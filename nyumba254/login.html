@@ -43,13 +43,16 @@
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 32px; height: 64px;
       background: var(--white); border-bottom: 1px solid var(--border); flex-shrink: 0;
+      gap: 12px;
     }
-    .logo { display: flex; align-items: center; gap: 10px; font-family: 'Playfair Display', serif; font-size: 20px; color: var(--green-dark); }
-    .logo-icon { width: 34px; height: 34px; background: var(--green); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .logo { display: flex; align-items: center; gap: 10px; font-family: 'Playfair Display', serif; font-size: 20px; color: var(--green-dark); flex-shrink: 0; white-space: nowrap; }
+    .logo-icon { width: 34px; height: 34px; background: var(--green); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .logo-icon svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 2; stroke-linecap: round; }
-    .nav-right { font-size: 14px; color: var(--text-2); }
-    .nav-right a { color: var(--green); font-weight: 500; }
+    .nav-right { font-size: 14px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .nav-right a { color: var(--green); font-weight: 500; white-space: nowrap; }
     .nav-right a:hover { text-decoration: underline; }
+    .nav-right .nav-right-full { display: inline; }
+    .nav-right .nav-right-short { display: none; }
 
     /* ── Layout ── */
     .page { flex: 1; display: grid; grid-template-columns: 1fr 1fr; min-height: calc(100vh - 64px); }
@@ -308,6 +311,14 @@
       .form-row { grid-template-columns: 1fr; gap: 0; }
       .right-panel { padding: 28px 16px; }
     }
+    @media (max-width: 420px) {
+      nav { padding: 0 14px; height: 56px; }
+      .logo { font-size: 17px; gap: 6px; }
+      .logo-icon { width: 28px; height: 28px; }
+      .nav-right .nav-right-full { display: none; }
+      .nav-right .nav-right-short { display: inline; }
+      .nav-right { font-size: 13px; }
+    }
   </style>
 </head>
 <body>
@@ -323,7 +334,7 @@
     Nyumba254
   </a>
   <div class="nav-right">
-    Looking to buy or rent? <a href="/listings">Browse listings →</a>
+    <span class="nav-right-full">Looking to buy or rent? </span><a href="/listings"><span class="nav-right-full">Browse listings</span><span class="nav-right-short">Browse</span> →</a>
   </div>
 </nav>
 
