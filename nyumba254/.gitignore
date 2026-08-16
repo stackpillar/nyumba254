@@ -1,4 +1,21 @@
-
+# Secrets and credentials
 Google Auth.txt
+*.env
+.env
+.env.local
+.env.*.local
+*secret*
+*Secret*
+*credentials*
+*Credentials*
+*api-key*
+*apikey*
+*.pem
+*.key
 
-Google Auth.txt
+# OS/editor junk
+.DS_Store
+Thumbs.db
+
+# Dependencies
+node_modules/
