@@ -5,6 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Browse Listings — Nyumba254</title>
   <meta name="description" content="Browse apartments for sale and rent across Kenya. Filter by county, area, price, bedrooms and more."/>
+  <link rel="canonical" href="https://nyumba254.com/listings"/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:title" content="Browse Listings — Nyumba254"/>
+  <meta property="og:description" content="Browse apartments for sale and rent across Kenya. Filter by county, area, price, bedrooms and more."/>
+  <meta property="og:url" content="https://nyumba254.com/listings"/>
+  <meta property="og:image" content="https://nyumba254.com/hero-photo.jpg"/>
+  <meta property="og:site_name" content="Nyumba254"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="Browse Listings — Nyumba254"/>
+  <meta name="twitter:description" content="Browse apartments for sale and rent across Kenya."/>
+  <meta name="twitter:image" content="https://nyumba254.com/hero-photo.jpg"/>
+  <meta name="twitter:site" content="@Nyumba254"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
   <link rel="icon" href="/favicon.ico" sizes="any">
@@ -143,7 +155,8 @@
       border: 1.5px solid var(--border); background: white; color: var(--text-2);
       cursor: pointer; transition: all .15s; font-weight: 500;
     }
-    .filter-pill:hover { border-color: var(--green); color: var(--green); }
+    .filter-pill:hover, .filter-pill:focus-visible { border-color: var(--green); color: var(--green); }
+    .filter-pill:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
     .filter-pill.active { background: var(--green); color: white; border-color: var(--green); }
 
     .apply-btn {
@@ -185,7 +198,8 @@
       background: white; border-radius: var(--radius-lg); border: 1px solid var(--border);
       overflow: hidden; transition: transform .2s, box-shadow .2s; cursor: pointer;
     }
-    .card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.09); }
+    .card:hover, .card:focus-visible { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.09); }
+    .card:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
     .card-img { height: 180px; background: var(--surface); position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
     .card-img img { width: 100%; height: 100%; object-fit: cover; }
     .card-img-placeholder { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--text-3); }
@@ -335,6 +349,8 @@
     @media (max-width: 480px) {
       .header-search { flex-direction: column; }
       .header-search input, .header-search button { width: 100%; }
+      .notify-strip-inner { flex-direction: column; align-items: flex-start; }
+      .notify-strip-inner .btn { width: 100%; justify-content: center; }
     }
   </style>
 </head>
@@ -362,7 +378,7 @@
     </a>
     <a href="/post-listing" class="btn btn-primary">List your apartment</a>
   </div>
-  <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Open menu">
+  <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Open menu" aria-expanded="false" id="mobile-menu-btn">
     <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
   </button>
 </nav>
@@ -489,7 +505,7 @@
     <!-- Toolbar -->
     <div class="toolbar">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <button class="filter-toggle" onclick="openSidebar()">
+        <button class="filter-toggle" onclick="openSidebar()" id="filter-toggle-btn" aria-expanded="false" aria-controls="sidebar">
           <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="12" y1="18" x2="20" y2="18"/></svg>
           Filters
         </button>
@@ -538,10 +554,10 @@
 
 <!-- ══ NOTIFY ME MODAL ══ -->
 <div class="notify-modal-overlay" id="notify-modal-overlay" onclick="if(event.target===this) closeNotifyModal()">
-  <div class="notify-modal">
+  <div class="notify-modal" role="dialog" aria-modal="true" aria-labelledby="notify-modal-title">
     <div class="notify-modal-head">
-      <h3>Get notified about new listings</h3>
-      <button class="notify-modal-close" onclick="closeNotifyModal()">✕</button>
+      <h3 id="notify-modal-title">Get notified about new listings</h3>
+      <button class="notify-modal-close" onclick="closeNotifyModal()" aria-label="Close">✕</button>
     </div>
     <div class="notify-modal-body">
       <p class="notify-modal-sub">Fill in what you're looking for — we'll reach out the moment a matching listing is posted. No spam.</p>
@@ -621,6 +637,12 @@
         <label>Anything else? <span class="nf-optional">optional</span></label>
         <textarea id="nf-notes" rows="2" placeholder="e.g. must have parking, near a school…"></textarea>
       </div>
+      <div class="nf-field">
+        <label class="nf-check">
+          <input type="checkbox" id="nf-consent"/>
+          I agree to be contacted about matching listings, per the <a href="privacy.html" target="_blank" style="color:var(--green);font-weight:600">Privacy Policy</a>.
+        </label>
+      </div>
     </div>
     <div class="notify-modal-foot">
       <button class="btn btn-outline" onclick="closeNotifyModal()">Cancel</button>
@@ -631,10 +653,10 @@
 <div class="notify-success-toast" id="notify-success-toast">✓ You're set! We'll reach out the moment a match goes live.</div>
 <!-- ══ EXIT INTENT — "did you find what you were looking for?" ══ -->
 <div class="notify-modal-overlay" id="exit-overlay">
-  <div class="notify-modal" style="max-width:440px">
+  <div class="notify-modal" style="max-width:440px" role="dialog" aria-modal="true" aria-labelledby="exit-modal-title">
     <div class="notify-modal-head">
-      <h3>Before you go…</h3>
-      <button class="notify-modal-close" onclick="exitCloseAndGo()">✕</button>
+      <h3 id="exit-modal-title">Before you go…</h3>
+      <button class="notify-modal-close" onclick="exitCloseAndGo()" aria-label="Close">✕</button>
     </div>
     <div class="notify-modal-body">
 
@@ -686,7 +708,20 @@
   const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
   const { createClient } = supabase;
-  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ── Match the "Remember me" storage adapter used on the sign-in page ──
+  const authStorage = {
+    getItem: (key) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).getItem(key),
+    setItem: (key, value) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).setItem(key, value),
+    removeItem: (key) => { localStorage.removeItem(key); sessionStorage.removeItem(key); }
+  };
+
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { storage: authStorage, persistSession: true, autoRefreshToken: true }
+  });
+
+  // ── Single shared session check — every script below reuses this ──
+  const nkSessionPromise = db.auth.getSession();
 
   const NK_COUNTIES = [
     "Mombasa","Kwale","Kilifi","Tana River","Lamu","Taita-Taveta","Garissa","Wajir","Mandera",
@@ -836,6 +871,7 @@
   let currentPage = 1;
   let totalCount = 0;
   let debounceTimer = null;
+  let nkRequestId = 0; // guards against a slower, older request overwriting newer results
 
   // ── Toggle showing all areas for the selected county vs the first 8 ──
   function toggleMoreAreas() {
@@ -959,8 +995,23 @@
     return { type, cat, beds, furn, county, areas, priceMin, priceMax, q, priceExact, sort };
   }
 
+  // ── Update the on-page heading/description and document title to reflect the
+  // active county/category filter — helps both SEO and in-page context. ──
+  function nkUpdatePageHeading(f) {
+    const parts = [];
+    if (f.cat) parts.push(f.cat.charAt(0).toUpperCase() + f.cat.slice(1) + ' properties');
+    if (f.county) parts.push('in ' + nkCountyLabel(f.county));
+    const heading = parts.length ? parts.join(' ') : 'Browse listings';
+    document.getElementById('page-title').textContent = heading;
+    document.getElementById('page-desc').textContent = parts.length
+      ? `${heading} — apartments, shops, and offices for sale and rent`
+      : 'Apartments, shops, and offices for sale and rent across Kenya';
+    document.title = parts.length ? heading + ' — Nyumba254' : 'Browse Listings — Nyumba254';
+  }
+
   // ── Build active filter tags ──
   function renderActiveTags(f) {
+    nkUpdatePageHeading(f);
     const tags = [];
     if (f.type) tags.push({ label: f.type === 'sale' ? 'For sale' : 'To let', key: 'type' });
     if (f.cat) tags.push({ label: f.cat.charAt(0).toUpperCase() + f.cat.slice(1), key: 'cat' });
@@ -976,7 +1027,7 @@
       tags.push({ label, key: 'price' });
     }
     if (f.priceExact !== null) {
-      tags.push({ label: `≈ KES ${f.priceExact.toLocaleString()} (±1)`, key: 'q' });
+      tags.push({ label: `≈ KES ${f.priceExact.toLocaleString()}`, key: 'q' });
     } else if (f.q) {
       tags.push({ label: `"${f.q}"`, key: 'q' });
     }
@@ -1034,6 +1085,7 @@
   // ── Build and run Supabase query ──
   async function applyFilters(page) {
     if (page) currentPage = page;
+    const requestId = ++nkRequestId;
     const f = getFilters();
     renderActiveTags(f);
 
@@ -1059,10 +1111,11 @@
     if (f.priceMax) query = query.lte('price', parseFloat(f.priceMax));
 
     if (f.priceExact !== null) {
-      // Exact-ish price typed in the header search box: only listings priced within
-      // ±1 KES of it. Combines (ANDs) with any sidebar price-min/max already set,
-      // so nothing about the existing range filter is overridden — it's additive.
-      query = query.gte('price', f.priceExact - 1).lte('price', f.priceExact + 1);
+      // Price typed in the header search box: match listings within ±15% of it
+      // instead of an exact ±1 KES band. Combines (ANDs) with any sidebar
+      // price-min/max already set — it's additive, not a replacement.
+      const band = Math.max(1, Math.round(f.priceExact * 0.15));
+      query = query.gte('price', f.priceExact - band).lte('price', f.priceExact + band);
     } else if (f.q) {
       query = query.or(`title.ilike.%${f.q}%,description.ilike.%${f.q}%,area.ilike.%${f.q}%,address.ilike.%${f.q}%`);
     }
@@ -1078,7 +1131,18 @@
     query = query.range(from, from + PAGE_SIZE - 1);
 
     const { data, count, error } = await query;
-    if (error) { console.error(error); return; }
+    if (requestId !== nkRequestId) return; // a newer request already resolved — discard this one
+
+    if (error) {
+      console.error(error);
+      document.getElementById('result-count').textContent = 'Something went wrong loading listings';
+      document.getElementById('listings-grid').innerHTML = `<div class="empty-state">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <h3>Couldn't load listings</h3>
+        <p>Please check your connection and <a onclick="applyFilters()" style="cursor:pointer">try again</a></p>
+      </div>`;
+      return;
+    }
 
     totalCount = count || 0;
     renderResults(data || [], totalCount);
@@ -1100,7 +1164,7 @@
     const catBadge = l.category !== 'standard'
       ? `<span class="badge-cat ${l.category}">${l.category}</span>` : '';
     return `
-      <div class="card" onclick="window.location='/listing?id=${String(l.listing_number).padStart(6,'0')}'">
+      <div class="card" onclick="window.location='/listing?id=${String(l.listing_number).padStart(6,'0')}'" role="button" tabindex="0" aria-label="${l.title}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.location='/listing?id=${String(l.listing_number).padStart(6,'0')}'}">
         <div class="card-img">
           ${imgHtml}
           ${l.is_featured ? '<span class="badge-featured">Featured</span>' : ''}
@@ -1167,15 +1231,31 @@
   function openSidebar() {
     document.getElementById('sidebar').classList.add('open');
     document.getElementById('overlay').classList.add('open');
+    document.getElementById('filter-toggle-btn')?.setAttribute('aria-expanded', 'true');
   }
   function closeSidebar() {
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('overlay').classList.remove('open');
+    document.getElementById('filter-toggle-btn')?.setAttribute('aria-expanded', 'false');
   }
 
   // ── Mobile nav toggle ──
   function toggleMobileMenu() {
-    document.getElementById('mobile-nav').classList.toggle('open');
+    const nav = document.getElementById('mobile-nav');
+    const isOpen = nav.classList.toggle('open');
+    document.getElementById('mobile-menu-btn')?.setAttribute('aria-expanded', isOpen);
+  }
+
+  // ── Make all static filter-pill elements keyboard-accessible (Tab + Enter/Space) ──
+  function nkMakeClickablesKeyboardAccessible() {
+    document.querySelectorAll('.filter-pill[onclick]').forEach(el => {
+      if (el.hasAttribute('tabindex')) return;
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
+      el.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.click(); }
+      });
+    });
   }
   document.addEventListener('click', e => {
     const nav = document.getElementById('mobile-nav');
@@ -1185,15 +1265,9 @@
     }
   });
 
-  // ── Sign in → My Account when logged in ──
-  (async function () {
-    const _sb = (typeof db !== 'undefined') ? db : supabase.createClient(
-      'https://vliuuloyfhyxcsuchpss.supabase.co',
-      'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx'
-    );
-    const { data: { session } } = await _sb.auth.getSession();
+  // ── Sign in → My Account when logged in (reuses the shared session check) ──
+  nkSessionPromise.then(({ data: { session } }) => {
     if (!session) return;
-
     const desktopLink = document.getElementById('nav-account-link');
     const mobileLink  = document.getElementById('mobile-account-link');
     if (desktopLink) {
@@ -1206,7 +1280,7 @@
       mobileLink.textContent = 'My Account';
       mobileLink.href = '/dashboard';
     }
-  })();
+  });
 
   /* ════════════════════════════════════════════════════
      NOTIFY ME — "haven't found what you're looking for"
@@ -1265,6 +1339,7 @@
     ['nf-type-pills','nf-cat-pills','nf-bed-pills'].forEach(groupId => {
       nfSetPill(document.querySelector(`#${groupId} .filter-pill[data-val=""]`), groupId);
     });
+    document.getElementById('nf-consent').checked = false;
   }
 
   function openNotifyModal() {
@@ -1300,6 +1375,10 @@
 
     if (!name)  { alert('Please enter your name'); return; }
     if (!email) { alert('Please enter an email so we can reach you'); return; }
+    if (!document.getElementById('nf-consent').checked) {
+      alert('Please agree to be contacted before submitting');
+      return;
+    }
 
     const priceType = document.querySelector('#nf-type-pills .filter-pill.active')?.dataset.val || null;
     const category  = document.querySelector('#nf-cat-pills .filter-pill.active')?.dataset.val || null;
@@ -1388,6 +1467,7 @@
   readUrlParams();
   toggleBedroomsFilter(document.querySelector('#cat-pills .filter-pill.active')?.dataset.val || '');
   applyFilters();
+  nkMakeClickablesKeyboardAccessible();
 </script>
 
 <script src="saved-listings.js"></script>
@@ -1395,16 +1475,14 @@
 
 <script>
   (function () {
-    const sb = supabase.createClient(
-      'https://vliuuloyfhyxcsuchpss.supabase.co',
-      'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx'
-    );
+    // Reuses the shared `db` client from earlier on this page instead of
+    // spinning up a second Supabase client just for this insert.
     let sid = localStorage.getItem('nk_sid');
     if (!sid) {
       sid = (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2));
       localStorage.setItem('nk_sid', sid);
     }
-    sb.from('page_views').insert({
+    db.from('page_views').insert({
       path: location.pathname,
       referrer: document.referrer || null,
       user_agent: navigator.userAgent,
@@ -1451,9 +1529,16 @@
     });
   }
 
-  // Escape key also counts as "trying to leave" — opens the same exit-intent modal instantly.
+  // Escape key: close the mobile filter sidebar if it's open; otherwise treat it
+  // as "trying to leave" and open the exit-intent modal.
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') exitOpenModal(null);
+    if (e.key !== 'Escape') return;
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar && sidebar.classList.contains('open')) {
+      closeSidebar();
+      return;
+    }
+    exitOpenModal(null);
   });
 
   function exitClose() { document.getElementById('exit-overlay').classList.remove('open'); }
@@ -1467,9 +1552,12 @@
     if (e.clientY <= 0) exitOpenModal(null);
   });
 
-  // Any click that navigates away from this page (nav, logo, footer, mobile nav)
+  // Any click that navigates away from this page (nav, logo, footer, mobile nav).
+  // Skip middle-click, Ctrl/Cmd/Shift/Alt-click — those mean "open in a new tab",
+  // not "leave this one".
   document.addEventListener('click', (e) => {
     if (exitAlreadyShown()) return;
+    if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
     const a = e.target.closest('a[href]');
     if (!a) return;
     const href = a.getAttribute('href');
@@ -1495,7 +1583,7 @@
   function exitRenderStars() {
     const el = document.getElementById('exit-stars');
     el.innerHTML = [1,2,3,4,5].map(n =>
-      `<svg class="exit-star" data-n="${n}" viewBox="0 0 24 24" onclick="exitSetStar(${n})"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
+      `<svg class="exit-star" data-n="${n}" viewBox="0 0 24 24" onclick="exitSetStar(${n})" role="button" tabindex="0" aria-label="Rate ${n} star${n>1?'s':''}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();exitSetStar(${n})}"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
     ).join('');
   }
   function exitSetStar(n) {
