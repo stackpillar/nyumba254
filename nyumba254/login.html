@@ -173,10 +173,15 @@
     .alert.success { display: flex; background: var(--green-light); color: var(--green-dark); border: 1px solid #9FE1CB; }
     .alert svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; fill: none; stroke: currentColor; stroke-width: 2; }
 
-    /* Forgot */
-    .forgot { text-align: right; margin-top: -8px; margin-bottom: 16px; }
-    .forgot a { font-size: 13px; color: var(--green); font-weight: 500; }
-    .forgot a:hover { text-decoration: underline; }
+    /* Remember + forgot row */
+    .remember-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: -8px; margin-bottom: 16px;
+    }
+    .remember-label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-2); cursor: pointer; }
+    .remember-label input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--green); cursor: pointer; }
+    .remember-row a { font-size: 13px; color: var(--green); font-weight: 500; }
+    .remember-row a:hover { text-decoration: underline; }
 
     /* Submit */
     .btn-submit {
@@ -209,6 +214,12 @@
     .terms a { color: var(--green); }
     .terms a:hover { text-decoration: underline; }
 
+    .secure-note {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      font-size: 11.5px; color: var(--text-3); margin-top: 10px;
+    }
+    .secure-note svg { width: 12px; height: 12px; stroke: var(--text-3); fill: none; stroke-width: 2; }
+
     /* Consent checkbox */
     .consent-box {
       background: var(--surface); border: 1.5px solid var(--border);
@@ -225,6 +236,26 @@
     .consent-text a { color: var(--green); font-weight: 600; text-decoration: underline; }
     .consent-text a:hover { color: var(--green-dark); }
     .consent-box #err-consent { margin-top: 8px; margin-bottom: 0; }
+
+    /* Trust strip */
+    .trust-strip {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--green-light); border: 1px solid #cdeee1;
+      border-radius: var(--radius); padding: 12px 14px; margin-bottom: 24px;
+    }
+    .trust-strip svg { width: 20px; height: 20px; stroke: var(--green-dark); fill: none; stroke-width: 2; flex-shrink: 0; }
+    .trust-strip span { font-size: 12.5px; color: var(--green-dark); line-height: 1.5; }
+    .trust-strip a { color: var(--green-dark); font-weight: 600; text-decoration: underline; }
+
+    /* Spam note on success screens */
+    .spam-note {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 12px 14px; margin-bottom: 18px;
+      font-size: 12.5px; color: var(--text-2); line-height: 1.6; text-align: left;
+    }
+    .spam-note strong { color: var(--text); }
+    .spam-note a { color: var(--green); font-weight: 600; cursor: pointer; }
+    .spam-note a:hover { text-decoration: underline; }
 
     /* Phone hint */
     .phone-note { font-size: 12px; color: var(--text-3); margin-top: 5px; }
@@ -255,6 +286,17 @@
     }
     .btn-green:hover { background: var(--green-dark); }
 
+    /* Session check overlay */
+    #session-check {
+      position: fixed; inset: 0; background: var(--white);
+      display: flex; align-items: center; justify-content: center; z-index: 999;
+    }
+    #session-check .spinner {
+      display: block; width: 28px; height: 28px;
+      border: 3px solid var(--border); border-top-color: var(--green);
+      border-radius: 50%; animation: spin .7s linear infinite;
+    }
+
     /* Responsive */
     @media (max-width: 900px) {
       .page { grid-template-columns: 1fr; }
@@ -269,6 +311,8 @@
   </style>
 </head>
 <body>
+
+<div id="session-check"><div class="spinner"></div></div>
 
 <!-- ── NAVBAR ── -->
 <nav>
@@ -351,6 +395,10 @@
       <!-- LOGIN                        -->
       <!-- ════════════════════════════ -->
       <div id="panel-login" class="active">
+        <div class="trust-strip">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Your data is encrypted and never sold or shared. See our <a href="privacy.html">Privacy Policy</a>.</span>
+        </div>
         <h1 class="auth-title">Welcome back</h1>
         <p class="auth-sub">Sign in to manage your listings and enquiries.</p>
 
@@ -372,7 +420,7 @@
           <label class="field-label" for="login-email">Email address</label>
           <div class="input-wrap">
             <svg class="icon" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email"/>
+            <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email" autofocus/>
           </div>
           <div class="field-error" id="err-login-email">Please enter a valid email address</div>
         </div>
@@ -389,7 +437,11 @@
           <div class="field-error" id="err-login-pw">Please enter your password</div>
         </div>
 
-        <div class="forgot">
+        <div class="remember-row">
+          <label class="remember-label">
+            <input type="checkbox" id="login-remember"/>
+            <span>Remember me</span>
+          </label>
           <a href="#" onclick="switchPanel('reset');return false">Forgot password?</a>
         </div>
 
@@ -397,6 +449,10 @@
           <div class="spinner"></div>
           <span class="btn-text">Sign in</span>
         </button>
+        <p class="secure-note">
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          Secure, encrypted connection
+        </p>
 
         <p class="terms">Don't have an account? <a href="#" onclick="switchTab('register');return false">Create one free →</a></p>
       </div>
@@ -405,6 +461,10 @@
       <!-- REGISTER                     -->
       <!-- ════════════════════════════ -->
       <div id="panel-register">
+        <div class="trust-strip">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Your data is encrypted and never sold or shared. See our <a href="privacy.html">Privacy Policy</a>.</span>
+        </div>
         <h1 class="auth-title">Create your account</h1>
         <p class="auth-sub">Free to join. Start listing in under 10 minutes.</p>
 
@@ -460,7 +520,7 @@
             <input type="tel" id="reg-phone" placeholder="07XX XXX XXX" autocomplete="tel" oninput="formatPhone(this)"/>
           </div>
           <div class="field-error" id="err-phone">Please enter a valid Kenyan phone number</div>
-          <p class="phone-note">Used for M-Pesa listing payments only. Never shared publicly.</p>
+          <p class="phone-note">Used only for M-Pesa listing payments. We never share it publicly or with third parties.</p>
         </div>
 
         <div class="form-group">
@@ -484,9 +544,9 @@
             <input type="checkbox" id="reg-consent" onchange="clearConsentError()"/>
             <span class="consent-text">
               I have read and agree to the
-              <a href="/terms" target="_blank" rel="noopener">Terms of Service</a>
+              <a href="terms.html">Terms of Service</a>
               and
-              <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.
+              <a href="privacy.html">Privacy Policy</a>.
             </span>
           </label>
           <div class="field-error" id="err-consent">You must agree to the Terms of Service and Privacy Policy to create an account</div>
@@ -502,6 +562,12 @@
           <div class="success-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
           <h3>Account created!</h3>
           <p>Check your email to verify your address. Once verified, sign in and start listing your apartment.</p>
+          <div class="spam-note">
+            <strong>Didn't get the email?</strong> It can take a minute or two — and sometimes it lands in Spam/Junk/Promotions instead of your main inbox. If you still don't see it, <a id="resend-success-link" onclick="resendFromSuccess()">click here to resend it</a>.
+          </div>
+          <div class="spam-note">
+            🔒 Your information is safe with us — Nyumba254 uses encrypted, secure storage (powered by Supabase) and we never sell or share your data with third parties. Read our <a href="privacy.html">Privacy Policy</a>.
+          </div>
           <a href="#" onclick="switchTab('login');document.getElementById('register-success').style.display='none';return false" class="btn-green">Go to sign in →</a>
         </div>
       </div>
@@ -553,7 +619,19 @@
   const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
   const { createClient } = supabase;
-  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ── "Remember me" storage adapter ──
+  // Checked -> session persists in localStorage (survives closing the browser).
+  // Unchecked -> session lives in sessionStorage (cleared when the tab closes).
+  const authStorage = {
+    getItem: (key) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).getItem(key),
+    setItem: (key, value) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).setItem(key, value),
+    removeItem: (key) => { localStorage.removeItem(key); sessionStorage.removeItem(key); }
+  };
+
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { storage: authStorage, persistSession: true, autoRefreshToken: true }
+  });
 
   // ── Production site base — used for ALL auth email redirects so links ──
   // ── always work no matter where signup/reset was triggered from       ──
@@ -563,9 +641,13 @@
   // If user came from post-listing page, send them back after login
   const redirectTo = new URLSearchParams(window.location.search).get('next') || '/dashboard';
 
-  // ── If already logged in, redirect immediately ──
+  // ── If already logged in, redirect immediately; otherwise reveal the form ──
   db.auth.getSession().then(({ data }) => {
-    if (data.session) window.location.href = redirectTo;
+    if (data.session) {
+      window.location.href = redirectTo;
+    } else {
+      document.getElementById('session-check').style.display = 'none';
+    }
   });
 
   // ── Tab switching ──
@@ -654,6 +736,7 @@
   const isPhone = v => v.replace(/\s/g,'').length >= 9;
 
   // ── LOGIN ──
+  let loginFailCount = 0;
   async function doLogin() {
     clearAllErrors();
     const email = document.getElementById('login-email').value.trim();
@@ -662,6 +745,9 @@
     if (!isEmail(email)) { fieldError('login-email','err-login-email',true); ok=false; }
     if (!pw) { fieldError('login-password','err-login-pw',true); ok=false; }
     if (!ok) return;
+
+    const remember = document.getElementById('login-remember').checked;
+    localStorage.setItem('ny_remember', remember ? '1' : '0');
 
     setLoading('btn-login', true);
     const { error } = await db.auth.signInWithPassword({ email, password: pw });
@@ -674,10 +760,18 @@
         showResendLink(email);
         return;
       }
-      const msg = error.message.includes('Invalid login credentials')
-        ? 'Email or password is incorrect. Please try again.'
-        : error.message;
-      showAlert('login-alert','login-alert-msg', msg, 'error');
+      if (error.message.includes('Invalid login credentials')) {
+        loginFailCount++;
+        if (loginFailCount >= 3) {
+          showAlert('login-alert','login-alert-msg',
+            "Still not working? Double-check your email, or reset your password below.", 'error');
+        } else {
+          showAlert('login-alert','login-alert-msg',
+            'Email or password is incorrect. Please try again.', 'error');
+        }
+      } else {
+        showAlert('login-alert','login-alert-msg', error.message, 'error');
+      }
       return;
     }
     window.location.href = redirectTo;
@@ -794,12 +888,33 @@
       });
     }
 
+    // Remember email so the "resend" link on the success screen works
+    window.lastRegEmail = email;
+
     // Hide form, show success
     document.querySelector('#panel-register .auth-title').style.display = 'none';
     document.querySelector('#panel-register .auth-sub').style.display = 'none';
     document.querySelector('#panel-register #register-alert').style.display = 'none';
     document.querySelectorAll('#panel-register .form-row, #panel-register .form-group, #panel-register .btn-submit, #panel-register .terms, #panel-register p.auth-sub, #panel-register .consent-box, #panel-register .btn-google, #panel-register .divider').forEach(el => el.style.display='none');
     document.getElementById('register-success').style.display = 'block';
+  }
+
+  // ── Resend verification email from the success screen ──
+  async function resendFromSuccess() {
+    const link = document.getElementById('resend-success-link');
+    if (!window.lastRegEmail) return;
+    link.textContent = 'Sending…';
+    const { error } = await db.auth.resend({
+      type: 'signup',
+      email: window.lastRegEmail,
+      options: { emailRedirectTo: SITE_BASE + '/verify-email' }
+    });
+    link.textContent = error
+      ? (error.message.includes('rate limit') || error.message.includes('after')
+          ? 'Please wait a minute, then try again'
+          : 'Could not resend — try again shortly')
+      : '✓ Sent! Check your inbox (and spam folder)';
+    link.style.pointerEvents = 'none';
   }
 
   // ── PASSWORD RESET ──
