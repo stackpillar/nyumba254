@@ -110,14 +110,17 @@
     .cat-option-title { font-size:14px; font-weight:600; color:var(--text); margin-bottom:3px; }
     .cat-option-desc { font-size:12px; color:var(--text-3); line-height:1.4; }
     .cat-option.selected .cat-option-title { color:var(--green-dark); }
+    .cat-option:focus-visible { outline:2px solid var(--green); outline-offset:2px; }
 
     .toggle-group { display:flex; border:1.5px solid var(--border); border-radius:var(--radius); overflow:hidden; }
     .toggle-opt { flex:1; padding:10px; text-align:center; font-size:14px; font-weight:500; color:var(--text-3); cursor:pointer; transition:all .15s; background:white; user-select:none; }
     .toggle-opt:hover { background:var(--surface); }
+    .toggle-opt:focus-visible { outline:2px solid var(--green); outline-offset:-2px; }
     .toggle-opt.active { background:var(--green); color:white; }
 
     .photo-drop { border:2px dashed var(--border); border-radius:var(--radius-lg); padding:36px 24px; text-align:center; cursor:pointer; transition:all .2s; background:var(--surface); }
     .photo-drop:hover,.photo-drop.drag-over { border-color:var(--green); background:var(--green-light); }
+    .photo-drop:focus-visible { outline:2px solid var(--green); outline-offset:2px; }
     .photo-drop svg { width:40px; height:40px; stroke:var(--text-3); fill:none; stroke-width:1.5; margin:0 auto 12px; display:block; }
     .photo-drop p { font-size:14px; color:var(--text-2); margin-bottom:4px; }
     .photo-drop span { font-size:12px; color:var(--text-3); }
@@ -128,8 +131,8 @@
     .photo-thumb .remove-btn { position:absolute; top:4px; right:4px; width:22px; height:22px; background:rgba(0,0,0,0.6); color:white; border-radius:50%; font-size:14px; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer; }
     .photo-thumb .remove-btn:hover { background:var(--red); }
     .photo-thumb .cover-badge { position:absolute; bottom:4px; left:4px; background:var(--green); color:white; font-size:10px; font-weight:600; padding:2px 6px; border-radius:4px; }
-    .photo-thumb .set-cover { position:absolute; bottom:4px; left:4px; background:rgba(0,0,0,0.5); color:white; font-size:10px; padding:2px 6px; border-radius:4px; cursor:pointer; display:none; }
-    .photo-thumb:hover .set-cover { display:block; }
+    .photo-thumb .set-cover { position:absolute; bottom:4px; left:4px; background:rgba(0,0,0,0.55); color:white; font-size:10px; padding:2px 6px; border-radius:4px; cursor:pointer; border:none; font-family:inherit; }
+    .photo-thumb .set-cover:focus-visible { outline:2px solid white; outline-offset:1px; }
     .upload-progress { margin-top:8px; height:4px; background:var(--border); border-radius:2px; overflow:hidden; display:none; }
     .upload-progress-bar { height:100%; background:var(--green); border-radius:2px; transition:width .3s; width:0%; }
 
@@ -153,6 +156,7 @@
     .pricing-options { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
     .pricing-option { border:2px solid var(--border); border-radius:var(--radius-lg); padding:20px; cursor:pointer; transition:all .2s; background:white; position:relative; }
     .pricing-option:hover { border-color:var(--green-mid); }
+    .pricing-option:focus-visible, .trial-banner:focus-visible { outline:2px solid var(--green); outline-offset:2px; }
     .pricing-option.selected { border-color:var(--green); background:var(--green-light); }
     .pricing-option .pop-badge { position:absolute; top:-10px; left:50%; transform:translateX(-50%); background:var(--gold); color:white; font-size:11px; font-weight:600; padding:2px 12px; border-radius:20px; white-space:nowrap; }
     .pricing-option h3 { font-size:15px; font-weight:600; color:var(--text); margin-bottom:4px; }
@@ -431,22 +435,22 @@
       <h2>What type of property are you listing?</h2>
       <p class="hint">Choose the category that best describes your property</p>
       <div class="cat-grid">
-        <div class="cat-option selected" data-cat="student" onclick="selectCat(this)">
+        <div class="cat-option selected" data-cat="student" onclick="selectCat(this)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectCat(this)}">
           <div class="cat-option-icon">🎓</div>
           <div class="cat-option-title">Student housing</div>
           <div class="cat-option-desc">Bedsitters, single rooms, shared flats near campuses</div>
         </div>
-        <div class="cat-option" data-cat="standard" onclick="selectCat(this)">
+        <div class="cat-option" data-cat="standard" onclick="selectCat(this)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectCat(this)}">
           <div class="cat-option-icon">🏠</div>
           <div class="cat-option-title">Standard apartment</div>
           <div class="cat-option-desc">1–3 bedroom apartments for families and professionals</div>
         </div>
-        <div class="cat-option" data-cat="luxury" onclick="selectCat(this)">
+        <div class="cat-option" data-cat="luxury" onclick="selectCat(this)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectCat(this)}">
           <div class="cat-option-icon">✨</div>
           <div class="cat-option-title">Luxury / premium</div>
           <div class="cat-option-desc">High-end apartments in prime neighborhoods across Kenya</div>
         </div>
-        <div class="cat-option" data-cat="commercial" onclick="selectCat(this)">
+        <div class="cat-option" data-cat="commercial" onclick="selectCat(this)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectCat(this)}">
           <div class="cat-option-icon">🏢</div>
           <div class="cat-option-title">Shop / office</div>
           <div class="cat-option-desc">Retail shops, offices and business spaces, e.g. in city centers</div>
@@ -482,8 +486,8 @@
       <div class="field">
         <label>Sale or rent <span class="req">*</span></label>
         <div class="toggle-group">
-          <div class="toggle-opt active" id="type-sale" onclick="setType('sale')">For sale</div>
-          <div class="toggle-opt" id="type-rent" onclick="setType('rent')">To let / rent</div>
+          <div class="toggle-opt active" id="type-sale" onclick="setType('sale')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();setType('sale')}">For sale</div>
+          <div class="toggle-opt" id="type-rent" onclick="setType('rent')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();setType('rent')}">To let / rent</div>
         </div>
       </div>
 
@@ -609,7 +613,7 @@
     <div class="form-card">
       <h2>Add photos</h2>
       <p class="hint">Listings with photos get 5× more enquiries. Add up to 10 — the first becomes the cover.</p>
-      <div class="photo-drop" id="photo-drop" onclick="document.getElementById('file-input').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFiles(event)">
+      <div class="photo-drop" id="photo-drop" onclick="document.getElementById('file-input').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFiles(event)" role="button" tabindex="0" aria-label="Upload photos" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('file-input').click()}">
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         <p>Click to upload or drag photos here</p>
         <span>JPG, PNG or WEBP — up to 30MB each, max 10 photos</span>
@@ -634,7 +638,7 @@
       <h2>Your listing plan</h2>
       <p class="hint" id="plan-hint">Both paid plans give your listing full visibility on Nyumba254</p>
 
-      <div class="trial-banner" id="plan-trial" onclick="selectPlan('trial')">
+      <div class="trial-banner" id="plan-trial" onclick="selectPlan('trial')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectPlan('trial')}">
         <div class="trial-banner-top">
           <span class="trial-ribbon">🔥 NEW — LAUNCH OFFER</span>
           <span class="trial-applied-check">✓ Applied to your listing</span>
@@ -647,7 +651,7 @@
       <div class="upgrade-divider" id="upgrade-divider">or upgrade for longer visibility from day one</div>
 
       <div class="pricing-options">
-        <div class="pricing-option selected" id="plan-basic" onclick="selectPlan('basic')">
+        <div class="pricing-option selected" id="plan-basic" onclick="selectPlan('basic')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectPlan('basic')}">
           <h3>Standard listing</h3>
           <div class="price-tag" id="basic-price-tag">KES 500 <span>one-time</span></div>
           <div class="field-hint" id="basic-price-note" style="display:none;margin:-6px 0 10px"></div>
@@ -658,7 +662,7 @@
             <li>Appears in search results</li>
           </ul>
         </div>
-        <div class="pricing-option featured-opt" id="plan-featured" onclick="selectPlan('featured')">
+        <div class="pricing-option featured-opt" id="plan-featured" onclick="selectPlan('featured')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectPlan('featured')}">
           <div class="pop-badge">Most enquiries</div>
           <h3>Featured listing</h3>
           <div class="price-tag" id="featured-price-tag">KES 1,500 <span>one-time</span></div>
@@ -763,7 +767,7 @@
 <!-- PAYMENT MODAL -->
 <div class="modal-overlay" id="payment-modal">
   <div class="modal-box">
-    <button class="modal-close-x" onclick="skipPayment()">×</button>
+    <button class="modal-close-x" onclick="skipPayment()" aria-label="Close">×</button>
     <h2>Complete payment</h2>
     <p class="modal-hint">Your listing is already saved and pending review. Payment is optional — our admin team can approve with or without it.</p>
     <div class="pay-amount-display" id="pay-amount-display">KES 500 <span>one-time listing fee</span></div>
@@ -844,6 +848,7 @@
   <div class="modal-box" style="max-width:420px;text-align:center">
     <h2 style="text-align:center;padding-right:0">Continue your listing?</h2>
     <p class="modal-hint" style="text-align:center">We found a listing you were working on earlier. Your progress was saved automatically — would you like to pick up where you left off, or start fresh?</p>
+    <div id="resume-draft-preview" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:6px;text-align:left;font-size:13px;color:var(--text-2)"></div>
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
       <button class="btn-pay-primary" onclick="resumeContinue()" style="margin-top:0">Continue where I left off</button>
       <button class="btn-back" onclick="resumeStartOver()" style="width:100%">Start over</button>
@@ -1099,6 +1104,11 @@ async function loadAndApplyDraft() {
   if (!hasContent) return;
 
   pendingDraft = draft;
+  const previewEl = document.getElementById('resume-draft-preview');
+  if (previewEl) {
+    const savedDate = draft.savedAt ? new Date(draft.savedAt).toLocaleString('en-KE', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '';
+    previewEl.innerHTML = `<strong>${(f.title && f.title.trim()) ? f.title : '(Untitled listing)'}</strong>${savedDate ? `<br><span style="color:var(--text-3)">Last saved ${savedDate}</span>` : ''}`;
+  }
   document.getElementById('resume-modal').classList.add('show');
 }
 
@@ -1529,15 +1539,21 @@ async function handleFiles(files) {
     if (!file.type.startsWith('image/')) continue;
     if (file.size > 30 * 1024 * 1024) { showToast(`${file.name} is too large (max 30MB)`, 'error'); continue; }
     showToast('Processing photo…', '');
-    const quality      = await checkImageQuality(file); // read BEFORE processing, for an accurate native resolution
-    const processed    = await standardizeImage(file);
-    const watermarked  = await watermarkImage(processed);
+    // Decode once and reuse the same bitmap across quality-check, resize, and
+    // watermark steps instead of each function independently re-decoding the
+    // same file (was 3 separate createImageBitmap calls per photo).
+    let sharedBitmap = null;
+    try { sharedBitmap = await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch (e) { console.error('Bitmap decode failed:', e); }
+    const quality      = checkImageQualityFromBitmap(sharedBitmap);
+    const processed    = await standardizeImage(file, sharedBitmap);
+    const watermarked  = await watermarkImage(processed, processed === file ? sharedBitmap : null);
+    if (sharedBitmap && typeof sharedBitmap.close === 'function') sharedBitmap.close();
     photos.push({ file: watermarked, previewUrl: URL.createObjectURL(watermarked), needsEnhance: quality.needsEnhance });
   }
   renderPhotoGrid();
 }
 
-async function standardizeImage(file) {
+async function standardizeImage(file, sharedBitmap) {
   // Untouched originals keep full quality — only re-encode when necessary
   if (file.size <= 2 * 1024 * 1024) return file;
 
@@ -1545,9 +1561,9 @@ async function standardizeImage(file) {
   const JPEG_QUALITY = 0.95;  // devs typically use 0.9–0.95 for photos, not 0.8
 
   try {
-    // createImageBitmap correctly applies EXIF orientation and decodes at
-    // full fidelity — more reliable than the <img> + canvas.drawImage path
-    const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    // Reuse the bitmap decoded once in handleFiles() when available, instead
+    // of decoding this same file again.
+    const bitmap = sharedBitmap || await createImageBitmap(file, { imageOrientation: 'from-image' });
     let { width, height } = bitmap;
 
     if (width > MAX_DIM || height > MAX_DIM) {
@@ -1577,6 +1593,7 @@ async function standardizeImage(file) {
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(src, 0, 0, width, height);
+    if (!sharedBitmap && typeof bitmap.close === 'function') bitmap.close();
 
     const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', JPEG_QUALITY));
     return new File([blob], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' });
@@ -1598,9 +1615,11 @@ async function standardizeImage(file) {
    e.g. a phone number, tagline, or a site URL. ═════════ */
 const WATERMARK_TEXT = 'Nyumba254';
 
-async function watermarkImage(file) {
+async function watermarkImage(file, sharedBitmap) {
   try {
-    const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    // Reuse the shared bitmap only if standardizeImage passed the *same*
+    // original file through untouched — otherwise decode fresh.
+    const bitmap = sharedBitmap || await createImageBitmap(file, { imageOrientation: 'from-image' });
     const canvas = document.createElement('canvas');
     canvas.width  = bitmap.width;
     canvas.height = bitmap.height;
@@ -1647,14 +1666,10 @@ async function watermarkImage(file) {
 const CLOUDINARY_CLOUD_NAME = 'f2qbihwv';
 const NK_LOW_QUALITY_MAX_EDGE = 1000; // px — below this on the long edge, a photo is flagged
 
-async function checkImageQuality(file) {
-  try {
-    const bitmap = await createImageBitmap(file);
-    const longEdge = Math.max(bitmap.width, bitmap.height);
-    return { needsEnhance: longEdge < NK_LOW_QUALITY_MAX_EDGE };
-  } catch (e) {
-    return { needsEnhance: false }; // if we can't even read it, don't block the upload over it
-  }
+function checkImageQualityFromBitmap(bitmap) {
+  if (!bitmap) return { needsEnhance: false }; // if we couldn't decode it, don't block the upload over it
+  const longEdge = Math.max(bitmap.width, bitmap.height);
+  return { needsEnhance: longEdge < NK_LOW_QUALITY_MAX_EDGE };
 }
 
 // Builds a Cloudinary "fetch" URL that AI-enhances an existing Supabase
@@ -1666,13 +1681,13 @@ function enhancePhotoIfNeeded(publicUrl) {
 
 function renderPhotoGrid() {
   document.getElementById('photo-count').textContent = photos.length
-    ? `${photos.length} photo${photos.length > 1 ? 's' : ''} added — hover to set cover`
+    ? `${photos.length} photo${photos.length > 1 ? 's' : ''} added — tap "Set cover" on any photo to feature it first`
     : 'No photos added yet';
   document.getElementById('photo-grid').innerHTML = photos.map((p, i) => `
     <div class="photo-thumb">
       <img src="${p.previewUrl}" alt="Photo ${i+1}"/>
-      <button class="remove-btn" onclick="removePhoto(${i})">×</button>
-      ${i === coverIndex ? '<span class="cover-badge">Cover</span>' : `<span class="set-cover" onclick="setCover(${i})">Set cover</span>`}
+      <button class="remove-btn" onclick="removePhoto(${i})" aria-label="Remove photo ${i+1}">×</button>
+      ${i === coverIndex ? '<span class="cover-badge">Cover</span>' : `<button type="button" class="set-cover" onclick="setCover(${i})">Set cover</button>`}
     </div>`).join('');
 }
 
@@ -1692,8 +1707,10 @@ function goStep(n) {
 
 function updateStepUI() {
   for (let i = 1; i <= 4; i++) {
-    document.getElementById(`dot-${i}`).className = 'step-dot' + (i < currentStep ? ' done' : i === currentStep ? ' active' : '');
-    document.getElementById(`dot-${i}`).innerHTML = i < currentStep ? '' : `<span>${i}</span>`;
+    const dot = document.getElementById(`dot-${i}`);
+    dot.className = 'step-dot' + (i < currentStep ? ' done' : i === currentStep ? ' active' : '');
+    dot.innerHTML = i < currentStep ? '' : `<span>${i}</span>`;
+    dot.setAttribute('aria-current', i === currentStep ? 'step' : 'false');
     document.getElementById(`lbl-${i}`).className = 'step-label' + (i === currentStep ? ' active' : '');
     const line = document.getElementById(`line-${i}`);
     if (line) line.className = 'step-line' + (i < currentStep ? ' done' : '');
@@ -1738,8 +1755,15 @@ function validateStep(step) {
   if (listingStructure === 'multi') {
     const valid = getValidUnitTypes();
     const err = document.getElementById('err-unit-types');
-    err.classList.toggle('show', valid.length === 0);
-    if (!valid.length) ok = false;
+    const incomplete = unitTypes.length > valid.length;
+    err.classList.toggle('show', valid.length === 0 || incomplete);
+    if (valid.length === 0) {
+      err.textContent = 'Please add at least one complete unit type (label, bedrooms, price and units available)';
+      ok = false;
+    } else if (incomplete) {
+      err.textContent = `${unitTypes.length - valid.length} unit type row(s) are missing required fields and won't be saved — fill them in or remove them`;
+      ok = false;
+    }
   }
 
   // If "Other — my area isn't listed" was chosen, the typed-in area is required too
