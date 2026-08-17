@@ -104,6 +104,8 @@
     .topbar-left { display: flex; align-items: center; gap: 12px; }
     .mobile-menu-btn { display: none; background: none; padding: 6px; border-radius: 6px; }
     .mobile-menu-btn svg { width: 20px; height: 20px; stroke: var(--text-2); fill: none; stroke-width: 2; display: block; }
+    .theme-toggle-btn { background: none; padding: 6px; border-radius: 6px; }
+    .theme-toggle-btn svg { width: 20px; height: 20px; stroke: var(--text-2); fill: none; stroke-width: 2; display: block; }
     .topbar-title { font-size: 15px; font-weight: 600; color: var(--text); }
     .topbar-right { display: flex; align-items: center; gap: 10px; }
     .topbar-search { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px; }
@@ -692,7 +694,7 @@
       Activity log
     </button>
     <div class="nav-section-label" style="margin-top:8px">Site</div>
-    <button class="nav-item" onclick="window.open('index.html','_blank')">
+    <button class="nav-item" onclick="window.open('index.html','_blank','noopener,noreferrer')">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
       View live site
     </button>
@@ -716,7 +718,7 @@
 <div class="main">
   <div class="topbar">
     <div class="topbar-left">
-      <button class="mobile-menu-btn" onclick="openSidebar()">
+      <button class="mobile-menu-btn" onclick="openSidebar()" aria-label="Open menu" aria-expanded="false" aria-controls="sidebar" id="hamburger-btn">
         <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
       <span class="topbar-title" id="topbar-title">Dashboard</span>
@@ -724,9 +726,9 @@
     <div class="topbar-right">
       <div class="topbar-search">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" placeholder="Search listings…" id="global-search" oninput="globalSearch(this.value)"/>
+        <input type="text" placeholder="Search listings…" id="global-search" oninput="globalSearch(this.value)" aria-label="Search listings"/>
       </div>
-      <button class="mobile-menu-btn" id="theme-toggle-btn" onclick="toggleDarkMode()" title="Toggle dark mode" style="display:flex">
+      <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleDarkMode()" aria-label="Toggle dark mode" aria-pressed="false" style="display:flex">
         <svg viewBox="0 0 24 24" id="theme-icon-moon"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
         <svg viewBox="0 0 24 24" id="theme-icon-sun" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
       </button>
@@ -808,20 +810,20 @@
           <button class="tab-btn"        id="tab-expired"  onclick="setTab('expired')">Expired <span class="count" id="tc-expired">—</span></button>
         </div>
         <div class="filters-row">
-          <select class="filter-select" id="filter-county" onchange="onFilterCountyChange()">
+          <select class="filter-select" id="filter-county" onchange="onFilterCountyChange()" aria-label="Filter by county">
             <option value="">All counties</option>
           </select>
-          <select class="filter-select" id="filter-area" onchange="loadAllListings()">
+          <select class="filter-select" id="filter-area" onchange="loadAllListings()" aria-label="Filter by area">
             <option value="">All areas</option>
           </select>
-          <select class="filter-select" id="filter-cat" onchange="loadAllListings()">
+          <select class="filter-select" id="filter-cat" onchange="loadAllListings()" aria-label="Filter by category">
             <option value="">All categories</option>
             <option value="student">Student</option>
             <option value="standard">Standard</option>
             <option value="luxury">Luxury</option>
             <option value="commercial">Commercial</option>
           </select>
-          <input class="filter-search" id="filter-search" type="text" placeholder="Search title or area…" oninput="debouncedLoad()"/>
+          <input class="filter-search" id="filter-search" type="text" placeholder="Search title or area…" oninput="debouncedLoad()" aria-label="Search listings by title or area"/>
         </div>
         <div class="bulk-bar" id="bulk-bar">
           <span class="bulk-count" id="bulk-count"></span>
@@ -916,7 +918,7 @@
       <div class="card">
         <div class="card-header"><span class="card-title">Registered sellers</span><div class="action-btns"><button class="action-btn view" onclick="exportUsersCSV()">Export CSV</button></div></div>
         <div class="filters-row">
-          <input class="filter-search" type="text" id="user-search" placeholder="Search by name or email…" oninput="debouncedLoadUsers()"/>
+          <input class="filter-search" type="text" id="user-search" placeholder="Search by name or email…" oninput="debouncedLoadUsers()" aria-label="Search sellers by name or email"/>
         </div>
         <div class="bulk-bar" id="users-bulk-bar">
           <span class="bulk-count" id="users-bulk-count"></span>
@@ -1101,8 +1103,8 @@
 
 <!-- LISTING DETAIL MODAL -->
 <div class="modal-overlay" id="listing-modal" onclick="handleOverlayClick(event,'listing-modal')">
-  <div class="modal">
-    <div class="modal-header"><h3 id="modal-title">Listing details</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-header"><h3 id="modal-title">Listing details</h3><button class="modal-close" onclick="closeModal()" aria-label="Close">×</button></div>
     <div class="modal-body" id="modal-body"></div>
     <div class="modal-footer" id="modal-footer"></div>
   </div>
@@ -1110,32 +1112,32 @@
 
 <!-- EDIT LISTING MODAL -->
 <div class="modal-overlay" id="edit-listing-modal" onclick="handleOverlayClick(event,'edit-listing-modal')">
-  <div class="modal" style="max-width:560px">
-    <div class="modal-header"><h3>Edit listing</h3><button class="modal-close" onclick="closeEditListingModal()">×</button></div>
+  <div class="modal" style="max-width:560px" role="dialog" aria-modal="true" aria-labelledby="edit-listing-title">
+    <div class="modal-header"><h3 id="edit-listing-title">Edit listing</h3><button class="modal-close" onclick="closeEditListingModal()" aria-label="Close">×</button></div>
     <div class="modal-body" id="edit-listing-body"></div>
     <div class="modal-footer">
       <button class="btn-modal cancel" onclick="closeEditListingModal()">Cancel</button>
-      <button class="btn-modal approve" onclick="saveListingEdit()">Save changes</button>
+      <button class="btn-modal approve" id="btn-save-listing-edit" onclick="saveListingEdit()">Save changes</button>
     </div>
   </div>
 </div>
 
 <!-- UPGRADE LISTING MODAL (trial → paid plan) -->
 <div class="modal-overlay" id="upgrade-modal" onclick="handleOverlayClick(event,'upgrade-modal')">
-  <div class="modal" style="max-width:440px">
-    <div class="modal-header"><h3>Process upgrade request</h3><button class="modal-close" onclick="closeUpgradeModal()">×</button></div>
+  <div class="modal" style="max-width:440px" role="dialog" aria-modal="true" aria-labelledby="upgrade-modal-title">
+    <div class="modal-header"><h3 id="upgrade-modal-title">Process upgrade request</h3><button class="modal-close" onclick="closeUpgradeModal()" aria-label="Close">×</button></div>
     <div class="modal-body" id="upgrade-modal-body"></div>
     <div class="modal-footer">
       <button class="btn-modal cancel" onclick="closeUpgradeModal()">Cancel</button>
-      <button class="btn-modal approve" onclick="confirmUpgrade()">Confirm upgrade</button>
+      <button class="btn-modal approve" id="btn-confirm-upgrade" onclick="confirmUpgrade()">Confirm upgrade</button>
     </div>
   </div>
 </div>
 
 <!-- PROFILE MODAL -->
 <div class="modal-overlay" id="profile-modal" onclick="handleOverlayClick(event,'profile-modal')">
-  <div class="modal" style="max-width:480px">
-    <div class="modal-header"><h3 id="profile-modal-title">Seller profile</h3><button class="modal-close" onclick="closeProfileModal()">×</button></div>
+  <div class="modal" style="max-width:480px" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
+    <div class="modal-header"><h3 id="profile-modal-title">Seller profile</h3><button class="modal-close" onclick="closeProfileModal()" aria-label="Close">×</button></div>
     <div class="modal-body" id="profile-modal-body"></div>
     <div class="modal-footer" id="profile-modal-footer"></div>
   </div>
@@ -1143,8 +1145,8 @@
 
 <!-- CONFIRM MODAL -->
 <div class="modal-overlay" id="confirm-modal" onclick="handleOverlayClick(event,'confirm-modal')">
-  <div class="modal" style="max-width:440px">
-    <div class="modal-header"><h3 id="confirm-title">Are you sure?</h3><button class="modal-close" onclick="closeConfirmModal()">×</button></div>
+  <div class="modal" style="max-width:440px" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+    <div class="modal-header"><h3 id="confirm-title">Are you sure?</h3><button class="modal-close" onclick="closeConfirmModal()" aria-label="Close">×</button></div>
     <div class="modal-body">
       <p id="confirm-message" style="font-size:13px;color:var(--text-2);line-height:1.6"></p>
       <div class="field" id="confirm-reason-wrap" style="display:none;margin-top:14px">
@@ -1162,8 +1164,8 @@
 
 <!-- INQUIRY THREAD MODAL -->
 <div class="modal-overlay" id="inquiry-modal" onclick="handleOverlayClick(event,'inquiry-modal')">
-  <div class="modal" style="max-width:520px">
-    <div class="modal-header"><h3 id="inquiry-modal-title">Conversation</h3><button class="modal-close" onclick="closeInquiryModal()">×</button></div>
+  <div class="modal" style="max-width:520px" role="dialog" aria-modal="true" aria-labelledby="inquiry-modal-title">
+    <div class="modal-header"><h3 id="inquiry-modal-title">Conversation</h3><button class="modal-close" onclick="closeInquiryModal()" aria-label="Close">×</button></div>
     <div class="modal-body" id="inquiry-modal-body"></div>
     <div class="modal-footer" id="inquiry-modal-footer"></div>
   </div>
@@ -1171,8 +1173,8 @@
 
 <!-- REPORT DETAIL MODAL -->
 <div class="modal-overlay" id="report-modal" onclick="handleOverlayClick(event,'report-modal')">
-  <div class="modal" style="max-width:520px">
-    <div class="modal-header"><h3 id="report-modal-title">Report details</h3><button class="modal-close" onclick="closeReportModal()">×</button></div>
+  <div class="modal" style="max-width:520px" role="dialog" aria-modal="true" aria-labelledby="report-modal-title">
+    <div class="modal-header"><h3 id="report-modal-title">Report details</h3><button class="modal-close" onclick="closeReportModal()" aria-label="Close">×</button></div>
     <div class="modal-body" id="report-modal-body"></div>
     <div class="modal-footer" id="report-modal-footer"></div>
   </div>
@@ -1180,8 +1182,8 @@
 
 <!-- REVIEW RESPONSE MODAL -->
 <div class="modal-overlay" id="review-respond-modal" onclick="handleOverlayClick(event,'review-respond-modal')">
-  <div class="modal" style="max-width:460px">
-    <div class="modal-header"><h3>Respond to review</h3><button class="modal-close" onclick="closeReviewRespondModal()">×</button></div>
+  <div class="modal" style="max-width:460px" role="dialog" aria-modal="true" aria-labelledby="review-respond-title">
+    <div class="modal-header"><h3 id="review-respond-title">Respond to review</h3><button class="modal-close" onclick="closeReviewRespondModal()" aria-label="Close">×</button></div>
     <div class="modal-body">
       <div class="field"><label>Review</label><div class="val" id="review-respond-original" style="font-size:13px;color:var(--text-2);line-height:1.6"></div></div>
       <div class="field"><label>Your response (public)</label><textarea id="review-respond-text" rows="4" placeholder="Thank the reviewer, address their concern, or explain what's changing…"></textarea></div>
@@ -1195,14 +1197,14 @@
 
 <!-- CONTACT REVEAL DETAIL MODAL -->
 <div class="modal-overlay" id="contact-reveal-modal" onclick="handleOverlayClick(event,'contact-reveal-modal')">
-  <div class="modal" style="max-width:480px">
-    <div class="modal-header"><h3 id="contact-reveal-modal-title">Device activity</h3><button class="modal-close" onclick="closeContactRevealModal()">×</button></div>
+  <div class="modal" style="max-width:480px" role="dialog" aria-modal="true" aria-labelledby="contact-reveal-modal-title">
+    <div class="modal-header"><h3 id="contact-reveal-modal-title">Device activity</h3><button class="modal-close" onclick="closeContactRevealModal()" aria-label="Close">×</button></div>
     <div class="modal-body" id="contact-reveal-modal-body"></div>
     <div class="modal-footer" id="contact-reveal-modal-footer"></div>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- ══════════════════════════════════════════════════════════════
      ADMIN CHAT WIDGET — floating launcher + panel
@@ -1226,13 +1228,13 @@
       <span>Admin Chat Center</span>
     </div>
     <div class="acw-head-actions">
-      <button class="acw-icon-btn" title="New message" onclick="ACW.showNewChat()">
+      <button class="acw-icon-btn" title="New message" aria-label="New message" onclick="ACW.showNewChat()">
         <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
-      <button class="acw-icon-btn" title="Open in full page" onclick="ACW.openFullPage()">
+      <button class="acw-icon-btn" title="Open in full page" aria-label="Open in full page" onclick="ACW.openFullPage()">
         <svg viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
       </button>
-      <button class="acw-icon-btn" title="Close" onclick="ACW.close()">
+      <button class="acw-icon-btn" title="Close" aria-label="Close chat" onclick="ACW.close()">
         <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
@@ -1253,7 +1255,7 @@
       <div class="acw-search">
         <div class="acw-search-inner">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="acw-search-input" placeholder="Search conversations…" oninput="ACW.filterList()"/>
+          <input type="text" id="acw-search-input" placeholder="Search conversations…" oninput="ACW.filterList()" aria-label="Search conversations"/>
         </div>
       </div>
       <div class="acw-tabs">
@@ -1279,7 +1281,7 @@
       <div class="acw-search">
         <div class="acw-search-inner">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="acw-newchat-search" placeholder="Search sellers by name, email, or phone…" oninput="ACW.onNewChatInput()"/>
+          <input type="text" id="acw-newchat-search" placeholder="Search sellers by name, email, or phone…" oninput="ACW.onNewChatInput()" aria-label="Search sellers by name, email, or phone"/>
         </div>
       </div>
       <div class="acw-newchat-results" id="acw-newchat-results">
@@ -1320,7 +1322,17 @@
   const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
   const { createClient } = supabase;
-  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ── Match the "Remember me" storage adapter used on the sign-in page ──
+  const authStorage = {
+    getItem: (key) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).getItem(key),
+    setItem: (key, value) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).setItem(key, value),
+    removeItem: (key) => { localStorage.removeItem(key); sessionStorage.removeItem(key); }
+  };
+
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { storage: authStorage, persistSession: true, autoRefreshToken: true }
+  });
 
   const EDGE_URL = `${SUPABASE_URL}/functions/v1`;
   async function notifyByEmail(type, payload) {
@@ -1382,11 +1394,13 @@
     }
     document.getElementById('theme-icon-moon').style.display = isDark ? 'block' : 'none';
     document.getElementById('theme-icon-sun').style.display  = isDark ? 'none' : 'block';
+    document.getElementById('theme-toggle-btn')?.setAttribute('aria-pressed', String(!isDark));
   }
   function syncThemeIcon() {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     document.getElementById('theme-icon-moon').style.display = isDark ? 'none' : 'block';
     document.getElementById('theme-icon-sun').style.display  = isDark ? 'block' : 'none';
+    document.getElementById('theme-toggle-btn')?.setAttribute('aria-pressed', String(isDark));
   }
 
 
@@ -1632,7 +1646,7 @@
 
   async function checkAuth() {
     const { data: { user } } = await db.auth.getUser();
-    if (!user) { window.location.href = '//login?next=admin'; return; }
+    if (!user) { window.location.href = '/login?next=admin'; return; }
     const { data: profile } = await db.from('profiles').select('*').eq('id', user.id).single();
     if (!profile || profile.role !== 'admin') { window.location.href = '/dashboard'; return; }
     currentUser = user;
@@ -1964,22 +1978,36 @@
     toast(`${ids.length} listing(s) approved`,'success');
     selectedListingIds.clear(); loadAllListings(); loadOverview();
   }
-  async function bulkReject() {
+  function bulkReject() {
     const ids=[...selectedListingIds];
-    if(!confirm(`Reject ${ids.length} selected listing(s)?`)) return;
-    for(const id of ids) await db.from('listings').update({status:'rejected'}).eq('id',id);
-    logAction('bulk_reject','listing','multiple',`${ids.length} listing(s)`);
-    toast(`${ids.length} listing(s) rejected`,'');
-    selectedListingIds.clear(); loadAllListings(); loadOverview();
+    if(!ids.length) return;
+    openConfirm({
+      title:`Reject ${ids.length} selected listing(s)?`,
+      message:`These listings will be marked rejected and hidden from buyers.`,
+      confirmText:`Reject ${ids.length} listing(s)`, confirmClass:'reject',
+      onConfirm: async () => {
+        for(const id of ids) await db.from('listings').update({status:'rejected'}).eq('id',id);
+        logAction('bulk_reject','listing','multiple',`${ids.length} listing(s)`);
+        toast(`${ids.length} listing(s) rejected`,'');
+        selectedListingIds.clear(); loadAllListings(); loadOverview();
+      }
+    });
   }
-  async function bulkRecycle() {
+  function bulkRecycle() {
     const ids=[...selectedListingIds];
-    if(!confirm(`Move ${ids.length} listing(s) to recycle bin?`)) return;
-    const purge=new Date(Date.now()+SETTINGS.recycle_bin_days*24*60*60*1000).toISOString();
-    for(const id of ids) await db.from('listings').update({is_disabled:true,recycle_bin:true,disabled_reason:'Bulk action by admin',disabled_at:new Date().toISOString(),purge_at:purge}).eq('id',id);
-    logAction('bulk_recycle','listing','multiple',`${ids.length} listing(s)`);
-    toast(`${ids.length} listing(s) moved to recycle bin`,'success');
-    selectedListingIds.clear(); loadAllListings(); loadOverview();
+    if(!ids.length) return;
+    openConfirm({
+      title:`Move ${ids.length} listing(s) to recycle bin?`,
+      message:`These listings will be hidden for ${SETTINGS.recycle_bin_days} days then permanently deleted.`,
+      confirmText:`Move ${ids.length} listing(s)`, confirmClass:'reject',
+      onConfirm: async () => {
+        const purge=new Date(Date.now()+SETTINGS.recycle_bin_days*24*60*60*1000).toISOString();
+        for(const id of ids) await db.from('listings').update({is_disabled:true,recycle_bin:true,disabled_reason:'Bulk action by admin',disabled_at:new Date().toISOString(),purge_at:purge}).eq('id',id);
+        logAction('bulk_recycle','listing','multiple',`${ids.length} listing(s)`);
+        toast(`${ids.length} listing(s) moved to recycle bin`,'success');
+        selectedListingIds.clear(); loadAllListings(); loadOverview();
+      }
+    });
   }
 
   function approveListing(id) {
@@ -2077,19 +2105,25 @@
   }
   function closeUpgradeModal() { document.getElementById('upgrade-modal').classList.remove('open'); upgradingListingId = null; }
 
+  let upgradeBusy = false;
   async function confirmUpgrade() {
+    if (upgradeBusy) return;
     const id = upgradingListingId; if(!id) return;
     const l = _listings[id]; if(!l) return;
     const plan     = document.getElementById('upgrade-plan').value;
     const markPaid = document.getElementById('upgrade-mark-paid').checked;
     const amount   = parseFloat(document.getElementById('upgrade-amount').value) || 0;
 
+    upgradeBusy = true;
+    const btn = document.getElementById('btn-confirm-upgrade');
+    if (btn) { btn.disabled = true; btn.textContent = 'Processing…'; }
+
     const updates = { is_featured: plan === 'featured', trial_expires_at: null };
     if (markPaid) updates.payment_status = 'paid';
 
     const { data, error } = await db.from('listings').update(updates).eq('id', id).select();
-    if (error)        { toast('Error upgrading: '+error.message,'error'); return; }
-    if (!data?.length){ toast('Blocked by RLS — check Supabase policy','error'); return; }
+    if (error)        { toast('Error upgrading: '+error.message,'error'); upgradeBusy=false; if(btn){btn.disabled=false;btn.textContent='Confirm upgrade';} return; }
+    if (!data?.length){ toast('Blocked by RLS — check Supabase policy','error'); upgradeBusy=false; if(btn){btn.disabled=false;btn.textContent='Confirm upgrade';} return; }
 
     if (markPaid) {
       await db.from('payments').insert({
@@ -2100,6 +2134,8 @@
 
     logAction('upgrade_listing','listing',id,`Upgraded trial to ${plan} (${markPaid?'paid':'unpaid'})`);
     toast(`Listing upgraded to ${plan==='featured'?'Featured':'Standard'} ✓`,'success');
+    upgradeBusy = false;
+    if (btn) { btn.disabled = false; btn.textContent = 'Confirm upgrade'; }
     closeUpgradeModal();
     loadOverview();
     if (currentView==='listings') loadAllListings();
@@ -2162,20 +2198,42 @@
   }
   const LISTING_PHOTOS_BUCKET = 'listing-photos'; // ← set to your actual bucket name
 
+  // One-time sanity check so a wrong bucket name fails loudly on load,
+  // instead of storage cleanup silently no-opping on every delete.
+  (async function verifyPhotosBucket() {
+    const { error } = await db.storage.from(LISTING_PHOTOS_BUCKET).list('', { limit: 1 });
+    if (error) console.error(`LISTING_PHOTOS_BUCKET ("${LISTING_PHOTOS_BUCKET}") may be wrong — storage cleanup on delete will silently fail:`, error.message);
+  })();
+
   function storagePathFromPublicUrl(url) {
     const marker = `/storage/v1/object/public/${LISTING_PHOTOS_BUCKET}/`;
     const i = (url||'').indexOf(marker);
     return i === -1 ? null : url.slice(i + marker.length);
   }
 
-  async function doDeleteListing(id,title) {
-    const l = _listings[id];
+  // Shared by doDeleteListing (single item) and purgeExpired (bulk) so both
+  // paths clean up storage files AND every related table the same way —
+  // previously only the single-delete path did either of those things.
+  // `listingObj` lets a caller that already has listing_photos loaded (e.g.
+  // purgeExpired's own query) skip re-fetching from the _listings cache.
+  async function deleteListingCascade(id, listingObj) {
+    const l = listingObj || _listings[id];
     const paths = (l?.listing_photos||[]).map(p => storagePathFromPublicUrl(p.url)).filter(Boolean);
     if (paths.length) {
       const { error: storageErr } = await db.storage.from(LISTING_PHOTOS_BUCKET).remove(paths);
       if (storageErr) console.error('Storage cleanup failed (row still deleted):', storageErr.message);
     }
-    const {data,error} = await db.from('listings').delete().eq('id',id).select();
+    await db.from('listing_photos').delete().eq('listing_id', id);
+    await db.from('enquiries').delete().eq('listing_id', id);
+    await db.from('messages').delete().eq('listing_id', id);
+    await db.from('unit_occupancy_log').delete().eq('listing_id', id);
+    await db.from('listing_units').delete().eq('listing_id', id);
+    await db.from('reviews').delete().eq('listing_id', id);
+    return db.from('listings').delete().eq('id', id).select();
+  }
+
+  async function doDeleteListing(id,title) {
+    const {data,error} = await deleteListingCascade(id);
     if (error)       { toast('Error: '+error.message,'error'); return; }
     if (!data?.length){ toast('Blocked by RLS — check Supabase policy','error'); return; }
     logAction('delete_listing','listing',id,title||'');
@@ -2255,9 +2313,9 @@
   }
   async function purgeExpired() {
     if(!confirm('Delete all recycle bin items past their 30-day limit?')) return;
-    const {data}=await db.from('listings').select('id').eq('recycle_bin',true).lt('purge_at',new Date().toISOString());
+    const {data}=await db.from('listings').select('id, listing_photos(*)').eq('recycle_bin',true).lt('purge_at',new Date().toISOString());
     if(!data?.length){toast('Nothing to purge','');return;}
-    for(const row of data) await db.from('listings').delete().eq('id',row.id);
+    for(const row of data) await deleteListingCascade(row.id, row);
     logAction('purge_expired','listing','bulk',`${data.length} listing(s)`);
     toast(`${data.length} purged`,'success'); loadRecycleBin();
   }
@@ -2364,7 +2422,12 @@
     if (newAreaInput && newAreaInput.tagName === 'INPUT' && currentVal) newAreaInput.value = currentVal;
   }
   function closeEditListingModal() { document.getElementById('edit-listing-modal').classList.remove('open'); editingListingId=null; }
+  let listingEditBusy = false;
   async function saveListingEdit() {
+    if (listingEditBusy) return;
+    listingEditBusy = true;
+    const btn = document.getElementById('btn-save-listing-edit');
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
     const updates = {
       title:       document.getElementById('el-title').value.trim(),
       description: document.getElementById('el-description').value.trim(),
@@ -2382,6 +2445,8 @@
       is_featured: document.getElementById('el-is_featured').checked,
     };
     const {error} = await db.from('listings').update(updates).eq('id',editingListingId);
+    listingEditBusy = false;
+    if (btn) { btn.disabled = false; btn.textContent = 'Save changes'; }
     if(error){toast('Error saving','error');return;}
     logAction('edit_listing','listing',editingListingId,updates.title);
     toast('Listing updated ✓','success');
@@ -2471,10 +2536,14 @@
   }
   function loadMorePayments() { paymentsPage++; loadPayments(true); }
 
+  const paymentActionBusy = new Set();
   async function confirmPayment(id, listingId) {
+    if (paymentActionBusy.has(id)) return;
+    paymentActionBusy.add(id);
     const {error} = await db.from('payments').update({status:'confirmed'}).eq('id',id);
-    if(error){toast('Error confirming','error');return;}
+    if(error){toast('Error confirming','error'); paymentActionBusy.delete(id); return;}
     if(listingId) await db.from('listings').update({payment_status:'paid'}).eq('id',listingId);
+    paymentActionBusy.delete(id);
     logAction('confirm_payment','payment',id,listingId||'');
 
     const p = _payments[id];
@@ -2699,12 +2768,17 @@ async function messageSellerInChat(sellerId, sellerName) {
         ? `<button class="btn-modal approve" onclick="enableProfile('${u.id}')">Reinstate account</button>`
         : `<button class="btn-modal reject"  onclick="disableProfileFlow('${u.id}')">Suspend account</button>`}
       <button class="btn-modal reject"  onclick="deleteProfileFlow('${u.id}')">Delete permanently</button>
-      <button class="btn-modal approve" onclick="saveProfileEdit()">Save changes</button>`;
+      <button class="btn-modal approve" id="btn-save-profile" onclick="saveProfileEdit()">Save changes</button>`;
     document.getElementById('profile-modal').classList.add('open');
   }
   function closeProfileModal() { document.getElementById('profile-modal').classList.remove('open'); editingProfileId=null; }
 
+  let profileEditBusy = false;
   async function saveProfileEdit() {
+    if (profileEditBusy) return;
+    profileEditBusy = true;
+    const btn = document.getElementById('btn-save-profile');
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
     const updates = {
       full_name: document.getElementById('pf-full_name').value.trim(),
       phone:     document.getElementById('pf-phone').value.trim(),
@@ -2712,6 +2786,8 @@ async function messageSellerInChat(sellerId, sellerName) {
       role:      document.getElementById('pf-role').value,
     };
     const {error} = await db.from('profiles').update(updates).eq('id',editingProfileId);
+    profileEditBusy = false;
+    if (btn) { btn.disabled = false; btn.textContent = 'Save changes'; }
     if(error){toast('Error saving profile','error');return;}
     logAction('edit_profile','profile',editingProfileId,updates.full_name);
     toast('Profile updated ✓','success');
@@ -2774,10 +2850,17 @@ async function messageSellerInChat(sellerId, sellerName) {
     });
   }
   async function doDeleteProfile(id) {
+    // Clean up every listing this seller owns first — otherwise they're left
+    // with a seller_id pointing at a profile row that no longer exists,
+    // breaking any query that joins profiles(...).
+    const { data: sellerListings } = await db.from('listings').select('id, listing_photos(*)').eq('seller_id', id);
+    for (const row of (sellerListings||[])) await deleteListingCascade(row.id, row);
+
     const {data,error}=await db.from('profiles').delete().eq('id',id).select();
     if(error){toast('Error: '+error.message,'error');return;}
     if(!data?.length){toast('Blocked by RLS — check Supabase policy','error');return;}
-    logAction('delete_profile','profile',id,''); toast('Profile deleted','success'); loadUsers();
+    logAction('delete_profile','profile',id, sellerListings?.length?`Also removed ${sellerListings.length} listing(s)`:'');
+    toast('Profile deleted','success'); loadUsers();
   }
 
   // ─── ENQUIRIES / CHATS (unified moderation feed) ───
@@ -3113,7 +3196,7 @@ async function messageSellerInChat(sellerId, sellerName) {
           ${mobileMenu(r.id,[
             {label:'View full details', cls:'', fn:`openReportModal('${r.id}')`},
             ...(seller && !seller.is_disabled?[{label:'Suspend seller', cls:'danger', fn:`quickSuspendSeller('${seller.id}')`}]:[]),
-            ...(listing?[{label:'Open listing page', cls:'', fn:`window.open('listing.html?id=${listing.id}','_blank')`}]:[]),
+            ...(listing?[{label:'Open listing page', cls:'', fn:`window.open('listing.html?id=${listing.id}','_blank','noopener,noreferrer')`}]:[]),
           ])}
         </td>
       </tr>`;
@@ -3225,7 +3308,7 @@ async function messageSellerInChat(sellerId, sellerName) {
     document.getElementById('report-modal-body').innerHTML = html;
 
     document.getElementById('report-modal-footer').innerHTML = `
-      ${listing?`<button class="btn-modal cancel" onclick="window.open('listing.html?id=${listing.id}','_blank')">View listing</button>`:''}
+      ${listing?`<button class="btn-modal cancel" onclick="window.open('listing.html?id=${listing.id}','_blank','noopener,noreferrer')">View listing</button>`:''}
       ${seller?`<button class="btn-modal cancel" onclick="closeReportModal(); openProfileModal('${seller.id}')">View seller profile</button>`:''}
       ${seller && !seller.is_disabled?`<button class="btn-modal reject" onclick="closeReportModal(); disableProfileFlow('${seller.id}')">Suspend seller</button>`:''}
       ${listing && !listing.is_disabled?`<button class="btn-modal reject" onclick="closeReportModal(); recycleListing('${listing.id}')">Recycle listing</button>`:''}
@@ -3275,6 +3358,19 @@ async function messageSellerInChat(sellerId, sellerName) {
     const { count } = await db.from('reports').select('*',{count:'exact',head:true}).eq('status','open');
     const el = document.getElementById('nav-badge-reports');
     if (el) el.textContent = count || 0;
+  }
+
+  // Keeps the sidebar "Reports" badge live instead of only updating on page
+  // load / after an admin action — mirrors how the chat widget's badge works.
+  let reportsRealtimeChannel = null;
+  function subscribeReportsRealtime() {
+    if (reportsRealtimeChannel) reportsRealtimeChannel.unsubscribe();
+    reportsRealtimeChannel = db.channel('reports-badge-watch')
+      .on('postgres_changes', {event:'*', schema:'public', table:'reports'}, () => {
+        loadReportsBadge();
+        if (currentView==='reports') loadReports();
+      })
+      .subscribe();
   }
 
   // ════════════════════════════════════
@@ -3702,11 +3798,19 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
   function closeConfirmModal() { document.getElementById('confirm-modal').classList.remove('open'); }
 
   // ─── CSV EXPORT ───
+  // Prefixes a cell with a leading apostrophe when it starts with a character
+  // Excel/Sheets would treat as the start of a formula (=, +, -, @, tab,
+  // carriage return) — stops a listing title, report reason, or seller name
+  // from executing as a formula when the CSV is opened.
+  function csvSafeCell(v) {
+    const s = String(v ?? '');
+    return /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
+  }
   function exportCSV(rows, filename) {
     if(!rows.length){toast('Nothing to export','error');return;}
     const headers = Object.keys(rows[0]);
     const csv = [headers.join(',')]
-      .concat(rows.map(r => headers.map(h=>`"${String(r[h]??'').replace(/"/g,'""')}"`).join(',')))
+      .concat(rows.map(r => headers.map(h=>`"${csvSafeCell(r[h]).replace(/"/g,'""')}"`).join(',')))
       .join('\n');
     const blob = new Blob([csv],{type:'text/csv'});
     const url  = URL.createObjectURL(blob);
@@ -3775,7 +3879,10 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
     if(v==='payments')     loadPayments();
     if(v==='settings')     loadSettingsForm();
     if(v==='users')        loadUsers();
-    if(v==='enquiries')    loadEnquiries().then(markAllEnquiriesRead);
+    // Don't mark everything read on open — that erases the unread dot before
+    // the admin has actually looked at each item. Individual items are
+    // marked read via markInquiryRead() when opened (see openInquiryModal).
+    if(v==='enquiries')    loadEnquiries();
     if(v==='reports')      loadReports();
     if(v==='reviews')      loadReviews();
     if(v==='contact-reveals') loadContactReveals();
@@ -3791,11 +3898,17 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
 
   function openModal()  { document.getElementById('listing-modal').classList.add('open'); }
   function closeModal() { document.getElementById('listing-modal').classList.remove('open'); }
-  function openSidebar()  { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').style.display='block'; }
-  function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').style.display='none'; }
+  function openSidebar()  { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').style.display='block'; document.getElementById('hamburger-btn')?.setAttribute('aria-expanded','true'); }
+  function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').style.display='none'; document.getElementById('hamburger-btn')?.setAttribute('aria-expanded','false'); }
 
   const globalSearch = debounce((val) => {
-    if(!val.trim()) return;
+    if(!val.trim()) {
+      if (currentView==='listings' && document.getElementById('filter-search').value) {
+        document.getElementById('filter-search').value = '';
+        loadAllListings();
+      }
+      return;
+    }
     showView('listings');
     document.getElementById('filter-search').value = val;
     loadAllListings();
@@ -4319,7 +4432,7 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
       backToList();
     }
     function openFullPage() {
-      window.open('admin-chat.html' + (activeId ? `?session=${activeId}` : ''), '_blank');
+      window.open('admin-chat.html' + (activeId ? `?session=${activeId}` : ''), '_blank', 'noopener,noreferrer');
     }
 
     function init() {
@@ -4345,6 +4458,7 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
     loadEnquiriesBadge();
     loadReportsBadge();
     loadReviewsBadge();
+    subscribeReportsRealtime();
     ACW.init();
   }
   init();
