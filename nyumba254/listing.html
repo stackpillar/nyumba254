@@ -1116,6 +1116,7 @@
 ════════════════════════════════════════════════════ */
 const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
+const EDGE_URL = `${SUPABASE_URL}/functions/v1`;
 const { createClient } = supabase;
 
 // ── Match the "Remember me" storage adapter used on the sign-in page ──
@@ -2110,6 +2111,19 @@ async function sendEnquiry() {
   /* ★ Track this contact so we can prompt for a review later, once the
      buyer has had a realistic chance to actually secure the property. */
   nkTrackContact(listingId, listing?.seller_id, listing?.profiles?.full_name || 'the seller');
+
+  // Notify the Nyumba254 admin inbox(es) directly — this is on top of the
+  // enquiry already being visible in the admin dashboard. Fire-and-forget,
+  // never blocks the success screen.
+  fetch(`${EDGE_URL}/send-notification-email`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+    body: JSON.stringify({
+      type: 'new_buyer_enquiry',
+      buyerName: name, buyerPhone: phone, buyerEmail: email || null,
+      message, listingId, listingTitle: listing?.title,
+    }),
+  }).catch(e => console.error('Enquiry notify email failed:', e));
 
   document.getElementById('enquiry-form').style.display   = 'none';
   document.getElementById('enquiry-success').style.display = 'block';
