@@ -10,12 +10,20 @@
   <meta property="og:description" id="og-description" content="View apartment listing details on Nyumba254."/>
   <meta property="og:image" id="og-image" content=""/>
   <meta property="og:url" id="og-url" content=""/>
+  <meta property="og:site_name" content="Nyumba254"/>
+  <link rel="canonical" id="canonical-link" href="https://nyumba254.com/listings"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" id="twitter-title" content="Nyumba254 listing"/>
+  <meta name="twitter:description" id="twitter-description" content="View apartment listing details on Nyumba254."/>
+  <meta name="twitter:image" id="twitter-image" content="https://nyumba254.com/hero-photo.jpg"/>
+  <meta name="twitter:site" content="@Nyumba254"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="application/ld+json" id="listing-jsonld"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -103,6 +111,7 @@
     .gallery-thumbs { display:flex; gap:8px; padding:10px; overflow-x:auto; background:var(--white); border-top:1px solid var(--border); }
     .gallery-thumb { width:72px; height:52px; border-radius:6px; overflow:hidden; flex-shrink:0; border:2px solid transparent; cursor:pointer; transition:border-color .15s; }
     .gallery-thumb.active { border-color:var(--green); }
+    .gallery-thumb:focus-visible, .gallery-main img:focus-visible { outline:2px solid var(--green); outline-offset:2px; }
     /* Thumbnails use cover since they're small previews */
     .gallery-thumb img { width:100%; height:100%; object-fit:cover; }
     .featured-overlay { position:absolute; top:14px; left:14px; z-index:2; background:var(--gold); color:white; font-size:11px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:.04em; display:flex; align-items:center; gap:5px; }
@@ -223,7 +232,8 @@
     .similar-section h3 { font-size:16px; font-weight:600; color:var(--text); margin-bottom:16px; }
     .similar-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px; }
     .similar-card { background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; cursor:pointer; transition:transform .2s,box-shadow .2s; }
-    .similar-card:hover { transform:translateY(-2px); box-shadow:0 4px 16px rgba(0,0,0,0.08); }
+    .similar-card:hover, .similar-card:focus-visible { transform:translateY(-2px); box-shadow:0 4px 16px rgba(0,0,0,0.08); }
+    .similar-card:focus-visible { outline:2px solid var(--green); outline-offset:2px; }
     .similar-img { height:130px; background:var(--surface); overflow:hidden; }
     .similar-img img { width:100%; height:100%; object-fit:cover; }
     .similar-body { padding:12px 14px; }
@@ -367,6 +377,10 @@
     .footer-col h4 { font-size:12px; font-weight:700; color:white; margin-bottom:14px; letter-spacing:.08em; text-transform:uppercase; }
     .footer-col a { display:block; font-size:13px; color:rgba(255,255,255,0.55); margin-bottom:8px; transition:color .15s; }
     .footer-col a:hover { color:white; }
+    .footer-social { display:flex; gap:8px; margin-top:14px; }
+    .footer-social a { width:34px; height:34px; border-radius:8px; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; transition:background .15s; }
+    .footer-social a:hover { background:var(--green); }
+    .footer-social svg { width:15px; height:15px; stroke:rgba(255,255,255,0.6); fill:none; stroke-width:2; }
     .footer-counties { column-count: 2; column-gap: 14px; max-height: 180px; overflow-y: auto; padding-right: 6px; }
     .footer-counties a { margin-bottom: 8px; break-inside: avoid; }
     .footer-counties::-webkit-scrollbar { width: 5px; }
@@ -571,7 +585,7 @@
     </a>
     <a href="/post-listing" class="btn-primary">List your apartment</a>
   </div>
-  <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Open menu">
+  <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Open menu" aria-expanded="false" id="mobile-menu-btn">
     <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
   </button>
 </nav>
@@ -683,7 +697,7 @@
               <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
               <p>No photos for this listing yet</p>
             </div>
-            <img id="gallery-img" src="" alt="" style="display:none" onclick="openLightbox()"/>
+            <img id="gallery-img" src="" alt="" style="display:none" onclick="openLightbox()" role="button" tabindex="0" aria-label="View photo full-screen" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openLightbox()}"/>
             <button class="gallery-arrow prev" id="prev-btn" onclick="changePhoto(-1)" style="display:none">
               <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
             </button>
@@ -974,6 +988,23 @@
       <div>
         <div class="footer-logo">Nyumba254</div>
         <p class="footer-tagline">Find and list apartments across Kenya — no agents, no commission.</p>
+        <div class="footer-social">
+          <a href="https://wa.me/254700000000" target="_blank" rel="noopener" title="WhatsApp">
+            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+          </a>
+          <a href="https://www.instagram.com/nyumba.254?igsh=Z2VhNzJkMm1td2Jz" target="_blank" rel="noopener" title="Instagram">
+            <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+          </a>
+          <a href="https://www.facebook.com/share/1EdzJKujSK/" target="_blank" rel="noopener" title="Facebook">
+            <svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+          </a>
+          <a href="https://www.tiktok.com/@nyumba.254?_r=1&_t=ZS-98w137YXueA" target="_blank" rel="noopener" title="TikTok">
+            <svg viewBox="0 0 24 24"><path d="M9 12a4 4 0 104 4V4a5 5 0 005 5"/></svg>
+          </a>
+          <a href="https://x.com/Nyumba254" target="_blank" rel="noopener" title="X (Twitter)">
+            <svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20"/></svg>
+          </a>
+        </div>
       </div>
       <div class="footer-col">
         <h4>Browse</h4>
@@ -1004,7 +1035,7 @@
 
 <!-- ══ REVIEW PROMPT BANNER ══ -->
 <div id="nk-review-banner">
-  <button class="rb-close" onclick="nkDismissBanner()">✕</button>
+  <button class="rb-close" onclick="nkDismissBanner()" aria-label="Dismiss">✕</button>
   <div class="rb-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>
   <div class="rb-text"><strong id="nk-rb-title">Did you secure this property?</strong><span id="nk-rb-sub">Takes one minute — it really helps other buyers.</span></div>
   <div class="rb-actions">
@@ -1016,8 +1047,8 @@
 
 <!-- ══ Seller review modal ══ -->
 <div class="nk-review-modal-overlay" id="nk-seller-review-modal">
-  <div class="nk-review-modal">
-    <h3>How was <span id="nk-review-seller-name">the seller</span>?</h3>
+  <div class="nk-review-modal" role="dialog" aria-modal="true" aria-labelledby="nk-seller-review-title">
+    <h3 id="nk-seller-review-title">How was <span id="nk-review-seller-name">the seller</span>?</h3>
     <p class="sub">Your review helps other buyers know what to expect. Takes about a minute.</p>
     <div class="nk-star-row" id="nk-seller-stars"></div>
     <div class="nk-name-field">
@@ -1038,8 +1069,8 @@
 
 <!-- ══ Platform review modal ══ -->
 <div class="nk-review-modal-overlay" id="nk-platform-review-modal">
-  <div class="nk-review-modal">
-    <h3>One last thing 🙂</h3>
+  <div class="nk-review-modal" role="dialog" aria-modal="true" aria-labelledby="nk-platform-review-title">
+    <h3 id="nk-platform-review-title">One last thing 🙂</h3>
     <p class="sub">How was your overall experience using Nyumba254 to find a home?</p>
     <div class="nk-star-row" id="nk-platform-stars"></div>
     <div class="nk-name-field">
@@ -1060,8 +1091,8 @@
 
 <!-- ══ Report modal ══ -->
 <div class="nk-review-modal-overlay" id="nk-report-modal">
-  <div class="nk-review-modal">
-    <h3>Report a problem</h3>
+  <div class="nk-review-modal" role="dialog" aria-modal="true" aria-labelledby="nk-report-title">
+    <h3 id="nk-report-title">Report a problem</h3>
     <p class="sub">Tell us what's wrong — fake listing, suspicious seller, scam attempt, anything. We review every report.</p>
     <select id="nk-report-reason" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;margin-bottom:12px;font-family:inherit">
       <option value="">Select a reason…</option>
@@ -1086,7 +1117,20 @@
 const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
 const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── Match the "Remember me" storage adapter used on the sign-in page ──
+const authStorage = {
+  getItem: (key) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).getItem(key),
+  setItem: (key, value) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).setItem(key, value),
+  removeItem: (key) => { localStorage.removeItem(key); sessionStorage.removeItem(key); }
+};
+
+const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { storage: authStorage, persistSession: true, autoRefreshToken: true }
+});
+
+// ── Single shared session check — every script below reuses this ──
+const nkSessionPromise = db.auth.getSession();
 
   const NK_COUNTIES = [
     "Mombasa","Kwale","Kilifi","Tana River","Lamu","Taita-Taveta","Garissa","Wajir","Mandera",
@@ -1284,7 +1328,7 @@ async function loadListing() {
 
     // Determine viewer identity once, up front — used both for the
     // disabled-listing gate below and for the seller "Manage units" panel.
-    const { data: { session } } = await db.auth.getSession();
+    const { data: { session } } = await nkSessionPromise;
     const viewerUserId = session?.user?.id || null;
     isListingOwner = !!viewerUserId && (data.seller_id === viewerUserId);
     currentBuyerId = isListingOwner ? null : viewerUserId; // don't treat the seller viewing their own listing as a "buyer"
@@ -1469,7 +1513,12 @@ function renderListing(l) {
   document.getElementById('og-description').setAttribute('content', ogDesc);
   document.getElementById('og-url').setAttribute('content', window.location.href);
   const ogCover = (l.listing_photos||[]).find(p=>p.is_cover) || (l.listing_photos||[])[0];
-  if (ogCover) document.getElementById('og-image').setAttribute('content', ogCover.url);
+  const ogImageUrl = ogCover ? ogCover.url : 'https://nyumba254.com/hero-photo.jpg';
+  document.getElementById('og-image').setAttribute('content', ogImageUrl);
+  document.getElementById('canonical-link').setAttribute('href', window.location.href.split('?')[0] + '?id=' + listingNumber);
+  document.getElementById('twitter-title').setAttribute('content', `${l.title} — Nyumba254`);
+  document.getElementById('twitter-description').setAttribute('content', ogDesc);
+  document.getElementById('twitter-image').setAttribute('content', ogImageUrl);
 
   document.getElementById('breadcrumb-area').textContent = `${nkListingCounty(l)} · ${l.area}`;
 
@@ -1602,6 +1651,27 @@ function renderListing(l) {
 
   document.getElementById('skeleton-wrap').style.display = 'none';
   document.getElementById('listing-content').style.display = 'block';
+
+  // ── JSON-LD structured data so Google can show price/availability
+  // directly in search results for this listing. ──
+  const jsonLdPrice = l.is_multi_unit
+    ? (listingUnits.length ? Math.min(...listingUnits.map(u => Number(u.price)).filter(p => !isNaN(p))) : Number(l.price_min) || Number(l.price) || 0)
+    : Number(l.price) || 0;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": l.title,
+    "description": l.description || ogDesc,
+    "image": ogImageUrl,
+    "offers": {
+      "@type": "Offer",
+      "priceCurrency": "KES",
+      "price": jsonLdPrice,
+      "availability": "https://schema.org/InStock",
+      "url": window.location.href
+    }
+  };
+  document.getElementById('listing-jsonld').textContent = JSON.stringify(jsonLd);
 }
 
 /* ════════════════════════════════════════════════════
@@ -1853,7 +1923,7 @@ function renderGallery() {
     nextBtn.style.display = 'flex';
     thumbWrap.style.display = 'flex';
     thumbWrap.innerHTML = photos.map((p,i) => `
-      <div class="gallery-thumb ${i===currentPhoto?'active':''}" onclick="goPhoto(${i})">
+      <div class="gallery-thumb ${i===currentPhoto?'active':''}" onclick="goPhoto(${i})" role="button" tabindex="0" aria-label="Photo ${i+1}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goPhoto(${i})}">
         <img src="${p.url}" alt="Photo ${i+1}" loading="lazy"/>
       </div>`).join('');
   } else {
@@ -1957,7 +2027,8 @@ async function loadSimilar(area, excludeId) {
   }
   grid.innerHTML = data.map(l => {
     const cover = (l.listing_photos||[]).find(p=>p.is_cover)||(l.listing_photos||[])[0];
-    return `<div class="similar-card" onclick="window.location='/listing?id=${String(l.listing_number).padStart(6,'0')}'">
+    const href = `/listing?id=${String(l.listing_number).padStart(6,'0')}`;
+    return `<div class="similar-card" onclick="window.location='${href}'" role="button" tabindex="0" aria-label="${escHtml(l.title)}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.location='${href}'}">
       <div class="similar-img">${cover?`<img src="${cover.url}" alt="${escHtml(l.title)}" loading="lazy"/>`:''}</div>
       <div class="similar-body">
         <div class="similar-area">${escHtml(l.area)}</div>
@@ -2003,10 +2074,16 @@ async function sendEnquiry() {
   const token = (crypto.randomUUID ? crypto.randomUUID() : Date.now()+'-'+Math.random().toString(36).slice(2));
   buyerToken = token; buyerName = name; buyerPhone = phone;
 
- const { error: enqErr } = await db.from('enquiries').insert({
+ const { data: insertedEnq, error: enqErr } = await db.from('enquiries').insert({
     listing_id: listingId, buyer_name: name, buyer_phone: phone,
     buyer_email: email||null, buyer_token: token, buyer_id: currentBuyerId, message
-  });
+  }).select().single();
+
+  if (enqErr) {
+    btn.disabled = false; btn.classList.remove('loading');
+    alert('Something went wrong. Please try calling the seller directly.');
+    return;
+  }
 
   const { data: insertedMsg, error: msgErr } = await db.from('messages').insert({
     listing_id: listingId, buyer_token: token, buyer_name: name,
@@ -2014,7 +2091,13 @@ async function sendEnquiry() {
   }).select().single();
 
   btn.disabled = false; btn.classList.remove('loading');
-  if (enqErr || msgErr) { alert('Something went wrong. Please try calling the seller directly.'); return; }
+  if (msgErr) {
+    // Message failed after the enquiry succeeded — roll back the enquiry
+    // row rather than leaving an orphaned enquiry with no matching thread.
+    if (insertedEnq?.id) await db.from('enquiries').delete().eq('id', insertedEnq.id);
+    alert('Something went wrong. Please try calling the seller directly.');
+    return;
+  }
 
   setBuyerToken(token);
 
@@ -2155,8 +2238,10 @@ function autoResizeTa(el) { el.style.height='auto'; el.style.height=Math.min(el.
    than silently failing.
 ════════════════════════════════════════════════════ */
 function nkBuildWaLink(rawPhone) {
-  const clean = (rawPhone||'').replace(/\s/g,'');
-  const wa254 = clean.startsWith('0') ? '254'+clean.slice(1) : clean;
+  const clean = (rawPhone||'').replace(/[\s+]/g,'');
+  // Only rewrite a leading 0 → 254 for a plain local Kenyan number.
+  // Numbers already starting with 254 (or any other country code) pass through untouched.
+  const wa254 = /^0\d{9}$/.test(clean) ? '254'+clean.slice(1) : clean;
   const msg   = encodeURIComponent(`Hello, I saw your listing "${listing?.title||''}" on Nyumba254 and I'm interested. Is it still available?`);
   return `https://wa.me/${wa254}?text=${msg}`;
 }
@@ -2169,7 +2254,10 @@ async function handleContactClick(channel) {
     contactRevealBusy = true;
     const callBtn = document.getElementById('btn-call');
     const waBtn   = document.getElementById('btn-whatsapp');
+    const callOrig = callBtn.innerHTML, waOrig = waBtn.innerHTML;
     callBtn.disabled = true; waBtn.disabled = true;
+    callBtn.innerHTML = 'Loading…';
+    waBtn.innerHTML = 'Loading…';
 
     try {
       const { data: phone, error } = await db.rpc('reveal_seller_contact', {
@@ -2196,6 +2284,7 @@ async function handleContactClick(channel) {
     } finally {
       contactRevealBusy = false;
       callBtn.disabled = false; waBtn.disabled = false;
+      callBtn.innerHTML = callOrig; waBtn.innerHTML = waOrig;
     }
   }
 
@@ -2238,6 +2327,8 @@ function copyLink(evt) {
     btn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
     btn.style.borderColor='var(--green)'; btn.style.color='var(--green)';
     setTimeout(() => { btn.innerHTML=orig; btn.style.borderColor=''; btn.style.color=''; }, 2000);
+  }).catch(() => {
+    showToastNK('Could not copy the link — you can copy it from the address bar instead.');
   });
 }
 
@@ -2279,22 +2370,25 @@ function nkGetDeviceId() {
 })();
 
 /* Mobile menu */
-function toggleMobileMenu() { document.getElementById('mobile-nav').classList.toggle('open'); }
+function toggleMobileMenu() {
+  const nav = document.getElementById('mobile-nav');
+  const isOpen = nav.classList.toggle('open');
+  document.getElementById('mobile-menu-btn')?.setAttribute('aria-expanded', isOpen);
+}
 document.addEventListener('click', e => {
   const nav = document.getElementById('mobile-nav');
   const btn = document.querySelector('.mobile-menu-btn');
   if (nav && nav.classList.contains('open') && !nav.contains(e.target) && !btn.contains(e.target)) nav.classList.remove('open');
 });
 
-/* Nav: Sign in → My Account when logged in */
-(async function () {
-  const { data: { session } } = await db.auth.getSession();
+/* Nav: Sign in → My Account when logged in (reuses the shared session check) */
+nkSessionPromise.then(({ data: { session } }) => {
   if (!session) return;
   const d = document.getElementById('nav-account-link');
   const m = document.getElementById('mobile-account-link');
   if (d) { d.textContent='My Account'; d.href='/dashboard'; d.style.fontWeight='600'; d.style.color='var(--green)'; }
   if (m) { m.textContent='My Account'; m.href='/dashboard'; }
-})();
+});
 
 /* ════════════════════════════════════════════════════
    REVIEWS & REPORTS
