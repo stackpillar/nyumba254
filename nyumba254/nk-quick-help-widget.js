@@ -582,7 +582,12 @@ Rules:
       scrollBottom();
     }
 
-    function copyInviteLink(btn, link) {
+    function copyInviteLink(btn, rawLink) {
+      // Force plain text no matter what's passed in — strips any HTML tags
+      // and decodes entities so nothing but a bare URL ever hits the clipboard.
+      const tmp = document.createElement('div');
+      tmp.innerHTML = rawLink;
+      const link = (tmp.textContent || tmp.innerText || rawLink).trim();
       const done = (ok) => {
         const orig = btn.textContent;
         btn.textContent = ok ? 'Copied ✓' : 'Copy failed';
