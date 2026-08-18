@@ -923,8 +923,6 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
   const { createClient } = supabase;
   const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -3053,5 +3051,6 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
   }
   init();
 </script>
+<script src="/supabase-client.js"></script>
 </body>
 </html>

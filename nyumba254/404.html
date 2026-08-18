@@ -411,8 +411,6 @@
 
   // ── Swap Sign in → My Account when logged in ──
   (async function() {
-    const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     const { data: { session } } = await db.auth.getSession();
     if (!session) return;
@@ -422,5 +420,6 @@
     if (mobileLink) { mobileLink.textContent = 'My Account'; mobileLink.href = '/dashboard'; }
   })();
 </script>
+<script src="/supabase-client.js"></script>
 </body>
 </html>

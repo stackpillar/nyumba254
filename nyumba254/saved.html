@@ -389,8 +389,6 @@
 </footer>
 
 <script>
-  const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
   const { createClient } = supabase;
   const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -676,10 +674,7 @@
 <!-- ── PAGE VIEW TRACKER ── -->
 <script>
   (function () {
-    const sb = supabase.createClient(
-      'https://vliuuloyfhyxcsuchpss.supabase.co',
-      'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx'
-    );
+    const sb = (typeof supabaseClient !== 'undefined') ? supabaseClient : supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     let sid = localStorage.getItem('nk_sid');
     if (!sid) {
       sid = (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2));
@@ -691,5 +686,6 @@
 
 <script src="global-chat-widget.js"></script>
 
+<script src="/supabase-client.js"></script>
 </body>
 </html>
