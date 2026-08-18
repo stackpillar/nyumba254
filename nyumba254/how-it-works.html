@@ -5,12 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>How It Works — Nyumba254</title>
   <meta name="description" content="See how Nyumba254 works for buyers and sellers. List your property or find your next home anywhere in Kenya — no agents, no commission."/>
+  <link rel="canonical" href="https://nyumba254.com/how-it-works"/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:title" content="How It Works — Nyumba254"/>
+  <meta property="og:description" content="See how Nyumba254 works for buyers and sellers — no agents, no commission."/>
+  <meta property="og:url" content="https://nyumba254.com/how-it-works"/>
+  <meta property="og:image" content="https://nyumba254.com/hero-photo.jpg"/>
+  <meta property="og:site_name" content="Nyumba254"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="How It Works — Nyumba254"/>
+  <meta name="twitter:description" content="See how Nyumba254 works for buyers and sellers — no agents, no commission."/>
+  <meta name="twitter:image" content="https://nyumba254.com/hero-photo.jpg"/>
+  <meta name="twitter:site" content="@Nyumba254"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
-  <link rel="icon" type="image/png" href="/favicon.png"/>
   <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -116,6 +126,7 @@
       color: rgba(255,255,255,0.75); cursor: pointer; transition: all .2s; background: transparent;
     }
     .hero-tab.active { background: var(--white); color: var(--text); box-shadow: 0 1px 6px rgba(0,0,0,0.2); }
+    .hero-tab:focus-visible { outline: 2px solid white; outline-offset: 2px; }
 
     /* ── Shared section wrapper ── */
     .section { padding: 80px 40px; max-width: 1080px; margin: 0 auto; }
@@ -367,7 +378,7 @@
     </a>
     <a href="/post-listing" class="btn-primary">List your apartment</a>
   </div>
-  <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Open menu">
+  <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Open menu" aria-expanded="false" id="mobile-menu-btn">
     <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
   </button>
 </nav>
@@ -399,9 +410,9 @@
     <h1>Finding a home should be<br><em>this simple</em></h1>
     <p class="hero-sub">Nyumba254 connects people who have properties with people who need them — anywhere in Kenya. No middlemen.</p>
 
-    <div class="hero-tabs">
-      <button class="hero-tab active" onclick="switchTab('buyer')">I'm looking to rent or buy</button>
-      <button class="hero-tab" onclick="switchTab('seller')">I want to list my property</button>
+    <div class="hero-tabs" role="tablist" aria-label="Choose your path">
+      <button class="hero-tab active" id="tab-btn-buyer" role="tab" aria-selected="true" aria-controls="panel-buyer" onclick="switchTab('buyer')">I'm looking to rent or buy</button>
+      <button class="hero-tab" id="tab-btn-seller" role="tab" aria-selected="false" aria-controls="panel-seller" onclick="switchTab('seller')">I want to list my property</button>
     </div>
   </div>
 </section>
@@ -409,7 +420,7 @@
 <!-- ════════════════════════════════════════ -->
 <!-- BUYER TAB                               -->
 <!-- ════════════════════════════════════════ -->
-<div class="tab-panel active" id="panel-buyer">
+<div class="tab-panel active" id="panel-buyer" role="tabpanel" aria-labelledby="tab-btn-buyer">
 
   <!-- Steps -->
   <div class="section">
@@ -503,7 +514,7 @@
 <!-- ════════════════════════════════════════ -->
 <!-- SELLER TAB                              -->
 <!-- ════════════════════════════════════════ -->
-<div class="tab-panel" id="panel-seller">
+<div class="tab-panel" id="panel-seller" role="tabpanel" aria-labelledby="tab-btn-seller">
 
   <div class="section">
     <div class="section-eyebrow">For property owners</div>
@@ -709,6 +720,18 @@
           <a href="https://wa.me/254700000000" target="_blank" rel="noopener" title="WhatsApp">
             <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
           </a>
+          <a href="https://www.instagram.com/nyumba.254?igsh=Z2VhNzJkMm1td2Jz" target="_blank" rel="noopener" title="Instagram">
+            <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+          </a>
+          <a href="https://www.facebook.com/share/1EdzJKujSK/" target="_blank" rel="noopener" title="Facebook">
+            <svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+          </a>
+          <a href="https://www.tiktok.com/@nyumba.254?_r=1&_t=ZS-98w137YXueA" target="_blank" rel="noopener" title="TikTok">
+            <svg viewBox="0 0 24 24"><path d="M9 12a4 4 0 104 4V4a5 5 0 005 5"/></svg>
+          </a>
+          <a href="https://x.com/Nyumba254" target="_blank" rel="noopener" title="X (Twitter)">
+            <svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20"/></svg>
+          </a>
           <a href="mailto:hello@nyumba254.co.ke" title="Email">
             <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
           </a>
@@ -769,7 +792,9 @@
 <script>
   function switchTab(tab) {
     document.querySelectorAll('.hero-tab').forEach((btn, i) => {
-      btn.classList.toggle('active', (i === 0 && tab === 'buyer') || (i === 1 && tab === 'seller'));
+      const isActive = (i === 0 && tab === 'buyer') || (i === 1 && tab === 'seller');
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-selected', String(isActive));
     });
     document.getElementById('panel-buyer').classList.toggle('active', tab === 'buyer');
     document.getElementById('panel-seller').classList.toggle('active', tab === 'seller');
@@ -881,77 +906,88 @@
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  (function () {
-    const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    // Page view tracking
-    let sid = localStorage.getItem('nk_sid');
-    if (!sid) { sid = (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2)); localStorage.setItem('nk_sid', sid); }
-    sb.from('page_views').insert({ path: location.pathname, referrer: document.referrer || null, user_agent: navigator.userAgent, session_id: sid });
-
-    // ── Live pricing/duration: pulled from the same `platform_settings` table
-    // the admin dashboard's Settings page writes to, so a price change there
-    // shows up here without editing this file. Defaults below only apply
-    // before the fetch resolves / if it fails.
-    window.NK_SETTINGS = {
-      standard_fee: 500,
-      featured_fee: 1500,
-      standard_fee_per_unit: 50,
-      featured_fee_per_unit: 150,
-      trial_days: 14,
-      standard_duration_days: 30,
-      featured_duration_days: 30,
-      recycle_bin_days: 30,
-    };
-
-    function fmtKES(n) { return 'KES ' + Number(n).toLocaleString('en-KE'); }
-
-    function applyHiwPricing() {
-      const s = window.NK_SETTINGS;
-      const stdPrice = fmtKES(s.standard_fee);
-      const featPrice = fmtKES(s.featured_fee);
-      const el = id => document.getElementById(id);
-      if (el('hiw-std-price'))       el('hiw-std-price').textContent = stdPrice;
-      if (el('hiw-feat-price'))      el('hiw-feat-price').textContent = featPrice;
-      if (el('hiw-std-duration'))    el('hiw-std-duration').textContent = s.standard_duration_days;
-      if (el('hiw-feat-duration'))   el('hiw-feat-duration').textContent = s.featured_duration_days;
-      if (el('hiw-step-std-price'))  el('hiw-step-std-price').textContent = stdPrice;
-      if (el('hiw-step-feat-price')) el('hiw-step-feat-price').textContent = featPrice;
-      if (el('hiw-step-duration'))   el('hiw-step-duration').textContent = s.standard_duration_days;
-    }
-
-    (async function loadHiwSettings() {
-      try {
-        const { data, error } = await sb.from('platform_settings').select('key,value');
-        if (error) { console.error('loadHiwSettings error:', error); applyHiwPricing(); return; }
-        (data || []).forEach(row => {
-          if (row.key in window.NK_SETTINGS) window.NK_SETTINGS[row.key] = Number(row.value);
-        });
-      } catch (e) {
-        console.error('loadHiwSettings exception:', e);
-      }
-      applyHiwPricing();
-    })();
-  })();
-</script>
-<script>
-(function() {
   const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
-  const _db = (typeof db !== 'undefined') ? db : supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  _db.auth.getSession().then(({ data: { session } }) => {
+  const { createClient } = supabase;
+
+  // ── Match the "Remember me" storage adapter used on the sign-in page ──
+  const authStorage = {
+    getItem: (key) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).getItem(key),
+    setItem: (key, value) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).setItem(key, value),
+    removeItem: (key) => { localStorage.removeItem(key); sessionStorage.removeItem(key); }
+  };
+
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { storage: authStorage, persistSession: true, autoRefreshToken: true }
+  });
+
+  // ── Single shared session check — every script below reuses this ──
+  const nkSessionPromise = db.auth.getSession();
+
+  // Page view tracking
+  let sid = localStorage.getItem('nk_sid');
+  if (!sid) { sid = (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2)); localStorage.setItem('nk_sid', sid); }
+  db.from('page_views').insert({ path: location.pathname, referrer: document.referrer || null, user_agent: navigator.userAgent, session_id: sid });
+
+  // ── Live pricing/duration: pulled from the same `platform_settings` table
+  // the admin dashboard's Settings page writes to, so a price change there
+  // shows up here without editing this file. Defaults below only apply
+  // before the fetch resolves / if it fails.
+  window.NK_SETTINGS = {
+    standard_fee: 500,
+    featured_fee: 1500,
+    standard_fee_per_unit: 50,
+    featured_fee_per_unit: 150,
+    trial_days: 14,
+    standard_duration_days: 30,
+    featured_duration_days: 30,
+    recycle_bin_days: 30,
+  };
+
+  function fmtKES(n) { return 'KES ' + Number(n).toLocaleString('en-KE'); }
+
+  function applyHiwPricing() {
+    const s = window.NK_SETTINGS;
+    const stdPrice = fmtKES(s.standard_fee);
+    const featPrice = fmtKES(s.featured_fee);
+    const el = id => document.getElementById(id);
+    if (el('hiw-std-price'))       el('hiw-std-price').textContent = stdPrice;
+    if (el('hiw-feat-price'))      el('hiw-feat-price').textContent = featPrice;
+    if (el('hiw-std-duration'))    el('hiw-std-duration').textContent = s.standard_duration_days;
+    if (el('hiw-feat-duration'))   el('hiw-feat-duration').textContent = s.featured_duration_days;
+    if (el('hiw-step-std-price'))  el('hiw-step-std-price').textContent = stdPrice;
+    if (el('hiw-step-feat-price')) el('hiw-step-feat-price').textContent = featPrice;
+    if (el('hiw-step-duration'))   el('hiw-step-duration').textContent = s.standard_duration_days;
+  }
+
+  (async function loadHiwSettings() {
+    try {
+      const { data, error } = await db.from('platform_settings').select('key,value');
+      if (error) { console.error('loadHiwSettings error:', error); applyHiwPricing(); return; }
+      (data || []).forEach(row => {
+        if (row.key in window.NK_SETTINGS) window.NK_SETTINGS[row.key] = Number(row.value);
+      });
+    } catch (e) {
+      console.error('loadHiwSettings exception:', e);
+    }
+    applyHiwPricing();
+  })();
+
+  // ── Sign in → My account when logged in (reuses the shared session check) ──
+  nkSessionPromise.then(({ data: { session } }) => {
     if (!session) return;
     const desktopLink = document.getElementById('nav-account-link');
     const mobileLink = document.getElementById('mobile-account-link');
     if (desktopLink) { desktopLink.textContent = 'My account'; desktopLink.href = '/dashboard'; desktopLink.style.fontWeight = '600'; desktopLink.style.color = 'var(--green)'; }
     if (mobileLink) { mobileLink.textContent = 'My account'; mobileLink.href = '/dashboard'; }
   });
-})();
 </script>
 <script>
-  function toggleMobileMenu() { document.getElementById('mobile-nav').classList.toggle('open'); }
+  function toggleMobileMenu() {
+    const nav = document.getElementById('mobile-nav');
+    const isOpen = nav.classList.toggle('open');
+    document.getElementById('mobile-menu-btn')?.setAttribute('aria-expanded', isOpen);
+  }
   document.addEventListener('click', e => {
     const nav = document.getElementById('mobile-nav');
     const btn = document.querySelector('.mobile-menu-btn');
