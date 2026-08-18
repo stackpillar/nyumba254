@@ -627,8 +627,6 @@
 </footer>
 
 <script>
-  const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
   const EDGE_URL = `${SUPABASE_URL}/functions/v1`;
   const { createClient } = supabase;
   const db = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -862,8 +860,6 @@
 <script>
 (function() {
   // Swap Sign in → My Account when logged in
-  const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
 
   // Reuse existing client if already on page, otherwise create one
   const _db = (typeof db !== 'undefined') ? db : supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -890,9 +886,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   (function () {
-    const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let sid = localStorage.getItem('nk_sid');
     if (!sid) {
@@ -924,10 +917,7 @@
   // ── Sign in → My Account when logged in ──
   (async function () {
     // Reuse existing db client or create one
-    const _sb = (typeof db !== 'undefined') ? db : supabase.createClient(
-      'https://vliuuloyfhyxcsuchpss.supabase.co',
-      'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx'
-    );
+    const _sb = (typeof db !== 'undefined') ? db : (typeof supabaseClient !== 'undefined' ? supabaseClient : supabase.createClient(SUPABASE_URL, SUPABASE_KEY));
     const { data: { session } } = await _sb.auth.getSession();
     if (!session) return;
 
@@ -947,5 +937,6 @@
   })();
 </script>
 <script src="nav-badge.js"></script>
+<script src="/supabase-client.js"></script>
 </body>
 </html>
