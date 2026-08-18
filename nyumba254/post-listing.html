@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,9 +7,6 @@
   <title>Post a Listing — Nyumba254</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
-  <link rel="icon" href="/favicon.ico" sizes="any">
-  <link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png"/> 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -110,17 +108,14 @@
     .cat-option-title { font-size:14px; font-weight:600; color:var(--text); margin-bottom:3px; }
     .cat-option-desc { font-size:12px; color:var(--text-3); line-height:1.4; }
     .cat-option.selected .cat-option-title { color:var(--green-dark); }
-    .cat-option:focus-visible { outline:2px solid var(--green); outline-offset:2px; }
 
     .toggle-group { display:flex; border:1.5px solid var(--border); border-radius:var(--radius); overflow:hidden; }
     .toggle-opt { flex:1; padding:10px; text-align:center; font-size:14px; font-weight:500; color:var(--text-3); cursor:pointer; transition:all .15s; background:white; user-select:none; }
     .toggle-opt:hover { background:var(--surface); }
-    .toggle-opt:focus-visible { outline:2px solid var(--green); outline-offset:-2px; }
     .toggle-opt.active { background:var(--green); color:white; }
 
     .photo-drop { border:2px dashed var(--border); border-radius:var(--radius-lg); padding:36px 24px; text-align:center; cursor:pointer; transition:all .2s; background:var(--surface); }
     .photo-drop:hover,.photo-drop.drag-over { border-color:var(--green); background:var(--green-light); }
-    .photo-drop:focus-visible { outline:2px solid var(--green); outline-offset:2px; }
     .photo-drop svg { width:40px; height:40px; stroke:var(--text-3); fill:none; stroke-width:1.5; margin:0 auto 12px; display:block; }
     .photo-drop p { font-size:14px; color:var(--text-2); margin-bottom:4px; }
     .photo-drop span { font-size:12px; color:var(--text-3); }
@@ -131,8 +126,8 @@
     .photo-thumb .remove-btn { position:absolute; top:4px; right:4px; width:22px; height:22px; background:rgba(0,0,0,0.6); color:white; border-radius:50%; font-size:14px; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer; }
     .photo-thumb .remove-btn:hover { background:var(--red); }
     .photo-thumb .cover-badge { position:absolute; bottom:4px; left:4px; background:var(--green); color:white; font-size:10px; font-weight:600; padding:2px 6px; border-radius:4px; }
-    .photo-thumb .set-cover { position:absolute; bottom:4px; left:4px; background:rgba(0,0,0,0.55); color:white; font-size:10px; padding:2px 6px; border-radius:4px; cursor:pointer; border:none; font-family:inherit; }
-    .photo-thumb .set-cover:focus-visible { outline:2px solid white; outline-offset:1px; }
+    .photo-thumb .set-cover { position:absolute; bottom:4px; left:4px; background:rgba(0,0,0,0.5); color:white; font-size:10px; padding:2px 6px; border-radius:4px; cursor:pointer; display:none; }
+    .photo-thumb:hover .set-cover { display:block; }
     .upload-progress { margin-top:8px; height:4px; background:var(--border); border-radius:2px; overflow:hidden; display:none; }
     .upload-progress-bar { height:100%; background:var(--green); border-radius:2px; transition:width .3s; width:0%; }
 
@@ -156,7 +151,6 @@
     .pricing-options { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
     .pricing-option { border:2px solid var(--border); border-radius:var(--radius-lg); padding:20px; cursor:pointer; transition:all .2s; background:white; position:relative; }
     .pricing-option:hover { border-color:var(--green-mid); }
-    .pricing-option:focus-visible, .trial-banner:focus-visible { outline:2px solid var(--green); outline-offset:2px; }
     .pricing-option.selected { border-color:var(--green); background:var(--green-light); }
     .pricing-option .pop-badge { position:absolute; top:-10px; left:50%; transform:translateX(-50%); background:var(--gold); color:white; font-size:11px; font-weight:600; padding:2px 12px; border-radius:20px; white-space:nowrap; }
     .pricing-option h3 { font-size:15px; font-weight:600; color:var(--text); margin-bottom:4px; }
@@ -352,14 +346,14 @@
 <body>
 
 <nav>
-  <a href="/" class="logo">
+  <a href="index.html" class="logo">
     <div class="logo-icon">
       <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     </div>
     Nyumba254
   </a>
   <div class="nav-right">
-    <a href="/listings" class="nav-link">Browse listings</a>
+    <a href="listings.html" class="nav-link">Browse listings</a>
   </div>
 </nav>
 
@@ -374,7 +368,7 @@
 
   <div class="auth-banner" id="auth-banner">
     <p>You need to be signed in to post a listing.</p>
-    <a href="login.html?next=post-listing">Sign in or create a free account →</a>
+    <a href="login.html?next=post-listing.html">Sign in or create a free account →</a>
   </div>
 
   <div class="steps-bar" id="steps-bar">
@@ -435,22 +429,22 @@
       <h2>What type of property are you listing?</h2>
       <p class="hint">Choose the category that best describes your property</p>
       <div class="cat-grid">
-        <div class="cat-option selected" data-cat="student" onclick="selectCat(this)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectCat(this)}">
+        <div class="cat-option selected" data-cat="student" onclick="selectCat(this)">
           <div class="cat-option-icon">🎓</div>
           <div class="cat-option-title">Student housing</div>
           <div class="cat-option-desc">Bedsitters, single rooms, shared flats near campuses</div>
         </div>
-        <div class="cat-option" data-cat="standard" onclick="selectCat(this)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectCat(this)}">
+        <div class="cat-option" data-cat="standard" onclick="selectCat(this)">
           <div class="cat-option-icon">🏠</div>
           <div class="cat-option-title">Standard apartment</div>
           <div class="cat-option-desc">1–3 bedroom apartments for families and professionals</div>
         </div>
-        <div class="cat-option" data-cat="luxury" onclick="selectCat(this)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectCat(this)}">
+        <div class="cat-option" data-cat="luxury" onclick="selectCat(this)">
           <div class="cat-option-icon">✨</div>
           <div class="cat-option-title">Luxury / premium</div>
           <div class="cat-option-desc">High-end apartments in prime neighborhoods across Kenya</div>
         </div>
-        <div class="cat-option" data-cat="commercial" onclick="selectCat(this)" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectCat(this)}">
+        <div class="cat-option" data-cat="commercial" onclick="selectCat(this)">
           <div class="cat-option-icon">🏢</div>
           <div class="cat-option-title">Shop / office</div>
           <div class="cat-option-desc">Retail shops, offices and business spaces, e.g. in city centers</div>
@@ -486,8 +480,8 @@
       <div class="field">
         <label>Sale or rent <span class="req">*</span></label>
         <div class="toggle-group">
-          <div class="toggle-opt active" id="type-sale" onclick="setType('sale')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();setType('sale')}">For sale</div>
-          <div class="toggle-opt" id="type-rent" onclick="setType('rent')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();setType('rent')}">To let / rent</div>
+          <div class="toggle-opt active" id="type-sale" onclick="setType('sale')">For sale</div>
+          <div class="toggle-opt" id="type-rent" onclick="setType('rent')">To let / rent</div>
         </div>
       </div>
 
@@ -613,7 +607,7 @@
     <div class="form-card">
       <h2>Add photos</h2>
       <p class="hint">Listings with photos get 5× more enquiries. Add up to 10 — the first becomes the cover.</p>
-      <div class="photo-drop" id="photo-drop" onclick="document.getElementById('file-input').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFiles(event)" role="button" tabindex="0" aria-label="Upload photos" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('file-input').click()}">
+      <div class="photo-drop" id="photo-drop" onclick="document.getElementById('file-input').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFiles(event)">
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         <p>Click to upload or drag photos here</p>
         <span>JPG, PNG or WEBP — up to 30MB each, max 10 photos</span>
@@ -627,7 +621,7 @@
       <button class="btn-back" onclick="goStep(1)">← Back</button>
       <div style="display:flex;align-items:center;gap:12px">
         <span style="font-size:13px;color:var(--text-3)">Step 2 of 4</span>
-        <button class="btn-next" onclick="goStep(4)">Next: Review listing →</button>
+        <button class="btn-next" onclick="goStep(3)">Next: Choose plan →</button>
       </div>
     </div>
   </div>
@@ -638,7 +632,7 @@
       <h2>Your listing plan</h2>
       <p class="hint" id="plan-hint">Both paid plans give your listing full visibility on Nyumba254</p>
 
-      <div class="trial-banner" id="plan-trial" onclick="selectPlan('trial')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectPlan('trial')}">
+      <div class="trial-banner" id="plan-trial" onclick="selectPlan('trial')">
         <div class="trial-banner-top">
           <span class="trial-ribbon">🔥 NEW — LAUNCH OFFER</span>
           <span class="trial-applied-check">✓ Applied to your listing</span>
@@ -651,7 +645,7 @@
       <div class="upgrade-divider" id="upgrade-divider">or upgrade for longer visibility from day one</div>
 
       <div class="pricing-options">
-        <div class="pricing-option selected" id="plan-basic" onclick="selectPlan('basic')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectPlan('basic')}">
+        <div class="pricing-option selected" id="plan-basic" onclick="selectPlan('basic')">
           <h3>Standard listing</h3>
           <div class="price-tag" id="basic-price-tag">KES 500 <span>one-time</span></div>
           <div class="field-hint" id="basic-price-note" style="display:none;margin:-6px 0 10px"></div>
@@ -662,7 +656,7 @@
             <li>Appears in search results</li>
           </ul>
         </div>
-        <div class="pricing-option featured-opt" id="plan-featured" onclick="selectPlan('featured')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectPlan('featured')}">
+        <div class="pricing-option featured-opt" id="plan-featured" onclick="selectPlan('featured')">
           <div class="pop-badge">Most enquiries</div>
           <h3>Featured listing</h3>
           <div class="price-tag" id="featured-price-tag">KES 1,500 <span>one-time</span></div>
@@ -678,7 +672,7 @@
       </div>
 
       <div style="background:var(--green-light);border-radius:var(--radius);padding:14px 16px;margin-top:20px;font-size:13px;color:var(--green-dark)" id="payment-info-box">
-        <strong>Payment:</strong> If you choose a paid plan, an M-Pesa prompt will be sent straight to your phone to pay our Paybill. You can also pay manually via Paybill, or skip and pay later — your listing is reviewed regardless.
+        <strong>Payment:</strong> If you choose a paid plan, you'll pay via M-Pesa Paybill after submitting (M-Pesa STK push is coming soon). You can also skip and pay later — your listing is reviewed regardless.
       </div>
       <div style="background:var(--gold-light);border-radius:var(--radius);padding:12px 16px;margin-top:12px;font-size:13px;color:var(--gold);display:none" id="multi-unit-price-note">
         <strong>Multi-unit pricing:</strong> Properties with multiple units pay the base plan fee plus a small per-unit fee, since more units means more admin review and more listing visibility. Prices above already reflect your property's unit count.
@@ -718,13 +712,13 @@
       <div class="field" style="margin-top:16px">
         <label for="agree-terms" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:400;font-size:13px;color:var(--text-2)">
           <input type="checkbox" id="agree-terms" onchange="document.getElementById('err-agree-terms').classList.remove('show'); this.classList.remove('error')" style="width:18px;height:18px;margin-top:1px;accent-color:var(--green);cursor:pointer;flex-shrink:0"/>
-          <span>I have read and agree to the <a href="/terms" target="_blank" rel="noopener" style="color:var(--green);font-weight:600;text-decoration:underline">Terms of Service</a> and <a href="/privacy" target="_blank" rel="noopener" style="color:var(--green);font-weight:600;text-decoration:underline">Privacy Policy</a> <span class="req">*</span></span>
+          <span>I have read and agree to the <a href="terms.html" target="_blank" rel="noopener" style="color:var(--green);font-weight:600;text-decoration:underline">Terms of Service</a> and <a href="privacy.html" target="_blank" rel="noopener" style="color:var(--green);font-weight:600;text-decoration:underline">Privacy Policy</a> <span class="req">*</span></span>
         </label>
         <div class="field-error" id="err-agree-terms">You must agree to the Terms of Service and Privacy Policy before submitting your listing</div>
       </div>
     </div>
     <div class="form-actions">
-      <button class="btn-back" onclick="goStep(2)">← Back</button>
+      <button class="btn-back" onclick="goStep(3)">← Back</button>
       <button class="btn-submit" id="submit-btn" onclick="submitListing()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
         Submit listing →
@@ -758,8 +752,8 @@
     </div>
 
     <div class="success-actions">
-      <a href="/dashboard" style="padding:11px 22px;background:var(--green);color:white;border-radius:var(--radius);font-size:14px;font-weight:600">View my listings</a>
-      <a href="/" style="padding:11px 22px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:14px;font-weight:500;color:var(--text-2)">Back to home</a>
+      <a href="dashboard.html" style="padding:11px 22px;background:var(--green);color:white;border-radius:var(--radius);font-size:14px;font-weight:600">View my listings</a>
+      <a href="index.html" style="padding:11px 22px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:14px;font-weight:500;color:var(--text-2)">Back to home</a>
     </div>
   </div>
 </div>
@@ -767,17 +761,20 @@
 <!-- PAYMENT MODAL -->
 <div class="modal-overlay" id="payment-modal">
   <div class="modal-box">
-    <button class="modal-close-x" onclick="skipPayment()" aria-label="Close">×</button>
+    <button class="modal-close-x" onclick="skipPayment()">×</button>
     <h2>Complete payment</h2>
     <p class="modal-hint">Your listing is already saved and pending review. Payment is optional — our admin team can approve with or without it.</p>
     <div class="pay-amount-display" id="pay-amount-display">KES 500 <span>one-time listing fee</span></div>
 
     <div class="pay-tabs">
-      <div class="pay-tab active" id="tab-mpesa" onclick="switchPayTab('mpesa')">M-Pesa STK Push</div>
-      <div class="pay-tab" id="tab-bank" onclick="switchPayTab('bank')">Pay Manually (Paybill)</div>
+      <div class="pay-tab" id="tab-mpesa" style="opacity:.55;cursor:not-allowed" onclick="showStkComingSoon()">M-Pesa STK Push <span style="font-size:10px;font-weight:700">(Coming soon)</span></div>
+      <div class="pay-tab active" id="tab-bank" onclick="switchPayTab('bank')">Pay via M-Pesa Paybill</div>
     </div>
 
-    <div class="pay-panel active" id="panel-mpesa">
+    <div class="pay-panel" id="panel-mpesa">
+      <div style="background:var(--gold-light);color:var(--gold);border-radius:var(--radius);padding:10px 12px;margin-bottom:16px;font-size:13px;font-weight:600">
+        🚧 M-Pesa STK Push is coming soon. Please use "Pay via M-Pesa Paybill" for now.
+      </div>
       <div class="stk-steps">
         <div class="stk-step">
           <div class="stk-step-num">1</div>
@@ -798,8 +795,8 @@
         <input type="tel" id="mpesa-phone" placeholder="e.g. 0712 345 678" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:14px;color:var(--text);background:var(--surface);outline:none;transition:border-color .15s"/>
       </div>
 
-      <button class="btn-pay-primary" id="stk-btn" onclick="sendStkPush()">
-        📱 Send M-Pesa Prompt
+      <button class="btn-pay-primary" id="stk-btn" onclick="sendStkPush()" disabled style="opacity:.5;cursor:not-allowed">
+        📱 Coming soon
       </button>
 
       <div class="stk-status" id="stk-status">
@@ -818,7 +815,7 @@
       </button>
     </div>
 
-    <div class="pay-panel" id="panel-bank">
+    <div class="pay-panel active" id="panel-bank">
       <div class="bank-details">
         <h4>M-Pesa Paybill — Payment Details</h4>
         <div class="bank-row"><span>Paybill number</span><strong>522522</strong></div>
@@ -840,19 +837,6 @@
 
     <div class="pay-note">💡 Already paid or prefer to pay later? Skip below — your listing stays pending and our team will review it anytime.</div>
     <span class="skip-link" onclick="skipPayment()">Skip for now — pay later →</span>
-  </div>
-</div>
-
-<!-- RESUME DRAFT MODAL -->
-<div class="modal-overlay" id="resume-modal">
-  <div class="modal-box" style="max-width:420px;text-align:center">
-    <h2 style="text-align:center;padding-right:0">Continue your listing?</h2>
-    <p class="modal-hint" style="text-align:center">We found a listing you were working on earlier. Your progress was saved automatically — would you like to pick up where you left off, or start fresh?</p>
-    <div id="resume-draft-preview" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:6px;text-align:left;font-size:13px;color:var(--text-2)"></div>
-    <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
-      <button class="btn-pay-primary" onclick="resumeContinue()" style="margin-top:0">Continue where I left off</button>
-      <button class="btn-back" onclick="resumeStartOver()" style="width:100%">Start over</button>
-    </div>
   </div>
 </div>
 
@@ -1041,8 +1025,6 @@ function collectDraftData() {
 // Server save is throttled much more loosely so continuous typing never
 // triggers a network request per pause — this is what was causing the lag.
 function scheduleDraftSave() {
-  if (!appReady) return; // ignore autosave triggers fired during page setup, before the resume-draft decision is settled
-  formDirty = true;
   clearTimeout(draftLocalTimer);
   draftLocalTimer = setTimeout(() => {
     const data = collectDraftData();
@@ -1096,36 +1078,10 @@ async function loadAndApplyDraft() {
   else draft = local || server;
 
   if (!draft) return;
+  applyDraftData(draft);
 
-  // Only bother the seller with a resume prompt if there's actually
-  // something meaningful saved — an empty/near-empty draft isn't worth it.
-  const f = draft.fields || {};
-  const hasContent = (f.title && f.title.trim()) || (f.description && f.description.trim());
-  if (!hasContent) return;
-
-  pendingDraft = draft;
-  const previewEl = document.getElementById('resume-draft-preview');
-  if (previewEl) {
-    const savedDate = draft.savedAt ? new Date(draft.savedAt).toLocaleString('en-KE', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '';
-    previewEl.innerHTML = `<strong>${(f.title && f.title.trim()) ? f.title : '(Untitled listing)'}</strong>${savedDate ? `<br><span style="color:var(--text-3)">Last saved ${savedDate}</span>` : ''}`;
-  }
-  document.getElementById('resume-modal').classList.add('show');
-}
-
-function resumeContinue() {
-  document.getElementById('resume-modal').classList.remove('show');
-  if (pendingDraft) {
-    applyDraftData(pendingDraft);
-    try { localStorage.setItem(DRAFT_LS_KEY, JSON.stringify(pendingDraft)); } catch(e) {}
-    if (currentUser) saveDraftToServer(pendingDraft);
-  }
-  pendingDraft = null;
-}
-
-async function resumeStartOver() {
-  document.getElementById('resume-modal').classList.remove('show');
-  pendingDraft = null;
-  await clearDraft();
+  try { localStorage.setItem(DRAFT_LS_KEY, JSON.stringify(draft)); } catch(e) {}
+  if (currentUser) saveDraftToServer(draft);
 }
 
 function applyDraftData(draft) {
@@ -1198,10 +1154,6 @@ let currentUserName   = '';
 let selectedReviewRating = 0;
 let checkoutRequestId = null;
 let paymentPollTimer  = null;
-let formDirty          = false;
-let hasSubmittedListing = false;
-let pendingDraft       = null;
-let appReady           = false;
 
 // ── Multi-unit property state ──
 let listingStructure  = 'single'; // 'single' | 'multi'
@@ -1240,15 +1192,8 @@ async function init() {
   document.querySelector('.page-wrap').addEventListener('input', scheduleDraftSave);
   document.querySelector('.page-wrap').addEventListener('change', scheduleDraftSave);
 
-  // Only now is it safe for autosave to actually write anything — this blocks
-  // the blank/default draft state from init() (e.g. the starter unit-type row)
-  // from racing ahead of loadAndApplyDraft() and overwriting a real saved draft
-  // before the resume-choice modal even has a chance to appear.
-  appReady = true;
-
   // Trial visibility runs regardless of login — everyone gets to see the offer exists
-  // Trial promo disabled while all listings are free during launch — re-enable when charging resumes
-  // await checkTrialAvailability();
+  await checkTrialAvailability();
 }
 
 // ── Trial availability: sitewide slots always checked; personal eligibility only
@@ -1311,7 +1256,7 @@ function showTrialUI() {
     document.getElementById('banner-copy').textContent =
       `First-time sellers get a free ${TRIAL_DAYS}-day listing — no M-Pesa, no card. Sign in or create a free account to check your eligibility and claim it.`;
     document.getElementById('banner-spots-text').textContent = `${spotsLabel} — sign in to claim yours`;
-    note.innerHTML = `New here? <a href="login.html?next=post-listing">Sign in or create a free account</a> to check your eligibility and claim this instantly.`;
+    note.innerHTML = `New here? <a href="login.html?next=post-listing.html">Sign in or create a free account</a> to check your eligibility and claim this instantly.`;
     note.classList.add('show');
   }
 }
@@ -1474,7 +1419,7 @@ function selectPlan(plan) {
   if (plan === 'trial') {
     if (trialEligible === null) {
       showToast('Please sign in to claim your free trial', '');
-      setTimeout(() => window.location.href = 'login.html?next=post-listing', 900);
+      setTimeout(() => window.location.href = 'login.html?next=post-listing.html', 900);
       return;
     }
     if (trialEligible !== true) return;
@@ -1539,21 +1484,15 @@ async function handleFiles(files) {
     if (!file.type.startsWith('image/')) continue;
     if (file.size > 30 * 1024 * 1024) { showToast(`${file.name} is too large (max 30MB)`, 'error'); continue; }
     showToast('Processing photo…', '');
-    // Decode once and reuse the same bitmap across quality-check, resize, and
-    // watermark steps instead of each function independently re-decoding the
-    // same file (was 3 separate createImageBitmap calls per photo).
-    let sharedBitmap = null;
-    try { sharedBitmap = await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch (e) { console.error('Bitmap decode failed:', e); }
-    const quality      = checkImageQualityFromBitmap(sharedBitmap);
-    const processed    = await standardizeImage(file, sharedBitmap);
-    const watermarked  = await watermarkImage(processed, processed === file ? sharedBitmap : null);
-    if (sharedBitmap && typeof sharedBitmap.close === 'function') sharedBitmap.close();
+    const quality      = await checkImageQuality(file); // read BEFORE processing, for an accurate native resolution
+    const processed    = await standardizeImage(file);
+    const watermarked  = await watermarkImage(processed);
     photos.push({ file: watermarked, previewUrl: URL.createObjectURL(watermarked), needsEnhance: quality.needsEnhance });
   }
   renderPhotoGrid();
 }
 
-async function standardizeImage(file, sharedBitmap) {
+async function standardizeImage(file) {
   // Untouched originals keep full quality — only re-encode when necessary
   if (file.size <= 2 * 1024 * 1024) return file;
 
@@ -1561,9 +1500,9 @@ async function standardizeImage(file, sharedBitmap) {
   const JPEG_QUALITY = 0.95;  // devs typically use 0.9–0.95 for photos, not 0.8
 
   try {
-    // Reuse the bitmap decoded once in handleFiles() when available, instead
-    // of decoding this same file again.
-    const bitmap = sharedBitmap || await createImageBitmap(file, { imageOrientation: 'from-image' });
+    // createImageBitmap correctly applies EXIF orientation and decodes at
+    // full fidelity — more reliable than the <img> + canvas.drawImage path
+    const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
     let { width, height } = bitmap;
 
     if (width > MAX_DIM || height > MAX_DIM) {
@@ -1593,7 +1532,6 @@ async function standardizeImage(file, sharedBitmap) {
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(src, 0, 0, width, height);
-    if (!sharedBitmap && typeof bitmap.close === 'function') bitmap.close();
 
     const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', JPEG_QUALITY));
     return new File([blob], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' });
@@ -1615,11 +1553,9 @@ async function standardizeImage(file, sharedBitmap) {
    e.g. a phone number, tagline, or a site URL. ═════════ */
 const WATERMARK_TEXT = 'Nyumba254';
 
-async function watermarkImage(file, sharedBitmap) {
+async function watermarkImage(file) {
   try {
-    // Reuse the shared bitmap only if standardizeImage passed the *same*
-    // original file through untouched — otherwise decode fresh.
-    const bitmap = sharedBitmap || await createImageBitmap(file, { imageOrientation: 'from-image' });
+    const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
     const canvas = document.createElement('canvas');
     canvas.width  = bitmap.width;
     canvas.height = bitmap.height;
@@ -1666,10 +1602,14 @@ async function watermarkImage(file, sharedBitmap) {
 const CLOUDINARY_CLOUD_NAME = 'f2qbihwv';
 const NK_LOW_QUALITY_MAX_EDGE = 1000; // px — below this on the long edge, a photo is flagged
 
-function checkImageQualityFromBitmap(bitmap) {
-  if (!bitmap) return { needsEnhance: false }; // if we couldn't decode it, don't block the upload over it
-  const longEdge = Math.max(bitmap.width, bitmap.height);
-  return { needsEnhance: longEdge < NK_LOW_QUALITY_MAX_EDGE };
+async function checkImageQuality(file) {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const longEdge = Math.max(bitmap.width, bitmap.height);
+    return { needsEnhance: longEdge < NK_LOW_QUALITY_MAX_EDGE };
+  } catch (e) {
+    return { needsEnhance: false }; // if we can't even read it, don't block the upload over it
+  }
 }
 
 // Builds a Cloudinary "fetch" URL that AI-enhances an existing Supabase
@@ -1681,13 +1621,13 @@ function enhancePhotoIfNeeded(publicUrl) {
 
 function renderPhotoGrid() {
   document.getElementById('photo-count').textContent = photos.length
-    ? `${photos.length} photo${photos.length > 1 ? 's' : ''} added — tap "Set cover" on any photo to feature it first`
+    ? `${photos.length} photo${photos.length > 1 ? 's' : ''} added — hover to set cover`
     : 'No photos added yet';
   document.getElementById('photo-grid').innerHTML = photos.map((p, i) => `
     <div class="photo-thumb">
       <img src="${p.previewUrl}" alt="Photo ${i+1}"/>
-      <button class="remove-btn" onclick="removePhoto(${i})" aria-label="Remove photo ${i+1}">×</button>
-      ${i === coverIndex ? '<span class="cover-badge">Cover</span>' : `<button type="button" class="set-cover" onclick="setCover(${i})">Set cover</button>`}
+      <button class="remove-btn" onclick="removePhoto(${i})">×</button>
+      ${i === coverIndex ? '<span class="cover-badge">Cover</span>' : `<span class="set-cover" onclick="setCover(${i})">Set cover</span>`}
     </div>`).join('');
 }
 
@@ -1707,10 +1647,8 @@ function goStep(n) {
 
 function updateStepUI() {
   for (let i = 1; i <= 4; i++) {
-    const dot = document.getElementById(`dot-${i}`);
-    dot.className = 'step-dot' + (i < currentStep ? ' done' : i === currentStep ? ' active' : '');
-    dot.innerHTML = i < currentStep ? '' : `<span>${i}</span>`;
-    dot.setAttribute('aria-current', i === currentStep ? 'step' : 'false');
+    document.getElementById(`dot-${i}`).className = 'step-dot' + (i < currentStep ? ' done' : i === currentStep ? ' active' : '');
+    document.getElementById(`dot-${i}`).innerHTML = i < currentStep ? '' : `<span>${i}</span>`;
     document.getElementById(`lbl-${i}`).className = 'step-label' + (i === currentStep ? ' active' : '');
     const line = document.getElementById(`line-${i}`);
     if (line) line.className = 'step-line' + (i < currentStep ? ' done' : '');
@@ -1755,15 +1693,8 @@ function validateStep(step) {
   if (listingStructure === 'multi') {
     const valid = getValidUnitTypes();
     const err = document.getElementById('err-unit-types');
-    const incomplete = unitTypes.length > valid.length;
-    err.classList.toggle('show', valid.length === 0 || incomplete);
-    if (valid.length === 0) {
-      err.textContent = 'Please add at least one complete unit type (label, bedrooms, price and units available)';
-      ok = false;
-    } else if (incomplete) {
-      err.textContent = `${unitTypes.length - valid.length} unit type row(s) are missing required fields and won't be saved — fill them in or remove them`;
-      ok = false;
-    }
+    err.classList.toggle('show', valid.length === 0);
+    if (!valid.length) ok = false;
   }
 
   // If "Other — my area isn't listed" was chosen, the typed-in area is required too
@@ -1850,13 +1781,26 @@ function renderReview() {
     <div class="summary-row"><span>Photos</span><strong>${photos.length} photo(s) added</strong></div>
     ${unitTypesTable}`;
 
-  document.getElementById('trial-applied-banner').style.display = 'none';
+  const isTrial = selectedPlan === 'trial' && trialEligible === true;
+  document.getElementById('trial-applied-banner').style.display = isTrial ? 'flex' : 'none';
+
+  const planPrice = getPlanPrice();
+  const planLabel = isTrial
+    ? `🎉 Free ${TRIAL_DAYS}-day launch trial (first-time seller)`
+    : selectedPlan === 'featured' ? `Featured listing (${window.NK_SETTINGS.featured_duration_days} days)` : `Standard listing (${window.NK_SETTINGS.standard_duration_days} days)`;
+
+  let feeBreakdownRow = '';
+  if (!isTrial && listingStructure === 'multi') {
+    const units = getEffectiveTotalUnits();
+    const base = getPlanBasePrice(selectedPlan);
+    const perUnit = getPerUnitFee(selectedPlan);
+    feeBreakdownRow = `<div class="summary-row"><span>Fee breakdown</span><span>KES ${base.toLocaleString('en-KE')} base + KES ${perUnit} × ${units} units</span></div>`;
+  }
 
   document.getElementById('order-summary').innerHTML = `
-    <div class="summary-row"><span>Listing cost</span><span>FREE</span></div>
-    <div style="margin-top:6px;font-size:12.5px;color:var(--text-3);line-height:1.6">
-      Listing is free for now — charges may apply in the future.
-    </div>`;
+    <div class="summary-row"><span>Plan</span><span>${planLabel}</span></div>
+    ${feeBreakdownRow}
+    <div class="summary-row"><span>Total</span><span>${planPrice ? 'KES ' + planPrice.toLocaleString('en-KE') + ' (pay now or later)' : 'FREE — no payment needed'}</span></div>`;
 }
 
 async function uploadPhotos(listingId) {
@@ -1871,14 +1815,7 @@ async function uploadPhotos(listingId) {
     const { error } = await db.storage.from('listing-photos').upload(path, file, { cacheControl:'3600', upsert:false });
     if (error) { console.error('Upload error:', error); continue; }
     const { data: urlData } = db.storage.from('listing-photos').getPublicUrl(path);
-    // TEMP: Cloudinary enhancement disabled — the enhanced URLs were
-    // rendering broken (empty/black) on the listing page, most likely
-    // because "Allow fetching remote images" isn't enabled yet in the
-    // Cloudinary dashboard under Settings → Security. Re-enable the
-    // needsEnhance ? enhancePhotoIfNeeded(...) branch below once that's
-    // confirmed working — until then every photo just uses its plain
-    // Supabase Storage URL, which always renders correctly.
-    const finalUrl = urlData.publicUrl;
+    const finalUrl = needsEnhance ? enhancePhotoIfNeeded(urlData.publicUrl) : urlData.publicUrl;
     uploaded.push({ url: finalUrl, is_cover: i === coverIndex, position: i });
     bar.style.width = `${Math.round(((i+1)/photos.length)*100)}%`;
   }
@@ -1886,16 +1823,10 @@ async function uploadPhotos(listingId) {
   return uploaded;
 }
 
-let submitInFlight = false;
-
 async function submitListing() {
-  if (submitInFlight) return; // blocks a second call firing before the first has a chance to disable the button
-  submitInFlight = true;
-
   const agreeEl = document.getElementById('agree-terms');
   const agreeErr = document.getElementById('err-agree-terms');
   if (!agreeEl.checked) {
-    submitInFlight = false;
     agreeErr.classList.add('show');
     agreeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     showToast('Please agree to the Terms of Service and Privacy Policy to continue', 'error');
@@ -1905,8 +1836,7 @@ async function submitListing() {
 
   if (!currentUser) {
     showToast('Please sign in first', 'error');
-    setTimeout(() => window.location.href = 'login.html?next=post-listing', 1500);
-    submitInFlight = false;
+    setTimeout(() => window.location.href = 'login.html?next=post-listing.html', 1500);
     return;
   }
 
@@ -1957,7 +1887,7 @@ async function submitListing() {
       is_trial:         isTrial,
       trial_expires_at: isTrial ? new Date(Date.now() + TRIAL_DAYS*24*60*60*1000).toISOString() : null,
       status:           'pending',
-      payment_status:   'free_launch',
+      payment_status:   isTrial ? 'trial' : 'unpaid',
       seller_id:        currentUser.id,
       views:            0,
       is_multi_unit:    isMulti,
@@ -2010,16 +1940,19 @@ async function submitListing() {
       }
     }
 
-    document.getElementById('success-message').textContent =
-      `Your listing has been saved and is pending review. Listing is free for now — charges may apply in the future.`;
-    finishSubmission();
+    if (isTrial) {
+      document.getElementById('success-message').textContent =
+        `Your free ${TRIAL_DAYS}-day listing has been saved and is pending review. No payment is needed — once approved, it will be live for ${TRIAL_DAYS} days before it expires.`;
+      finishSubmission();
+    } else {
+      openPaymentModal();
+    }
 
   } catch(err) {
     console.error('Submit error:', err);
     showToast(`Error: ${err.message || 'Something went wrong. Please try again.'}`, 'error');
     btn.disabled = false;
     btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Submit listing →`;
-    submitInFlight = false;
   }
 }
 
@@ -2032,9 +1965,7 @@ function openPaymentModal() {
   document.getElementById('mpesa-code').value  = '';
   document.getElementById('bank-ref').value    = '';
   setStatusHidden();
-  document.getElementById('stk-btn').disabled = false;
-  document.getElementById('stk-btn').textContent = '📱 Send M-Pesa Prompt';
-  switchPayTab('mpesa');
+  switchPayTab('bank');
   document.getElementById('payment-modal').classList.add('show');
 }
 
@@ -2043,6 +1974,10 @@ function switchPayTab(tab) {
     document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
     document.getElementById(`panel-${t}`).classList.toggle('active', t === tab);
   });
+}
+
+function showStkComingSoon() {
+  showToast('M-Pesa STK Push is coming soon — please pay via Paybill for now.', '');
 }
 
 function setStatusHidden() {
@@ -2178,7 +2113,6 @@ async function confirmManualPayment(method) {
 function skipPayment() { finishSubmission(); }
 
 function finishSubmission() {
-  hasSubmittedListing = true;
   if (paymentPollTimer) clearInterval(paymentPollTimer);
   document.getElementById('payment-modal').classList.remove('show');
   document.getElementById('step-4').style.display = 'none';
@@ -2247,6 +2181,44 @@ document.addEventListener('keydown', e => {
 
 init();
 </script>
-<script src="nk-quick-help-widget.js" defer></script>
+
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
 </body>
 </html>
