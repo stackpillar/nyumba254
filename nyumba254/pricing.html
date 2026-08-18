@@ -445,7 +445,7 @@
     </a>
     <a href="/post-listing" class="btn-nav">List your apartment</a>
   </div>
-  <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Open menu">
+  <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-nav" id="mobile-menu-btn">
     <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
   </button>
 </nav>
@@ -866,7 +866,7 @@
         </div>
         <p class="footer-tagline">The easiest way to find and list apartments, shops, and offices across Kenya — without agents or commissions.</p>
         <div class="footer-social">
-          <a href="https://wa.me/254700000000" target="_blank" rel="noopener" title="WhatsApp">
+          <a href="https://wa.me/254706804462" target="_blank" rel="noopener" title="WhatsApp">
             <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
           </a>
           <a href="mailto:hello@nyumba254.co.ke" title="Email">
@@ -930,8 +930,11 @@
   function toggleFaq(btn) {
     const item = btn.closest('.faq-item');
     const isOpen = item.classList.contains('open');
-    document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
-    if (!isOpen) item.classList.add('open');
+    document.querySelectorAll('.faq-item.open').forEach(el => {
+      el.classList.remove('open');
+      el.querySelector('.faq-q')?.setAttribute('aria-expanded', 'false');
+    });
+    if (!isOpen) { item.classList.add('open'); btn.setAttribute('aria-expanded', 'true'); }
   }
 
   function animatePrice(el, target, prefix) {
@@ -968,7 +971,12 @@
     priceObserver.observe(basicPriceEl);
   }
 
-  document.querySelector('.faq-item')?.classList.add('open');
+  document.querySelectorAll('.faq-q').forEach(b => b.setAttribute('aria-expanded', 'false'));
+  const firstFaqItem = document.querySelector('.faq-item');
+  if (firstFaqItem) {
+    firstFaqItem.classList.add('open');
+    firstFaqItem.querySelector('.faq-q')?.setAttribute('aria-expanded', 'true');
+  }
 
   // ── Live pricing/duration: pulled from the same `platform_settings` table
   // the admin dashboard's Settings page writes to, so a price change there
@@ -976,7 +984,17 @@
   // before the fetch resolves / if it fails.
   const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
-  const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ── Match the "Remember me" storage adapter used on the sign-in page ──
+  const authStorage = {
+    getItem: (key) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).getItem(key),
+    setItem: (key, value) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).setItem(key, value),
+    removeItem: (key) => { localStorage.removeItem(key); sessionStorage.removeItem(key); }
+  };
+
+  const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { storage: authStorage, persistSession: true, autoRefreshToken: true }
+  });
 
   window.NK_SETTINGS = {
     standard_fee: 500,
@@ -1191,7 +1209,7 @@
         </div>` : '';
       return `
       <div class="proof-card">
-        <div class="proof-stars">${starString(r.rating)}</div>
+        <div class="proof-stars" role="img" aria-label="${r.rating} out of 5 stars">${starString(r.rating)}</div>
         <p class="proof-quote">"${escapeHtml(r.comment)}"</p>
         <div class="proof-author">
           <div class="proof-avatar">${initialsFor(r.reviewer_name)}</div>
@@ -1222,7 +1240,8 @@
 </script>
 <script>
   function toggleMobileMenu() {
-    document.getElementById('mobile-nav').classList.toggle('open');
+    const isOpen = document.getElementById('mobile-nav').classList.toggle('open');
+    document.getElementById('mobile-menu-btn')?.setAttribute('aria-expanded', isOpen);
   }
   document.addEventListener('click', e => {
     const nav = document.getElementById('mobile-nav');
