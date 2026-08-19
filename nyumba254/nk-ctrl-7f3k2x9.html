@@ -2684,7 +2684,7 @@ async function loadUsers(append) {
         <td><div class="user-cell">
           <div class="user-avatar">${ini}</div>
           <div>
-            <div style="font-weight:500">${esc(u.full_name || '—')}${u.role === 'admin' ? ' <span class="badge active" style="margin-left:6px">admin</span>' : ''}${u.verification_status==='verified'?' <span class="badge active" style="margin-left:6px">✓ verified</span>':''}${u.concierge_enabled?' <span class="badge featured" style="margin-left:6px">concierge</span>':''}</div>
+            <div style="font-weight:500">${esc(u.full_name || '—')}${u.role === 'admin' ? ' <span class="badge active" style="margin-left:6px">admin</span>' : ''}${u.verification_status==='verified'?' <span class="badge active" style="margin-left:6px">✓ verified</span>':' <span class="badge pending" style="margin-left:6px">unverified</span>'}${u.concierge_enabled?' <span class="badge featured" style="margin-left:6px">concierge</span>':''}${u.hide_buyer_contact?' <span class="badge rejected" style="margin-left:6px">contact hidden</span>':''}</div>
             <div style="font-size:11px;color:var(--text-3)">${esc(u.email || '')}</div>
           </div>
         </div></td>
@@ -3165,7 +3165,8 @@ async function messageSellerInChat(sellerId, sellerName) {
       <td>${p.verification_is_owner===false?'Not owner':'Owner'}${p.extra_verification_status==='submitted'?' · Extra docs submitted':''}</td>
       <td>${p.verification_submitted_at?fmtDate(p.verification_submitted_at):'—'}</td>
       <td><div class="action-btns">
-        <button class="action-btn view" onclick="viewVerifyDoc('${p.id}','id')">View ID</button>
+        <button class="action-btn view" onclick="viewVerifyDoc('${p.id}','id')">View ID (front)</button>
+        <button class="action-btn view" onclick="viewVerifyDoc('${p.id}','id2')">View ID (back)</button>
         <button class="action-btn view" onclick="viewVerifyDoc('${p.id}','proof')">View proof</button>
         ${p.verification_status==='pending'?`${aBtn('approve','Approve','approve',`approveVerification('${p.id}')`)}${aBtn('reject','Reject','reject',`rejectVerification('${p.id}')`)}`:''}
         ${p.extra_verification_status==='submitted'?aBtn('approve','Approve extra docs','approve',`approveExtraVerification('${p.id}')`):''}
@@ -3175,7 +3176,7 @@ async function messageSellerInChat(sellerId, sellerName) {
 
   async function viewVerifyDoc(sellerId, kind) {
     const p = _verifySellers[sellerId]; if (!p) return;
-    const path = kind==='id' ? p.verification_id_url : p.verification_proof_url;
+    const path = kind==='id' ? p.verification_id_url : kind==='id2' ? p.verification_id_url_2 : p.verification_proof_url;
     if (!path) { toast('No document uploaded','error'); return; }
     const { data, error } = await db.storage.from('verification-docs').createSignedUrl(path, 3600);
     if (error || !data?.signedUrl) { toast('Could not open document: '+(error?.message||''),'error'); return; }

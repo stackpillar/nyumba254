@@ -1144,6 +1144,14 @@ async function loadProfile(){
   if (conciergeNote) conciergeNote.textContent = data?.concierge_enabled
     ? "On — our team can now reply to your buyer messages for you. You'll still see everything in your Messages tab."
     : 'Off — you handle all your own enquiries.';
+
+  const hideContactToggle = document.getElementById('hide-contact-toggle');
+  if (hideContactToggle) hideContactToggle.checked = !!data?.hide_buyer_contact;
+  const hideContactNote = document.getElementById('hide-contact-note');
+  if (hideContactNote) hideContactNote.textContent = data?.hide_buyer_contact
+    ? 'On — every listing shows "Chat only" to buyers. Call/WhatsApp buttons are hidden platform-wide.'
+    : 'Off — buyers can reveal your number to call or WhatsApp you (rate-limited for your safety).';
+
   loadVerificationUI();
 
   const sidebarBadge = document.getElementById('sidebar-verify-badge');
@@ -1166,10 +1174,10 @@ function loadVerificationUI() {
     rejected:   '<span class="badge" style="background:var(--red-light);color:#c0392b">Needs changes</span>',
   };
   banner.innerHTML = `<div style="margin-bottom:10px">${badges[status]||badges.unverified}</div>` +
-    (status==='verified' ? `<p style="font-size:12.5px;color:var(--text-3)">You're verified — unlimited listings unlocked.</p>` : '') +
+    (status==='verified' ? `<p style="font-size:12.5px;color:var(--text-3)">You're verified — buyers see a trust badge on your listings, and your listing space is unlimited.</p>` : '') +
     (status==='pending' ? `<p style="font-size:12.5px;color:var(--text-3)">We're reviewing your documents — usually within 24 hours.</p>` : '') +
     (status==='rejected' && v.verification_rejection_reason ? `<p style="font-size:12.5px;color:#c0392b">${escHtml(v.verification_rejection_reason)}</p>` : '') +
-    (status==='unverified' ? `<p style="font-size:12.5px;color:var(--text-3)">Unverified sellers can post up to 2 listings. Verify to unlock unlimited listings.</p>` : '');
+    (status==='unverified' ? `<div style="background:var(--amber-light);border:1px solid #f2d29b;border-radius:8px;padding:10px 12px;font-size:12.5px;color:#7a5200;line-height:1.6"><strong>🔒 Verify your account to unlock more listing space.</strong> Unverified sellers can post up to 2 listings at a time — verified sellers get unlimited listings plus a trust badge buyers can see. Takes about 2 minutes.</div>` : '');
 
   formWrap.innerHTML = (status === 'pending' || status === 'verified') ? '' : `
       <div class="form-group"><label>Are you the property owner?</label>
@@ -1178,8 +1186,12 @@ function loadVerificationUI() {
           <option value="no">No — I'm listing on someone's behalf</option>
         </select>
       </div>
-      <div class="form-group"><label>National ID (front and back, one photo)</label>
+      <div class="form-group"><label>National ID — front side</label>
         <input type="file" id="verify-id-file" accept="image/*,.pdf"/>
+      </div>
+      <div class="form-group"><label>National ID — back side</label>
+        <input type="file" id="verify-id-file-2" accept="image/*,.pdf"/>
+        <p style="font-size:11px;color:var(--text-3);margin-top:4px">Both sides are required — we can't verify an ID from one side alone.</p>
       </div>
       <div class="form-group"><label id="verify-proof-label">Proof of ownership (Title Deed or lease copy)</label>
         <input type="file" id="verify-proof-file" accept="image/*,.pdf"/>
@@ -1213,17 +1225,20 @@ async function uploadVerifyFile(file, kind) {
 
 async function submitVerification() {
   const idFile = document.getElementById('verify-id-file').files[0];
+  const idFile2 = document.getElementById('verify-id-file-2').files[0];
   const proofFile = document.getElementById('verify-proof-file').files[0];
   const isOwner = document.getElementById('verify-is-owner').value === 'yes';
-  if (!idFile || !proofFile) { showToast('Please attach both documents','error'); return; }
+  if (!idFile || !idFile2) { showToast('Please upload both the front and back of your ID','error'); return; }
+  if (!proofFile) { showToast('Please attach your proof of ownership document','error'); return; }
   const btn = document.getElementById('verify-submit-btn');
   btn.disabled = true; btn.textContent = 'Uploading…';
   try {
-    const idPath = await uploadVerifyFile(idFile, 'id');
+    const idPath = await uploadVerifyFile(idFile, 'id-front');
+    const idPath2 = await uploadVerifyFile(idFile2, 'id-back');
     const proofPath = await uploadVerifyFile(proofFile, isOwner ? 'ownership' : 'authority');
     const { error } = await db.from('profiles').update({
       verification_status: 'pending', verification_is_owner: isOwner,
-      verification_id_url: idPath, verification_proof_url: proofPath,
+      verification_id_url: idPath, verification_id_url_2: idPath2, verification_proof_url: proofPath,
       verification_proof_type: isOwner ? 'title_deed_or_lease' : 'authority_letter',
       verification_submitted_at: new Date().toISOString(), verification_rejection_reason: null,
     }).eq('id', currentUser.id);
@@ -1273,7 +1288,15 @@ async function toggleConcierge(enabled) {
     type: enabled ? 'concierge_enabled' : 'concierge_disabled', sellerName: currentProfile?.full_name, sellerEmail: currentUser.email,
   })}).catch(()=>{});
 }
-
+async function toggleContactPrivacy(enabled) {
+  const { error } = await db.from('profiles').update({ hide_buyer_contact: enabled }).eq('id', currentUser.id);
+  if (error) { showToast('Could not update: '+error.message,'error'); document.getElementById('hide-contact-toggle').checked = !enabled; return; }
+  currentProfile = { ...currentProfile, hide_buyer_contact: enabled };
+  document.getElementById('hide-contact-note').textContent = enabled
+    ? 'On — every listing shows "Chat only" to buyers. Call/WhatsApp buttons are hidden platform-wide.'
+    : 'Off — buyers can reveal your number to call or WhatsApp you (rate-limited for your safety).';
+  showToast(enabled ? 'Contact buttons hidden on all listings ✓' : 'Call/WhatsApp buttons re-enabled','success');
+}
 async function saveNotificationPrefs(){
   const prefs={
     notif_enquiry: document.getElementById('notif-enquiry').checked,

@@ -249,8 +249,10 @@
     .seller-avatar { width:42px; height:42px; border-radius:50%; background:var(--green-light); display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; color:var(--green-dark); flex-shrink:0; }
     .seller-name { font-size:14px; font-weight:600; color:var(--text); }
     .seller-since { font-size:12px; color:var(--text-3); }
-    .verified-badge { display:inline-flex; align-items:center; gap:3px; font-size:11px; color:var(--green); font-weight:600; margin-top:3px; }
-    .verified-badge svg { width:12px; height:12px; stroke:var(--green); fill:none; stroke-width:2.5; }
+    .verified-badge { display:inline-flex; align-items:center; gap:3px; font-size:11px; color:var(--green); font-weight:700; margin-top:3px; background:var(--green-light); padding:2px 8px; border-radius:20px; }
+    .verified-badge svg { width:12px; height:12px; stroke:var(--green); fill:none; stroke-width:3; }
+    .unverified-badge { display:inline-flex; align-items:center; gap:3px; font-size:11px; color:#92400E; font-weight:600; margin-top:3px; background:var(--gold-light); padding:2px 8px; border-radius:20px; }
+    .unverified-badge svg { width:12px; height:12px; stroke:#92400E; fill:none; stroke-width:2; }
     .contact-btns { display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
     .btn-call { display:flex; align-items:center; justify-content:center; gap:8px; padding:13px; border-radius:var(--radius); font-size:15px; font-weight:600; background:var(--green); color:white; transition:background .15s; }
     .btn-call:hover { background:var(--green-dark); }
@@ -837,6 +839,10 @@
                 <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                 Verified seller
               </div>
+              <div class="unverified-badge" id="seller-unverified-badge" style="display:none">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                Unverified — proceed with caution
+              </div>
               <div class="seller-since" id="seller-since"></div>
               <div id="seller-rating" style="display:none;margin-top:4px"></div>
             </div>
@@ -1310,7 +1316,7 @@ async function loadListing() {
          is what stops bots from bulk-scraping every seller's number straight
          out of the page source or browser memory. Multi-unit properties also
          pull their listing_units rows here (unit types + live availability). */
-      .select('*, profiles(full_name, created_at, verification_status), listing_photos(*), listing_units(*)')
+      .select('*, profiles(full_name, created_at, verification_status, hide_buyer_contact), listing_photos(*), listing_units(*)')
       .eq('listing_number', parseInt(listingNumber, 10))
       .single();
 
@@ -1642,16 +1648,19 @@ function renderListing(l) {
   document.getElementById('seller-since').textContent = profile.created_at
     ? `Member since ${new Date(profile.created_at).toLocaleDateString('en-KE',{month:'long',year:'numeric'})}`
     : '';
-  document.getElementById('seller-verified-badge').style.display = profile.verification_status === 'verified' ? 'inline-flex' : 'none';
+  const nkIsVerifiedSeller = profile.verification_status === 'verified';
+  document.getElementById('seller-verified-badge').style.display = nkIsVerifiedSeller ? 'inline-flex' : 'none';
+  document.getElementById('seller-unverified-badge').style.display = nkIsVerifiedSeller ? 'none' : 'inline-flex';
 
-  if (l.contact_hidden) {
+  const contactHidden = !!(l.contact_hidden || l.profiles?.hide_buyer_contact);
+  if (contactHidden) {
     const contactBtns = document.querySelector('.contact-btns');
     const orDivider = document.querySelector('.or-divider');
     if (contactBtns) contactBtns.style.display = 'none';
     if (orDivider) orDivider.style.display = 'none';
     const banner = document.createElement('div');
     banner.style.cssText = 'background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;font-size:12.5px;color:var(--green-dark);line-height:1.6';
-    banner.innerHTML = '<strong>💬 Chat only</strong> — this seller keeps all buyer communication on Nyumba254 for privacy and to reduce scams. Send a message below and they\'ll reply here.';
+    banner.innerHTML = '<strong>🔒 For your security, contact reveal is off</strong> — this seller keeps all buyer communication on Nyumba254 to protect their privacy and reduce scams. Send a message below and they\'ll reply here.';
     contactBtns?.parentNode.insertBefore(banner, contactBtns);
   }
 
@@ -2273,8 +2282,8 @@ function nkBuildWaLink(rawPhone) {
 }
 
 async function handleContactClick(channel) {
-  if (listing?.contact_hidden) {
-    showToastNK('This seller only accepts messages on Nyumba254 — please send a message below.');
+  if (listing?.contact_hidden || listing?.profiles?.hide_buyer_contact) {
+    showToastNK('For your security, this seller has turned off contact reveal — please send a message below and they\'ll get back to you.');
     document.getElementById('enq-message')?.focus();
     return;
   }
