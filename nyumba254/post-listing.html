@@ -491,6 +491,7 @@
           <div class="field">
             <label>Price (KES) <span class="req">*</span> <span class="opt" id="price-suffix">total asking price</span></label>
             <input type="number" id="price" placeholder="e.g. 4500000" min="0"/>
+            <div class="field-hint" id="price-fee-hint" style="display:none"></div>
             <div class="field-error" id="err-price">Please enter a price</div>
           </div>
           <div class="field">
@@ -840,6 +841,21 @@
   </div>
 </div>
 
+<!-- RESUME DRAFT MODAL -->
+<div class="modal-overlay" id="resume-draft-modal">
+  <div class="modal-box" style="max-width:420px;text-align:center">
+    <div class="success-icon" style="margin:0 auto 18px">
+      <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-4-4L3 13.9"/></svg>
+    </div>
+    <h2 style="padding-right:0">Welcome back!</h2>
+    <p class="modal-hint" id="resume-draft-text">We saved your progress from earlier. Would you like to continue where you left off?</p>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn-back" style="flex:1" onclick="discardDraftAndStartFresh()">Start fresh</button>
+      <button class="btn-pay-primary" style="flex:1;margin-top:0" onclick="resumeDraft()">Continue draft →</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
@@ -854,8 +870,14 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 // Defaults below only apply before the fetch resolves / if it fails.
 // ══════════════════════════════════════════════════════════════
 window.NK_SETTINGS = {
-  standard_fee: 500,
-  featured_fee: 1500,
+  sale_standard_pct: 0.1,
+  sale_featured_pct: 0.2,
+  rent_standard_pct: 3,
+  rent_featured_pct: 6,
+  standard_min_fee: 300,
+  standard_max_fee: 5000,
+  featured_min_fee: 800,
+  featured_max_fee: 10000,
   standard_fee_per_unit: 50,
   featured_fee_per_unit: 150,
   trial_days: 14,
@@ -1058,6 +1080,8 @@ async function clearDraft() {
   }
 }
 
+let pendingDraft = null;
+
 async function loadAndApplyDraft() {
   let local = null;
   try {
@@ -1077,11 +1101,53 @@ async function loadAndApplyDraft() {
   if (local && server) draft = (server.savedAt >= local.savedAt) ? server : local;
   else draft = local || server;
 
-  if (!draft) return;
-  applyDraftData(draft);
+  if (!draft || !draftHasContent(draft)) return;
 
-  try { localStorage.setItem(DRAFT_LS_KEY, JSON.stringify(draft)); } catch(e) {}
-  if (currentUser) saveDraftToServer(draft);
+  pendingDraft = draft;
+  showResumeDraftPrompt(draft);
+}
+
+// Skip the prompt for a draft that's effectively empty (e.g. only the
+// default category/step were ever touched) — nothing worth resuming.
+function draftHasContent(draft) {
+  const f = draft.fields || {};
+  return !!(f.title?.trim() || f.description?.trim() || f.price || (draft.unitTypes||[]).some(u => u.label?.trim()));
+}
+
+function timeAgoLabel(ts) {
+  const mins = Math.floor((Date.now() - ts) / 60000);
+  if (mins < 1) return 'a moment ago';
+  if (mins < 60) return `${mins} minute${mins===1?'':'s'} ago`;
+  const hrs = Math.floor(mins/60);
+  if (hrs < 24) return `${hrs} hour${hrs===1?'':'s'} ago`;
+  const days = Math.floor(hrs/24);
+  return `${days} day${days===1?'':'s'} ago`;
+}
+
+function showResumeDraftPrompt(draft) {
+  const textEl = document.getElementById('resume-draft-text');
+  if (textEl) {
+    const savedAgo = timeAgoLabel(draft.savedAt);
+    const titleBit = draft.fields?.title ? ` — "${draft.fields.title}"` : '';
+    textEl.textContent = `We saved your progress from ${savedAgo}${titleBit}. Would you like to continue where you left off?`;
+  }
+  document.getElementById('resume-draft-modal').classList.add('show');
+}
+
+function resumeDraft() {
+  document.getElementById('resume-draft-modal').classList.remove('show');
+  if (pendingDraft) {
+    applyDraftData(pendingDraft);
+    try { localStorage.setItem(DRAFT_LS_KEY, JSON.stringify(pendingDraft)); } catch(e) {}
+    if (currentUser) saveDraftToServer(pendingDraft);
+  }
+  pendingDraft = null;
+}
+
+function discardDraftAndStartFresh() {
+  document.getElementById('resume-draft-modal').classList.remove('show');
+  pendingDraft = null;
+  clearDraft();
 }
 
 function applyDraftData(draft) {
@@ -1191,9 +1257,16 @@ async function init() {
   // added unit-type rows are covered too without extra wiring).
   document.querySelector('.page-wrap').addEventListener('input', scheduleDraftSave);
   document.querySelector('.page-wrap').addEventListener('change', scheduleDraftSave);
+  // Keep the fee preview live as the seller types a price or edits unit types.
+  document.querySelector('.page-wrap').addEventListener('input', (e) => {
+    if (e.target.id === 'price' || e.target.id === 'total_units' || e.target.closest('#unit-type-rows')) updatePricingCards();
+  });
 
   // Trial visibility runs regardless of login — everyone gets to see the offer exists
   await checkTrialAvailability();
+
+  // Reflect the live fee immediately, in case a restored draft already has a price.
+  updatePricingCards();
 }
 
 // ── Trial availability: sitewide slots always checked; personal eligibility only
@@ -1281,6 +1354,7 @@ function setType(type) {
   document.getElementById('type-rent').classList.toggle('active', type === 'rent');
   document.getElementById('price-suffix').textContent = type === 'sale' ? 'total asking price' : 'per month';
   if (listingStructure === 'multi') renderUnitTypeRows();
+  updatePricingCards();
 }
 
 // ── Listing structure: single unit vs a multi-unit property ──
@@ -1291,6 +1365,7 @@ function setStructure(mode) {
   document.getElementById('single-unit-fields').classList.toggle('hide', mode === 'multi');
   document.getElementById('unit-types-wrap').classList.toggle('show', mode === 'multi');
   if (mode === 'multi') updateUnitsSummary();
+  updatePricingCards();
   scheduleDraftSave();
 }
 
@@ -1431,8 +1506,14 @@ function selectPlan(plan) {
   if (trial) trial.classList.toggle('selected', plan === 'trial');
 }
 
-function getPlanBasePrice(plan) {
-  return plan === 'featured' ? window.NK_SETTINGS.featured_fee : window.NK_SETTINGS.standard_fee;
+// Shared logic — keep this identical to calcListingFee in dashboard.html.
+function calcListingFee(price, priceType, plan) {
+  price = Math.max(0, Number(price) || 0);
+  const pct = Number(window.NK_SETTINGS[`${priceType === 'rent' ? 'rent' : 'sale'}_${plan === 'featured' ? 'featured' : 'standard'}_pct`]) || 0;
+  let fee = price * (pct / 100);
+  const min = Number(window.NK_SETTINGS[plan === 'featured' ? 'featured_min_fee' : 'standard_min_fee']) || 0;
+  const max = Number(window.NK_SETTINGS[plan === 'featured' ? 'featured_max_fee' : 'standard_max_fee']) || Infinity;
+  return Math.round(Math.max(min, Math.min(max, fee)));
 }
 function getPerUnitFee(plan) {
   return plan === 'featured' ? window.NK_SETTINGS.featured_fee_per_unit : window.NK_SETTINGS.standard_fee_per_unit;
@@ -1440,12 +1521,16 @@ function getPerUnitFee(plan) {
 
 function getPlanPrice() {
   if (selectedPlan === 'trial') return 0; // trial is fully free, regardless of unit count
-  const base = getPlanBasePrice(selectedPlan);
+  const feePlan = selectedPlan === 'featured' ? 'featured' : 'standard';
   if (listingStructure === 'multi') {
+    const valid = getValidUnitTypes();
+    const portfolioValue = valid.reduce((s,u)=>s + (parseFloat(u.price)||0) * (parseInt(u.quantity)||0), 0);
+    const pctFee = calcListingFee(portfolioValue, priceType, feePlan);
     const units = getEffectiveTotalUnits();
-    return base + units * getPerUnitFee(selectedPlan);
+    return pctFee + units * getPerUnitFee(feePlan);
   }
-  return base;
+  const price = parseFloat(document.getElementById('price')?.value) || 0;
+  return calcListingFee(price, priceType, feePlan);
 }
 
 // Refreshes the price shown on each pricing card — for multi-unit properties
@@ -1453,25 +1538,41 @@ function getPlanPrice() {
 function updatePricingCards() {
   const noteBox = document.getElementById('multi-unit-price-note');
   if (listingStructure !== 'multi') {
-    document.getElementById('basic-price-tag').innerHTML = `KES ${window.NK_SETTINGS.standard_fee.toLocaleString('en-KE')} <span>one-time</span>`;
-    document.getElementById('featured-price-tag').innerHTML = `KES ${window.NK_SETTINGS.featured_fee.toLocaleString('en-KE')} <span>one-time</span>`;
-    document.getElementById('basic-price-note').style.display = 'none';
-    document.getElementById('featured-price-note').style.display = 'none';
+    const price = parseFloat(document.getElementById('price')?.value) || 0;
+    const stdFee  = calcListingFee(price, priceType, 'standard');
+    const featFee = calcListingFee(price, priceType, 'featured');
+    document.getElementById('basic-price-tag').innerHTML = `KES ${stdFee.toLocaleString('en-KE')} <span>one-time</span>`;
+    document.getElementById('featured-price-tag').innerHTML = `KES ${featFee.toLocaleString('en-KE')} <span>one-time</span>`;
+    const stdNote = document.getElementById('basic-price-note');
+    const featNote = document.getElementById('featured-price-note');
+    const hint = document.getElementById('price-fee-hint');
+    if (price > 0) {
+      const basis = priceType === 'rent' ? 'your listed monthly rent' : 'your listed asking price';
+      stdNote.style.display = 'block';  stdNote.textContent  = `Based on ${basis}`;
+      featNote.style.display = 'block'; featNote.textContent = `Based on ${basis}`;
+      if (hint) { hint.style.display = 'block'; hint.textContent = `Estimated listing fee — Standard: KES ${stdFee.toLocaleString('en-KE')} · Featured: KES ${featFee.toLocaleString('en-KE')}`; }
+    } else {
+      stdNote.style.display = 'none'; featNote.style.display = 'none';
+      if (hint) hint.style.display = 'none';
+    }
     noteBox.style.display = 'none';
     return;
   }
   const units = getEffectiveTotalUnits();
-  ['basic', 'featured'].forEach(plan => {
-    const base = getPlanBasePrice(plan);
+  const valid = getValidUnitTypes();
+  const portfolioValue = valid.reduce((s,u)=>s + (parseFloat(u.price)||0) * (parseInt(u.quantity)||0), 0);
+  ['standard', 'featured'].forEach(plan => {
+    const pctFee = calcListingFee(portfolioValue, priceType, plan);
     const perUnit = getPerUnitFee(plan);
-    const total = base + units * perUnit;
-    document.getElementById(`${plan}-price-tag`).innerHTML =
-      `KES ${total.toLocaleString('en-KE')} <span>one-time</span>`;
-    const note = document.getElementById(`${plan}-price-note`);
+    const total = pctFee + units * perUnit;
+    const tagId  = plan === 'standard' ? 'basic-price-tag' : 'featured-price-tag';
+    const noteId = plan === 'standard' ? 'basic-price-note' : 'featured-price-note';
+    document.getElementById(tagId).innerHTML = `KES ${total.toLocaleString('en-KE')} <span>one-time</span>`;
+    const note = document.getElementById(noteId);
     note.style.display = 'block';
     note.textContent = units > 0
-      ? `KES ${base.toLocaleString('en-KE')} base + KES ${perUnit}/unit × ${units} units`
-      : `KES ${base.toLocaleString('en-KE')} base + KES ${perUnit} per unit`;
+      ? `Based on total unit value + KES ${perUnit}/unit × ${units} units`
+      : `Based on total unit value + KES ${perUnit} per unit`;
   });
   noteBox.style.display = 'block';
 }
@@ -1790,11 +1891,18 @@ function renderReview() {
     : selectedPlan === 'featured' ? `Featured listing (${window.NK_SETTINGS.featured_duration_days} days)` : `Standard listing (${window.NK_SETTINGS.standard_duration_days} days)`;
 
   let feeBreakdownRow = '';
-  if (!isTrial && listingStructure === 'multi') {
-    const units = getEffectiveTotalUnits();
-    const base = getPlanBasePrice(selectedPlan);
-    const perUnit = getPerUnitFee(selectedPlan);
-    feeBreakdownRow = `<div class="summary-row"><span>Fee breakdown</span><span>KES ${base.toLocaleString('en-KE')} base + KES ${perUnit} × ${units} units</span></div>`;
+  if (!isTrial) {
+    const feePlan = selectedPlan === 'featured' ? 'featured' : 'standard';
+    if (listingStructure === 'multi') {
+      const units = getEffectiveTotalUnits();
+      const valid = getValidUnitTypes();
+      const portfolioValue = valid.reduce((s,u)=>s + (parseFloat(u.price)||0) * (parseInt(u.quantity)||0), 0);
+      const pctFee = calcListingFee(portfolioValue, priceType, feePlan);
+      const perUnit = getPerUnitFee(feePlan);
+      feeBreakdownRow = `<div class="summary-row"><span>Fee breakdown</span><span>KES ${pctFee.toLocaleString('en-KE')} (based on total unit value) + KES ${perUnit} × ${units} units</span></div>`;
+    } else {
+      feeBreakdownRow = `<div class="summary-row"><span>Fee basis</span><span>Calculated from your listed ${priceType === 'rent' ? 'monthly rent' : 'asking price'}</span></div>`;
+    }
   }
 
   document.getElementById('order-summary').innerHTML = `

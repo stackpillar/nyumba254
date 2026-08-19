@@ -898,8 +898,14 @@
         <p style="padding:14px 22px 4px;font-size:12px;color:var(--text-3);line-height:1.6">These control the fees and durations used across revenue calculations, the upgrade modal, and listing details — no code changes needed when they change.</p>
         <div style="padding:8px 22px 24px">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:640px">
-            <div class="settings-field"><label>Standard listing fee (KES)</label><input type="number" id="set-standard_fee"/></div>
-            <div class="settings-field"><label>Featured listing fee (KES)</label><input type="number" id="set-featured_fee"/></div>
+            <div class="settings-field"><label>Sale — Standard fee (%)</label><input type="number" step="0.01" id="set-sale_standard_pct"/></div>
+            <div class="settings-field"><label>Sale — Featured fee (%)</label><input type="number" step="0.01" id="set-sale_featured_pct"/></div>
+            <div class="settings-field"><label>Rent — Standard fee (%)</label><input type="number" step="0.01" id="set-rent_standard_pct"/></div>
+            <div class="settings-field"><label>Rent — Featured fee (%)</label><input type="number" step="0.01" id="set-rent_featured_pct"/></div>
+            <div class="settings-field"><label>Standard — min fee (KES)</label><input type="number" id="set-standard_min_fee"/></div>
+            <div class="settings-field"><label>Standard — max fee (KES)</label><input type="number" id="set-standard_max_fee"/></div>
+            <div class="settings-field"><label>Featured — min fee (KES)</label><input type="number" id="set-featured_min_fee"/></div>
+            <div class="settings-field"><label>Featured — max fee (KES)</label><input type="number" id="set-featured_max_fee"/></div>
             <div class="settings-field"><label>Standard — per extra unit (KES)</label><input type="number" id="set-standard_fee_per_unit"/></div>
             <div class="settings-field"><label>Featured — per extra unit (KES)</label><input type="number" id="set-featured_fee_per_unit"/></div>
             <div class="settings-field"><label>Free trial length (days)</label><input type="number" id="set-trial_days"/></div>
@@ -1410,8 +1416,14 @@
   // these with whatever's actually saved in platform_settings, so nothing
   // changes for existing installs until an admin edits a value.
   const SETTINGS = {
-    standard_fee: 500,
-    featured_fee: 1500,
+    sale_standard_pct: 0.1,
+    sale_featured_pct: 0.2,
+    rent_standard_pct: 3,
+    rent_featured_pct: 6,
+    standard_min_fee: 300,
+    standard_max_fee: 5000,
+    featured_min_fee: 800,
+    featured_max_fee: 10000,
     standard_fee_per_unit: 50,
     featured_fee_per_unit: 150,
     trial_days: 14,
@@ -1419,6 +1431,17 @@
     featured_duration_days: 90,
     recycle_bin_days: 30,
   };
+
+  // Shared logic — keep this in sync with the identical function in
+  // post-listing.html. Percentage fee, clamped to a min/max floor+ceiling.
+  function calcListingFee(price, priceType, plan) {
+    price = Math.max(0, Number(price) || 0);
+    const pct = Number(SETTINGS[`${priceType === 'rent' ? 'rent' : 'sale'}_${plan === 'featured' ? 'featured' : 'standard'}_pct`]) || 0;
+    let fee = price * (pct / 100);
+    const min = Number(SETTINGS[plan === 'featured' ? 'featured_min_fee' : 'standard_min_fee']) || 0;
+    const max = Number(SETTINGS[plan === 'featured' ? 'featured_max_fee' : 'standard_max_fee']) || Infinity;
+    return Math.round(Math.max(min, Math.min(max, fee)));
+  }
   const SETTINGS_KEYS = Object.keys(SETTINGS);
 
   async function loadSettings() {
@@ -1440,8 +1463,8 @@
   function applySettingsToUI() {
     const stdLabel = document.getElementById('price-standard-label');
     const featLabel = document.getElementById('price-featured-label');
-    if (stdLabel)  stdLabel.textContent  = 'KES ' + SETTINGS.standard_fee.toLocaleString();
-    if (featLabel) featLabel.textContent = 'KES ' + SETTINGS.featured_fee.toLocaleString();
+    if (stdLabel)  stdLabel.textContent  = `Sale ${SETTINGS.sale_standard_pct}% / Rent ${SETTINGS.rent_standard_pct}%`;
+    if (featLabel) featLabel.textContent = `Sale ${SETTINGS.sale_featured_pct}% / Rent ${SETTINGS.rent_featured_pct}%`;
   }
 
   function loadSettingsForm() {
@@ -2071,12 +2094,26 @@
     loadOverview(); if(currentView==='listings') loadAllListings();
   }
 
+  function calcUpgradeAmount(l, plan) {
+    const priceType = l.price_type === 'rent' ? 'rent' : 'sale';
+    const feePlan = plan === 'featured' ? 'featured' : 'standard';
+    if (l.is_multi_unit) {
+      const units = l.listing_units || [];
+      const portfolioValue = units.length
+        ? units.reduce((s,u)=>s + Number(u.price||0) * Number(u.quantity_total ?? u.quantity_available ?? 1), 0)
+        : Number(l.price||0) * (l.total_units||1);
+      const pctFee = calcListingFee(portfolioValue, priceType, feePlan);
+      const perUnit = (feePlan === 'featured' ? SETTINGS.featured_fee_per_unit : SETTINGS.standard_fee_per_unit) * (l.total_units || units.length || 0);
+      return pctFee + perUnit;
+    }
+    return calcListingFee(l.price, priceType, feePlan);
+  }
   function openUpgradeModal(id) {
     const l = _listings[id]; if(!l) return;
     upgradingListingId = id;
     const trialDaysLeft = l.trial_expires_at ? Math.max(0, Math.ceil((new Date(l.trial_expires_at)-new Date())/86400000)) : null;
     const perUnitNote = l.is_multi_unit
-      ? `<div class="multiunit-info-box">🏢 Multi-unit property — ${l.total_units||'?'} units. Standard/Featured base fees apply plus KES ${SETTINGS.standard_fee_per_unit} (standard) or KES ${SETTINGS.featured_fee_per_unit} (featured) per unit — adjust the amount manually if recording a specific payment.</div>`
+      ? `<div class="multiunit-info-box">🏢 Multi-unit property — ${l.total_units||'?'} units. Fee is based on total portfolio value plus KES ${SETTINGS.standard_fee_per_unit} (standard) or KES ${SETTINGS.featured_fee_per_unit} (featured) per unit — adjust the amount manually if recording a specific payment.</div>`
       : '';
     document.getElementById('upgrade-modal-body').innerHTML = `
       ${perUnitNote}
@@ -2085,11 +2122,11 @@
       ${trialDaysLeft!==null?`<div class="field"><label>Free trial</label><div class="val">${trialDaysLeft} day(s) left</div></div>`:''}
       <div class="field"><label>Choose plan</label>
         <select id="upgrade-plan" onchange="updateUpgradeAmount()">
-          <option value="basic">Standard — KES ${SETTINGS.standard_fee.toLocaleString()} (${SETTINGS.standard_duration_days} days, up to 6 photos)</option>
-          <option value="featured">Featured — KES ${SETTINGS.featured_fee.toLocaleString()} (${SETTINGS.featured_duration_days} days, up to 15 photos, top placement)</option>
+          <option value="basic">Standard — ${SETTINGS.standard_duration_days} days, up to 6 photos</option>
+          <option value="featured">Featured — ${SETTINGS.featured_duration_days} days, up to 15 photos, top placement</option>
         </select>
       </div>
-      <div class="field"><label>Amount to record (KES)</label><input type="number" id="upgrade-amount" value="${SETTINGS.standard_fee + (l.is_multi_unit && l.total_units ? SETTINGS.standard_fee_per_unit * l.total_units : 0)}"/></div>
+      <div class="field"><label>Amount to record (KES)</label><input type="number" id="upgrade-amount" value="${calcUpgradeAmount(l,'basic')}"/></div>
       <div class="field check-field"><input type="checkbox" id="upgrade-mark-paid" checked/><label for="upgrade-mark-paid">Mark payment as confirmed (M-Pesa already received)</label></div>
       <div class="confirm-warning">Confirming clears the free trial and activates the selected plan immediately — the seller's dashboard reflects this right away. Adjust the amount above if recording a discounted or negotiated payment.</div>`;
     document.getElementById('upgrade-modal').classList.add('open');
@@ -2097,11 +2134,7 @@
   function updateUpgradeAmount() {
     const l = _listings[upgradingListingId]; if (!l) return;
     const plan = document.getElementById('upgrade-plan').value;
-    let amount = plan === 'featured' ? SETTINGS.featured_fee : SETTINGS.standard_fee;
-    if (l.is_multi_unit && l.total_units) {
-      amount += (plan === 'featured' ? SETTINGS.featured_fee_per_unit : SETTINGS.standard_fee_per_unit) * l.total_units;
-    }
-    document.getElementById('upgrade-amount').value = amount;
+    document.getElementById('upgrade-amount').value = calcUpgradeAmount(l, plan);
   }
   function closeUpgradeModal() { document.getElementById('upgrade-modal').classList.remove('open'); upgradingListingId = null; }
 
