@@ -833,7 +833,7 @@
             <div class="seller-avatar" id="seller-avatar">?</div>
             <div>
               <div class="seller-name" id="seller-name">Loading…</div>
-              <div class="verified-badge">
+              <div class="verified-badge" id="seller-verified-badge" style="display:none">
                 <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                 Verified seller
               </div>
@@ -1310,7 +1310,7 @@ async function loadListing() {
          is what stops bots from bulk-scraping every seller's number straight
          out of the page source or browser memory. Multi-unit properties also
          pull their listing_units rows here (unit types + live availability). */
-      .select('*, profiles(full_name, created_at), listing_photos(*), listing_units(*)')
+      .select('*, profiles(full_name, created_at, verification_status), listing_photos(*), listing_units(*)')
       .eq('listing_number', parseInt(listingNumber, 10))
       .single();
 
@@ -1642,6 +1642,18 @@ function renderListing(l) {
   document.getElementById('seller-since').textContent = profile.created_at
     ? `Member since ${new Date(profile.created_at).toLocaleDateString('en-KE',{month:'long',year:'numeric'})}`
     : '';
+  document.getElementById('seller-verified-badge').style.display = profile.verification_status === 'verified' ? 'inline-flex' : 'none';
+
+  if (l.contact_hidden) {
+    const contactBtns = document.querySelector('.contact-btns');
+    const orDivider = document.querySelector('.or-divider');
+    if (contactBtns) contactBtns.style.display = 'none';
+    if (orDivider) orDivider.style.display = 'none';
+    const banner = document.createElement('div');
+    banner.style.cssText = 'background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;font-size:12.5px;color:var(--green-dark);line-height:1.6';
+    banner.innerHTML = '<strong>💬 Chat only</strong> — this seller keeps all buyer communication on Nyumba254 for privacy and to reduce scams. Send a message below and they\'ll reply here.';
+    contactBtns?.parentNode.insertBefore(banner, contactBtns);
+  }
 
   /* NOTE: the seller's phone is intentionally NOT touched here. Nothing
      about it is written to the DOM, an href, or even fetched, until the
@@ -2261,6 +2273,11 @@ function nkBuildWaLink(rawPhone) {
 }
 
 async function handleContactClick(channel) {
+  if (listing?.contact_hidden) {
+    showToastNK('This seller only accepts messages on Nyumba254 — please send a message below.');
+    document.getElementById('enq-message')?.focus();
+    return;
+  }
   if (contactRevealBusy) return;
 
   // Fetch + unlock (only once per page visit).

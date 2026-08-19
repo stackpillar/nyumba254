@@ -568,8 +568,9 @@
       <div class="sidebar-user" onclick="showPage('settings')" role="button" tabindex="0" aria-label="Account settings" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
         <div class="sidebar-avatar" id="sidebar-avatar">?</div>
         <div>
-          <div class="sidebar-user-name" id="sidebar-name">Loading…</div>
-          <div class="sidebar-user-email" id="sidebar-email">…</div>
+        <div class="sidebar-user-name" id="sidebar-name">Loading…</div>
+        <div class="sidebar-user-email" id="sidebar-email">…</div>
+        <div id="sidebar-verify-badge" style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);margin-top:2px">—</div>
         </div>
       </div>
       <button class="nav-item" onclick="doSignOut()" style="margin-top:4px;color:rgba(255,255,255,0.5)">
@@ -731,6 +732,19 @@
             </div>
             <button class="btn btn-outline btn-sm" style="margin-top:14px;width:100%;justify-content:center" onclick="saveNotificationPrefs()">Save preferences</button>
           </div>
+          <div class="settings-section">
+            <h3><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>Account verification</h3>
+            <div id="verify-status-banner" style="margin-bottom:14px"></div>
+            <div id="verify-form-wrap"></div>
+          </div>
+          <div class="settings-section">
+            <h3><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Managed chat</h3>
+            <div class="toggle-row" style="border-bottom:none">
+              <div class="toggle-label"><strong>Let our team handle enquiries</strong><span>We reply to buyer messages on your behalf — you never need to log in for it</span></div>
+              <label class="switch"><input type="checkbox" id="concierge-toggle" onchange="toggleConcierge(this.checked)"/><span class="switch-track"></span></label>
+            </div>
+            <p style="font-size:12px;color:var(--text-3);line-height:1.6;margin-top:8px" id="concierge-note"></p>
+          </div>
         </div>
       </div>
       <div class="danger-zone">
@@ -765,6 +779,7 @@
         <div class="form-group" style="grid-column:1/-1"><label>Address / sub-area</label><input type="text" id="edit-address"/></div>
         <div class="form-group" style="grid-column:1/-1"><label>Description</label><textarea id="edit-description" style="min-height:120px"></textarea></div>
         <div class="form-group" style="grid-column:1/-1"><label>Furnished</label><label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:10px;background:var(--surface);border-radius:6px;text-transform:none;letter-spacing:0"><input type="checkbox" id="edit-furnished"/> This apartment is furnished</label></div>
+        <div class="form-group" style="grid-column:1/-1"><label>Contact privacy</label><label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:10px;background:var(--surface);border-radius:6px;text-transform:none;letter-spacing:0"><input type="checkbox" id="edit-contact_hidden"/> Keep buyer contact on chat only (hide Call/WhatsApp)</label></div>
       </div>
       <div style="margin-top:16px"><div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text-3);margin-bottom:10px">Amenities</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px" id="edit-amenities-grid"></div></div>
     </div>
@@ -1122,6 +1137,141 @@ async function loadProfile(){
   document.getElementById('notif-approved').checked = data?.notif_approved !== false;
   document.getElementById('notif-expiring').checked = data?.notif_expiring !== false;
   document.getElementById('notif-payment').checked = data?.notif_payment !== false;
+
+  const conciergeToggle = document.getElementById('concierge-toggle');
+  if (conciergeToggle) conciergeToggle.checked = !!data?.concierge_enabled;
+  const conciergeNote = document.getElementById('concierge-note');
+  if (conciergeNote) conciergeNote.textContent = data?.concierge_enabled
+    ? "On — our team can now reply to your buyer messages for you. You'll still see everything in your Messages tab."
+    : 'Off — you handle all your own enquiries.';
+  loadVerificationUI();
+
+  const sidebarBadge = document.getElementById('sidebar-verify-badge');
+  if (sidebarBadge) sidebarBadge.textContent = data?.verification_status === 'verified' ? '✓ Verified' : 'Unverified';
+}
+
+const VERIFY_BUCKET = 'verification-docs';
+
+function loadVerificationUI() {
+  const v = currentProfile || {};
+  const status = v.verification_status || 'unverified';
+  const banner = document.getElementById('verify-status-banner');
+  const formWrap = document.getElementById('verify-form-wrap');
+  if (!banner || !formWrap) return;
+
+  const badges = {
+    unverified: '<span class="badge" style="background:var(--surface);color:var(--text-3)">Not verified</span>',
+    pending:    '<span class="badge" style="background:var(--amber-light);color:var(--amber)">Pending review</span>',
+    verified:   '<span class="badge" style="background:#d1fae5;color:#065f46">✓ Verified</span>',
+    rejected:   '<span class="badge" style="background:var(--red-light);color:#c0392b">Needs changes</span>',
+  };
+  banner.innerHTML = `<div style="margin-bottom:10px">${badges[status]||badges.unverified}</div>` +
+    (status==='verified' ? `<p style="font-size:12.5px;color:var(--text-3)">You're verified — unlimited listings unlocked.</p>` : '') +
+    (status==='pending' ? `<p style="font-size:12.5px;color:var(--text-3)">We're reviewing your documents — usually within 24 hours.</p>` : '') +
+    (status==='rejected' && v.verification_rejection_reason ? `<p style="font-size:12.5px;color:#c0392b">${escHtml(v.verification_rejection_reason)}</p>` : '') +
+    (status==='unverified' ? `<p style="font-size:12.5px;color:var(--text-3)">Unverified sellers can post up to 2 listings. Verify to unlock unlimited listings.</p>` : '');
+
+  formWrap.innerHTML = (status === 'pending' || status === 'verified') ? '' : `
+      <div class="form-group"><label>Are you the property owner?</label>
+        <select id="verify-is-owner" onchange="updateVerifyProofLabel()">
+          <option value="yes">Yes, I own it</option>
+          <option value="no">No — I'm listing on someone's behalf</option>
+        </select>
+      </div>
+      <div class="form-group"><label>National ID (front and back, one photo)</label>
+        <input type="file" id="verify-id-file" accept="image/*,.pdf"/>
+      </div>
+      <div class="form-group"><label id="verify-proof-label">Proof of ownership (Title Deed or lease copy)</label>
+        <input type="file" id="verify-proof-file" accept="image/*,.pdf"/>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" id="verify-submit-btn" onclick="submitVerification()">Submit for review</button>`;
+
+  if (v.extra_verification_status === 'requested') {
+    banner.innerHTML += `
+      <div style="margin-top:12px;padding:12px 14px;background:var(--red-light);border-radius:8px;font-size:12.5px;color:#742a2a;line-height:1.6">
+        <strong>Additional documents requested:</strong> ${escHtml(v.extra_verification_reason||'')}
+        <div style="margin-top:8px"><input type="file" id="extra-doc-file" accept="image/*,.pdf"/></div>
+        <button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="submitExtraVerification()">Upload document</button>
+      </div>`;
+  }
+}
+
+function updateVerifyProofLabel() {
+  const isOwner = document.getElementById('verify-is-owner').value === 'yes';
+  document.getElementById('verify-proof-label').textContent = isOwner
+    ? 'Proof of ownership (Title Deed or lease copy)'
+    : "Authority letter, or the owner's ID + a short written consent";
+}
+
+async function uploadVerifyFile(file, kind) {
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  const path = `${currentUser.id}/${kind}-${Date.now()}.${ext}`;
+  const { error } = await db.storage.from(VERIFY_BUCKET).upload(path, file, { upsert:false });
+  if (error) throw error;
+  return path;
+}
+
+async function submitVerification() {
+  const idFile = document.getElementById('verify-id-file').files[0];
+  const proofFile = document.getElementById('verify-proof-file').files[0];
+  const isOwner = document.getElementById('verify-is-owner').value === 'yes';
+  if (!idFile || !proofFile) { showToast('Please attach both documents','error'); return; }
+  const btn = document.getElementById('verify-submit-btn');
+  btn.disabled = true; btn.textContent = 'Uploading…';
+  try {
+    const idPath = await uploadVerifyFile(idFile, 'id');
+    const proofPath = await uploadVerifyFile(proofFile, isOwner ? 'ownership' : 'authority');
+    const { error } = await db.from('profiles').update({
+      verification_status: 'pending', verification_is_owner: isOwner,
+      verification_id_url: idPath, verification_proof_url: proofPath,
+      verification_proof_type: isOwner ? 'title_deed_or_lease' : 'authority_letter',
+      verification_submitted_at: new Date().toISOString(), verification_rejection_reason: null,
+    }).eq('id', currentUser.id);
+    if (error) throw error;
+    await db.from('verification_activity_log').insert({ seller_id: currentUser.id, action:'submitted' });
+    currentProfile = { ...currentProfile, verification_status:'pending', verification_is_owner:isOwner };
+    loadVerificationUI();
+    showToast('Submitted for review ✓','success');
+    fetch(`${EDGE_URL}/send-notification-email`, { method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}, body: JSON.stringify({
+      type:'verification_submitted', sellerName: currentProfile?.full_name, sellerEmail: currentUser.email, isOwner, proofType: isOwner?'Title deed / lease':'Authority letter',
+    })}).catch(()=>{});
+  } catch(e) {
+    showToast('Upload failed: '+e.message,'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Submit for review';
+  }
+}
+
+async function submitExtraVerification() {
+  const file = document.getElementById('extra-doc-file')?.files[0];
+  if (!file) { showToast('Please attach a file','error'); return; }
+  try {
+    const path = await uploadVerifyFile(file, 'extra');
+    const docs = Array.isArray(currentProfile?.extra_verification_docs) ? [...currentProfile.extra_verification_docs] : [];
+    docs.push({ url: path, uploaded_at: new Date().toISOString() });
+    const { error } = await db.from('profiles').update({ extra_verification_docs: docs, extra_verification_status: 'submitted' }).eq('id', currentUser.id);
+    if (error) throw error;
+    await db.from('verification_activity_log').insert({ seller_id: currentUser.id, action:'extra_submitted' });
+    currentProfile = { ...currentProfile, extra_verification_docs: docs, extra_verification_status:'submitted' };
+    loadVerificationUI();
+    showToast('Uploaded ✓ — our team will review it shortly','success');
+    fetch(`${EDGE_URL}/send-notification-email`, { method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}, body: JSON.stringify({
+      type:'extra_verification_submitted', sellerName: currentProfile?.full_name, sellerEmail: currentUser.email,
+    })}).catch(()=>{});
+  } catch(e) { showToast('Upload failed: '+e.message,'error'); }
+}
+
+async function toggleConcierge(enabled) {
+  const { error } = await db.from('profiles').update({ concierge_enabled: enabled, concierge_enabled_at: enabled ? new Date().toISOString() : null }).eq('id', currentUser.id);
+  if (error) { showToast('Could not update: '+error.message,'error'); document.getElementById('concierge-toggle').checked = !enabled; return; }
+  currentProfile = { ...currentProfile, concierge_enabled: enabled };
+  document.getElementById('concierge-note').textContent = enabled
+    ? "On — our team can now reply to your buyer messages for you. You'll still see everything in your Messages tab."
+    : 'Off — you handle all your own enquiries.';
+  showToast(enabled ? 'Managed chat turned on ✓' : 'Managed chat turned off','success');
+  fetch(`${EDGE_URL}/send-notification-email`, { method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}, body: JSON.stringify({
+    type: enabled ? 'concierge_enabled' : 'concierge_disabled', sellerName: currentProfile?.full_name, sellerEmail: currentUser.email,
+  })}).catch(()=>{});
 }
 
 async function saveNotificationPrefs(){
@@ -1611,7 +1761,7 @@ async function muLoadOccupancyLog(unitId){
 
 function openEditModal(id){
   const l=allListings.find(l=>l.id===id);if(!l)return;
-  document.getElementById('edit-id').value=l.id;document.getElementById('edit-title').value=l.title||'';document.getElementById('edit-price').value=l.price||'';document.getElementById('edit-price-type').value=l.price_type||'sale';document.getElementById('edit-bedrooms').value=l.bedrooms||'';document.getElementById('edit-bathrooms').value=l.bathrooms||'';document.getElementById('edit-size').value=l.size_sqm||'';document.getElementById('edit-category').value=l.category||'standard';document.getElementById('edit-address').value=l.address||'';document.getElementById('edit-description').value=l.description||'';document.getElementById('edit-furnished').checked=l.furnished||false;
+  document.getElementById('edit-id').value=l.id;document.getElementById('edit-title').value=l.title||'';document.getElementById('edit-price').value=l.price||'';document.getElementById('edit-price-type').value=l.price_type||'sale';document.getElementById('edit-bedrooms').value=l.bedrooms||'';document.getElementById('edit-bathrooms').value=l.bathrooms||'';document.getElementById('edit-size').value=l.size_sqm||'';document.getElementById('edit-category').value=l.category||'standard';document.getElementById('edit-address').value=l.address||'';document.getElementById('edit-description').value=l.description||'';document.getElementById('edit-furnished').checked=l.furnished||false;document.getElementById('edit-contact_hidden').checked=l.contact_hidden||false;
   const currentArea=l.area||'Milimani';
   const currentCounty=NK_AREA_TO_COUNTY[currentArea]||'Kisumu';
   document.getElementById('edit-county').value=currentCounty;
@@ -1627,7 +1777,7 @@ function openEditModal(id){
 async function saveEdit(){
   const id=document.getElementById('edit-id').value;
   const am={};AMENITY_KEYS.forEach(a=>{am[a.key]=document.getElementById('edit-'+a.key)?.checked||false;});
-  const u={title:document.getElementById('edit-title').value.trim(),price:parseFloat(document.getElementById('edit-price').value)||0,price_type:document.getElementById('edit-price-type').value,bedrooms:parseInt(document.getElementById('edit-bedrooms').value)||null,bathrooms:parseInt(document.getElementById('edit-bathrooms').value)||null,size_sqm:parseFloat(document.getElementById('edit-size').value)||null,area:document.getElementById('edit-area').value,category:document.getElementById('edit-category').value,address:document.getElementById('edit-address').value.trim(),description:document.getElementById('edit-description').value.trim(),furnished:document.getElementById('edit-furnished').checked,...am};
+  const u={title:document.getElementById('edit-title').value.trim(),price:parseFloat(document.getElementById('edit-price').value)||0,price_type:document.getElementById('edit-price-type').value,bedrooms:parseInt(document.getElementById('edit-bedrooms').value)||null,bathrooms:parseInt(document.getElementById('edit-bathrooms').value)||null,size_sqm:parseFloat(document.getElementById('edit-size').value)||null,area:document.getElementById('edit-area').value,category:document.getElementById('edit-category').value,address:document.getElementById('edit-address').value.trim(),description:document.getElementById('edit-description').value.trim(),furnished:document.getElementById('edit-furnished').checked,contact_hidden:document.getElementById('edit-contact_hidden').checked,...am};
   const btn=document.getElementById('btn-save-edit');btn.disabled=true;btn.innerHTML='<span class="spinner-sm"></span> Saving…';
   const original=allListings.find(l=>l.id===id);
   const oldPrice=original?Number(original.price):null;

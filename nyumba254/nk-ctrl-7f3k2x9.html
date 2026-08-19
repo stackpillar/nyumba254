@@ -664,12 +664,22 @@
       <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
       Sellers
     </button>
+    <button class="nav-item" data-view="concierge" onclick="showView('concierge')">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      Concierge sellers
+      <span class="nav-badge green" id="nav-badge-concierge">—</span>
+    </button>
     <button class="nav-item" data-view="enquiries" onclick="showView('enquiries')">
       <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
       Enquiries
       <span class="nav-badge" id="nav-badge-enquiries">—</span>
     </button>
     <div class="nav-section-label" style="margin-top:8px">Safety &amp; trust</div>
+    <button class="nav-item" data-view="verification" onclick="showView('verification')">
+      <svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>
+      Verification
+      <span class="nav-badge" id="nav-badge-verification">—</span>
+    </button>
     <button class="nav-item" data-view="reports" onclick="showView('reports')">
       <svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
       Reports
@@ -968,6 +978,35 @@
       </div>
     </div>
 
+        <!-- VERIFICATION -->
+    <div class="view" id="view-verification">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Seller verification</span></div>
+        <div class="table-wrap mobile-hide">
+          <table>
+            <thead><tr><th>Seller</th><th>Ownership</th><th>Submitted</th><th>Actions</th></tr></thead>
+            <tbody id="verification-body"><tr class="skeleton-row"><td colspan="4"><div class="skel"></div></td></tr></tbody>
+          </table>
+        </div>
+        <div class="mobile-card-list" id="verification-mobile"></div>
+      </div>
+    </div>
+
+    <!-- CONCIERGE -->
+    <div class="view" id="view-concierge">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Concierge sellers</span></div>
+        <p style="padding:0 22px 14px;font-size:12px;color:var(--text-3)">Sellers who've turned on managed chat. Open a seller to reply to their buyer enquiries on their behalf.</p>
+        <div class="table-wrap mobile-hide">
+          <table>
+            <thead><tr><th>Seller</th><th>Enabled since</th><th>Actions</th></tr></thead>
+            <tbody id="concierge-body"><tr class="skeleton-row"><td colspan="3"><div class="skel"></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORTS -->
     <!-- REPORTS -->
     <div class="view" id="view-reports">
       <div class="card">
@@ -2645,7 +2684,7 @@ async function loadUsers(append) {
         <td><div class="user-cell">
           <div class="user-avatar">${ini}</div>
           <div>
-            <div style="font-weight:500">${esc(u.full_name || '—')}${u.role === 'admin' ? ' <span class="badge active" style="margin-left:6px">admin</span>' : ''}</div>
+            <div style="font-weight:500">${esc(u.full_name || '—')}${u.role === 'admin' ? ' <span class="badge active" style="margin-left:6px">admin</span>' : ''}${u.verification_status==='verified'?' <span class="badge active" style="margin-left:6px">✓ verified</span>':''}${u.concierge_enabled?' <span class="badge featured" style="margin-left:6px">concierge</span>':''}</div>
             <div style="font-size:11px;color:var(--text-3)">${esc(u.email || '')}</div>
           </div>
         </div></td>
@@ -2900,6 +2939,13 @@ async function messageSellerInChat(sellerId, sellerName) {
   let _enqItems = [];
   let enqTab = 'all';
   const _enqThreads = {};
+  let _conciergeSellerIds = new Set();
+  let _verifySellers = {};
+  let _activeInquiryId = null;
+  async function loadConciergeSellerIds() {
+    const { data } = await db.from('profiles').select('id').eq('concierge_enabled', true);
+    _conciergeSellerIds = new Set((data||[]).map(p=>p.id));
+  }
 
   async function loadEnquiries() {
     const tbody    = document.getElementById('enquiries-body');
@@ -2944,7 +2990,7 @@ async function messageSellerInChat(sellerId, sellerName) {
         preview: last.content || last.message || '',
         date: last.created_at,
       });
-      _enqThreads[key] = { kind:'message', name:last.buyer_name||'Buyer', contact:last.buyer_phone||'', related:last.listings?.title||'—', messages:msgs };
+      _enqThreads[key] = { kind:'message', name:last.buyer_name||'Buyer', contact:last.buyer_phone||'', related:last.listings?.title||'—', messages:msgs, listingId: last.listing_id, sellerId: last.listings?.seller_id||null, buyerToken: last.buyer_token||null, buyerPhone: last.buyer_phone||null, buyerName: last.buyer_name||null };
     });
 
     (chatData||[]).forEach(c => {
@@ -3059,7 +3105,9 @@ async function messageSellerInChat(sellerId, sellerName) {
 
   function openInquiryModal(id) {
     const t = _enqThreads[id]; if (!t) return;
+    _activeInquiryId = id;
     document.getElementById('inquiry-modal-title').textContent = t.related || 'Conversation';
+    const isConcierge = t.kind==='message' && t.sellerId && _conciergeSellerIds.has(t.sellerId);
     let body = '';
     if (t.kind === 'enquiry') {
       body = `
@@ -3070,20 +3118,138 @@ async function messageSellerInChat(sellerId, sellerName) {
       body = `
         <div class="field"><label>Between</label><div class="val">${esc(t.name)}${t.contact?' · '+esc(t.contact):''} and the seller</div></div>
         <div class="field"><label>Listing</label><div class="val">${esc(t.related)}</div></div>
+        ${isConcierge?'<div class="confirm-warning" style="background:var(--green-light);color:var(--green-dark)">🎧 This seller has managed chat on — you can reply below on their behalf. It shows to the buyer as a normal reply from the seller.</div>':''}
         <div class="field"><label>Full conversation</label>
           <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
             ${t.messages.map(m => `
               <div style="align-self:${m.sender==='seller'?'flex-end':'flex-start'};max-width:85%">
-                <div style="font-size:11px;color:var(--text-3);margin-bottom:2px">${m.sender==='seller'?'Seller':'Buyer'} · ${new Date(m.created_at).toLocaleString('en-KE')}</div>
+                <div style="font-size:11px;color:var(--text-3);margin-bottom:2px">${m.sender==='seller'?(m.sent_by_admin_id?'Seller (via admin)':'Seller'):'Buyer'} · ${new Date(m.created_at).toLocaleString('en-KE')}</div>
                 <div style="background:${m.sender==='seller'?'var(--green-light)':'var(--surface)'};border-radius:10px;padding:8px 12px;font-size:13px;color:var(--text-2)">${esc(m.content||m.message||'')}</div>
               </div>`).join('')}
           </div>
-        </div>`;
+        </div>
+        ${isConcierge?`<div class="field"><label>Reply as the seller</label><textarea id="concierge-reply-text" rows="3" placeholder="Type a reply — the buyer will see this as coming from the seller…"></textarea></div>`:''}`;
     }
     document.getElementById('inquiry-modal-body').innerHTML = body;
-    document.getElementById('inquiry-modal-footer').innerHTML = `<button class="btn-modal cancel" onclick="closeInquiryModal()">Close</button>`;
+    document.getElementById('inquiry-modal-footer').innerHTML = isConcierge
+      ? `<button class="btn-modal cancel" onclick="closeInquiryModal()">Close</button><button class="btn-modal approve" onclick="sendConciergeReply()">Send reply</button>`
+      : `<button class="btn-modal cancel" onclick="closeInquiryModal()">Close</button>`;
     document.getElementById('inquiry-modal').classList.add('open');
     markInquiryRead(id);
+  }
+
+  async function sendConciergeReply() {
+    const t = _enqThreads[_activeInquiryId]; if (!t) return;
+    const textEl = document.getElementById('concierge-reply-text');
+    const text = textEl.value.trim();
+    if (!text) return;
+    const { data, error } = await db.from('messages').insert({
+      listing_id: t.listingId, buyer_token: t.buyerToken, buyer_name: t.buyerName,
+      buyer_phone: t.buyerPhone, sender: 'seller', content: text, sent_by_admin_id: currentUser.id,
+    }).select().single();
+    if (error) { toast('Could not send: '+error.message,'error'); return; }
+    t.messages.push(data);
+    openInquiryModal(_activeInquiryId);
+    toast('Reply sent ✓','success');
+  }
+
+  async function loadVerification() {
+    const tbody = document.getElementById('verification-body');
+    tbody.innerHTML = `<tr class="skeleton-row"><td colspan="4"><div class="skel"></div></td></tr>`.repeat(3);
+    const { data, error } = await db.from('profiles').select('*').or('verification_status.eq.pending,extra_verification_status.eq.submitted').order('verification_submitted_at',{ascending:false});
+    document.getElementById('nav-badge-verification').textContent = (data||[]).filter(p=>p.verification_status==='pending').length;
+    if (error || !data?.length) { tbody.innerHTML = `<tr><td colspan="4"><div class="table-loading"><p>Nothing pending review</p></div></td></tr>`; return; }
+    _verifySellers = {}; data.forEach(p=>{_verifySellers[p.id]=p;});
+    tbody.innerHTML = data.map(p => `<tr>
+      <td>${esc(p.full_name||'—')}<div class="listing-meta">${esc(p.email||'')}</div></td>
+      <td>${p.verification_is_owner===false?'Not owner':'Owner'}${p.extra_verification_status==='submitted'?' · Extra docs submitted':''}</td>
+      <td>${p.verification_submitted_at?fmtDate(p.verification_submitted_at):'—'}</td>
+      <td><div class="action-btns">
+        <button class="action-btn view" onclick="viewVerifyDoc('${p.id}','id')">View ID</button>
+        <button class="action-btn view" onclick="viewVerifyDoc('${p.id}','proof')">View proof</button>
+        ${p.verification_status==='pending'?`${aBtn('approve','Approve','approve',`approveVerification('${p.id}')`)}${aBtn('reject','Reject','reject',`rejectVerification('${p.id}')`)}`:''}
+        ${p.extra_verification_status==='submitted'?aBtn('approve','Approve extra docs','approve',`approveExtraVerification('${p.id}')`):''}
+      </div></td>
+    </tr>`).join('');
+  }
+
+  async function viewVerifyDoc(sellerId, kind) {
+    const p = _verifySellers[sellerId]; if (!p) return;
+    const path = kind==='id' ? p.verification_id_url : p.verification_proof_url;
+    if (!path) { toast('No document uploaded','error'); return; }
+    const { data, error } = await db.storage.from('verification-docs').createSignedUrl(path, 3600);
+    if (error || !data?.signedUrl) { toast('Could not open document: '+(error?.message||''),'error'); return; }
+    window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+  }
+
+  async function approveVerification(sellerId) {
+    const p = _verifySellers[sellerId]; if (!p) return;
+    const { error } = await db.from('profiles').update({ verification_status:'verified', verification_reviewed_at:new Date().toISOString(), verification_reviewed_by: currentUser.id }).eq('id', sellerId);
+    if (error) { toast('Error: '+error.message,'error'); return; }
+    await db.from('verification_activity_log').insert({ seller_id: sellerId, action:'approved', admin_id: currentUser.id });
+    notifySeller('verification_approved', { sellerName: p.full_name, sellerEmail: p.email });
+    toast('Seller verified ✓','success');
+    loadVerification();
+  }
+
+  function rejectVerification(sellerId) {
+    const p = _verifySellers[sellerId]; if (!p) return;
+    openConfirm({ title:'Reject verification?', message:`${p.full_name||'This seller'} will be asked to resubmit.`, requireReason:true, reasonLabel:'Reason (shown to seller)', confirmText:'Reject', confirmClass:'reject', onConfirm: async (reason) => {
+      const { error } = await db.from('profiles').update({ verification_status:'rejected', verification_rejection_reason: reason, verification_reviewed_at:new Date().toISOString(), verification_reviewed_by: currentUser.id }).eq('id', sellerId);
+      if (error) { toast('Error: '+error.message,'error'); return; }
+      await db.from('verification_activity_log').insert({ seller_id: sellerId, action:'rejected', detail: reason, admin_id: currentUser.id });
+      notifySeller('verification_rejected', { sellerName: p.full_name, sellerEmail: p.email, reason });
+      toast('Verification rejected','success');
+      loadVerification();
+    }});
+  }
+
+  async function approveExtraVerification(sellerId) {
+    const { error } = await db.from('profiles').update({ extra_verification_status:'approved' }).eq('id', sellerId);
+    if (error) { toast('Error: '+error.message,'error'); return; }
+    await db.from('verification_activity_log').insert({ seller_id: sellerId, action:'extra_approved', admin_id: currentUser.id });
+    toast('Extra documents approved ✓','success');
+    loadVerification();
+  }
+
+  function requestExtraVerification(sellerId, sellerName) {
+    openConfirm({
+      title:'Request additional verification documents?',
+      message:`${sellerName||'This seller'} will be asked to upload extra proof (e.g. search certificate, CR12, rates clearance) because of this report.`,
+      requireReason:true, reasonLabel:'What to request / why (shown to seller)',
+      confirmText:'Send request', confirmClass:'approve',
+      onConfirm: async (reason) => {
+        const { data: p, error: fetchErr } = await db.from('profiles').select('full_name,email').eq('id', sellerId).single();
+        const { error } = await db.from('profiles').update({ extra_verification_status:'requested', extra_verification_reason: reason }).eq('id', sellerId);
+        if (error) { toast('Error: '+error.message,'error'); return; }
+        await db.from('verification_activity_log').insert({ seller_id: sellerId, action:'extra_requested', detail: reason, admin_id: currentUser.id });
+        if (!fetchErr && p) notifySeller('extra_verification_requested', { sellerName: p.full_name, sellerEmail: p.email, reason });
+        toast('Request sent to seller ✓','success');
+      }
+    });
+  }
+
+  async function loadConcierge() {
+    const tbody = document.getElementById('concierge-body');
+    tbody.innerHTML = `<tr class="skeleton-row"><td colspan="3"><div class="skel"></div></td></tr>`.repeat(3);
+    const { data, error } = await db.from('profiles').select('*').eq('concierge_enabled', true).order('concierge_enabled_at',{ascending:false});
+    document.getElementById('nav-badge-concierge').textContent = data?.length||0;
+    if (error || !data?.length) { tbody.innerHTML = `<tr><td colspan="3"><div class="table-loading"><p>No sellers on managed chat</p></div></td></tr>`; return; }
+    tbody.innerHTML = data.map(p => `<tr>
+      <td>${esc(p.full_name||'—')}<div class="listing-meta">${esc(p.email||'')}</div></td>
+      <td>${p.concierge_enabled_at?fmtDate(p.concierge_enabled_at):'—'}</td>
+      <td><div class="action-btns">${aBtn('message','Manage enquiries','message',`openConciergeInbox('${p.id}','${esc(p.full_name||'')}')`)}</div></td>
+    </tr>`).join('');
+  }
+
+  function openConciergeInbox(sellerId, sellerName) {
+    showView('enquiries');
+    setEnqTab('message');
+    setTimeout(() => {
+      const filtered = _enqItems.filter(i => i.type==='message' && _enqThreads[i.id]?.sellerId === sellerId);
+      document.getElementById('enquiries-count').textContent = `${filtered.length} conversation(s) — ${sellerName}`;
+      const prevItems = _enqItems; _enqItems = filtered; renderEnquiriesTable(); _enqItems = prevItems;
+    }, 300);
   }
   function closeInquiryModal() { document.getElementById('inquiry-modal').classList.remove('open'); }
 
@@ -3344,6 +3510,7 @@ async function messageSellerInChat(sellerId, sellerName) {
       ${listing?`<button class="btn-modal cancel" onclick="window.open('listing.html?id=${listing.id}','_blank','noopener,noreferrer')">View listing</button>`:''}
       ${seller?`<button class="btn-modal cancel" onclick="closeReportModal(); openProfileModal('${seller.id}')">View seller profile</button>`:''}
       ${seller && !seller.is_disabled?`<button class="btn-modal reject" onclick="closeReportModal(); disableProfileFlow('${seller.id}')">Suspend seller</button>`:''}
+      ${seller?`<button class="btn-modal cancel" onclick="closeReportModal(); requestExtraVerification('${seller.id}','${esc(seller.full_name||'')}')">Request extra documents</button>`:''}
       ${listing && !listing.is_disabled?`<button class="btn-modal reject" onclick="closeReportModal(); recycleListing('${listing.id}')">Recycle listing</button>`:''}
       <button class="btn-modal cancel"  onclick="setReportStatus('${r.id}','dismissed')">Dismiss</button>
       <button class="btn-modal reject"  onclick="setReportStatus('${r.id}','reviewing')">Mark reviewing</button>
@@ -3915,7 +4082,9 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
     // Don't mark everything read on open — that erases the unread dot before
     // the admin has actually looked at each item. Individual items are
     // marked read via markInquiryRead() when opened (see openInquiryModal).
-    if(v==='enquiries')    loadEnquiries();
+    if(v==='enquiries')    { loadConciergeSellerIds(); loadEnquiries(); }
+    if(v==='verification') loadVerification();
+    if(v==='concierge')    loadConcierge();
     if(v==='reports')      loadReports();
     if(v==='reviews')      loadReviews();
     if(v==='contact-reveals') loadContactReveals();
