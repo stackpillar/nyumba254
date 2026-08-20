@@ -356,6 +356,12 @@
     .safety-tip { margin-top:16px; padding:12px 14px; background:var(--gold-light); border-radius:var(--radius); border:1px solid #FAC775; font-size:12px; color:#5C3A00; line-height:1.6; display:flex; gap:8px; }
     .safety-tip svg { width:14px; height:14px; stroke:var(--gold); fill:none; stroke-width:2; flex-shrink:0; margin-top:2px; }
 
+    /* Finder's-fee note — rentals only */
+    .fee-note { display:none; margin-top:12px; padding:12px 14px; background:#E6F1FB; border-radius:var(--radius); border:1px solid #BEDBF5; font-size:12px; color:#0F3D66; line-height:1.6; gap:8px; }
+    .fee-note.show { display:flex; }
+    .fee-note svg { width:14px; height:14px; stroke:#185FA5; fill:none; stroke-width:2; flex-shrink:0; margin-top:2px; }
+    .fee-note-link { color:#185FA5; font-weight:600; text-decoration:underline; cursor:pointer; background:none; border:none; padding:0; font-size:12px; font-family:inherit; }
+
     /* ══════════════════════════════════════
        VIEWS BADGE — Live counter
     ══════════════════════════════════════ */
@@ -957,6 +963,12 @@
             <div class="chat-wa-note" id="chat-wa-note"></div>
           </div>
 
+          <!-- Finder's-fee note — shown only for rental listings -->
+          <div class="fee-note" id="fee-note">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>Remember: some landlords ask tenants for a small finder's fee once they move in, since you found the home through Nyumba254 instead of an agent — that's normal and settled directly between you two. If a seller asks for more than feels fair, or wants payment before you've even viewed the unit, <button type="button" class="fee-note-link" onclick="nkOpenReportModal('listing', listingId)">report it</button> so we can look into it.</span>
+          </div>
+
           <!-- Safety tip -->
           <div class="safety-tip">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -1100,14 +1112,20 @@
   <div class="nk-review-modal" role="dialog" aria-modal="true" aria-labelledby="nk-report-title">
     <h3 id="nk-report-title">Report a problem</h3>
     <p class="sub">Tell us what's wrong — fake listing, suspicious seller, scam attempt, anything. We review every report.</p>
-    <select id="nk-report-reason" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;margin-bottom:12px;font-family:inherit">
+    <select id="nk-report-reason" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;margin-bottom:12px;font-family:inherit" onchange="nkToggleReportAmountField()">
       <option value="">Select a reason…</option>
       <option value="fake_listing">This listing looks fake</option>
       <option value="scam_attempt">Seller asked for money upfront / scam attempt</option>
+      <option value="unreasonable_fee">Seller asked for an unreasonable finder's fee</option>
       <option value="wrong_info">Listing details don't match reality</option>
       <option value="offensive">Offensive or inappropriate content</option>
       <option value="other">Something else</option>
     </select>
+    <div class="nk-name-field" id="nk-report-amount-wrap" style="display:none">
+      <label>How much were you asked for? (KES)</label>
+      <input type="number" id="nk-report-amount" min="0" placeholder="e.g. 5000"/>
+      <p style="font-size:11px;color:var(--text-3);margin-top:2px">This helps our team judge the case and act quickly.</p>
+    </div>
     <textarea id="nk-report-details" maxlength="1000" placeholder="Give us a few details…"></textarea>
     <div class="nk-modal-actions">
       <button class="nk-btn-cancel" onclick="nkCloseReportModal()">Cancel</button>
@@ -1657,6 +1675,10 @@ function renderListing(l) {
   // is off pops a toast via handleContactClick() instead of hiding the buttons.
   const phoneFieldEl = document.getElementById('enq-phone-field');
   if (phoneFieldEl) phoneFieldEl.style.display = contactHidden ? 'none' : 'block';
+
+  // Finder's-fee note only makes sense for rentals, not sales
+  const feeNoteEl = document.getElementById('fee-note');
+  if (feeNoteEl) feeNoteEl.classList.toggle('show', l.price_type === 'rent');
 
   /* NOTE: the seller's phone is intentionally NOT touched here. Nothing
      about it is written to the DOM, an href, or even fetched, until the
@@ -2278,7 +2300,7 @@ function nkBuildWaLink(rawPhone) {
 
 async function handleContactClick(channel) {
   if (listing?.contact_hidden || listing?.profiles?.hide_buyer_contact) {
-    showToastNK('For your security, this seller has turned off contact reveal — please send a message below and they\'ll get back to you.');
+    showToastNK('For security, this seller has turned off contact reveal — please send a message below and they\'ll get back to you.');
     document.getElementById('enq-message')?.focus();
     return;
   }
@@ -2683,7 +2705,18 @@ async function nkSubmitPlatformReview() {
 function nkOpenReportModal(targetType, targetId) {
   nkReportTargetType = targetType || 'listing';
   nkReportTargetId   = targetId || null;
+  document.getElementById('nk-report-reason').value = '';
+  const amtEl = document.getElementById('nk-report-amount');
+  if (amtEl) amtEl.value = '';
+  nkToggleReportAmountField();
   document.getElementById('nk-report-modal').classList.add('open');
+}
+
+function nkToggleReportAmountField() {
+  const reason = document.getElementById('nk-report-reason').value;
+  const wrap = document.getElementById('nk-report-amount-wrap');
+  if (!wrap) return;
+  wrap.style.display = (reason === 'unreasonable_fee' || reason === 'scam_attempt') ? 'block' : 'none';
 }
 
 function nkCloseReportModal() {
@@ -2694,8 +2727,10 @@ let nkReportSubmitting = false;
 async function nkSubmitReport() {
   if (nkReportSubmitting) return;
   const reason  = document.getElementById('nk-report-reason').value;
-  const details = document.getElementById('nk-report-details').value.trim();
+  const amount  = document.getElementById('nk-report-amount')?.value.trim();
+  let   details = document.getElementById('nk-report-details').value.trim();
   if (!reason) { alert('Please select a reason'); return; }
+  if (amount) details = `Amount seller asked for: KES ${Number(amount).toLocaleString('en-KE')}\n\n${details}`;
 
   nkReportSubmitting = true;
   await db.from('reports').insert({
@@ -2709,6 +2744,9 @@ async function nkSubmitReport() {
   document.getElementById('nk-report-modal').classList.remove('open');
   document.getElementById('nk-report-reason').value = '';
   document.getElementById('nk-report-details').value = '';
+  const amtReset = document.getElementById('nk-report-amount');
+  if (amtReset) amtReset.value = '';
+  nkToggleReportAmountField();
 
   if (nkReportTargetType === 'listing' && nkReportTargetId) {
     nkMarkListingReported(nkReportTargetId);
