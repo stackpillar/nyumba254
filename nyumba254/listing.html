@@ -1653,16 +1653,10 @@ function renderListing(l) {
   document.getElementById('seller-unverified-badge').style.display = nkIsVerifiedSeller ? 'none' : 'inline-flex';
 
   const contactHidden = !!(l.contact_hidden || l.profiles?.hide_buyer_contact);
-  if (contactHidden) {
-    const contactBtns = document.querySelector('.contact-btns');
-    const orDivider = document.querySelector('.or-divider');
-    if (contactBtns) contactBtns.style.display = 'none';
-    if (orDivider) orDivider.style.display = 'none';
-    const banner = document.createElement('div');
-    banner.style.cssText = 'background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;font-size:12.5px;color:var(--green-dark);line-height:1.6';
-    banner.innerHTML = '<strong>🔒 For your security, contact reveal is off</strong> — this seller keeps all buyer communication on Nyumba254 to protect their privacy and reduce scams. Send a message below and they\'ll reply here.';
-    contactBtns?.parentNode.insertBefore(banner, contactBtns);
-  }
+  // Buttons stay visible either way now — clicking them when contact reveal
+  // is off pops a toast via handleContactClick() instead of hiding the buttons.
+  const phoneFieldEl = document.getElementById('enq-phone-field');
+  if (phoneFieldEl) phoneFieldEl.style.display = contactHidden ? 'none' : 'block';
 
   /* NOTE: the seller's phone is intentionally NOT touched here. Nothing
      about it is written to the DOM, an href, or even fetched, until the
@@ -2065,6 +2059,7 @@ async function loadSimilar(area, excludeId) {
    ENQUIRY / MESSAGING
 ════════════════════════════════════════════════════ */
 async function sendEnquiry() {
+  const contactHidden = !!(listing?.contact_hidden || listing?.profiles?.hide_buyer_contact);
   const name    = document.getElementById('enq-name').value.trim();
   const phone   = document.getElementById('enq-phone').value.trim();
   const email   = document.getElementById('enq-email').value.trim();
@@ -2075,7 +2070,7 @@ async function sendEnquiry() {
   ['err-enq-name','err-enq-phone','err-enq-msg'].forEach(id => document.getElementById(id).classList.remove('show'));
 
   if (!name)    { document.getElementById('enq-name').classList.add('error');    document.getElementById('err-enq-name').classList.add('show');  ok=false; }
-  if (!phone || phone.replace(/\s/g,'').length < 9) { document.getElementById('enq-phone').classList.add('error'); document.getElementById('err-enq-phone').classList.add('show'); ok=false; }
+  if (!contactHidden && (!phone || phone.replace(/\s/g,'').length < 9)) { document.getElementById('enq-phone').classList.add('error'); document.getElementById('err-enq-phone').classList.add('show'); ok=false; }
   if (!message) { document.getElementById('enq-message').classList.add('error'); document.getElementById('err-enq-msg').classList.add('show');   ok=false; }
   if (!ok) return;
 

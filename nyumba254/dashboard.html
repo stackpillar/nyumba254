@@ -595,6 +595,12 @@
       </div>
     </div>
 
+    <div id="verify-warning-banner" style="display:none;background:var(--red-light);border-bottom:1.5px solid #f5c6c2;padding:12px 28px;align-items:center;gap:14px;flex-wrap:wrap">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#c0392b" stroke-width="2" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span style="flex:1;font-size:13px;color:var(--red);font-weight:600;min-width:220px">Your account isn't verified yet — your active listings are limited to 2. Verify your account to unlock unlimited listings and a trust badge buyers can see.</span>
+      <button class="btn btn-sm" style="background:var(--red);color:white;flex-shrink:0" onclick="goToVerification()">Verify my account →</button>
+    </div>
+
     <!-- OVERVIEW -->
     <div class="page active" id="page-overview">
       <div class="stat-grid">
@@ -719,7 +725,7 @@
           <h3><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</h3>
           <div class="profile-avatar-row"><div class="profile-avatar-lg" id="settings-avatar">?</div><div class="profile-avatar-info"><strong id="settings-fullname">—</strong><span id="settings-email-display">—</span></div></div>
           <p style="font-size:13px;color:var(--text-3);margin-bottom:18px;line-height:1.6">Edit your name, phone number, email address, and password from your dedicated profile page.</p>
-          <a href="/profile" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;text-decoration:none"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="15" height="15"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit profile &amp; password</a>
+          <a href="/profile.html" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;text-decoration:none"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="15" height="15"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit profile &amp; password</a>
         </div>
         <div style="display:flex;flex-direction:column;gap:20px">
           <div class="settings-section">
@@ -732,7 +738,7 @@
             </div>
             <button class="btn btn-outline btn-sm" style="margin-top:14px;width:100%;justify-content:center" onclick="saveNotificationPrefs()">Save preferences</button>
           </div>
-          <div class="settings-section">
+          <div class="settings-section" id="verification-settings-section">
             <h3><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>Account verification</h3>
             <div id="verify-status-banner" style="margin-bottom:14px"></div>
             <div id="verify-form-wrap"></div>
@@ -1164,6 +1170,19 @@ async function loadProfile(){
 
   const sidebarBadge = document.getElementById('sidebar-verify-badge');
   if (sidebarBadge) sidebarBadge.textContent = data?.verification_status === 'verified' ? '✓ Verified' : 'Unverified';
+
+  updateVerifyWarningBanner();
+}
+
+function updateVerifyWarningBanner(){
+  const banner=document.getElementById('verify-warning-banner');
+  if(!banner)return;
+  const status=currentProfile?.verification_status||'unverified';
+  banner.style.display=(status==='unverified'||status==='rejected')?'flex':'none';
+}
+function goToVerification(){
+  showPage('settings');
+  setTimeout(()=>document.getElementById('verification-settings-section')?.scrollIntoView({behavior:'smooth',block:'start'}),80);
 }
 
 const VERIFY_BUCKET = 'verification-docs';
@@ -1254,6 +1273,7 @@ async function submitVerification() {
     await db.from('verification_activity_log').insert({ seller_id: currentUser.id, action:'submitted' });
     currentProfile = { ...currentProfile, verification_status:'pending', verification_is_owner:isOwner };
     loadVerificationUI();
+    updateVerifyWarningBanner();
     showToast('Submitted for review ✓','success');
     fetch(`${EDGE_URL}/send-notification-email`, { method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}, body: JSON.stringify({
       type:'verification_submitted', sellerName: currentProfile?.full_name, sellerEmail: currentUser.email, isOwner, proofType: isOwner?'Title deed / lease':'Authority letter',
@@ -1589,6 +1609,10 @@ const manageUnitsBtn=l.is_multi_unit
   ?`<div class="icon-btn purple" data-id="${l.id}" onclick="openManageUnitsModal(this.dataset.id)" title="Manage units — mark occupied/available" role="button" tabindex="0" aria-label="Manage units" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg></div>`
   :'';
 
+const contactHideBtn=l.contact_hidden
+  ?`<div class="icon-btn" data-id="${l.id}" onclick="toggleListingContactHidden(this.dataset.id)" title="Contact hidden — click to re-enable Call/WhatsApp on this listing" role="button" tabindex="0" aria-label="Show buyer contact for this listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}" style="color:var(--red);border-color:var(--red)"><svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div>`
+  :`<div class="icon-btn" data-id="${l.id}" onclick="toggleListingContactHidden(this.dataset.id)" title="Hide Call/WhatsApp — force chat-only on this listing" role="button" tabindex="0" aria-label="Hide buyer contact for this listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>`;
+
     return `<tr>
       <td><div class="listing-name-cell"><div class="listing-thumb">${img}</div><div>
         <div class="listing-title-text">${escHtml(l.title)}</div>
@@ -1605,7 +1629,7 @@ const manageUnitsBtn=l.is_multi_unit
         <a href="/listing?id=${String(l.listing_number).padStart(6,'0')}" target="_blank" class="icon-btn" title="View live listing"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
         <div class="icon-btn" onclick="openMessagesForListing('${l.id}')" title="Messages" role="button" tabindex="0" aria-label="Open messages for this listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
         <div class="icon-btn" onclick="shareListing('${l.id}')" title="Share" role="button" tabindex="0" aria-label="Share listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
-        ${editBtn}${statusBtn}${pauseBtn}${manageUnitsBtn}
+        ${editBtn}${statusBtn}${pauseBtn}${manageUnitsBtn}${contactHideBtn}
         <div class="icon-btn danger" data-id="${l.id}" data-title="${escAttr(l.title)}" onclick="openDeleteModal(this.dataset.id,this.dataset.title)" title="Delete listing" role="button" tabindex="0" aria-label="Delete listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></div>
       </div></td>
     </tr>`;
@@ -1613,6 +1637,21 @@ const manageUnitsBtn=l.is_multi_unit
 }
 
 function statusLabel(s){return{active:'Active',pending:'Pending review',paused:'Paused',rejected:'Rejected',expired:'Expired',occupied:'Occupied'}[s]||s;}
+async function toggleListingContactHidden(id){
+  if(listingActionBusy.has(id))return;
+  listingActionBusy.add(id);
+  try{
+    const l=allListings.find(l=>l.id===id);if(!l)return;
+    const next=!l.contact_hidden;
+    const{error}=await db.from('listings').update({contact_hidden:next}).eq('id',id);
+    if(error){showToast('Could not update: '+error.message,'error');return;}
+    l.contact_hidden=next;
+    renderListingsTable();
+    showToast(next?'Buyer contact hidden on this listing — chat only ✓':'Call/WhatsApp re-enabled on this listing ✓','success');
+  } finally {
+    listingActionBusy.delete(id);
+  }
+}
 async function togglePause(id,cs){
   if(listingActionBusy.has(id))return;
   listingActionBusy.add(id);
