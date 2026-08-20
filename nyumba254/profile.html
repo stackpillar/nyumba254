@@ -244,6 +244,9 @@
     .verify-badge.unverified { background: var(--amber-light);  color: #78350f; }
     .verify-badge svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2.5; }
 
+    /* Generic status badge, used by the account-verification card */
+    .badge { display: inline-flex; align-items: center; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+
     /* ── DANGER ZONE ── */
     .danger-zone-body { padding: 22px 28px; }
     .danger-item {
@@ -403,6 +406,7 @@
           </div>
           <div class="avatar-name" id="nav-name">Loading…</div>
           <div class="avatar-email" id="nav-email">—</div>
+          <div id="nav-verify-badge" style="margin-top:4px"></div>
         </div>
       </div>
       <ul>
@@ -417,6 +421,10 @@
         <li><a href="#security" onclick="scrollToSection('security',this)">
           <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
           Password
+        </a></li>
+        <li><a href="#verification" onclick="scrollToSection('verification',this)">
+          <svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>
+          Verification
         </a></li>
         <li><a href="#notifications" onclick="scrollToSection('notifications',this)">
           <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
@@ -552,6 +560,29 @@
               <span class="btn-label">Save contact</span>
             </button>
           </div>
+        </div>
+      </div>
+
+      <!-- ── VERIFICATION ── -->
+      <div class="card" id="verification">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-header-icon green">
+              <svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>
+            </div>
+            <div>
+              <div class="card-title">Account verification</div>
+              <div class="card-sub">Verify your identity to unlock unlimited listings and a trust badge</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="verify-msg-banner" class="status-banner">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            <p id="verify-msg-banner-msg"></p>
+          </div>
+          <div id="verify-status-banner" style="margin-bottom:14px"></div>
+          <div id="verify-form-wrap"></div>
         </div>
       </div>
 
@@ -788,7 +819,17 @@
   const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
   const EDGE_URL = `${SUPABASE_URL}/functions/v1`;
   const { createClient } = supabase;
-  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ── Match the "Remember me" storage adapter used on login.html/dashboard.html/listing.html ──
+  const authStorage = {
+    getItem: (key) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).getItem(key),
+    setItem: (key, value) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).setItem(key, value),
+    removeItem: (key) => { localStorage.removeItem(key); sessionStorage.removeItem(key); }
+  };
+
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { storage: authStorage, persistSession: true, autoRefreshToken: true }
+  });
 
   let currentUser = null;
   let profileData = null;
@@ -834,6 +875,8 @@
 
     populate();
     loadStats();
+    loadVerificationUI();
+    updateNavVerifyBadge();
   }
 
   function populate() {
@@ -1185,6 +1228,142 @@
     document.getElementById(id)?.scrollIntoView({ behavior:'smooth', block:'start' });
     document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
     if (el) el.classList.add('active');
+  }
+
+  // ─────────────────────────────────────────
+  // ACCOUNT VERIFICATION
+  // ─────────────────────────────────────────
+  const VERIFY_BUCKET = 'verification-docs';
+
+  function escHtml(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function updateNavVerifyBadge() {
+    const el = document.getElementById('nav-verify-badge');
+    if (!el) return;
+    const verified = profileData?.verification_status === 'verified';
+    el.innerHTML = verified
+      ? `<span class="verify-badge verified"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Verified</span>`
+      : `<span class="verify-badge unverified"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Unverified</span>`;
+  }
+
+  function loadVerificationUI() {
+    const v = profileData || {};
+    const status = v.verification_status || 'unverified';
+    const banner = document.getElementById('verify-status-banner');
+    const formWrap = document.getElementById('verify-form-wrap');
+    if (!banner || !formWrap) return;
+
+    const badges = {
+      unverified: '<span class="badge" style="background:var(--surface);color:var(--text-3)">Not verified</span>',
+      pending:    '<span class="badge" style="background:var(--amber-light);color:var(--amber)">Pending review</span>',
+      verified:   '<span class="badge" style="background:var(--green-light);color:var(--green-dark)">✓ Verified</span>',
+      rejected:   '<span class="badge" style="background:var(--red-light);color:var(--red)">Needs changes</span>',
+    };
+    banner.innerHTML = `<div style="margin-bottom:10px">${badges[status]||badges.unverified}</div>` +
+      (status==='verified' ? `<p style="font-size:12.5px;color:var(--text-3)">You're verified — buyers see a trust badge on your listings, and your listing space is unlimited.</p>` : '') +
+      (status==='pending' ? `<p style="font-size:12.5px;color:var(--text-3)">We're reviewing your documents — usually within 24 hours.</p>` : '') +
+      (status==='rejected' && v.verification_rejection_reason ? `<p style="font-size:12.5px;color:var(--red)">${escHtml(v.verification_rejection_reason)}</p>` : '') +
+      (status==='unverified' ? `<div style="background:var(--amber-light);border:1px solid #f2d29b;border-radius:8px;padding:10px 12px;font-size:12.5px;color:#7a5200;line-height:1.6"><strong>🔒 Verify your account to unlock more listing space.</strong> Unverified sellers can post up to 2 listings at a time — verified sellers get unlimited listings plus a trust badge buyers can see. Takes about 2 minutes.</div>` : '');
+
+    formWrap.innerHTML = (status === 'pending' || status === 'verified') ? '' : `
+        <div class="form-group"><label for="verify-is-owner">Are you the property owner?</label>
+          <select id="verify-is-owner" onchange="updateVerifyProofLabel()">
+            <option value="yes">Yes, I own it</option>
+            <option value="no">No — I'm listing on someone's behalf</option>
+          </select>
+        </div>
+        <div class="form-group"><label for="verify-id-file">National ID — front side</label>
+          <input type="file" id="verify-id-file" accept="image/*,.pdf"/>
+        </div>
+        <div class="form-group"><label for="verify-id-file-2">National ID — back side</label>
+          <input type="file" id="verify-id-file-2" accept="image/*,.pdf"/>
+          <div class="field-hint">Both sides are required — we can't verify an ID from one side alone.</div>
+        </div>
+        <div class="form-group"><label id="verify-proof-label" for="verify-proof-file">Proof of ownership (Title Deed or lease copy)</label>
+          <input type="file" id="verify-proof-file" accept="image/*,.pdf"/>
+        </div>
+        <button class="btn-save" style="width:100%;justify-content:center" id="verify-submit-btn" onclick="submitVerification()">
+          <div class="spinner"></div>
+          <span class="btn-label">Submit for review</span>
+        </button>`;
+
+    if (v.extra_verification_status === 'requested') {
+      banner.innerHTML += `
+        <div style="margin-top:12px;padding:12px 14px;background:var(--red-light);border-radius:8px;font-size:12.5px;color:#742a2a;line-height:1.6">
+          <strong>Additional documents requested:</strong> ${escHtml(v.extra_verification_reason||'')}
+          <div style="margin-top:8px"><input type="file" id="extra-doc-file" accept="image/*,.pdf"/></div>
+          <button class="btn-save" style="margin-top:8px;padding:8px 16px;font-size:13px" onclick="submitExtraVerification()"><span class="btn-label">Upload document</span></button>
+        </div>`;
+    }
+  }
+
+  function updateVerifyProofLabel() {
+    const isOwner = document.getElementById('verify-is-owner').value === 'yes';
+    document.getElementById('verify-proof-label').textContent = isOwner
+      ? 'Proof of ownership (Title Deed or lease copy)'
+      : "Authority letter, or the owner's ID + a short written consent";
+  }
+
+  async function uploadVerifyFile(file, kind) {
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const path = `${currentUser.id}/${kind}-${Date.now()}.${ext}`;
+    const { error } = await db.storage.from(VERIFY_BUCKET).upload(path, file, { upsert:false });
+    if (error) throw error;
+    return path;
+  }
+
+  async function submitVerification() {
+    const idFile = document.getElementById('verify-id-file').files[0];
+    const idFile2 = document.getElementById('verify-id-file-2').files[0];
+    const proofFile = document.getElementById('verify-proof-file').files[0];
+    const isOwner = document.getElementById('verify-is-owner').value === 'yes';
+    if (!idFile || !idFile2) { showBanner('verify-msg-banner','verify-msg-banner-msg','error','Please upload both the front and back of your ID.'); return; }
+    if (!proofFile) { showBanner('verify-msg-banner','verify-msg-banner-msg','error','Please attach your proof of ownership document.'); return; }
+    setLoading('verify-submit-btn', true);
+    try {
+      const idPath = await uploadVerifyFile(idFile, 'id-front');
+      const idPath2 = await uploadVerifyFile(idFile2, 'id-back');
+      const proofPath = await uploadVerifyFile(proofFile, isOwner ? 'ownership' : 'authority');
+      const { error } = await db.from('profiles').update({
+        verification_status: 'pending', verification_is_owner: isOwner,
+        verification_id_url: idPath, verification_id_url_2: idPath2, verification_proof_url: proofPath,
+        verification_proof_type: isOwner ? 'title_deed_or_lease' : 'authority_letter',
+        verification_submitted_at: new Date().toISOString(), verification_rejection_reason: null,
+      }).eq('id', currentUser.id);
+      if (error) throw error;
+      profileData = { ...profileData, verification_status:'pending', verification_is_owner:isOwner };
+      loadVerificationUI();
+      updateNavVerifyBadge();
+      showBanner('verify-msg-banner','verify-msg-banner-msg','success','Submitted for review ✓');
+      fetch(`${EDGE_URL}/send-notification-email`, { method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY}, body: JSON.stringify({
+        type:'verification_submitted', sellerName: profileData?.full_name, sellerEmail: currentUser.email, isOwner, proofType: isOwner?'Title deed / lease':'Authority letter',
+      })}).catch(()=>{});
+    } catch(e) {
+      showBanner('verify-msg-banner','verify-msg-banner-msg','error','Upload failed: '+e.message);
+    } finally {
+      setLoading('verify-submit-btn', false);
+    }
+  }
+
+  async function submitExtraVerification() {
+    const file = document.getElementById('extra-doc-file')?.files[0];
+    if (!file) { showBanner('verify-msg-banner','verify-msg-banner-msg','error','Please attach a file.'); return; }
+    try {
+      const path = await uploadVerifyFile(file, 'extra');
+      const docs = Array.isArray(profileData?.extra_verification_docs) ? [...profileData.extra_verification_docs] : [];
+      docs.push({ url: path, uploaded_at: new Date().toISOString() });
+      const { error } = await db.from('profiles').update({ extra_verification_docs: docs, extra_verification_status: 'submitted' }).eq('id', currentUser.id);
+      if (error) throw error;
+      profileData = { ...profileData, extra_verification_docs: docs, extra_verification_status:'submitted' };
+      loadVerificationUI();
+      showBanner('verify-msg-banner','verify-msg-banner-msg','success','Uploaded ✓ — our team will review it shortly.');
+      fetch(`${EDGE_URL}/send-notification-email`, { method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY}, body: JSON.stringify({
+        type:'extra_verification_submitted', sellerName: profileData?.full_name, sellerEmail: currentUser.email,
+      })}).catch(()=>{});
+    } catch(e) { showBanner('verify-msg-banner','verify-msg-banner-msg','error','Upload failed: '+e.message); }
   }
 
   // Enter key submit per section
