@@ -818,6 +818,7 @@
           <button class="tab-btn"        id="tab-featured" onclick="setTab('featured')">Featured <span class="count" id="tc-featured">—</span></button>
           <button class="tab-btn"        id="tab-multiunit" onclick="setTab('multiunit')">Multi-unit <span class="count" id="tc-multiunit">—</span></button>
           <button class="tab-btn"        id="tab-expired"  onclick="setTab('expired')">Expired <span class="count" id="tc-expired">—</span></button>
+          <button class="tab-btn"        id="tab-inactive" onclick="setTab('inactive')">Inactive <span class="count" id="tc-inactive">—</span></button>
         </div>
         <div class="filters-row">
           <select class="filter-select" id="filter-county" onchange="onFilterCountyChange()" aria-label="Filter by county">
@@ -843,8 +844,8 @@
         </div>
         <div class="table-wrap mobile-hide">
           <table>
-            <thead><tr><th><input type="checkbox" onchange="toggleSelectAllListings(this.checked)"/></th><th>Property</th><th>Location</th><th>Price</th><th>Category</th><th>Status</th><th>Payment</th><th>Posted</th><th>Actions</th></tr></thead>
-            <tbody id="all-listings-body"><tr class="skeleton-row"><td colspan="9"><div class="skel"></div></td></tr></tbody>
+            <thead><tr><th><input type="checkbox" onchange="toggleSelectAllListings(this.checked)"/></th><th>Property</th><th>Location</th><th>Price</th><th>Category</th><th>Status</th><th>Payment</th><th>Posted</th><th>Expires</th><th>Actions</th></tr></thead>
+            <tbody id="all-listings-body"><tr class="skeleton-row"><td colspan="10"><div class="skel"></div></td></tr></tbody>
           </table>
         </div>
         <div class="mobile-card-list" id="all-listings-mobile"></div>
@@ -1240,6 +1241,25 @@
   </div>
 </div>
 
+<!-- EMAIL REMINDER MODAL -->
+<div class="modal-overlay" id="email-reminder-modal" onclick="handleOverlayClick(event,'email-reminder-modal')">
+  <div class="modal" style="max-width:480px" role="dialog" aria-modal="true" aria-labelledby="email-reminder-title">
+    <div class="modal-header"><h3 id="email-reminder-title">Email seller</h3><button class="modal-close" onclick="closeEmailReminderModal()" aria-label="Close">×</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Notification</label>
+        <select id="email-reminder-template" onchange="applyEmailTemplate()"></select>
+      </div>
+      <div class="field"><label>Subject</label><input type="text" id="email-reminder-subject"/></div>
+      <div class="field"><label>Message</label><textarea id="email-reminder-body" rows="7"></textarea></div>
+      <p style="font-size:11px;color:var(--text-3);line-height:1.6">Edit the message freely before sending — it's pre-filled with a suggested template but goes out exactly as written here.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal cancel" onclick="closeEmailReminderModal()">Cancel</button>
+      <button class="btn-modal approve" id="btn-send-email-reminder" onclick="sendEmailReminder()">Send email</button>
+    </div>
+  </div>
+</div>
+
 <!-- CONTACT REVEAL DETAIL MODAL -->
 <div class="modal-overlay" id="contact-reveal-modal" onclick="handleOverlayClick(event,'contact-reveal-modal')">
   <div class="modal" style="max-width:480px" role="dialog" aria-modal="true" aria-labelledby="contact-reveal-modal-title">
@@ -1395,6 +1415,63 @@
     } catch (err) { console.error('notifyByEmail failed:', err); }
   }
   function notifySeller(type, payload) { return notifyByEmail(type, { ...payload, audience: 'seller' }); }
+
+  // ─── Email reminder templates ──────────────────────────────────────
+  // Sent via notifyByEmail('admin_seller_notice', {...}) — the edge
+  // function needs a case for 'admin_seller_notice' that emails
+  // payload.subject / payload.message to payload.sellerEmail.
+  const EMAIL_TEMPLATES = [
+    { id:'verification_reminder', label:'Account verification reminder', subject:'Verify your Nyumba254 account',
+      body: (name)=>`Hi ${name||'there'},\n\nJust a quick reminder to verify your Nyumba254 seller account. Verified sellers get unlimited listings and a trust badge buyers can see — it only takes about 2 minutes.\n\nYou can start from your dashboard under Settings → Account verification.\n\nThanks for listing with us.` },
+    { id:'listing_improvement', label:'Improve listing details', subject:'A few tips to improve your listing',
+      body: (name)=>`Hi ${name||'there'},\n\nWe noticed a few things that could make your listing stand out more to buyers — clearer photos, a fuller description, and an accurate price all help. Feel free to update it from your dashboard any time.\n\nLet us know if you need a hand.` },
+    { id:'trial_expiring', label:'Free trial ending soon', subject:'Your free trial is ending soon',
+      body: (name)=>`Hi ${name||'there'},\n\nYour free trial listing period is coming to an end soon. To keep your listing visible to buyers, upgrade to a paid plan from your dashboard.\n\nThanks for using Nyumba254.` },
+    { id:'payment_reminder', label:'Payment reminder', subject:'Complete your listing payment',
+      body: (name)=>`Hi ${name||'there'},\n\nWe noticed your listing payment hasn't been confirmed yet. Once it's settled, your listing stays live and visible to buyers without interruption.\n\nReach out if you've already paid and this is a mistake — we'll check right away.` },
+    { id:'welcome_tips', label:'Welcome & getting-started tips', subject:'Getting the most out of Nyumba254',
+      body: (name)=>`Hi ${name||'there'},\n\nWelcome to Nyumba254! A few quick tips to get more enquiries: add clear photos, keep your price accurate, and reply to buyer messages quickly.\n\nWe're here if you need anything.` },
+    { id:'custom', label:'Custom message', subject:'A message from Nyumba254',
+      body: ()=>'' },
+  ];
+  let emailReminderTarget = null;
+  function openEmailReminderModal(sellerId, sellerName, sellerEmail) {
+    if (!sellerEmail) { toast('This seller has no email on file','error'); return; }
+    emailReminderTarget = { id: sellerId, name: sellerName, email: sellerEmail };
+    document.getElementById('email-reminder-title').textContent = `Email ${sellerName||'seller'}`;
+    const sel = document.getElementById('email-reminder-template');
+    sel.innerHTML = EMAIL_TEMPLATES.map(t=>`<option value="${t.id}">${esc(t.label)}</option>`).join('');
+    sel.value = 'verification_reminder';
+    applyEmailTemplate();
+    document.getElementById('email-reminder-modal').classList.add('open');
+  }
+  function applyEmailTemplate() {
+    const t = EMAIL_TEMPLATES.find(x=>x.id===document.getElementById('email-reminder-template').value);
+    if (!t || !emailReminderTarget) return;
+    document.getElementById('email-reminder-subject').value = t.subject;
+    document.getElementById('email-reminder-body').value = t.body(emailReminderTarget.name);
+  }
+  function closeEmailReminderModal() { document.getElementById('email-reminder-modal').classList.remove('open'); emailReminderTarget=null; }
+  let emailReminderBusy = false;
+  async function sendEmailReminder() {
+    if (emailReminderBusy || !emailReminderTarget) return;
+    const subject = document.getElementById('email-reminder-subject').value.trim();
+    const messageBody = document.getElementById('email-reminder-body').value.trim();
+    if (!messageBody) { toast('Please write a message first','error'); return; }
+    const templateId = document.getElementById('email-reminder-template').value;
+    emailReminderBusy = true;
+    const btn = document.getElementById('btn-send-email-reminder');
+    if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+    await notifyByEmail('admin_seller_notice', {
+      audience: 'seller', noticeType: templateId, subject, message: messageBody,
+      sellerName: emailReminderTarget.name, sellerEmail: emailReminderTarget.email,
+    });
+    logAction('email_seller','profile',emailReminderTarget.id,`Sent "${subject}"`);
+    emailReminderBusy = false;
+    if (btn) { btn.disabled = false; btn.textContent = 'Send email'; }
+    toast('Email sent ✓','success');
+    closeEmailReminderModal();
+  }
 
   async function banAuthUser(userId) {
     const { data: { session } } = await db.auth.getSession();
@@ -1651,6 +1728,29 @@
     return `<span class="badge multiunit" title="${totalAvail} of ${totalUnits} available">Multi-unit${totalUnits?` · ${totalUnits}`:''}</span>`;
   }
 
+  // Days left before a listing's plan expires. Trial listings use
+  // trial_expires_at directly; paid listings are computed from
+  // created_at + the plan's duration in SETTINGS (there's no separate
+  // expires_at column, so this mirrors the same math the public site
+  // would need to decide when a listing quietly goes stale).
+  function listingDaysLeft(l) {
+    if (l.status === 'expired') return { text: 'Expired', cls: 'rejected' };
+    if (l.payment_status === 'trial') {
+      if (!l.trial_expires_at) return { text: '—', cls: 'standard' };
+      const days = Math.ceil((new Date(l.trial_expires_at) - new Date()) / 86400000);
+      return { text: days < 0 ? 'Trial expired' : `${days}d (trial)`, cls: days < 0 ? 'rejected' : days <= 3 ? 'pending' : 'trial' };
+    }
+    if (l.payment_status !== 'paid' || !l.created_at) return { text: '—', cls: 'standard' };
+    const durationDays = l.is_featured ? SETTINGS.featured_duration_days : SETTINGS.standard_duration_days;
+    const expiresAt = new Date(l.created_at).getTime() + durationDays * 86400000;
+    const days = Math.ceil((expiresAt - Date.now()) / 86400000);
+    return { text: days < 0 ? 'Expired' : `${days}d left`, cls: days < 0 ? 'rejected' : days <= 3 ? 'pending' : days <= 7 ? 'featured' : 'active' };
+  }
+  function expiryBadgeHtml(l) {
+    const e = listingDaysLeft(l);
+    return `<span class="badge ${e.cls}">${esc(e.text)}</span>`;
+  }
+
   const ICONS = {
     view:     '<circle cx="12" cy="12" r="3"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>',
     edit:     '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>',
@@ -1671,6 +1771,9 @@
     external: '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>',
     chat:     '<path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>',
     ban:      '<circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>',
+    idcard:   '<rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="8" cy="10" r="2"/><path d="M14 9h6M14 13h6M6 15h4"/>',
+    doc:      '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>',
+    mail:     '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/>',
   };
   function aBtn(icon, tip, cls, onclick) {
     return `<button class="action-btn icon ${cls}" data-tip="${esc(tip)}" aria-label="${esc(tip)}" onclick="${onclick}"><svg viewBox="0 0 24 24">${ICONS[icon]}</svg></button>`;
@@ -1836,7 +1939,7 @@
 
   async function loadTabCounts() {
     const [
-      {count:pend}, {count:actv}, {count:exp}, {count:feat}, {count:tot}, {count:trial}, {count:multi}
+      {count:pend}, {count:actv}, {count:exp}, {count:feat}, {count:tot}, {count:trial}, {count:multi}, {count:inactive}
     ] = await Promise.all([
       db.from('listings').select('*',{count:'exact',head:true}).eq('status','pending').eq('recycle_bin',false),
       db.from('listings').select('*',{count:'exact',head:true}).eq('status','active').eq('recycle_bin',false),
@@ -1845,6 +1948,7 @@
       db.from('listings').select('*',{count:'exact',head:true}).eq('recycle_bin',false),
       db.from('listings').select('*',{count:'exact',head:true}).eq('payment_status','trial').eq('recycle_bin',false),
       db.from('listings').select('*',{count:'exact',head:true}).eq('is_multi_unit',true).eq('recycle_bin',false),
+      db.from('listings').select('*',{count:'exact',head:true}).eq('is_disabled',true).eq('recycle_bin',false),
     ]);
     document.getElementById('tc-all').textContent      = tot||0;
     document.getElementById('tc-pending').textContent  = pend||0;
@@ -1853,6 +1957,7 @@
     document.getElementById('tc-expired').textContent  = exp||0;
     document.getElementById('tc-trial').textContent    = trial||0;
     document.getElementById('tc-multiunit').textContent = multi||0;
+    document.getElementById('tc-inactive').textContent = inactive||0;
     document.getElementById('nav-badge-trial').textContent = trial||0;
     document.getElementById('nav-badge-multiunit').textContent = multi||0;
   }
@@ -1879,7 +1984,7 @@
     const loadMoreWrap = document.getElementById('listings-load-more-wrap');
     if (!append) {
       listingsPage = 0;
-      const skelRow   = `<tr class="skeleton-row"><td colspan="9"><div class="skel"></div></td></tr>`;
+      const skelRow   = `<tr class="skeleton-row"><td colspan="10"><div class="skel"></div></td></tr>`;
       tbody.innerHTML  = skelRow.repeat(4);
       mobileEl.innerHTML = '';
       loadMoreWrap.style.display = 'none';
@@ -1895,6 +2000,7 @@
     else if (currentTab==='expired')  q = q.eq('status','expired');
     else if (currentTab==='trial')    q = q.eq('payment_status','trial');
     else if (currentTab==='multiunit') q = q.eq('is_multi_unit',true);
+    else if (currentTab==='inactive') q = q.eq('is_disabled',true);
 
     const county = document.getElementById('filter-county').value;
     const area   = document.getElementById('filter-area').value;
@@ -1913,7 +2019,7 @@
     if (loadMoreBtn) { loadMoreBtn.disabled = false; loadMoreBtn.textContent = 'Load more'; }
 
     if (error || (!append && !data?.length)) {
-      tbody.innerHTML    = `<tr><td colspan="9"><div class="table-loading"><p>No listings found</p></div></td></tr>`;
+      tbody.innerHTML    = `<tr><td colspan="10"><div class="table-loading"><p>No listings found</p></div></td></tr>`;
       mobileEl.innerHTML = `<div class="table-loading"><p>No listings found</p></div>`;
       return;
     }
@@ -1954,6 +2060,7 @@
         <td><span class="badge ${l.status}">${l.status}</span></td>
         <td><span class="badge ${payClass}">${l.payment_status||'unpaid'}</span></td>
         <td>${fmtDate(l.created_at)}</td>
+        <td>${expiryBadgeHtml(l)}</td>
         <td>
           <div class="action-btns">
             ${l.status==='pending'?(aBtn('approve','Approve listing','approve',`approveListing('${l.id}')`)+aBtn('reject','Reject listing','reject',`rejectListing('${l.id}')`)):''}
@@ -1992,6 +2099,7 @@
           <div class="mobile-card-row"><span>Category</span><span><span class="badge ${l.category}" style="font-size:10px">${l.category}</span></span></div>
           <div class="mobile-card-row"><span>Payment</span><span><span class="badge ${payClass}" style="font-size:10px">${l.payment_status||'unpaid'}</span></span></div>
           <div class="mobile-card-row"><span>Posted</span><span>${fmtDate(l.created_at)}</span></div>
+          <div class="mobile-card-row"><span>Expires</span><span>${expiryBadgeHtml(l)}</span></div>
         </div>
         <div class="mobile-card-actions">
           ${l.status==='pending'?(aBtn('approve','Approve','approve',`approveListing('${l.id}')`)+aBtn('reject','Reject','reject',`rejectListing('${l.id}')`)):''}
@@ -2700,6 +2808,7 @@ async function loadUsers(append) {
               ${aBtn('message','Message seller','message',`messageSellerInChat('${u.id}','${esc(u.full_name || 'Seller')}')`)}
               ${u.unreadFromSeller > 0 ? `<span class="seller-msg-badge" style="position:absolute;top:-6px;right:-6px;margin:0">${u.unreadFromSeller}</span>` : ''}
             </span>
+            ${aBtn('mail','Email reminder','message',`openEmailReminderModal('${u.id}','${esc(u.full_name || 'Seller')}','${esc(u.email || '')}')`)}
             ${u.is_disabled
               ? aBtn('reinstate','Reinstate account','approve',`enableProfile('${u.id}')`)
               : aBtn('suspend','Suspend account','reject',`disableProfileFlow('${u.id}')`)}
@@ -2711,6 +2820,7 @@ async function loadUsers(append) {
                 ? `Message (${u.unreadFromSeller} new)`
                 : 'Send message',
               cls: 'blue', fn: `messageSellerInChat('${u.id}','${esc(u.full_name || 'Seller')}')` },
+            { label: 'Email reminder…', cls: 'blue', fn: `openEmailReminderModal('${u.id}','${esc(u.full_name || 'Seller')}','${esc(u.email || '')}')` },
             u.is_disabled
               ? { label: 'Reinstate account', cls: 'success', fn: `enableProfile('${u.id}')` }
               : { label: 'Suspend account',   cls: 'danger',  fn: `disableProfileFlow('${u.id}')` },
@@ -2742,6 +2852,7 @@ async function loadUsers(append) {
           ${aBtn('view','Manage','view',`openProfileModal('${u.id}')`)}
           ${aBtn('list','Listings','view',`filterByUser('${u.id}','${esc(u.full_name || '')}')`)}
           ${aBtn('message','Message','message',`messageSellerInChat('${u.id}','${esc(u.full_name || 'Seller')}')`)}
+          ${aBtn('mail','Email','message',`openEmailReminderModal('${u.id}','${esc(u.full_name || 'Seller')}','${esc(u.email || '')}')`)}
           ${u.is_disabled
             ? aBtn('reinstate','Reinstate','approve',`enableProfile('${u.id}')`)
             : aBtn('suspend','Suspend','reject',`disableProfileFlow('${u.id}')`)}
@@ -2836,6 +2947,8 @@ async function messageSellerInChat(sellerId, sellerName) {
     document.getElementById('profile-modal-footer').innerHTML = `
       <button class="btn-modal cancel"  onclick="closeProfileModal()">Cancel</button>
       <button class="btn-modal cancel"  onclick="closeProfileModal(); messageSellerInChat('${u.id}','${esc(u.full_name||'Seller')}')">Message seller</button>
+      <button class="btn-modal cancel"  onclick="closeProfileModal(); openEmailReminderModal('${u.id}','${esc(u.full_name||'Seller')}','${esc(u.email||'')}')">Email reminder</button>
+      <button class="btn-modal cancel"  onclick="closeProfileModal(); requestExtraVerification('${u.id}','${esc(u.full_name||'')}')">Request extra documents</button>
       ${u.is_disabled
         ? `<button class="btn-modal approve" onclick="enableProfile('${u.id}')">Reinstate account</button>`
         : `<button class="btn-modal reject"  onclick="disableProfileFlow('${u.id}')">Suspend account</button>`}
@@ -3154,24 +3267,69 @@ async function messageSellerInChat(sellerId, sellerName) {
   }
 
   async function loadVerification() {
-    const tbody = document.getElementById('verification-body');
+    const tbody    = document.getElementById('verification-body');
+    const mobileEl = document.getElementById('verification-mobile');
     tbody.innerHTML = `<tr class="skeleton-row"><td colspan="4"><div class="skel"></div></td></tr>`.repeat(3);
+    mobileEl.innerHTML = '';
     const { data, error } = await db.from('profiles').select('*').or('verification_status.eq.pending,extra_verification_status.eq.submitted').order('verification_submitted_at',{ascending:false});
     document.getElementById('nav-badge-verification').textContent = (data||[]).filter(p=>p.verification_status==='pending').length;
-    if (error || !data?.length) { tbody.innerHTML = `<tr><td colspan="4"><div class="table-loading"><p>Nothing pending review</p></div></td></tr>`; return; }
+    if (error || !data?.length) {
+      tbody.innerHTML    = `<tr><td colspan="4"><div class="table-loading"><p>Nothing pending review</p></div></td></tr>`;
+      mobileEl.innerHTML = `<div class="table-loading"><p>Nothing pending review</p></div>`;
+      return;
+    }
     _verifySellers = {}; data.forEach(p=>{_verifySellers[p.id]=p;});
-    tbody.innerHTML = data.map(p => `<tr>
-      <td>${esc(p.full_name||'—')}<div class="listing-meta">${esc(p.email||'')}</div></td>
-      <td>${p.verification_is_owner===false?'Not owner':'Owner'}${p.extra_verification_status==='submitted'?' · Extra docs submitted':''}</td>
-      <td>${p.verification_submitted_at?fmtDate(p.verification_submitted_at):'—'}</td>
-      <td><div class="action-btns">
-        <button class="action-btn view" onclick="viewVerifyDoc('${p.id}','id')">View ID (front)</button>
-        <button class="action-btn view" onclick="viewVerifyDoc('${p.id}','id2')">View ID (back)</button>
-        <button class="action-btn view" onclick="viewVerifyDoc('${p.id}','proof')">View proof</button>
-        ${p.verification_status==='pending'?`${aBtn('approve','Approve','approve',`approveVerification('${p.id}')`)}${aBtn('reject','Reject','reject',`rejectVerification('${p.id}')`)}`:''}
-        ${p.extra_verification_status==='submitted'?aBtn('approve','Approve extra docs','approve',`approveExtraVerification('${p.id}')`):''}
-      </div></td>
-    </tr>`).join('');
+
+    tbody.innerHTML = data.map(p => {
+      const menuItems = [
+        {label:'View ID (front)', cls:'', fn:`viewVerifyDoc('${p.id}','id')`},
+        {label:'View ID (back)',  cls:'', fn:`viewVerifyDoc('${p.id}','id2')`},
+        {label:'View proof of ownership', cls:'', fn:`viewVerifyDoc('${p.id}','proof')`},
+        ...(p.verification_status==='pending'?[
+          {label:'✓ Approve', cls:'success', fn:`approveVerification('${p.id}')`},
+          {label:'✕ Reject',  cls:'danger',  fn:`rejectVerification('${p.id}')`},
+        ]:[]),
+        ...(p.extra_verification_status==='submitted'?[{label:'Approve extra docs', cls:'success', fn:`approveExtraVerification('${p.id}')`}]:[]),
+        {label:'Request extra documents', cls:'blue', fn:`requestExtraVerification('${p.id}','${esc(p.full_name||'')}')`},
+      ];
+      return `<tr>
+        <td>${esc(p.full_name||'—')}<div class="listing-meta">${esc(p.email||'')}</div></td>
+        <td>${p.verification_is_owner===false?'Not owner':'Owner'}${p.extra_verification_status==='submitted'?' · Extra docs submitted':''}</td>
+        <td>${p.verification_submitted_at?fmtDate(p.verification_submitted_at):'—'}</td>
+        <td>
+          <div class="action-btns">
+            ${aBtn('idcard','View ID (front)','view',`viewVerifyDoc('${p.id}','id')`)}
+            ${aBtn('idcard','View ID (back)','view',`viewVerifyDoc('${p.id}','id2')`)}
+            ${aBtn('doc','View proof of ownership','view',`viewVerifyDoc('${p.id}','proof')`)}
+            ${p.verification_status==='pending'?(aBtn('approve','Approve','approve',`approveVerification('${p.id}')`)+aBtn('reject','Reject','reject',`rejectVerification('${p.id}')`)):''}
+            ${p.extra_verification_status==='submitted'?aBtn('approve','Approve extra docs','approve',`approveExtraVerification('${p.id}')`):''}
+            ${aBtn('mail','Request extra documents','message',`requestExtraVerification('${p.id}','${esc(p.full_name||'')}')`)}
+          </div>
+          ${mobileMenu(p.id, menuItems)}
+        </td>
+      </tr>`;
+    }).join('');
+
+    mobileEl.innerHTML = data.map(p => `<div class="mobile-card">
+      <div class="mobile-card-header">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:13px">${esc(p.full_name||'—')}</div>
+          <div style="font-size:11px;color:var(--text-3)">${esc(p.email||'')}</div>
+        </div>
+        <span class="badge pending">${p.verification_status==='pending'?'pending':'extra docs'}</span>
+      </div>
+      <div class="mobile-card-body">
+        <div class="mobile-card-row"><span>Ownership</span><span>${p.verification_is_owner===false?'Not owner':'Owner'}</span></div>
+        <div class="mobile-card-row"><span>Submitted</span><span>${p.verification_submitted_at?fmtDate(p.verification_submitted_at):'—'}</span></div>
+      </div>
+      <div class="mobile-card-actions">
+        ${aBtn('idcard','ID front','view',`viewVerifyDoc('${p.id}','id')`)}
+        ${aBtn('idcard','ID back','view',`viewVerifyDoc('${p.id}','id2')`)}
+        ${aBtn('doc','Proof','view',`viewVerifyDoc('${p.id}','proof')`)}
+        ${p.verification_status==='pending'?(aBtn('approve','Approve','approve',`approveVerification('${p.id}')`)+aBtn('reject','Reject','reject',`rejectVerification('${p.id}')`)):''}
+        ${p.extra_verification_status==='submitted'?aBtn('approve','Approve extra','approve',`approveExtraVerification('${p.id}')`):''}
+      </div>
+    </div>`).join('');
   }
 
   async function viewVerifyDoc(sellerId, kind) {
