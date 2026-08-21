@@ -46,8 +46,8 @@
   .bt-switch.yearly::after{transform:translateX(24px)}
   .bt-save{font-size:11px;font-weight:700;color:var(--green-dark);background:var(--green-light);padding:3px 10px;border-radius:20px;white-space:nowrap}
 
-  .plans{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:stretch}
-  @media(max-width:760px){.plans{grid-template-columns:1fr}}
+  .plans{display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px;align-items:stretch}
+  @media(max-width:980px){.plans{grid-template-columns:1fr}}
 
   .plan{background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:32px 30px;display:flex;flex-direction:column;position:relative;overflow:hidden}
   .plan.elite{border-color:var(--gold);box-shadow:0 1px 3px rgba(0,0,0,0.06),0 18px 44px rgba(186,117,23,0.12)}
@@ -123,8 +123,29 @@
 
   <div class="plans" id="plans-grid">
 
+    <!-- FREE -->
+    <div class="plan free">
+      <div class="plan-eyebrow" style="color:var(--text-3)">Free</div>
+      <div class="plan-name">Get started</div>
+      <p class="plan-desc">Post listings, chat with buyers, and use the essentials — no card required, ever.</p>
+      <div class="plan-price">
+        <span class="amount" data-monthly="KES 0" data-yearly="KES 0">KES 0</span>
+        <span class="period">forever</span>
+      </div>
+      <div class="plan-price-note" data-monthly-note="No card required" data-yearly-note="No card required">No card required</div>
+      <a href="/post-listing" class="plan-cta" style="background:var(--surface);color:var(--text);border:1.5px solid var(--border)">Post a listing</a>
+      <ul class="feat-list">
+        <li><span class="feat-check" style="background:var(--surface)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--green)"><polyline points="20 6 9 17 4 12"/></svg></span><span>Post listings across all 47 counties</span></li>
+        <li><span class="feat-check" style="background:var(--surface)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--green)"><polyline points="20 6 9 17 4 12"/></svg></span><span>Buyers message you directly — chat &amp; WhatsApp</span></li>
+        <li><span class="feat-check" style="background:var(--surface)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--green)"><polyline points="20 6 9 17 4 12"/></svg></span><span>Buyer contact privacy toggle</span></li>
+        <li><span class="feat-check" style="background:var(--surface)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--green)"><polyline points="20 6 9 17 4 12"/></svg></span><span>Free trial period on every new listing</span></li>
+        <li><span class="feat-check" style="background:var(--surface)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--green)"><polyline points="20 6 9 17 4 12"/></svg></span><span>0% commission — no cut of your rent or sale</span></li>
+      </ul>
+    </div>
+
     <!-- PREMIUM -->
     <div class="plan premium">
+      <div class="plan-ribbon" style="background:var(--green)">Most popular</div>
       <div class="plan-eyebrow">Premium</div>
       <div class="plan-name">For active sellers</div>
       <p class="plan-desc">Everything you need to look credible, get found, and get replies faster.</p>
@@ -195,16 +216,16 @@
       .in('key',['premium_monthly_price','premium_yearly_price','elite_monthly_price','elite_yearly_price']);
     const map = {}; (data||[]).forEach(r => map[r.key] = Number(r.value));
     const fmt = n => n ? 'KES ' + n.toLocaleString('en-KE') : null;
-    const premiumEl = document.querySelector('.plan.premium .amount');
-    const eliteEl = document.querySelector('.plan.elite .amount');
-    if (premiumEl && map.premium_monthly_price) { premiumEl.dataset.monthly = fmt(map.premium_monthly_price); premiumEl.textContent = fmt(map.premium_monthly_price); }
-    if (premiumEl && map.premium_yearly_price)  premiumEl.dataset.yearly = fmt(Math.round(map.premium_yearly_price/12));
-    if (eliteEl && map.elite_monthly_price) { eliteEl.dataset.monthly = fmt(map.elite_monthly_price); eliteEl.textContent = fmt(map.elite_monthly_price); }
-    if (eliteEl && map.elite_yearly_price)  eliteEl.dataset.yearly = fmt(Math.round(map.elite_yearly_price/12));
-    document.querySelectorAll('.plan-price-note[data-yearly-note]').forEach((el,i) => {
-      const yearlyVal = i===0 ? map.premium_yearly_price : map.elite_yearly_price;
-      if (yearlyVal) el.dataset.yearlyNote = `KES ${yearlyVal.toLocaleString('en-KE')} billed yearly`;
-    });
+
+    function applyPrice(planClass, monthlyKey, yearlyKey){
+      const amountEl = document.querySelector(`.plan.${planClass} .amount`);
+      const noteEl = document.querySelector(`.plan.${planClass} .plan-price-note`);
+      if (amountEl && map[monthlyKey]) { amountEl.dataset.monthly = fmt(map[monthlyKey]); amountEl.textContent = fmt(map[monthlyKey]); }
+      if (amountEl && map[yearlyKey])  amountEl.dataset.yearly = fmt(Math.round(map[yearlyKey]/12));
+      if (noteEl && map[yearlyKey])    noteEl.dataset.yearlyNote = `KES ${map[yearlyKey].toLocaleString('en-KE')} billed yearly`;
+    }
+    applyPrice('premium', 'premium_monthly_price', 'premium_yearly_price');
+    applyPrice('elite', 'elite_monthly_price', 'elite_yearly_price');
   }
   loadLivePrices();
 
@@ -235,7 +256,8 @@
       el.textContent = yearly ? '/ month, billed yearly' : '/ month';
     });
     document.querySelectorAll('.plan-price-note').forEach(el => {
-      el.textContent = yearly ? el.dataset.yearlyNote : el.dataset.monthlyNote;
+      const val = yearly ? el.dataset.yearlyNote : el.dataset.monthlyNote;
+      if (val) el.textContent = val;
     });
   }
 </script>
