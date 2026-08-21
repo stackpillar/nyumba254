@@ -1867,7 +1867,7 @@
       {count: active}, {count: pending}, {count: total},
       {count: recycled}, {count: sellers}, {count: unpaid}
     ] = await Promise.all([
-      db.from('listings').select('*',{count:'exact',head:true}).eq('status','active').eq('recycle_bin',false),
+      db.from('listings').select('*',{count:'exact',head:true}).eq('status','active').eq('is_disabled',false).eq('recycle_bin',false),
       db.from('listings').select('*',{count:'exact',head:true}).eq('status','pending').eq('recycle_bin',false),
       db.from('listings').select('*',{count:'exact',head:true}).eq('recycle_bin',false),
       db.from('listings').select('*',{count:'exact',head:true}).eq('recycle_bin',true),
@@ -1964,9 +1964,9 @@
       {count:pend}, {count:actv}, {count:exp}, {count:feat}, {count:tot}, {count:trial}, {count:multi}, {count:inactive}
     ] = await Promise.all([
       db.from('listings').select('*',{count:'exact',head:true}).eq('status','pending').eq('recycle_bin',false),
-      db.from('listings').select('*',{count:'exact',head:true}).eq('status','active').eq('recycle_bin',false),
+      db.from('listings').select('*',{count:'exact',head:true}).eq('status','active').eq('is_disabled',false).eq('recycle_bin',false),
       db.from('listings').select('*',{count:'exact',head:true}).eq('status','expired').eq('recycle_bin',false),
-      db.from('listings').select('*',{count:'exact',head:true}).eq('is_featured',true).eq('status','active').eq('recycle_bin',false),
+      db.from('listings').select('*',{count:'exact',head:true}).eq('is_featured',true).eq('status','active').eq('is_disabled',false).eq('recycle_bin',false),
       db.from('listings').select('*',{count:'exact',head:true}).eq('recycle_bin',false),
       db.from('listings').select('*',{count:'exact',head:true}).eq('payment_status','trial').eq('recycle_bin',false),
       db.from('listings').select('*',{count:'exact',head:true}).eq('is_multi_unit',true).eq('recycle_bin',false),
@@ -2017,8 +2017,8 @@
 
     let q = db.from('listings').select('*, profiles(full_name, email), listing_photos(*), listing_units(*)',{count:'exact'}).eq('recycle_bin',false);
     if (currentTab==='pending')       q = q.eq('status','pending');
-    else if (currentTab==='active')   q = q.eq('status','active');
-    else if (currentTab==='featured') q = q.eq('is_featured',true).eq('status','active');
+    else if (currentTab==='active')   q = q.eq('status','active').eq('is_disabled',false);
+    else if (currentTab==='featured') q = q.eq('is_featured',true).eq('status','active').eq('is_disabled',false);
     else if (currentTab==='expired')  q = q.eq('status','expired');
     else if (currentTab==='trial')    q = q.eq('payment_status','trial');
     else if (currentTab==='multiunit') q = q.eq('is_multi_unit',true);
