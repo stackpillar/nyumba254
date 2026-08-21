@@ -970,6 +970,26 @@
   </div>
 </div>
 
+<!-- VALUATION TOOL MODAL -->
+<div class="modal-overlay" id="modal-valuation">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-head"><h3>Instant Valuation</h3><div class="modal-close" onclick="closeModal('modal-valuation')" role="button" tabindex="0" aria-label="Close" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeModal('modal-valuation')}">✕</div></div>
+    <div class="modal-body">
+      <p style="font-size:12.5px;color:var(--text-3);margin-bottom:16px;line-height:1.6">See what similar properties are priced at on Nyumba254 right now, so you can list competitively.</p>
+      <div class="form-grid">
+        <div class="form-group"><label>County</label><select id="val-county" onchange="valPopulateAreas()"></select></div>
+        <div class="form-group"><label>Area</label><select id="val-area"><option value="">Any area in county</option></select></div>
+        <div class="form-group"><label>Category</label><select id="val-category"><option value="standard">Standard</option><option value="student">Student</option><option value="luxury">Luxury</option><option value="commercial">Shops &amp; offices</option></select></div>
+        <div class="form-group"><label>Sale or rent</label><select id="val-price-type"><option value="rent">To let (monthly)</option><option value="sale">For sale</option></select></div>
+        <div class="form-group"><label>Bedrooms</label><input type="number" id="val-bedrooms" min="0" max="20" placeholder="e.g. 2"/></div>
+      </div>
+      <div id="val-usage-note" style="font-size:11.5px;color:var(--text-3);margin-top:4px"></div>
+      <div id="val-results" style="margin-top:18px"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-valuation')">Close</button><button class="btn btn-primary" id="btn-run-valuation" onclick="runValuation()">Get valuation</button></div>
+  </div>
+</div>
+
 <!-- SUPPORT CHAT WIDGET -->
 <button class="scw-fab" id="scw-fab" onclick="scwToggle()">
   <span class="scw-fab-avatar"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span>
@@ -1344,6 +1364,7 @@ function updateEliteSectionUI(sub){
   const btn = document.getElementById('elite-upgrade-btn');
   const banner = document.getElementById('elite-status-banner');
   const storefrontBtn = document.getElementById('elite-storefront-btn');
+  const valuationBtn = document.getElementById('elite-valuation-btn');
   if(!btn || !banner) return;
   if(sub.active && sub.plan==='elite'){
     const exp = sub.expiresAt ? ` — renews/expires ${fmtSubDate(sub.expiresAt)}` : '';
@@ -1351,10 +1372,12 @@ function updateEliteSectionUI(sub){
     banner.textContent = `✓ Active${exp}`;
     btn.style.display = 'none';
     if(storefrontBtn) storefrontBtn.style.display = 'inline-flex';
+    if(valuationBtn) valuationBtn.style.display = 'inline-flex';
   } else {
     banner.style.display = 'none';
     btn.style.display = 'inline-flex';
     if(storefrontBtn) storefrontBtn.style.display = 'none';
+    if(valuationBtn) valuationBtn.style.display = 'none';
   }
 }
 
@@ -1392,6 +1415,121 @@ async function copyStorefrontLink(){
   }).catch(()=>{
     showToast(url,'');
   });
+}
+
+// ── Instant Valuation Tool (Elite) ──────────────────────────────────
+// Pure-data feature — compares a spec against other active listings on
+// the platform (same county/area/category/price type, optionally bedrooms)
+// and returns min/median/average/max. Usage is capped per calendar month
+// via elite_valuation_uses_monthly in platform_settings, tracked on
+// profiles.valuation_uses_month/_count.
+let eliteValuationLimit = 20;
+async function loadValuationLimit(){
+  try{
+    const{data}=await db.from('platform_settings').select('value').eq('key','elite_valuation_uses_monthly').maybeSingle();
+    if(data?.value) eliteValuationLimit = Number(data.value)||eliteValuationLimit;
+  }catch(e){/* fall back to default */}
+}
+
+function valPopulateCounties(){
+  const sel=document.getElementById('val-county');
+  if(!sel)return;
+  sel.innerHTML = NK_COUNTIES.map(c=>`<option value="${c}">${nkCountyLabel(c)}</option>`).join('');
+}
+function valPopulateAreas(){
+  const county=document.getElementById('val-county')?.value;
+  const sel=document.getElementById('val-area');
+  if(!sel)return;
+  const areas=NK_AREAS_BY_COUNTY[county]||[];
+  sel.innerHTML = '<option value="">Any area in county</option>' + areas.map(a=>`<option value="${a}">${a}</option>`).join('');
+}
+
+function currentMonthKey(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
+
+async function openValuationModal(){
+  await loadValuationLimit();
+  valPopulateCounties();
+  const savedArea = allListings[0]?.area;
+  const savedCounty = savedArea ? NK_AREA_TO_COUNTY[savedArea] : null;
+  if(savedCounty){ document.getElementById('val-county').value = savedCounty; }
+  valPopulateAreas();
+  document.getElementById('val-results').innerHTML = '';
+  const monthKey = currentMonthKey();
+  const usedThisMonth = (currentProfile?.valuation_uses_month===monthKey) ? (currentProfile?.valuation_uses_count||0) : 0;
+  document.getElementById('val-usage-note').textContent = `${Math.max(0,eliteValuationLimit-usedThisMonth)} of ${eliteValuationLimit} valuations left this month`;
+  openModal('modal-valuation');
+}
+
+async function runValuation(){
+  const monthKey = currentMonthKey();
+  const usedThisMonth = (currentProfile?.valuation_uses_month===monthKey) ? (currentProfile?.valuation_uses_count||0) : 0;
+  if(usedThisMonth >= eliteValuationLimit){
+    showToast(`You've used all ${eliteValuationLimit} valuations for this month — resets next month.`,'error');
+    return;
+  }
+
+  const county = document.getElementById('val-county').value;
+  const area = document.getElementById('val-area').value;
+  const category = document.getElementById('val-category').value;
+  const priceType = document.getElementById('val-price-type').value;
+  const bedroomsRaw = document.getElementById('val-bedrooms').value;
+  const bedrooms = bedroomsRaw==='' ? null : parseInt(bedroomsRaw);
+
+  const btn=document.getElementById('btn-run-valuation');
+  btn.disabled=true; btn.textContent='Calculating…';
+  const resultsEl = document.getElementById('val-results');
+  resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-3);font-size:13px">Looking at similar listings…</div>';
+
+  try{
+    async function fetchComparables(withBedrooms, withArea){
+      let q = db.from('listings').select('price').eq('status','active').eq('category',category).eq('price_type',priceType).eq('county',county);
+      if(withArea && area) q = q.eq('area',area);
+      if(withBedrooms && bedrooms!==null) q = q.eq('bedrooms',bedrooms);
+      const{data,error} = await q.limit(500);
+      if(error) throw error;
+      return (data||[]).map(r=>Number(r.price)).filter(p=>p>0);
+    }
+
+    let prices = await fetchComparables(true, true);
+    let note = area ? `${area}, matching bedrooms` : `${nkCountyLabel(county)}-wide, matching bedrooms`;
+    if(prices.length < 3 && area){
+      prices = await fetchComparables(true, false);
+      note = `${nkCountyLabel(county)}-wide (widened from ${area}), matching bedrooms`;
+    }
+    if(prices.length < 3 && bedrooms!==null){
+      prices = await fetchComparables(false, false);
+      note = `${nkCountyLabel(county)}-wide, any bedroom count`;
+    }
+
+    if(!prices.length){
+      resultsEl.innerHTML = `<div class="empty-state" style="padding:24px"><p>No comparable active listings found yet for this combination. Try a nearby area or a different category.</p></div>`;
+      return;
+    }
+
+    prices.sort((a,b)=>a-b);
+    const min = prices[0], max = prices[prices.length-1];
+    const avg = Math.round(prices.reduce((s,p)=>s+p,0)/prices.length);
+    const mid = Math.floor(prices.length/2);
+    const median = prices.length%2 ? prices[mid] : Math.round((prices[mid-1]+prices[mid])/2);
+    const suffix = priceType==='rent' ? '/mo' : '';
+
+    resultsEl.innerHTML = `
+      <div style="background:var(--green-light);border-radius:var(--radius);padding:16px 18px;margin-bottom:12px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--green-dark);margin-bottom:6px">Suggested price range</div>
+        <div style="font-size:22px;font-weight:700;color:var(--green-dark)">KES ${min.toLocaleString('en-KE')}${suffix} – KES ${max.toLocaleString('en-KE')}${suffix}</div>
+        <div style="font-size:12.5px;color:var(--green-dark);margin-top:4px">Median KES ${median.toLocaleString('en-KE')}${suffix} · Average KES ${avg.toLocaleString('en-KE')}${suffix}</div>
+      </div>
+      <div style="font-size:12px;color:var(--text-3)">Based on ${prices.length} active listing${prices.length!==1?'s':''} — ${escHtml(note)}.</div>`;
+
+    const newCount = usedThisMonth + 1;
+    const{error:updErr} = await db.from('profiles').update({ valuation_uses_month: monthKey, valuation_uses_count: newCount }).eq('id', currentUser.id);
+    if(!updErr) currentProfile = { ...currentProfile, valuation_uses_month: monthKey, valuation_uses_count: newCount };
+    document.getElementById('val-usage-note').textContent = `${Math.max(0,eliteValuationLimit-newCount)} of ${eliteValuationLimit} valuations left this month`;
+  }catch(e){
+    resultsEl.innerHTML = `<div class="empty-state" style="padding:24px"><p>Could not run the valuation: ${escHtml(e.message||String(e))}</p></div>`;
+  }finally{
+    btn.disabled=false; btn.textContent='Get valuation';
+  }
 }
 
 function updateConciergeGate(sub){
