@@ -772,7 +772,7 @@
           <a href="/profile" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;text-decoration:none"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="15" height="15"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit profile &amp; password</a>
         </div>
         <div style="display:flex;flex-direction:column;gap:20px">
-          <div class="settings-section">
+          <div class="settings-section" id="settings-notifications-section">
             <h3><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>Notifications</h3>
             <div class="notif-list">
               <div class="toggle-row"><div class="toggle-label"><strong>New message</strong><span>Get notified when a buyer messages you</span></div><label class="switch"><input type="checkbox" id="notif-enquiry" checked/><span class="switch-track"></span></label></div>
@@ -787,7 +787,7 @@
             <div id="verify-status-banner" style="margin-bottom:14px"></div>
             <div id="verify-form-wrap"></div>
           </div>
-          <div class="settings-section">
+          <div class="settings-section" id="settings-concierge-section">
             <h3><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Managed chat</h3>
             <div class="toggle-row" style="border-bottom:none">
               <div class="toggle-label"><strong>Let our team handle enquiries</strong><span>We reply to buyer messages on your behalf — you never need to log in for it</span></div>
@@ -795,7 +795,7 @@
             </div>
             <p style="font-size:12px;color:var(--text-3);line-height:1.6;margin-top:8px" id="concierge-note"></p>
           </div>
-          <div class="settings-section">
+          <div class="settings-section" id="settings-contact-privacy-section">
             <h3><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.12 1.2 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>Buyer contact privacy</h3>
             <div class="toggle-row" style="border-bottom:none">
               <div class="toggle-label"><strong>Hide Call &amp; WhatsApp on all my listings</strong><span>When on, buyers can only message you on Nyumba254 — your phone number is never revealed. When off, buyers can reveal your number to call or WhatsApp you directly.</span></div>
@@ -3055,15 +3055,24 @@ if(window.__scwEarlyErrors&&window.__scwEarlyErrors.length){
    they sign in from a different device or clear site data.)
 ══════════════════════════════════════ */
 const Tour = (() => {
+  // Steps carry an optional `page` — the dashboard page (see showPage()) that
+  // must be active for that step's target element to exist/be visible. When a
+  // step's page differs from whatever's currently showing, showStep() switches
+  // pages first (via the existing showPage()) before measuring the target, so
+  // the tour can "dive into" a page's own sections, not just point at nav items.
   const STEPS = [
-    { selector:'#nav-overview',         title:'Your Overview', desc:'This is your home base — see active listings, enquiries, and recent activity every time you sign in.' },
-    { selector:'#nav-listings',         title:'My Listings',   desc:'Manage everything you\'ve posted here: edit details, pause a listing, mark it sold or occupied, or delete it.' },
-    { selector:'#btn-new-listing-tour', title:'Post a Listing',desc:'Ready to list a property? Tap here any time to add a new apartment or house.' },
-    { selector:'#nav-messages',         title:'Messages',      desc:'Chat directly with buyers who\'ve reached out about your listings — all your conversations live here.' },
-    { selector:'#nav-enquiries',        title:'Enquiries',     desc:'A quick feed of every buyer enquiry, so nothing slips through even before you open a full conversation.' },
-    { selector:'#nav-reviews',          title:'Reviews',       desc:'See what buyers are saying about you and respond to build trust with future buyers.' },
-    { selector:'#nav-payments',         title:'Payments',      desc:'Track your listing fee payments and download receipts any time you need them.' },
-    { selector:'#nav-settings',         title:'Account Settings', desc:'Verify your account here to unlock unlimited listings and a trust badge — plus manage notifications and privacy.' },
+    { selector:'#nav-overview',         page:'overview', title:'Your Overview', desc:'This is your home base — see active listings, enquiries, and recent activity every time you sign in.' },
+    { selector:'#nav-listings',         page:'overview', title:'My Listings',   desc:'Manage everything you\'ve posted here: edit details, pause a listing, mark it sold or occupied, or delete it.' },
+    { selector:'#btn-new-listing-tour', page:'overview', title:'Post a Listing',desc:'Ready to list a property? Tap here any time to add a new apartment or house.' },
+    { selector:'#nav-messages',         page:'overview', title:'Messages',      desc:'Chat directly with buyers who\'ve reached out about your listings — all your conversations live here.' },
+    { selector:'#nav-enquiries',        page:'overview', title:'Enquiries',     desc:'A quick feed of every buyer enquiry, so nothing slips through even before you open a full conversation.' },
+    { selector:'#nav-reviews',          page:'overview', title:'Reviews',       desc:'See what buyers are saying about you and respond to build trust with future buyers.' },
+    { selector:'#nav-payments',         page:'overview', title:'Payments',      desc:'Track your listing fee payments and download receipts any time you need them.' },
+    { selector:'#nav-settings',         page:'overview', title:'Account Settings', desc:'Everything about your account lives here — let\'s take a quick look inside.' },
+    { selector:'#verification-settings-section', page:'settings', title:'Account Verification', desc:'Verify your account here to unlock unlimited listings and a trust badge buyers can see.' },
+    { selector:'#settings-notifications-section', page:'settings', title:'Notifications', desc:'Choose which alerts you get — new messages, listing approvals, expiring listings, and payment confirmations.' },
+    { selector:'#settings-concierge-section', page:'settings', title:'Managed Chat', desc:'Turn this on and our team can reply to buyer messages on your behalf — you\'ll still see everything in your Messages tab.' },
+    { selector:'#settings-contact-privacy-section', page:'settings', title:'Buyer Contact Privacy', desc:'Hide your Call and WhatsApp buttons platform-wide so buyers can only reach you through chat on Nyumba254.' },
   ];
   let idx = 0;
   let storageKey = null;
@@ -3078,18 +3087,36 @@ const Tour = (() => {
     showStep();
   }
 
+  function currentPageName() {
+    const active = document.querySelector('.page.active');
+    return active ? active.id.replace('page-','') : null;
+  }
+
   function showStep() {
     const step = STEPS[idx];
-    const target = step ? document.querySelector(step.selector) : null;
-    if (!step || !target) { finish(); return; }
+    if (!step) { finish(); return; }
 
-    document.getElementById('tour-step-label').textContent = `Step ${idx+1} of ${STEPS.length}`;
-    document.getElementById('tour-title').textContent = step.title;
-    document.getElementById('tour-desc').textContent = step.desc;
-    document.getElementById('tour-btn-continue').textContent = (idx === STEPS.length-1) ? 'Finish' : 'Continue';
+    // Switch pages first if this step lives on a different page (e.g. diving
+    // into Settings' own sections) — showPage() already handles rendering
+    // that page's content and closing the mobile sidebar.
+    if (step.page && currentPageName() !== step.page) {
+      showPage(step.page);
+    }
 
-    positionSpotlight(target);
-    positionTooltip(target);
+    // Give the page swap a frame to lay out before measuring the target,
+    // so the spotlight/tooltip position against the final, settled layout.
+    requestAnimationFrame(() => {
+      const target = document.querySelector(step.selector);
+      if (!target) { finish(); return; }
+
+      document.getElementById('tour-step-label').textContent = `Step ${idx+1} of ${STEPS.length}`;
+      document.getElementById('tour-title').textContent = step.title;
+      document.getElementById('tour-desc').textContent = step.desc;
+      document.getElementById('tour-btn-continue').textContent = (idx === STEPS.length-1) ? 'Finish' : 'Continue';
+
+      positionSpotlight(target);
+      positionTooltip(target);
+    });
   }
 
   function positionSpotlight(target) {
