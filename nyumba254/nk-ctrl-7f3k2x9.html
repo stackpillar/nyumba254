@@ -939,6 +939,21 @@
           <button class="btn-modal approve" style="margin-top:14px" onclick="saveSettings()">Save changes</button>
         </div>
       </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Social media auto-posting</span></div>
+        <p style="padding:14px 22px 4px;font-size:12px;color:var(--text-3);line-height:1.6">Posts go to Nyumba254's own Facebook Page and Instagram — not sellers' individual accounts. You can also post any listing manually from the Actions column any time, regardless of these settings.</p>
+        <div style="padding:8px 22px 24px;display:flex;flex-direction:column;gap:10px;max-width:440px">
+          <label style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text-2);cursor:pointer">
+            <input type="checkbox" id="set-auto_post_facebook" style="width:18px;height:18px"/>
+            Automatically post new listings to Facebook when approved
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text-2);cursor:pointer">
+            <input type="checkbox" id="set-auto_post_instagram" style="width:18px;height:18px"/>
+            Automatically post new listings to Instagram when approved
+          </label>
+          <button class="btn-modal approve" style="margin-top:6px;width:fit-content" onclick="saveSocialSettings()">Save</button>
+        </div>
+      </div>
     </div>
 
     <!-- USERS -->
@@ -1807,6 +1822,84 @@
     return `<span class="badge multiunit" title="${totalAvail} of ${totalUnits} available">Multi-unit${totalUnits?` · ${totalUnits}`:''}</span>`;
   }
 
+  // ── Social posting (Facebook/Instagram — platform Page, admin-controlled) ──
+  function socialPostedInfo(l, platform){
+    const posts=(l.social_posts||[]).filter(p=>p.platform===platform && p.status==='posted');
+    if(!posts.length) return null;
+    return posts.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0];
+  }
+  function socialBadges(l){
+    const fb=socialPostedInfo(l,'facebook'), ig=socialPostedInfo(l,'instagram');
+    let out='';
+    if(fb) out+=`<span class="badge active" title="Posted ${fmtDate(fb.created_at)}">FB ✓</span> `;
+    if(ig) out+=`<span class="badge active" title="Posted ${fmtDate(ig.created_at)}">IG ✓</span> `;
+    return out;
+  }
+  function renderSocialButtons(l){
+    const fb=socialPostedInfo(l,'facebook'), ig=socialPostedInfo(l,'instagram');
+    return aBtn('facebook', fb?'Posted to Facebook — post again':'Post to Facebook','view',`postToSocial('${l.id}','facebook')`)
+         + aBtn('instagram', ig?'Posted to Instagram — post again':'Post to Instagram','view',`postToSocial('${l.id}','instagram')`);
+  }
+  async function postToSocial(id, platform){
+    const label = platform==='facebook'?'Facebook':'Instagram';
+    const { data:{ session } } = await db.auth.getSession();
+    if(!session){ toast('Not signed in','error'); return; }
+    toast(`Posting to ${label}…`,'');
+    try{
+      const res = await fetch(`${EDGE_URL}/social-post`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},
+        body:JSON.stringify({ listingId:id, platforms:[platform] }),
+      });
+      const body = await res.json();
+      const result = body?.results?.[platform];
+      if(!res.ok || !result?.success){
+        toast(`${label} post failed: ${result?.error||body?.error||'Unknown error'}`,'error');
+        return;
+      }
+      toast(`Posted to ${label} ✓`,'success');
+      logAction(`social_post_${platform}`,'listing',id,'');
+      if(currentView==='listings') loadAllListings();
+    }catch(err){
+      toast('Network error: '+err.message,'error');
+    }
+  }
+  let SOCIAL_SETTINGS = { auto_post_facebook:false, auto_post_instagram:false };
+  async function loadSocialSettings(){
+    const { data } = await db.from('platform_settings').select('key,value').in('key',['auto_post_facebook','auto_post_instagram']);
+    (data||[]).forEach(row=>{ SOCIAL_SETTINGS[row.key] = row.value==='1'||row.value===1; });
+    const fbCb=document.getElementById('set-auto_post_facebook'); if(fbCb) fbCb.checked=SOCIAL_SETTINGS.auto_post_facebook;
+    const igCb=document.getElementById('set-auto_post_instagram'); if(igCb) igCb.checked=SOCIAL_SETTINGS.auto_post_instagram;
+  }
+  async function saveSocialSettings(){
+    const fb=document.getElementById('set-auto_post_facebook').checked;
+    const ig=document.getElementById('set-auto_post_instagram').checked;
+    const rows=[
+      {key:'auto_post_facebook', value: fb?'1':'0', updated_at:new Date().toISOString(), updated_by: currentUser?.id||null},
+      {key:'auto_post_instagram', value: ig?'1':'0', updated_at:new Date().toISOString(), updated_by: currentUser?.id||null},
+    ];
+    const { error } = await db.from('platform_settings').upsert(rows,{onConflict:'key'});
+    if(error){ toast('Error saving: '+error.message,'error'); return; }
+    SOCIAL_SETTINGS.auto_post_facebook=fb; SOCIAL_SETTINGS.auto_post_instagram=ig;
+    toast('Social posting settings saved ✓','success');
+  }
+  async function maybeAutoPostSocial(id){
+    const platforms=[];
+    if(SOCIAL_SETTINGS.auto_post_facebook) platforms.push('facebook');
+    if(SOCIAL_SETTINGS.auto_post_instagram) platforms.push('instagram');
+    if(!platforms.length) return;
+    const { data:{ session } } = await db.auth.getSession();
+    if(!session) return;
+    try{
+      await fetch(`${EDGE_URL}/social-post`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},
+        body:JSON.stringify({ listingId:id, platforms }),
+      });
+      if(currentView==='listings') loadAllListings();
+    }catch(e){ console.error('Auto-post failed:',e); }
+  }
+
   // Days left before a listing's plan expires. Trial listings use
   // trial_expires_at directly; paid listings are computed from
   // created_at + the plan's duration in SETTINGS (there's no separate
@@ -1853,6 +1946,8 @@
     idcard:   '<rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="8" cy="10" r="2"/><path d="M14 9h6M14 13h6M6 15h4"/>',
     doc:      '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>',
     mail:     '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/>',
+    facebook: '<path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/>',
+    instagram:'<rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>',
   };
   function aBtn(icon, tip, cls, onclick) {
     return `<button class="action-btn icon ${cls}" data-tip="${esc(tip)}" aria-label="${esc(tip)}" onclick="${onclick}"><svg viewBox="0 0 24 24">${ICONS[icon]}</svg></button>`;
@@ -2072,7 +2167,7 @@
       loadMoreBtn.textContent = 'Loading…';
     }
 
-    let q = db.from('listings').select('*, profiles(full_name, email), listing_photos(*), listing_units(*)',{count:'exact'}).eq('recycle_bin',false);
+    let q = db.from('listings').select('*, profiles(full_name, email), listing_photos(*), listing_units(*), social_posts(*)',{count:'exact'}).eq('recycle_bin',false);
     if (currentTab==='pending')       q = q.eq('status','pending');
     else if (currentTab==='active')   q = q.eq('status','active').eq('is_disabled',false);
     else if (currentTab==='featured') q = q.eq('is_featured',true).eq('status','active').eq('is_disabled',false);
@@ -2124,6 +2219,10 @@
         l.is_disabled
           ? {label:'Activate',   cls:'success', fn:`activateListing('${l.id}')`}
           : {label:'Deactivate', cls:'danger',  fn:`deactivateListing('${l.id}')`},
+        ...(l.status==='active'&&!l.is_disabled?[
+          {label:'📘 Post to Facebook', cls:'blue', fn:`postToSocial('${l.id}','facebook')`},
+          {label:'📷 Post to Instagram', cls:'blue', fn:`postToSocial('${l.id}','instagram')`},
+        ]:[]),
         {label:'Move to recycle bin',   cls:'danger', fn:`recycleListing('${l.id}')`},
         {label:'Delete permanently',    cls:'danger', fn:`deleteListingPermanently('${l.id}')`},
       ];
@@ -2131,7 +2230,7 @@
         <td><input type="checkbox" class="listing-select-cb" data-id="${l.id}" onchange="toggleSelectListing('${l.id}',this.checked)" ${selectedListingIds.has(l.id)?'checked':''}/></td>
         <td><div class="listing-thumb">
           <div class="thumb-img">${thumb}</div>
-          <div class="listing-info"><div class="listing-title">${esc(l.title)}</div><div class="listing-meta">${esc(l.profiles?.full_name||'—')} ${multiUnitBadge(l)}</div></div>
+          <div class="listing-info"><div class="listing-title">${esc(l.title)}</div><div class="listing-meta">${esc(l.profiles?.full_name||'—')} ${multiUnitBadge(l)} ${l.status==='active'&&!l.is_disabled?socialBadges(l):''}</div></div>
         </div></td>
         <td>${esc(fmtLocation(l))}</td>
         <td style="font-weight:500">${fmtListingPrice(l)}</td>
@@ -2146,11 +2245,13 @@
             ${isTrial?aBtn('upgrade','Process upgrade','upgrade',`openUpgradeModal('${l.id}')`):''}
             ${l.status==='active'&&!l.is_featured?aBtn('feature','Feature listing','feature',`featureListing('${l.id}')`):''}
             ${l.is_featured?aBtn('unfeature','Unfeature listing','view',`unfeatureListing('${l.id}')`):''}
-            ${aBtn('edit','Edit listing','view',`openEditListingModal('${l.id}')`)}
+            ${l.status==='active'&&!l.is_disabled?renderSocialButtons(l):''}
+            ${aBtn('view','View','view',`openListingModal('${l.id}')`)}
             ${aBtn('view','View live listing','view',`openListingModal('${l.id}')`)}
             ${l.is_disabled
               ? aBtn('activate','Activate listing','approve',`activateListing('${l.id}')`)
               : aBtn('deactivate','Deactivate listing','reject',`deactivateListing('${l.id}')`)}
+            ${l.status==='active'&&!l.is_disabled?renderSocialButtons(l):''}
             ${aBtn('recycle','Move to recycle bin','reject',`recycleListing('${l.id}')`)}
             ${aBtn('delete','Delete permanently','delete',`deleteListingPermanently('${l.id}')`)}
           </div>
@@ -2279,6 +2380,7 @@
     }
     toast('Listing approved and live ✓','success');
     loadOverview(); if(currentView==='listings') loadAllListings();
+    maybeAutoPostSocial(id);
   }
 
   function rejectListing(id) {
@@ -2621,6 +2723,7 @@
       ${l.status==='active'&&!l.is_featured?`<button class="btn-modal approve" onclick="featureListing('${l.id}');closeModal()">★ Feature</button>`:''}
       ${l.is_featured?`<button class="btn-modal cancel" onclick="unfeatureListing('${l.id}');closeModal()">☆ Unfeature</button>`:''}
       ${l.is_disabled?`<button class="btn-modal approve" onclick="activateListing('${l.id}');closeModal()">Activate</button>`:`<button class="btn-modal reject" onclick="deactivateListing('${l.id}');closeModal()">Deactivate</button>`}
+      ${l.status==='active'&&!l.is_disabled?`<button class="btn-modal cancel" onclick="postToSocial('${l.id}','facebook')">📘 Post to Facebook</button><button class="btn-modal cancel" onclick="postToSocial('${l.id}','instagram')">📷 Post to Instagram</button>`:''}
       <button class="btn-modal cancel" onclick="openEditListingModal('${l.id}');closeModal()">Edit</button>
       <button class="btn-modal cancel" onclick="closeModal()">Close</button>`;
     openModal();
@@ -4600,7 +4703,7 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
     if(v==='listings')     { loadAllListings(); loadTabCounts(); }
     if(v==='recycle-bin')  loadRecycleBin();
     if(v==='payments')     loadPayments();
-    if(v==='settings')     loadSettingsForm();
+    if(v==='settings')     { loadSettingsForm(); loadSocialSettings(); }
     if(v==='users')        loadUsers();
     // Don't mark everything read on open — that erases the unread dot before
     // the admin has actually looked at each item. Individual items are
@@ -5186,6 +5289,7 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
     loadReviewsBadge();
     loadPremiumBadge();
     subscribeReportsRealtime();
+    loadSocialSettings();
     ACW.init();
   }
   init();
