@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Seller Plans — Nyumba254</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --green:#0F6E56;--green-light:#E1F5EE;--green-mid:#1D9E75;--green-dark:#085041;
+    --gold:#BA7517;--gold-light:#FAEEDA;
+    --text:#1a1a18;--text-2:#4a4a46;--text-3:#888780;
+    --border:#e0ded8;--surface:#f7f6f2;--white:#ffffff;
+    --radius:10px;--radius-lg:18px;
+    --shadow:0 1px 3px rgba(0,0,0,0.06),0 10px 30px rgba(8,80,65,0.06);
+  }
+  html{scroll-behavior:smooth}
+  body{font-family:'Inter',sans-serif;color:var(--text);background:var(--surface);line-height:1.6;min-height:100vh}
+  a{color:inherit}
+  /* subtle roof-motif watermark, this brand's own mark, echoed instead of a generic icon */
+  body::before{
+    content:'';position:fixed;top:-160px;right:-160px;width:520px;height:520px;
+    background:radial-gradient(circle at center, rgba(15,110,86,0.05), transparent 70%);
+    pointer-events:none;z-index:0;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:56px 24px 90px;position:relative;z-index:1}
+
+  .top-logo{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:34px}
+  .top-logo-icon{width:34px;height:34px;background:var(--green-dark);border-radius:9px;display:flex;align-items:center;justify-content:center}
+  .top-logo-icon svg{width:17px;height:17px;stroke:white;fill:none;stroke-width:2;stroke-linecap:round}
+  .top-logo-text{font-family:'Playfair Display',serif;font-weight:700;font-size:19px;color:var(--green-dark)}
+
+  .hero{text-align:center;max-width:620px;margin:0 auto 40px}
+  .hero-eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+  .hero h1{font-family:'Playfair Display',serif;font-weight:700;font-size:clamp(28px,4vw,40px);color:var(--text);line-height:1.15;margin-bottom:14px}
+  .hero p{font-size:15px;color:var(--text-2);line-height:1.7}
+
+  /* billing toggle */
+  .billing-toggle{display:flex;align-items:center;justify-content:center;gap:14px;margin:36px 0 44px}
+  .bt-label{font-size:14px;font-weight:600;color:var(--text-3);cursor:pointer;transition:color .15s}
+  .bt-label.active{color:var(--text)}
+  .bt-switch{position:relative;width:52px;height:28px;border-radius:20px;background:var(--green);cursor:pointer;flex-shrink:0;border:none}
+  .bt-switch::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:white;box-shadow:0 1px 3px rgba(0,0,0,0.25);transition:transform .2s ease}
+  .bt-switch.yearly::after{transform:translateX(24px)}
+  .bt-save{font-size:11px;font-weight:700;color:var(--green-dark);background:var(--green-light);padding:3px 10px;border-radius:20px;white-space:nowrap}
+
+  .plans{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:stretch}
+  @media(max-width:760px){.plans{grid-template-columns:1fr}}
+
+  .plan{background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:32px 30px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+  .plan.elite{border-color:var(--gold);box-shadow:0 1px 3px rgba(0,0,0,0.06),0 18px 44px rgba(186,117,23,0.12)}
+  .plan-ribbon{position:absolute;top:18px;right:-34px;transform:rotate(40deg);background:var(--gold);color:white;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:5px 42px}
+
+  .plan-eyebrow{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+  .plan.premium .plan-eyebrow{color:var(--green)}
+  .plan.elite .plan-eyebrow{color:var(--gold)}
+  .plan-name{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--text);margin-bottom:8px}
+  .plan-desc{font-size:13px;color:var(--text-3);line-height:1.6;margin-bottom:22px;min-height:40px}
+
+  .plan-price{display:flex;align-items:baseline;gap:6px;margin-bottom:4px}
+  .plan-price .amount{font-size:38px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+  .plan-price .period{font-size:14px;color:var(--text-3);font-weight:500}
+  .plan-price-note{font-size:12px;color:var(--text-3);margin-bottom:24px;min-height:16px}
+
+  .plan-cta{display:block;text-align:center;padding:13px 20px;border-radius:var(--radius);font-size:14px;font-weight:700;border:none;cursor:pointer;transition:all .15s;margin-bottom:26px;text-decoration:none}
+  .plan.premium .plan-cta{background:var(--green);color:white}
+  .plan.premium .plan-cta:hover{background:var(--green-dark)}
+  .plan.elite .plan-cta{background:var(--gold);color:white}
+  .plan.elite .plan-cta:hover{background:#9c6212}
+
+  .feat-list{list-style:none;display:flex;flex-direction:column;gap:13px;flex:1}
+  .feat-list li{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;color:var(--text-2);line-height:1.5}
+  .feat-check{width:18px;height:18px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .plan.premium .feat-check{background:var(--green-light)}
+  .plan.elite .feat-check{background:var(--gold-light)}
+  .feat-check svg{width:10px;height:10px;stroke-width:3}
+  .plan.premium .feat-check svg{stroke:var(--green-dark)}
+  .plan.elite .feat-check svg{stroke:var(--gold)}
+  .feat-list strong{color:var(--text);font-weight:600}
+  .feat-annual{display:none;font-size:11px;font-weight:700;color:var(--gold);margin-left:4px;white-space:nowrap}
+  .yearly-mode .feat-annual{display:inline}
+  .feat-new{font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--gold);background:var(--gold-light);padding:1px 7px;border-radius:20px;margin-left:6px;vertical-align:middle}
+
+  .plan-divider{border-top:1px solid var(--border);margin:24px 0 18px}
+  .plan-footnote{font-size:11.5px;color:var(--text-3);line-height:1.6}
+
+  .compare-note{max-width:620px;margin:52px auto 0;text-align:center;font-size:12.5px;color:var(--text-3);line-height:1.7;padding-top:28px;border-top:1px solid var(--border)}
+  .compare-note strong{color:var(--text-2)}
+
+  .cs-toast{
+    position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--text);color:white;font-size:13px;font-weight:600;
+    padding:12px 22px;border-radius:30px;box-shadow:0 10px 30px rgba(0,0,0,0.25);
+    opacity:0;pointer-events:none;transition:opacity .25s ease, transform .25s ease;
+    z-index:999;white-space:nowrap;
+  }
+  .cs-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="top-logo">
+    <div class="top-logo-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+    <span class="top-logo-text">Nyumba254</span>
+  </div>
+
+  <div class="hero">
+    <div class="hero-eyebrow">Seller plans</div>
+    <h1>List smarter, close faster</h1>
+    <p>Free listings stay free. These plans add the tools sellers ask for most — from a badge buyers trust to a whole website for your listings.</p>
+  </div>
+
+  <div class="billing-toggle">
+    <span class="bt-label active" id="label-monthly">Monthly</span>
+    <button class="bt-switch" id="billing-switch" onclick="toggleBilling()" aria-label="Toggle yearly billing" aria-pressed="false"></button>
+    <span class="bt-label" id="label-yearly">Yearly</span>
+    <span class="bt-save">Save ~17%</span>
+  </div>
+
+  <div class="plans" id="plans-grid">
+
+    <!-- PREMIUM -->
+    <div class="plan premium">
+      <div class="plan-eyebrow">Premium</div>
+      <div class="plan-name">For active sellers</div>
+      <p class="plan-desc">Everything you need to look credible, get found, and get replies faster.</p>
+      <div class="plan-price">
+        <span class="amount" data-monthly="KES 1,200" data-yearly="KES 1,000">KES 1,200</span>
+        <span class="period">/ month</span>
+      </div>
+      <div class="plan-price-note" data-monthly-note="Billed monthly" data-yearly-note="KES 12,000 billed yearly">Billed monthly</div>
+      <a href="#" class="plan-cta" onclick="showComingSoon('Premium');return false">Get Premium</a>
+      <ul class="feat-list">
+        <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>Managed chat</strong> — our team replies to buyers for you</span></li>
+        <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>Pro seller badge</strong> on your listings and profile</span></li>
+        <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>Scheduled publishing</strong> — up to 3 listings queued ahead <span class="feat-annual">→ unlimited</span></span></li>
+        <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>Video walkthroughs</strong> — 1 per listing <span class="feat-annual">→ up to 5</span></span></li>
+        <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>Printable brochure</strong> — branded PDF flyer <span class="feat-annual">→ your own logo</span></span></li>
+        <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>Local market price insights</strong> per listing <span class="feat-annual">→ weekly digest</span></span></li>
+        <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>SMS enquiry alerts</strong> the moment a buyer messages</span></li>
+        <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>Buyer search-match alerts</strong> — know demand before they message</span></li>
+        <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>Branded shareable link</strong> for all your listings</span></li>
+        <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>1 team seat</strong> — invite an assistant <span class="feat-annual">→ up to 3</span></span></li>
+        <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span>Priority support chat queue</span></li>
+      </ul>
+    </div>
+
+    <!-- ELITE -->
+    <div class="plan elite">
+      <div class="plan-ribbon">Elite</div>
+      <div class="plan-eyebrow">Elite</div>
+      <div class="plan-name">For power sellers &amp; agencies</div>
+      <p class="plan-desc">Everything in Premium, plus AI tools and a real storefront for high-volume selling.</p>
+      <div class="plan-price">
+        <span class="amount" data-monthly="KES 3,000" data-yearly="KES 2,500">KES 3,000</span>
+        <span class="period">/ month</span>
+      </div>
+      <div class="plan-price-note" data-monthly-note="Billed monthly" data-yearly-note="KES 30,000 billed yearly">Billed monthly</div>
+      <a href="#" class="plan-cta" onclick="showComingSoon('Elite');return false">Get Elite</a>
+      <ul class="feat-list">
+        <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span>Everything in <strong>Premium</strong>, with higher limits</span></li>
+        <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>AI listing assistant</strong><span class="feat-new">New</span> — auto-write titles, descriptions, and a suggested price</span></li>
+        <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>Instant valuation tool</strong><span class="feat-new">New</span> — estimated fair price for any property</span></li>
+        <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>Seller storefront</strong><span class="feat-new">New</span> — a branded mini-site for all your listings</span></li>
+        <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>Dedicated relationship manager</strong> — direct phone/WhatsApp line</span></li>
+        <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>5 team seats</strong> for agencies managing multiple listings</span></li>
+      </ul>
+      <div class="plan-divider"></div>
+      <p class="plan-footnote">Best for agencies or landlords managing 10+ active listings.</p>
+    </div>
+
+  </div>
+
+  <div class="compare-note">
+    <strong>Free plan stays free</strong> — posting a listing, receiving enquiries, WhatsApp replies, and the buyer-contact privacy toggle are never gated. Prices shown are drafts and can be changed any time from <strong>Admin → Pricing settings</strong>.
+  </div>
+
+</div>
+
+<div class="cs-toast" id="cs-toast">Premium plans are coming soon 🎉</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  async function loadLivePrices(){
+    const { data } = await db.from('platform_settings').select('key,value')
+      .in('key',['premium_monthly_price','premium_yearly_price','elite_monthly_price','elite_yearly_price']);
+    const map = {}; (data||[]).forEach(r => map[r.key] = Number(r.value));
+    const fmt = n => n ? 'KES ' + n.toLocaleString('en-KE') : null;
+    const premiumEl = document.querySelector('.plan.premium .amount');
+    const eliteEl = document.querySelector('.plan.elite .amount');
+    if (premiumEl && map.premium_monthly_price) { premiumEl.dataset.monthly = fmt(map.premium_monthly_price); premiumEl.textContent = fmt(map.premium_monthly_price); }
+    if (premiumEl && map.premium_yearly_price)  premiumEl.dataset.yearly = fmt(Math.round(map.premium_yearly_price/12));
+    if (eliteEl && map.elite_monthly_price) { eliteEl.dataset.monthly = fmt(map.elite_monthly_price); eliteEl.textContent = fmt(map.elite_monthly_price); }
+    if (eliteEl && map.elite_yearly_price)  eliteEl.dataset.yearly = fmt(Math.round(map.elite_yearly_price/12));
+    document.querySelectorAll('.plan-price-note[data-yearly-note]').forEach((el,i) => {
+      const yearlyVal = i===0 ? map.premium_yearly_price : map.elite_yearly_price;
+      if (yearlyVal) el.dataset.yearlyNote = `KES ${yearlyVal.toLocaleString('en-KE')} billed yearly`;
+    });
+  }
+  loadLivePrices();
+
+  let csToastTimer = null;
+  function showComingSoon(plan){
+    const t = document.getElementById('cs-toast');
+    t.textContent = `${plan} plans are coming soon 🎉`;
+    t.classList.add('show');
+    clearTimeout(csToastTimer);
+    csToastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  let yearly = false;
+  function toggleBilling(){
+    yearly = !yearly;
+    const sw = document.getElementById('billing-switch');
+    const grid = document.getElementById('plans-grid');
+    sw.classList.toggle('yearly', yearly);
+    sw.setAttribute('aria-pressed', String(yearly));
+    grid.classList.toggle('yearly-mode', yearly);
+    document.getElementById('label-monthly').classList.toggle('active', !yearly);
+    document.getElementById('label-yearly').classList.toggle('active', yearly);
+
+    document.querySelectorAll('.plan-price .amount').forEach(el => {
+      el.textContent = yearly ? el.dataset.yearly : el.dataset.monthly;
+    });
+    document.querySelectorAll('.plan-price .period').forEach(el => {
+      el.textContent = yearly ? '/ month, billed yearly' : '/ month';
+    });
+    document.querySelectorAll('.plan-price-note').forEach(el => {
+      el.textContent = yearly ? el.dataset.yearlyNote : el.dataset.monthlyNote;
+    });
+  }
+</script>
+
+</body>
+</html>

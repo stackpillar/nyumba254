@@ -669,6 +669,11 @@
       Concierge sellers
       <span class="nav-badge green" id="nav-badge-concierge">—</span>
     </button>
+    <button class="nav-item" data-view="premium-sellers" onclick="showView('premium-sellers')">
+      <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Premium sellers
+      <span class="nav-badge gold" id="nav-badge-premium">—</span>
+    </button>
     <button class="nav-item" data-view="enquiries" onclick="showView('enquiries')">
       <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
       Enquiries
@@ -923,6 +928,10 @@
             <div class="settings-field"><label>Standard duration (days)</label><input type="number" id="set-standard_duration_days"/></div>
             <div class="settings-field"><label>Featured duration (days)</label><input type="number" id="set-featured_duration_days"/></div>
             <div class="settings-field"><label>Recycle bin retention (days)</label><input type="number" id="set-recycle_bin_days"/></div>
+            <div class="settings-field"><label>Premium — Monthly price (KES)</label><input type="number" id="set-premium_monthly_price"/></div>
+            <div class="settings-field"><label>Premium — Yearly price (KES)</label><input type="number" id="set-premium_yearly_price"/></div>
+            <div class="settings-field"><label>Elite — Monthly price (KES)</label><input type="number" id="set-elite_monthly_price"/></div>
+            <div class="settings-field"><label>Elite — Yearly price (KES)</label><input type="number" id="set-elite_yearly_price"/></div>
           </div>
           <div id="settings-saved-meta" style="font-size:11px;color:var(--text-3);margin-top:16px"></div>
           <button class="btn-modal approve" style="margin-top:14px" onclick="saveSettings()">Save changes</button>
@@ -1009,6 +1018,34 @@
             <tbody id="concierge-body"><tr class="skeleton-row"><td colspan="3"><div class="skel"></div></td></tr></tbody>
           </table>
         </div>
+      </div>
+    </div>
+
+    <!-- PREMIUM SELLERS -->
+    <div class="view" id="view-premium-sellers">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Premium sellers</span>
+          <span style="font-size:12px;color:var(--text-3)" id="premium-count"></span>
+        </div>
+        <p style="padding:0 22px 14px;font-size:12px;color:var(--text-3)">No payment gateway is wired for Premium yet — confirm payment (M-Pesa/bank) the same way you do for listing upgrades, then grant it here.</p>
+        <div class="tab-bar">
+          <button class="tab-btn active" id="ptab-active"   onclick="setPremiumTab('active')">Active <span class="count" id="ptc-active">—</span></button>
+          <button class="tab-btn"        id="ptab-expiring" onclick="setPremiumTab('expiring')">Expiring soon <span class="count" id="ptc-expiring">—</span></button>
+          <button class="tab-btn"        id="ptab-expired"  onclick="setPremiumTab('expired')">Expired <span class="count" id="ptc-expired">—</span></button>
+          <button class="tab-btn"        id="ptab-all"      onclick="setPremiumTab('all')">All <span class="count" id="ptc-all">—</span></button>
+        </div>
+        <div class="filters-row">
+          <input class="filter-search" id="premium-search" type="text" placeholder="Search seller name or email…" oninput="debouncedLoadPremium()" aria-label="Search sellers"/>
+          <button class="action-btn approve" onclick="openGrantPremiumModal()">+ Grant Premium</button>
+        </div>
+        <div class="table-wrap mobile-hide">
+          <table>
+            <thead><tr><th>Seller</th><th>Tier</th><th>Pro badge</th><th>Expires</th><th>Actions</th></tr></thead>
+            <tbody id="premium-body"><tr class="skeleton-row"><td colspan="5"><div class="skel"></div></td></tr></tbody>
+          </table>
+        </div>
+        <div class="mobile-card-list" id="premium-mobile"></div>
       </div>
     </div>
 
@@ -1261,6 +1298,18 @@
     <div class="modal-footer">
       <button class="btn-modal cancel" onclick="closeEmailReminderModal()">Cancel</button>
       <button class="btn-modal approve" id="btn-send-email-reminder" onclick="sendEmailReminder()">Send email</button>
+    </div>
+  </div>
+</div>
+
+<!-- GRANT PREMIUM MODAL -->
+<div class="modal-overlay" id="grant-premium-modal" onclick="handleOverlayClick(event,'grant-premium-modal')">
+  <div class="modal" style="max-width:460px" role="dialog" aria-modal="true" aria-labelledby="grant-premium-title">
+    <div class="modal-header"><h3 id="grant-premium-title">Grant Premium</h3><button class="modal-close" onclick="closeGrantPremiumModal()" aria-label="Close">×</button></div>
+    <div class="modal-body" id="grant-premium-body"></div>
+    <div class="modal-footer">
+      <button class="btn-modal cancel" onclick="closeGrantPremiumModal()">Cancel</button>
+      <button class="btn-modal approve" id="btn-confirm-grant-premium" onclick="confirmGrantPremium()">Grant Premium</button>
     </div>
   </div>
 </div>
@@ -1568,6 +1617,10 @@
     standard_duration_days: 60,
     featured_duration_days: 90,
     recycle_bin_days: 30,
+    premium_monthly_price: 1200,
+    premium_yearly_price: 12000,
+    elite_monthly_price: 3000,
+    elite_yearly_price: 30000,
   };
 
   // Shared logic — keep this in sync with the identical function in
@@ -3448,6 +3501,229 @@ async function messageSellerInChat(sellerId, sellerName) {
     });
   }
 
+  // ════════════════════════════════════
+  // PREMIUM SELLERS
+  // ════════════════════════════════════
+  let premiumTab = 'active';
+  let _premiumSellers = [];
+  let grantingSellerId = null;
+
+  function setPremiumTab(tab) {
+    premiumTab = tab;
+    document.querySelectorAll('#view-premium-sellers .tab-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('ptab-'+tab)?.classList.add('active');
+    renderPremiumTable();
+  }
+
+  async function loadPremiumSellers() {
+    const tbody = document.getElementById('premium-body');
+    const mobileEl = document.getElementById('premium-mobile');
+    tbody.innerHTML = `<tr class="skeleton-row"><td colspan="5"><div class="skel"></div></td></tr>`.repeat(3);
+    mobileEl.innerHTML = '';
+    const search = document.getElementById('premium-search')?.value.trim() || '';
+    let q = db.from('profiles').select('*').neq('role','admin').neq('subscription_tier','none');
+    if (search) q = q.or(`full_name.ilike.%${search}%,email.ilike.%${search}%`);
+    const { data, error } = await q.order('subscription_expires_at',{ascending:true});
+    if (error) { tbody.innerHTML = `<tr><td colspan="5"><div class="table-loading"><p>Could not load: ${esc(error.message)}</p></div></td></tr>`; return; }
+    _premiumSellers = data || [];
+    data.forEach(p => { _users[p.id] = p; });
+
+    const now = Date.now(), soon = now + 7*86400000;
+    const counts = { active:0, expiring:0, expired:0, all:_premiumSellers.length };
+    _premiumSellers.forEach(p => {
+      const exp = p.subscription_expires_at ? new Date(p.subscription_expires_at).getTime() : null;
+      if (exp && exp < now) counts.expired++;
+      else if (exp && exp < soon) counts.expiring++;
+      else counts.active++;
+    });
+    Object.entries(counts).forEach(([k,v]) => { const el=document.getElementById('ptc-'+k); if(el) el.textContent=v; });
+    document.getElementById('premium-count').textContent = `${counts.all} premium seller(s)`;
+    await loadPremiumBadge();
+    renderPremiumTable();
+  }
+  const debouncedLoadPremium = debounce(loadPremiumSellers, 400);
+
+  async function loadPremiumBadge() {
+    const { count } = await db.from('profiles').select('*',{count:'exact',head:true})
+      .neq('subscription_tier','none')
+      .or('subscription_expires_at.is.null,subscription_expires_at.gt.'+new Date().toISOString());
+    const el = document.getElementById('nav-badge-premium');
+    if (el) el.textContent = count || 0;
+  }
+
+  function premiumRowStatus(p) {
+    if (!p.subscription_expires_at) return { text:'No expiry set', cls:'trial' };
+    const days = Math.ceil((new Date(p.subscription_expires_at)-new Date())/86400000);
+    if (days < 0) return { text:'Expired', cls:'rejected' };
+    if (days <= 7) return { text:`${days}d left`, cls:'pending' };
+    return { text:`${days}d left`, cls:'active' };
+  }
+
+  function renderPremiumTable() {
+    const now = Date.now(), soon = now + 7*86400000;
+    const filtered = _premiumSellers.filter(p => {
+      const exp = p.subscription_expires_at ? new Date(p.subscription_expires_at).getTime() : null;
+      if (premiumTab==='all') return true;
+      if (premiumTab==='expired') return exp && exp < now;
+      if (premiumTab==='expiring') return exp && exp >= now && exp < soon;
+      if (premiumTab==='active') return !exp || exp >= soon;
+      return true;
+    });
+    const tbody = document.getElementById('premium-body');
+    const mobileEl = document.getElementById('premium-mobile');
+    if (!filtered.length) {
+      tbody.innerHTML = `<tr><td colspan="5"><div class="table-loading"><p>No sellers here</p></div></td></tr>`;
+      mobileEl.innerHTML = `<div class="table-loading"><p>No sellers here</p></div>`;
+      return;
+    }
+    tbody.innerHTML = filtered.map(p => {
+      const st = premiumRowStatus(p);
+      return `<tr>
+        <td>${esc(p.full_name||'—')}<div class="listing-meta">${esc(p.email||'')}</div></td>
+        <td><span class="badge ${p.subscription_tier==='yearly'?'featured':'active'}">${p.subscription_tier}</span></td>
+        <td>${p.is_pro?'<span class="badge active">✓ Pro badge</span>':'<span class="badge standard">Off</span>'}</td>
+        <td><span class="badge ${st.cls}">${st.text}</span></td>
+        <td>
+          <div class="action-btns">
+            ${aBtn('edit','Change plan / extend','view',`openGrantPremiumModal('${p.id}')`)}
+            ${aBtn('reject','Revoke Premium','reject',`revokePremiumFlow('${p.id}')`)}
+          </div>
+          ${mobileMenu(p.id,[
+            {label:'Change plan / extend', cls:'', fn:`openGrantPremiumModal('${p.id}')`},
+            {label:'Revoke Premium', cls:'danger', fn:`revokePremiumFlow('${p.id}')`},
+          ])}
+        </td>
+      </tr>`;
+    }).join('');
+    mobileEl.innerHTML = filtered.map(p => {
+      const st = premiumRowStatus(p);
+      return `<div class="mobile-card">
+        <div class="mobile-card-header">
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:13px">${esc(p.full_name||'—')}</div>
+            <div style="font-size:11px;color:var(--text-3)">${esc(p.email||'')}</div>
+          </div>
+          <span class="badge ${p.subscription_tier==='yearly'?'featured':'active'}">${p.subscription_tier}</span>
+        </div>
+        <div class="mobile-card-body">
+          <div class="mobile-card-row"><span>Expires</span><span>${st.text}</span></div>
+          <div class="mobile-card-row"><span>Pro badge</span><span>${p.is_pro?'On':'Off'}</span></div>
+        </div>
+        <div class="mobile-card-actions">
+          ${aBtn('edit','Edit','view',`openGrantPremiumModal('${p.id}')`)}
+          ${aBtn('reject','Revoke','reject',`revokePremiumFlow('${p.id}')`)}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // sellerId omitted → opens a search-and-pick flow (used by the "+ Grant
+  // Premium" button); pass a seller id to jump straight to editing them
+  // (used from the row action and, later, from the Sellers table).
+  async function openGrantPremiumModal(sellerId) {
+    grantingSellerId = sellerId || null;
+    let seller = sellerId ? (_users[sellerId] || _premiumSellers.find(p=>p.id===sellerId)) : null;
+    if (sellerId && !seller) {
+      const { data } = await db.from('profiles').select('*').eq('id', sellerId).single();
+      seller = data;
+    }
+    const pickerHtml = seller ? '' : `
+      <div class="field" id="grant-seller-picker"><label>Seller</label>
+        <input type="text" id="grant-seller-search" placeholder="Search by name or email…" oninput="searchGrantSeller(this.value)"/>
+        <div id="grant-seller-results" style="margin-top:6px;max-height:160px;overflow-y:auto"></div>
+      </div>`;
+    document.getElementById('grant-premium-title').textContent = seller ? `Grant Premium — ${seller.full_name||'Seller'}` : 'Grant Premium';
+    document.getElementById('grant-premium-body').innerHTML = `
+      ${pickerHtml}
+      ${seller?`<div class="field"><label>Seller</label><div class="val">${esc(seller.full_name||'—')} · ${esc(seller.email||'')}</div></div>`:''}
+      <div class="field"><label>Plan</label>
+        <select id="grant-plan">
+          <option value="monthly">Monthly — KES ${(SETTINGS.premium_monthly_price||1200).toLocaleString('en-KE')}</option>
+          <option value="yearly">Yearly — KES ${(SETTINGS.premium_yearly_price||12000).toLocaleString('en-KE')}</option>
+        </select>
+      </div>
+      <div class="field check-field"><input type="checkbox" id="grant-is-pro" checked/><label for="grant-is-pro">Show the Pro seller badge</label></div>
+      <div class="confirm-warning">This only marks the subscription active in the database — confirm payment was actually received first, same as a manual listing upgrade.</div>`;
+    document.getElementById('grant-premium-modal').classList.add('open');
+  }
+
+  let grantSellerSearchTimer = null;
+  function searchGrantSeller(q) {
+    clearTimeout(grantSellerSearchTimer);
+    grantSellerSearchTimer = setTimeout(async () => {
+      const resultsEl = document.getElementById('grant-seller-results');
+      if (!q.trim()) { resultsEl.innerHTML = ''; return; }
+      const { data } = await db.from('profiles').select('id,full_name,email').neq('role','admin')
+        .or(`full_name.ilike.%${q}%,email.ilike.%${q}%`).limit(8);
+      resultsEl.innerHTML = (data||[]).map(p =>
+        `<div style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:4px;cursor:pointer" onclick="pickGrantSeller('${p.id}','${esc(p.full_name||'')}')">
+          <strong>${esc(p.full_name||'—')}</strong><div style="font-size:11px;color:var(--text-3)">${esc(p.email||'')}</div>
+        </div>`
+      ).join('') || '<div style="font-size:12px;color:var(--text-3)">No matches</div>';
+    }, 300);
+  }
+  function pickGrantSeller(id, name) {
+    grantingSellerId = id;
+    document.getElementById('grant-premium-title').textContent = `Grant Premium — ${name}`;
+    document.getElementById('grant-seller-picker')?.remove();
+  }
+
+  function closeGrantPremiumModal() { document.getElementById('grant-premium-modal').classList.remove('open'); grantingSellerId=null; }
+
+  let grantPremiumBusy = false;
+  async function confirmGrantPremium() {
+    if (grantPremiumBusy) return;
+    if (!grantingSellerId) { toast('Pick a seller first','error'); return; }
+    const plan = document.getElementById('grant-plan').value;
+    const isPro = document.getElementById('grant-is-pro').checked;
+    const days = plan === 'yearly' ? 365 : 30;
+    const expiresAt = new Date(Date.now() + days*86400000).toISOString();
+
+    grantPremiumBusy = true;
+    const btn = document.getElementById('btn-confirm-grant-premium');
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+    const { data, error } = await db.from('profiles').update({
+      subscription_tier: plan, subscription_expires_at: expiresAt, is_pro: isPro,
+    }).eq('id', grantingSellerId).select();
+
+    grantPremiumBusy = false;
+    if (btn) { btn.disabled = false; btn.textContent = 'Grant Premium'; }
+    if (error) { toast('Error: '+error.message,'error'); return; }
+    if (!data?.length) { toast('Blocked by RLS — check Supabase policy','error'); return; }
+
+    const amount = plan === 'yearly' ? SETTINGS.premium_yearly_price : SETTINGS.premium_monthly_price;
+    await db.from('payments').insert({
+      seller_id: grantingSellerId, amount, method:'manual',
+      reference:'Admin-granted premium', type:'premium_subscription', status:'confirmed',
+    });
+
+    logAction('grant_premium','profile',grantingSellerId,`${plan} plan`);
+    const seller = data[0];
+    if (seller?.email) notifySeller('premium_granted', { sellerName: seller.full_name, sellerEmail: seller.email, plan, expiresAt });
+    toast('Premium granted ✓','success');
+    closeGrantPremiumModal();
+    loadPremiumSellers();
+    if (currentView==='users') loadUsers();
+  }
+
+  function revokePremiumFlow(sellerId) {
+    const p = _premiumSellers.find(x=>x.id===sellerId) || _users[sellerId];
+    openConfirm({
+      title:'Revoke Premium?',
+      message:`${p?.full_name||'This seller'} loses Premium immediately — Pro badge and any subscription-gated features turn off right away. This does not issue a refund.`,
+      confirmText:'Revoke Premium', confirmClass:'reject',
+      onConfirm: async () => {
+        const { error } = await db.from('profiles').update({ subscription_tier:'none', subscription_expires_at:null, is_pro:false }).eq('id', sellerId);
+        if (error) { toast('Error: '+error.message,'error'); return; }
+        logAction('revoke_premium','profile',sellerId,'');
+        if (p?.email) notifySeller('premium_revoked', { sellerName: p.full_name, sellerEmail: p.email });
+        toast('Premium revoked','success');
+        loadPremiumSellers();
+      }
+    });
+  }
+
   async function loadConcierge() {
     const tbody = document.getElementById('concierge-body');
     tbody.innerHTML = `<tr class="skeleton-row"><td colspan="3"><div class="skel"></div></td></tr>`.repeat(3);
@@ -4283,7 +4559,7 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
   const viewTitles = {
     overview:'Dashboard', listings:'All listings', 'recycle-bin':'Recycle bin',
     payments:'Payments', settings:'Pricing settings', users:'Sellers', enquiries:'Enquiries',
-    reports:'Reports', reviews:'Reviews', 'contact-reveals':'Contact reveals',
+    reports:'Reports', reviews:'Reviews',     'contact-reveals':'Contact reveals', 'premium-sellers':'Premium sellers',
     analytics:'Site visits', 'activity-log':'Activity log'
   };
   function showView(v) {
@@ -4304,6 +4580,7 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
     if(v==='enquiries')    { loadConciergeSellerIds(); loadEnquiries(); }
     if(v==='verification') loadVerification();
     if(v==='concierge')    loadConcierge();
+    if(v==='premium-sellers') loadPremiumSellers();
     if(v==='reports')      loadReports();
     if(v==='reviews')      loadReviews();
     if(v==='contact-reveals') loadContactReveals();
@@ -4879,6 +5156,7 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
     loadEnquiriesBadge();
     loadReportsBadge();
     loadReviewsBadge();
+    loadPremiumBadge();
     subscribeReportsRealtime();
     ACW.init();
   }
