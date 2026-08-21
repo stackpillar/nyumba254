@@ -1449,6 +1449,7 @@ function loadSubscriptionUI(){
   const sub = subscriptionInfo();
   updatePremiumSectionUI(sub);
   updateEliteSectionUI(sub);
+  syncProBadge(sub);
   updateConciergeGate(sub);
   updateEliteGatedPages(sub);
 }
@@ -1480,6 +1481,14 @@ function updatePremiumSectionUI(sub){
   } else {
     banner.style.display = 'none';
     btn.style.display = 'inline-flex';
+  }
+}
+
+async function syncProBadge(sub){
+  const shouldBePro = !!sub.active; // any Premium or Elite subscriber
+  if(currentProfile && currentProfile.is_pro !== shouldBePro){
+    const{error} = await db.from('profiles').update({ is_pro: shouldBePro }).eq('id', currentUser.id);
+    if(!error) currentProfile = { ...currentProfile, is_pro: shouldBePro };
   }
 }
 

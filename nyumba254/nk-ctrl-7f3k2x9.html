@@ -414,10 +414,24 @@
       .modal-footer { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
       .filters-row { padding: 10px 12px; }
       .card-header { padding: 14px 16px 12px; }
+      /* Prevent iOS auto-zoom-on-focus: any focusable field under 16px
+         triggers it, forcing the user to pinch back out. */
+      .modal-body input[type="text"],
+      .modal-body input[type="number"],
+      .modal-body select,
+      .modal-body textarea,
+      .filter-select,
+      .filter-search,
+      .settings-field input,
+      .acw-search input,
+      .acw-reply-inner textarea,
+      #email-reminder-subject,
+      #confirm-reason-input { font-size: 16px; }
     }
     @media (max-width: 480px) {
       .stat-grid { grid-template-columns: 1fr; }
       .revenue-banner { padding: 16px; }
+      .toast { left: 12px; right: 12px; bottom: 84px; max-width: none; }
     }
 
     /* ══════════════════════════════════════════════════════════════
@@ -1531,6 +1545,7 @@
     sel.value = 'verification_reminder';
     applyEmailTemplate();
     document.getElementById('email-reminder-modal').classList.add('open');
+    focusModalField('email-reminder-modal','#email-reminder-subject');
   }
   function applyEmailTemplate() {
     const t = EMAIL_TEMPLATES.find(x=>x.id===document.getElementById('email-reminder-template').value);
@@ -2016,9 +2031,22 @@
     document.querySelectorAll('.action-menu-dropdown.open').forEach(d => d.classList.remove('open'));
     if (!wasOpen) {
       const rect = btn.getBoundingClientRect();
-      dd.style.top  = (rect.bottom + window.scrollY + 4) + 'px';
+      const maxTop = window.innerHeight - 60; // keep it on-screen even near the bottom
+      dd.style.top = Math.min(rect.bottom + 4, maxTop) + 'px';
       dd.classList.add('open');
     }
+  }
+
+  // Focuses the first typeable field in a just-opened modal and scrolls the
+  // modal body to the top, so the keyboard is ready and nothing important
+  // is left hidden below the fold.
+  function focusModalField(modalId, selector) {
+    requestAnimationFrame(() => {
+      const modalEl = document.querySelector(`#${modalId} .modal`);
+      if (modalEl) modalEl.scrollTop = 0;
+      const el = document.querySelector(`#${modalId} ${selector}`);
+      if (el) { el.focus({preventScroll:true}); if (el.select) try{el.select();}catch(_){} }
+    });
   }
 
   function handleOverlayClick(e, id) {
@@ -2327,6 +2355,7 @@
           ${isTrial?aBtn('upgrade','Upgrade','upgrade',`openUpgradeModal('${l.id}')`):''}
           ${l.status==='active'&&!l.is_featured?aBtn('feature','Feature','feature',`featureListing('${l.id}')`):''}
           ${l.is_featured?aBtn('unfeature','Unfeature','view',`unfeatureListing('${l.id}')`):''}
+          ${l.status==='active'&&!l.is_disabled?renderSocialButtons(l):''}
           ${aBtn('view','View','view',`openListingModal('${l.id}')`)}
           ${aBtn('edit','Edit','view',`openEditListingModal('${l.id}')`)}
           ${l.is_disabled
@@ -2499,6 +2528,7 @@
       <div class="field check-field"><input type="checkbox" id="upgrade-mark-paid" checked/><label for="upgrade-mark-paid">Mark payment as confirmed (M-Pesa already received)</label></div>
       <div class="confirm-warning">Confirming clears the free trial and activates the selected plan immediately — the seller's dashboard reflects this right away. Adjust the amount above if recording a discounted or negotiated payment.</div>`;
     document.getElementById('upgrade-modal').classList.add('open');
+    focusModalField('upgrade-modal','#upgrade-plan');
   }
   function updateUpgradeAmount() {
     const l = _listings[upgradingListingId]; if (!l) return;
@@ -2803,6 +2833,7 @@
       <div class="field check-field"><input type="checkbox" id="el-furnished" ${l.furnished?'checked':''}/><label for="el-furnished">Furnished</label></div>
       <div class="field check-field"><input type="checkbox" id="el-is_featured" ${l.is_featured?'checked':''}/><label for="el-is_featured">Featured</label></div>`;
     document.getElementById('edit-listing-modal').classList.add('open');
+    focusModalField('edit-listing-modal','#el-title');
   }
   function buildEditAreaField(county, currentArea) {
     const areas = NK_AREAS_BY_COUNTY[county];
@@ -3178,6 +3209,7 @@ async function messageSellerInChat(sellerId, sellerName) {
       <button class="btn-modal reject"  onclick="deleteProfileFlow('${u.id}')">Delete permanently</button>
       <button class="btn-modal approve" id="btn-save-profile" onclick="saveProfileEdit()">Save changes</button>`;
     document.getElementById('profile-modal').classList.add('open');
+    focusModalField('profile-modal','#pf-full_name');
   }
   function closeProfileModal() { document.getElementById('profile-modal').classList.remove('open'); editingProfileId=null; }
 
@@ -3803,6 +3835,7 @@ async function messageSellerInChat(sellerId, sellerName) {
     if (seller?.subscription_plan === 'elite' && document.getElementById('grant-tier')) document.getElementById('grant-tier').value = 'elite';
     updateGrantPlanOptions();
     document.getElementById('grant-premium-modal').classList.add('open');
+    focusModalField('grant-premium-modal', grantingSellerId ? '#grant-tier' : '#grant-seller-search');
   }
 
   function updateGrantPlanOptions() {
@@ -4368,6 +4401,7 @@ async function messageSellerInChat(sellerId, sellerName) {
     document.getElementById('review-respond-original').textContent = r.comment || '(No comment left — rating only)';
     document.getElementById('review-respond-text').value = r.response_text || '';
     document.getElementById('review-respond-modal').classList.add('open');
+    focusModalField('review-respond-modal','#review-respond-text');
   }
   function closeReviewRespondModal() { document.getElementById('review-respond-modal').classList.remove('open'); editingReviewId=null; }
 async function toggleReviewPublish(id, isCurrentlyPublished) {
@@ -4661,6 +4695,7 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
       closeConfirmModal(); onConfirm(ri.value.trim());
     };
     document.getElementById('confirm-modal').classList.add('open');
+    if (requireReason) focusModalField('confirm-modal','#confirm-reason-input');
   }
   function closeConfirmModal() { document.getElementById('confirm-modal').classList.remove('open'); }
 
@@ -5085,6 +5120,7 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
 
       await loadMessages(id);
       subscribeMessages(id);
+      if (!s.is_resolved) document.getElementById('acw-reply-input')?.focus({preventScroll:true});
     }
 
     function backToList() {
