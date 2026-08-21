@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
     authUrl.searchParams.set("client_key", TIKTOK_CLIENT_KEY);
     authUrl.searchParams.set("redirect_uri", REDIRECT_URI);
     authUrl.searchParams.set("response_type", "code");
-    authUrl.searchParams.set("scope", "user.info.basic,video.publish");
+    authUrl.searchParams.set("scope", "user.info.profile,video.publish");
     authUrl.searchParams.set("state", crypto.randomUUID());
     return Response.redirect(authUrl.toString(), 302);
   }
