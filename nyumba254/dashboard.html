@@ -463,6 +463,36 @@
     @keyframes scwBadgeBlink { 0%,100%{opacity:1} 50%{opacity:.35} }
       .scw-fab-badge.show, .scw-tab-badge.show { animation: scwBadgeBlink 1.1s ease-in-out infinite; }
       .scw-ticket-dot { width:8px; height:8px; border-radius:50%; background:#ff5a5a; display:inline-block; flex-shrink:0; margin-left:2px; animation: scwBadgeBlink 1.1s ease-in-out infinite; }
+
+    /* ══════════════════════════════════════════════════════════════
+       ONBOARDING TOUR — first-time seller walkthrough. A translucent
+       overlay with a "spotlight" cut-out over the current step's
+       target element (sidebar item or the New listing button), plus
+       a tooltip with Continue/Skip. Shown once per seller — see the
+       Tour module near the bottom of the script.
+    ══════════════════════════════════════════════════════════════ */
+    .tour-overlay { position:fixed; inset:0; z-index:900; display:none; }
+    .tour-overlay.open { display:block; }
+    .tour-spotlight {
+      position:fixed; border-radius:10px; pointer-events:none;
+      box-shadow: 0 0 0 9999px rgba(13,31,26,0.72);
+      transition: top .25s ease, left .25s ease, width .25s ease, height .25s ease;
+    }
+    .tour-tooltip {
+      position:fixed; z-index:901; width:320px; max-width:calc(100vw - 32px);
+      background:var(--white); border-radius:var(--radius-lg);
+      box-shadow:0 20px 60px rgba(0,0,0,0.35); padding:18px 20px;
+      transition: top .25s ease, left .25s ease;
+    }
+    .tour-tooltip-step { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--green); margin-bottom:6px; }
+    .tour-tooltip-title { font-size:15px; font-weight:700; color:var(--text); margin-bottom:6px; }
+    .tour-tooltip-desc { font-size:13px; color:var(--text-2); line-height:1.55; margin-bottom:16px; }
+    .tour-tooltip-actions { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .tour-btn-skip { font-size:12.5px; font-weight:600; color:var(--text-3); background:none; border:none; cursor:pointer; padding:6px 4px; }
+    .tour-btn-skip:hover { color:var(--text-2); }
+    .tour-btn-continue { font-size:13px; font-weight:700; color:white; background:var(--green); border:none; border-radius:8px; padding:9px 18px; cursor:pointer; transition:background .15s; }
+    .tour-btn-continue:hover { background:var(--green-dark); }
+    @media(max-width:480px){ .tour-tooltip{width:calc(100vw - 24px)} }
   </style>
 </head>
 <body>
@@ -589,7 +619,7 @@
         </div>
       </div>
       <div class="topbar-right">
-        <a href="/post-listing" class="btn btn-primary">
+        <a href="/post-listing" class="btn btn-primary" id="btn-new-listing-tour">
           <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New listing
         </a>
       </div>
@@ -969,6 +999,23 @@
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════════
+     ONBOARDING TOUR — shown once to first-time sellers on their
+     first dashboard visit. See the Tour module in the script below.
+══════════════════════════════════════════════════════════════ -->
+<div class="tour-overlay" id="tour-overlay">
+  <div class="tour-spotlight" id="tour-spotlight"></div>
+  <div class="tour-tooltip" id="tour-tooltip">
+    <div class="tour-tooltip-step" id="tour-step-label">Step 1 of 8</div>
+    <h3 class="tour-tooltip-title" id="tour-title"></h3>
+    <p class="tour-tooltip-desc" id="tour-desc"></p>
+    <div class="tour-tooltip-actions">
+      <button class="tour-btn-skip" onclick="Tour.skip()" title="Close the tour and go straight to your dashboard">Skip tour</button>
+      <button class="tour-btn-continue" id="tour-btn-continue" onclick="Tour.next()" title="See the next tip">Continue</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
@@ -1145,6 +1192,7 @@ async function init(){
 
     scwLoaded=true;
     scwInit();
+    Tour.maybeStart();
   }catch(err){console.error('Init error:',err);window.location.href='/login';}
 }
 
@@ -2982,6 +3030,100 @@ try{scwRenderHomeFaq();scwRenderHelp('');}catch(e){console.error('SCW eager rend
 if(window.__scwEarlyErrors&&window.__scwEarlyErrors.length){
   console.error('SCW early errors:',window.__scwEarlyErrors.join(' | '));
 }
+
+/* ══════════════════════════════════════
+   ONBOARDING TOUR
+   Highlights each sidebar section (plus the "New listing" button)
+   in turn with a spotlight + tooltip. Runs once per seller — a flag
+   is stored in this browser's localStorage keyed to their user id,
+   so it never runs again once they finish or skip it. (It's a
+   per-browser flag, not stored server-side, so it would reappear if
+   they sign in from a different device or clear site data.)
+══════════════════════════════════════ */
+const Tour = (() => {
+  const STEPS = [
+    { selector:'#nav-overview',         title:'Your Overview', desc:'This is your home base — see active listings, enquiries, and recent activity every time you sign in.' },
+    { selector:'#nav-listings',         title:'My Listings',   desc:'Manage everything you\'ve posted here: edit details, pause a listing, mark it sold or occupied, or delete it.' },
+    { selector:'#btn-new-listing-tour', title:'Post a Listing',desc:'Ready to list a property? Tap here any time to add a new apartment or house.' },
+    { selector:'#nav-messages',         title:'Messages',      desc:'Chat directly with buyers who\'ve reached out about your listings — all your conversations live here.' },
+    { selector:'#nav-enquiries',        title:'Enquiries',     desc:'A quick feed of every buyer enquiry, so nothing slips through even before you open a full conversation.' },
+    { selector:'#nav-reviews',          title:'Reviews',       desc:'See what buyers are saying about you and respond to build trust with future buyers.' },
+    { selector:'#nav-payments',         title:'Payments',      desc:'Track your listing fee payments and download receipts any time you need them.' },
+    { selector:'#nav-settings',         title:'Account Settings', desc:'Verify your account here to unlock unlimited listings and a trust badge — plus manage notifications and privacy.' },
+  ];
+  let idx = 0;
+  let storageKey = null;
+
+  function maybeStart() {
+    if (!currentUser) return;
+    storageKey = `ny_tour_seen_${currentUser.id}`;
+    if (localStorage.getItem(storageKey)) return;
+    idx = 0;
+    openSidebar(); // ensures sidebar items are visible/highlightable on mobile too
+    document.getElementById('tour-overlay').classList.add('open');
+    showStep();
+  }
+
+  function showStep() {
+    const step = STEPS[idx];
+    const target = step ? document.querySelector(step.selector) : null;
+    if (!step || !target) { finish(); return; }
+
+    document.getElementById('tour-step-label').textContent = `Step ${idx+1} of ${STEPS.length}`;
+    document.getElementById('tour-title').textContent = step.title;
+    document.getElementById('tour-desc').textContent = step.desc;
+    document.getElementById('tour-btn-continue').textContent = (idx === STEPS.length-1) ? 'Finish' : 'Continue';
+
+    positionSpotlight(target);
+    positionTooltip(target);
+  }
+
+  function positionSpotlight(target) {
+    const r = target.getBoundingClientRect();
+    const pad = 8;
+    const spot = document.getElementById('tour-spotlight');
+    spot.style.top    = (r.top - pad) + 'px';
+    spot.style.left   = (r.left - pad) + 'px';
+    spot.style.width  = (r.width + pad*2) + 'px';
+    spot.style.height = (r.height + pad*2) + 'px';
+  }
+
+  function positionTooltip(target) {
+    const r = target.getBoundingClientRect();
+    const tip = document.getElementById('tour-tooltip');
+    let top = r.bottom + 14;
+    let left = r.left;
+    const tipWidth = 320;
+    if (left + tipWidth > window.innerWidth - 16) left = window.innerWidth - tipWidth - 16;
+    if (left < 16) left = 16;
+    if (top + 160 > window.innerHeight) top = Math.max(16, r.top - 170); // flip above if no room below
+    tip.style.top = top + 'px';
+    tip.style.left = left + 'px';
+  }
+
+  function next() {
+    idx++;
+    if (idx >= STEPS.length) { finish(); return; }
+    showStep();
+  }
+
+  function skip() { finish(); }
+
+  function finish() {
+    document.getElementById('tour-overlay').classList.remove('open');
+    closeSidebar();
+    if (storageKey) localStorage.setItem(storageKey, '1');
+  }
+
+  window.addEventListener('resize', () => {
+    if (!document.getElementById('tour-overlay').classList.contains('open')) return;
+    const step = STEPS[idx];
+    const target = step ? document.querySelector(step.selector) : null;
+    if (target) { positionSpotlight(target); positionTooltip(target); }
+  });
+
+  return { maybeStart, next, skip };
+})();
 
 init();
 </script>
