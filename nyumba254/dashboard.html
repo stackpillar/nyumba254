@@ -797,10 +797,12 @@
               <label class="switch"><input type="checkbox" id="concierge-toggle" onchange="toggleConcierge(this.checked)"/><span class="switch-track"></span></label>
             </div>
             <p style="font-size:12px;color:var(--text-3);line-height:1.6;margin-top:8px" id="concierge-note"></p>
+            <p style="font-size:12px;color:var(--gold);background:var(--gold-light);border-radius:6px;padding:8px 10px;line-height:1.6;margin-top:8px;display:none" id="concierge-lock-note">🔒 Managed chat is a Premium feature. <a href="/plans" style="color:var(--gold);font-weight:700;text-decoration:underline">Upgrade to unlock</a>.</p>
           </div>
           <div class="settings-section" id="settings-premium-section">
             <h3><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Premium</h3>
             <p style="font-size:12.5px;color:var(--text-3);margin-bottom:14px;line-height:1.6">Unlock managed chat, a Pro badge, scheduled publishing, video tours, printable brochures, and more.</p>
+            <div id="premium-status-banner" style="display:none;font-size:12.5px;font-weight:700;color:var(--green-dark);background:var(--green-light);border-radius:8px;padding:8px 12px;margin-bottom:14px"></div>
             <div class="toggle-row">
               <div class="toggle-label"><strong>Managed chat</strong><span>We reply to buyer messages for you</span></div>
               <span style="font-size:11px;font-weight:700;color:var(--gold);background:var(--gold-light);padding:3px 9px;border-radius:20px">Premium</span>
@@ -825,7 +827,26 @@
               <div class="toggle-label"><strong>SMS enquiry alerts</strong><span>Get a text the moment a buyer enquires</span></div>
               <span style="font-size:11px;font-weight:700;color:var(--gold);background:var(--gold-light);padding:3px 9px;border-radius:20px">Premium</span>
             </div>
-            <a href="/plans" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:14px;text-decoration:none">Upgrade — from KES 1,200/mo</a>
+            <a href="/plans" id="premium-upgrade-btn" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:14px;text-decoration:none">Upgrade — from KES 1,200/mo</a>
+          </div>
+          <div class="settings-section" id="settings-elite-section">
+            <h3><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Elite</h3>
+            <p style="font-size:12.5px;color:var(--text-3);margin-bottom:14px;line-height:1.6">Everything in Premium, plus AI-powered tools to save time on listings and pricing.</p>
+            <div id="elite-status-banner" style="display:none;font-size:12.5px;font-weight:700;color:white;background:#7c3aed;border-radius:8px;padding:8px 12px;margin-bottom:14px"></div>
+            <div class="toggle-row">
+              <div class="toggle-label"><strong>AI Listing Assistant</strong><span>Auto-generate a polished title, description, and suggested price</span></div>
+              <span style="font-size:11px;font-weight:700;color:white;background:#7c3aed;padding:3px 9px;border-radius:20px">Elite</span>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-label"><strong>Instant Valuation Tool</strong><span>Get an estimated fair rent/price based on similar listings</span></div>
+              <span style="font-size:11px;font-weight:700;color:white;background:#7c3aed;padding:3px 9px;border-radius:20px">Elite</span>
+            </div>
+            <div class="toggle-row" style="border-bottom:none">
+              <div class="toggle-label"><strong>Seller Storefront</strong><span>A full branded page listing all your active properties</span></div>
+              <span style="font-size:11px;font-weight:700;color:white;background:#7c3aed;padding:3px 9px;border-radius:20px">Elite</span>
+            </div>
+            <button id="elite-upgrade-btn" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:14px;background:#7c3aed" onclick="showToast('Elite plans coming soon','')">Upgrade to Elite — from KES 3,000/mo</button>
+            <button id="elite-storefront-btn" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:10px;display:none" onclick="copyStorefrontLink()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy my storefront link</button>
           </div>
           <div class="settings-section" id="settings-contact-privacy-section">
             <h3><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.12 1.2 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>Buyer contact privacy</h3>
@@ -1215,6 +1236,7 @@ async function init(){
       return;
     }
     await loadAllData();
+    loadPlatformPrices();
     renderOverview();
     document.getElementById('loading-screen').style.display='none';
     document.getElementById('app-shell').style.display='flex';
@@ -1270,6 +1292,7 @@ async function loadProfile(){
   if (sidebarBadge) sidebarBadge.textContent = data?.verification_status === 'verified' ? '✓ Verified' : 'Unverified';
 
   updateVerifyWarningBanner();
+  loadSubscriptionUI();
 }
 
 function updateVerifyWarningBanner(){
@@ -1283,7 +1306,119 @@ function goToVerification(){
   setTimeout(()=>document.getElementById('verification-settings-section')?.scrollIntoView({behavior:'smooth',block:'start'}),80);
 }
 
+// ── Subscription status — reads what the admin panel's Grant Premium
+// modal writes (subscription_tier: 'monthly'/'yearly'/'none',
+// subscription_plan: 'premium'/'elite', subscription_expires_at). ──
+function subscriptionInfo(){
+  const tier = currentProfile?.subscription_tier || 'none';
+  const expiresAt = currentProfile?.subscription_expires_at;
+  const notExpired = !expiresAt || new Date(expiresAt) > new Date();
+  const active = tier !== 'none' && !!tier && notExpired;
+  return { active, plan: active ? (currentProfile?.subscription_plan || 'premium') : null, expiresAt: active ? expiresAt : null };
+}
+function fmtSubDate(d){ return new Date(d).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'}); }
+
+function loadSubscriptionUI(){
+  const sub = subscriptionInfo();
+  updatePremiumSectionUI(sub);
+  updateEliteSectionUI(sub);
+  updateConciergeGate(sub);
+}
+
+function updatePremiumSectionUI(sub){
+  const btn = document.getElementById('premium-upgrade-btn');
+  const banner = document.getElementById('premium-status-banner');
+  if(!btn || !banner) return;
+  if(sub.active){
+    const exp = sub.expiresAt ? ` — renews/expires ${fmtSubDate(sub.expiresAt)}` : '';
+    banner.style.display = 'block';
+    banner.textContent = sub.plan==='elite' ? `✓ Included with your Elite plan${exp}` : `✓ Active${exp}`;
+    btn.style.display = 'none';
+  } else {
+    banner.style.display = 'none';
+    btn.style.display = 'inline-flex';
+  }
+}
+
+function updateEliteSectionUI(sub){
+  const btn = document.getElementById('elite-upgrade-btn');
+  const banner = document.getElementById('elite-status-banner');
+  const storefrontBtn = document.getElementById('elite-storefront-btn');
+  if(!btn || !banner) return;
+  if(sub.active && sub.plan==='elite'){
+    const exp = sub.expiresAt ? ` — renews/expires ${fmtSubDate(sub.expiresAt)}` : '';
+    banner.style.display = 'block';
+    banner.textContent = `✓ Active${exp}`;
+    btn.style.display = 'none';
+    if(storefrontBtn) storefrontBtn.style.display = 'inline-flex';
+  } else {
+    banner.style.display = 'none';
+    btn.style.display = 'inline-flex';
+    if(storefrontBtn) storefrontBtn.style.display = 'none';
+  }
+}
+
+function slugifyName(name){
+  return (name||'seller').toLowerCase().trim()
+    .replace(/[^a-z0-9\s-]/g,'')
+    .replace(/\s+/g,'-')
+    .replace(/-+/g,'-')
+    .replace(/^-|-$/g,'') || 'seller';
+}
+
+async function ensureStorefrontSlug(){
+  if(currentProfile?.storefront_slug) return currentProfile.storefront_slug;
+  const base = slugifyName(currentProfile?.full_name);
+  let candidate = base;
+  for(let i=0;i<20;i++){
+    const{data:existing}=await db.from('profiles').select('id').eq('storefront_slug',candidate).maybeSingle();
+    if(!existing || existing.id===currentUser.id) break;
+    candidate = `${base}-${Math.floor(Math.random()*900+100)}`;
+  }
+  const{error}=await db.from('profiles').update({storefront_slug:candidate}).eq('id',currentUser.id);
+  if(error){ console.error('Could not save storefront slug:',error); return currentUser.id; }
+  currentProfile = {...currentProfile, storefront_slug:candidate};
+  return candidate;
+}
+
+async function copyStorefrontLink(){
+  const btn = document.getElementById('elite-storefront-btn');
+  if(btn) btn.disabled = true;
+  const slug = await ensureStorefrontSlug();
+  if(btn) btn.disabled = false;
+  const url = `${location.origin}/storefront?seller=${slug}`;
+  navigator.clipboard.writeText(url).then(()=>{
+    showToast('Storefront link copied ✓','success');
+  }).catch(()=>{
+    showToast(url,'');
+  });
+}
+
+function updateConciergeGate(sub){
+  const toggle = document.getElementById('concierge-toggle');
+  const lockNote = document.getElementById('concierge-lock-note');
+  if(!toggle) return;
+  toggle.disabled = !sub.active;
+  if(lockNote) lockNote.style.display = sub.active ? 'none' : 'block';
+}
+
 const VERIFY_BUCKET = 'verification-docs';
+
+// ── Live Premium/Elite prices — reads the same platform_settings rows the
+// admin's Pricing settings page writes, so this dashboard never shows a
+// stale hardcoded number after an admin changes a price. ──
+let platformPrices = { premium_monthly_price: 1200, elite_monthly_price: 3000 };
+async function loadPlatformPrices(){
+  try{
+    const{data,error}=await db.from('platform_settings').select('key,value').in('key',['premium_monthly_price','elite_monthly_price']);
+    if(error||!data)return;
+    data.forEach(row=>{ if(row.key in platformPrices) platformPrices[row.key]=Number(row.value)||platformPrices[row.key]; });
+    const pBtn=document.getElementById('premium-upgrade-btn');
+    if(pBtn) pBtn.textContent=`Upgrade — from KES ${platformPrices.premium_monthly_price.toLocaleString('en-KE')}/mo`;
+    const eBtn=document.getElementById('elite-upgrade-btn');
+    if(eBtn) eBtn.textContent=`Upgrade to Elite — from KES ${platformPrices.elite_monthly_price.toLocaleString('en-KE')}/mo`;
+  }catch(e){console.error('loadPlatformPrices failed:',e);}
+}
 
 function loadVerificationUI() {
   const v = currentProfile || {};

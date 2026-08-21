@@ -932,6 +932,8 @@
             <div class="settings-field"><label>Premium — Yearly price (KES)</label><input type="number" id="set-premium_yearly_price"/></div>
             <div class="settings-field"><label>Elite — Monthly price (KES)</label><input type="number" id="set-elite_monthly_price"/></div>
             <div class="settings-field"><label>Elite — Yearly price (KES)</label><input type="number" id="set-elite_yearly_price"/></div>
+            <div class="settings-field"><label>Elite — AI listing uses (monthly)</label><input type="number" id="set-elite_ai_listing_uses_monthly"/></div>
+            <div class="settings-field"><label>Elite — Valuation tool uses (monthly)</label><input type="number" id="set-elite_valuation_uses_monthly"/></div>
           </div>
           <div id="settings-saved-meta" style="font-size:11px;color:var(--text-3);margin-top:16px"></div>
           <button class="btn-modal approve" style="margin-top:14px" onclick="saveSettings()">Save changes</button>
@@ -1028,7 +1030,7 @@
           <span class="card-title">Premium sellers</span>
           <span style="font-size:12px;color:var(--text-3)" id="premium-count"></span>
         </div>
-        <p style="padding:0 22px 14px;font-size:12px;color:var(--text-3)">No payment gateway is wired for Premium yet — confirm payment (M-Pesa/bank) the same way you do for listing upgrades, then grant it here.</p>
+        <p style="padding:0 22px 14px;font-size:12px;color:var(--text-3)">No payment gateway is wired for Premium/Elite yet — confirm payment (M-Pesa/bank) the same way you do for listing upgrades, then grant it here. Use the Tier field to choose Premium or Elite.</p>
         <div class="tab-bar">
           <button class="tab-btn active" id="ptab-active"   onclick="setPremiumTab('active')">Active <span class="count" id="ptc-active">—</span></button>
           <button class="tab-btn"        id="ptab-expiring" onclick="setPremiumTab('expiring')">Expiring soon <span class="count" id="ptc-expiring">—</span></button>
@@ -1041,7 +1043,7 @@
         </div>
         <div class="table-wrap mobile-hide">
           <table>
-            <thead><tr><th>Seller</th><th>Tier</th><th>Pro badge</th><th>Expires</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Seller</th><th>Plan</th><th>Tier</th><th>Pro badge</th><th>Expires</th><th>Actions</th></tr></thead>
             <tbody id="premium-body"><tr class="skeleton-row"><td colspan="5"><div class="skel"></div></td></tr></tbody>
           </table>
         </div>
@@ -1621,6 +1623,8 @@
     premium_yearly_price: 12000,
     elite_monthly_price: 3000,
     elite_yearly_price: 30000,
+    elite_ai_listing_uses_monthly: 20,
+    elite_valuation_uses_monthly: 20,
   };
 
   // Shared logic — keep this in sync with the identical function in
@@ -3580,15 +3584,18 @@ async function messageSellerInChat(sellerId, sellerName) {
       const st = premiumRowStatus(p);
       return `<tr>
         <td>${esc(p.full_name||'—')}<div class="listing-meta">${esc(p.email||'')}</div></td>
+        <td><span class="badge ${p.subscription_plan==='elite'?'multiunit':'featured'}">${p.subscription_plan==='elite'?'Elite':'Premium'}</span></td>
         <td><span class="badge ${p.subscription_tier==='yearly'?'featured':'active'}">${p.subscription_tier}</span></td>
         <td>${p.is_pro?'<span class="badge active">✓ Pro badge</span>':'<span class="badge standard">Off</span>'}</td>
         <td><span class="badge ${st.cls}">${st.text}</span></td>
         <td>
           <div class="action-btns">
+            ${p.subscription_plan==='elite'?aBtn('external','Open storefront','view',`window.open('/storefront?seller=${p.id}','_blank','noopener,noreferrer')`):''}
             ${aBtn('edit','Change plan / extend','view',`openGrantPremiumModal('${p.id}')`)}
             ${aBtn('reject','Revoke Premium','reject',`revokePremiumFlow('${p.id}')`)}
           </div>
           ${mobileMenu(p.id,[
+            ...(p.subscription_plan==='elite'?[{label:'🔗 Open storefront', cls:'', fn:`window.open('/storefront?seller=${p.id}','_blank','noopener,noreferrer')`}]:[]),
             {label:'Change plan / extend', cls:'', fn:`openGrantPremiumModal('${p.id}')`},
             {label:'Revoke Premium', cls:'danger', fn:`revokePremiumFlow('${p.id}')`},
           ])}
@@ -3606,10 +3613,12 @@ async function messageSellerInChat(sellerId, sellerName) {
           <span class="badge ${p.subscription_tier==='yearly'?'featured':'active'}">${p.subscription_tier}</span>
         </div>
         <div class="mobile-card-body">
+          <div class="mobile-card-row"><span>Plan</span><span>${p.subscription_plan==='elite'?'Elite':'Premium'}</span></div>
           <div class="mobile-card-row"><span>Expires</span><span>${st.text}</span></div>
           <div class="mobile-card-row"><span>Pro badge</span><span>${p.is_pro?'On':'Off'}</span></div>
         </div>
         <div class="mobile-card-actions">
+          ${p.subscription_plan==='elite'?aBtn('external','Storefront','view',`window.open('/storefront?seller=${p.id}','_blank','noopener,noreferrer')`):''}
           ${aBtn('edit','Edit','view',`openGrantPremiumModal('${p.id}')`)}
           ${aBtn('reject','Revoke','reject',`revokePremiumFlow('${p.id}')`)}
         </div>
@@ -3636,15 +3645,31 @@ async function messageSellerInChat(sellerId, sellerName) {
     document.getElementById('grant-premium-body').innerHTML = `
       ${pickerHtml}
       ${seller?`<div class="field"><label>Seller</label><div class="val">${esc(seller.full_name||'—')} · ${esc(seller.email||'')}</div></div>`:''}
-      <div class="field"><label>Plan</label>
-        <select id="grant-plan">
-          <option value="monthly">Monthly — KES ${(SETTINGS.premium_monthly_price||1200).toLocaleString('en-KE')}</option>
-          <option value="yearly">Yearly — KES ${(SETTINGS.premium_yearly_price||12000).toLocaleString('en-KE')}</option>
+      <div class="field"><label>Tier</label>
+        <select id="grant-tier" onchange="updateGrantPlanOptions()">
+          <option value="premium">Premium</option>
+          <option value="elite">Elite</option>
         </select>
+      </div>
+      <div class="field"><label>Billing period</label>
+        <select id="grant-plan"></select>
       </div>
       <div class="field check-field"><input type="checkbox" id="grant-is-pro" checked/><label for="grant-is-pro">Show the Pro seller badge</label></div>
       <div class="confirm-warning">This only marks the subscription active in the database — confirm payment was actually received first, same as a manual listing upgrade.</div>`;
+    if (seller?.subscription_plan === 'elite' && document.getElementById('grant-tier')) document.getElementById('grant-tier').value = 'elite';
+    updateGrantPlanOptions();
     document.getElementById('grant-premium-modal').classList.add('open');
+  }
+
+  function updateGrantPlanOptions() {
+    const tier = document.getElementById('grant-tier')?.value || 'premium';
+    const sel = document.getElementById('grant-plan');
+    if (!sel) return;
+    const monthlyPrice = tier === 'elite' ? (SETTINGS.elite_monthly_price||3000) : (SETTINGS.premium_monthly_price||1200);
+    const yearlyPrice  = tier === 'elite' ? (SETTINGS.elite_yearly_price||30000) : (SETTINGS.premium_yearly_price||12000);
+    sel.innerHTML = `
+      <option value="monthly">Monthly — KES ${monthlyPrice.toLocaleString('en-KE')}</option>
+      <option value="yearly">Yearly — KES ${yearlyPrice.toLocaleString('en-KE')}</option>`;
   }
 
   let grantSellerSearchTimer = null;
@@ -3675,6 +3700,7 @@ async function messageSellerInChat(sellerId, sellerName) {
     if (grantPremiumBusy) return;
     if (!grantingSellerId) { toast('Pick a seller first','error'); return; }
     const plan = document.getElementById('grant-plan').value;
+    const tier = document.getElementById('grant-tier')?.value || 'premium';
     const isPro = document.getElementById('grant-is-pro').checked;
     const days = plan === 'yearly' ? 365 : 30;
     const expiresAt = new Date(Date.now() + days*86400000).toISOString();
@@ -3684,7 +3710,7 @@ async function messageSellerInChat(sellerId, sellerName) {
     if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
 
     const { data, error } = await db.from('profiles').update({
-      subscription_tier: plan, subscription_expires_at: expiresAt, is_pro: isPro,
+      subscription_tier: plan, subscription_plan: tier, subscription_expires_at: expiresAt, is_pro: isPro,
     }).eq('id', grantingSellerId).select();
 
     grantPremiumBusy = false;
@@ -3692,13 +3718,15 @@ async function messageSellerInChat(sellerId, sellerName) {
     if (error) { toast('Error: '+error.message,'error'); return; }
     if (!data?.length) { toast('Blocked by RLS — check Supabase policy','error'); return; }
 
-    const amount = plan === 'yearly' ? SETTINGS.premium_yearly_price : SETTINGS.premium_monthly_price;
+    const amount = tier === 'elite'
+      ? (plan === 'yearly' ? SETTINGS.elite_yearly_price : SETTINGS.elite_monthly_price)
+      : (plan === 'yearly' ? SETTINGS.premium_yearly_price : SETTINGS.premium_monthly_price);
     await db.from('payments').insert({
       seller_id: grantingSellerId, amount, method:'manual',
-      reference:'Admin-granted premium', type:'premium_subscription', status:'confirmed',
+      reference:`Admin-granted ${tier}`, type: tier === 'elite' ? 'elite_subscription' : 'premium_subscription', status:'confirmed',
     });
 
-    logAction('grant_premium','profile',grantingSellerId,`${plan} plan`);
+    logAction('grant_premium','profile',grantingSellerId,`${tier} ${plan} plan`);
     const seller = data[0];
     if (seller?.email) notifySeller('premium_granted', { sellerName: seller.full_name, sellerEmail: seller.email, plan, expiresAt });
     toast('Premium granted ✓','success');

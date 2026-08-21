@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Seller Storefront — Nyumba254</title>
+<meta name="robots" content="index,follow"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --green:#0F6E56;--green-light:#E1F5EE;--green-mid:#1D9E75;--green-dark:#085041;
+    --gold:#BA7517;--gold-light:#FAEEDA;--purple:#7c3aed;--purple-light:#EDE9FE;
+    --text:#1a1a18;--text-2:#4a4a46;--text-3:#888780;
+    --border:#e0ded8;--surface:#f7f6f2;--white:#ffffff;
+    --radius:10px;--radius-lg:16px;
+    --shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 12px rgba(0,0,0,0.06);
+  }
+  body{font-family:'Inter',sans-serif;color:var(--text);background:var(--surface);line-height:1.6;min-height:100vh}
+  a{text-decoration:none;color:inherit}
+  img{display:block;max-width:100%}
+
+  /* ── minimal top bar, links back to the platform ── */
+  .topbar{background:var(--white);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+  .topbar-logo{display:flex;align-items:center;gap:8px;font-family:'Playfair Display',serif;font-size:16px;color:var(--green-dark);font-weight:700}
+  .topbar-logo-icon{width:26px;height:26px;background:var(--green);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .topbar-logo-icon svg{width:13px;height:13px;stroke:white;fill:none;stroke-width:2;stroke-linecap:round}
+  .topbar-cta{font-size:13px;font-weight:600;color:var(--green);border:1.5px solid var(--green);padding:7px 14px;border-radius:20px}
+  .topbar-cta:hover{background:var(--green-light)}
+
+  /* ── seller header / branding ── */
+  .seller-header{background:linear-gradient(135deg,var(--green-dark),var(--green-mid));padding:44px 24px 90px;text-align:center;position:relative}
+  .seller-avatar{width:84px;height:84px;border-radius:50%;background:rgba(255,255,255,0.15);border:3px solid rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:white;margin:0 auto 16px}
+  .seller-name{font-family:'Playfair Display',serif;font-size:clamp(24px,4vw,32px);color:white;margin-bottom:8px}
+  .seller-badges{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .s-badge{font-size:11.5px;font-weight:700;padding:4px 12px;border-radius:20px;display:inline-flex;align-items:center;gap:5px}
+  .s-badge.pro{background:var(--gold-light);color:var(--gold)}
+  .s-badge.verified{background:rgba(255,255,255,0.18);color:white}
+  .s-badge svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5}
+  .seller-sub{font-size:14px;color:rgba(255,255,255,0.75);max-width:440px;margin:0 auto}
+  .seller-contact-row{display:flex;justify-content:center;gap:10px;margin-top:20px;flex-wrap:wrap}
+  .contact-btn{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;padding:10px 18px;border-radius:var(--radius);transition:all .15s}
+  .contact-btn.wa{background:#25D366;color:white}
+  .contact-btn.wa:hover{background:#1ea952}
+  .contact-btn.chat{background:white;color:var(--green-dark)}
+  .contact-btn.chat:hover{background:var(--green-light)}
+  .contact-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+
+  /* ── content ── */
+  .content{max-width:1120px;margin:-56px auto 0;padding:0 24px 64px;position:relative;z-index:2}
+  .stats-strip{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:18px 26px;display:flex;justify-content:center;gap:40px;flex-wrap:wrap;margin-bottom:36px}
+  .stat{text-align:center}
+  .stat-val{font-size:22px;font-weight:700;color:var(--green-dark)}
+  .stat-lbl{font-size:11.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+
+  .section-title{font-family:'Playfair Display',serif;font-size:21px;color:var(--text);margin-bottom:18px}
+
+  .listings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px}
+  .card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;transition:transform .15s,box-shadow .15s;cursor:pointer}
+  .card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+  .card-img{height:170px;background:var(--surface);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .card-img img{width:100%;height:100%;object-fit:cover}
+  .card-img svg{width:32px;height:32px;stroke:var(--text-3);fill:none;stroke-width:1.4;opacity:.5}
+  .badge-featured{position:absolute;top:10px;left:10px;background:var(--gold);color:white;font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:20px}
+  .card-body{padding:14px 16px}
+  .card-area{font-size:10.5px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+  .card-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px;line-height:1.35}
+  .card-price{font-size:16px;font-weight:700;color:var(--green-dark)}
+  .card-price span{font-size:12px;font-weight:400;color:var(--text-3)}
+
+  .empty-state{text-align:center;padding:60px 20px;color:var(--text-3)}
+  .empty-state svg{width:44px;height:44px;margin:0 auto 14px;stroke:var(--border);fill:none;stroke-width:1.4}
+
+  .loading-wrap{text-align:center;padding:80px 20px;color:var(--text-3);font-size:13px}
+  .spin{width:26px;height:26px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:sp .7s linear infinite;margin:0 auto 12px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  .not-available{max-width:460px;margin:80px auto;text-align:center;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:40px 32px}
+  .not-available svg{width:44px;height:44px;stroke:var(--text-3);fill:none;stroke-width:1.4;margin:0 auto 16px}
+  .not-available h2{font-family:'Playfair Display',serif;font-size:19px;margin-bottom:8px}
+  .not-available p{font-size:13.5px;color:var(--text-3);line-height:1.6;margin-bottom:18px}
+
+  footer{text-align:center;padding:28px 20px;font-size:12px;color:var(--text-3)}
+  footer a{color:var(--green);font-weight:600}
+
+  @media(max-width:600px){.content{margin-top:-40px}.seller-header{padding:36px 16px 70px}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="/" class="topbar-logo">
+    <span class="topbar-logo-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+    Nyumba254
+  </a>
+  <a href="/listings" class="topbar-cta">Browse all listings</a>
+</div>
+
+<div id="app-root">
+  <div class="loading-wrap"><div class="spin"></div>Loading storefront…</div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function fmtPrice(price, type){
+    const p = Number(price||0).toLocaleString('en-KE');
+    return type === 'rent' ? `KES ${p}<span>/mo</span>` : `KES ${p}`;
+  }
+  function formatWaPhone(p){
+    const clean = (p||'').replace(/[\s+]/g,'');
+    return /^0\d{9}$/.test(clean) ? '254'+clean.slice(1) : clean;
+  }
+  function initialsOf(name){
+    return (name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase() || '?';
+  }
+
+  function renderNotAvailable(msg){
+    document.getElementById('app-root').innerHTML = `
+      <div class="not-available">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        <h2>Storefront not available</h2>
+        <p>${esc(msg)}</p>
+        <a href="/listings" class="topbar-cta" style="display:inline-block">Browse all listings</a>
+      </div>`;
+  }
+
+  function subscriptionActive(profile){
+    const tier = profile?.subscription_tier || 'none';
+    const expiresAt = profile?.subscription_expires_at;
+    const notExpired = !expiresAt || new Date(expiresAt) > new Date();
+    return tier !== 'none' && !!tier && notExpired;
+  }
+
+  function buildCard(listing){
+    const photos = listing.listing_photos || [];
+    const cover = photos.find(p=>p.is_cover) || photos[0];
+    const imgHtml = cover
+      ? `<img src="${esc(cover.url)}" alt="${esc(listing.title)}" loading="lazy"/>`
+      : `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
+    return `
+      <div class="card" onclick="window.location='/listing?id=${String(listing.listing_number).padStart(6,'0')}'" role="button" tabindex="0" aria-label="${esc(listing.title)}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.location='/listing?id=${String(listing.listing_number).padStart(6,'0')}'}">
+        <div class="card-img">${imgHtml}${listing.is_featured?'<span class="badge-featured">Featured</span>':''}</div>
+        <div class="card-body">
+          <div class="card-area">${esc(listing.area||'')}${listing.sub_area?' · '+esc(listing.sub_area):''}</div>
+          <div class="card-title">${esc(listing.title)}</div>
+          <div class="card-price">${fmtPrice(listing.price, listing.price_type)}</div>
+        </div>
+      </div>`;
+  }
+
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  async function init(){
+    const params = new URLSearchParams(location.search);
+    const sellerParam = params.get('seller');
+    if (!sellerParam) { renderNotAvailable("No seller was specified in this link."); return; }
+
+    const lookupField = UUID_RE.test(sellerParam) ? 'id' : 'storefront_slug';
+    const { data: profile, error: profErr } = await db.from('profiles').select('*').eq(lookupField, sellerParam).single();
+    if (profErr || !profile) { renderNotAvailable("We couldn't find this seller — the link may be incorrect."); return; }
+    const sellerId = profile.id;
+    if (profile.is_disabled) { renderNotAvailable("This seller's account is currently unavailable."); return; }
+    if (!subscriptionActive(profile) || profile.subscription_plan !== 'elite') {
+      renderNotAvailable("This seller hasn't set up a storefront yet.");
+      return;
+    }
+
+    const { data: listings, error: listErr } = await db
+      .from('listings')
+      .select('*, listing_photos(*)')
+      .eq('seller_id', sellerId)
+      .eq('status', 'active')
+      .eq('is_disabled', false)
+      .order('is_featured', { ascending: false })
+      .order('created_at', { ascending: false });
+
+    const items = listErr ? [] : (listings || []);
+    const name = profile.full_name || 'Seller';
+    const isVerified = profile.verification_status === 'verified';
+    const isPro = !!profile.is_pro;
+    const hideContact = !!profile.hide_buyer_contact;
+    const totalViews = items.reduce((s,l)=>s+(Number(l.views)||0),0);
+
+    document.title = `${name} — Nyumba254 Storefront`;
+
+    const contactRow = hideContact
+      ? `<div class="seller-contact-row"><span class="contact-btn chat" style="cursor:default"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Message via listing chat</span></div>`
+      : (profile.phone ? `<div class="seller-contact-row">
+          <a class="contact-btn wa" href="https://wa.me/${formatWaPhone(profile.phone)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>WhatsApp</a>
+        </div>` : '');
+
+    document.getElementById('app-root').innerHTML = `
+      <div class="seller-header">
+        <div class="seller-avatar">${esc(initialsOf(name))}</div>
+        <div class="seller-name">${esc(name)}</div>
+        <div class="seller-badges">
+          ${isPro?'<span class="s-badge pro"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Pro seller</span>':''}
+          ${isVerified?'<span class="s-badge verified"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>Verified seller</span>':''}
+        </div>
+        <p class="seller-sub">Browse every active listing from ${esc(name)}, all in one place.</p>
+        ${contactRow}
+      </div>
+      <div class="content">
+        <div class="stats-strip">
+          <div class="stat"><div class="stat-val">${items.length}</div><div class="stat-lbl">Active listings</div></div>
+          <div class="stat"><div class="stat-val">${totalViews.toLocaleString('en-KE')}</div><div class="stat-lbl">Total views</div></div>
+        </div>
+        <div class="section-title">${esc(name)}'s listings</div>
+        <div id="listings-wrap">
+          ${items.length
+            ? `<div class="listings-grid">${items.map(buildCard).join('')}</div>`
+            : `<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><p>No active listings right now — check back soon.</p></div>`}
+        </div>
+      </div>
+      <footer>Powered by <a href="/">Nyumba254</a> — Kenya's agent-free property marketplace</footer>`;
+
+    db.from('page_views').insert({ path: '/storefront?seller='+sellerId, referrer: document.referrer || null, user_agent: navigator.userAgent, session_id: localStorage.getItem('nk_sid')||null }).then(()=>{}).catch(()=>{});
+  }
+
+  init();
+</script>
+</body>
+</html>
