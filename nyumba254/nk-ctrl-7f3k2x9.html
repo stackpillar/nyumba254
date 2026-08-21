@@ -983,6 +983,11 @@
     <div class="view" id="view-verification">
       <div class="card">
         <div class="card-header"><span class="card-title">Seller verification</span></div>
+        <div class="tab-bar">
+          <button class="tab-btn active" id="vtab-pending"  onclick="setVerificationTab('pending')">Pending / unverified <span class="count" id="vtc-pending">—</span></button>
+          <button class="tab-btn"        id="vtab-verified" onclick="setVerificationTab('verified')">Verified <span class="count" id="vtc-verified">—</span></button>
+        </div>
+        <p style="padding:0 22px 14px;font-size:12px;color:var(--text-3)">Verified sellers keep no viewable documents here for privacy — only the pending/unverified queue can view uploaded ID and ownership proof.</p>
         <div class="table-wrap mobile-hide">
           <table>
             <thead><tr><th>Seller</th><th>Ownership</th><th>Submitted</th><th>Actions</th></tr></thead>
@@ -1400,6 +1405,9 @@
   });
 
   const EDGE_URL = `${SUPABASE_URL}/functions/v1`;
+  // Returns {ok, status, body} instead of nothing, so callers that need to
+  // know whether the email actually went out can surface the real error
+  // instead of blindly claiming success.
   async function notifyByEmail(type, payload) {
     try {
       const res = await fetch(`${EDGE_URL}/send-notification-email`, {
@@ -1411,8 +1419,17 @@
         },
         body: JSON.stringify({ type, ...payload }),
       });
-      if (!res.ok) console.error('notifyByEmail: edge function returned', res.status);
-    } catch (err) { console.error('notifyByEmail failed:', err); }
+      let body = null;
+      try { body = await res.json(); } catch(_) {}
+      if (!res.ok || body?.success === false) {
+        console.error('notifyByEmail: edge function returned', res.status, body);
+        return { ok: false, status: res.status, body };
+      }
+      return { ok: true, status: res.status, body };
+    } catch (err) {
+      console.error('notifyByEmail failed:', err);
+      return { ok: false, status: 0, body: { error: err.message } };
+    }
   }
   function notifySeller(type, payload) { return notifyByEmail(type, { ...payload, audience: 'seller' }); }
 
@@ -1462,13 +1479,18 @@
     emailReminderBusy = true;
     const btn = document.getElementById('btn-send-email-reminder');
     if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
-    await notifyByEmail('admin_seller_notice', {
+    const result = await notifyByEmail('admin_seller_notice', {
       audience: 'seller', noticeType: templateId, subject, message: messageBody,
       sellerName: emailReminderTarget.name, sellerEmail: emailReminderTarget.email,
     });
-    logAction('email_seller','profile',emailReminderTarget.id,`Sent "${subject}"`);
     emailReminderBusy = false;
     if (btn) { btn.disabled = false; btn.textContent = 'Send email'; }
+    if (!result.ok) {
+      const detail = result.body?.error || result.body?.failedRecipients?.[0]?.error || `HTTP ${result.status}`;
+      toast('Email failed to send: '+detail,'error');
+      return;
+    }
+    logAction('email_seller','profile',emailReminderTarget.id,`Sent "${subject}"`);
     toast('Email sent ✓','success');
     closeEmailReminderModal();
   }
@@ -2792,7 +2814,7 @@ async function loadUsers(append) {
         <td><div class="user-cell">
           <div class="user-avatar">${ini}</div>
           <div>
-            <div style="font-weight:500">${esc(u.full_name || '—')}${u.role === 'admin' ? ' <span class="badge active" style="margin-left:6px">admin</span>' : ''}${u.verification_status==='verified'?' <span class="badge active" style="margin-left:6px">✓ verified</span>':' <span class="badge pending" style="margin-left:6px">unverified</span>'}${u.concierge_enabled?' <span class="badge featured" style="margin-left:6px">concierge</span>':''}${u.hide_buyer_contact?' <span class="badge rejected" style="margin-left:6px">contact hidden</span>':''}</div>
+            <div style="font-weight:500">${esc(u.full_name || '—')}${u.role === 'admin' ? ' <span class="badge active" style="margin-left:6px">admin</span>' : (u.verification_status==='verified'?' <span class="badge active" style="margin-left:6px">✓ verified</span>':' <span class="badge pending" style="margin-left:6px">unverified</span>')}${u.concierge_enabled?' <span class="badge featured" style="margin-left:6px">concierge</span>':''}${u.hide_buyer_contact?' <span class="badge rejected" style="margin-left:6px">contact hidden</span>':''}</div>
             <div style="font-size:11px;color:var(--text-3)">${esc(u.email || '')}</div>
           </div>
         </div></td>
@@ -3266,22 +3288,47 @@ async function messageSellerInChat(sellerId, sellerName) {
     toast('Reply sent ✓','success');
   }
 
+  let verificationTab = 'pending';
+  function setVerificationTab(tab) {
+    verificationTab = tab;
+    document.querySelectorAll('#view-verification .tab-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('vtab-'+tab)?.classList.add('active');
+    loadVerification();
+  }
+
   async function loadVerification() {
     const tbody    = document.getElementById('verification-body');
     const mobileEl = document.getElementById('verification-mobile');
     tbody.innerHTML = `<tr class="skeleton-row"><td colspan="4"><div class="skel"></div></td></tr>`.repeat(3);
     mobileEl.innerHTML = '';
-    const { data, error } = await db.from('profiles').select('*').or('verification_status.eq.pending,extra_verification_status.eq.submitted').order('verification_submitted_at',{ascending:false});
-    document.getElementById('nav-badge-verification').textContent = (data||[]).filter(p=>p.verification_status==='pending').length;
+
+    let q = db.from('profiles').select('*').neq('role','admin');
+    q = verificationTab === 'verified'
+      ? q.eq('verification_status','verified').order('verification_reviewed_at',{ascending:false})
+      : q.or('verification_status.eq.pending,extra_verification_status.eq.submitted').order('verification_submitted_at',{ascending:false});
+    const { data, error } = await q;
+
+    // Badge and tab counts always reflect the live totals, not just whichever tab is open.
+    const { count: pendingCount } = await db.from('profiles').select('*',{count:'exact',head:true}).neq('role','admin').eq('verification_status','pending');
+    const { count: verifiedCount } = await db.from('profiles').select('*',{count:'exact',head:true}).neq('role','admin').eq('verification_status','verified');
+    document.getElementById('nav-badge-verification').textContent = pendingCount||0;
+    const vtcP = document.getElementById('vtc-pending');  if (vtcP) vtcP.textContent = pendingCount||0;
+    const vtcV = document.getElementById('vtc-verified'); if (vtcV) vtcV.textContent = verifiedCount||0;
+
+    const isVerifiedTab = verificationTab === 'verified';
+
     if (error || !data?.length) {
-      tbody.innerHTML    = `<tr><td colspan="4"><div class="table-loading"><p>Nothing pending review</p></div></td></tr>`;
-      mobileEl.innerHTML = `<div class="table-loading"><p>Nothing pending review</p></div>`;
+      const emptyMsg = isVerifiedTab ? 'No verified sellers yet' : 'Nothing pending review';
+      tbody.innerHTML    = `<tr><td colspan="4"><div class="table-loading"><p>${emptyMsg}</p></div></td></tr>`;
+      mobileEl.innerHTML = `<div class="table-loading"><p>${emptyMsg}</p></div>`;
       return;
     }
     _verifySellers = {}; data.forEach(p=>{_verifySellers[p.id]=p;});
 
     tbody.innerHTML = data.map(p => {
-      const menuItems = [
+      const menuItems = isVerifiedTab ? [
+        {label:'Revoke verification', cls:'danger', fn:`revokeVerification('${p.id}')`},
+      ] : [
         {label:'View ID (front)', cls:'', fn:`viewVerifyDoc('${p.id}','id')`},
         {label:'View ID (back)',  cls:'', fn:`viewVerifyDoc('${p.id}','id2')`},
         {label:'View proof of ownership', cls:'', fn:`viewVerifyDoc('${p.id}','proof')`},
@@ -3292,19 +3339,15 @@ async function messageSellerInChat(sellerId, sellerName) {
         ...(p.extra_verification_status==='submitted'?[{label:'Approve extra docs', cls:'success', fn:`approveExtraVerification('${p.id}')`}]:[]),
         {label:'Request extra documents', cls:'blue', fn:`requestExtraVerification('${p.id}','${esc(p.full_name||'')}')`},
       ];
+      const actionsHtml = isVerifiedTab
+        ? aBtn('reject','Revoke verification','reject',`revokeVerification('${p.id}')`)
+        : `${aBtn('idcard','View ID (front)','view',`viewVerifyDoc('${p.id}','id')`)}${aBtn('idcard','View ID (back)','view',`viewVerifyDoc('${p.id}','id2')`)}${aBtn('doc','View proof of ownership','view',`viewVerifyDoc('${p.id}','proof')`)}${p.verification_status==='pending'?(aBtn('approve','Approve','approve',`approveVerification('${p.id}')`)+aBtn('reject','Reject','reject',`rejectVerification('${p.id}')`)):''}${p.extra_verification_status==='submitted'?aBtn('approve','Approve extra docs','approve',`approveExtraVerification('${p.id}')`):''}${aBtn('mail','Request extra documents','message',`requestExtraVerification('${p.id}','${esc(p.full_name||'')}')`)}`;
       return `<tr>
         <td>${esc(p.full_name||'—')}<div class="listing-meta">${esc(p.email||'')}</div></td>
-        <td>${p.verification_is_owner===false?'Not owner':'Owner'}${p.extra_verification_status==='submitted'?' · Extra docs submitted':''}</td>
-        <td>${p.verification_submitted_at?fmtDate(p.verification_submitted_at):'—'}</td>
+        <td>${isVerifiedTab ? '<span class="badge active">✓ Verified — documents not shown here</span>' : `${p.verification_is_owner===false?'Not owner':'Owner'}${p.extra_verification_status==='submitted'?' · Extra docs submitted':''}`}</td>
+        <td>${isVerifiedTab ? (p.verification_reviewed_at?fmtDate(p.verification_reviewed_at):'—') : (p.verification_submitted_at?fmtDate(p.verification_submitted_at):'—')}</td>
         <td>
-          <div class="action-btns">
-            ${aBtn('idcard','View ID (front)','view',`viewVerifyDoc('${p.id}','id')`)}
-            ${aBtn('idcard','View ID (back)','view',`viewVerifyDoc('${p.id}','id2')`)}
-            ${aBtn('doc','View proof of ownership','view',`viewVerifyDoc('${p.id}','proof')`)}
-            ${p.verification_status==='pending'?(aBtn('approve','Approve','approve',`approveVerification('${p.id}')`)+aBtn('reject','Reject','reject',`rejectVerification('${p.id}')`)):''}
-            ${p.extra_verification_status==='submitted'?aBtn('approve','Approve extra docs','approve',`approveExtraVerification('${p.id}')`):''}
-            ${aBtn('mail','Request extra documents','message',`requestExtraVerification('${p.id}','${esc(p.full_name||'')}')`)}
-          </div>
+          <div class="action-btns">${actionsHtml}</div>
           ${mobileMenu(p.id, menuItems)}
         </td>
       </tr>`;
@@ -3316,18 +3359,18 @@ async function messageSellerInChat(sellerId, sellerName) {
           <div style="font-weight:600;font-size:13px">${esc(p.full_name||'—')}</div>
           <div style="font-size:11px;color:var(--text-3)">${esc(p.email||'')}</div>
         </div>
-        <span class="badge pending">${p.verification_status==='pending'?'pending':'extra docs'}</span>
+        <span class="badge ${isVerifiedTab?'active':'pending'}">${isVerifiedTab?'verified':(p.verification_status==='pending'?'pending':'extra docs')}</span>
       </div>
       <div class="mobile-card-body">
-        <div class="mobile-card-row"><span>Ownership</span><span>${p.verification_is_owner===false?'Not owner':'Owner'}</span></div>
-        <div class="mobile-card-row"><span>Submitted</span><span>${p.verification_submitted_at?fmtDate(p.verification_submitted_at):'—'}</span></div>
+        ${isVerifiedTab
+          ? `<div class="mobile-card-row"><span>Verified on</span><span>${p.verification_reviewed_at?fmtDate(p.verification_reviewed_at):'—'}</span></div>`
+          : `<div class="mobile-card-row"><span>Ownership</span><span>${p.verification_is_owner===false?'Not owner':'Owner'}</span></div>
+             <div class="mobile-card-row"><span>Submitted</span><span>${p.verification_submitted_at?fmtDate(p.verification_submitted_at):'—'}</span></div>`}
       </div>
       <div class="mobile-card-actions">
-        ${aBtn('idcard','ID front','view',`viewVerifyDoc('${p.id}','id')`)}
-        ${aBtn('idcard','ID back','view',`viewVerifyDoc('${p.id}','id2')`)}
-        ${aBtn('doc','Proof','view',`viewVerifyDoc('${p.id}','proof')`)}
-        ${p.verification_status==='pending'?(aBtn('approve','Approve','approve',`approveVerification('${p.id}')`)+aBtn('reject','Reject','reject',`rejectVerification('${p.id}')`)):''}
-        ${p.extra_verification_status==='submitted'?aBtn('approve','Approve extra','approve',`approveExtraVerification('${p.id}')`):''}
+        ${isVerifiedTab
+          ? aBtn('reject','Revoke','reject',`revokeVerification('${p.id}')`)
+          : `${aBtn('idcard','ID front','view',`viewVerifyDoc('${p.id}','id')`)}${aBtn('idcard','ID back','view',`viewVerifyDoc('${p.id}','id2')`)}${aBtn('doc','Proof','view',`viewVerifyDoc('${p.id}','proof')`)}${p.verification_status==='pending'?(aBtn('approve','Approve','approve',`approveVerification('${p.id}')`)+aBtn('reject','Reject','reject',`rejectVerification('${p.id}')`)):''}${p.extra_verification_status==='submitted'?aBtn('approve','Approve extra','approve',`approveExtraVerification('${p.id}')`):''}`}
       </div>
     </div>`).join('');
   }
@@ -3369,6 +3412,23 @@ async function messageSellerInChat(sellerId, sellerName) {
     await db.from('verification_activity_log').insert({ seller_id: sellerId, action:'extra_approved', admin_id: currentUser.id });
     toast('Extra documents approved ✓','success');
     loadVerification();
+  }
+
+  function revokeVerification(sellerId) {
+    const p = _verifySellers[sellerId]; if (!p) return;
+    openConfirm({
+      title:'Revoke verification?',
+      message:`${p.full_name||'This seller'} will lose their verified badge and go back to the unverified listing limit. They'll need to resubmit documents to be verified again.`,
+      requireReason:true, reasonLabel:'Internal note',
+      confirmText:'Revoke verification', confirmClass:'reject',
+      onConfirm: async (reason) => {
+        const { error } = await db.from('profiles').update({ verification_status:'unverified', verification_reviewed_at:new Date().toISOString(), verification_reviewed_by: currentUser.id }).eq('id', sellerId);
+        if (error) { toast('Error: '+error.message,'error'); return; }
+        await db.from('verification_activity_log').insert({ seller_id: sellerId, action:'revoked', detail: reason, admin_id: currentUser.id });
+        toast('Verification revoked','success');
+        loadVerification();
+      }
+    });
   }
 
   function requestExtraVerification(sellerId, sellerName) {
