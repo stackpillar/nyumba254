@@ -951,6 +951,10 @@
             <input type="checkbox" id="set-auto_post_instagram" style="width:18px;height:18px"/>
             Automatically post new listings to Instagram when approved
           </label>
+          <label style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text-2);cursor:pointer">
+            <input type="checkbox" id="set-auto_post_tiktok" style="width:18px;height:18px"/>
+            Automatically post new listings to TikTok when approved (private/self-only until TikTok's audit clears)
+          </label>
           <button class="btn-modal approve" style="margin-top:6px;width:fit-content" onclick="saveSocialSettings()">Save</button>
         </div>
       </div>
@@ -1829,19 +1833,21 @@
     return posts.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0];
   }
   function socialBadges(l){
-    const fb=socialPostedInfo(l,'facebook'), ig=socialPostedInfo(l,'instagram');
+    const fb=socialPostedInfo(l,'facebook'), ig=socialPostedInfo(l,'instagram'), tt=socialPostedInfo(l,'tiktok');
     let out='';
     if(fb) out+=`<span class="badge active" title="Posted ${fmtDate(fb.created_at)}">FB ✓</span> `;
     if(ig) out+=`<span class="badge active" title="Posted ${fmtDate(ig.created_at)}">IG ✓</span> `;
+    if(tt) out+=`<span class="badge active" title="Posted ${fmtDate(tt.created_at)} — private until TikTok audit clears">TT ✓</span> `;
     return out;
   }
   function renderSocialButtons(l){
-    const fb=socialPostedInfo(l,'facebook'), ig=socialPostedInfo(l,'instagram');
+    const fb=socialPostedInfo(l,'facebook'), ig=socialPostedInfo(l,'instagram'), tt=socialPostedInfo(l,'tiktok');
     return aBtn('facebook', fb?'Posted to Facebook — post again':'Post to Facebook','view',`postToSocial('${l.id}','facebook')`)
-         + aBtn('instagram', ig?'Posted to Instagram — post again':'Post to Instagram','view',`postToSocial('${l.id}','instagram')`);
+         + aBtn('instagram', ig?'Posted to Instagram — post again':'Post to Instagram','view',`postToSocial('${l.id}','instagram')`)
+         + aBtn('tiktok', tt?'Posted to TikTok (private until audit) — post again':'Post to TikTok (private until audit)','view',`postToSocial('${l.id}','tiktok')`);
   }
   async function postToSocial(id, platform){
-    const label = platform==='facebook'?'Facebook':'Instagram';
+    const label = platform==='facebook'?'Facebook':platform==='instagram'?'Instagram':'TikTok';
     const { data:{ session } } = await db.auth.getSession();
     if(!session){ toast('Not signed in','error'); return; }
     const startedAt = new Date().toISOString();
@@ -1886,7 +1892,7 @@
         .gte('created_at', startedAt)
         .order('created_at', { ascending: false }).limit(1);
       if (data?.length) {
-        const label = platform==='facebook'?'Facebook':'Instagram';
+        const label = platform==='facebook'?'Facebook':platform==='instagram'?'Instagram':'TikTok';
         toast(`Posted to ${label} ✓ (took a bit longer than usual)`,'success');
         logAction(`social_post_${platform}`,'listing',listingId,'recovered after timeout');
         if(currentView==='listings') loadAllListings();
@@ -1895,29 +1901,33 @@
     }
     return false;
   }
-  let SOCIAL_SETTINGS = { auto_post_facebook:false, auto_post_instagram:false };
+  let SOCIAL_SETTINGS = { auto_post_facebook:false, auto_post_instagram:false, auto_post_tiktok:false };
   async function loadSocialSettings(){
-    const { data } = await db.from('platform_settings').select('key,value').in('key',['auto_post_facebook','auto_post_instagram']);
+    const { data } = await db.from('platform_settings').select('key,value').in('key',['auto_post_facebook','auto_post_instagram','auto_post_tiktok']);
     (data||[]).forEach(row=>{ SOCIAL_SETTINGS[row.key] = row.value==='1'||row.value===1; });
     const fbCb=document.getElementById('set-auto_post_facebook'); if(fbCb) fbCb.checked=SOCIAL_SETTINGS.auto_post_facebook;
     const igCb=document.getElementById('set-auto_post_instagram'); if(igCb) igCb.checked=SOCIAL_SETTINGS.auto_post_instagram;
+    const ttCb=document.getElementById('set-auto_post_tiktok'); if(ttCb) ttCb.checked=SOCIAL_SETTINGS.auto_post_tiktok;
   }
   async function saveSocialSettings(){
     const fb=document.getElementById('set-auto_post_facebook').checked;
     const ig=document.getElementById('set-auto_post_instagram').checked;
+    const tt=document.getElementById('set-auto_post_tiktok').checked;
     const rows=[
       {key:'auto_post_facebook', value: fb?'1':'0', updated_at:new Date().toISOString(), updated_by: currentUser?.id||null},
       {key:'auto_post_instagram', value: ig?'1':'0', updated_at:new Date().toISOString(), updated_by: currentUser?.id||null},
+      {key:'auto_post_tiktok', value: tt?'1':'0', updated_at:new Date().toISOString(), updated_by: currentUser?.id||null},
     ];
     const { error } = await db.from('platform_settings').upsert(rows,{onConflict:'key'});
     if(error){ toast('Error saving: '+error.message,'error'); return; }
-    SOCIAL_SETTINGS.auto_post_facebook=fb; SOCIAL_SETTINGS.auto_post_instagram=ig;
+    SOCIAL_SETTINGS.auto_post_facebook=fb; SOCIAL_SETTINGS.auto_post_instagram=ig; SOCIAL_SETTINGS.auto_post_tiktok=tt;
     toast('Social posting settings saved ✓','success');
   }
   async function maybeAutoPostSocial(id){
     const platforms=[];
     if(SOCIAL_SETTINGS.auto_post_facebook) platforms.push('facebook');
     if(SOCIAL_SETTINGS.auto_post_instagram) platforms.push('instagram');
+    if(SOCIAL_SETTINGS.auto_post_tiktok) platforms.push('tiktok');
     if(!platforms.length) return;
     const { data:{ session } } = await db.auth.getSession();
     if(!session) return;
@@ -1979,6 +1989,7 @@
     mail:     '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/>',
     facebook: '<path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/>',
     instagram:'<rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>',
+    tiktok:   '<path d="M9 12a4 4 0 104 4V4c1 2 3 3 5 3"/>',
   };
   function aBtn(icon, tip, cls, onclick) {
     return `<button class="action-btn icon ${cls}" data-tip="${esc(tip)}" aria-label="${esc(tip)}" onclick="${onclick}"><svg viewBox="0 0 24 24">${ICONS[icon]}</svg></button>`;
@@ -2253,6 +2264,7 @@
         ...(l.status==='active'&&!l.is_disabled?[
           {label:'📘 Post to Facebook', cls:'blue', fn:`postToSocial('${l.id}','facebook')`},
           {label:'📷 Post to Instagram', cls:'blue', fn:`postToSocial('${l.id}','instagram')`},
+          {label:'🎵 Post to TikTok (private)', cls:'blue', fn:`postToSocial('${l.id}','tiktok')`},
         ]:[]),
         {label:'Move to recycle bin',   cls:'danger', fn:`recycleListing('${l.id}')`},
         {label:'Delete permanently',    cls:'danger', fn:`deleteListingPermanently('${l.id}')`},
@@ -2752,7 +2764,7 @@
       ${l.status==='active'&&!l.is_featured?`<button class="btn-modal approve" onclick="featureListing('${l.id}');closeModal()">★ Feature</button>`:''}
       ${l.is_featured?`<button class="btn-modal cancel" onclick="unfeatureListing('${l.id}');closeModal()">☆ Unfeature</button>`:''}
       ${l.is_disabled?`<button class="btn-modal approve" onclick="activateListing('${l.id}');closeModal()">Activate</button>`:`<button class="btn-modal reject" onclick="deactivateListing('${l.id}');closeModal()">Deactivate</button>`}
-      ${l.status==='active'&&!l.is_disabled?`<button class="btn-modal cancel" onclick="postToSocial('${l.id}','facebook')">📘 Post to Facebook</button><button class="btn-modal cancel" onclick="postToSocial('${l.id}','instagram')">📷 Post to Instagram</button>`:''}
+      ${l.status==='active'&&!l.is_disabled?`<button class="btn-modal cancel" onclick="postToSocial('${l.id}','facebook')">📘 Post to Facebook</button><button class="btn-modal cancel" onclick="postToSocial('${l.id}','instagram')">📷 Post to Instagram</button><button class="btn-modal cancel" onclick="postToSocial('${l.id}','tiktok')">🎵 Post to TikTok (private)</button>`:''}
       <button class="btn-modal cancel" onclick="openEditListingModal('${l.id}');closeModal()">Edit</button>
       <button class="btn-modal cancel" onclick="closeModal()">Close</button>`;
     openModal();
