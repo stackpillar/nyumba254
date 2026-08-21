@@ -1844,7 +1844,8 @@
     const label = platform==='facebook'?'Facebook':'Instagram';
     const { data:{ session } } = await db.auth.getSession();
     if(!session){ toast('Not signed in','error'); return; }
-    toast(`Posting to ${label}…`,'');
+    const startedAt = new Date().toISOString();
+    toast(`Posting to ${label}… this can take up to 30s for Instagram`,'');
     try{
       const res = await fetch(`${EDGE_URL}/social-post`,{
         method:'POST',
@@ -1854,6 +1855,8 @@
       const body = await res.json();
       const result = body?.results?.[platform];
       if(!res.ok || !result?.success){
+        const recovered = await checkSocialPostLanded(id, platform, startedAt);
+        if (recovered) return;
         toast(`${label} post failed: ${result?.error||body?.error||'Unknown error'}`,'error');
         return;
       }
@@ -1861,8 +1864,36 @@
       logAction(`social_post_${platform}`,'listing',id,'');
       if(currentView==='listings') loadAllListings();
     }catch(err){
+      // The request itself timed out/dropped — Instagram's publish can still
+      // finish server-side after the client gives up. Check the DB before
+      // declaring failure, since a "network error" toast next to a real
+      // successful post (and seller email) is confusing and wrong.
+      const recovered = await checkSocialPostLanded(id, platform, startedAt);
+      if (recovered) return;
       toast('Network error: '+err.message,'error');
     }
+  }
+
+  // Polls social_posts for a fresh 'posted' row created after this attempt
+  // started. Used when the fetch itself errors/times out but the edge
+  // function may have completed the post anyway.
+  async function checkSocialPostLanded(listingId, platform, startedAt) {
+    for (let i = 0; i < 4; i++) {
+      await new Promise(r => setTimeout(r, 3000));
+      const { data } = await db.from('social_posts')
+        .select('id,status,created_at')
+        .eq('listing_id', listingId).eq('platform', platform).eq('status', 'posted')
+        .gte('created_at', startedAt)
+        .order('created_at', { ascending: false }).limit(1);
+      if (data?.length) {
+        const label = platform==='facebook'?'Facebook':'Instagram';
+        toast(`Posted to ${label} ✓ (took a bit longer than usual)`,'success');
+        logAction(`social_post_${platform}`,'listing',listingId,'recovered after timeout');
+        if(currentView==='listings') loadAllListings();
+        return true;
+      }
+    }
+    return false;
   }
   let SOCIAL_SETTINGS = { auto_post_facebook:false, auto_post_instagram:false };
   async function loadSocialSettings(){
