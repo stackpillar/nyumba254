@@ -2246,12 +2246,10 @@
             ${l.status==='active'&&!l.is_featured?aBtn('feature','Feature listing','feature',`featureListing('${l.id}')`):''}
             ${l.is_featured?aBtn('unfeature','Unfeature listing','view',`unfeatureListing('${l.id}')`):''}
             ${l.status==='active'&&!l.is_disabled?renderSocialButtons(l):''}
-            ${aBtn('view','View','view',`openListingModal('${l.id}')`)}
-            ${aBtn('view','View live listing','view',`openListingModal('${l.id}')`)}
+            ${aBtn('view','View details','view',`openListingModal('${l.id}')`)}
             ${l.is_disabled
               ? aBtn('activate','Activate listing','approve',`activateListing('${l.id}')`)
               : aBtn('deactivate','Deactivate listing','reject',`deactivateListing('${l.id}')`)}
-            ${l.status==='active'&&!l.is_disabled?renderSocialButtons(l):''}
             ${aBtn('recycle','Move to recycle bin','reject',`recycleListing('${l.id}')`)}
             ${aBtn('delete','Delete permanently','delete',`deleteListingPermanently('${l.id}')`)}
           </div>
