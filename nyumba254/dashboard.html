@@ -1192,8 +1192,12 @@ async function init(){
 
     scwLoaded=true;
     scwInit();
-    Tour.maybeStart();
-  }catch(err){console.error('Init error:',err);window.location.href='/login';}
+    try{ Tour.maybeStart(); }catch(tourErr){ console.error('Tour error (non-fatal):',tourErr); }
+  }catch(err){
+    console.error('Init error:',err);
+    document.getElementById('loading-screen').innerHTML =
+      '<p style="color:white;max-width:320px;text-align:center">Something went wrong loading your dashboard. Please refresh the page.<br><span style="opacity:.6;font-size:11px">'+escHtml(err.message||String(err))+'</span></p>';
+  }
 }
 
 async function loadProfile(){
@@ -2204,6 +2208,11 @@ function toggleSidebar(){
   document.getElementById('sidebar-overlay').classList.toggle('open');
   document.getElementById('hamburger-btn')?.setAttribute('aria-expanded',isOpen);
 }
+function openSidebar(){
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebar-overlay').classList.add('open');
+  document.getElementById('hamburger-btn')?.setAttribute('aria-expanded','true');
+}
 function closeSidebar(){
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('sidebar-overlay').classList.remove('open');
@@ -2442,14 +2451,19 @@ async function scwLoadTickets(){
     .order('last_msg_at',{ascending:false});
   if(error){console.error(error);return;}
   const prevById={};scwTickets.forEach(t=>{prevById[t.id]=t;});
+  const prevIds=scwTickets.map(t=>t.id).sort().join(',');
   scwTickets=(data||[]).map(t=>{
     const prev=prevById[t.id];
     return{...t,status:t.status||(t.is_resolved?'resolved':'open'),_messages:prev?prev._messages:null,_unread:prev?prev._unread:0,_topicId:prev?prev._topicId:null,_botMsgs:prev?prev._botMsgs:{},_suggested:prev?prev._suggested:false,_clarified:prev?prev._clarified:false,_textSuggested:prev?prev._textSuggested:false,_renderedCount:prev?prev._renderedCount:0};
   });
+  const newIds=scwTickets.map(t=>t.id).sort().join(',');
   await scwRefreshUnreadCounts();
   scwRefreshListViews();
   scwUpdateBadges();
-  scwSubscribeRealtime();
+  // Only tear down/rebuild the realtime channel when the ticket id set
+  // actually changed (or we don't have a live channel yet) — not on
+  // every 45s poll, which was causing constant reconnect/flicker.
+  if(newIds!==prevIds||!scwChannel)scwSubscribeRealtime();
 }
 
 // ── Real-time: instant delivery of new admin messages, even mid-conversation ──
