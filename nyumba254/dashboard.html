@@ -71,7 +71,8 @@
     .btn:disabled{opacity:.55;cursor:not-allowed}
     .spinner-sm{width:13px;height:13px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
     @keyframes spin{to{transform:rotate(360deg)}}
-    .card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg)}
+    .card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);transition:box-shadow .18s ease}
+    .card:hover{box-shadow:0 4px 18px rgba(0,0,0,0.05)}
     .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
     .section-head h2{font-size:17px;font-weight:600;color:var(--text)}
     .status{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;letter-spacing:.03em}
@@ -130,8 +131,9 @@
     .switch input:checked + .switch-track{background:var(--green)}
     .switch input:checked + .switch-track::after{transform:translateX(18px)}
     .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px}
-    .stat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 22px;position:relative;overflow:hidden}
-    .stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--green)}
+    .stat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 22px;position:relative;overflow:hidden;transition:transform .18s ease,box-shadow .18s ease}
+    .stat-card:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,0,0,0.08)}
+    .stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--green),var(--green-mid))}
     .stat-card.gold::after{background:var(--gold)}
     .stat-card.amber::after{background:var(--amber)}
     .stat-card.blue::after{background:#2563eb}
@@ -813,8 +815,10 @@
       <div class="section-head">
         <h2>Rent &amp; Tenant Ledger</h2>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-outline" id="btn-remind-overdue" style="display:none;color:var(--red);border-color:var(--red)" onclick="sendAllOverdueReminders()">✉️ Remind all overdue</button>
           <button class="btn btn-outline" id="btn-export-rl-csv" style="display:none" onclick="exportRentLedgerCSV()">⬇️ CSV</button>
           <button class="btn btn-outline" id="btn-export-rl-pdf" style="display:none" onclick="exportRentLedgerPDF()">⬇️ Rent roll PDF</button>
+          <button class="btn btn-outline" id="btn-export-rl-annual" style="display:none" onclick="exportAnnualReport()">📊 Annual report</button>
           <button class="btn btn-primary" id="btn-add-rental-unit" style="display:none;background:#7c3aed" onclick="openAddRentalUnitModal()">
             <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add rental unit
           </button>
@@ -834,12 +838,14 @@
         <div class="rl-tabs">
           <button class="rl-tab active" data-tab="units" onclick="rlSetTab('units')">Units</button>
           <button class="rl-tab" data-tab="ledger" onclick="rlSetTab('ledger')">Full 12-month ledger</button>
+          <button class="rl-tab" data-tab="analytics" onclick="rlSetTab('analytics')">📈 Analytics</button>
         </div>
         <div class="rl-toolbar">
           <input type="text" placeholder="Search unit or tenant…" oninput="rlFilterInput(this.value)"/>
         </div>
         <div id="rental-units-list"><div style="padding:30px;text-align:center;color:var(--text-3);font-size:13px">Loading…</div></div>
         <div id="rl-ledger-wrap" class="card" style="padding:18px 20px;display:none"></div>
+        <div id="rl-analytics-wrap" style="display:none"></div>
       </div>
     </div>
 
@@ -1648,6 +1654,12 @@ async function loadRelationshipManager(sub){
   content.innerHTML=`${escHtml(name)||'Your manager'} is your direct contact for anything on Nyumba254.${phone?` <a href="tel:${escHtml(phone)}" style="color:var(--green);font-weight:600">Call ${escHtml(phone)}</a>`:''}${waLink?` · <a href="${waLink}" target="_blank" style="color:#25D366;font-weight:600">WhatsApp</a>`:''}`;
 }
 
+async function toggleDemandDigest(enabled){
+  const { error } = await db.from('profiles').update({ demand_digest_enabled: enabled }).eq('id', currentUser.id);
+  if(error){ showToast('Could not update: '+error.message,'error'); document.getElementById('demand-digest-toggle').checked=!enabled; return; }
+  currentProfile = {...currentProfile, demand_digest_enabled: enabled};
+  showToast(enabled?'Weekly digest turned on ✓':'Weekly digest turned off','success');
+}
 function eliteActive(){
   const sub = subscriptionInfo();
   return sub.active && sub.plan==='elite';
@@ -1661,7 +1673,9 @@ function updateEliteGatedPages(sub){
   if(dhLocked && dhContent){ dhLocked.style.display = isElite?'none':'block'; dhContent.style.display = isElite?'block':'none'; }
   const addUnitBtn=document.getElementById('btn-add-rental-unit');
   if(addUnitBtn) addUnitBtn.style.display = isElite?'inline-flex':'none';
-  ['btn-export-rl-csv','btn-export-rl-pdf','btn-export-di-csv','btn-export-di-pdf'].forEach(id=>{
+  const digestRow=document.getElementById('demand-digest-row');
+  if(digestRow){ digestRow.style.display = isElite?'flex':'none'; const dt=document.getElementById('demand-digest-toggle'); if(dt) dt.checked=!!currentProfile?.demand_digest_enabled; }
+  ['btn-export-rl-csv','btn-export-rl-pdf','btn-export-rl-annual','btn-remind-overdue','btn-export-di-csv','btn-export-di-pdf'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.style.display = isElite?'inline-flex':'none';
   });
@@ -1752,6 +1766,205 @@ async function loadRentalUnits(){
   renderLeaseAlerts();
   renderRentalUnits();
   renderFullLedgerTable();
+  if(rlActiveTab==='analytics') renderRentAnalytics();
+}
+
+// ── Portfolio analytics ──
+function rlCollectionRateForMonth(monthKey){
+  let roll=0, collected=0;
+  rentalUnitsCache.forEach(u=>{
+    const t=rlActiveTenant(u); if(!t) return;
+    roll += Number(u.monthly_rent)||0;
+    const st = rentStatusForMonth(t, monthKey);
+    const amt = rentAmountForMonth(t, monthKey);
+    if(st==='paid') collected += amt || Number(u.monthly_rent)||0;
+    else if(st==='partial') collected += amt;
+  });
+  return roll>0 ? Math.round((collected/roll)*100) : null;
+}
+function tenantReliability(t){
+  let checked=0, onTime=0;
+  last12Months().filter(m=>m<=currentMonthKey()).forEach(m=>{
+    const st=rentStatusForMonth(t,m);
+    if(st==='paid'||st==='overdue'){ checked++; if(st==='paid') onTime++; }
+  });
+  return checked>0 ? Math.round((onTime/checked)*100) : null;
+}
+function renderRentAnalytics(){
+  const wrap=document.getElementById('rl-analytics-wrap');
+  if(!wrap) return;
+  const months=last6Months();
+  const rates=months.map(rlCollectionRateForMonth);
+  const bars=months.map((m,i)=>{
+    const r=rates[i];
+    const h=r==null?4:Math.max(4,Math.round((r/100)*90));
+    const label=new Date(m+'-01').toLocaleDateString('en-KE',{month:'short'});
+    const color=r==null?'var(--border)':r>=90?'#16a34a':r>=60?'#d97706':'#dc2626';
+    return `<div style="flex:1;text-align:center">
+      <div style="height:90px;display:flex;align-items:flex-end;justify-content:center">
+        <div style="width:70%;height:${h}px;background:${color};border-radius:4px 4px 0 0;transition:height .3s" title="${r==null?'No active tenants':r+'% collected'}"></div>
+      </div>
+      <div style="font-size:10.5px;color:var(--text-3);margin-top:4px">${label}</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text)">${r==null?'—':r+'%'}</div>
+    </div>`;
+  }).join('');
+
+  const overdueList=[];
+  let checkedAll=0, onTimeAll=0;
+  rentalUnitsCache.forEach(u=>{
+    const t=rlActiveTenant(u); if(!t) return;
+    let overdueAmt=0, overdueMonths=0;
+    last12Months().filter(m=>m<currentMonthKey()).forEach(m=>{
+      if(rentStatusForMonth(t,m)==='overdue'){ overdueAmt+=Number(u.monthly_rent)||0; overdueMonths++; }
+    });
+    if(overdueAmt>0) overdueList.push({unit:u,tenant:t,amt:overdueAmt,months:overdueMonths});
+    last12Months().filter(m=>m<=currentMonthKey()).forEach(m=>{
+      const st=rentStatusForMonth(t,m);
+      if(st==='paid'||st==='overdue'){checkedAll++; if(st==='paid')onTimeAll++;}
+    });
+  });
+  overdueList.sort((a,b)=>b.amt-a.amt);
+  const reliabilityAvg = checkedAll>0 ? Math.round((onTimeAll/checkedAll)*100) : null;
+  const occupied=rentalUnitsCache.filter(u=>rlActiveTenant(u)).length;
+  const occRate = rentalUnitsCache.length ? Math.round((occupied/rentalUnitsCache.length)*100) : 0;
+  const portfolioValue = rentalUnitsCache.reduce((s,u)=>s+(Number(u.monthly_rent)||0),0)*12;
+
+  wrap.innerHTML = `
+    <div class="rl-summary-grid" style="margin-bottom:20px">
+      <div class="rl-stat ${occRate>=85?'good':occRate>=60?'warn':'danger'}"><div class="rl-label">Occupancy rate</div><div class="rl-val">${occRate}%</div></div>
+      <div class="rl-stat ${reliabilityAvg==null?'':reliabilityAvg>=85?'good':reliabilityAvg>=60?'warn':'danger'}"><div class="rl-label">On-time payment rate (12mo)</div><div class="rl-val">${reliabilityAvg==null?'—':reliabilityAvg+'%'}</div></div>
+      <div class="rl-stat purple"><div class="rl-label">Annualized portfolio value</div><div class="rl-val">KES ${portfolioValue.toLocaleString('en-KE')}</div></div>
+    </div>
+    <div class="card" style="padding:18px 20px;margin-bottom:16px">
+      <h3 style="font-size:13.5px;font-weight:700;margin-bottom:14px">Collection rate — last 6 months</h3>
+      <div style="display:flex;gap:6px">${bars}</div>
+    </div>
+    <div class="card" style="padding:18px 20px">
+      <h3 style="font-size:13.5px;font-weight:700;margin-bottom:12px">⚠️ Tenants with overdue balances</h3>
+      ${overdueList.length ? overdueList.map(o=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px">
+          <div><strong>${escHtml(o.tenant.full_name)}</strong><div style="font-size:11.5px;color:var(--text-3)">${escHtml(o.unit.unit_label)} · ${o.months} month(s) overdue</div></div>
+          <div style="text-align:right">
+            <div style="font-weight:700;color:var(--red)">KES ${o.amt.toLocaleString('en-KE')}</div>
+            <button class="btn btn-outline btn-sm" style="margin-top:4px" onclick="openTenantDetailModal('${o.unit.id}','${o.tenant.id}')">View</button>
+          </div>
+        </div>`).join('') : '<div style="font-size:12.5px;color:var(--text-3)">No overdue balances — great work! 🎉</div>'}
+    </div>`;
+}
+
+async function sendAllOverdueReminders(){
+  const targets=[];
+  rentalUnitsCache.forEach(u=>{
+    const t=rlActiveTenant(u); if(!t||!t.email) return;
+    const overdue = last12Months().some(m=>m<currentMonthKey() && rentStatusForMonth(t,m)==='overdue');
+    if(overdue) targets.push({unit:u,tenant:t});
+  });
+  if(!targets.length){ showToast('No overdue tenants with an email on file','error'); return; }
+  if(!confirm(`Send an overdue-rent reminder to ${targets.length} tenant(s)?`)) return;
+  const btn=document.getElementById('btn-remind-overdue');
+  if(btn){btn.disabled=true;btn.textContent='Sending…';}
+  for(const {unit,tenant} of targets){
+    const overdueAmt = last12Months().filter(m=>m<currentMonthKey()&&rentStatusForMonth(tenant,m)==='overdue').reduce((s)=>s+(Number(unit.monthly_rent)||0),0);
+    await notifyByEmail('rent_overdue_alert',{
+      tenantName:tenant.full_name, tenantEmail:tenant.email, unitLabel:unit.unit_label,
+      monthlyRent:unit.monthly_rent, overdueAmount:overdueAmt,
+      sellerName:currentProfile?.full_name, sellerEmail:currentUser?.email
+    });
+  }
+  if(btn){btn.disabled=false;btn.textContent='✉️ Remind all overdue';}
+  showToast(`Reminders sent to ${targets.length} tenant(s) ✓`,'success');
+}
+
+async function exportAnnualReport(){
+  if(!rentalUnitsCache.length){showToast('No rental units to report on','error');return;}
+  if(!window.jspdf){showToast('PDF library still loading — try again','error');return;}
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const year=new Date().getFullYear();
+  doc.setFillColor(124,58,237);doc.rect(0,0,210,26,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(18);doc.setTextColor(255,255,255);
+  doc.text(`${year} Annual Rent Report`,14,16);
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(230,230,255);
+  doc.text(`${currentProfile?.full_name||currentUser?.email||''} · Nyumba254 Elite`,14,22);
+  let y=36;
+  let totalCollected=0, totalDue=0;
+  const months=[]; for(let m=0;m<12;m++) months.push(`${year}-${String(m+1).padStart(2,'0')}`);
+  rentalUnitsCache.forEach(u=>{
+    const t=rlActiveTenant(u); if(!t) return;
+    months.forEach(mk=>{
+      totalDue += Number(u.monthly_rent)||0;
+      const amt=rentAmountForMonth(t,mk); const st=rentStatusForMonth(t,mk);
+      if(st==='paid') totalCollected += amt||Number(u.monthly_rent)||0;
+      else if(st==='partial') totalCollected += amt;
+    });
+  });
+  doc.setTextColor(26,26,24);doc.setFont('helvetica','bold');doc.setFontSize(12);
+  doc.text(`Total rent due: KES ${totalDue.toLocaleString('en-KE')}`,14,y);y+=7;
+  doc.text(`Total collected: KES ${totalCollected.toLocaleString('en-KE')}`,14,y);y+=7;
+  doc.text(`Collection rate: ${totalDue>0?Math.round(totalCollected/totalDue*100):0}%`,14,y);y+=10;
+  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255,255,255);
+  doc.setFillColor(124,58,237);doc.rect(14,y-4,182,7,'F');
+  doc.text('Unit',16,y);doc.text('Tenant',60,y);doc.text('Annual rent (KES)',110,y);doc.text('Collected (KES)',155,y);
+  y+=7;
+  doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(74,74,70);
+  rentalUnitsCache.forEach(u=>{
+    if(y>280){doc.addPage();y=20;}
+    const t=rlActiveTenant(u);
+    let collected=0;
+    if(t) months.forEach(mk=>{
+      const amt=rentAmountForMonth(t,mk); const st=rentStatusForMonth(t,mk);
+      if(st==='paid') collected+=amt||Number(u.monthly_rent)||0; else if(st==='partial') collected+=amt;
+    });
+    doc.text(String(u.unit_label).slice(0,26),16,y);
+    doc.text(t?String(t.full_name).slice(0,22):'(vacant)',60,y);
+    doc.text((Number(u.monthly_rent)*12).toLocaleString('en-KE'),110,y);
+    doc.text(collected.toLocaleString('en-KE'),155,y);
+    y+=6.5;
+    doc.setDrawColor(230,230,230);doc.line(14,y-4.5,196,y-4.5);
+  });
+  doc.save(`Nyumba254-Annual-Rent-Report-${year}.pdf`);
+  showToast('Annual report downloaded ✓','success');
+}
+
+function downloadTenantStatementPDF(unitId,tenantId){
+  const u=rentalUnitsCache.find(x=>String(x.id)===String(unitId));
+  const t=u?.tenants?.find(x=>String(x.id)===String(tenantId));
+  if(!u||!t){showToast('Could not find tenant','error');return;}
+  if(!window.jspdf){showToast('PDF library still loading — try again','error');return;}
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  doc.setFillColor(124,58,237);doc.rect(0,0,210,24,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(255,255,255);
+  doc.text('Tenant Payment Statement',14,15);
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(230,230,255);
+  doc.text(`${t.full_name} — ${u.unit_label}`,14,21);
+  let y=34;
+  doc.setTextColor(26,26,24);doc.setFont('helvetica','normal');doc.setFontSize(10);
+  doc.text(`Landlord: ${currentProfile?.full_name||currentUser?.email||''}`,14,y);y+=6;
+  doc.text(`Monthly rent: KES ${Number(u.monthly_rent).toLocaleString('en-KE')}`,14,y);y+=6;
+  if(t.lease_end_date){ doc.text(`Lease ends: ${new Date(t.lease_end_date).toLocaleDateString('en-KE')}`,14,y); y+=6; }
+  const rel=tenantReliability(t);
+  doc.text(`Reliability score: ${rel==null?'Not enough history':rel+'% on-time'}`,14,y);y+=10;
+  doc.setFont('helvetica','bold');doc.setFillColor(124,58,237);doc.setTextColor(255,255,255);
+  doc.rect(14,y-4,182,7,'F');
+  doc.text('Month',16,y);doc.text('Status',90,y);doc.text('Amount (KES)',140,y);
+  y+=7;
+  doc.setFont('helvetica','normal');doc.setTextColor(74,74,70);
+  const payments=(t.rent_payments||[]).slice().sort((a,b)=>new Date(a.period_month)-new Date(b.period_month));
+  let totalPaid=0;
+  payments.forEach(p=>{
+    if(y>280){doc.addPage();y=20;}
+    doc.text(new Date(p.period_month).toLocaleDateString('en-KE',{month:'long',year:'numeric'}),16,y);
+    doc.text(p.status,90,y);
+    doc.text(Number(p.amount||0).toLocaleString('en-KE'),140,y);
+    if(p.status==='paid') totalPaid+=Number(p.amount||0);
+    y+=6.5;
+    doc.setDrawColor(230,230,230);doc.line(14,y-4.5,196,y-4.5);
+  });
+  y+=6;
+  doc.setFont('helvetica','bold');doc.setFontSize(12);doc.setTextColor(8,80,65);
+  doc.text(`Total paid: KES ${totalPaid.toLocaleString('en-KE')}`,14,y);
+  doc.save(`${t.full_name.replace(/[^a-z0-9]+/gi,'-')}-statement.pdf`);
 }
 
 function rlActiveTenant(u){return (u.tenants||[]).find(t=>t.status==='active');}
@@ -1837,6 +2050,8 @@ function rlSetTab(tab){
   document.querySelectorAll('.rl-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
   document.getElementById('rental-units-list').style.display=tab==='units'?'block':'none';
   document.getElementById('rl-ledger-wrap').style.display=tab==='ledger'?'block':'none';
+  document.getElementById('rl-analytics-wrap').style.display=tab==='analytics'?'block':'none';
+  if(tab==='analytics') renderRentAnalytics();
 }
 function rlFilterInput(v){rlSearchQuery=(v||'').toLowerCase();renderRentalUnits();}
 
@@ -1988,7 +2203,9 @@ function openTenantDetailModal(unitId,tenantId){
       <div><strong>Lease ends:</strong> ${t.lease_end_date?new Date(t.lease_end_date).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'}):'—'}</div>
       <div><strong>Deposit:</strong> ${t.deposit_amount?'KES '+Number(t.deposit_amount).toLocaleString('en-KE'):'—'}</div>
       <div><strong>Total collected:</strong> KES ${totalPaid.toLocaleString('en-KE')}</div>
+      <div><strong>Reliability score:</strong> ${(()=>{const r=tenantReliability(t);return r==null?'Not enough history':r+'% on-time';})()}</div>
     </div>
+    <button class="btn btn-outline btn-sm" style="margin-bottom:14px" onclick="downloadTenantStatementPDF('${unitId}','${tenantId}')">⬇️ Download statement PDF</button>
     <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-3);margin-bottom:8px">Payment history</div>
     <div style="max-height:220px;overflow-y:auto">
       ${payments.length?payments.map(p=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:12.5px">
@@ -2186,9 +2403,14 @@ async function loadDemandInsights(){
       const areaAvg=areaAvgCount/Math.max(areaListingCount,1);
       const diff=areaAvg>0?Math.round(((mine-areaAvg)/areaAvg)*100):0;
       const cls=diff>0?'up':diff<0?'down':'';
-      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:12.5px">
-        <span style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%">${escHtml(l.title)}</span>
-        <span>${mine} enquir${mine!==1?'ies':'y'}${areaAvg>0?` <span class="di-trend ${cls}">${diff>=0?'▲':'▼'} ${Math.abs(diff)}% vs area avg</span>`:''}</span>
+      const tip = mine===0 ? '💡 Zero enquiries — try the Instant Valuation tool to check your price against similar listings.'
+        : (diff<-30 ? '💡 Underperforming this area — consider a price review or refreshed photos.' : '');
+      return `<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12.5px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%">${escHtml(l.title)}</span>
+          <span>${mine} enquir${mine!==1?'ies':'y'}${areaAvg>0?` <span class="di-trend ${cls}">${diff>=0?'▲':'▼'} ${Math.abs(diff)}% vs area avg</span>`:''}</span>
+        </div>
+        ${tip?`<div style="color:#7c3aed;margin-top:3px">${tip}</div>`:''}
       </div>`;
     }).join('');
   }else{
