@@ -246,13 +246,13 @@
   async function finishAccept(inviteId, memberEmail){
     const{data:{session}}=await db.auth.getSession();
     if(!session){ setAlert('Something went wrong — please try signing in again.','error'); return; }
-    // Guard: only ever claim an invite that is still 'invited' and matches this email,
-    // so an old/reused link can't silently reassign an already-active seat.
-    const{error}=await db.from('team_members')
-      .update({ member_id: session.user.id, status:'active', joined_at:new Date().toISOString() })
-      .eq('id', inviteId).eq('status','invited');
+    const{data:success,error}=await db.rpc('accept_team_invite',{p_invite_id:Number(inviteId),p_member_email:memberEmail});
     if(error){
       setAlert('Could not finalize the invite: '+error.message,'error');
+      return;
+    }
+    if(!success){
+      setAlert('Could not finalize the invite — make sure you accepted with the exact email it was sent to, and that this invite hasn\'t already been used.','error');
       return;
     }
     show(`
