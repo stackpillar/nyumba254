@@ -992,9 +992,13 @@
               <div class="toggle-label"><strong>Rent &amp; Tenant Ledger</strong><span>Track rent due dates, payments, and tenant history</span></div>
               <span style="font-size:11px;font-weight:700;color:white;background:#7c3aed;padding:3px 9px;border-radius:20px">Elite</span>
             </div>
-            <div class="toggle-row" style="border-bottom:none">
+            <div class="toggle-row">
               <div class="toggle-label"><strong>Demand Insights</strong><span>See which areas buyers are enquiring about most</span></div>
               <span style="font-size:11px;font-weight:700;color:white;background:#7c3aed;padding:3px 9px;border-radius:20px">Elite</span>
+            </div>
+            <div class="toggle-row" id="demand-digest-row" style="display:none;border-bottom:none">
+              <div class="toggle-label"><strong>Weekly demand digest</strong><span>Email me the top opportunity areas every Monday</span></div>
+              <label class="switch"><input type="checkbox" id="demand-digest-toggle" onchange="toggleDemandDigest(this.checked)"/><span class="switch-track"></span></label>
             </div>
             <button id="elite-upgrade-btn" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:14px;background:#7c3aed" onclick="showToast('Elite plans coming soon','')">Upgrade to Elite — from KES 3,000/mo</button>
             <button id="elite-storefront-btn" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:10px;display:none" onclick="copyStorefrontLink()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy my storefront link</button>
@@ -1172,6 +1176,7 @@
       <div class="form-group"><label>Unit label</label><input type="text" id="ru-label" placeholder="e.g. Milimani Court, Unit 4B"/></div>
       <div class="form-group"><label>Link to an existing listing (optional)</label><select id="ru-listing"></select></div>
       <div class="form-group"><label>Monthly rent (KES)</label><input type="number" id="ru-rent" min="0"/></div>
+      <div class="form-group"><label>Late fee (% per overdue month, optional)</label><input type="number" id="ru-late-fee" min="0" step="0.5" placeholder="e.g. 5"/></div>
       <div class="form-group"><label>Notes</label><textarea id="ru-notes" placeholder="Optional — anything worth remembering about this unit"></textarea></div>
     </div>
     <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-add-rental-unit')">Cancel</button><button class="btn btn-primary" id="btn-save-rental-unit" onclick="saveRentalUnit()">Add unit</button></div>
@@ -1815,7 +1820,7 @@ function renderRentAnalytics(){
     const t=rlActiveTenant(u); if(!t) return;
     let overdueAmt=0, overdueMonths=0;
     last12Months().filter(m=>m<currentMonthKey()).forEach(m=>{
-      if(rentStatusForMonth(t,m)==='overdue'){ overdueAmt+=Number(u.monthly_rent)||0; overdueMonths++; }
+      if(rentStatusForMonth(t,m)==='overdue'){ overdueAmt+=overdueAmountForUnit(u,1); overdueMonths++; }
     });
     if(overdueAmt>0) overdueList.push({unit:u,tenant:t,amt:overdueAmt,months:overdueMonths});
     last12Months().filter(m=>m<=currentMonthKey()).forEach(m=>{
@@ -1864,7 +1869,8 @@ async function sendAllOverdueReminders(){
   const btn=document.getElementById('btn-remind-overdue');
   if(btn){btn.disabled=true;btn.textContent='Sending…';}
   for(const {unit,tenant} of targets){
-    const overdueAmt = last12Months().filter(m=>m<currentMonthKey()&&rentStatusForMonth(tenant,m)==='overdue').reduce((s)=>s+(Number(unit.monthly_rent)||0),0);
+    const overdueMonthCount = last12Months().filter(m=>m<currentMonthKey()&&rentStatusForMonth(tenant,m)==='overdue').length;
+    const overdueAmt = overdueAmountForUnit(unit, overdueMonthCount);
     await notifyByEmail('rent_overdue_alert',{
       tenantName:tenant.full_name, tenantEmail:tenant.email, unitLabel:unit.unit_label,
       monthlyRent:unit.monthly_rent, overdueAmount:overdueAmt,
@@ -1991,6 +1997,15 @@ function last12Months(){
   return out;
 }
 
+// Rent owed for a specific overdue month, including any configured late fee —
+// used everywhere "overdue amount" is shown so the number a seller sees
+// actually matches what they'd ask the tenant for.
+function overdueAmountForUnit(u,monthsOverdue){
+  const base=Number(u.monthly_rent)||0;
+  const pct=Number(u.late_fee_percent)||0;
+  return Math.round(base*monthsOverdue*(1+pct/100));
+}
+
 // ── Portfolio summary — the numbers a landlord actually opens this page for ──
 function renderRentLedgerSummary(){
   const el=document.getElementById('rl-summary-grid');
@@ -2011,7 +2026,7 @@ function renderRentLedgerSummary(){
   rentalUnitsCache.forEach(u=>{
     const t=rlActiveTenant(u);if(!t)return;
     last12Months().filter(m=>m<mKey).forEach(m=>{
-      if(rentStatusForMonth(t,m)==='overdue'){overdueAmt+=Number(u.monthly_rent)||0;overdueCount++;}
+      if(rentStatusForMonth(t,m)==='overdue'){overdueAmt+=overdueAmountForUnit(u,1);overdueCount++;}
     });
   });
   const collectionRate=rentRoll>0?Math.round((collected/rentRoll)*100):0;
@@ -2125,11 +2140,12 @@ function openAddRentalUnitModal(){
 async function saveRentalUnit(){
   const label=document.getElementById('ru-label').value.trim();
   const rent=parseFloat(document.getElementById('ru-rent').value)||0;
+  const lateFeePct=parseFloat(document.getElementById('ru-late-fee').value)||0;
   const listingId=document.getElementById('ru-listing').value||null;
   const notes=document.getElementById('ru-notes').value.trim()||null;
   if(!label){showToast('Please name the unit','error');return;}
   const btn=document.getElementById('btn-save-rental-unit');btn.disabled=true;btn.textContent='Saving…';
-  const{error}=await db.from('rental_units').insert({seller_id:currentUser.id,listing_id:listingId,unit_label:label,monthly_rent:rent,notes});
+  const{error}=await db.from('rental_units').insert({seller_id:currentUser.id,listing_id:listingId,unit_label:label,monthly_rent:rent,late_fee_percent:lateFeePct,notes});
   btn.disabled=false;btn.textContent='Add unit';
   if(error){showToast('Could not save: '+error.message,'error');return;}
   closeModal('modal-add-rental-unit');
