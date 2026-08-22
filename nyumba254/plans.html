@@ -18,11 +18,16 @@
   }
   html{scroll-behavior:smooth}
   body{font-family:'Inter',sans-serif;color:var(--text);background:var(--surface);line-height:1.6;min-height:100vh}
-  a{color:inherit}
+  a{color:inherit;text-decoration:none}
   /* subtle roof-motif watermark, this brand's own mark, echoed instead of a generic icon */
   body::before{
     content:'';position:fixed;top:-160px;right:-160px;width:520px;height:520px;
-    background:radial-gradient(circle at center, rgba(15,110,86,0.05), transparent 70%);
+    background:radial-gradient(circle at center, rgba(15,110,86,0.06), transparent 70%);
+    pointer-events:none;z-index:0;
+  }
+  body::after{
+    content:'';position:fixed;bottom:-200px;left:-180px;width:480px;height:480px;
+    background:radial-gradient(circle at center, rgba(186,117,23,0.05), transparent 70%);
     pointer-events:none;z-index:0;
   }
   .wrap{max-width:1080px;margin:0 auto;padding:56px 24px 90px;position:relative;z-index:1}
@@ -56,10 +61,29 @@
   .top-logo-icon svg{width:17px;height:17px;stroke:white;fill:none;stroke-width:2;stroke-linecap:round}
   .top-logo-text{font-family:'Playfair Display',serif;font-weight:700;font-size:19px;color:var(--green-dark)}
 
-  .hero{text-align:center;max-width:620px;margin:0 auto 40px}
-  .hero-eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
-  .hero h1{font-family:'Playfair Display',serif;font-weight:700;font-size:clamp(28px,4vw,40px);color:var(--text);line-height:1.15;margin-bottom:14px}
-  .hero p{font-size:15px;color:var(--text-2);line-height:1.7}
+  .hero{text-align:center;max-width:640px;margin:24px auto 0}
+  .hero-eyebrow{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-dark,#8a5a12);
+    background:var(--gold-light);padding:6px 16px;border-radius:20px;margin-bottom:20px;
+  }
+  .hero h1{
+    font-family:'Playfair Display',serif;font-weight:700;font-size:clamp(30px,4.6vw,46px);
+    color:var(--text);line-height:1.12;margin-bottom:16px;letter-spacing:-.01em;
+  }
+  .hero p{font-size:16px;color:var(--text-2);line-height:1.75}
+
+  /* trust strip under the hero copy */
+  .plans-trust{
+    display:flex;justify-content:center;gap:28px;flex-wrap:wrap;
+    margin:30px 0 8px;padding:16px 20px;
+    background:var(--white);border:1px solid var(--border);border-radius:999px;
+    max-width:fit-content;margin-left:auto;margin-right:auto;
+    box-shadow:0 1px 2px rgba(0,0,0,0.03);
+  }
+  .plans-trust-item{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--text-2);white-space:nowrap}
+  .plans-trust-item svg{width:15px;height:15px;stroke:var(--green);fill:none;stroke-width:2;flex-shrink:0}
+  @media(max-width:640px){.plans-trust{border-radius:var(--radius-lg);gap:14px 22px}}
 
   /* billing toggle */
   .billing-toggle{display:flex;align-items:center;justify-content:center;gap:14px;margin:36px 0 44px}
@@ -73,9 +97,19 @@
   .plans{display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px;align-items:stretch}
   @media(max-width:980px){.plans{grid-template-columns:1fr}}
 
-  .plan{background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:32px 30px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+  .plan{
+    background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius-lg);
+    padding:32px 30px;display:flex;flex-direction:column;position:relative;overflow:hidden;
+    transition:transform .2s ease, box-shadow .2s ease;
+  }
+  .plan:hover{transform:translateY(-4px)}
+  .plan.free:hover{box-shadow:0 1px 3px rgba(0,0,0,0.06),0 20px 40px rgba(0,0,0,0.06)}
+  .plan.premium{box-shadow:0 1px 3px rgba(0,0,0,0.06),0 18px 44px rgba(15,110,86,0.1);transform:scale(1.02)}
+  .plan.premium:hover{transform:scale(1.02) translateY(-4px)}
   .plan.elite{border-color:var(--gold);box-shadow:0 1px 3px rgba(0,0,0,0.06),0 18px 44px rgba(186,117,23,0.12)}
+  .plan.elite:hover{box-shadow:0 1px 3px rgba(0,0,0,0.06),0 26px 52px rgba(186,117,23,0.18)}
   .plan-ribbon{position:absolute;top:18px;right:-34px;transform:rotate(40deg);background:var(--gold);color:white;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:5px 42px}
+  @media(max-width:980px){.plan.premium{transform:none}.plan.premium:hover{transform:translateY(-4px)}}
 
   .plan-eyebrow{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
   .plan.premium .plan-eyebrow{color:var(--green)}
@@ -88,11 +122,11 @@
   .plan-price .period{font-size:14px;color:var(--text-3);font-weight:500}
   .plan-price-note{font-size:12px;color:var(--text-3);margin-bottom:24px;min-height:16px}
 
-  .plan-cta{display:block;text-align:center;padding:13px 20px;border-radius:var(--radius);font-size:14px;font-weight:700;border:none;cursor:pointer;transition:all .15s;margin-bottom:26px;text-decoration:none}
-  .plan.premium .plan-cta{background:var(--green);color:white}
-  .plan.premium .plan-cta:hover{background:var(--green-dark)}
-  .plan.elite .plan-cta{background:var(--gold);color:white}
-  .plan.elite .plan-cta:hover{background:#9c6212}
+  .plan-cta{display:block;text-align:center;padding:14px 20px;border-radius:var(--radius);font-size:14.5px;font-weight:700;border:none;cursor:pointer;transition:all .18s ease;margin-bottom:26px;text-decoration:none;letter-spacing:.01em}
+  .plan.premium .plan-cta{background:var(--green);color:white;box-shadow:0 4px 14px rgba(15,110,86,0.28)}
+  .plan.premium .plan-cta:hover{background:var(--green-dark);box-shadow:0 6px 20px rgba(15,110,86,0.36);transform:translateY(-1px)}
+  .plan.elite .plan-cta{background:var(--gold);color:white;box-shadow:0 4px 14px rgba(186,117,23,0.28)}
+  .plan.elite .plan-cta:hover{background:#9c6212;box-shadow:0 6px 20px rgba(186,117,23,0.36);transform:translateY(-1px)}
 
   .feat-list{list-style:none;display:flex;flex-direction:column;gap:13px;flex:1}
   .feat-list li{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;color:var(--text-2);line-height:1.5}
@@ -110,7 +144,10 @@
   .plan-divider{border-top:1px solid var(--border);margin:24px 0 18px}
   .plan-footnote{font-size:11.5px;color:var(--text-3);line-height:1.6}
 
-  .compare-note{max-width:620px;margin:52px auto 0;text-align:center;font-size:12.5px;color:var(--text-3);line-height:1.7;padding-top:28px;border-top:1px solid var(--border)}
+  .compare-note{
+    max-width:640px;margin:56px auto 0;text-align:center;font-size:13px;color:var(--text-3);line-height:1.75;
+    padding:22px 28px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);
+  }
   .compare-note strong{color:var(--text-2)}
 
   .cs-toast{
@@ -133,13 +170,18 @@
     Nyumba254
   </a>
   <div class="nav-links">
-    <a href="/" class="nav-link">Home</a>
     <a href="/listings" class="nav-link">Browse</a>
     <a href="/how-it-works" class="nav-link">How it works</a>
     <a href="/about" class="nav-link">About us</a>
+    <a href="/pricing" class="nav-link" style="color:var(--green);font-weight:600">Pricing</a>
     <a href="/faq" class="nav-link">FAQ</a>
     <a href="/login" class="nav-link" id="nav-account-link">Sign in</a>
-    <a href="/dashboard" class="btn-primary">My dashboard</a>
+    <a href="/saved" class="nav-link">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      Saved
+      <span class="nav-count" id="nav-count-badge" style="display:none">0</span>
+    </a>
+    <a href="/post-listing" class="btn-primary">List your apartment</a>
   </div>
   <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Open menu" aria-expanded="false" id="mobile-menu-btn">
     <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -147,21 +189,28 @@
 </nav>
 
 <div class="mobile-nav" id="mobile-nav">
-  <a href="/">Home</a>
   <a href="/listings">Browse</a>
   <a href="/how-it-works">How it works</a>
   <a href="/about">About us</a>
+  <a href="/pricing" style="color:var(--green);font-weight:600">Pricing</a>
   <a href="/faq">FAQ</a>
   <a href="/login" id="mobile-account-link">Sign in</a>
-  <a href="/dashboard" class="btn-primary">My dashboard</a>
+  <a href="/saved">Saved <span class="nav-count" id="nav-count-badge-mobile" style="display:none">0</span></a>
+  <a href="/post-listing" class="btn-primary">List your apartment</a>
 </div>
 
 <div class="wrap">
 
   <div class="hero">
-    <div class="hero-eyebrow">Seller plans</div>
+    <div class="hero-eyebrow">✨ Seller plans</div>
     <h1>List smarter, close faster</h1>
     <p>Free listings stay free. These plans add the tools sellers ask for most — from a badge buyers trust to a whole website for your listings.</p>
+  </div>
+
+  <div class="plans-trust">
+    <div class="plans-trust-item"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>No agents, ever</div>
+    <div class="plans-trust-item"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Pay via M-Pesa</div>
+    <div class="plans-trust-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Cancel any time</div>
   </div>
 
   <div class="billing-toggle">
@@ -255,6 +304,8 @@
 <div class="cs-toast" id="cs-toast">Premium plans are coming soon 🎉</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="saved-listings.js"></script>
+<script src="nav-badge.js"></script>
 <script>
   const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
@@ -278,6 +329,7 @@
     applyPrice('elite', 'elite_monthly_price', 'elite_yearly_price');
   }
   loadLivePrices();
+  if (typeof NKSaved !== 'undefined') NKSaved.init();
 
   function toggleMobileMenu() {
     const nav = document.getElementById('mobile-nav');
