@@ -1733,12 +1733,13 @@ async function inviteTeamMember(){
   const{count}=await db.from('team_members').select('*',{count:'exact',head:true}).eq('owner_id',currentUser.id);
   if((count||0)>=limit){showToast('You\'ve used all your team seats for this plan','error');return;}
   const btn=document.getElementById('team-invite-btn');btn.disabled=true;btn.textContent='Inviting…';
-  const{data:invite,error}=await db.from('team_members').insert({owner_id:currentUser.id,member_email:email,status:'invited'}).select().single();
+  const inviteToken=crypto.randomUUID();
+  const{data:invite,error}=await db.from('team_members').insert({owner_id:currentUser.id,member_email:email,status:'invited',invite_token:inviteToken}).select().single();
   btn.disabled=false;btn.textContent='Invite';
   if(error){showToast('Could not invite: '+error.message,'error');return;}
   emailEl.value='';
   showToast('Invite sent ✓','success');
-  fetch(`${EDGE_URL}/send-notification-email`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`},body:JSON.stringify({type:'team_invite',audience:'seller',sellerEmail:email,sellerName:email.split('@')[0],ownerName:currentProfile?.full_name||currentUser?.email,inviteToken:invite?.invite_token})}).catch(()=>{});
+  fetch(`${EDGE_URL}/send-notification-email`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`},body:JSON.stringify({type:'team_invite',audience:'seller',sellerEmail:email,sellerName:email.split('@')[0],ownerName:currentProfile?.full_name||currentUser?.email,inviteToken:inviteToken})}).catch(()=>{});
   loadTeamSeats(subscriptionInfo());
 }
 
