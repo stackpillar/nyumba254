@@ -655,8 +655,9 @@
       <button class="nav-item" id="nav-settings" onclick="showPage('settings')">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Settings
       </button>
-      <a href="/plans" class="nav-item">
-        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Upgrade to Premium
+      <a href="/plans" class="nav-item" id="nav-premium-upgrade">
+        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <span id="nav-premium-upgrade-text">Upgrade to Premium</span>
       </a>
       <a href="/" class="nav-item">
         <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>View site
@@ -1655,6 +1656,7 @@ function loadSubscriptionUI(){
   updatePremiumSectionUI(sub);
   updateEliteSectionUI(sub);
   syncProBadge(sub);
+  updatePremiumNavBadge(sub);
   updateConciergeGate(sub);
   updateSmsAlertsGate(sub);
   updateEliteGatedPages(sub);
@@ -1784,6 +1786,38 @@ async function syncProBadge(sub){
   if(currentProfile && currentProfile.is_pro !== shouldBePro){
     const{error} = await db.from('profiles').update({ is_pro: shouldBePro }).eq('id', currentUser.id);
     if(!error) currentProfile = { ...currentProfile, is_pro: shouldBePro };
+  }
+}
+
+// ── Sidebar "Upgrade to Premium" link → Pro badge once subscribed ──
+// - No active subscription: plain "Upgrade to Premium" link (as before).
+// - Active Premium (not Elite): shows a Pro badge but stays clickable,
+//   since a Premium seller can still upgrade further to Elite.
+// - Active Elite: top tier — nothing left to upgrade to, so the link
+//   becomes a static, disabled badge (no href, no click).
+function updatePremiumNavBadge(sub){
+  const link = document.getElementById('nav-premium-upgrade');
+  const textEl = document.getElementById('nav-premium-upgrade-text');
+  if(!link || !textEl) return;
+
+  if(sub.active && sub.plan==='elite'){
+    textEl.innerHTML = '👑 Elite member';
+    link.removeAttribute('href');
+    link.style.cursor = 'default';
+    link.style.opacity = '0.85';
+    link.onclick = (e)=>e.preventDefault();
+  } else if(sub.active && sub.plan==='premium'){
+    textEl.innerHTML = '⭐ Pro · Upgrade to Elite';
+    link.setAttribute('href','/plans');
+    link.style.cursor = 'pointer';
+    link.style.opacity = '1';
+    link.onclick = null;
+  } else {
+    textEl.textContent = 'Upgrade to Premium';
+    link.setAttribute('href','/plans');
+    link.style.cursor = 'pointer';
+    link.style.opacity = '1';
+    link.onclick = null;
   }
 }
 
