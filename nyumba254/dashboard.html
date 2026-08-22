@@ -1034,6 +1034,7 @@
             <button id="elite-upgrade-btn" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:14px;background:#7c3aed" onclick="showToast('Elite plans coming soon','')">Upgrade to Elite — from KES 3,000/mo</button>
             <button id="elite-storefront-btn" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:10px;display:none" onclick="copyStorefrontLink()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy my storefront link</button>
             <button id="elite-valuation-btn" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:10px;display:none" onclick="openValuationModal()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Instant Valuation Tool</button>
+            <button id="elite-ai-listing-btn" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:10px;display:none" onclick="openAiListingModal()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>AI Listing Assistant</button>
           </div>
           <div class="settings-section" id="settings-team-section" style="display:none">
             <h3><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Team seats</h3>
@@ -1197,6 +1198,39 @@
       <div id="val-results" style="margin-top:18px"></div>
     </div>
     <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-valuation')">Close</button><button class="btn btn-primary" id="btn-run-valuation" onclick="runValuation()">Get valuation</button></div>
+  </div>
+</div>
+
+<!-- AI LISTING ASSISTANT MODAL -->
+<div class="modal-overlay" id="modal-ai-listing">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-head"><h3>AI Listing Assistant</h3><div class="modal-close" onclick="closeModal('modal-ai-listing')" role="button" tabindex="0" aria-label="Close" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeModal('modal-ai-listing')}">✕</div></div>
+    <div class="modal-body">
+      <p style="font-size:12.5px;color:var(--text-3);margin-bottom:16px;line-height:1.6">Jot down a few bullet points about the property and let AI draft a polished title, description, and a suggested price range based on similar listings.</p>
+      <div class="form-group"><label>Apply to an existing listing (optional)</label><select id="ai-listing-select" onchange="document.getElementById('btn-apply-ai-listing').style.display = (this.value && aiListingLastResult) ? 'inline-flex' : 'none'"><option value="">Just generate text — I'll copy it myself</option></select></div>
+      <div class="form-grid">
+        <div class="form-group"><label>Category</label><select id="ai-listing-category"><option value="standard">Standard</option><option value="student">Student</option><option value="luxury">Luxury</option><option value="commercial">Shops & offices</option></select></div>
+        <div class="form-group"><label>Sale or rent</label><select id="ai-listing-price-type"><option value="rent">To let (monthly)</option><option value="sale">For sale</option></select></div>
+        <div class="form-group"><label>Bedrooms</label><input type="number" id="ai-listing-bedrooms" min="0" max="20" placeholder="e.g. 2"/></div>
+        <div class="form-group"><label>Area</label><input type="text" id="ai-listing-area" placeholder="e.g. Milimani, Kisumu"/></div>
+      </div>
+      <div class="form-group"><label>Key features (one per line)</label><textarea id="ai-listing-notes" placeholder="e.g.&#10;Newly painted, tiled floors&#10;Gated compound with 24/7 security&#10;5 min walk to Kondele market&#10;Backup water tank" style="min-height:100px"></textarea></div>
+      <div class="form-group"><label>Current asking price (KES) — optional, helps the price suggestion</label><input type="number" id="ai-listing-price" min="0" placeholder="e.g. 15000"/></div>
+      <div id="ai-listing-usage-note" style="font-size:11.5px;color:var(--text-3);margin-top:4px"></div>
+      <div id="ai-listing-results" style="margin-top:18px;display:none">
+        <div style="height:1px;background:var(--border);margin-bottom:16px"></div>
+        <div class="form-group"><label>Generated title <button type="button" onclick="copyAiField('ai-listing-out-title')" style="float:right;background:none;border:none;color:var(--green);font-weight:700;font-size:11px;cursor:pointer;text-transform:none;letter-spacing:0">Copy</button></label><input type="text" id="ai-listing-out-title"/></div>
+        <div class="form-group"><label>Generated description <button type="button" onclick="copyAiField('ai-listing-out-desc')" style="float:right;background:none;border:none;color:var(--green);font-weight:700;font-size:11px;cursor:pointer;text-transform:none;letter-spacing:0">Copy</button></label><textarea id="ai-listing-out-desc" style="min-height:130px"></textarea></div>
+        <div style="background:var(--green-light);border-radius:var(--radius);padding:12px 14px;font-size:13px;color:var(--green-dark)">
+          <strong>Suggested price:</strong> <span id="ai-listing-out-price">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('modal-ai-listing')">Close</button>
+      <button class="btn btn-outline" id="btn-apply-ai-listing" style="display:none" onclick="applyAiListingToSelected()">Apply to selected listing</button>
+      <button class="btn btn-primary" id="btn-generate-ai-listing" style="background:#7c3aed" onclick="generateAiListing()">✨ Generate</button>
+    </div>
   </div>
 </div>
 
@@ -1746,6 +1780,7 @@ function updateEliteSectionUI(sub){
   const banner = document.getElementById('elite-status-banner');
   const storefrontBtn = document.getElementById('elite-storefront-btn');
   const valuationBtn = document.getElementById('elite-valuation-btn');
+  const aiListingBtn = document.getElementById('elite-ai-listing-btn');
   if(!btn || !banner) return;
   if(sub.active && sub.plan==='elite'){
     const exp = sub.expiresAt ? ` — renews/expires ${fmtSubDate(sub.expiresAt)}` : '';
@@ -1754,11 +1789,13 @@ function updateEliteSectionUI(sub){
     btn.style.display = 'none';
     if(storefrontBtn) storefrontBtn.style.display = 'inline-flex';
     if(valuationBtn) valuationBtn.style.display = 'inline-flex';
+    if(aiListingBtn) aiListingBtn.style.display = 'inline-flex';
   } else {
     banner.style.display = 'none';
     btn.style.display = 'inline-flex';
     if(storefrontBtn) storefrontBtn.style.display = 'none';
     if(valuationBtn) valuationBtn.style.display = 'none';
+    if(aiListingBtn) aiListingBtn.style.display = 'none';
   }
 }
 
@@ -2642,6 +2679,117 @@ async function runValuation(){
   }finally{
     btn.disabled=false; btn.textContent='Get valuation';
   }
+}
+
+// ── AI Listing Assistant (Elite) ──────────────────────────────────
+let eliteAiListingLimit = 20;
+let aiListingLastResult = null;
+
+async function loadAiListingLimit(){
+  try{
+    const{data}=await db.from('platform_settings').select('value').eq('key','elite_ai_listing_uses_monthly').maybeSingle();
+    if(data?.value) eliteAiListingLimit = Number(data.value)||eliteAiListingLimit;
+  }catch(e){/* fall back to default */}
+}
+
+async function openAiListingModal(){
+  await loadAiListingLimit();
+  const sel=document.getElementById('ai-listing-select');
+  sel.innerHTML='<option value="">Just generate text — I\'ll copy it myself</option>'+allListings.map(l=>`<option value="${l.id}">${escHtml(l.title)}</option>`).join('');
+  document.getElementById('ai-listing-category').value='standard';
+  document.getElementById('ai-listing-price-type').value='rent';
+  document.getElementById('ai-listing-bedrooms').value='';
+  document.getElementById('ai-listing-area').value=allListings[0]?.area||'';
+  document.getElementById('ai-listing-notes').value='';
+  document.getElementById('ai-listing-price').value='';
+  document.getElementById('ai-listing-results').style.display='none';
+  document.getElementById('btn-apply-ai-listing').style.display='none';
+  aiListingLastResult=null;
+  const monthKey = currentMonthKey();
+  const usedThisMonth = (currentProfile?.ai_listing_uses_month===monthKey) ? (currentProfile?.ai_listing_uses_count||0) : 0;
+  document.getElementById('ai-listing-usage-note').textContent = `${Math.max(0,eliteAiListingLimit-usedThisMonth)} of ${eliteAiListingLimit} generations left this month`;
+  openModal('modal-ai-listing');
+}
+
+async function generateAiListing(){
+  const monthKey = currentMonthKey();
+  const usedThisMonth = (currentProfile?.ai_listing_uses_month===monthKey) ? (currentProfile?.ai_listing_uses_count||0) : 0;
+  if(usedThisMonth >= eliteAiListingLimit){
+    showToast(`You've used all ${eliteAiListingLimit} AI generations for this month — resets next month.`,'error');
+    return;
+  }
+  const notes = document.getElementById('ai-listing-notes').value.trim();
+  if(!notes){ showToast('Add a few bullet points about the property first','error'); return; }
+
+  const payload = {
+    category: document.getElementById('ai-listing-category').value,
+    priceType: document.getElementById('ai-listing-price-type').value,
+    bedrooms: document.getElementById('ai-listing-bedrooms').value || null,
+    area: document.getElementById('ai-listing-area').value.trim(),
+    notes,
+    currentPrice: document.getElementById('ai-listing-price').value || null,
+  };
+
+  const btn=document.getElementById('btn-generate-ai-listing');
+  btn.disabled=true; btn.textContent='Generating…';
+  const resultsEl=document.getElementById('ai-listing-results');
+
+  try{
+    const{data:{session}}=await db.auth.getSession();
+    if(!session) throw new Error('Please sign in again');
+    const res=await fetch(`${EDGE_URL}/ai-listing-generate`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${session.access_token}`},
+      body:JSON.stringify(payload),
+    });
+    const body=await res.json();
+    if(!res.ok||body.error) throw new Error(body.error||'Generation failed');
+
+    aiListingLastResult = body;
+    document.getElementById('ai-listing-out-title').value = body.title||'';
+    document.getElementById('ai-listing-out-desc').value = body.description||'';
+    const priceEl=document.getElementById('ai-listing-out-price');
+    if(body.suggestedPriceMin && body.suggestedPriceMax){
+      const suffix = payload.priceType==='rent' ? '/mo' : '';
+      priceEl.textContent = body.suggestedPriceMin===body.suggestedPriceMax
+        ? `KES ${Number(body.suggestedPriceMin).toLocaleString('en-KE')}${suffix}`
+        : `KES ${Number(body.suggestedPriceMin).toLocaleString('en-KE')} – ${Number(body.suggestedPriceMax).toLocaleString('en-KE')}${suffix}`;
+    } else {
+      priceEl.textContent = 'Not enough comparable listings yet in this area/category';
+    }
+    resultsEl.style.display='block';
+    document.getElementById('btn-apply-ai-listing').style.display = document.getElementById('ai-listing-select').value ? 'inline-flex' : 'none';
+
+    currentProfile = { ...currentProfile, ai_listing_uses_month: monthKey, ai_listing_uses_count: body.usedCount };
+    document.getElementById('ai-listing-usage-note').textContent = `${Math.max(0,eliteAiListingLimit-body.usedCount)} of ${eliteAiListingLimit} generations left this month`;
+  }catch(e){
+    showToast('Could not generate: '+(e.message||String(e)),'error');
+  }finally{
+    btn.disabled=false; btn.textContent='✨ Generate';
+  }
+}
+
+function copyAiField(id){
+  const el=document.getElementById(id);
+  navigator.clipboard.writeText(el.value).then(()=>showToast('Copied ✓','success')).catch(()=>showToast('Could not copy','error'));
+}
+
+async function applyAiListingToSelected(){
+  const listingId=document.getElementById('ai-listing-select').value;
+  if(!listingId||!aiListingLastResult){showToast('Nothing to apply','error');return;}
+  const title=document.getElementById('ai-listing-out-title').value.trim();
+  const description=document.getElementById('ai-listing-out-desc').value.trim();
+  if(!title||!description){showToast('Title and description can\'t be empty','error');return;}
+  const btn=document.getElementById('btn-apply-ai-listing');
+  btn.disabled=true;btn.textContent='Applying…';
+  const{error}=await db.from('listings').update({title,description}).eq('id',listingId);
+  btn.disabled=false;btn.textContent='Apply to selected listing';
+  if(error){showToast('Could not apply: '+error.message,'error');return;}
+  const idx=allListings.findIndex(l=>l.id===listingId);
+  if(idx!==-1){allListings[idx]={...allListings[idx],title,description};}
+  renderListingsTable();renderQuickListings();
+  showToast('Applied to listing ✓','success');
+  closeModal('modal-ai-listing');
 }
 
 function updateConciergeGate(sub){
