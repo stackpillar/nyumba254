@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Accept invite — Nyumba254</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--green:#0F6E56;--green-light:#E1F5EE;--green-dark:#085041;--text:#1a1a18;--text-2:#4a4a46;--text-3:#888780;--border:#e0ded8;--surface:#f7f6f2;--white:#fff;--red:#c0392b;--red-light:#fdecea;--radius:10px;--radius-lg:16px}
+    body{font-family:'Inter',sans-serif;color:var(--text);background:var(--surface);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    a{color:inherit;text-decoration:none}
+    button{font-family:inherit;cursor:pointer;border:none}
+    .card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);max-width:440px;width:100%;padding:36px 32px;box-shadow:0 8px 32px rgba(0,0,0,0.08)}
+    .logo{display:flex;align-items:center;gap:10px;font-family:'Playfair Display',serif;font-size:19px;color:var(--green-dark);margin-bottom:28px}
+    .logo-icon{width:32px;height:32px;background:var(--green);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .logo-icon svg{width:16px;height:16px;stroke:white;fill:none;stroke-width:2}
+    h1{font-family:'Playfair Display',serif;font-size:22px;margin-bottom:8px}
+    .sub{font-size:14px;color:var(--text-3);margin-bottom:24px;line-height:1.6}
+    .sub strong{color:var(--text-2)}
+    .form-group{margin-bottom:16px}
+    label{display:block;font-size:12.5px;font-weight:600;color:var(--text-2);margin-bottom:6px}
+    input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:14px;color:var(--text);background:var(--white);outline:none}
+    input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(15,110,86,0.08)}
+    input[readonly]{background:var(--surface);color:var(--text-3)}
+    .btn{width:100%;padding:12px;border-radius:var(--radius);font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s}
+    .btn-primary{background:var(--green);color:white}
+    .btn-primary:hover:not(:disabled){background:var(--green-dark)}
+    .btn-primary:disabled{opacity:.6;cursor:not-allowed}
+    .btn-outline{background:transparent;color:var(--text-2);border:1.5px solid var(--border)}
+    .btn-outline:hover{border-color:var(--green);color:var(--green)}
+    .spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;display:none}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .btn.loading .spinner{display:block}
+    .btn.loading .btn-text{display:none}
+    .mode-toggle{display:flex;gap:6px;margin-bottom:20px;background:var(--surface);border-radius:var(--radius);padding:4px}
+    .mode-tab{flex:1;text-align:center;padding:8px;font-size:13px;font-weight:500;color:var(--text-3);border-radius:7px;background:transparent}
+    .mode-tab.active{background:var(--white);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.1)}
+    .alert{display:none;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:var(--radius);font-size:13px;margin-bottom:18px;line-height:1.5}
+    .alert.error{display:flex;background:var(--red-light);color:var(--red);border:1px solid #f5c6c2}
+    .alert.success{display:flex;background:var(--green-light);color:var(--green-dark);border:1px solid #9FE1CB}
+    .alert.info{display:flex;background:#E6F1FB;color:#185FA5;border:1px solid #BEDBF5}
+    .icon-circle{width:56px;height:56px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+    .icon-circle svg{width:24px;height:24px;stroke:var(--green-dark);fill:none;stroke-width:2}
+    .icon-circle.err{background:var(--red-light)}
+    .icon-circle.err svg{stroke:var(--red)}
+    #spin-screen{display:flex;align-items:center;justify-content:center;padding:20px 0}
+    #spin-screen .spinner{display:block;width:26px;height:26px;border:3px solid var(--border);border-top-color:var(--green)}
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="logo">
+      <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+      Nyumba254
+    </div>
+
+    <div id="spin-screen"><div class="spinner"></div></div>
+
+    <!-- Populated by JS depending on invite state -->
+    <div id="content" style="display:none"></div>
+  </div>
+
+<script>
+  const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
+  const SITE_BASE = 'https://nyumba254.com';
+  const { createClient } = supabase;
+
+  // Same "remember me" adapter dashboard.html and login.html use, so a
+  // session created here is picked up consistently everywhere else.
+  const authStorage = {
+    getItem: (key) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).getItem(key),
+    setItem: (key, value) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).setItem(key, value),
+    removeItem: (key) => { localStorage.removeItem(key); sessionStorage.removeItem(key); }
+  };
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storage: authStorage, persistSession: true, autoRefreshToken: true } });
+
+  const token = new URLSearchParams(window.location.search).get('token');
+  const contentEl = document.getElementById('content');
+  const spinEl = document.getElementById('spin-screen');
+
+  function show(html){ spinEl.style.display='none'; contentEl.style.display='block'; contentEl.innerHTML = html; }
+  function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function errorScreen(title, msg, showLoginLink){
+    show(`
+      <div class="icon-circle err"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+      <h1>${esc(title)}</h1>
+      <p class="sub">${esc(msg)}</p>
+      ${showLoginLink ? '<a href="/login" class="btn btn-outline" style="display:flex">Go to sign in</a>' : ''}
+    `);
+  }
+
+  async function init(){
+    if(!token){
+      errorScreen('Invalid invite link', 'This link is missing its invite code. Ask whoever invited you to resend it from their Settings → Team seats.', true);
+      return;
+    }
+
+    const{data:invite,error}=await db.from('team_members').select('id,owner_id,member_email,status').eq('invite_token',token).maybeSingle();
+    if(error || !invite){
+      errorScreen('Invite not found', 'This invite link is invalid or has expired. Ask whoever invited you to send a new one.', true);
+      return;
+    }
+    if(invite.status==='active'){
+      errorScreen('Already accepted', 'This invite has already been used. If this was you, just sign in normally.', true);
+      return;
+    }
+
+    const{data:ownerProfile}=await db.from('profiles').select('full_name').eq('id',invite.owner_id).maybeSingle();
+    const ownerName = ownerProfile?.full_name || 'A Nyumba254 seller';
+
+    const{data:{session}}=await db.auth.getSession();
+    if(session){
+      if(session.user.email?.toLowerCase() === invite.member_email?.toLowerCase()){
+        renderConfirmScreen(invite, ownerName, session);
+      } else {
+        renderMismatchScreen(invite, ownerName, session);
+      }
+    } else {
+      renderAuthForm(invite, ownerName);
+    }
+  }
+
+  function renderConfirmScreen(invite, ownerName, session){
+    show(`
+      <div class="icon-circle"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div>
+      <h1>Join ${esc(ownerName)}'s team</h1>
+      <p class="sub">You're signed in as <strong>${esc(session.user.email)}</strong>, matching this invite. Accept to get access to their listings, messages, and payments.</p>
+      <div class="alert" id="alert"></div>
+      <button class="btn btn-primary" id="btn-accept" onclick="acceptInvite('${invite.id}')"><div class="spinner"></div><span class="btn-text">Accept invite</span></button>
+    `);
+  }
+
+  function renderMismatchScreen(invite, ownerName, session){
+    show(`
+      <div class="icon-circle err"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+      <h1>Wrong account</h1>
+      <p class="sub">This invite from <strong>${esc(ownerName)}</strong> was sent to <strong>${esc(invite.member_email)}</strong>, but you're signed in as <strong>${esc(session.user.email)}</strong>.</p>
+      <button class="btn btn-outline" onclick="signOutAndRetry()">Sign out and try again</button>
+    `);
+  }
+
+  async function signOutAndRetry(){
+    await db.auth.signOut();
+    window.location.reload();
+  }
+
+  function renderAuthForm(invite, ownerName){
+    show(`
+      <div class="icon-circle"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div>
+      <h1>Join ${esc(ownerName)}'s team</h1>
+      <p class="sub">${esc(ownerName)} invited <strong>${esc(invite.member_email)}</strong> to help manage their Nyumba254 seller account.</p>
+
+      <div class="mode-toggle">
+        <button class="mode-tab active" id="tab-signin" onclick="setMode('signin')">I have an account</button>
+        <button class="mode-tab" id="tab-signup" onclick="setMode('signup')">Create account</button>
+      </div>
+
+      <div class="alert" id="alert"></div>
+
+      <div id="fullname-group" class="form-group" style="display:none">
+        <label>Full name</label>
+        <input type="text" id="in-name" placeholder="e.g. Amara Odhiambo"/>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="in-email" value="${esc(invite.member_email)}" readonly/>
+      </div>
+      <div class="form-group">
+        <label id="pw-label">Password</label>
+        <input type="password" id="in-password" placeholder="Your password" autocomplete="current-password"/>
+      </div>
+
+      <button class="btn btn-primary" id="btn-submit" onclick="submitAuth('${invite.id}','${esc(invite.member_email)}','${token}')">
+        <div class="spinner"></div><span class="btn-text" id="submit-label">Sign in &amp; accept</span>
+      </button>
+    `);
+  }
+
+  let authMode='signin';
+  function setMode(mode){
+    authMode=mode;
+    document.getElementById('tab-signin').classList.toggle('active',mode==='signin');
+    document.getElementById('tab-signup').classList.toggle('active',mode==='signup');
+    document.getElementById('fullname-group').style.display = mode==='signup' ? 'block' : 'none';
+    document.getElementById('pw-label').textContent = mode==='signup' ? 'Create a password (min 8 characters)' : 'Password';
+    document.getElementById('in-password').autocomplete = mode==='signup' ? 'new-password' : 'current-password';
+    document.getElementById('submit-label').textContent = mode==='signup' ? 'Create account & accept' : 'Sign in & accept';
+  }
+
+  function setAlert(msg,type){
+    const el=document.getElementById('alert');
+    el.className='alert '+type;
+    el.textContent=msg;
+  }
+  function setLoading(btnId,loading){
+    const btn=document.getElementById(btnId);
+    if(!btn)return;
+    btn.disabled=loading;
+    btn.classList.toggle('loading',loading);
+  }
+
+  async function submitAuth(inviteId, memberEmail, tok){
+    document.getElementById('alert').className='alert';
+    const pw = document.getElementById('in-password').value;
+    if(!pw || pw.length<6){ setAlert('Please enter your password.','error'); return; }
+
+    setLoading('btn-submit',true);
+
+    if(authMode==='signup'){
+      const name = document.getElementById('in-name').value.trim();
+      if(!name){ setLoading('btn-submit',false); setAlert('Please enter your name.','error'); return; }
+      if(pw.length<8){ setLoading('btn-submit',false); setAlert('Password must be at least 8 characters.','error'); return; }
+      const{data,error}=await db.auth.signUp({
+        email: memberEmail, password: pw,
+        options:{ data:{ full_name:name }, emailRedirectTo: SITE_BASE+'/accept-invite?token='+tok }
+      });
+      setLoading('btn-submit',false);
+      if(error){ setAlert(error.message.includes('already registered') ? 'An account with this email already exists — switch to "I have an account" above.' : error.message,'error'); return; }
+      if(data.user){ await db.from('profiles').upsert({ id:data.user.id, full_name:name, email:memberEmail }); }
+      if(!data.session){
+        setAlert('Account created — check your email to confirm it, then click the same invite link again to finish joining.','success');
+        return;
+      }
+      await finishAccept(inviteId, memberEmail);
+    } else {
+      const{data,error}=await db.auth.signInWithPassword({ email: memberEmail, password: pw });
+      setLoading('btn-submit',false);
+      if(error){ setAlert(error.message.includes('Invalid login credentials') ? 'Incorrect password, or no account exists yet — try "Create account" above.' : error.message,'error'); return; }
+      await finishAccept(inviteId, memberEmail);
+    }
+  }
+
+  async function acceptInvite(inviteId){
+    setLoading('btn-accept',true);
+    const{data:{session}}=await db.auth.getSession();
+    await finishAccept(inviteId, session.user.email);
+  }
+
+  async function finishAccept(inviteId, memberEmail){
+    const{data:{session}}=await db.auth.getSession();
+    if(!session){ setAlert('Something went wrong — please try signing in again.','error'); return; }
+    // Guard: only ever claim an invite that is still 'invited' and matches this email,
+    // so an old/reused link can't silently reassign an already-active seat.
+    const{error}=await db.from('team_members')
+      .update({ member_id: session.user.id, status:'active', joined_at:new Date().toISOString() })
+      .eq('id', inviteId).eq('status','invited');
+    if(error){
+      setAlert('Could not finalize the invite: '+error.message,'error');
+      return;
+    }
+    show(`
+      <div class="icon-circle"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <h1>You're in!</h1>
+      <p class="sub">You now have access to this seller's listings, messages, and payments.</p>
+      <a href="/dashboard" class="btn btn-primary" style="display:flex">Go to dashboard →</a>
+    `);
+  }
+
+  init();
+</script>
+</body>
+</html>

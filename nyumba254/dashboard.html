@@ -1528,7 +1528,7 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
   }
 
 
-let currentUser=null,currentProfile=null,allListings=[],allEnquiries=[],allPayments=[],allMessages=[],allReviews=[],threads=[],activeThread=null,listingFilter='all',enquiryFilter='all',deleteTargetId=null,occupiedTargetId=null,replyTargetEnquiry=null,msgPollTimer=null,threadListingFilter=null,messagesChannel=null,listingActionBusy=new Set();
+let currentUser=null,currentProfile=null,ownerProfile=null,effectiveSellerId=null,isTeamMember=false,allListings=[],allEnquiries=[],allPayments=[],allMessages=[],allReviews=[],threads=[],activeThread=null,listingFilter='all',enquiryFilter='all',deleteTargetId=null,occupiedTargetId=null,replyTargetEnquiry=null,msgPollTimer=null,threadListingFilter=null,messagesChannel=null,listingActionBusy=new Set();
 
 // Message history window: only pulls the last N days of messages on load,
 // so this query and buildThreads() stay fast as conversations pile up over
@@ -1550,6 +1550,7 @@ async function init(){
     if(!session){window.location.href='/login';return;}
     currentUser=session.user;
     document.getElementById('topbar-date').textContent=new Date().toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    await resolveEffectiveSeller();
     await loadProfile();
     if(currentProfile?.role==='admin'){
       document.getElementById('loading-screen').style.display='none';
@@ -1585,6 +1586,34 @@ async function init(){
     document.getElementById('loading-screen').innerHTML =
       '<p style="color:white;max-width:320px;text-align:center">Something went wrong loading your dashboard. Please refresh the page.<br><span style="opacity:.6;font-size:11px">'+escHtml(err.message||String(err))+'</span></p>';
   }
+}
+
+// Returns the owner's id if the caller is an active team member,
+// otherwise the caller's own id. Everything that scopes to "this seller's
+// data" should use effectiveSellerId, not currentUser.id.
+async function resolveEffectiveSeller(){
+  const{data}=await db.from('team_members').select('owner_id').eq('member_id',currentUser.id).eq('status','active').maybeSingle();
+  if(data && data.owner_id){
+    effectiveSellerId = data.owner_id;
+    isTeamMember = true;
+  } else {
+    effectiveSellerId = currentUser.id;
+    isTeamMember = false;
+  }
+}
+
+// Writes a business-level profile field (subscription, notifications toggle,
+// verification, storefront slug, etc.) to the OWNER's profile row, and keeps
+// the in-memory ownerProfile/currentProfile in sync. Use this instead of
+// writing straight to currentUser.id for anything that should apply
+// account-wide rather than to just the person clicking the toggle.
+async function updateOwnerProfile(patch){
+  const{error}=await db.from('profiles').update(patch).eq('id',effectiveSellerId);
+  if(!error){
+    ownerProfile={...ownerProfile,...patch};
+    if(!isTeamMember) currentProfile=ownerProfile;
+  }
+  return error;
 }
 
 async function loadProfile(){
@@ -1626,6 +1655,12 @@ async function loadProfile(){
   const sidebarBadge = document.getElementById('sidebar-verify-badge');
   if (sidebarBadge) sidebarBadge.textContent = data?.verification_status === 'verified' ? '✓ Verified' : 'Unverified';
 
+  if(isTeamMember){
+    const{data:owner}=await db.from('profiles').select('*').eq('id',effectiveSellerId).single();
+    ownerProfile=owner||currentProfile;
+  }else{
+    ownerProfile=currentProfile;
+  }
   updateVerifyWarningBanner();
   loadSubscriptionUI();
 }
@@ -1645,11 +1680,12 @@ function goToVerification(){
 // modal writes (subscription_tier: 'monthly'/'yearly'/'none',
 // subscription_plan: 'premium'/'elite', subscription_expires_at). ──
 function subscriptionInfo(){
-  const tier = currentProfile?.subscription_tier || 'none';
-  const expiresAt = currentProfile?.subscription_expires_at;
+  const p = ownerProfile || currentProfile;
+  const tier = p?.subscription_tier || 'none';
+  const expiresAt = p?.subscription_expires_at;
   const notExpired = !expiresAt || new Date(expiresAt) > new Date();
   const active = tier !== 'none' && !!tier && notExpired;
-  return { active, plan: active ? (currentProfile?.subscription_plan || 'premium') : null, expiresAt: active ? expiresAt : null };
+  return { active, plan: active ? (p?.subscription_plan || 'premium') : null, expiresAt: active ? expiresAt : null };
 }
 function fmtSubDate(d){ return new Date(d).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'}); }
 
@@ -1673,7 +1709,7 @@ function teamSeatLimit(){
 async function loadTeamSeats(sub){
   const section=document.getElementById('settings-team-section');
   if(!section)return;
-  if(!sub.active){section.style.display='none';return;}
+  if(!sub.active || isTeamMember){section.style.display='none';return;}
   section.style.display='block';
   const limit=teamSeatLimit();
   const{data,error}=await db.from('team_members').select('*').eq('owner_id',currentUser.id).order('invited_at',{ascending:false});
@@ -1697,12 +1733,12 @@ async function inviteTeamMember(){
   const{count}=await db.from('team_members').select('*',{count:'exact',head:true}).eq('owner_id',currentUser.id);
   if((count||0)>=limit){showToast('You\'ve used all your team seats for this plan','error');return;}
   const btn=document.getElementById('team-invite-btn');btn.disabled=true;btn.textContent='Inviting…';
-  const{error}=await db.from('team_members').insert({owner_id:currentUser.id,member_email:email,status:'invited'});
+  const{data:invite,error}=await db.from('team_members').insert({owner_id:currentUser.id,member_email:email,status:'invited'}).select().single();
   btn.disabled=false;btn.textContent='Invite';
   if(error){showToast('Could not invite: '+error.message,'error');return;}
   emailEl.value='';
   showToast('Invite sent ✓','success');
-  fetch(`${EDGE_URL}/send-notification-email`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`},body:JSON.stringify({type:'team_invite',audience:'seller',sellerEmail:email,sellerName:email.split('@')[0],ownerName:currentProfile?.full_name||currentUser?.email})}).catch(()=>{});
+  fetch(`${EDGE_URL}/send-notification-email`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`},body:JSON.stringify({type:'team_invite',audience:'seller',sellerEmail:email,sellerName:email.split('@')[0],ownerName:currentProfile?.full_name||currentUser?.email,inviteToken:invite?.invite_token})}).catch(()=>{});
   loadTeamSeats(subscriptionInfo());
 }
 
@@ -1785,9 +1821,9 @@ function updatePremiumSectionUI(sub){
 
 async function syncProBadge(sub){
   const shouldBePro = !!sub.active; // any Premium or Elite subscriber
-  if(currentProfile && currentProfile.is_pro !== shouldBePro){
-    const{error} = await db.from('profiles').update({ is_pro: shouldBePro }).eq('id', currentUser.id);
-    if(!error) currentProfile = { ...currentProfile, is_pro: shouldBePro };
+  const p = ownerProfile || currentProfile;
+  if(p && p.is_pro !== shouldBePro){
+    await updateOwnerProfile({ is_pro: shouldBePro });
   }
 }
 
@@ -1856,17 +1892,17 @@ function slugifyName(name){
 }
 
 async function ensureStorefrontSlug(){
-  if(currentProfile?.storefront_slug) return currentProfile.storefront_slug;
-  const base = slugifyName(currentProfile?.full_name);
+  const p = ownerProfile || currentProfile;
+  if(p?.storefront_slug) return p.storefront_slug;
+  const base = slugifyName(p?.full_name);
   let candidate = base;
   for(let i=0;i<20;i++){
     const{data:existing}=await db.from('profiles').select('id').eq('storefront_slug',candidate).maybeSingle();
-    if(!existing || existing.id===currentUser.id) break;
+    if(!existing || existing.id===effectiveSellerId) break;
     candidate = `${base}-${Math.floor(Math.random()*900+100)}`;
   }
-  const{error}=await db.from('profiles').update({storefront_slug:candidate}).eq('id',currentUser.id);
-  if(error){ console.error('Could not save storefront slug:',error); return currentUser.id; }
-  currentProfile = {...currentProfile, storefront_slug:candidate};
+  const err = await updateOwnerProfile({storefront_slug:candidate});
+  if(err){ console.error('Could not save storefront slug:',err); return effectiveSellerId; }
   return candidate;
 }
 
@@ -1881,7 +1917,7 @@ async function loadRentalUnits(){
   if(!eliteActive())return;
   const wrap=document.getElementById('rental-units-list');
   wrap.innerHTML='<div style="padding:30px;text-align:center;color:var(--text-3);font-size:13px">Loading…</div>';
-  const{data,error}=await db.from('rental_units').select('*, tenants(*, rent_payments(*))').eq('seller_id',currentUser.id).order('created_at',{ascending:false});
+  const{data,error}=await db.from('rental_units').select('*, tenants(*, rent_payments(*))').eq('seller_id',effectiveSellerId).order('created_at',{ascending:false});
   if(error){wrap.innerHTML=`<div class="empty-state"><p>Could not load: ${escHtml(error.message)}</p></div>`;return;}
   rentalUnitsCache=data||[];
   renderRentLedgerSummary();
@@ -2262,7 +2298,7 @@ async function saveRentalUnit(){
   const notes=document.getElementById('ru-notes').value.trim()||null;
   if(!label){showToast('Please name the unit','error');return;}
   const btn=document.getElementById('btn-save-rental-unit');btn.disabled=true;btn.textContent='Saving…';
-  const{error}=await db.from('rental_units').insert({seller_id:currentUser.id,listing_id:listingId,unit_label:label,monthly_rent:rent,late_fee_percent:lateFeePct,notes});
+  const{error}=await db.from('rental_units').insert({seller_id:effectiveSellerId,listing_id:listingId,unit_label:label,monthly_rent:rent,late_fee_percent:lateFeePct,notes});
   btn.disabled=false;btn.textContent='Add unit';
   if(error){showToast('Could not save: '+error.message,'error');return;}
   closeModal('modal-add-rental-unit');
@@ -3011,9 +3047,8 @@ async function toggleConcierge(enabled) {
   })}).catch(()=>{});
 }
 async function toggleContactPrivacy(enabled) {
-  const { error } = await db.from('profiles').update({ hide_buyer_contact: enabled }).eq('id', currentUser.id);
+  const error = await updateOwnerProfile({ hide_buyer_contact: enabled });
   if (error) { showToast('Could not update: '+error.message,'error'); document.getElementById('hide-contact-toggle').checked = !enabled; return; }
-  currentProfile = { ...currentProfile, hide_buyer_contact: enabled };
   document.getElementById('hide-contact-note').textContent = enabled
     ? 'On — every listing shows "Chat only" to buyers. Call/WhatsApp buttons are hidden platform-wide.'
     : 'Off — buyers can reveal your number to call or WhatsApp you (rate-limited for your safety).';
@@ -3033,7 +3068,7 @@ async function saveNotificationPrefs(){
 }
 
 async function loadAllData(){
-  const{data:listingsData}=await db.from('listings').select('*, listing_photos(*), listing_units(*)').eq('seller_id',currentUser.id).order('created_at',{ascending:false});
+  const{data:listingsData}=await db.from('listings').select('*, listing_photos(*), listing_units(*)').eq('seller_id',effectiveSellerId).order('created_at',{ascending:false});
   allListings=listingsData||[];
   const ids=allListings.map(l=>l.id);
   const msgCutoff=new Date(Date.now()-MSG_HISTORY_DAYS*86400000).toISOString();
@@ -3041,8 +3076,8 @@ async function loadAllData(){
   const[enqRes,msgRes,payRes,revRes]=await Promise.all([
     ids.length ? db.from('enquiries').select('*, listings(title, area)').in('listing_id',ids).order('created_at',{ascending:false}) : Promise.resolve({data:[]}),
     ids.length ? db.from('messages').select('*').in('listing_id',ids).gte('created_at',msgCutoff).order('created_at',{ascending:true}) : Promise.resolve({data:[]}),
-    db.from('payments').select('*, listings(title)').eq('seller_id',currentUser.id).order('created_at',{ascending:false}),
-    db.from('reviews').select('*, listings(title)').eq('review_type','seller').eq('target_seller_id',currentUser.id).order('created_at',{ascending:false}),
+    db.from('payments').select('*, listings(title)').eq('seller_id',effectiveSellerId).order('created_at',{ascending:false}),
+    db.from('reviews').select('*, listings(title)').eq('review_type','seller').eq('target_seller_id',effectiveSellerId).order('created_at',{ascending:false}),
   ]);
 
   allEnquiries=enqRes.data||[];
