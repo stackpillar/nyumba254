@@ -985,6 +985,20 @@
   </div>
 </div>
 
+<!-- MANAGE VIDEOS MODAL (Premium/Elite video walkthroughs) -->
+<div class="modal-overlay" id="modal-manage-videos">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-head"><h3>Video walkthroughs — <span id="mv-listing-title"></span></h3><div class="modal-close" onclick="closeModal('modal-manage-videos')" role="button" tabindex="0" aria-label="Close" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeModal('modal-manage-videos')}">✕</div></div>
+    <div class="modal-body">
+      <p style="font-size:12.5px;color:var(--text-3);margin-bottom:14px;line-height:1.6">Add a YouTube, Vimeo, or direct video link (e.g. a 360° tour) — buyers see it embedded on your listing page. <span id="mv-limit-note"></span></p>
+      <div class="form-group"><label>Video URL</label><input type="text" id="mv-url-input" placeholder="https://youtube.com/watch?v=…"/></div>
+      <button class="btn btn-primary btn-sm" id="mv-add-btn" onclick="addListingVideo()">+ Add video</button>
+      <div id="mv-video-list" style="margin-top:16px"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-manage-videos')">Close</button></div>
+  </div>
+</div>
+
 <!-- REPLY MODAL -->
 <div class="modal-overlay" id="modal-reply">
   <div class="modal" style="max-width:440px">
@@ -2316,6 +2330,10 @@ const manageUnitsBtn=l.is_multi_unit
   ?`<div class="icon-btn purple" data-id="${l.id}" onclick="openManageUnitsModal(this.dataset.id)" title="Manage units — mark occupied/available" role="button" tabindex="0" aria-label="Manage units" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg></div>`
   :'';
 
+const manageVideosBtn=subscriptionInfo().active
+  ?`<div class="icon-btn purple" data-id="${l.id}" onclick="openManageVideosModal(this.dataset.id)" title="Manage video walkthrough" role="button" tabindex="0" aria-label="Manage videos" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>`
+  :'';
+
 const contactHideBtn=l.contact_hidden
   ?`<div class="icon-btn" data-id="${l.id}" onclick="toggleListingContactHidden(this.dataset.id)" title="Contact hidden — click to re-enable Call/WhatsApp on this listing" role="button" tabindex="0" aria-label="Show buyer contact for this listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}" style="color:var(--red);border-color:var(--red)"><svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div>`
   :`<div class="icon-btn" data-id="${l.id}" onclick="toggleListingContactHidden(this.dataset.id)" title="Hide Call/WhatsApp — force chat-only on this listing" role="button" tabindex="0" aria-label="Hide buyer contact for this listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>`;
@@ -2336,7 +2354,7 @@ const contactHideBtn=l.contact_hidden
         <a href="/listing?id=${String(l.listing_number).padStart(6,'0')}" target="_blank" class="icon-btn" title="View live listing"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
         <div class="icon-btn" onclick="openMessagesForListing('${l.id}')" title="Messages" role="button" tabindex="0" aria-label="Open messages for this listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
         <div class="icon-btn" onclick="shareListing('${l.id}')" title="Share" role="button" tabindex="0" aria-label="Share listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
-        ${editBtn}${statusBtn}${pauseBtn}${publishNowBtn}${manageUnitsBtn}${contactHideBtn}
+        ${editBtn}${statusBtn}${pauseBtn}${publishNowBtn}${manageUnitsBtn}${manageVideosBtn}${contactHideBtn}
         <div class="icon-btn danger" data-id="${l.id}" data-title="${escAttr(l.title)}" onclick="openDeleteModal(this.dataset.id,this.dataset.title)" title="Delete listing" role="button" tabindex="0" aria-label="Delete listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></div>
       </div></td>
     </tr>`;
@@ -2534,6 +2552,71 @@ async function muLoadOccupancyLog(unitId){
       return `<div class="mu-log-item"><span>${escHtml(detail)}</span><span>${when}</span></div>`;
     }).join('');
   }catch(e){el.innerHTML='';}
+}
+
+/* ══════════════════════════════════════
+   MANAGE VIDEOS MODAL — Premium/Elite video walkthroughs
+   ════════════════════════════════════════════════════
+   Link-based (YouTube/Vimeo/direct file link) rather than an upload —
+   listing.html embeds these on the public listing page. Monthly plan
+   caps at 1 video; yearly (any tier) is unlimited.
+══════════════════════════════════════ */
+let mvActiveListingId=null,mvVideos=[];
+
+function videoWalkthroughLimit(){
+  const sub=subscriptionInfo();
+  if(!sub.active)return 0;
+  return currentProfile?.subscription_tier==='yearly' ? Infinity : 1;
+}
+
+async function openManageVideosModal(listingId){
+  const l=allListings.find(x=>String(x.id)===String(listingId));
+  if(!l){showToast('Listing not found','error');return;}
+  mvActiveListingId=listingId;
+  document.getElementById('mv-listing-title').textContent=l.title;
+  document.getElementById('mv-url-input').value='';
+  document.getElementById('mv-video-list').innerHTML='<div style="text-align:center;padding:16px;color:var(--text-3);font-size:13px">Loading…</div>';
+  openModal('modal-manage-videos');
+  const{data,error}=await db.from('listing_videos').select('*').eq('listing_id',listingId).order('position',{ascending:true});
+  if(error){document.getElementById('mv-video-list').innerHTML=`<div class="empty-state"><p>Could not load: ${escHtml(error.message)}</p></div>`;return;}
+  mvVideos=data||[];
+  renderManageVideosModal();
+}
+
+function renderManageVideosModal(){
+  const limit=videoWalkthroughLimit();
+  const limitNote=document.getElementById('mv-limit-note');
+  limitNote.textContent = limit===Infinity ? 'Unlimited videos on your yearly plan.' : `Up to ${limit} video on your monthly plan.`;
+  const addBtn=document.getElementById('mv-add-btn');
+  addBtn.disabled = mvVideos.length>=limit;
+  addBtn.textContent = mvVideos.length>=limit ? 'Limit reached' : '+ Add video';
+  document.getElementById('mv-video-list').innerHTML = mvVideos.length
+    ? mvVideos.map(v=>`<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:12.5px;color:var(--text-2);word-break:break-all">${escHtml(v.url)}</span><button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red);flex-shrink:0" onclick="deleteListingVideo(${v.id})">Remove</button></div>`).join('')
+    : '<div style="font-size:12.5px;color:var(--text-3)">No videos added yet.</div>';
+}
+
+async function addListingVideo(){
+  const limit=videoWalkthroughLimit();
+  if(!limit){showToast('Video walkthroughs are a Premium feature — upgrade to add one.','error');return;}
+  if(mvVideos.length>=limit){showToast('Video limit reached for your plan.','error');return;}
+  const url=document.getElementById('mv-url-input').value.trim();
+  if(!url||!/^https?:\/\//i.test(url)){showToast('Please enter a valid video URL','error');return;}
+  const btn=document.getElementById('mv-add-btn');btn.disabled=true;btn.textContent='Adding…';
+  const{data,error}=await db.from('listing_videos').insert({listing_id:mvActiveListingId,url,position:mvVideos.length}).select().single();
+  btn.disabled=false;
+  if(error){showToast('Could not add video: '+error.message,'error');renderManageVideosModal();return;}
+  mvVideos.push(data);
+  document.getElementById('mv-url-input').value='';
+  renderManageVideosModal();
+  showToast('Video added ✓','success');
+}
+
+async function deleteListingVideo(id){
+  const{error}=await db.from('listing_videos').delete().eq('id',id);
+  if(error){showToast('Could not remove video: '+error.message,'error');return;}
+  mvVideos=mvVideos.filter(v=>v.id!==id);
+  renderManageVideosModal();
+  showToast('Video removed','success');
 }
 
 function openEditModal(id){

@@ -173,6 +173,12 @@
     .unit-avail-pill.none { background:var(--red-light); color:var(--red); }
 
     /* ══════════════════════════════════════
+       VIDEO WALKTHROUGH — Premium/Elite feature
+    ══════════════════════════════════════ */
+    .video-card { background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; margin-bottom:20px; display:none; }
+    .video-card h3 { font-size:15px; font-weight:600; color:var(--text); margin-bottom:14px; }
+
+    /* ══════════════════════════════════════
        SELLER: MANAGE UNITS PANEL
     ══════════════════════════════════════ */
     .manage-units-card { background:var(--white); border:2px solid var(--green); border-radius:var(--radius-lg); padding:24px; margin-bottom:20px; display:none; }
@@ -782,6 +788,12 @@
           <div id="manage-unit-list"></div>
         </div>
 
+        <!-- Video walkthrough -->
+        <div class="video-card" id="video-card">
+          <h3>Video walkthrough</h3>
+          <div id="video-embed-wrap"></div>
+        </div>
+
         <!-- Description -->
         <div class="desc-card" id="desc-card" style="display:none">
           <h3>About this property</h3>
@@ -1334,7 +1346,7 @@ async function loadListing() {
          is what stops bots from bulk-scraping every seller's number straight
          out of the page source or browser memory. Multi-unit properties also
          pull their listing_units rows here (unit types + live availability). */
-      .select('*, profiles(full_name, created_at, verification_status, hide_buyer_contact), listing_photos(*), listing_units(*)')
+      .select('*, profiles(full_name, created_at, verification_status, hide_buyer_contact), listing_photos(*), listing_units(*), listing_videos(*)')
       .eq('listing_number', parseInt(listingNumber, 10))
       .single();
 
@@ -1645,6 +1657,7 @@ function renderListing(l) {
 
   /* ── Available units card (buyer-facing) ── */
   if (l.is_multi_unit) renderUnitAvailability();
+  renderVideoSection(l.listing_videos || []);
 
   /* ── Enquiry form: unit-type + floor/position preference (multi-unit only) ── */
   if (l.is_multi_unit && listingUnits.length) {
@@ -1747,6 +1760,41 @@ function renderUnitAvailability() {
         <div class="unit-avail-pill ${pillClass}">${pillText}</div>
         <div class="unit-type-card-price">KES ${Number(u.price).toLocaleString('en-KE')}${listing?.price_type==='rent'?'<span>/month</span>':'<span>total</span>'}</div>
       </div>`;
+  }).join('');
+}
+
+/* ── Video walkthrough — YouTube/Vimeo get an embedded player;
+   any other link (direct mp4, 360° tour host) gets a native <video>
+   tag with a fallback "open link" line in case that host blocks
+   inline playback. ── */
+function nkVideoEmbedUrl(url) {
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes('youtube.com') || u.hostname.includes('youtu.be')) {
+      let vid = u.searchParams.get('v');
+      if (!vid && u.hostname.includes('youtu.be')) vid = u.pathname.slice(1);
+      if (!vid && u.pathname.includes('/embed/')) return url;
+      return vid ? `https://www.youtube.com/embed/${vid}` : null;
+    }
+    if (u.hostname.includes('vimeo.com')) {
+      const id = u.pathname.split('/').filter(Boolean).pop();
+      return id ? `https://player.vimeo.com/video/${id}` : null;
+    }
+    return null;
+  } catch(e) { return null; }
+}
+
+function renderVideoSection(videos) {
+  const card = document.getElementById('video-card');
+  const wrap = document.getElementById('video-embed-wrap');
+  if (!videos || !videos.length) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  wrap.innerHTML = videos.map(v => {
+    const embed = nkVideoEmbedUrl(v.url);
+    if (embed) {
+      return `<div style="position:relative;padding-top:56.25%;margin-bottom:14px;border-radius:10px;overflow:hidden;background:#000"><iframe src="${escHtml(embed)}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`;
+    }
+    return `<video controls style="width:100%;border-radius:10px;margin-bottom:6px;background:#000" preload="metadata"><source src="${escHtml(v.url)}"></video><p style="font-size:12px;color:var(--text-3);margin:0 0 14px"><a href="${escHtml(v.url)}" target="_blank" rel="noopener" style="color:var(--green)">Open video link</a> if it doesn't play above.</p>`;
   }).join('');
 }
 
