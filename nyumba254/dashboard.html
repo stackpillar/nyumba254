@@ -323,7 +323,43 @@
     .mu-log-item{font-size:11.5px;color:var(--text-3);padding:5px 0;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:8px}
     .mu-summary-strip{display:flex;gap:16px;flex-wrap:wrap;background:var(--green-light);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:12.5px;color:var(--green-dark)}
     @media(max-width:520px){.mu-occupy-grid{grid-template-columns:1fr}}
-    
+
+    /* ===== Rent Ledger & Demand Insights v2 — Elite value-add ===== */
+    .rl-summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+    .rl-stat{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+    .rl-stat .rl-label{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);margin-bottom:6px}
+    .rl-stat .rl-val{font-size:20px;font-weight:700;color:var(--text)}
+    .rl-stat.good .rl-val{color:#065f46}
+    .rl-stat.warn .rl-val{color:var(--amber)}
+    .rl-stat.danger .rl-val{color:var(--red)}
+    .rl-stat.purple .rl-val{color:#7c3aed}
+    .rl-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+    .rl-toolbar input[type=text]{flex:1;min-width:160px;padding:9px 14px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;outline:none;background:white}
+    .rl-toolbar input[type=text]:focus{border-color:var(--green)}
+    .rl-lease-alert{background:var(--amber-light);border:1px solid #f2d29b;border-radius:var(--radius);padding:12px 16px;margin-bottom:16px;font-size:12.5px;color:#7a5200;line-height:1.8}
+    .rl-lease-alert strong{display:block;margin-bottom:4px;font-size:13px}
+    .rl-tabs{display:flex;gap:8px;margin-bottom:16px}
+    .rl-tab{font-size:12.5px;font-weight:600;padding:7px 15px;border-radius:20px;border:1.5px solid var(--border);background:white;color:var(--text-2);cursor:pointer}
+    .rl-tab.active{background:#7c3aed;color:white;border-color:#7c3aed}
+    .rl-ledger-scroll{overflow-x:auto}
+    .rl-ledger-table{width:100%;border-collapse:collapse;min-width:760px}
+    .rl-ledger-table th{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-3);text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+    .rl-ledger-table td{padding:9px 10px;border-bottom:1px solid var(--border);font-size:12.5px;white-space:nowrap}
+    .rl-ledger-table td.rl-unit-cell{font-weight:600;color:var(--text)}
+    .rl-chip{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px}
+    .rl-chip.paid{background:#d1fae5;color:#065f46}
+    .rl-chip.partial{background:var(--amber-light);color:var(--amber)}
+    .rl-chip.due{background:var(--surface);color:var(--text-3);border:1px solid var(--border)}
+    .rl-chip.overdue{background:var(--red-light);color:var(--red)}
+    .di-tabs{display:flex;gap:8px;margin-bottom:16px}
+    .di-breakdown-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+    .di-trend{font-size:11px;font-weight:700;padding:1px 7px;border-radius:20px;margin-left:6px}
+    .di-trend.up{background:#d1fae5;color:#065f46}
+    .di-trend.down{background:var(--red-light);color:var(--red)}
+    .di-opportunity{display:inline-block;font-size:10px;font-weight:700;background:#7c3aed;color:white;padding:2px 8px;border-radius:20px;margin-left:6px}
+    .di-mine-badge{display:inline-block;font-size:10px;font-weight:700;background:var(--green);color:white;padding:2px 8px;border-radius:20px;margin-left:6px}
+    @media(max-width:700px){.di-breakdown-grid{grid-template-columns:1fr}}
+
     /* ===== Support Chat Widget v2 ===== */
     .scw-fab{position:fixed;bottom:28px;right:28px;z-index:8000;display:flex;align-items:center;gap:9px;padding:10px 20px 10px 10px;border-radius:40px;background:var(--white);border:1px solid var(--border);box-shadow:var(--shadow-lg);cursor:pointer;transition:transform .18s;font-family:'Inter',sans-serif}
     .scw-fab:hover{transform:translateY(-2px)}
@@ -589,6 +625,7 @@
       <div class="nav-section-label" style="margin-top:8px">Elite tools</div>
       <button class="nav-item" id="nav-rent-ledger" onclick="showPage('rent-ledger')">
         <svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 9h1M9 13h1M9 17h1M14 9h1M14 13h1M14 17h1"/></svg>Rent Ledger
+        <span class="badge-count red" id="nav-badge-rentledger" style="display:none">0</span>
       </button>
       <button class="nav-item" id="nav-demand-heatmap" onclick="showPage('demand-heatmap')">
         <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Demand Insights
@@ -775,39 +812,78 @@
     <div class="page" id="page-rent-ledger">
       <div class="section-head">
         <h2>Rent &amp; Tenant Ledger</h2>
-        <button class="btn btn-primary" id="btn-add-rental-unit" style="display:none" onclick="openAddRentalUnitModal()">
-          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add rental unit
-        </button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-outline" id="btn-export-rl-csv" style="display:none" onclick="exportRentLedgerCSV()">⬇️ CSV</button>
+          <button class="btn btn-outline" id="btn-export-rl-pdf" style="display:none" onclick="exportRentLedgerPDF()">⬇️ Rent roll PDF</button>
+          <button class="btn btn-primary" id="btn-add-rental-unit" style="display:none;background:#7c3aed" onclick="openAddRentalUnitModal()">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add rental unit
+          </button>
+        </div>
       </div>
       <div class="card" id="rent-ledger-locked" style="display:none;padding:40px 30px;text-align:center">
         <div style="width:52px;height:52px;border-radius:50%;background:#EDE9FE;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
           <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#7c3aed" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
         </div>
         <h3 style="font-size:16px;margin-bottom:8px">Rent Ledger is an Elite feature</h3>
-        <p style="font-size:13px;color:var(--text-3);max-width:380px;margin:0 auto 18px;line-height:1.6">Track rent due dates, payments received, and tenant history for units you rent out long-term.</p>
+        <p style="font-size:13px;color:var(--text-3);max-width:380px;margin:0 auto 18px;line-height:1.6">A full rent roll for units you manage long-term: automatic overdue detection, lease expiry alerts, tenant history, and downloadable reports.</p>
         <a href="/plans" class="btn btn-primary" style="background:#7c3aed;text-decoration:none">Upgrade to Elite</a>
       </div>
       <div id="rent-ledger-content" style="display:none">
+        <div id="rl-lease-alerts" class="rl-lease-alert" style="display:none"></div>
+        <div class="rl-summary-grid" id="rl-summary-grid"></div>
+        <div class="rl-tabs">
+          <button class="rl-tab active" data-tab="units" onclick="rlSetTab('units')">Units</button>
+          <button class="rl-tab" data-tab="ledger" onclick="rlSetTab('ledger')">Full 12-month ledger</button>
+        </div>
+        <div class="rl-toolbar">
+          <input type="text" placeholder="Search unit or tenant…" oninput="rlFilterInput(this.value)"/>
+        </div>
         <div id="rental-units-list"><div style="padding:30px;text-align:center;color:var(--text-3);font-size:13px">Loading…</div></div>
+        <div id="rl-ledger-wrap" class="card" style="padding:18px 20px;display:none"></div>
       </div>
     </div>
 
     <!-- DEMAND INSIGHTS -->
     <div class="page" id="page-demand-heatmap">
-      <div class="section-head"><h2>Demand Insights</h2></div>
+      <div class="section-head">
+        <h2>Demand Insights</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-outline" id="btn-export-di-csv" style="display:none" onclick="exportDemandCSV()">⬇️ CSV</button>
+          <button class="btn btn-outline" id="btn-export-di-pdf" style="display:none" onclick="exportDemandPDF()">⬇️ PDF report</button>
+        </div>
+      </div>
       <div class="card" id="demand-locked" style="display:none;padding:40px 30px;text-align:center">
         <div style="width:52px;height:52px;border-radius:50%;background:#EDE9FE;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
           <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
         </div>
         <h3 style="font-size:16px;margin-bottom:8px">Demand Insights is an Elite feature</h3>
-        <p style="font-size:13px;color:var(--text-3);max-width:380px;margin:0 auto 18px;line-height:1.6">See which areas buyers are enquiring about most, so you know where to list next.</p>
+        <p style="font-size:13px;color:var(--text-3);max-width:380px;margin:0 auto 18px;line-height:1.6">Platform-wide buyer demand by area, category, and price type — with supply comparisons and downloadable reports — so you know exactly where to list next.</p>
         <a href="/plans" class="btn btn-primary" style="background:#7c3aed;text-decoration:none">Upgrade to Elite</a>
       </div>
       <div id="demand-content" style="display:none">
-        <p style="font-size:13px;color:var(--text-3);margin-bottom:18px;line-height:1.6">Where buyers are enquiring right now on Nyumba254 — platform-wide, last 90 days.</p>
-        <div class="card" style="padding:20px 22px">
+        <div class="di-tabs">
+          <button class="filter-pill" onclick="diSetRange(30,this)">Last 30 days</button>
+          <button class="filter-pill active" onclick="diSetRange(90,this)">Last 90 days</button>
+          <button class="filter-pill" onclick="diSetRange(180,this)">Last 180 days</button>
+        </div>
+        <p style="font-size:13px;color:var(--text-3);margin-bottom:18px;line-height:1.6">Where buyers are enquiring right now on Nyumba254 — platform-wide. 🔥 flags areas with strong demand relative to how many listings currently exist there.</p>
+        <div class="card" style="padding:20px 22px;margin-bottom:16px">
           <h3 style="font-size:14px;font-weight:600;margin-bottom:14px">Top areas by buyer enquiries</h3>
           <div id="demand-area-bars"></div>
+        </div>
+        <div class="di-breakdown-grid">
+          <div class="card" style="padding:20px 22px">
+            <h3 style="font-size:14px;font-weight:600;margin-bottom:14px">Demand by category</h3>
+            <div id="demand-category-bars"></div>
+          </div>
+          <div class="card" style="padding:20px 22px">
+            <h3 style="font-size:14px;font-weight:600;margin-bottom:14px">Rent vs. sale demand</h3>
+            <div id="demand-type-bars"></div>
+          </div>
+        </div>
+        <div class="card" style="padding:20px 22px;margin-top:16px">
+          <h3 style="font-size:14px;font-weight:600;margin-bottom:14px">Your listings vs. area average</h3>
+          <div id="demand-mine-list"></div>
         </div>
       </div>
     </div>
@@ -1108,8 +1184,18 @@
         <div class="form-group"><label>Move-in date</label><input type="date" id="tn-movein"/></div>
         <div class="form-group"><label>Deposit (KES)</label><input type="number" id="tn-deposit" min="0"/></div>
       </div>
+      <div class="form-group"><label>Lease end date</label><input type="date" id="tn-lease-end"/><p style="font-size:11px;color:var(--text-3);margin-top:4px">Optional — you'll get an alert here when it's within 30 days of expiring.</p></div>
     </div>
     <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-add-tenant')">Cancel</button><button class="btn btn-primary" id="btn-save-tenant" onclick="saveTenant()">Add tenant</button></div>
+  </div>
+</div>
+
+<!-- TENANT DETAIL MODAL -->
+<div class="modal-overlay" id="modal-tenant-detail">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-head"><h3 id="td-title">Tenant details</h3><div class="modal-close" onclick="closeModal('modal-tenant-detail')" role="button" tabindex="0" aria-label="Close" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeModal('modal-tenant-detail')}">✕</div></div>
+    <div class="modal-body" id="td-body"></div>
+    <div class="modal-foot"><button class="btn btn-outline" style="color:var(--red);border-color:var(--red)" onclick="moveOutTenant()">Mark moved out</button><button class="btn btn-outline" onclick="closeModal('modal-tenant-detail')">Close</button></div>
   </div>
 </div>
 
@@ -1575,6 +1661,10 @@ function updateEliteGatedPages(sub){
   if(dhLocked && dhContent){ dhLocked.style.display = isElite?'none':'block'; dhContent.style.display = isElite?'block':'none'; }
   const addUnitBtn=document.getElementById('btn-add-rental-unit');
   if(addUnitBtn) addUnitBtn.style.display = isElite?'inline-flex':'none';
+  ['btn-export-rl-csv','btn-export-rl-pdf','btn-export-di-csv','btn-export-di-pdf'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display = isElite?'inline-flex':'none';
+  });
 }
 
 function updatePremiumSectionUI(sub){
@@ -1644,8 +1734,13 @@ async function ensureStorefrontSlug(){
   return candidate;
 }
 
-// ── Rent & Tenant Ledger (Elite) ────────────────────────────────────
+// ── Rent & Tenant Ledger (Elite) — full property-management grade ledger ──
+// Requires: alter table tenants add column if not exists lease_end_date date;
+//           alter table tenants add column if not exists move_out_date date;
 let rentalUnitsCache=[];
+let rlSearchQuery='';
+let rlActiveTab='units';
+
 async function loadRentalUnits(){
   if(!eliteActive())return;
   const wrap=document.getElementById('rental-units-list');
@@ -1653,34 +1748,116 @@ async function loadRentalUnits(){
   const{data,error}=await db.from('rental_units').select('*, tenants(*, rent_payments(*))').eq('seller_id',currentUser.id).order('created_at',{ascending:false});
   if(error){wrap.innerHTML=`<div class="empty-state"><p>Could not load: ${escHtml(error.message)}</p></div>`;return;}
   rentalUnitsCache=data||[];
+  renderRentLedgerSummary();
+  renderLeaseAlerts();
   renderRentalUnits();
+  renderFullLedgerTable();
 }
 
+function rlActiveTenant(u){return (u.tenants||[]).find(t=>t.status==='active');}
+
+// A past month with no payment record is now auto-flagged "overdue" instead
+// of sitting forever as "due" — this alone is what makes the ledger useful.
 function rentStatusForMonth(tenant,monthKey){
   const p=(tenant.rent_payments||[]).find(rp=>rp.period_month && rp.period_month.slice(0,7)===monthKey);
-  return p?p.status:'due';
+  if(p)return p.status;
+  return monthKey<currentMonthKey() ? 'overdue' : 'due';
+}
+function rentAmountForMonth(tenant,monthKey){
+  const p=(tenant.rent_payments||[]).find(rp=>rp.period_month && rp.period_month.slice(0,7)===monthKey);
+  return p?Number(p.amount)||0:0;
 }
 function last6Months(){
   const out=[];const d=new Date();d.setDate(1);
   for(let i=5;i>=0;i--){const m=new Date(d.getFullYear(),d.getMonth()-i,1);out.push(m.toISOString().slice(0,7));}
   return out;
 }
+function last12Months(){
+  const out=[];const d=new Date();d.setDate(1);
+  for(let i=11;i>=0;i--){const m=new Date(d.getFullYear(),d.getMonth()-i,1);out.push(m.toISOString().slice(0,7));}
+  return out;
+}
+
+// ── Portfolio summary — the numbers a landlord actually opens this page for ──
+function renderRentLedgerSummary(){
+  const el=document.getElementById('rl-summary-grid');
+  if(!el)return;
+  const totalUnits=rentalUnitsCache.length;
+  const occupied=rentalUnitsCache.filter(u=>rlActiveTenant(u)).length;
+  const vacant=totalUnits-occupied;
+  const rentRoll=rentalUnitsCache.reduce((s,u)=>s+(rlActiveTenant(u)?Number(u.monthly_rent)||0:0),0);
+  const mKey=currentMonthKey();
+  let collected=0,overdueAmt=0,overdueCount=0;
+  rentalUnitsCache.forEach(u=>{
+    const t=rlActiveTenant(u);if(!t)return;
+    const status=rentStatusForMonth(t,mKey);
+    const amt=rentAmountForMonth(t,mKey);
+    if(status==='paid')collected+=amt||Number(u.monthly_rent)||0;
+    else if(status==='partial')collected+=amt;
+  });
+  rentalUnitsCache.forEach(u=>{
+    const t=rlActiveTenant(u);if(!t)return;
+    last12Months().filter(m=>m<mKey).forEach(m=>{
+      if(rentStatusForMonth(t,m)==='overdue'){overdueAmt+=Number(u.monthly_rent)||0;overdueCount++;}
+    });
+  });
+  const collectionRate=rentRoll>0?Math.round((collected/rentRoll)*100):0;
+  el.innerHTML=`
+    <div class="rl-stat"><div class="rl-label">Total units</div><div class="rl-val">${totalUnits}</div></div>
+    <div class="rl-stat good"><div class="rl-label">Occupied</div><div class="rl-val">${occupied}</div></div>
+    <div class="rl-stat ${vacant>0?'warn':''}"><div class="rl-label">Vacant</div><div class="rl-val">${vacant}</div></div>
+    <div class="rl-stat purple"><div class="rl-label">Monthly rent roll</div><div class="rl-val">KES ${rentRoll.toLocaleString('en-KE')}</div></div>
+    <div class="rl-stat good"><div class="rl-label">Collected — ${new Date(mKey+'-01').toLocaleDateString('en-KE',{month:'short'})}</div><div class="rl-val">KES ${collected.toLocaleString('en-KE')}</div></div>
+    <div class="rl-stat ${collectionRate>=90?'good':collectionRate>=60?'warn':'danger'}"><div class="rl-label">Collection rate</div><div class="rl-val">${collectionRate}%</div></div>
+    <div class="rl-stat ${overdueCount>0?'danger':''}"><div class="rl-label">Overdue (past months)</div><div class="rl-val">KES ${overdueAmt.toLocaleString('en-KE')}${overdueCount?` <span style="font-size:12px;font-weight:600">(${overdueCount})</span>`:''}</div></div>`;
+  const badge=document.getElementById('nav-badge-rentledger');
+  if(badge){badge.textContent=overdueCount;badge.style.display=overdueCount>0?'inline-block':'none';}
+}
+
+// ── Lease expiry alerts ──
+function renderLeaseAlerts(){
+  const el=document.getElementById('rl-lease-alerts');
+  if(!el)return;
+  const soon=[];const now=new Date();
+  rentalUnitsCache.forEach(u=>{
+    const t=rlActiveTenant(u);
+    if(!t||!t.lease_end_date)return;
+    const days=Math.ceil((new Date(t.lease_end_date)-now)/86400000);
+    if(days<=30)soon.push({unit:u,tenant:t,days});
+  });
+  if(!soon.length){el.style.display='none';el.innerHTML='';return;}
+  soon.sort((a,b)=>a.days-b.days);
+  el.style.display='block';
+  el.innerHTML=`<strong>⏰ ${soon.length} lease${soon.length!==1?'s':''} expiring soon</strong>` +
+    soon.map(s=>`${escHtml(s.tenant.full_name)} (${escHtml(s.unit.unit_label)}) — ${s.days<0?`expired ${Math.abs(s.days)}d ago`:s.days===0?'expires today':`expires in ${s.days}d`}`).join(' · ');
+}
+
+function rlSetTab(tab){
+  rlActiveTab=tab;
+  document.querySelectorAll('.rl-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  document.getElementById('rental-units-list').style.display=tab==='units'?'block':'none';
+  document.getElementById('rl-ledger-wrap').style.display=tab==='ledger'?'block':'none';
+}
+function rlFilterInput(v){rlSearchQuery=(v||'').toLowerCase();renderRentalUnits();}
 
 function renderRentalUnits(){
   const wrap=document.getElementById('rental-units-list');
+  let units=rentalUnitsCache;
+  if(rlSearchQuery)units=units.filter(u=>u.unit_label.toLowerCase().includes(rlSearchQuery)||rlActiveTenant(u)?.full_name?.toLowerCase().includes(rlSearchQuery));
   if(!rentalUnitsCache.length){
     wrap.innerHTML=`<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M5 21V7l8-4 8 4v14"/></svg><h3>No rental units yet</h3><p>Add a unit you rent out long-term to start tracking tenants and rent payments.</p><button class="btn btn-primary" onclick="openAddRentalUnitModal()">Add rental unit</button></div>`;
     return;
   }
+  if(!units.length){wrap.innerHTML=`<div class="empty-state"><p>No units match "${escHtml(rlSearchQuery)}".</p></div>`;return;}
   const months=last6Months();
-  wrap.innerHTML=rentalUnitsCache.map(u=>{
-    const tenant=(u.tenants||[]).find(t=>t.status==='active');
+  wrap.innerHTML=units.map(u=>{
+    const tenant=rlActiveTenant(u);
     const monthCells=tenant?months.map(m=>{
       const st=rentStatusForMonth(tenant,m);
-      const cls=st==='paid'?'status-active':st==='overdue'?'status-rejected':st==='partial'?'status-pending':'status-paused';
       const label=new Date(m+'-01').toLocaleDateString('en-KE',{month:'short'});
-      return `<span class="status ${cls}" style="margin-right:4px" title="${m}">${label}: ${st}</span>`;
+      return `<span class="rl-chip ${st}" style="margin-right:4px" title="${m}">${label}: ${st}</span>`;
     }).join(''):'';
+    const leaseTxt=tenant&&tenant.lease_end_date?`Lease ends ${new Date(tenant.lease_end_date).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'})}`:'';
     return `<div class="card" style="padding:18px 20px;margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
         <div>
@@ -1689,16 +1866,37 @@ function renderRentalUnits(){
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           ${tenant?`<button class="btn btn-outline btn-sm" onclick="openLogRentPaymentModal('${u.id}','${tenant.id}')">Log payment</button>`:`<button class="btn btn-primary btn-sm" onclick="openAddTenantModal('${u.id}')">Add tenant</button>`}
+          ${tenant?`<button class="btn btn-outline btn-sm" onclick="openTenantDetailModal('${u.id}','${tenant.id}')">View history</button>`:''}
           ${tenant&&tenant.email?`<button class="btn btn-outline btn-sm" onclick="sendRentReminder('${u.id}','${tenant.id}')">Remind tenant</button>`:''}
           <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="openDeleteRentalUnitFlow('${u.id}','${escAttr(u.unit_label)}')">Delete</button>
         </div>
       </div>
       ${tenant?`<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-        <div style="font-size:13px;font-weight:600;margin-bottom:6px">${escHtml(tenant.full_name)}${tenant.phone?' · '+escHtml(tenant.phone):''}</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:2px">${escHtml(tenant.full_name)}${tenant.phone?' · '+escHtml(tenant.phone):''}</div>
+        ${leaseTxt?`<div style="font-size:11.5px;color:var(--text-3);margin-bottom:6px">${leaseTxt}</div>`:''}
         <div style="display:flex;flex-wrap:wrap;gap:4px">${monthCells}</div>
       </div>`:`<div style="margin-top:10px;font-size:12px;color:var(--text-3)">No active tenant — add one to start the ledger.</div>`}
     </div>`;
   }).join('');
+}
+
+// ── Full 12-month ledger table ──
+function renderFullLedgerTable(){
+  const el=document.getElementById('rl-ledger-wrap');
+  if(!el)return;
+  if(!rentalUnitsCache.length){el.innerHTML='';return;}
+  const months=last12Months();
+  const head=months.map(m=>`<th>${new Date(m+'-01').toLocaleDateString('en-KE',{month:'short',year:'2-digit'})}</th>`).join('');
+  const rows=rentalUnitsCache.map(u=>{
+    const t=rlActiveTenant(u);
+    const cells=months.map(m=>{
+      if(!t)return `<td><span class="rl-chip due">—</span></td>`;
+      const st=rentStatusForMonth(t,m);
+      return `<td><span class="rl-chip ${st}">${st}</span></td>`;
+    }).join('');
+    return `<tr><td class="rl-unit-cell">${escHtml(u.unit_label)}${t?`<br><span style="font-weight:400;color:var(--text-3);font-size:11px">${escHtml(t.full_name)}</span>`:''}</td>${cells}</tr>`;
+  }).join('');
+  el.innerHTML=`<div class="rl-ledger-scroll"><table class="rl-ledger-table"><thead><tr><th>Unit / Tenant</th>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 function openAddRentalUnitModal(){
@@ -1728,12 +1926,13 @@ let ruAddTenantUnitId=null;
 function openAddTenantModal(unitId){
   ruAddTenantUnitId=unitId;
   document.getElementById('tn-name').value='';document.getElementById('tn-phone').value='';document.getElementById('tn-email').value='';document.getElementById('tn-movein').value='';document.getElementById('tn-deposit').value='';
+  const leaseEl=document.getElementById('tn-lease-end');if(leaseEl)leaseEl.value='';
   openModal('modal-add-tenant');
 }
 async function saveTenant(){
   const name=document.getElementById('tn-name').value.trim();
   if(!name){showToast('Please enter the tenant name','error');return;}
-  const payload={rental_unit_id:ruAddTenantUnitId,full_name:name,phone:document.getElementById('tn-phone').value.trim()||null,email:document.getElementById('tn-email').value.trim()||null,move_in_date:document.getElementById('tn-movein').value||null,deposit_amount:parseFloat(document.getElementById('tn-deposit').value)||null,status:'active'};
+  const payload={rental_unit_id:ruAddTenantUnitId,full_name:name,phone:document.getElementById('tn-phone').value.trim()||null,email:document.getElementById('tn-email').value.trim()||null,move_in_date:document.getElementById('tn-movein').value||null,deposit_amount:parseFloat(document.getElementById('tn-deposit').value)||null,lease_end_date:document.getElementById('tn-lease-end')?.value||null,status:'active'};
   const btn=document.getElementById('btn-save-tenant');btn.disabled=true;btn.textContent='Saving…';
   const{error}=await db.from('tenants').insert(payload);
   btn.disabled=false;btn.textContent='Add tenant';
@@ -1746,8 +1945,7 @@ async function saveTenant(){
 let rpTenantId=null,rpUnitId=null;
 function openLogRentPaymentModal(unitId,tenantId){
   rpUnitId=unitId;rpTenantId=tenantId;
-  const d=new Date();const monthStr=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-  document.getElementById('rp-month').value=monthStr;
+  document.getElementById('rp-month').value=currentMonthKey();
   document.getElementById('rp-amount').value='';
   document.getElementById('rp-paiddate').value=new Date().toISOString().slice(0,10);
   document.getElementById('rp-method').value='mpesa';
@@ -1769,6 +1967,45 @@ async function saveRentPayment(){
   if(error){showToast('Could not save: '+error.message,'error');return;}
   closeModal('modal-log-rent-payment');
   showToast('Rent payment recorded ✓','success');
+  loadRentalUnits();
+}
+
+// ── Tenant detail modal — full history, lease, move-out ──
+let tdActiveUnitId=null,tdActiveTenantId=null;
+function openTenantDetailModal(unitId,tenantId){
+  tdActiveUnitId=unitId;tdActiveTenantId=tenantId;
+  const u=rentalUnitsCache.find(x=>String(x.id)===String(unitId));
+  const t=u?.tenants?.find(x=>String(x.id)===String(tenantId));
+  if(!u||!t){showToast('Could not find tenant','error');return;}
+  document.getElementById('td-title').textContent=t.full_name+' — '+u.unit_label;
+  const payments=(t.rent_payments||[]).slice().sort((a,b)=>new Date(b.period_month)-new Date(a.period_month));
+  const totalPaid=payments.filter(p=>p.status==='paid').reduce((s,p)=>s+Number(p.amount||0),0);
+  document.getElementById('td-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;font-size:12.5px">
+      <div><strong>Phone:</strong> ${escHtml(t.phone||'—')}</div>
+      <div><strong>Email:</strong> ${escHtml(t.email||'—')}</div>
+      <div><strong>Move-in:</strong> ${t.move_in_date?new Date(t.move_in_date).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'}):'—'}</div>
+      <div><strong>Lease ends:</strong> ${t.lease_end_date?new Date(t.lease_end_date).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'}):'—'}</div>
+      <div><strong>Deposit:</strong> ${t.deposit_amount?'KES '+Number(t.deposit_amount).toLocaleString('en-KE'):'—'}</div>
+      <div><strong>Total collected:</strong> KES ${totalPaid.toLocaleString('en-KE')}</div>
+    </div>
+    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-3);margin-bottom:8px">Payment history</div>
+    <div style="max-height:220px;overflow-y:auto">
+      ${payments.length?payments.map(p=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:12.5px">
+        <span>${new Date(p.period_month).toLocaleDateString('en-KE',{month:'long',year:'numeric'})}</span>
+        <span class="rl-chip ${p.status}">${p.status}</span>
+        <span style="font-weight:600">KES ${Number(p.amount||0).toLocaleString('en-KE')}</span>
+      </div>`).join(''):'<div style="color:var(--text-3);font-size:12.5px">No payments logged yet.</div>'}
+    </div>`;
+  openModal('modal-tenant-detail');
+}
+async function moveOutTenant(){
+  if(!tdActiveTenantId)return;
+  if(!confirm('Mark this tenant as moved out? The unit will become vacant and ready for a new tenant.'))return;
+  const{error}=await db.from('tenants').update({status:'past',move_out_date:new Date().toISOString().slice(0,10)}).eq('id',tdActiveTenantId);
+  if(error){showToast('Could not update: '+error.message,'error');return;}
+  closeModal('modal-tenant-detail');
+  showToast('Tenant marked as moved out ✓','success');
   loadRentalUnits();
 }
 
@@ -1795,24 +2032,218 @@ async function sendRentReminder(unitId,tenantId){
   showToast('Reminder sent ✓','success');
 }
 
-// ── Demand Insights (Elite) — ranked areas by buyer enquiry volume ──
+// ── Exports — CSV (raw data) + PDF (formatted rent-roll report) ──
+function rlDownloadBlob(filename,content,mime){
+  const blob=new Blob([content],{type:mime});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function exportRentLedgerCSV(){
+  if(!rentalUnitsCache.length){showToast('No rental units to export','error');return;}
+  const months=last12Months();
+  const rows=[['Unit','Tenant','Monthly Rent',...months.map(m=>new Date(m+'-01').toLocaleDateString('en-KE',{month:'short',year:'numeric'}))]];
+  rentalUnitsCache.forEach(u=>{
+    const t=rlActiveTenant(u);
+    rows.push([u.unit_label,t?t.full_name:'(vacant)',u.monthly_rent,...months.map(m=>t?rentStatusForMonth(t,m):'—')]);
+  });
+  const csv=rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  rlDownloadBlob(`Nyumba254-Rent-Ledger-${currentMonthKey()}.csv`,csv,'text/csv');
+  showToast('CSV exported ✓','success');
+}
+async function exportRentLedgerPDF(){
+  if(!rentalUnitsCache.length){showToast('No rental units to export','error');return;}
+  if(!window.jspdf){showToast('PDF library still loading — try again in a second','error');return;}
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const mKey=currentMonthKey();
+  doc.setFillColor(124,58,237);doc.rect(0,0,210,24,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(255,255,255);
+  doc.text('Nyumba254 — Rent Roll Report',14,15);
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(230,230,255);
+  doc.text(`${currentProfile?.full_name||currentUser?.email||''} · Generated ${new Date().toLocaleDateString('en-KE',{day:'numeric',month:'long',year:'numeric'})}`,14,21);
+
+  let y=34;
+  const rentRoll=rentalUnitsCache.reduce((s,u)=>s+(rlActiveTenant(u)?Number(u.monthly_rent)||0:0),0);
+  const occupied=rentalUnitsCache.filter(u=>rlActiveTenant(u)).length;
+  doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(26,26,24);
+  doc.text(`${occupied} of ${rentalUnitsCache.length} units occupied · Monthly rent roll KES ${rentRoll.toLocaleString('en-KE')}`,14,y);
+  y+=10;
+
+  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255,255,255);
+  doc.setFillColor(124,58,237);doc.rect(14,y-4,182,7,'F');
+  doc.text('Unit',16,y);doc.text('Tenant',60,y);doc.text('Rent (KES)',110,y);doc.text('This month',150,y);
+  y+=7;
+  doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(74,74,70);
+  rentalUnitsCache.forEach(u=>{
+    if(y>280){doc.addPage();y=20;}
+    const t=rlActiveTenant(u);
+    const status=t?rentStatusForMonth(t,mKey):'vacant';
+    doc.text(String(u.unit_label).slice(0,26),16,y);
+    doc.text(t?String(t.full_name).slice(0,26):'—',60,y);
+    doc.text(Number(u.monthly_rent).toLocaleString('en-KE'),110,y);
+    doc.text(status,150,y);
+    y+=6.5;
+    doc.setDrawColor(230,230,230);doc.line(14,y-4.5,196,y-4.5);
+  });
+  doc.save(`Nyumba254-Rent-Roll-${mKey}.pdf`);
+  showToast('Rent roll PDF downloaded ✓','success');
+}
+
+// ── Demand Insights (Elite) — full market-intelligence dashboard ──
+let diRangeDays=90;
+
+function diCutoff(days){return new Date(Date.now()-days*86400000).toISOString();}
+function diMyAreas(){return new Set(allListings.map(l=>l.area).filter(Boolean));}
+
+function diSetRange(days,el){
+  diRangeDays=days;
+  document.querySelectorAll('.di-tabs .filter-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  loadDemandInsights();
+}
+
 async function loadDemandInsights(){
   if(!eliteActive())return;
   const wrap=document.getElementById('demand-area-bars');
+  const catWrap=document.getElementById('demand-category-bars');
+  const typeWrap=document.getElementById('demand-type-bars');
+  const mineWrap=document.getElementById('demand-mine-list');
   wrap.innerHTML='<div style="padding:20px;text-align:center;color:var(--text-3);font-size:13px">Loading…</div>';
-  const cutoff=new Date(Date.now()-90*86400000).toISOString();
-  const{data,error}=await db.from('enquiries').select('listings(area)').gte('created_at',cutoff);
-  if(error){wrap.innerHTML=`<div class="empty-state"><p>Could not load: ${escHtml(error.message)}</p></div>`;return;}
-  const counts={};
-  (data||[]).forEach(row=>{const area=row.listings?.area;if(area)counts[area]=(counts[area]||0)+1;});
-  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  if(!sorted.length){wrap.innerHTML='<div class="empty-state"><p>Not enough enquiry activity yet to show demand by area.</p></div>';return;}
-  const max=sorted[0][1];
-  wrap.innerHTML=sorted.map(([area,count])=>`
-    <div style="margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px"><span style="font-weight:600">${escHtml(area)}</span><span style="color:var(--text-3)">${count} enquir${count!==1?'ies':'y'}</span></div>
+
+  const cutoff=diCutoff(diRangeDays);
+  const prevCutoff=diCutoff(diRangeDays*2);
+
+  const[{data:curData,error:curErr},{data:prevData}]=await Promise.all([
+    db.from('enquiries').select('listing_id,listings(area,category,price_type)').gte('created_at',cutoff),
+    db.from('enquiries').select('listings(area)').gte('created_at',prevCutoff).lt('created_at',cutoff)
+  ]);
+  if(curErr){wrap.innerHTML=`<div class="empty-state"><p>Could not load: ${escHtml(curErr.message)}</p></div>`;return;}
+
+  const rows=curData||[];
+  const areaCounts={},catCounts={},typeCounts={},prevAreaCounts={};
+  rows.forEach(r=>{
+    const area=r.listings?.area,cat=r.listings?.category,pt=r.listings?.price_type;
+    if(area)areaCounts[area]=(areaCounts[area]||0)+1;
+    if(cat)catCounts[cat]=(catCounts[cat]||0)+1;
+    if(pt)typeCounts[pt]=(typeCounts[pt]||0)+1;
+  });
+  (prevData||[]).forEach(r=>{const area=r.listings?.area;if(area)prevAreaCounts[area]=(prevAreaCounts[area]||0)+1;});
+
+  const sortedAreas=Object.entries(areaCounts).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  if(!sortedAreas.length){
+    wrap.innerHTML='<div class="empty-state"><p>Not enough enquiry activity yet in this window. Try a longer time range.</p></div>';
+    catWrap.innerHTML='';typeWrap.innerHTML='';mineWrap.innerHTML='';
+    return;
+  }
+
+  const topAreaNames=sortedAreas.map(([a])=>a);
+  const{data:supplyRows}=await db.from('listings').select('area').eq('status','active').in('area',topAreaNames);
+  const supplyCounts={};
+  (supplyRows||[]).forEach(r=>{if(r.area)supplyCounts[r.area]=(supplyCounts[r.area]||0)+1;});
+
+  const max=sortedAreas[0][1];
+  const myAreas=diMyAreas();
+  window.__diLastData={sortedAreas,catCounts,typeCounts,supplyCounts,rangeDays:diRangeDays};
+
+  wrap.innerHTML=sortedAreas.map(([area,count])=>{
+    const prevCount=prevAreaCounts[area]||0;
+    const pct=prevCount>0?Math.round(((count-prevCount)/prevCount)*100):(count>0?100:0);
+    const trend=(prevCount===0&&count===0)?'':`<span class="di-trend ${pct>=0?'up':'down'}">${pct>=0?'▲':'▼'} ${Math.abs(pct)}%</span>`;
+    const supply=supplyCounts[area]||0;
+    const ratio=supply>0?(count/supply):count;
+    const isOpportunity=ratio>=1.5&&count>=3;
+    const isMine=myAreas.has(area);
+    return `<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;margin-bottom:4px;flex-wrap:wrap;gap:4px">
+        <span style="font-weight:600">${escHtml(area)}${isMine?'<span class="di-mine-badge">You list here</span>':''}${isOpportunity?'<span class="di-opportunity">🔥 High demand, low supply</span>':''}</span>
+        <span style="color:var(--text-3)">${count} enquir${count!==1?'ies':'y'} · ${supply} active listing${supply!==1?'s':''}${trend}</span>
+      </div>
       <div style="background:var(--surface);border-radius:6px;height:8px;overflow:hidden"><div style="background:#7c3aed;height:100%;width:${Math.round((count/max)*100)}%"></div></div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
+
+  const catLabels={student:'Student',standard:'Standard',luxury:'Luxury',commercial:'Shops & offices'};
+  const catMax=Math.max(...Object.values(catCounts),1);
+  catWrap.innerHTML=Object.keys(catLabels).map(k=>{
+    const c=catCounts[k]||0;
+    return `<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>${catLabels[k]}</span><span style="color:var(--text-3)">${c}</span></div><div style="background:var(--surface);border-radius:6px;height:6px;overflow:hidden"><div style="background:var(--green);height:100%;width:${Math.round((c/catMax)*100)}%"></div></div></div>`;
+  }).join('');
+
+  const rentCt=typeCounts.rent||0,saleCt=typeCounts.sale||0,typeTotal=rentCt+saleCt||1;
+  typeWrap.innerHTML=`
+    <div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>To let (rent)</span><span style="color:var(--text-3)">${rentCt} (${Math.round(rentCt/typeTotal*100)}%)</span></div><div style="background:var(--surface);border-radius:6px;height:6px;overflow:hidden"><div style="background:var(--gold);height:100%;width:${Math.round(rentCt/typeTotal*100)}%"></div></div></div>
+    <div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>For sale</span><span style="color:var(--text-3)">${saleCt} (${Math.round(saleCt/typeTotal*100)}%)</span></div><div style="background:var(--surface);border-radius:6px;height:6px;overflow:hidden"><div style="background:#2563eb;height:100%;width:${Math.round(saleCt/typeTotal*100)}%"></div></div></div>`;
+
+  if(allListings.length){
+    const{data:myEnqRows}=await db.from('enquiries').select('listing_id').in('listing_id',allListings.map(l=>l.id)).gte('created_at',cutoff);
+    const myCounts={};
+    (myEnqRows||[]).forEach(r=>{myCounts[r.listing_id]=(myCounts[r.listing_id]||0)+1;});
+    mineWrap.innerHTML=allListings.slice(0,8).map(l=>{
+      const mine=myCounts[l.id]||0;
+      const areaAvgCount=areaCounts[l.area]||0;
+      const areaListingCount=supplyCounts[l.area]||1;
+      const areaAvg=areaAvgCount/Math.max(areaListingCount,1);
+      const diff=areaAvg>0?Math.round(((mine-areaAvg)/areaAvg)*100):0;
+      const cls=diff>0?'up':diff<0?'down':'';
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:12.5px">
+        <span style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%">${escHtml(l.title)}</span>
+        <span>${mine} enquir${mine!==1?'ies':'y'}${areaAvg>0?` <span class="di-trend ${cls}">${diff>=0?'▲':'▼'} ${Math.abs(diff)}% vs area avg</span>`:''}</span>
+      </div>`;
+    }).join('');
+  }else{
+    mineWrap.innerHTML='<div style="font-size:12.5px;color:var(--text-3)">Post a listing to see how it compares to area demand.</div>';
+  }
+}
+
+function diDownloadBlob(filename,content,mime){
+  const blob=new Blob([content],{type:mime});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function exportDemandCSV(){
+  const d=window.__diLastData;
+  if(!d||!d.sortedAreas.length){showToast('No demand data to export yet','error');return;}
+  const rows=[['Area','Enquiries','Active listings','Enquiries per listing']];
+  d.sortedAreas.forEach(([area,count])=>{
+    const supply=d.supplyCounts[area]||0;
+    rows.push([area,count,supply,supply>0?(count/supply).toFixed(2):count]);
+  });
+  const csv=rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  diDownloadBlob(`Nyumba254-Demand-Insights-${d.rangeDays}d.csv`,csv,'text/csv');
+  showToast('CSV exported ✓','success');
+}
+async function exportDemandPDF(){
+  const d=window.__diLastData;
+  if(!d||!d.sortedAreas.length){showToast('No demand data to export yet','error');return;}
+  if(!window.jspdf){showToast('PDF library still loading — try again in a second','error');return;}
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  doc.setFillColor(124,58,237);doc.rect(0,0,210,24,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(255,255,255);
+  doc.text('Nyumba254 — Demand Insights',14,15);
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(230,230,255);
+  doc.text(`Last ${d.rangeDays} days · Generated ${new Date().toLocaleDateString('en-KE',{day:'numeric',month:'long',year:'numeric'})}`,14,21);
+
+  let y=34;
+  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255,255,255);
+  doc.setFillColor(124,58,237);doc.rect(14,y-4,182,7,'F');
+  doc.text('Area',16,y);doc.text('Enquiries',110,y);doc.text('Active listings',140,y);doc.text('Ratio',175,y);
+  y+=7;
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(74,74,70);
+  d.sortedAreas.forEach(([area,count])=>{
+    if(y>280){doc.addPage();y=20;}
+    const supply=d.supplyCounts[area]||0;
+    doc.text(String(area).slice(0,40),16,y);
+    doc.text(String(count),110,y);
+    doc.text(String(supply),140,y);
+    doc.text(supply>0?(count/supply).toFixed(2):'—',175,y);
+    y+=6.5;
+    doc.setDrawColor(230,230,230);doc.line(14,y-4.5,196,y-4.5);
+  });
+  doc.save(`Nyumba254-Demand-Insights-${d.rangeDays}d.pdf`);
+  showToast('Demand insights PDF downloaded ✓','success');
 }
 
 async function copyStorefrontLink(){
