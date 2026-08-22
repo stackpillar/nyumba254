@@ -1033,6 +1033,7 @@
             </div>
             <button id="elite-upgrade-btn" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:14px;background:#7c3aed" onclick="showToast('Elite plans coming soon','')">Upgrade to Elite — from KES 3,000/mo</button>
             <button id="elite-storefront-btn" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:10px;display:none" onclick="copyStorefrontLink()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy my storefront link</button>
+            <button id="elite-valuation-btn" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:10px;display:none" onclick="openValuationModal()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Instant Valuation Tool</button>
           </div>
           <div class="settings-section" id="settings-team-section" style="display:none">
             <h3><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Team seats</h3>
@@ -2450,7 +2451,7 @@ async function loadDemandInsights(){
       const areaAvg=areaAvgCount/Math.max(areaListingCount,1);
       const diff=areaAvg>0?Math.round(((mine-areaAvg)/areaAvg)*100):0;
       const cls=diff>0?'up':diff<0?'down':'';
-      const tip = mine===0 ? '💡 Zero enquiries — try the Instant Valuation tool to check your price against similar listings.'
+      const tip = mine===0 ? '💡 Zero enquiries — try the <button type="button" onclick="openValuationModal()" style="background:none;border:none;padding:0;color:#7c3aed;font-weight:700;text-decoration:underline;cursor:pointer;font-size:inherit;font-family:inherit">Instant Valuation tool</button> to check your price against similar listings.'
         : (diff<-30 ? '💡 Underperforming this area — consider a price review or refreshed photos.' : '');
       return `<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12.5px">
         <div style="display:flex;justify-content:space-between;align-items:center">
