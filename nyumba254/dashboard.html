@@ -2644,17 +2644,18 @@ function valPopulateAreas(){
 function currentMonthKey(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
 
 async function openValuationModal(){
-  await loadValuationLimit();
   valPopulateCounties();
   const savedArea = allListings[0]?.area;
   const savedCounty = savedArea ? NK_AREA_TO_COUNTY[savedArea] : null;
   if(savedCounty){ document.getElementById('val-county').value = savedCounty; }
   valPopulateAreas();
   document.getElementById('val-results').innerHTML = '';
+  document.getElementById('val-usage-note').textContent = 'Loading usage…';
+  openModal('modal-valuation');
+  await loadValuationLimit();
   const monthKey = currentMonthKey();
   const usedThisMonth = (currentProfile?.valuation_uses_month===monthKey) ? (currentProfile?.valuation_uses_count||0) : 0;
   document.getElementById('val-usage-note').textContent = `${Math.max(0,eliteValuationLimit-usedThisMonth)} of ${eliteValuationLimit} valuations left this month`;
-  openModal('modal-valuation');
 }
 
 async function runValuation(){
@@ -2741,7 +2742,6 @@ async function loadAiListingLimit(){
 }
 
 async function openAiListingModal(){
-  await loadAiListingLimit();
   const sel=document.getElementById('ai-listing-select');
   sel.innerHTML='<option value="">Just generate text — I\'ll copy it myself</option>'+allListings.map(l=>`<option value="${l.id}">${escHtml(l.title)}</option>`).join('');
   document.getElementById('ai-listing-category').value='standard';
@@ -2753,10 +2753,12 @@ async function openAiListingModal(){
   document.getElementById('ai-listing-results').style.display='none';
   document.getElementById('btn-apply-ai-listing').style.display='none';
   aiListingLastResult=null;
+  document.getElementById('ai-listing-usage-note').textContent = 'Loading usage…';
+  openModal('modal-ai-listing');
+  await loadAiListingLimit();
   const monthKey = currentMonthKey();
   const usedThisMonth = (currentProfile?.ai_listing_uses_month===monthKey) ? (currentProfile?.ai_listing_uses_count||0) : 0;
   document.getElementById('ai-listing-usage-note').textContent = `${Math.max(0,eliteAiListingLimit-usedThisMonth)} of ${eliteAiListingLimit} generations left this month`;
-  openModal('modal-ai-listing');
 }
 
 async function generateAiListing(){

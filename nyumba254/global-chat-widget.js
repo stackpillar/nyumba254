@@ -8,6 +8,7 @@
 (function () {
   const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
+  const EDGE_URL = `${SUPABASE_URL}/functions/v1`;
   const gdb = window.db || supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   window.db = window.db || gdb;
 
@@ -262,12 +263,37 @@
     box.innerHTML = activeMessages.map(m => {
       const mine = m.sender === 'buyer';
       const time = new Date(m.created_at).toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'});
+      // Strip the internal "🤖 [Automated reply]" marker the edge function
+      // stores for the seller's own dashboard — buyers only ever see plain
+      // seller-labeled text here, indistinguishable from a human reply.
+      const bodyText = (m.content || m.message || '').replace(/^🤖\s*\[Automated reply\]\s*/, '');
       return `<div class="gcw-row ${mine?'mine':''}">
         <div class="gcw-av">${mine?'You':'S'}</div>
-        <div><div class="gcw-bubble">${escHtml(m.content||m.message||'')}</div><div class="gcw-time">${time}</div></div>
+        <div><div class="gcw-bubble">${escHtml(bodyText)}</div><div class="gcw-time">${time}</div></div>
       </div>`;
     }).join('');
     box.scrollTop = box.scrollHeight;
+  }
+
+  // Fire-and-forget: asks ai-concierge-reply for an instant answer grounded
+  // in this listing's own facts. The function itself checks whether this
+  // seller has the Elite AI Concierge turned on and quietly no-ops
+  // ({skipped:true}) if not — nothing here needs to know or care. When it
+  // does reply, it inserts straight into `messages` as sender:'seller' with
+  // is_ai_reply:true, which the realtime subscription in subscribeAll()
+  // already listens for and renders automatically — no extra wiring needed
+  // beyond calling this.
+  async function triggerAiConcierge(listingId, buyerToken, message) {
+    try {
+      const buyerName = localStorage.getItem('nk_buyer_name_' + listingId) || '';
+      await fetch(`${EDGE_URL}/ai-concierge-reply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+        body: JSON.stringify({ listingId, buyerToken, buyerName, buyerMessage: message }),
+      });
+    } catch (e) {
+      console.error('AI concierge trigger failed (non-fatal):', e);
+    }
   }
 
   async function sendMessage() {
@@ -292,6 +318,8 @@
     renderThread();
     const convo = conversations.find(c => c.listingId === activeListingId);
     if (convo) { convo.lastMessage = text; convo.lastAt = data.created_at; renderList(); }
+
+    triggerAiConcierge(activeListingId, activeBuyerToken, text);
   }
 
   function subscribeAll() {
