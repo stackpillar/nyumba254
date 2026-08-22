@@ -62,6 +62,7 @@
     #page-messages{padding:0}
     .enquiry-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;display:flex;gap:16px;align-items:flex-start;transition:box-shadow .2s ease,transform .2s ease}
     .enquiry-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:9px 18px;border-radius:var(--radius);font-size:13px;font-weight:600;white-space:nowrap;line-height:1.2;transition:all .15s ease}
     .btn:active:not(:disabled){transform:scale(.96)}
     .btn-primary{box-shadow:0 1px 3px rgba(15,110,86,0.25)}
     .btn-primary:hover{box-shadow:0 4px 12px rgba(15,110,86,0.32);transform:translateY(-1px)}
@@ -376,7 +377,7 @@
     @media(max-width:700px){.di-breakdown-grid{grid-template-columns:1fr}}
 
     /* ===== Support Chat Widget v2 ===== */
-    .scw-fab{position:fixed;bottom:28px;right:28px;z-index:400;display:flex;align-items:center;gap:9px;padding:10px 20px 10px 10px;border-radius:40px;background:var(--white);border:1px solid var(--border);box-shadow:var(--shadow-lg);cursor:pointer;transition:transform .18s,opacity .15s;font-family:'Inter',sans-serif}
+    .scw-fab{position:fixed;bottom:calc(28px + env(safe-area-inset-bottom));right:calc(28px + env(safe-area-inset-right));z-index:400;display:flex;align-items:center;gap:9px;padding:10px 20px 10px 10px;border-radius:40px;background:var(--white);border:1px solid var(--border);box-shadow:var(--shadow-lg);cursor:pointer;transition:transform .18s,opacity .15s;font-family:'Inter',sans-serif}
     .scw-fab.scw-hidden{display:none !important}
     .scw-fab:hover{transform:translateY(-2px)}
     .scw-fab-avatar{width:34px;height:34px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -497,7 +498,7 @@
     @keyframes scwDot{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-4px)}}
     @media(max-width:480px){
       .scw-panel{width:calc(100vw - 20px);right:10px;height:min(600px, calc(100vh - 96px))}
-      .scw-fab{bottom:16px;right:16px;padding:10px 14px 10px 10px}
+      .scw-fab{bottom:calc(16px + env(safe-area-inset-bottom));right:calc(16px + env(safe-area-inset-right));padding:10px 14px 10px 10px}
       .scw-fab-text{display:none}
     }
     @media(max-width:1100px){.overview-grid{grid-template-columns:1fr}.settings-grid{grid-template-columns:1fr}}
@@ -3882,9 +3883,14 @@ function closeSidebar(){
 // onboarding tour hides the fab (and closes the chat panel if it was
 // open); it reappears the instant everything closes.
 function scwSyncOverlayVisibility(){
-  const blocking = document.querySelector('.modal-overlay.open') || document.getElementById('tour-overlay')?.classList.contains('open');
+  const blocking = !!(
+    document.querySelector('.modal-overlay.open') ||
+    document.getElementById('tour-overlay')?.classList.contains('open') ||
+    document.getElementById('sidebar-overlay')?.classList.contains('open') ||
+    document.body.style.overflow === 'hidden'
+  );
   const fab=document.getElementById('scw-fab');
-  if(fab) fab.classList.toggle('scw-hidden', !!blocking);
+  if(fab) fab.classList.toggle('scw-hidden', blocking);
   if(blocking && typeof scwOpen!=='undefined' && scwOpen){
     scwOpen=false;
     document.getElementById('scw-panel')?.classList.remove('open');
@@ -3893,6 +3899,15 @@ function scwSyncOverlayVisibility(){
 }
 function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';scwSyncOverlayVisibility();}
 function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';scwSyncOverlayVisibility();}
+
+// Safety net: automatically re-checks visibility whenever ANY popup opens/closes,
+// even ones added later that forget to call scwSyncOverlayVisibility() directly.
+(function scwWatchOverlays(){
+  const watchTargets=[document.body, document.getElementById('tour-overlay'), document.getElementById('sidebar-overlay')];
+  document.querySelectorAll('.modal-overlay').forEach(el=>watchTargets.push(el));
+  const observer=new MutationObserver(()=>scwSyncOverlayVisibility());
+  watchTargets.filter(Boolean).forEach(el=>observer.observe(el,{attributes:true,attributeFilter:['class','style']}));
+})();
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal-overlay.open').forEach(m=>{m.classList.remove('open');document.body.style.overflow='';});scwSyncOverlayVisibility();}});
 document.querySelectorAll('.modal-overlay').forEach(ov=>ov.addEventListener('click',e=>{if(e.target===ov)closeModal(ov.id);}));
 async function doSignOut(){clearInterval(msgPollTimer);clearInterval(listingStatusPollTimer);document.removeEventListener('visibilitychange',handleVisibilityChange);if(messagesChannel){messagesChannel.unsubscribe();messagesChannel=null;}scwCleanup();await db.auth.signOut();window.location.href='/login';}
