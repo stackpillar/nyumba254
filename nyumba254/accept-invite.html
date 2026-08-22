@@ -102,7 +102,8 @@
       return;
     }
 
-    const{data:invite,error}=await db.from('team_members').select('id,owner_id,member_email,status').eq('invite_token',token).maybeSingle();
+    const{data:inviteRows,error}=await db.rpc('get_invite_by_token',{p_token:token});
+    const invite=inviteRows&&inviteRows[0];
     if(error || !invite){
       errorScreen('Invite not found', 'This invite link is invalid or has expired. Ask whoever invited you to send a new one.', true);
       return;
