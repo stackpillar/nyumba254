@@ -781,9 +781,13 @@
     <div class="page" id="page-enquiries">
       <div class="section-head">
         <h2>Enquiries from buyers</h2>
-        <div style="display:flex;gap:8px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           <button class="filter-pill active" id="enq-filter-all" onclick="filterEnquiries('all',this)">All</button>
           <button class="filter-pill" id="enq-filter-unread" onclick="filterEnquiries('unread',this)">Unread</button>
+          <div class="filter-search" style="margin-left:8px">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Search buyer or listing…" id="enquiry-search" oninput="renderEnquiries()"/>
+          </div>
         </div>
       </div>
       <div class="enquiry-list" id="enquiry-list"><div style="text-align:center;padding:40px;color:var(--text-3);font-size:13px">Loading enquiries…</div></div>
@@ -3602,6 +3606,8 @@ function buildEnquiryFeed(){
 function renderEnquiries(){
   let items=buildEnquiryFeed();
   if(enquiryFilter==='unread')items=items.filter(i=>i.unread);
+  const q=(document.getElementById('enquiry-search')?.value||'').toLowerCase();
+  if(q)items=items.filter(i=>(i.buyer_name||'').toLowerCase().includes(q)||(i.listing_title||'').toLowerCase().includes(q)||(i.listing_area||'').toLowerCase().includes(q));
   const el=document.getElementById('enquiry-list');
   if(!items.length){el.innerHTML=`<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/></svg><h3>${enquiryFilter==='unread'?'All caught up!':'No enquiries yet'}</h3><p>${enquiryFilter==='unread'?'No unread messages.':"When buyers message you, they'll appear here."}</p></div>`;return;}
   el.innerHTML=items.map(i=>{const ini=(i.buyer_name||'B').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();return `<div class="enquiry-card${i.unread?' unread':''}"><div class="enquiry-avatar">${ini}</div><div class="enquiry-body"><div class="enquiry-head"><span class="enquiry-name">${escHtml(i.buyer_name||'Unknown buyer')}</span><span class="enquiry-phone">${i.buyer_phone||''}</span><span class="enquiry-time">${timeAgo(i.created_at)}</span></div><div class="enquiry-listing-ref">Re: ${escHtml(i.listing_title||'Listing')} · ${i.listing_area||''}</div><div class="enquiry-msg">${escHtml(i.message||'')}</div><div class="enquiry-actions"><button class="btn btn-primary btn-sm" onclick="openConversationFromThread('${i.key}')"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Open conversation</button>${i.buyer_phone?`<a class="btn btn-sm" style="background:#25D366;color:white" href="https://wa.me/${formatWaPhone(i.buyer_phone)}" target="_blank">WhatsApp</a>`:''}${i.unread?`<button class="btn btn-outline btn-sm" data-key="${i.key}" onclick="markEnqThreadRead(this.dataset.key)">Mark read</button>`:''}</div></div></div>`;}).join('');
