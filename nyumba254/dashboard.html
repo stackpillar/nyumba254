@@ -376,16 +376,17 @@
     @media(max-width:700px){.di-breakdown-grid{grid-template-columns:1fr}}
 
     /* ===== Support Chat Widget v2 ===== */
-    .scw-fab{position:fixed;bottom:28px;right:28px;z-index:8000;display:flex;align-items:center;gap:9px;padding:10px 20px 10px 10px;border-radius:40px;background:var(--white);border:1px solid var(--border);box-shadow:var(--shadow-lg);cursor:pointer;transition:transform .18s;font-family:'Inter',sans-serif}
+    .scw-fab{position:fixed;bottom:28px;right:28px;z-index:400;display:flex;align-items:center;gap:9px;padding:10px 20px 10px 10px;border-radius:40px;background:var(--white);border:1px solid var(--border);box-shadow:var(--shadow-lg);cursor:pointer;transition:transform .18s,opacity .15s;font-family:'Inter',sans-serif}
+    .scw-fab.scw-hidden{display:none !important}
     .scw-fab:hover{transform:translateY(-2px)}
     .scw-fab-avatar{width:34px;height:34px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0}
     .scw-fab-avatar svg{width:16px;height:16px;stroke:white;fill:none;stroke-width:2}
     .scw-fab-text{font-size:14px;font-weight:600;color:var(--text)}
     .scw-fab-badge{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;border-radius:10px;background:var(--red);border:2px solid white;font-size:10px;font-weight:700;color:white;display:none;align-items:center;justify-content:center;padding:0 4px}
     .scw-fab-badge.show{display:flex}
-    .scw-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:8100;display:none}
+    .scw-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:401;display:none}
     .scw-overlay.open{display:block}
-    .scw-panel{position:fixed;bottom:16px;right:28px;z-index:8200;width:380px;height:min(624px, calc(100vh - 72px));background:var(--surface);border-radius:20px;box-shadow:0 8px 48px rgba(0,0,0,0.22);display:none;flex-direction:column;overflow:hidden;font-family:'Inter',sans-serif}
+    .scw-panel{position:fixed;bottom:16px;right:28px;z-index:402;width:380px;height:min(624px, calc(100vh - 72px));background:var(--surface);border-radius:20px;box-shadow:0 8px 48px rgba(0,0,0,0.22);display:none;flex-direction:column;overflow:hidden;font-family:'Inter',sans-serif}
     .scw-panel.open{display:flex;animation:scwIn .22s ease}
     @keyframes scwIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
     .scw-header{background:linear-gradient(135deg,var(--green-dark),var(--green-mid));padding:20px 20px 22px;position:relative;flex-shrink:0}
@@ -494,7 +495,11 @@
     .scw-dot:nth-child(2){animation-delay:.15s}
     .scw-dot:nth-child(3){animation-delay:.3s}
     @keyframes scwDot{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-4px)}}
-    @media(max-width:480px){.scw-panel{width:calc(100vw - 20px);right:10px;height:min(600px, calc(100vh - 96px))}.scw-fab{bottom:16px;right:16px}}
+    @media(max-width:480px){
+      .scw-panel{width:calc(100vw - 20px);right:10px;height:min(600px, calc(100vh - 96px))}
+      .scw-fab{bottom:16px;right:16px;padding:10px 14px 10px 10px}
+      .scw-fab-text{display:none}
+    }
     @media(max-width:1100px){.overview-grid{grid-template-columns:1fr}.settings-grid{grid-template-columns:1fr}}
     @media(max-width:900px){
       .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.sidebar-overlay.open{display:block}
@@ -3871,9 +3876,24 @@ function closeSidebar(){
   document.getElementById('sidebar-overlay').classList.remove('open');
   document.getElementById('hamburger-btn')?.setAttribute('aria-expanded','false');
 }
-function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
-function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>{m.classList.remove('open');document.body.style.overflow='';});});
+// Keeps the "Let's Chat" bubble from ever floating on top of a modal's
+// buttons — especially on mobile where the bubble and the modal footer
+// both sit bottom-right/bottom-center. Any open .modal-overlay or the
+// onboarding tour hides the fab (and closes the chat panel if it was
+// open); it reappears the instant everything closes.
+function scwSyncOverlayVisibility(){
+  const blocking = document.querySelector('.modal-overlay.open') || document.getElementById('tour-overlay')?.classList.contains('open');
+  const fab=document.getElementById('scw-fab');
+  if(fab) fab.classList.toggle('scw-hidden', !!blocking);
+  if(blocking && typeof scwOpen!=='undefined' && scwOpen){
+    scwOpen=false;
+    document.getElementById('scw-panel')?.classList.remove('open');
+    document.getElementById('scw-overlay')?.classList.remove('open');
+  }
+}
+function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';scwSyncOverlayVisibility();}
+function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';scwSyncOverlayVisibility();}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal-overlay.open').forEach(m=>{m.classList.remove('open');document.body.style.overflow='';});scwSyncOverlayVisibility();}});
 document.querySelectorAll('.modal-overlay').forEach(ov=>ov.addEventListener('click',e=>{if(e.target===ov)closeModal(ov.id);}));
 async function doSignOut(){clearInterval(msgPollTimer);clearInterval(listingStatusPollTimer);document.removeEventListener('visibilitychange',handleVisibilityChange);if(messagesChannel){messagesChannel.unsubscribe();messagesChannel=null;}scwCleanup();await db.auth.signOut();window.location.href='/login';}
 let toastTimer;
@@ -4737,6 +4757,7 @@ const Tour = (() => {
     idx = 0;
     openSidebar(); // ensures sidebar items are visible/highlightable on mobile too
     document.getElementById('tour-overlay').classList.add('open');
+    scwSyncOverlayVisibility();
     showStep();
   }
 
@@ -4806,6 +4827,7 @@ const Tour = (() => {
   function finish() {
     document.getElementById('tour-overlay').classList.remove('open');
     closeSidebar();
+    scwSyncOverlayVisibility();
     if (storageKey) localStorage.setItem(storageKey, '1');
   }
 
