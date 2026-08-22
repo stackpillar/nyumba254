@@ -929,6 +929,8 @@
         <p style="padding:14px 22px 4px;font-size:12px;color:var(--text-3);line-height:1.6">These control the fees and durations used across revenue calculations, the upgrade modal, and listing details — no code changes needed when they change.</p>
         <div style="padding:8px 22px 24px">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:640px">
+            <div class="settings-field"><label>Relationship manager — name</label><input type="text" id="set-rm_name"/></div>
+            <div class="settings-field"><label>Relationship manager — phone</label><input type="text" id="set-rm_phone" placeholder="e.g. 0712345678"/></div>
             <div class="settings-field"><label>Sale — Standard fee (%)</label><input type="number" step="0.01" id="set-sale_standard_pct"/></div>
             <div class="settings-field"><label>Sale — Featured fee (%)</label><input type="number" step="0.01" id="set-sale_featured_pct"/></div>
             <div class="settings-field"><label>Rent — Standard fee (%)</label><input type="number" step="0.01" id="set-rent_standard_pct"/></div>
@@ -952,6 +954,7 @@
           </div>
           <div id="settings-saved-meta" style="font-size:11px;color:var(--text-3);margin-top:16px"></div>
           <button class="btn-modal approve" style="margin-top:14px" onclick="saveSettings()">Save changes</button>
+          <p style="font-size:11px;color:var(--text-3);margin-top:6px">Relationship manager name/phone save automatically with the button above.</p>
         </div>
       </div>
       <div class="card">
@@ -1517,6 +1520,13 @@
     }
   }
   function notifySeller(type, payload) { return notifyByEmail(type, { ...payload, audience: 'seller' }); }
+function notifySms(type, payload) {
+  return fetch(`${EDGE_URL}/send-sms-alert`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+    body: JSON.stringify({ type, ...payload }),
+  }).catch(e => console.error('notifySms failed:', e));
+}
 
   // ─── Email reminder templates ──────────────────────────────────────
   // Sent via notifyByEmail('admin_seller_notice', {...}) — the edge
@@ -1702,6 +1712,9 @@
       const el = document.getElementById('set-' + k);
       if (el) el.value = SETTINGS[k];
     });
+    db.from('platform_settings').select('key,value').in('key',['rm_name','rm_phone']).then(({data})=>{
+      (data||[]).forEach(row=>{ const el=document.getElementById('set-'+row.key); if(el) el.value=row.value||''; });
+    });
   }
 
   async function saveSettings() {
@@ -1710,6 +1723,10 @@
       const val = Number(el?.value);
       return { key: k, value: isNaN(val) ? SETTINGS[k] : val, updated_at: new Date().toISOString(), updated_by: currentUser?.id || null };
     });
+    const rmName = document.getElementById('set-rm_name')?.value.trim() || '';
+    const rmPhone = document.getElementById('set-rm_phone')?.value.trim() || '';
+    rows.push({ key: 'rm_name', value: rmName, updated_at: new Date().toISOString(), updated_by: currentUser?.id || null });
+    rows.push({ key: 'rm_phone', value: rmPhone, updated_at: new Date().toISOString(), updated_by: currentUser?.id || null });
     const { error } = await db.from('platform_settings').upsert(rows, { onConflict: 'key' });
     if (error) { toast('Error saving settings: '+error.message,'error'); return; }
     rows.forEach(r => { SETTINGS[r.key] = r.value; });
@@ -2145,8 +2162,8 @@
   }
 
   async function loadPendingPreview() {
-    const {data, error} = await db.from('listings')
-      .select('*, profiles(full_name, phone, email), listing_photos(*), listing_units(*)')
+  const {data, error} = await db.from('listings')
+    .select('*, profiles(full_name, phone, email, subscription_tier, subscription_expires_at), listing_photos(*), listing_units(*)')
       .eq('status','pending').eq('recycle_bin',false)
       .order('created_at',{ascending:false}).limit(5);
     const tbody = document.getElementById('pending-table-body');
@@ -2238,7 +2255,7 @@
       loadMoreBtn.textContent = 'Loading…';
     }
 
-    let q = db.from('listings').select('*, profiles(full_name, email), listing_photos(*), listing_units(*), social_posts(*)',{count:'exact'}).eq('recycle_bin',false);
+    let q = db.from('listings').select('*, profiles(full_name, email, subscription_tier, subscription_expires_at), listing_photos(*), listing_units(*), social_posts(*)',{count:'exact'}).eq('recycle_bin',false);
     if (currentTab==='pending')       q = q.eq('status','pending');
     else if (currentTab==='active')   q = q.eq('status','active').eq('is_disabled',false);
     else if (currentTab==='featured') q = q.eq('is_featured',true).eq('status','active').eq('is_disabled',false);
@@ -2453,9 +2470,26 @@
         sellerName: l.profiles.full_name, sellerEmail: l.profiles.email,
       });
     }
+    notifySms('listing_status', { listingId: id, listingTitle: title, status: isFutureScheduled ? 'scheduled' : 'active' });
     toast(isFutureScheduled ? `Listing approved — will go live ${new Date(l.publish_at).toLocaleString('en-KE')} ✓` : 'Listing approved and live ✓','success');
     loadOverview(); if(currentView==='listings') loadAllListings();
-    if (!isFutureScheduled) maybeAutoPostSocial(id);
+    if (!isFutureScheduled) { maybeAutoPostSocial(id); checkAndNotifyDemandMatches(id, l); }
+  }
+
+  async function checkAndNotifyDemandMatches(listingId, l) {
+    try {
+      let q = db.from('listing_alerts').select('id', {count:'exact', head:true});
+      if (l.area) q = q.eq('area', l.area);
+      if (l.category) q = q.eq('category', l.category);
+      const { count } = await q;
+      if (!count) return;
+      await db.from('seller_demand_notices').insert({ seller_id: l.seller_id, listing_id: listingId, area: l.area, category: l.category, match_count: count });
+      const sub = l.profiles;
+      const active = sub?.subscription_tier && sub.subscription_tier !== 'none' && (!sub.subscription_expires_at || new Date(sub.subscription_expires_at) > new Date());
+      if (active && sub?.email) {
+        notifySeller('demand_match', { listingId, listingTitle: l.title, sellerName: sub.full_name, sellerEmail: sub.email, matchCount: count, area: l.area });
+      }
+    } catch(e) { console.error('Demand match check failed:', e); }
   }
 
   function rejectListing(id) {
@@ -2994,6 +3028,7 @@
           sellerName: l.profiles.full_name, sellerEmail: l.profiles.email,
         });
       }
+      notifySms('payment_confirmed', { listingId, listingTitle: l?.title, amount: p?.amount });
     }
 
     toast('Payment confirmed ✓','success');

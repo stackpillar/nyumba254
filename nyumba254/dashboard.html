@@ -847,6 +847,15 @@
             <p style="font-size:12px;color:var(--text-3);line-height:1.6;margin-top:8px" id="concierge-note"></p>
             <p style="font-size:12px;color:var(--gold);background:var(--gold-light);border-radius:6px;padding:8px 10px;line-height:1.6;margin-top:8px;display:none" id="concierge-lock-note">🔒 Managed chat is a Premium feature. <a href="/plans" style="color:var(--gold);font-weight:700;text-decoration:underline">Upgrade to unlock</a>.</p>
           </div>
+          <div class="settings-section" id="settings-sms-section">
+            <h3><svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>SMS enquiry alerts</h3>
+            <div class="toggle-row" style="border-bottom:none">
+              <div class="toggle-label"><strong>Text me for new enquiries</strong><span>We'll text you the moment a buyer enquires — in addition to email/in-app</span></div>
+              <label class="switch"><input type="checkbox" id="sms-alerts-toggle" onchange="toggleSmsAlerts(this.checked)"/><span class="switch-track"></span></label>
+            </div>
+            <p style="font-size:12px;color:var(--text-3);line-height:1.6;margin-top:8px" id="sms-alerts-note">Yearly plans also get texts for payment confirmations and listing status changes.</p>
+            <p style="font-size:12px;color:var(--gold);background:var(--gold-light);border-radius:6px;padding:8px 10px;line-height:1.6;margin-top:8px;display:none" id="sms-alerts-lock-note">🔒 SMS alerts are a Premium feature. <a href="/plans" style="color:var(--gold);font-weight:700;text-decoration:underline">Upgrade to unlock</a>.</p>
+          </div>
           <div class="settings-section" id="settings-premium-section">
             <h3><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Premium</h3>
             <p style="font-size:12.5px;color:var(--text-3);margin-bottom:14px;line-height:1.6">Unlock managed chat, a Pro badge, scheduled publishing, video tours, printable brochures, and more.</p>
@@ -877,6 +886,10 @@
             </div>
             <a href="/plans" id="premium-upgrade-btn" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:14px;text-decoration:none">Upgrade — from KES 1,200/mo</a>
           </div>
+          <div class="settings-section" id="settings-rm-section" style="display:none">
+            <h3><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Your relationship manager</h3>
+            <p id="rm-content" style="font-size:13px;color:var(--text-2);line-height:1.7"></p>
+          </div>
           <div class="settings-section" id="settings-elite-section">
             <h3><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Elite</h3>
             <p style="font-size:12.5px;color:var(--text-3);margin-bottom:14px;line-height:1.6">Everything in Premium, plus AI-powered tools to save time on listings and pricing.</p>
@@ -903,6 +916,15 @@
             </div>
             <button id="elite-upgrade-btn" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:14px;background:#7c3aed" onclick="showToast('Elite plans coming soon','')">Upgrade to Elite — from KES 3,000/mo</button>
             <button id="elite-storefront-btn" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:10px;display:none" onclick="copyStorefrontLink()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy my storefront link</button>
+          </div>
+          <div class="settings-section" id="settings-team-section" style="display:none">
+            <h3><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Team seats</h3>
+            <p style="font-size:12.5px;color:var(--text-3);margin-bottom:12px;line-height:1.6">Invite someone to help manage your account. <span id="team-seats-note"></span></p>
+            <div style="display:flex;gap:8px;margin-bottom:14px">
+              <input type="email" id="team-invite-email" placeholder="teammate@email.com" style="flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none"/>
+              <button class="btn btn-primary btn-sm" id="team-invite-btn" onclick="inviteTeamMember()">Invite</button>
+            </div>
+            <div id="team-members-list"></div>
           </div>
           <div class="settings-section" id="settings-contact-privacy-section">
             <h3><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.12 1.2 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>Buyer contact privacy</h3>
@@ -1415,6 +1437,8 @@ async function loadProfile(){
 
   const conciergeToggle = document.getElementById('concierge-toggle');
   if (conciergeToggle) conciergeToggle.checked = !!data?.concierge_enabled;
+  const smsToggle = document.getElementById('sms-alerts-toggle');
+  if (smsToggle) smsToggle.checked = !!data?.sms_alerts_enabled;
   const conciergeNote = document.getElementById('concierge-note');
   if (conciergeNote) conciergeNote.textContent = data?.concierge_enabled
     ? "On — our team can now reply to your buyer messages for you. You'll still see everything in your Messages tab."
@@ -1465,7 +1489,77 @@ function loadSubscriptionUI(){
   updateEliteSectionUI(sub);
   syncProBadge(sub);
   updateConciergeGate(sub);
+  updateSmsAlertsGate(sub);
   updateEliteGatedPages(sub);
+  loadRelationshipManager(sub);
+  loadTeamSeats(sub);
+}
+
+function teamSeatLimit(){
+  return currentProfile?.subscription_tier==='yearly' ? 3 : 1;
+}
+
+async function loadTeamSeats(sub){
+  const section=document.getElementById('settings-team-section');
+  if(!section)return;
+  if(!sub.active){section.style.display='none';return;}
+  section.style.display='block';
+  const limit=teamSeatLimit();
+  const{data,error}=await db.from('team_members').select('*').eq('owner_id',currentUser.id).order('invited_at',{ascending:false});
+  const members=data||[];
+  document.getElementById('team-seats-note').textContent=`${members.length} of ${limit} seat(s) used.`;
+  document.getElementById('team-invite-btn').disabled=members.length>=limit;
+  const listEl=document.getElementById('team-members-list');
+  if(error){listEl.innerHTML=`<div style="font-size:12px;color:var(--red)">Could not load team: ${escHtml(error.message)}</div>`;return;}
+  listEl.innerHTML=members.length?members.map(m=>`
+    <div class="toggle-row">
+      <div class="toggle-label"><strong>${escHtml(m.member_email)}</strong><span>${m.status==='active'?'Active — joined '+new Date(m.joined_at).toLocaleDateString('en-KE'):'Invited — awaiting sign-up'}</span></div>
+      <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="removeTeamMember(${m.id})">Remove</button>
+    </div>`).join(''):'<div style="font-size:12.5px;color:var(--text-3)">No teammates invited yet.</div>';
+}
+
+async function inviteTeamMember(){
+  const emailEl=document.getElementById('team-invite-email');
+  const email=emailEl.value.trim();
+  if(!email||!email.includes('@')){showToast('Please enter a valid email','error');return;}
+  const limit=teamSeatLimit();
+  const{count}=await db.from('team_members').select('*',{count:'exact',head:true}).eq('owner_id',currentUser.id);
+  if((count||0)>=limit){showToast('You\'ve used all your team seats for this plan','error');return;}
+  const btn=document.getElementById('team-invite-btn');btn.disabled=true;btn.textContent='Inviting…';
+  const{error}=await db.from('team_members').insert({owner_id:currentUser.id,member_email:email,status:'invited'});
+  btn.disabled=false;btn.textContent='Invite';
+  if(error){showToast('Could not invite: '+error.message,'error');return;}
+  emailEl.value='';
+  showToast('Invite sent ✓','success');
+  fetch(`${EDGE_URL}/send-notification-email`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`},body:JSON.stringify({type:'team_invite',audience:'seller',sellerEmail:email,sellerName:email.split('@')[0],ownerName:currentProfile?.full_name||currentUser?.email})}).catch(()=>{});
+  loadTeamSeats(subscriptionInfo());
+}
+
+async function removeTeamMember(id){
+  if(!confirm('Remove this teammate?'))return;
+  const{error}=await db.from('team_members').delete().eq('id',id);
+  if(error){showToast('Could not remove: '+error.message,'error');return;}
+  showToast('Removed','success');
+  loadTeamSeats(subscriptionInfo());
+}
+
+async function loadRelationshipManager(sub){
+  const section=document.getElementById('settings-rm-section');
+  const content=document.getElementById('rm-content');
+  if(!section||!content)return;
+  if(!sub.active){section.style.display='none';return;}
+  if(currentProfile?.subscription_tier!=='yearly'){
+    section.style.display='block';
+    content.textContent="You're in our priority support queue — support chats from monthly-plan sellers are answered ahead of the general queue. Upgrade to yearly for a named manager with a direct line.";
+    return;
+  }
+  const{data}=await db.from('platform_settings').select('key,value').in('key',['rm_name','rm_phone']);
+  const name=(data||[]).find(r=>r.key==='rm_name')?.value||'';
+  const phone=(data||[]).find(r=>r.key==='rm_phone')?.value||'';
+  section.style.display='block';
+  if(!name&&!phone){content.textContent="Your relationship manager will be assigned shortly — we'll update this as soon as they're set.";return;}
+  const waLink=phone?`https://wa.me/${phone.replace(/[\s+]/g,'').replace(/^0/,'254')}`:null;
+  content.innerHTML=`${escHtml(name)||'Your manager'} is your direct contact for anything on Nyumba254.${phone?` <a href="tel:${escHtml(phone)}" style="color:var(--green);font-weight:600">Call ${escHtml(phone)}</a>`:''}${waLink?` · <a href="${waLink}" target="_blank" style="color:#25D366;font-weight:600">WhatsApp</a>`:''}`;
 }
 
 function eliteActive(){
@@ -1856,6 +1950,19 @@ function updateConciergeGate(sub){
   toggle.disabled = !sub.active;
   if(lockNote) lockNote.style.display = sub.active ? 'none' : 'block';
 }
+function updateSmsAlertsGate(sub){
+  const toggle = document.getElementById('sms-alerts-toggle');
+  const lockNote = document.getElementById('sms-alerts-lock-note');
+  if(!toggle) return;
+  toggle.disabled = !sub.active;
+  if(lockNote) lockNote.style.display = sub.active ? 'none' : 'block';
+}
+async function toggleSmsAlerts(enabled) {
+  const { error } = await db.from('profiles').update({ sms_alerts_enabled: enabled }).eq('id', currentUser.id);
+  if (error) { showToast('Could not update: '+error.message,'error'); document.getElementById('sms-alerts-toggle').checked = !enabled; return; }
+  currentProfile = { ...currentProfile, sms_alerts_enabled: enabled };
+  showToast(enabled ? 'SMS alerts turned on ✓' : 'SMS alerts turned off','success');
+}
 
 const VERIFY_BUCKET = 'verification-docs';
 
@@ -2126,6 +2233,18 @@ function getListingStatusDisplay(l){
   return{label:statusLabel(l.status),cls:'status-'+l.status,banner:null};
 }
 
+async function loadDemandMatches(){
+  const wrap=document.getElementById('demand-matches-list');
+  if(!wrap)return;
+  if(!subscriptionInfo().active){
+    wrap.innerHTML=`<div style="text-align:center;padding:14px 0"><p style="font-size:12.5px;color:var(--text-3);margin-bottom:10px">See when buyers' saved searches match one of your listings.</p><a href="/plans" class="btn btn-primary btn-sm">Upgrade to unlock</a></div>`;
+    return;
+  }
+  const{data,error}=await db.from('seller_demand_notices').select('*, listings(title)').eq('seller_id',currentUser.id).order('created_at',{ascending:false}).limit(5);
+  if(error||!data?.length){wrap.innerHTML='<div style="padding:10px 0;color:var(--text-3);font-size:13px">No buyer matches yet — you\'ll see them here when a buyer\'s saved search matches one of your listings.</div>';return;}
+  wrap.innerHTML=data.map(n=>`<div class="quick-row"><span>${n.match_count} buyer${n.match_count!==1?'s':''} searching ${n.category?'for '+escHtml(n.category):''} in ${escHtml(n.area||'your area')}${n.listings?.title?' — '+escHtml(n.listings.title):''}</span><span>${timeAgo(n.created_at)}</span></div>`).join('');
+}
+
 function renderOverview(){
   const active=allListings.filter(l=>l.status==='active'&&!l.is_disabled).length;
   const unread=threads.reduce((s,t)=>s+(t.unread_count||0),0);
@@ -2142,7 +2261,7 @@ function renderOverview(){
   document.getElementById('stat-paid').textContent=`KES ${totalPaid.toLocaleString('en-KE')}`;
   document.getElementById('stat-paid-delta').textContent=`${confirmed.length} payment${confirmed.length!==1?'s':''}`;
   document.getElementById('stat-views').textContent=views.toLocaleString('en-KE');
-  renderActivityFeed();renderChart();renderQuickListings();
+  renderActivityFeed();renderChart();renderQuickListings();loadDemandMatches();
 }
 
 function renderActivityFeed(){
@@ -2334,6 +2453,10 @@ const manageVideosBtn=subscriptionInfo().active
   ?`<div class="icon-btn purple" data-id="${l.id}" onclick="openManageVideosModal(this.dataset.id)" title="Manage video walkthrough" role="button" tabindex="0" aria-label="Manage videos" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>`
   :'';
 
+const brochureBtn=subscriptionInfo().active
+  ?`<div class="icon-btn purple" data-id="${l.id}" onclick="generateBrochure(this.dataset.id)" title="Download printable brochure" role="button" tabindex="0" aria-label="Download brochure" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>`
+  :'';
+
 const contactHideBtn=l.contact_hidden
   ?`<div class="icon-btn" data-id="${l.id}" onclick="toggleListingContactHidden(this.dataset.id)" title="Contact hidden — click to re-enable Call/WhatsApp on this listing" role="button" tabindex="0" aria-label="Show buyer contact for this listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}" style="color:var(--red);border-color:var(--red)"><svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div>`
   :`<div class="icon-btn" data-id="${l.id}" onclick="toggleListingContactHidden(this.dataset.id)" title="Hide Call/WhatsApp — force chat-only on this listing" role="button" tabindex="0" aria-label="Hide buyer contact for this listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>`;
@@ -2354,7 +2477,7 @@ const contactHideBtn=l.contact_hidden
         <a href="/listing?id=${String(l.listing_number).padStart(6,'0')}" target="_blank" class="icon-btn" title="View live listing"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
         <div class="icon-btn" onclick="openMessagesForListing('${l.id}')" title="Messages" role="button" tabindex="0" aria-label="Open messages for this listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
         <div class="icon-btn" onclick="shareListing('${l.id}')" title="Share" role="button" tabindex="0" aria-label="Share listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
-        ${editBtn}${statusBtn}${pauseBtn}${publishNowBtn}${manageUnitsBtn}${manageVideosBtn}${contactHideBtn}
+        ${editBtn}${statusBtn}${pauseBtn}${publishNowBtn}${manageUnitsBtn}${manageVideosBtn}${brochureBtn}${contactHideBtn}
         <div class="icon-btn danger" data-id="${l.id}" data-title="${escAttr(l.title)}" onclick="openDeleteModal(this.dataset.id,this.dataset.title)" title="Delete listing" role="button" tabindex="0" aria-label="Delete listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></div>
       </div></td>
     </tr>`;
@@ -2609,6 +2732,8 @@ async function addListingVideo(){
   document.getElementById('mv-url-input').value='';
   renderManageVideosModal();
   showToast('Video added ✓','success');
+  const l=allListings.find(x=>String(x.id)===String(mvActiveListingId));
+  notifyAdmin('listing_video_added',{listingId:mvActiveListingId,listingTitle:l?.title||'',videoUrl:url,sellerName:currentProfile?.full_name||currentUser?.email,sellerEmail:currentUser?.email});
 }
 
 async function deleteListingVideo(id){
@@ -2900,6 +3025,101 @@ let receiptTarget=null;
 function openReceiptModal(id){const p=allPayments.find(x=>String(x.id)===String(id));if(!p)return;receiptTarget=p;const isPaid=p.status==='confirmed'||p.status==='paid';document.getElementById('rcpt-number').textContent='NK-'+String(p.id).slice(0,8).toUpperCase();document.getElementById('rcpt-date').textContent=new Date(p.created_at).toLocaleDateString('en-KE',{day:'numeric',month:'long',year:'numeric'});document.getElementById('rcpt-seller').textContent=currentProfile?.full_name||currentUser?.email||'—';document.getElementById('rcpt-listing').textContent=p.listings?.title||'—';document.getElementById('rcpt-method').textContent=(p.method||'—').toUpperCase();document.getElementById('rcpt-ref').textContent=p.reference||p.mpesa_ref||'—';document.getElementById('rcpt-status').textContent=isPaid?'Paid ✓':(p.status||'pending');document.getElementById('rcpt-amount').textContent=`KES ${Number(p.amount||0).toLocaleString('en-KE')}`;openModal('modal-receipt');}
 function printReceipt(){window.print();}
 function downloadReceiptPDF(){if(!receiptTarget)return;if(!window.jspdf){showToast('PDF library still loading — try again in a second','error');return;}const{jsPDF}=window.jspdf;const doc=new jsPDF({unit:'mm',format:'a5'});const p=receiptTarget;const isPaid=p.status==='confirmed'||p.status==='paid';doc.setFont('helvetica','bold');doc.setFontSize(18);doc.setTextColor(8,80,65);doc.text('Nyumba254',74,20,{align:'center'});doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(120,120,120);doc.text('PAYMENT RECEIPT',74,27,{align:'center'});doc.setDrawColor(15,110,86);doc.line(15,32,133,32);let y=42;const row=(label,value)=>{doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(130,130,130);doc.text(label,15,y);doc.setFont('helvetica','bold');doc.setTextColor(26,26,24);doc.text(String(value),133,y,{align:'right'});y+=8;};row('Receipt No.','NK-'+String(p.id).slice(0,8).toUpperCase());row('Date',new Date(p.created_at).toLocaleDateString('en-KE',{day:'numeric',month:'long',year:'numeric'}));row('Billed to',currentProfile?.full_name||currentUser?.email||'—');row('Listing',p.listings?.title||'—');row('Payment method',(p.method||'—').toUpperCase());row('Reference',p.reference||p.mpesa_ref||'—');row('Status',isPaid?'Paid':(p.status||'pending'));doc.setDrawColor(224,222,216);doc.line(15,y,133,y);y+=10;doc.setFont('helvetica','bold');doc.setFontSize(14);doc.setTextColor(8,80,65);doc.text('Amount paid',15,y);doc.text(`KES ${Number(p.amount||0).toLocaleString('en-KE')}`,133,y,{align:'right'});y+=20;doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(150,150,150);doc.text('Thank you for using Nyumba254.',74,y,{align:'center'});doc.save(`Nyumba254-Receipt-${String(p.id).slice(0,8)}.pdf`);}
+
+/* ══════════════════════════════════════
+   PRINTABLE BROCHURE — Premium/Elite
+   ════════════════════════════════════════════════════
+   Reuses the jsPDF instance already loaded for receipts.
+   QR code is fetched as an image from api.qrserver.com
+   (free, no key) and embedded as a data URL — no new
+   client library needed.
+══════════════════════════════════════ */
+async function urlToDataURL(url){
+  const res=await fetch(url);
+  if(!res.ok)throw new Error('Fetch failed: '+res.status);
+  const blob=await res.blob();
+  return new Promise((resolve,reject)=>{
+    const r=new FileReader();
+    r.onload=()=>resolve(r.result);
+    r.onerror=reject;
+    r.readAsDataURL(blob);
+  });
+}
+
+async function generateBrochure(id){
+  if(!subscriptionInfo().active){showToast('Brochures are a Premium feature — upgrade to unlock.','error');return;}
+  const l=allListings.find(x=>String(x.id)===String(id));
+  if(!l){showToast('Listing not found','error');return;}
+  if(!window.jspdf){showToast('PDF library still loading — try again in a second','error');return;}
+  showToast('Generating brochure…','');
+  try{
+    const{jsPDF}=window.jspdf;
+    const doc=new jsPDF({unit:'mm',format:'a4'});
+    const pageW=210,margin=14;
+    const isYearly=currentProfile?.subscription_tier==='yearly';
+
+    doc.setFillColor(15,110,86);
+    doc.rect(0,0,pageW,26,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(255,255,255);
+    doc.text(isYearly&&currentProfile?.full_name?currentProfile.full_name:'Nyumba254',margin,16);
+
+    let y=34;
+    const cover=(l.listing_photos||[]).find(p=>p.is_cover)||(l.listing_photos||[])[0];
+    if(cover){
+      try{
+        const dataUrl=await urlToDataURL(cover.url);
+        doc.addImage(dataUrl,'JPEG',margin,y,pageW-margin*2,88,undefined,'FAST');
+        y+=96;
+      }catch(e){console.error('Brochure image load failed:',e);}
+    }
+
+    doc.setTextColor(26,26,24);doc.setFont('helvetica','bold');doc.setFontSize(15);
+    doc.text(l.title,margin,y);y+=8;
+
+    doc.setFont('helvetica','normal');doc.setFontSize(11);doc.setTextColor(74,74,70);
+    doc.text(`${l.area}${l.sub_area?', '+l.sub_area:''}`,margin,y);y+=8;
+
+    doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(8,80,65);
+    const priceTxt=l.is_multi_unit?muPriceRangeText(l):`KES ${Number(l.price).toLocaleString('en-KE')}${l.price_type==='rent'?'/mo':''}`;
+    doc.text(priceTxt,margin,y);y+=10;
+
+    doc.setDrawColor(224,222,216);doc.line(margin,y,pageW-margin,y);y+=8;
+
+    doc.setFont('helvetica','normal');doc.setFontSize(10.5);doc.setTextColor(74,74,70);
+    const specs=[];
+    if(!l.is_multi_unit){
+      specs.push(`Bedrooms: ${l.bedrooms==0?'Studio':l.bedrooms}`);
+      if(l.bathrooms)specs.push(`Bathrooms: ${l.bathrooms}`);
+      if(l.size_sqm)specs.push(`Size: ${l.size_sqm} m²`);
+    }
+    specs.push(`Category: ${l.category}`);
+    doc.text(specs.join('   ·   '),margin,y);y+=10;
+
+    if(l.description){
+      doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(74,74,70);
+      const lines=doc.splitTextToSize(l.description,pageW-margin*2-40);
+      doc.text(lines.slice(0,10),margin,y);
+    }
+
+    try{
+      const listingUrl=`${location.origin}/listing?id=${String(l.listing_number).padStart(6,'0')}`;
+      const qrUrl=`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(listingUrl)}`;
+      const qrDataUrl=await urlToDataURL(qrUrl);
+      doc.addImage(qrDataUrl,'PNG',pageW-margin-32,y-8,32,32);
+      doc.setFontSize(8);doc.setTextColor(136,135,128);
+      doc.text('Scan to view listing',pageW-margin-32,y+27);
+    }catch(e){console.error('QR generation failed:',e);}
+
+    doc.setFontSize(9);doc.setTextColor(136,135,128);
+    doc.text(currentProfile?.full_name?`Contact: ${currentProfile.full_name}`:'Nyumba254',margin,285);
+
+    doc.save(`${l.title.replace(/[^a-z0-9]+/gi,'-')}-brochure.pdf`);
+    showToast('Brochure downloaded ✓','success');
+  }catch(e){
+    console.error('Brochure generation failed:',e);
+    showToast('Could not generate brochure: '+e.message,'error');
+  }
+}
 
 const pageTitles={overview:'Overview',listings:'My listings',messages:'Messages',enquiries:'Enquiries',reviews:'Reviews',payments:'Payments',settings:'Settings','rent-ledger':'Rent & Tenant Ledger','demand-heatmap':'Demand Insights'};
 function showPage(name){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');const navEl=document.getElementById('nav-'+name);if(navEl)navEl.classList.add('active');document.getElementById('topbar-title').textContent=pageTitles[name]||name;if(name==='overview')renderOverview();if(name==='listings')renderListingsTable();if(name==='messages'){showThreadListMobile();renderThreadList();}if(name==='enquiries')renderEnquiries();if(name==='reviews')renderReviews();if(name==='payments')renderPayments();if(name==='rent-ledger')loadRentalUnits();if(name==='demand-heatmap')loadDemandInsights();closeSidebar();

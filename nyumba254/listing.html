@@ -2211,6 +2211,12 @@ async function sendEnquiry() {
     }),
   }).catch(e => console.error('Enquiry notify email failed:', e));
 
+  fetch(`${EDGE_URL}/send-sms-alert`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+    body: JSON.stringify({ type: 'new_enquiry', listingId, buyerName: name, messagePreview: message, listingTitle: listing?.title }),
+  }).catch(e => console.error('SMS alert failed:', e));
+
   document.getElementById('enquiry-form').style.display   = 'none';
   document.getElementById('enquiry-success').style.display = 'block';
   if (typeof NKGlobalChat !== 'undefined') NKGlobalChat.registerAndOpen(listingId);
