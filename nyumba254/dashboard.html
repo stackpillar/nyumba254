@@ -1571,6 +1571,8 @@ async function init(){
     renderOverview();
     document.getElementById('loading-screen').style.display='none';
     document.getElementById('app-shell').style.display='flex';
+    const lastPage=sessionStorage.getItem('ny_last_page');
+    if(lastPage&&lastPage!=='overview'&&document.getElementById('page-'+lastPage)){showPage(lastPage);}
     msgPollTimer=setInterval(pollNewMessages,MSG_POLL_MS);
     listingStatusPollTimer=setInterval(pollListingStatusChanges,LISTING_STATUS_POLL_MS);
     document.addEventListener('visibilitychange',handleVisibilityChange);
@@ -3032,17 +3034,20 @@ async function loadAllData(){
   const{data:listingsData}=await db.from('listings').select('*, listing_photos(*), listing_units(*)').eq('seller_id',currentUser.id).order('created_at',{ascending:false});
   allListings=listingsData||[];
   const ids=allListings.map(l=>l.id);
-  if(ids.length){
-    const{data:enqData}=await db.from('enquiries').select('*, listings(title, area)').in('listing_id',ids).order('created_at',{ascending:false});
-    allEnquiries=enqData||[];
-    const msgCutoff=new Date(Date.now()-MSG_HISTORY_DAYS*86400000).toISOString();
-    const{data:msgData}=await db.from('messages').select('*').in('listing_id',ids).gte('created_at',msgCutoff).order('created_at',{ascending:true});
-    allMessages=msgData||[];
-  }else{allEnquiries=[];allMessages=[];}
-  const{data:payData}=await db.from('payments').select('*, listings(title)').eq('seller_id',currentUser.id).order('created_at',{ascending:false});
-  allPayments=payData||[];
-  const{data:revData}=await db.from('reviews').select('*, listings(title)').eq('review_type','seller').eq('target_seller_id',currentUser.id).order('created_at',{ascending:false});
-  allReviews=revData||[];
+  const msgCutoff=new Date(Date.now()-MSG_HISTORY_DAYS*86400000).toISOString();
+
+  const[enqRes,msgRes,payRes,revRes]=await Promise.all([
+    ids.length ? db.from('enquiries').select('*, listings(title, area)').in('listing_id',ids).order('created_at',{ascending:false}) : Promise.resolve({data:[]}),
+    ids.length ? db.from('messages').select('*').in('listing_id',ids).gte('created_at',msgCutoff).order('created_at',{ascending:true}) : Promise.resolve({data:[]}),
+    db.from('payments').select('*, listings(title)').eq('seller_id',currentUser.id).order('created_at',{ascending:false}),
+    db.from('reviews').select('*, listings(title)').eq('review_type','seller').eq('target_seller_id',currentUser.id).order('created_at',{ascending:false}),
+  ]);
+
+  allEnquiries=enqRes.data||[];
+  allMessages=msgRes.data||[];
+  allPayments=payRes.data||[];
+  allReviews=revRes.data||[];
+
   buildThreads();updateNavBadges();
   listingStatusSnapshot={};
   allListings.forEach(l=>{listingStatusSnapshot[l.id]=l.status;});
@@ -4046,7 +4051,7 @@ async function generateBrochure(id){
 }
 
 const pageTitles={overview:'Overview',listings:'My listings',messages:'Messages',enquiries:'Enquiries',reviews:'Reviews',payments:'Payments',settings:'Settings','rent-ledger':'Rent & Tenant Ledger','demand-heatmap':'Demand Insights'};
-function showPage(name){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');const navEl=document.getElementById('nav-'+name);if(navEl)navEl.classList.add('active');document.getElementById('topbar-title').textContent=pageTitles[name]||name;if(name==='overview')renderOverview();if(name==='listings')renderListingsTable();if(name==='messages'){showThreadListMobile();renderThreadList();}if(name==='enquiries')renderEnquiries();if(name==='reviews')renderReviews();if(name==='payments')renderPayments();if(name==='rent-ledger')loadRentalUnits();if(name==='demand-heatmap')loadDemandInsights();closeSidebar();
+function showPage(name){sessionStorage.setItem('ny_last_page',name);document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');const navEl=document.getElementById('nav-'+name);if(navEl)navEl.classList.add('active');document.getElementById('topbar-title').textContent=pageTitles[name]||name;if(name==='overview')renderOverview();if(name==='listings')renderListingsTable();if(name==='messages'){showThreadListMobile();renderThreadList();}if(name==='enquiries')renderEnquiries();if(name==='reviews')renderReviews();if(name==='payments')renderPayments();if(name==='rent-ledger')loadRentalUnits();if(name==='demand-heatmap')loadDemandInsights();closeSidebar();
   const scwFabEl=document.getElementById('scw-fab');
   if(scwFabEl){
     if(name==='messages'){
