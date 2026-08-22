@@ -183,6 +183,7 @@
     .badge.sold     { background: var(--blue-light); color: var(--blue); }
     .badge.expired  { background: var(--surface); color: var(--text-3); }
     .badge.rejected { background: var(--red-light); color: var(--red); }
+    .badge.scheduled { background: var(--blue-light); color: var(--blue); }
     .badge.featured { background: var(--gold-light); color: var(--gold); }
     .badge.standard { background: var(--surface); color: var(--text-3); }
     .badge.paid     { background: var(--green-light); color: var(--green-dark); }
@@ -2306,7 +2307,7 @@
         <td>${esc(fmtLocation(l))}</td>
         <td style="font-weight:500">${fmtListingPrice(l)}</td>
         <td><span class="badge ${l.category}">${l.category}</span></td>
-        <td><span class="badge ${l.status}">${l.status}</span></td>
+        <td><span class="badge ${l.status}">${l.status}${l.status==='scheduled'&&l.publish_at?' · '+fmtDate(l.publish_at):''}</span></td>
         <td><span class="badge ${payClass}">${l.payment_status||'unpaid'}</span></td>
         <td>${fmtDate(l.created_at)}</td>
         <td>${expiryBadgeHtml(l)}</td>
@@ -2437,20 +2438,24 @@
     } else { doApprove(id,l.title); }
   }
   async function doApprove(id,title) {
-    const {data,error} = await db.from('listings').update({status:'active'}).eq('id',id).select();
+    const l = _listings[id];
+    const now = new Date();
+    const isFutureScheduled = l?.publish_at && new Date(l.publish_at) > now;
+    const newStatus = isFutureScheduled ? 'scheduled' : 'active';
+
+    const {data,error} = await db.from('listings').update({status:newStatus}).eq('id',id).select();
     if (error)       { toast('Error approving: '+error.message,'error'); return; }
     if (!data?.length){ toast('Blocked by RLS — check Supabase policy','error'); return; }
-    logAction('approve_listing','listing',id,title||'');
-    const l = _listings[id];
+    logAction(isFutureScheduled ? 'approve_listing_scheduled' : 'approve_listing','listing',id,title||'');
     if (l?.profiles?.email) {
-      notifySeller('listing_approved', {
-        listingId: id, listingTitle: title,
+      notifySeller(isFutureScheduled ? 'listing_scheduled' : 'listing_approved', {
+        listingId: id, listingTitle: title, publishAt: l.publish_at,
         sellerName: l.profiles.full_name, sellerEmail: l.profiles.email,
       });
     }
-    toast('Listing approved and live ✓','success');
+    toast(isFutureScheduled ? `Listing approved — will go live ${new Date(l.publish_at).toLocaleString('en-KE')} ✓` : 'Listing approved and live ✓','success');
     loadOverview(); if(currentView==='listings') loadAllListings();
-    maybeAutoPostSocial(id);
+    if (!isFutureScheduled) maybeAutoPostSocial(id);
   }
 
   function rejectListing(id) {

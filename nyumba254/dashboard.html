@@ -2108,6 +2108,7 @@ function getListingStatusDisplay(l){
   if(l.recycle_bin){const d=l.purge_at?Math.max(0,Math.ceil((new Date(l.purge_at)-new Date())/86400000)):null;return{label:'In recycle bin',cls:'status-disabled',banner:`Disabled by admin${l.disabled_reason?': '+escHtml(l.disabled_reason):''}. Contact admin for more information.`+(d!==null?` Removed in ${d} day(s).`:'')};}
   if(l.is_disabled)return{label:'Disabled by admin',cls:'status-disabled',banner:`Disabled by admin${l.disabled_reason?': '+escHtml(l.disabled_reason):''}. Contact admin for more information.`};
   if(l.status==='occupied'){const word=l.price_type==='rent'?'occupied':'sold';return{label:l.price_type==='rent'?'Occupied':'Sold',cls:'status-occupied',banner:`Marked as ${word} — hidden from public search and listing pages.`};}
+  if(l.status==='scheduled')return{label:'Scheduled',cls:'status-pending',banner:l.publish_at?`Approved — goes live automatically on ${new Date(l.publish_at).toLocaleString('en-KE')}.`:null};
   return{label:statusLabel(l.status),cls:'status-'+l.status,banner:null};
 }
 
@@ -2232,6 +2233,20 @@ async function confirmOccupied(){
   showToast('Listing hidden from public — marked as occupied/sold ✓','success');
 }
 
+async function publishScheduledNow(id){
+  if(listingActionBusy.has(id))return;
+  listingActionBusy.add(id);
+  try{
+    const{error}=await db.from('listings').update({status:'active',publish_at:null}).eq('id',id);
+    if(error){showToast('Could not publish: '+error.message,'error');return;}
+    const l=allListings.find(l=>l.id===id);
+    if(l){l.status='active';l.publish_at=null;}
+    renderListingsTable();renderOverview();
+    showToast('Listing published now ✓','success');
+  } finally {
+    listingActionBusy.delete(id);
+  }
+}
 async function reactivateListing(id){
   if(listingActionBusy.has(id))return;
   listingActionBusy.add(id);
@@ -2293,6 +2308,10 @@ const pauseBtn=isActive
   ?`<div class="icon-btn" data-id="${l.id}" data-status="${l.status}" onclick="togglePause(this.dataset.id,this.dataset.status)" title="Pause listing" role="button" tabindex="0" aria-label="Pause listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></div>`
   :'';
 
+const publishNowBtn = (l.status==='scheduled')
+  ?`<div class="icon-btn purple" data-id="${l.id}" onclick="publishScheduledNow(this.dataset.id)" title="Publish now instead of waiting" role="button" tabindex="0" aria-label="Publish now" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>`
+  :'';
+
 const manageUnitsBtn=l.is_multi_unit
   ?`<div class="icon-btn purple" data-id="${l.id}" onclick="openManageUnitsModal(this.dataset.id)" title="Manage units — mark occupied/available" role="button" tabindex="0" aria-label="Manage units" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg></div>`
   :'';
@@ -2317,14 +2336,14 @@ const contactHideBtn=l.contact_hidden
         <a href="/listing?id=${String(l.listing_number).padStart(6,'0')}" target="_blank" class="icon-btn" title="View live listing"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
         <div class="icon-btn" onclick="openMessagesForListing('${l.id}')" title="Messages" role="button" tabindex="0" aria-label="Open messages for this listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
         <div class="icon-btn" onclick="shareListing('${l.id}')" title="Share" role="button" tabindex="0" aria-label="Share listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
-        ${editBtn}${statusBtn}${pauseBtn}${manageUnitsBtn}${contactHideBtn}
+        ${editBtn}${statusBtn}${pauseBtn}${publishNowBtn}${manageUnitsBtn}${contactHideBtn}
         <div class="icon-btn danger" data-id="${l.id}" data-title="${escAttr(l.title)}" onclick="openDeleteModal(this.dataset.id,this.dataset.title)" title="Delete listing" role="button" tabindex="0" aria-label="Delete listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></div>
       </div></td>
     </tr>`;
   }).join('');
 }
 
-function statusLabel(s){return{active:'Active',pending:'Pending review',paused:'Paused',rejected:'Rejected',expired:'Expired',occupied:'Occupied'}[s]||s;}
+function statusLabel(s){return{active:'Active',pending:'Pending review',paused:'Paused',rejected:'Rejected',expired:'Expired',occupied:'Occupied',scheduled:'Scheduled'}[s]||s;}
 async function toggleListingContactHidden(id){
   if(listingActionBusy.has(id))return;
   listingActionBusy.add(id);
