@@ -2198,6 +2198,11 @@ async function sendEnquiry() {
      buyer has had a realistic chance to actually secure the property. */
   nkTrackContact(listingId, listing?.seller_id, listing?.profiles?.full_name || 'the seller');
 
+  /* If this seller has the Elite AI Chat Concierge on, this quietly asks it
+     for an instant reply grounded in the listing's own facts. No-ops (via
+     {skipped:true}) for every seller who doesn't have it enabled. */
+  nkMaybeTriggerAiConcierge(listingId, token, name, message);
+
   // Notify the Nyumba254 admin inbox(es) directly — this is on top of the
   // enquiry already being visible in the admin dashboard. Fire-and-forget,
   // never blocks the success screen.
@@ -2292,6 +2297,8 @@ async function sendFollowUp() {
   threadMessages.push(data || { sender:'buyer', content:text, created_at:new Date().toISOString() });
   input.value = ''; input.style.height = 'auto';
   renderThread();
+
+  nkMaybeTriggerAiConcierge(listingId, buyerToken, buyerName, text);
 }
 
 function clearThread() {
@@ -2536,6 +2543,26 @@ function nkTrackContact(lId, sellerId, sellerName) {
   if (!pending.some(p => p.listingId === lId)) {
     pending.push({ listingId: lId, sellerId, sellerName, contactedAt: Date.now(), snoozedUntil: 0, done: false, visitCount: 0 });
     nkLSSet(NK_REVIEW_PENDING_KEY, JSON.stringify(pending));
+  }
+}
+
+/* Fire-and-forget: asks the ai-concierge-reply edge function for an instant
+   answer grounded in this listing's own facts. The function itself checks
+   whether this seller actually has the Elite AI Concierge turned on and
+   quietly no-ops (skipped:true) if not — nothing here needs to know or care. */
+async function nkMaybeTriggerAiConcierge(lId, token, name, message) {
+  try {
+    const res = await fetch(`${EDGE_URL}/ai-concierge-reply`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+      body: JSON.stringify({ listingId: lId, buyerToken: token, buyerName: name, buyerMessage: message }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok || body.skipped) return;
+    await loadThread();
+    if (typeof NKGlobalChat !== 'undefined' && NKGlobalChat.refresh) NKGlobalChat.refresh();
+  } catch (e) {
+    console.error('AI concierge trigger failed (non-fatal):', e);
   }
 }
 

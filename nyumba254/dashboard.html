@@ -1027,9 +1027,13 @@
               <div class="toggle-label"><strong>Demand Insights</strong><span>See which areas buyers are enquiring about most</span></div>
               <span style="font-size:11px;font-weight:700;color:white;background:#7c3aed;padding:3px 9px;border-radius:20px">Elite</span>
             </div>
-            <div class="toggle-row" id="demand-digest-row" style="display:none;border-bottom:none">
+            <div class="toggle-row" id="demand-digest-row" style="display:none">
               <div class="toggle-label"><strong>Weekly demand digest</strong><span>Email me the top opportunity areas every Monday</span></div>
               <label class="switch"><input type="checkbox" id="demand-digest-toggle" onchange="toggleDemandDigest(this.checked)"/><span class="switch-track"></span></label>
+            </div>
+            <div class="toggle-row" id="ai-concierge-row" style="display:none;border-bottom:none">
+              <div class="toggle-label"><strong>24/7 AI Chat Concierge</strong><span>An AI trained on this listing's own details answers routine buyer questions instantly — availability, price, amenities — and hands off anything it can't answer to you</span></div>
+              <label class="switch"><input type="checkbox" id="ai-concierge-toggle" onchange="toggleAiConcierge(this.checked)"/><span class="switch-track"></span></label>
             </div>
             <button id="elite-upgrade-btn" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:14px;background:#7c3aed" onclick="showToast('Elite plans coming soon','')">Upgrade to Elite — from KES 3,000/mo</button>
             <button id="elite-storefront-btn" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:10px;display:none" onclick="copyStorefrontLink()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy my storefront link</button>
@@ -1731,6 +1735,12 @@ async function toggleDemandDigest(enabled){
   currentProfile = {...currentProfile, demand_digest_enabled: enabled};
   showToast(enabled?'Weekly digest turned on ✓':'Weekly digest turned off','success');
 }
+async function toggleAiConcierge(enabled){
+  const { error } = await db.from('profiles').update({ ai_concierge_enabled: enabled, ai_concierge_enabled_at: enabled ? new Date().toISOString() : null }).eq('id', currentUser.id);
+  if(error){ showToast('Could not update: '+error.message,'error'); document.getElementById('ai-concierge-toggle').checked=!enabled; return; }
+  currentProfile = {...currentProfile, ai_concierge_enabled: enabled};
+  showToast(enabled?'AI Chat Concierge turned on ✓ — it will start answering routine buyer questions on your listings':'AI Chat Concierge turned off','success');
+}
 function eliteActive(){
   const sub = subscriptionInfo();
   return sub.active && sub.plan==='elite';
@@ -1746,6 +1756,8 @@ function updateEliteGatedPages(sub){
   if(addUnitBtn) addUnitBtn.style.display = isElite?'inline-flex':'none';
   const digestRow=document.getElementById('demand-digest-row');
   if(digestRow){ digestRow.style.display = isElite?'flex':'none'; const dt=document.getElementById('demand-digest-toggle'); if(dt) dt.checked=!!currentProfile?.demand_digest_enabled; }
+  const aiConciergeRow=document.getElementById('ai-concierge-row');
+  if(aiConciergeRow){ aiConciergeRow.style.display = isElite?'flex':'none'; const act=document.getElementById('ai-concierge-toggle'); if(act) act.checked=!!currentProfile?.ai_concierge_enabled; }
   ['btn-export-rl-csv','btn-export-rl-pdf','btn-export-rl-annual','btn-remind-overdue','btn-export-di-csv','btn-export-di-pdf'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.style.display = isElite?'inline-flex':'none';
