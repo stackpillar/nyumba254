@@ -35,7 +35,9 @@
     .sidebar-logo-text{font-family:'Playfair Display',serif;font-size:16px;color:white}
     .sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto}
     .nav-section-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,0.3);padding:12px 8px 6px}
-    .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius);font-size:13px;font-weight:500;color:rgba(255,255,255,0.6);cursor:pointer;transition:all .15s;margin-bottom:2px;border:none;width:100%;text-align:left;background:none}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius);font-size:13px;font-weight:500;color:rgba(255,255,255,0.6);cursor:pointer;transition:background .18s ease,color .18s ease,transform .12s ease,padding-left .18s ease;margin-bottom:2px;border:none;width:100%;text-align:left;background:none}
+    .nav-item:hover{padding-left:16px}
+    .nav-item:active{transform:scale(.98)}
     .nav-item svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0}
     .nav-item:hover{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.9)}
     .nav-item.active{background:rgba(255,255,255,0.12);color:white}
@@ -58,7 +60,11 @@
     .page{display:none;padding:28px}
     .page.active{display:block}
     #page-messages{padding:0}
-    .btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:8px 16px;border-radius:var(--radius);transition:all .15s;cursor:pointer;border:none}
+    .enquiry-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;display:flex;gap:16px;align-items:flex-start;transition:box-shadow .2s ease,transform .2s ease}
+    .enquiry-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+    .btn:active:not(:disabled){transform:scale(.96)}
+    .btn-primary{box-shadow:0 1px 3px rgba(15,110,86,0.25)}
+    .btn-primary:hover{box-shadow:0 4px 12px rgba(15,110,86,0.32);transform:translateY(-1px)}
     .btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
     .btn-primary{background:var(--green);color:white}
     .btn-primary:hover{background:var(--green-dark)}
@@ -98,8 +104,8 @@
     .icon-btn.purple:hover{border-color:var(--purple);color:var(--purple);background:#EDE9FE}
     .icon-btn.locked{opacity:.4;cursor:not-allowed;pointer-events:none}
     .icon-btn.locked:hover{border-color:var(--border);color:var(--text-2);background:white}
-    .toast{position:fixed;bottom:28px;right:28px;z-index:9999;background:var(--text);color:white;padding:12px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:10px;transform:translateY(80px);opacity:0;transition:all .25s;max-width:340px}
-    .toast.show{transform:translateY(0);opacity:1}
+    .toast{position:fixed;bottom:28px;right:28px;z-index:9999;background:var(--text);color:white;padding:12px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;box-shadow:0 12px 32px rgba(0,0,0,0.28);display:flex;align-items:center;gap:10px;transform:translateY(80px) scale(.95);opacity:0;transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .25s;max-width:340px}
+    .toast.show{transform:translateY(0) scale(1);opacity:1}
     .toast.success{background:var(--green-dark)}
     .toast.error{background:var(--red)}
     .toast svg{width:15px;height:15px;stroke:white;fill:none;stroke-width:2.5;flex-shrink:0}
@@ -141,8 +147,10 @@
     .stat-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:10px}
     .stat-val{font-size:32px;font-weight:700;color:var(--text);line-height:1;margin-bottom:6px}
     .stat-delta{font-size:12px;color:var(--text-3)}
-    .stat-icon{position:absolute;top:18px;right:18px;width:36px;height:36px;border-radius:8px;background:var(--surface);display:flex;align-items:center;justify-content:center}
+    .stat-icon{position:absolute;top:18px;right:18px;width:36px;height:36px;border-radius:8px;background:var(--surface);display:flex;align-items:center;justify-content:center;transition:transform .25s ease}
     .stat-icon svg{width:18px;height:18px;stroke:var(--text-3);fill:none;stroke-width:1.8}
+    .stat-card:hover .stat-icon{transform:scale(1.1) rotate(-4deg)}
+    .stat-val{transition:color .2s ease}
     .overview-grid{display:grid;grid-template-columns:2fr 1fr;gap:20px}
     .activity-feed{display:flex;flex-direction:column}
     .activity-item{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
@@ -157,7 +165,8 @@
     .activity-text{font-size:13px;color:var(--text-2);line-height:1.5;flex:1}
     .activity-text strong{color:var(--text);font-weight:600}
     .activity-time{font-size:11px;color:var(--text-3);white-space:nowrap}
-    .quick-listing{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
+    .quick-listing{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);transition:background .15s ease;border-radius:8px}
+    .quick-listing:hover{background:var(--surface);padding-left:8px;padding-right:8px;margin:0 -8px}
     .quick-listing:last-child{border-bottom:none}
     .quick-img{width:52px;height:40px;border-radius:6px;background:var(--surface);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
     .quick-img img{width:100%;height:100%;object-fit:cover}
@@ -174,6 +183,7 @@
     .chart-label{flex:1;text-align:center;font-size:10px;color:var(--text-3)}
     .filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;align-items:center}
     .filter-pill{font-size:12px;padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);background:white;color:var(--text-2);cursor:pointer;font-weight:500;transition:all .15s}
+    .filter-pill.active{box-shadow:0 2px 8px rgba(15,110,86,0.28)}
     .filter-pill:hover{border-color:var(--green);color:var(--green)}
     .filter-pill.active{background:var(--green);color:white;border-color:var(--green)}
     .filter-search{margin-left:auto;display:flex;align-items:center;border:1.5px solid var(--border);border-radius:var(--radius);background:white;overflow:hidden}
@@ -183,7 +193,10 @@
     .listings-table th{text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface);white-space:nowrap}
     .listings-table td{padding:14px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
     .listings-table tr:last-child td{border-bottom:none}
+    .listings-table tr{transition:background .12s ease}
     .listings-table tr:hover td{background:#fafaf8}
+    .icon-btn{transition:all .15s ease,transform .15s ease}
+    .icon-btn:hover:not(.locked){transform:translateY(-1px)}
     .listing-thumb{width:52px;height:40px;border-radius:6px;background:var(--surface);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
     .listing-thumb img{width:100%;height:100%;object-fit:cover}
     .listing-thumb svg{width:18px;height:18px;stroke:var(--text-3);fill:none;stroke-width:1.5}
@@ -296,7 +309,7 @@
     .danger-zone{background:var(--red-light);border:1px solid #f5c6c2;border-radius:var(--radius-lg);padding:20px 24px;margin-top:20px}
     .danger-zone h3{font-size:14px;font-weight:600;color:var(--red);margin-bottom:8px}
     .danger-zone p{font-size:13px;color:var(--text-2);margin-bottom:14px}
-    #loading-screen{position:fixed;inset:0;background:var(--green-dark);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;color:white;gap:16px}
+    #loading-screen{position:fixed;inset:0;background:linear-gradient(135deg,var(--green-dark),#0a3d31);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;color:white;gap:16px}
     #loading-screen .spin{width:36px;height:36px;border:3px solid rgba(255,255,255,0.2);border-top-color:white;border-radius:50%;animation:spin .8s linear infinite}
     #loading-screen p{font-size:14px;color:rgba(255,255,255,0.6)}
     .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:99}
@@ -804,7 +817,15 @@
 
     <!-- PAYMENTS -->
     <div class="page" id="page-payments">
-      <div class="section-head"><h2>Payment history</h2><div style="font-size:13px;color:var(--text-3)">All listing fee transactions</div></div>
+      <div class="section-head">
+        <h2>Payment history</h2>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <label style="font-size:12px;color:var(--text-3)">From <input type="date" id="pay-date-from" onchange="renderPayments()" style="margin-left:4px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:12px"/></label>
+          <label style="font-size:12px;color:var(--text-3)">To <input type="date" id="pay-date-to" onchange="renderPayments()" style="margin-left:4px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:12px"/></label>
+          <button class="btn btn-outline btn-sm" onclick="document.getElementById('pay-date-from').value='';document.getElementById('pay-date-to').value='';renderPayments()">Clear</button>
+          <button class="btn btn-outline btn-sm" onclick="exportSellerPaymentsCSV()">⬇️ CSV</button>
+        </div>
+      </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px" id="payment-summary"></div>
       <div class="card" style="overflow:hidden">
         <table class="payments-table">
@@ -3686,14 +3707,41 @@ async function submitReviewResponse(id){
   if(rv)notifyAdmin('review_response',{listingTitle:rv.listings?.title||'',reviewerName:rv.reviewer_name,sellerName:currentProfile?.full_name||currentUser?.email,sellerEmail:currentUser?.email,responseText:text});
 }
 
+function paymentsInDateRange(){
+  const from=document.getElementById('pay-date-from')?.value;
+  const to=document.getElementById('pay-date-to')?.value;
+  if(!from&&!to)return allPayments;
+  return allPayments.filter(p=>{
+    const d=new Date(p.created_at);
+    if(from&&d<new Date(from+'T00:00:00'))return false;
+    if(to&&d>new Date(to+'T23:59:59'))return false;
+    return true;
+  });
+}
 function renderPayments(){
-  const paid=allPayments.filter(p=>p.status==='confirmed'||p.status==='paid');
+  const rows=paymentsInDateRange();
+  const paid=rows.filter(p=>p.status==='confirmed'||p.status==='paid');
   const total=paid.reduce((s,p)=>s+(Number(p.amount)||0),0);
-  const pending=allPayments.filter(p=>p.status==='pending'||p.status==='pending_verification');
+  const pending=rows.filter(p=>p.status==='pending'||p.status==='pending_verification');
   document.getElementById('payment-summary').innerHTML=[{label:'Total collected',val:`KES ${total.toLocaleString('en-KE')}`,sub:`${paid.length} confirmed payment${paid.length!==1?'s':''}`,color:'var(--green)'},{label:'Pending',val:pending.length,sub:'awaiting confirmation',color:'var(--amber)'},{label:'Avg per listing',val:paid.length?`KES ${Math.round(total/paid.length).toLocaleString('en-KE')}`:'—',sub:'listing fee',color:'var(--text-3)'}].map(s=>`<div class="card" style="padding:18px 20px"><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:8px">${s.label}</div><div style="font-size:24px;font-weight:700;color:${s.color};margin-bottom:4px">${s.val}</div><div style="font-size:12px;color:var(--text-3)">${s.sub}</div></div>`).join('');
   const tbody=document.getElementById('payments-tbody');
-  if(!allPayments.length){tbody.innerHTML=`<tr><td colspan="6"><div class="empty-state"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><h3>No payments yet</h3><p>When you pay the listing fee, your payment history appears here.</p></div></td></tr>`;return;}
-  tbody.innerHTML=allPayments.map(p=>{const date=new Date(p.created_at).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'});const isPaid=p.status==='confirmed'||p.status==='paid';const isPending=p.status==='pending'||p.status==='pending_verification';return `<tr><td style="color:var(--text-2)">${date}</td><td style="font-weight:500">${escHtml(p.listings?.title||'—')}</td><td><span class="pay-ref">${p.reference||p.mpesa_ref||'—'}</span></td><td style="font-weight:700;color:var(--green-dark)">KES ${Number(p.amount||0).toLocaleString('en-KE')}</td><td><span class="pay-status ${isPaid?'paid':isPending?'pending':'failed'}">${isPaid?'✓ Paid':isPending?'⏳ Pending':'✕ Failed'}</span></td><td>${isPaid?`<button class="btn btn-outline btn-sm" onclick="openReceiptModal('${p.id}')">Receipt</button>`:'—'}</td></tr>`;}).join('');
+  if(!rows.length){tbody.innerHTML=`<tr><td colspan="6"><div class="empty-state"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><h3>No payments${allPayments.length?' in this range':' yet'}</h3><p>${allPayments.length?'Try clearing the date filter.':'When you pay the listing fee, your payment history appears here.'}</p></div></td></tr>`;return;}
+  tbody.innerHTML=rows.map(p=>{const date=new Date(p.created_at).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'});const isPaid=p.status==='confirmed'||p.status==='paid';const isPending=p.status==='pending'||p.status==='pending_verification';return `<tr><td style="color:var(--text-2)">${date}</td><td style="font-weight:500">${escHtml(p.listings?.title||'—')}</td><td><span class="pay-ref">${p.reference||p.mpesa_ref||'—'}</span></td><td style="font-weight:700;color:var(--green-dark)">KES ${Number(p.amount||0).toLocaleString('en-KE')}</td><td><span class="pay-status ${isPaid?'paid':isPending?'pending':'failed'}">${isPaid?'✓ Paid':isPending?'⏳ Pending':'✕ Failed'}</span></td><td>${isPaid?`<button class="btn btn-outline btn-sm" onclick="openReceiptModal('${p.id}')">Receipt</button>`:'—'}</td></tr>`;}).join('');
+}
+function exportSellerPaymentsCSV(){
+  const rows=paymentsInDateRange();
+  if(!rows.length){showToast('No payments to export','error');return;}
+  const csvRows=[['Date','Listing','Reference','Amount (KES)','Status']];
+  rows.forEach(p=>{
+    const isPaid=p.status==='confirmed'||p.status==='paid';
+    csvRows.push([new Date(p.created_at).toLocaleDateString('en-KE'),p.listings?.title||'—',p.reference||p.mpesa_ref||'—',Number(p.amount||0),isPaid?'Paid':(p.status||'pending')]);
+  });
+  const csv=csvRows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`Nyumba254-Payments-${new Date().toISOString().slice(0,10)}.csv`;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  showToast('CSV exported ✓','success');
 }
 
 let receiptTarget=null;
