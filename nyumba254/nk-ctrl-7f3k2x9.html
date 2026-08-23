@@ -467,8 +467,10 @@
     }
     .acw-launcher-badge.show { display: flex; animation: acwBlink 1.4s ease-in-out infinite; }
     .acw-launcher.hide,
-    body.nk-modal-open .acw-launcher { display: none; }
-    body.nk-modal-open .acw-panel { display: none !important; }
+    body.nk-modal-open .acw-launcher,
+    body.nk-concierge-open .acw-launcher { display: none; }
+    body.nk-modal-open .acw-panel,
+    body.nk-concierge-open .acw-panel { display: none !important; }
 
     @keyframes acwBlink { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
 
@@ -5244,6 +5246,10 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
     document.querySelectorAll('.nav-item[data-view]').forEach(el => el.classList.toggle('active', el.dataset.view===v));
     currentView = v;
     document.getElementById('topbar-title').textContent = viewTitles[v]||v;
+    // The concierge inbox has its own full-width composer/send button that
+    // sits exactly where the floating chat launcher docks — hide the
+    // launcher only on this view, restore it everywhere else.
+    document.body.classList.toggle('nk-concierge-open', v === 'concierge');
     closeSidebar();
     if(v==='listings')     { loadAllListings(); loadTabCounts(); }
     if(v==='recycle-bin')  loadRecycleBin();
