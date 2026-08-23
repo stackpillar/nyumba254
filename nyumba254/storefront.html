@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Seller Storefront — Nyumba254</title>
 <meta name="robots" content="index,follow"/>
+<meta name="description" id="meta-description" content="Browse active property listings on Nyumba254."/>
+<meta property="og:title" id="og-title" content="Seller Storefront — Nyumba254"/>
+<meta property="og:description" id="og-description" content="Browse active property listings on Nyumba254."/>
+<meta property="og:type" content="profile"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -71,6 +75,37 @@
   .card-price{font-size:16px;font-weight:700;color:var(--green-dark)}
   .card-price span{font-size:12px;font-weight:400;color:var(--text-3)}
 
+  /* ── filters & sort ── */
+  .filters-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px}
+  .filters-bar select,.filters-bar input[type="text"]{padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--white);outline:none;font-family:inherit}
+  .filters-bar select:focus,.filters-bar input:focus{border-color:var(--green)}
+  .filters-bar input[type="text"]{flex:1;min-width:160px}
+  .filters-count{font-size:12.5px;color:var(--text-3);margin-left:auto;white-space:nowrap}
+
+  /* ── share button ── */
+  .share-btn{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;padding:8px 14px;border-radius:20px;background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.35);cursor:pointer}
+  .share-btn:hover{background:rgba(255,255,255,0.25)}
+  .share-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
+
+  /* ── reviews ── */
+  .reviews-summary-row{display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+  .reviews-avg{font-size:30px;font-weight:700;color:var(--text)}
+  .reviews-stars{color:var(--gold);font-size:15px;letter-spacing:1px}
+  .reviews-count{font-size:12.5px;color:var(--text-3)}
+  .review-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:12px}
+  .review-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .review-avatar{width:32px;height:32px;border-radius:50%;background:var(--green-light);color:var(--green-dark);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+  .review-name{font-size:13px;font-weight:600;color:var(--text)}
+  .review-date{font-size:11.5px;color:var(--text-3);margin-left:auto}
+  .review-stars{color:var(--gold);font-size:12px;letter-spacing:1px;margin-bottom:6px}
+  .review-comment{font-size:13.5px;color:var(--text-2);line-height:1.6}
+  .review-response{background:var(--green-light);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12.5px;color:var(--green-dark)}
+  .review-response strong{color:var(--green-dark)}
+
+  /* ── mobile sticky contact bar ── */
+  .sticky-contact-bar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--white);border-top:1px solid var(--border);padding:10px 16px;box-shadow:0 -4px 16px rgba(0,0,0,0.08);gap:10px}
+  .sticky-contact-bar a{flex:1;text-align:center}
+
   .empty-state{text-align:center;padding:60px 20px;color:var(--text-3)}
   .empty-state svg{width:44px;height:44px;margin:0 auto 14px;stroke:var(--border);fill:none;stroke-width:1.4}
 
@@ -86,7 +121,12 @@
   footer{text-align:center;padding:28px 20px;font-size:12px;color:var(--text-3)}
   footer a{color:var(--green);font-weight:600}
 
-  @media(max-width:600px){.content{margin-top:-40px}.seller-header{padding:36px 16px 70px}}
+  @media(max-width:600px){
+    .content{margin-top:-40px}
+    .seller-header{padding:36px 16px 70px}
+    body{padding-bottom:64px}
+    .sticky-contact-bar{display:flex}
+  }
 </style>
 </head>
 <body>
@@ -158,6 +198,75 @@
 
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+  let ALL_ITEMS = [];
+  let ALL_REVIEWS = [];
+  let SELLER_PROFILE = null;
+
+  function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+  function starGlyphs(avg){ const full=Math.round(avg); return '★★★★★'.slice(0,full)+'☆☆☆☆☆'.slice(0,5-full); }
+
+  function buildReviewCard(r){
+    const date=new Date(r.created_at).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'});
+    return `<div class="review-card">
+      <div class="review-head">
+        <div class="review-avatar">${esc(initialsOf(r.reviewer_name||'Buyer'))}</div>
+        <div class="review-name">${esc(r.reviewer_name||'Anonymous buyer')}</div>
+        <div class="review-date">${date}</div>
+      </div>
+      <div class="review-stars">${starGlyphs(r.rating)}</div>
+      <div class="review-comment">${esc(r.comment||'(No comment left — rating only)')}</div>
+      ${r.response_text?`<div class="review-response"><strong>Seller response:</strong> ${esc(r.response_text)}</div>`:''}
+    </div>`;
+  }
+
+  function applyFilters(){
+    const q=(document.getElementById('sf-search')?.value||'').toLowerCase().trim();
+    const cat=document.getElementById('sf-category')?.value||'';
+    const type=document.getElementById('sf-type')?.value||'';
+    const area=document.getElementById('sf-area')?.value||'';
+    const sort=document.getElementById('sf-sort')?.value||'newest';
+
+    let filtered=ALL_ITEMS.filter(l=>{
+      if(q && !(l.title||'').toLowerCase().includes(q) && !(l.area||'').toLowerCase().includes(q)) return false;
+      if(cat && l.category!==cat) return false;
+      if(type && l.price_type!==type) return false;
+      if(area && l.area!==area) return false;
+      return true;
+    });
+    if(sort==='price_low') filtered=[...filtered].sort((a,b)=>Number(a.price)-Number(b.price));
+    else if(sort==='price_high') filtered=[...filtered].sort((a,b)=>Number(b.price)-Number(a.price));
+    else filtered=[...filtered].sort((a,b)=>(b.is_featured?1:0)-(a.is_featured?1:0)||new Date(b.created_at)-new Date(a.created_at));
+
+    const grid=document.getElementById('listings-grid');
+    const countEl=document.getElementById('sf-count');
+    if(countEl) countEl.textContent=`${filtered.length} of ${ALL_ITEMS.length} listing${ALL_ITEMS.length!==1?'s':''}`;
+    if(grid){
+      grid.innerHTML = filtered.length
+        ? filtered.map(buildCard).join('')
+        : `<div style="grid-column:1/-1" class="empty-state"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><p>No listings match your filters. Try clearing them.</p></div>`;
+    }
+  }
+
+  function wireFilters(){
+    const searchEl=document.getElementById('sf-search');
+    if(!searchEl)return;
+    searchEl.addEventListener('input', debounce(applyFilters,250));
+    ['sf-category','sf-type','sf-area','sf-sort'].forEach(id=>document.getElementById(id)?.addEventListener('change',applyFilters));
+    applyFilters();
+  }
+
+  function shareStorefront(){
+    const url=location.href;
+    const name=SELLER_PROFILE?.full_name||'this seller';
+    if(navigator.share){
+      navigator.share({title:`${name} — Nyumba254`, text:`Check out ${name}'s listings on Nyumba254`, url}).catch(()=>{});
+    } else {
+      navigator.clipboard.writeText(url).then(()=>{
+        document.querySelectorAll('.share-btn').forEach(b=>{const orig=b.innerHTML;b.innerHTML='✓ Link copied';setTimeout(()=>b.innerHTML=orig,1800);});
+      }).catch(()=>{});
+    }
+  }
+
   async function init(){
     const params = new URLSearchParams(location.search);
     const sellerParam = params.get('seller');
@@ -167,35 +276,45 @@
     const { data: profile, error: profErr } = await db.from('profiles').select('*').eq(lookupField, sellerParam).single();
     if (profErr || !profile) { renderNotAvailable("We couldn't find this seller — the link may be incorrect."); return; }
     const sellerId = profile.id;
+    SELLER_PROFILE = profile;
     if (profile.is_disabled) { renderNotAvailable("This seller's account is currently unavailable."); return; }
     if (!subscriptionActive(profile) || profile.subscription_plan !== 'elite') {
       renderNotAvailable("This seller hasn't set up a storefront yet.");
       return;
     }
 
-    const { data: listings, error: listErr } = await db
-      .from('listings')
-      .select('*, listing_photos(*)')
-      .eq('seller_id', sellerId)
-      .eq('status', 'active')
-      .eq('is_disabled', false)
-      .order('is_featured', { ascending: false })
-      .order('created_at', { ascending: false });
+    const [{ data: listings, error: listErr }, { data: reviews }] = await Promise.all([
+      db.from('listings').select('*, listing_photos(*)').eq('seller_id', sellerId).eq('status', 'active').eq('is_disabled', false).order('is_featured', { ascending: false }).order('created_at', { ascending: false }),
+      db.from('reviews').select('*').eq('review_type','seller').eq('target_seller_id', sellerId).order('created_at',{ascending:false}),
+    ]);
 
     const items = listErr ? [] : (listings || []);
+    ALL_ITEMS = items;
+    ALL_REVIEWS = reviews || [];
+
     const name = profile.full_name || 'Seller';
     const isVerified = profile.verification_status === 'verified';
     const isPro = !!profile.is_pro;
     const hideContact = !!profile.hide_buyer_contact;
     const totalViews = items.reduce((s,l)=>s+(Number(l.views)||0),0);
+    const avgRating = ALL_REVIEWS.length ? (ALL_REVIEWS.reduce((s,r)=>s+r.rating,0)/ALL_REVIEWS.length) : 0;
 
     document.title = `${name} — Nyumba254 Storefront`;
+    const descText = `Browse ${items.length} active propert${items.length===1?'y':'ies'} from ${name} on Nyumba254.`;
+    document.getElementById('meta-description')?.setAttribute('content', descText);
+    document.getElementById('og-title')?.setAttribute('content', `${name} — Nyumba254 Storefront`);
+    document.getElementById('og-description')?.setAttribute('content', descText);
 
     const contactRow = hideContact
-      ? `<div class="seller-contact-row"><span class="contact-btn chat" style="cursor:default"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Message via listing chat</span></div>`
-      : (profile.phone ? `<div class="seller-contact-row">
-          <a class="contact-btn wa" href="https://wa.me/${formatWaPhone(profile.phone)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>WhatsApp</a>
-        </div>` : '');
+      ? `<div class="seller-contact-row"><span class="contact-btn chat" style="cursor:default"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Message via listing chat</span><button class="share-btn" onclick="shareStorefront()"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share</button></div>`
+      : `<div class="seller-contact-row">
+          ${profile.phone?`<a class="contact-btn wa" href="https://wa.me/${formatWaPhone(profile.phone)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>WhatsApp</a>`:''}
+          <button class="share-btn" onclick="shareStorefront()"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share</button>
+        </div>`;
+
+    const areas = [...new Set(items.map(l=>l.area).filter(Boolean))].sort();
+    const categories = [...new Set(items.map(l=>l.category).filter(Boolean))];
+    const catLabels = {student:'Student',standard:'Standard',luxury:'Luxury',commercial:'Shops & offices'};
 
     document.getElementById('app-root').innerHTML = `
       <div class="seller-header">
@@ -204,6 +323,7 @@
         <div class="seller-badges">
           ${isPro?'<span class="s-badge pro"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Pro seller</span>':''}
           ${isVerified?'<span class="s-badge verified"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>Verified seller</span>':''}
+          ${ALL_REVIEWS.length?`<span class="s-badge verified">⭐ ${avgRating.toFixed(1)} (${ALL_REVIEWS.length} review${ALL_REVIEWS.length!==1?'s':''})</span>`:''}
         </div>
         <p class="seller-sub">Browse every active listing from ${esc(name)}, all in one place.</p>
         ${contactRow}
@@ -212,16 +332,42 @@
         <div class="stats-strip">
           <div class="stat"><div class="stat-val">${items.length}</div><div class="stat-lbl">Active listings</div></div>
           <div class="stat"><div class="stat-val">${totalViews.toLocaleString('en-KE')}</div><div class="stat-lbl">Total views</div></div>
+          ${ALL_REVIEWS.length?`<div class="stat"><div class="stat-val">${avgRating.toFixed(1)} ★</div><div class="stat-lbl">Seller rating</div></div>`:''}
         </div>
+
+        ${items.length>1?`<div class="filters-bar">
+          <input type="text" id="sf-search" placeholder="Search by title or area…"/>
+          <select id="sf-category"><option value="">All categories</option>${categories.map(c=>`<option value="${esc(c)}">${esc(catLabels[c]||c)}</option>`).join('')}</select>
+          <select id="sf-type"><option value="">Sale &amp; rent</option><option value="sale">For sale</option><option value="rent">To let</option></select>
+          <select id="sf-area"><option value="">All areas</option>${areas.map(a=>`<option value="${esc(a)}">${esc(a)}</option>`).join('')}</select>
+          <select id="sf-sort"><option value="newest">Newest first</option><option value="price_low">Price: low to high</option><option value="price_high">Price: high to low</option></select>
+          <span class="filters-count" id="sf-count"></span>
+        </div>`:''}
+
         <div class="section-title">${esc(name)}'s listings</div>
         <div id="listings-wrap">
           ${items.length
-            ? `<div class="listings-grid">${items.map(buildCard).join('')}</div>`
+            ? `<div class="listings-grid" id="listings-grid">${items.map(buildCard).join('')}</div>`
             : `<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><p>No active listings right now — check back soon.</p></div>`}
         </div>
-      </div>
-      <footer>Powered by <a href="/">Nyumba254</a> — Kenya's agent-free property marketplace</footer>`;
 
+        ${ALL_REVIEWS.length ? `
+        <div class="section-title" style="margin-top:44px">Reviews for ${esc(name)}</div>
+        <div class="reviews-summary-row">
+          <div class="reviews-avg">${avgRating.toFixed(1)}</div>
+          <div>
+            <div class="reviews-stars">${starGlyphs(avgRating)}</div>
+            <div class="reviews-count">${ALL_REVIEWS.length} review${ALL_REVIEWS.length!==1?'s':''}</div>
+          </div>
+        </div>
+        <div id="reviews-list">${ALL_REVIEWS.slice(0,8).map(buildReviewCard).join('')}</div>` : ''}
+      </div>
+      <footer>Powered by <a href="/">Nyumba254</a> — Kenya's agent-free property marketplace</footer>
+      ${(!hideContact && profile.phone) ? `<div class="sticky-contact-bar">
+        <a class="contact-btn wa" style="flex:1" href="https://wa.me/${formatWaPhone(profile.phone)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>Chat on WhatsApp</a>
+      </div>`:''}`;
+
+    wireFilters();
     db.from('page_views').insert({ path: '/storefront?seller='+sellerId, referrer: document.referrer || null, user_agent: navigator.userAgent, session_id: localStorage.getItem('nk_sid')||null }).then(()=>{}).catch(()=>{});
   }
 

@@ -718,6 +718,21 @@
 
     <!-- OVERVIEW -->
     <div class="page active" id="page-overview">
+      <div class="card" id="storefront-banner-card" style="display:none;padding:16px 20px;margin-bottom:20px;background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;color:white">
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <div style="width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="white" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>
+          </div>
+          <div style="flex:1;min-width:200px">
+            <div style="font-size:13px;font-weight:700">Your Elite storefront is live</div>
+            <div style="font-size:12px;opacity:.85;word-break:break-all" id="storefront-banner-url">nyumba254.com/storefront?seller=…</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-shrink:0">
+            <button class="btn btn-sm" style="background:rgba(255,255,255,0.18);color:white" onclick="copyStorefrontLink()">📋 Copy link</button>
+            <a class="btn btn-sm" style="background:white;color:#5b21b6;text-decoration:none" id="storefront-banner-open" href="#" target="_blank" rel="noopener">Open ↗</a>
+          </div>
+        </div>
+      </div>
       <div class="stat-grid">
         <div class="stat-card"><div class="stat-label">Active listings</div><div class="stat-val" id="stat-active">—</div><div class="stat-delta" id="stat-active-delta">of your total listings</div><div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div></div>
         <div class="stat-card gold"><div class="stat-label">Total enquiries</div><div class="stat-val" id="stat-enquiries">—</div><div class="stat-delta" id="stat-enquiries-delta">buyers reached out</div><div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div></div>
@@ -1054,7 +1069,13 @@
               <label class="switch"><input type="checkbox" id="ai-concierge-toggle" onchange="toggleAiConcierge(this.checked)"/><span class="switch-track"></span></label>
             </div>
             <a href="/plans" id="elite-upgrade-btn" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:14px;background:#7c3aed;text-decoration:none">Upgrade to Elite — from KES 3,000/mo</a>
-            <button id="elite-storefront-btn" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:10px;display:none" onclick="copyStorefrontLink()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy my storefront link</button>
+            <div id="storefront-link-row" style="display:none;margin-top:10px">
+              <div style="font-size:11.5px;color:var(--text-3);word-break:break-all;background:var(--surface);border-radius:8px;padding:8px 10px;margin-bottom:8px" id="storefront-settings-url"></div>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-outline" style="flex:1;justify-content:center" onclick="copyStorefrontLink()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy link</button>
+                <a class="btn btn-primary" style="flex:1;justify-content:center;text-decoration:none;background:#7c3aed" id="storefront-settings-open" href="#" target="_blank" rel="noopener">Open storefront ↗</a>
+              </div>
+            </div>
             <button id="elite-valuation-btn" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:10px;display:none" onclick="openValuationModal()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Instant Valuation Tool</button>
             <button id="elite-ai-listing-btn" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:10px;display:none" onclick="openAiListingModal()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>AI Listing Assistant</button>
           </div>
@@ -1749,6 +1770,23 @@ function loadSubscriptionUI(){
   updateEliteGatedPages(sub);
   loadRelationshipManager(sub);
   loadTeamSeats(sub);
+  updateStorefrontBanner(sub);
+}
+
+// Surfaces the storefront link somewhere the seller can't miss it — a
+// dedicated banner right at the top of Overview, not buried in Settings.
+async function updateStorefrontBanner(sub){
+  const card=document.getElementById('storefront-banner-card');
+  if(!card)return;
+  const isElite = sub.active && sub.plan==='elite';
+  if(!isElite){card.style.display='none';return;}
+  const slug = await ensureStorefrontSlug();
+  const url = `${location.origin}/storefront?seller=${slug}`;
+  const urlEl=document.getElementById('storefront-banner-url');
+  const openEl=document.getElementById('storefront-banner-open');
+  if(urlEl) urlEl.textContent = url.replace(/^https?:\/\//,'');
+  if(openEl) openEl.href = url;
+  card.style.display='block';
 }
 
 function teamSeatLimit(){
@@ -1913,7 +1951,7 @@ function updatePremiumNavBadge(sub){
 function updateEliteSectionUI(sub){
   const btn = document.getElementById('elite-upgrade-btn');
   const banner = document.getElementById('elite-status-banner');
-  const storefrontBtn = document.getElementById('elite-storefront-btn');
+  const storefrontRow = document.getElementById('storefront-link-row');
   const valuationBtn = document.getElementById('elite-valuation-btn');
   const aiListingBtn = document.getElementById('elite-ai-listing-btn');
   if(!btn || !banner) return;
@@ -1922,13 +1960,22 @@ function updateEliteSectionUI(sub){
     banner.style.display = 'block';
     banner.textContent = `✓ Active${exp}`;
     btn.style.display = 'none';
-    if(storefrontBtn) storefrontBtn.style.display = 'inline-flex';
+    if(storefrontRow){
+      storefrontRow.style.display = 'block';
+      ensureStorefrontSlug().then(slug=>{
+        const url = `${location.origin}/storefront?seller=${slug}`;
+        const urlEl=document.getElementById('storefront-settings-url');
+        const openEl=document.getElementById('storefront-settings-open');
+        if(urlEl) urlEl.textContent = url;
+        if(openEl) openEl.href = url;
+      });
+    }
     if(valuationBtn) valuationBtn.style.display = 'inline-flex';
     if(aiListingBtn) aiListingBtn.style.display = 'inline-flex';
   } else {
     banner.style.display = 'none';
     btn.style.display = 'inline-flex';
-    if(storefrontBtn) storefrontBtn.style.display = 'none';
+    if(storefrontRow) storefrontRow.style.display = 'none';
     if(valuationBtn) valuationBtn.style.display = 'none';
     if(aiListingBtn) aiListingBtn.style.display = 'none';
   }
