@@ -1752,6 +1752,7 @@ function loadSubscriptionUI(){
 }
 
 function teamSeatLimit(){
+  if (currentProfile?.subscription_plan==='elite') return 5;
   return currentProfile?.subscription_tier==='yearly' ? 3 : 1;
 }
 
