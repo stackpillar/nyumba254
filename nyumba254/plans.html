@@ -253,7 +253,7 @@
         <span class="period">/ month</span>
       </div>
       <div class="plan-price-note" data-monthly-note="Billed monthly" data-yearly-note="KES 12,000 billed yearly">Billed monthly</div>
-      <a href="#" class="plan-cta" onclick="showComingSoon('Premium');return false">Get Premium</a>
+      <a href="#" class="plan-cta" onclick="startSubscriptionCheckout('premium');return false">Get Premium</a>
       <ul class="feat-list">
         <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>Managed chat</strong> — our team replies to buyers for you</span></li>
         <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>Pro seller badge</strong> on your listings and profile</span></li>
@@ -280,7 +280,7 @@
         <span class="period">/ month</span>
       </div>
       <div class="plan-price-note" data-monthly-note="Billed monthly" data-yearly-note="KES 30,000 billed yearly">Billed monthly</div>
-      <a href="#" class="plan-cta" onclick="showComingSoon('Elite');return false">Get Elite</a>
+      <a href="#" class="plan-cta" onclick="startSubscriptionCheckout('elite');return false">Get Elite</a>
       <ul class="feat-list">
         <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span>Everything in <strong>Premium</strong>, with higher limits</span></li>
         <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>AI listing assistant</strong><span class="feat-new">New</span> — auto-write titles, descriptions, and a suggested price</span></li>
@@ -303,6 +303,29 @@
 
 <div class="cs-toast" id="cs-toast">Premium plans are coming soon 🎉</div>
 
+<!-- SUBSCRIPTION PAYMENT MODAL -->
+<div id="sub-payment-modal" style="position:fixed;inset:0;background:rgba(15,15,12,0.6);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px">
+  <div style="background:white;border-radius:16px;max-width:440px;width:100%;padding:28px;max-height:92vh;overflow-y:auto;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.25)">
+    <button onclick="closeSubPaymentModal()" style="position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;background:var(--surface);color:var(--text-2);font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none">×</button>
+    <h2 style="font-size:18px;font-weight:600;margin-bottom:4px;padding-right:32px" id="sub-pay-title">Complete payment</h2>
+    <p style="font-size:13px;color:var(--text-3);margin-bottom:18px;line-height:1.6">Pay via M-Pesa Paybill, then enter your confirmation code below. Our team verifies payments and activates your plan — usually within a few hours.</p>
+    <div style="font-size:32px;font-weight:700;color:var(--green-dark);margin-bottom:20px" id="sub-pay-amount-display">KES 0</div>
+    <div style="background:var(--surface);border-radius:10px;padding:16px;margin-bottom:18px;border:1px solid var(--border)">
+      <h4 style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;text-transform:uppercase;letter-spacing:.04em">M-Pesa Paybill — Payment Details</h4>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--text-3)">Paybill number</span><strong>522522</strong></div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--text-3)">Account number</span><strong>1298476615</strong></div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span style="color:var(--text-3)">Amount</span><strong id="sub-pay-amount-label">KES 0</strong></div>
+    </div>
+    <div style="font-size:13px;color:var(--text-2);margin-bottom:14px;padding:10px 12px;background:var(--surface);border-radius:10px">Go to <strong>M-Pesa → Lipa na M-Pesa → Paybill</strong>, enter the details above, then enter your confirmation code below.</div>
+    <div style="margin-bottom:12px">
+      <label style="display:block;font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:6px">M-Pesa transaction code</label>
+      <input type="text" id="sub-pay-ref" placeholder="e.g. QFT7H8K2LM" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;color:var(--text);background:var(--surface);outline:none;text-transform:uppercase"/>
+    </div>
+    <button onclick="confirmSubManualPayment()" style="width:100%;padding:13px;border-radius:10px;background:var(--green);color:white;font-size:15px;font-weight:600;border:none;cursor:pointer" id="sub-pay-verify-btn">✓ Submit for verification</button>
+    <p style="font-size:12px;color:var(--text-3);text-align:center;margin-top:14px;cursor:pointer" onclick="closeSubPaymentModal()">Cancel</p>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="saved-listings.js"></script>
 <script src="nav-badge.js"></script>
@@ -316,6 +339,7 @@
     const { data } = await db.from('platform_settings').select('key,value')
       .in('key',['premium_monthly_price','premium_yearly_price','elite_monthly_price','elite_yearly_price']);
     const map = {}; (data||[]).forEach(r => map[r.key] = Number(r.value));
+    Object.assign(livePrices, map);
     const fmt = n => n ? 'KES ' + n.toLocaleString('en-KE') : null;
 
     function applyPrice(planClass, monthlyKey, yearlyKey){
@@ -360,6 +384,60 @@
   }
 
   let yearly = false;
+  let currentUser = null;
+  let livePrices = { premium_monthly_price: 1200, premium_yearly_price: 12000, elite_monthly_price: 3000, elite_yearly_price: 30000 };
+  let checkoutPlan = null, checkoutTier = null, checkoutAmount = 0;
+  let subToastTimer = null;
+
+  db.auth.getSession().then(({ data: { session } }) => { currentUser = session?.user || null; });
+  db.auth.onAuthStateChange((_e, session) => { currentUser = session?.user || null; });
+
+  function subToast(msg){
+    const t = document.getElementById('cs-toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(subToastTimer);
+    subToastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+  }
+
+  async function startSubscriptionCheckout(plan) {
+    const { data: { session } } = await db.auth.getSession();
+    if (!session) { window.location.href = '/login?next=plans'; return; }
+    currentUser = session.user;
+    checkoutPlan = plan; // 'premium' | 'elite'
+    checkoutTier = yearly ? 'yearly' : 'monthly';
+    checkoutAmount = livePrices[`${plan}_${checkoutTier}_price`] || 0;
+    document.getElementById('sub-pay-title').textContent = `Pay for ${plan === 'elite' ? 'Elite' : 'Premium'} (${checkoutTier})`;
+    document.getElementById('sub-pay-amount-display').textContent = `KES ${checkoutAmount.toLocaleString('en-KE')}`;
+    document.getElementById('sub-pay-amount-label').textContent = `KES ${checkoutAmount.toLocaleString('en-KE')}`;
+    document.getElementById('sub-pay-ref').value = '';
+    document.getElementById('sub-payment-modal').style.display = 'flex';
+  }
+  function closeSubPaymentModal() { document.getElementById('sub-payment-modal').style.display = 'none'; }
+
+  async function confirmSubManualPayment() {
+    const code = document.getElementById('sub-pay-ref').value.trim().toUpperCase();
+    if (!code) { subToast('Please enter your M-Pesa code'); return; }
+    const btn = document.getElementById('sub-pay-verify-btn');
+    btn.disabled = true; btn.textContent = 'Submitting…';
+    const { error } = await db.from('payments').insert({
+      seller_id: currentUser.id,
+      amount: checkoutAmount,
+      method: 'paybill',
+      reference: code,
+      type: checkoutPlan === 'elite' ? 'elite_subscription' : 'premium_subscription',
+      status: 'pending_verification',
+    });
+    btn.disabled = false; btn.textContent = '✓ Submit for verification';
+    if (error) { subToast('Could not submit — please try again'); console.error(error); return; }
+    fetch(`${SUPABASE_URL}/functions/v1/send-notification-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+      body: JSON.stringify({ type: 'premium_payment_submitted', audience: 'admin', plan: checkoutPlan, tier: checkoutTier, amount: checkoutAmount, reference: code, sellerEmail: currentUser.email }),
+    }).catch(()=>{});
+    closeSubPaymentModal();
+    subToast('Payment submitted — we\'ll activate your plan shortly ✓');
+  }
   function toggleBilling(){
     yearly = !yearly;
     const sw = document.getElementById('billing-switch');

@@ -3015,11 +3015,30 @@ function notifySms(type, payload) {
     paymentActionBusy.add(id);
     const {error} = await db.from('payments').update({status:'confirmed'}).eq('id',id);
     if(error){toast('Error confirming','error'); paymentActionBusy.delete(id); return;}
-    if(listingId) await db.from('listings').update({payment_status:'paid'}).eq('id',listingId);
+
+    const p = _payments[id];
+
+    if (listingId) {
+      await db.from('listings').update({payment_status:'paid'}).eq('id',listingId);
+    } else if (p && (p.type === 'premium_subscription' || p.type === 'elite_subscription') && p.seller_id) {
+      // Subscription payment — auto-activates the plan on confirm, no separate
+      // "Grant Premium" step needed.
+      const tier = p.type === 'elite_subscription'
+        ? (Math.abs(Number(p.amount) - SETTINGS.elite_yearly_price) < Math.abs(Number(p.amount) - SETTINGS.elite_monthly_price) ? 'yearly' : 'monthly')
+        : (Math.abs(Number(p.amount) - SETTINGS.premium_yearly_price) < Math.abs(Number(p.amount) - SETTINGS.premium_monthly_price) ? 'yearly' : 'monthly');
+      const planName = p.type === 'elite_subscription' ? 'elite' : 'premium';
+      const days = tier === 'yearly' ? 365 : 30;
+      const expiresAt = new Date(Date.now() + days*86400000).toISOString();
+      const { data: seller } = await db.from('profiles').update({
+        subscription_tier: tier, subscription_plan: planName, subscription_expires_at: expiresAt, is_pro: true,
+      }).eq('id', p.seller_id).select().single();
+      if (seller?.email) notifySeller('premium_granted', { sellerName: seller.full_name, sellerEmail: seller.email, plan: tier, expiresAt });
+      logAction('activate_subscription_from_payment','profile',p.seller_id,`${planName} ${tier}`);
+    }
+
     paymentActionBusy.delete(id);
     logAction('confirm_payment','payment',id,listingId||'');
 
-    const p = _payments[id];
     if (listingId) {
       const { data: l } = await db.from('listings').select('title, profiles(full_name, email)').eq('id', listingId).single();
       if (l?.profiles?.email) {
@@ -3033,6 +3052,7 @@ function notifySms(type, payload) {
 
     toast('Payment confirmed ✓','success');
     loadPayments(); loadOverview();
+    if (currentView === 'premium-sellers') loadPremiumSellers();
   }
 
 async function loadUsers(append) {
