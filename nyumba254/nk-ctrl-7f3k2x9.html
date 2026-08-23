@@ -330,7 +330,7 @@
     @keyframes shimmer { to { background-position: -200% 0; } }
 
     /* MODALS */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500; display: none; align-items: flex-end; justify-content: center; padding: 0; }
+    .modal-overlay { position: fixed; inset: 0; height: 100vh; height: 100dvh; background: rgba(0,0,0,0.5); z-index: 500; display: none; align-items: flex-end; justify-content: center; padding: 0; }
     .modal-overlay.open { display: flex; }
     .modal { background: var(--white); width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto; border-radius: var(--radius-lg) var(--radius-lg) 0 0; animation: slideUp .22s ease; }
     @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -471,6 +471,9 @@
     body.nk-concierge-open .acw-launcher { display: none; }
     body.nk-modal-open .acw-panel,
     body.nk-concierge-open .acw-panel { display: none !important; }
+    /* Locks the background page while any modal sheet is open, so it can't
+       be mid-scroll underneath a fixed-position modal on mobile. */
+    body.nk-modal-open { overflow: hidden; }
 
     @keyframes acwBlink { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
 
@@ -5834,14 +5837,29 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
   })();
 
   // ─── INIT ───
-  // Watches every .modal-overlay for its 'open' class toggling and hides
-  // the floating Admin Chat Center launcher/panel whenever any modal is
-  // showing, so it can't sit on top of modal buttons/fields on mobile.
-  // Reappears automatically the moment the modal closes.
+  // Watches every .modal-overlay for its 'open' class toggling. Does two
+  // things so a form modal always appears fully in view on mobile without
+  // the admin needing to hunt for it or scroll:
+  //  1. Hides the floating Admin Chat Center launcher/panel (unchanged).
+  //  2. Locks the background page AND snaps scroll to the top the instant
+  //     a modal opens. Fixed-position elements on mobile Chrome are placed
+  //     against the full layout viewport, which is taller than what's
+  //     visible while the URL bar is showing — so if the background page
+  //     was scrolled down when a modal opened, the sheet could render
+  //     partly below the visible screen until the admin scrolled to find
+  //     it. Resetting scroll to 0 before the sheet renders means it's
+  //     always immediately visible, centered on-screen, no searching.
+  // Reappears/unlocks automatically the moment the modal closes.
+  let _nkModalWasOpen = false;
   function watchModalsForChatWidget() {
     function updateModalState() {
       const anyOpen = !!document.querySelector('.modal-overlay.open');
       document.body.classList.toggle('nk-modal-open', anyOpen);
+      if (anyOpen && !_nkModalWasOpen) {
+        window.scrollTo(0, 0);
+        document.querySelector('.page-area')?.scrollTo?.(0, 0);
+      }
+      _nkModalWasOpen = anyOpen;
     }
     document.querySelectorAll('.modal-overlay').forEach(el => {
       new MutationObserver(updateModalState).observe(el, { attributes: true, attributeFilter: ['class'] });
