@@ -522,34 +522,51 @@
       .scw-ticket-dot { width:8px; height:8px; border-radius:50%; background:#ff5a5a; display:inline-block; flex-shrink:0; margin-left:2px; animation: scwBadgeBlink 1.1s ease-in-out infinite; }
 
     /* ══════════════════════════════════════════════════════════════
-       ONBOARDING TOUR — first-time seller walkthrough. A translucent
-       overlay with a "spotlight" cut-out over the current step's
-       target element (sidebar item or the New listing button), plus
-       a tooltip with Continue/Skip. Shown once per seller — see the
-       Tour module near the bottom of the script.
+       ONBOARDING TOUR v2 — mobile-safe (bottom-sheet on small screens),
+       covers the whole dashboard, supports click-to-continue on nav
+       items. Buttons are pinned in a sticky footer — never hidden.
     ══════════════════════════════════════════════════════════════ */
     .tour-overlay { position:fixed; inset:0; z-index:900; display:none; }
     .tour-overlay.open { display:block; }
+    .tour-overlay.tour-passthrough { pointer-events:none; }
     .tour-spotlight {
       position:fixed; border-radius:10px; pointer-events:none;
-      box-shadow: 0 0 0 9999px rgba(13,31,26,0.72);
+      box-shadow: 0 0 0 9999px rgba(13,31,26,0.72), 0 0 0 2px rgba(255,255,255,0.85);
       transition: top .25s ease, left .25s ease, width .25s ease, height .25s ease;
     }
+    .tour-spotlight.tour-clickable{ box-shadow: 0 0 0 9999px rgba(13,31,26,0.72), 0 0 0 3px var(--gold); }
     .tour-tooltip {
-      position:fixed; z-index:901; width:320px; max-width:calc(100vw - 32px);
+      position:fixed; z-index:903; width:340px; max-width:calc(100vw - 32px);
       background:var(--white); border-radius:var(--radius-lg);
-      box-shadow:0 20px 60px rgba(0,0,0,0.35); padding:18px 20px;
-      transition: top .25s ease, left .25s ease;
+      box-shadow:0 20px 60px rgba(0,0,0,0.35);
+      display:flex; flex-direction:column;
+      max-height:calc(100vh - 32px);
+      pointer-events:auto;
+      transition: top .25s ease, left .25s ease, bottom .25s ease;
+      overflow:hidden;
     }
-    .tour-tooltip-step { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--green); margin-bottom:6px; }
-    .tour-tooltip-title { font-size:15px; font-weight:700; color:var(--text); margin-bottom:6px; }
-    .tour-tooltip-desc { font-size:13px; color:var(--text-2); line-height:1.55; margin-bottom:16px; }
-    .tour-tooltip-actions { display:flex; align-items:center; justify-content:space-between; gap:10px; }
-    .tour-btn-skip { font-size:12.5px; font-weight:600; color:var(--text-3); background:none; border:none; cursor:pointer; padding:6px 4px; }
+    .tour-tooltip-scroll{ padding:18px 20px 4px; overflow-y:auto; flex:1 1 auto; min-height:0; }
+    .tour-tooltip-step { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--green); margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+    .tour-tooltip-progress{ flex:1; height:3px; background:var(--border); border-radius:3px; overflow:hidden; }
+    .tour-tooltip-progress-fill{ display:block; height:100%; background:var(--green); border-radius:3px; transition:width .25s ease; }
+    .tour-tooltip-title { font-size:15.5px; font-weight:700; color:var(--text); margin-bottom:6px; }
+    .tour-tooltip-desc { font-size:13px; color:var(--text-2); line-height:1.55; }
+    .tour-tooltip-click-hint{ margin-top:12px; font-size:12px; font-weight:700; color:var(--gold); background:var(--gold-light); border-radius:8px; padding:8px 10px; display:flex; align-items:center; gap:6px; }
+    .tour-tooltip-actions { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 20px; border-top:1px solid var(--border); flex-shrink:0; background:var(--white); }
+    .tour-tooltip-actions-left{ display:flex; align-items:center; gap:2px; }
+    .tour-btn-skip { font-size:12.5px; font-weight:600; color:var(--text-3); background:none; border:none; cursor:pointer; padding:8px 6px; }
     .tour-btn-skip:hover { color:var(--text-2); }
-    .tour-btn-continue { font-size:13px; font-weight:700; color:white; background:var(--green); border:none; border-radius:8px; padding:9px 18px; cursor:pointer; transition:background .15s; }
+    .tour-btn-back{ font-size:12.5px; font-weight:600; color:var(--text-2); background:none; border:none; cursor:pointer; padding:8px 6px; }
+    .tour-btn-back:hover{ color:var(--green-dark); }
+    .tour-btn-continue { font-size:13px; font-weight:700; color:white; background:var(--green); border:none; border-radius:8px; padding:10px 18px; cursor:pointer; transition:background .15s; white-space:nowrap; }
     .tour-btn-continue:hover { background:var(--green-dark); }
-    @media(max-width:480px){ .tour-tooltip{width:calc(100vw - 24px)} }
+    @media(max-width:640px){
+      .tour-tooltip{
+        left:8px !important; right:8px; width:auto; max-width:none;
+        bottom:calc(8px + env(safe-area-inset-bottom)) !important; top:auto !important;
+        max-height:62vh;
+      }
+    }
   </style>
 </head>
 <body>
@@ -664,7 +681,7 @@
       </a>
     </nav>
     <div class="sidebar-footer">
-      <div class="sidebar-user" onclick="showPage('settings')" role="button" tabindex="0" aria-label="Account settings" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
+      <div class="sidebar-user" id="sidebar-user-block" onclick="showPage('settings')" role="button" tabindex="0" aria-label="Account settings" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
         <div class="sidebar-avatar" id="sidebar-avatar">?</div>
         <div>
         <div class="sidebar-user-name" id="sidebar-name">Loading…</div>
@@ -710,17 +727,17 @@
         <div class="stat-card purple"><div class="stat-label">Total views</div><div class="stat-val" id="stat-views">—</div><div class="stat-delta" id="stat-views-delta">across all listings</div><div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div></div>
       </div>
       <div class="overview-grid">
-        <div class="card" style="padding:20px 24px">
+        <div class="card" id="overview-activity-card" style="padding:20px 24px">
           <div class="section-head"><h2>Recent activity</h2><button class="btn btn-outline btn-sm" onclick="showAllMessages()">View messages</button></div>
           <div class="activity-feed" id="activity-feed"><div style="padding:20px 0;text-align:center;color:var(--text-3);font-size:13px">Loading activity…</div></div>
         </div>
         <div style="display:flex;flex-direction:column;gap:20px">
-          <div class="card" style="padding:20px 22px">
+          <div class="card" id="overview-chart-card" style="padding:20px 22px">
             <div class="section-head" style="margin-bottom:12px"><h2>Messages · last 7 days</h2></div>
             <div class="chart-bars" id="chart-bars"></div>
             <div class="chart-labels" id="chart-labels"></div>
           </div>
-          <div class="card" style="padding:20px 22px">
+          <div class="card" id="overview-quicklistings-card" style="padding:20px 22px">
             <div class="section-head"><h2>Your listings</h2><button class="btn btn-outline btn-sm" onclick="showPage('listings')">Manage</button></div>
             <div id="quick-listings"><div style="padding:10px 0;color:var(--text-3);font-size:13px">Loading…</div></div>
           </div>
@@ -748,7 +765,7 @@
         </div>
       </div>
 
-      <div class="filter-bar">
+      <div class="filter-bar" id="listings-filter-bar">
         <button class="filter-pill active" onclick="filterListings('all',this)">All</button>
         <button class="filter-pill" onclick="filterListings('active',this)">Active</button>
         <button class="filter-pill" onclick="filterListings('pending',this)">Pending</button>
@@ -759,7 +776,7 @@
           <input type="text" placeholder="Search listings…" id="listing-search" oninput="renderListingsTable()"/>
         </div>
       </div>
-      <div class="card" style="overflow:hidden">
+      <div class="card" id="listings-table-card" style="overflow:hidden">
         <table class="listings-table">
           <thead><tr><th>Property</th><th>Price</th><th>Status</th><th>Messages</th><th>Views</th><th>Posted</th><th>Actions</th></tr></thead>
           <tbody id="listings-tbody"><tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-3)">Loading listings…</td></tr></tbody>
@@ -935,6 +952,7 @@
           <div class="profile-avatar-row"><div class="profile-avatar-lg" id="settings-avatar">?</div><div class="profile-avatar-info"><strong id="settings-fullname">—</strong><span id="settings-email-display">—</span></div></div>
           <p style="font-size:13px;color:var(--text-3);margin-bottom:18px;line-height:1.6">Edit your name, phone number, email address, and password from your dedicated profile page.</p>
           <a href="/profile" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;text-decoration:none"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="15" height="15"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit profile &amp; password</a>
+          <button class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:10px" onclick="Tour.restart()">🔄 Replay dashboard tour</button>
         </div>
         <div style="display:flex;flex-direction:column;gap:20px">
           <div class="settings-section" id="settings-notifications-section">
@@ -1390,11 +1408,20 @@
 <div class="tour-overlay" id="tour-overlay">
   <div class="tour-spotlight" id="tour-spotlight"></div>
   <div class="tour-tooltip" id="tour-tooltip">
-    <div class="tour-tooltip-step" id="tour-step-label">Step 1 of 8</div>
-    <h3 class="tour-tooltip-title" id="tour-title"></h3>
-    <p class="tour-tooltip-desc" id="tour-desc"></p>
+    <div class="tour-tooltip-scroll">
+      <div class="tour-tooltip-step">
+        <span id="tour-step-label">Step 1 of 8</span>
+        <span class="tour-tooltip-progress"><span class="tour-tooltip-progress-fill" id="tour-progress-fill" style="width:0%"></span></span>
+      </div>
+      <h3 class="tour-tooltip-title" id="tour-title"></h3>
+      <p class="tour-tooltip-desc" id="tour-desc"></p>
+      <div class="tour-tooltip-click-hint" id="tour-click-hint" style="display:none">👆 Tap the highlighted item to continue</div>
+    </div>
     <div class="tour-tooltip-actions">
-      <button class="tour-btn-skip" onclick="Tour.skip()" title="Close the tour and go straight to your dashboard">Skip tour</button>
+      <div class="tour-tooltip-actions-left">
+        <button class="tour-btn-back" id="tour-btn-back" onclick="Tour.back()" title="Go back">← Back</button>
+        <button class="tour-btn-skip" onclick="Tour.skip()" title="Close the tour and go straight to your dashboard">Skip tour</button>
+      </div>
       <button class="tour-btn-continue" id="tour-btn-continue" onclick="Tour.next()" title="See the next tip">Continue</button>
     </div>
   </div>
@@ -4981,117 +5008,215 @@ if(window.__scwEarlyErrors&&window.__scwEarlyErrors.length){
    they sign in from a different device or clear site data.)
 ══════════════════════════════════════ */
 const Tour = (() => {
-  // Steps carry an optional `page` — the dashboard page (see showPage()) that
-  // must be active for that step's target element to exist/be visible. When a
-  // step's page differs from whatever's currently showing, showStep() switches
-  // pages first (via the existing showPage()) before measuring the target, so
-  // the tour can "dive into" a page's own sections, not just point at nav items.
+  // `page`: dashboard page this step's target lives on (forces a showPage()
+  // switch as a fallback/safety net). `click:true`: this step is a real
+  // in-app nav button — the highlighted element becomes genuinely clickable
+  // (overlay lets the click through) and clicking it advances the tour.
+  // The Continue button still works too ("Click it for me").
   const STEPS = [
-    { selector:'#nav-overview',         page:'overview', title:'Your Overview', desc:'This is your home base — see active listings, enquiries, and recent activity every time you sign in.' },
-    { selector:'#nav-listings',         page:'overview', title:'My Listings',   desc:'Manage everything you\'ve posted here: edit details, pause a listing, mark it sold or occupied, or delete it.' },
-    { selector:'#btn-new-listing-tour', page:'overview', title:'Post a Listing',desc:'Ready to list a property? Tap here any time to add a new apartment or house.' },
-    { selector:'#nav-messages',         page:'overview', title:'Messages',      desc:'Chat directly with buyers who\'ve reached out about your listings — all your conversations live here.' },
-    { selector:'#nav-enquiries',        page:'overview', title:'Enquiries',     desc:'A quick feed of every buyer enquiry, so nothing slips through even before you open a full conversation.' },
-    { selector:'#nav-reviews',          page:'overview', title:'Reviews',       desc:'See what buyers are saying about you and respond to build trust with future buyers.' },
-    { selector:'#nav-payments',         page:'overview', title:'Payments',      desc:'Track your listing fee payments and download receipts any time you need them.' },
-    { selector:'#nav-settings',         page:'overview', title:'Account Settings', desc:'Everything about your account lives here — let\'s take a quick look inside.' },
-    { selector:'#verification-settings-section', page:'settings', title:'Account Verification', desc:'Verify your account here to unlock unlimited listings and a trust badge buyers can see.' },
-    { selector:'#settings-notifications-section', page:'settings', title:'Notifications', desc:'Choose which alerts you get — new messages, listing approvals, expiring listings, and payment confirmations.' },
-    { selector:'#settings-concierge-section', page:'settings', title:'Managed Chat', desc:'Turn this on and our team can reply to buyer messages on your behalf — you\'ll still see everything in your Messages tab.' },
-    { selector:'#settings-contact-privacy-section', page:'settings', title:'Buyer Contact Privacy', desc:'Hide your Call and WhatsApp buttons platform-wide so buyers can only reach you through chat on Nyumba254.' },
+    { selector:'#nav-overview', page:'overview', title:'Welcome to your dashboard', desc:"Let's take a quick tour of everything you can do here. This is your Overview — your home base every time you sign in." },
+    { selector:'#verify-warning-banner', page:'overview', title:'Get verified', desc:'Verify your account here to unlock unlimited listings and a trust badge buyers can see. It only takes about 2 minutes.' },
+    { selector:'.stat-grid', page:'overview', title:'Your key numbers', desc:'Active listings, total enquiries, unread messages, payments and views — all at a glance.' },
+    { selector:'#overview-activity-card', page:'overview', title:'Recent activity', desc:'A live feed of new enquiries, messages, listings and payments. Tap any item to jump straight to it.' },
+    { selector:'#overview-chart-card', page:'overview', title:'Messages this week', desc:'See how buyer activity on your listings has trended over the last 7 days.' },
+    { selector:'#overview-quicklistings-card', page:'overview', title:'Your listings at a glance', desc:'A quick preview of your properties — tap "Manage" any time to see them all.' },
+    { selector:'#btn-new-listing-tour', page:'overview', title:'Post a listing', desc:'Ready to list a property? Tap this any time to add a new apartment, house, or commercial space.' },
+    { selector:'#nav-listings', page:'overview', title:'My listings', desc:'Tap "My listings" now to see everything you\'ve posted.', click:true },
+    { selector:'#listings-filter-bar', page:'listings', title:'Filter your listings', desc:'Filter by status — active, pending, paused, occupied/sold — or search by name.' },
+    { selector:'#listings-table-card', page:'listings', title:'Manage each listing', desc:'Edit, view messages, share, mark occupied/sold, pause, or delete — from the icons on each row.' },
+    { selector:'#nav-messages', page:'listings', title:'Messages', desc:'Tap "Messages" to see every conversation with buyers in one place.', click:true },
+    { selector:'#thread-list', page:'messages', title:'Your inbox', desc:'All your buyer conversations live here, newest first. A green dot marks unread ones.' },
+    { selector:'#chat-pane', page:'messages', title:'Chat with buyers', desc:'Open a conversation to reply directly — or via WhatsApp if the buyer shared their number.' },
+    { selector:'#nav-enquiries', page:'messages', title:'Enquiries', desc:'Tap "Enquiries" for a simple feed of every buyer enquiry — handy for a quick daily check.', click:true },
+    { selector:'#enquiry-list', page:'enquiries', title:'Enquiry feed', desc:'See every enquiry at a glance and jump into the full conversation with one tap.' },
+    { selector:'#nav-reviews', page:'enquiries', title:'Reviews', desc:'Tap "Reviews" to see what buyers are saying about you.', click:true },
+    { selector:'#reviews-list', page:'reviews', title:'Buyer reviews', desc:'Respond to reviews to build trust — your reply appears publicly once posted.' },
+    { selector:'#nav-payments', page:'reviews', title:'Payments', desc:'Tap "Payments" to see your listing fee history.', click:true },
+    { selector:'#payment-summary', page:'payments', title:'Payment history', desc:'Track what you\'ve paid, download receipts, and export everything to CSV.' },
+    { selector:'#nav-rent-ledger', page:'payments', title:'Rent Ledger (Elite)', desc:'Tap "Rent Ledger" — track rent due dates, tenants, and payments for units you manage long-term.', click:true },
+    { selector:['#rent-ledger-content','#rent-ledger-locked'], page:'rent-ledger', title:'Your rent roll', desc:'Add rental units, log payments, and get automatic overdue and lease-expiry alerts.' },
+    { selector:'#nav-demand-heatmap', page:'rent-ledger', title:'Demand Insights (Elite)', desc:'Tap "Demand Insights" to see where buyers are searching most right now.', click:true },
+    { selector:['#demand-content','#demand-locked'], page:'demand-heatmap', title:'Platform-wide demand', desc:'See top areas, categories, and rent-vs-sale demand — and how your listings compare to the area average.' },
+    { selector:'#nav-settings', page:'demand-heatmap', title:'Settings', desc:'Tap "Settings" to manage your profile, notifications, and plan.', click:true },
+    { selector:'#verification-settings-section', page:'settings', title:'Account verification', desc:'Submit your ID and proof of ownership here to get verified and unlock unlimited listings.' },
+    { selector:'#settings-notifications-section', page:'settings', title:'Notifications', desc:'Choose exactly which alerts you want — messages, approvals, expiring listings, payments.' },
+    { selector:'#settings-concierge-section', page:'settings', title:'Managed chat', desc:'Let our team reply to buyer messages on your behalf — you\'ll still see everything in Messages.' },
+    { selector:'#settings-contact-privacy-section', page:'settings', title:'Contact privacy', desc:'Hide your Call/WhatsApp buttons platform-wide so buyers can only reach you through chat.' },
+    { selector:'#settings-premium-section', page:'settings', title:'Premium', desc:'Unlock managed chat, a Pro badge, scheduled publishing, video tours, brochures, and SMS alerts.' },
+    { selector:'#settings-elite-section', page:'settings', title:'Elite', desc:'AI Listing Assistant, Instant Valuation, a Storefront page, Rent Ledger, and Demand Insights.' },
+    { selector:'#nav-premium-upgrade', page:'settings', title:'Upgrade any time', desc:'Your plan status always shows here in the sidebar — tap it any time to upgrade.' },
+    { selector:'#sidebar-user-block', page:'settings', title:"That's it!", desc:'Your account and sign-out are always one tap away from here. Enjoy Nyumba254! 🎉' },
   ];
-  let idx = 0;
-  let storageKey = null;
 
-  function maybeStart() {
-    if (!currentUser) return;
-    storageKey = `ny_tour_seen_${currentUser.id}`;
-    if (localStorage.getItem(storageKey)) return;
-    idx = 0;
-    openSidebar(); // ensures sidebar items are visible/highlightable on mobile too
-    document.getElementById('tour-overlay').classList.add('open');
-    scwSyncOverlayVisibility();
-    showStep();
+  let idx = 0, storageKey = null, advancedThisStep = false, clickListener = null, repositionRaf = null;
+
+  function isVisible(el){
+    if(!el) return false;
+    const r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
   }
-
-  function currentPageName() {
+  function resolveTarget(step){
+    const selectors = Array.isArray(step.selector) ? step.selector : [step.selector];
+    for(const sel of selectors){
+      const el = document.querySelector(sel);
+      if(el && isVisible(el)) return el;
+    }
+    return null;
+  }
+  function isMobile(){ return window.matchMedia('(max-width:640px)').matches; }
+  function currentPageName(){
     const active = document.querySelector('.page.active');
     return active ? active.id.replace('page-','') : null;
   }
 
-  function showStep() {
+  function maybeStart(){
+    if(!currentUser) return;
+    storageKey = `ny_tour_seen_${currentUser.id}`;
+    if(localStorage.getItem(storageKey)) return;
+    idx = 0;
+    start();
+  }
+  function restart(){
+    if(currentUser) localStorage.removeItem(`ny_tour_seen_${currentUser.id}`);
+    idx = 0;
+    start();
+  }
+  function start(){
+    openSidebar();
+    document.getElementById('tour-overlay').classList.add('open');
+    scwSyncOverlayVisibility();
+    showStep(1);
+  }
+
+  function showStep(dir){
+    dir = dir || 1;
+    if(idx < 0) idx = 0;
     const step = STEPS[idx];
-    if (!step) { finish(); return; }
+    if(!step){ finish(); return; }
 
-    // Switch pages first if this step lives on a different page (e.g. diving
-    // into Settings' own sections) — showPage() already handles rendering
-    // that page's content and closing the mobile sidebar.
-    if (step.page && currentPageName() !== step.page) {
-      showPage(step.page);
-    }
+    if(step.page && currentPageName() !== step.page) showPage(step.page);
 
-    // Give the page swap a frame to lay out before measuring the target,
-    // so the spotlight/tooltip position against the final, settled layout.
     requestAnimationFrame(() => {
-      const target = document.querySelector(step.selector);
-      if (!target) { finish(); return; }
+      const target = resolveTarget(step);
+      if(!target){ idx += dir; showStep(dir); return; }
 
-      document.getElementById('tour-step-label').textContent = `Step ${idx+1} of ${STEPS.length}`;
-      document.getElementById('tour-title').textContent = step.title;
-      document.getElementById('tour-desc').textContent = step.desc;
-      document.getElementById('tour-btn-continue').textContent = (idx === STEPS.length-1) ? 'Finish' : 'Continue';
-
-      positionSpotlight(target);
-      positionTooltip(target);
+      if(isMobile()){
+        const sb = document.getElementById('sidebar');
+        if(sb && sb.contains(target) && !sb.classList.contains('open')) openSidebar();
+      }
+      target.scrollIntoView({ block:'center', inline:'nearest' });
+      setTimeout(() => renderStep(step, target), isMobile() ? 240 : 60);
     });
   }
 
-  function positionSpotlight(target) {
+  function renderStep(step, target){
+    advancedThisStep = false;
+    detachClickListener();
+
+    document.getElementById('tour-step-label').textContent = `Step ${idx+1} of ${STEPS.length}`;
+    document.getElementById('tour-progress-fill').style.width = Math.round(((idx+1)/STEPS.length)*100) + '%';
+    document.getElementById('tour-title').textContent = step.title;
+    document.getElementById('tour-desc').textContent = step.desc;
+    document.getElementById('tour-click-hint').style.display = step.click ? 'flex' : 'none';
+    document.getElementById('tour-btn-continue').textContent = (idx === STEPS.length-1) ? 'Finish' : (step.click ? 'Click it for me' : 'Continue');
+    document.getElementById('tour-btn-back').style.visibility = idx === 0 ? 'hidden' : 'visible';
+
+    document.getElementById('tour-overlay').classList.toggle('tour-passthrough', !!step.click);
+    document.getElementById('tour-spotlight').classList.toggle('tour-clickable', !!step.click);
+
+    positionSpotlight(target);
+    if(!isMobile()) positionTooltipDesktop(target);
+
+    if(step.click) attachClickListener(target);
+  }
+
+  function positionSpotlight(target){
     const r = target.getBoundingClientRect();
     const pad = 8;
     const spot = document.getElementById('tour-spotlight');
-    spot.style.top    = (r.top - pad) + 'px';
-    spot.style.left   = (r.left - pad) + 'px';
-    spot.style.width  = (r.width + pad*2) + 'px';
+    spot.style.top = Math.max(0, r.top - pad) + 'px';
+    spot.style.left = Math.max(0, r.left - pad) + 'px';
+    spot.style.width = Math.min(r.width + pad*2, window.innerWidth) + 'px';
     spot.style.height = (r.height + pad*2) + 'px';
   }
 
-  function positionTooltip(target) {
-    const r = target.getBoundingClientRect();
+  function positionTooltipDesktop(target){
     const tip = document.getElementById('tour-tooltip');
+    tip.style.bottom = 'auto';
+    const margin = 16;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const r = target.getBoundingClientRect();
+    const tipRect = tip.getBoundingClientRect();
+
     let top = r.bottom + 14;
+    if(top + tipRect.height > vh - margin){
+      const above = r.top - 14 - tipRect.height;
+      top = above >= margin ? above : Math.max(margin, vh - tipRect.height - margin);
+    }
     let left = r.left;
-    const tipWidth = 320;
-    if (left + tipWidth > window.innerWidth - 16) left = window.innerWidth - tipWidth - 16;
-    if (left < 16) left = 16;
-    if (top + 160 > window.innerHeight) top = Math.max(16, r.top - 170); // flip above if no room below
+    if(left + tipRect.width > vw - margin) left = vw - tipRect.width - margin;
+    if(left < margin) left = margin;
+    top = Math.max(margin, Math.min(top, vh - margin));
+
     tip.style.top = top + 'px';
     tip.style.left = left + 'px';
   }
 
-  function next() {
-    idx++;
-    if (idx >= STEPS.length) { finish(); return; }
-    showStep();
+  function attachClickListener(target){
+    const fn = function(){
+      if(advancedThisStep) return;
+      advancedThisStep = true;
+      setTimeout(() => { idx += 1; showStep(1); }, 180);
+    };
+    target.addEventListener('click', fn, true);
+    clickListener = { el: target, fn };
+  }
+  function detachClickListener(){
+    if(clickListener){
+      clickListener.el.removeEventListener('click', clickListener.fn, true);
+      clickListener = null;
+    }
   }
 
-  function skip() { finish(); }
+  function next(){
+    const step = STEPS[idx];
+    if(step && step.click && !advancedThisStep){
+      const target = resolveTarget(step);
+      if(target){ target.click(); return; }
+    }
+    idx += 1;
+    showStep(1);
+  }
+  function back(){
+    if(idx <= 0) return;
+    idx -= 1;
+    showStep(-1);
+  }
+  function skip(){ finish(); }
 
-  function finish() {
-    document.getElementById('tour-overlay').classList.remove('open');
+  function finish(){
+    detachClickListener();
+    document.getElementById('tour-overlay').classList.remove('open','tour-passthrough');
     closeSidebar();
     scwSyncOverlayVisibility();
-    if (storageKey) localStorage.setItem(storageKey, '1');
+    if(storageKey) localStorage.setItem(storageKey, '1');
   }
 
-  window.addEventListener('resize', () => {
-    if (!document.getElementById('tour-overlay').classList.contains('open')) return;
-    const step = STEPS[idx];
-    const target = step ? document.querySelector(step.selector) : null;
-    if (target) { positionSpotlight(target); positionTooltip(target); }
-  });
+  function reposition(){
+    if(!document.getElementById('tour-overlay').classList.contains('open')) return;
+    if(repositionRaf) cancelAnimationFrame(repositionRaf);
+    repositionRaf = requestAnimationFrame(() => {
+      const step = STEPS[idx];
+      const target = step ? resolveTarget(step) : null;
+      if(!target) return;
+      positionSpotlight(target);
+      if(!isMobile()) positionTooltipDesktop(target);
+    });
+  }
+  window.addEventListener('resize', reposition);
+  window.addEventListener('scroll', reposition, { passive:true, capture:true });
 
-  return { maybeStart, next, skip };
+  return { maybeStart, next, back, skip, restart };
 })();
 
 init();
