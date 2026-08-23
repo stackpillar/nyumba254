@@ -562,9 +562,8 @@
     .tour-btn-continue:hover { background:var(--green-dark); }
     @media(max-width:640px){
       .tour-tooltip{
-        left:8px !important; right:8px; width:auto; max-width:none;
-        bottom:calc(8px + env(safe-area-inset-bottom)) !important; top:auto !important;
-        max-height:62vh;
+        width:calc(100vw - 16px); max-width:calc(100vw - 16px);
+        max-height:min(70vh, calc(100vh - 16px - env(safe-area-inset-bottom)));
       }
     }
   </style>
@@ -5125,7 +5124,7 @@ const Tour = (() => {
     document.getElementById('tour-spotlight').classList.toggle('tour-clickable', !!step.click);
 
     positionSpotlight(target);
-    if(!isMobile()) positionTooltipDesktop(target);
+    positionTooltip(target);
 
     if(step.click) attachClickListener(target);
   }
@@ -5140,23 +5139,36 @@ const Tour = (() => {
     spot.style.height = (r.height + pad*2) + 'px';
   }
 
-  function positionTooltipDesktop(target){
+  function positionTooltip(target){
     const tip = document.getElementById('tour-tooltip');
     tip.style.bottom = 'auto';
-    const margin = 16;
+    const margin = isMobile() ? 8 : 16;
     const vw = window.innerWidth, vh = window.innerHeight;
     const r = target.getBoundingClientRect();
     const tipRect = tip.getBoundingClientRect();
+    const tipH = Math.min(tipRect.height, vh - margin*2);
+    const tipW = tipRect.width;
 
-    let top = r.bottom + 14;
-    if(top + tipRect.height > vh - margin){
-      const above = r.top - 14 - tipRect.height;
-      top = above >= margin ? above : Math.max(margin, vh - tipRect.height - margin);
+    // Prefer directly below the target; flip above if there's no room below;
+    // if neither fits cleanly, pin to whichever edge keeps more of the
+    // target visible, then clamp fully inside the viewport either way.
+    let top;
+    const below = r.bottom + 14;
+    const above = r.top - 14 - tipH;
+    if(below + tipH <= vh - margin){
+      top = below;
+    }else if(above >= margin){
+      top = above;
+    }else{
+      top = (r.top > vh - r.bottom) ? margin : Math.max(margin, vh - tipH - margin);
     }
-    let left = r.left;
-    if(left + tipRect.width > vw - margin) left = vw - tipRect.width - margin;
-    if(left < margin) left = margin;
-    top = Math.max(margin, Math.min(top, vh - margin));
+    top = Math.max(margin, Math.min(top, vh - tipH - margin));
+
+    let left = isMobile() ? margin : r.left;
+    if(!isMobile()){
+      if(left + tipW > vw - margin) left = vw - tipW - margin;
+      if(left < margin) left = margin;
+    }
 
     tip.style.top = top + 'px';
     tip.style.left = left + 'px';
@@ -5210,7 +5222,7 @@ const Tour = (() => {
       const target = step ? resolveTarget(step) : null;
       if(!target) return;
       positionSpotlight(target);
-      if(!isMobile()) positionTooltipDesktop(target);
+      positionTooltip(target);
     });
   }
   window.addEventListener('resize', reposition);
