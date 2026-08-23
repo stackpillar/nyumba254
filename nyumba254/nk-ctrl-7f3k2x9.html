@@ -466,7 +466,9 @@
       border: 2px solid var(--sidebar-bg);
     }
     .acw-launcher-badge.show { display: flex; animation: acwBlink 1.4s ease-in-out infinite; }
-    .acw-launcher.hide { display: none; }
+    .acw-launcher.hide,
+    body.nk-modal-open .acw-launcher { display: none; }
+    body.nk-modal-open .acw-panel { display: none !important; }
 
     @keyframes acwBlink { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
 
@@ -5826,6 +5828,21 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
   })();
 
   // ─── INIT ───
+  // Watches every .modal-overlay for its 'open' class toggling and hides
+  // the floating Admin Chat Center launcher/panel whenever any modal is
+  // showing, so it can't sit on top of modal buttons/fields on mobile.
+  // Reappears automatically the moment the modal closes.
+  function watchModalsForChatWidget() {
+    function updateModalState() {
+      const anyOpen = !!document.querySelector('.modal-overlay.open');
+      document.body.classList.toggle('nk-modal-open', anyOpen);
+    }
+    document.querySelectorAll('.modal-overlay').forEach(el => {
+      new MutationObserver(updateModalState).observe(el, { attributes: true, attributeFilter: ['class'] });
+    });
+    updateModalState();
+  }
+
   async function init() {
     await checkAuth();
     populateCountyFilter();
@@ -5839,6 +5856,7 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
     loadConciergeBadge();
     subscribeReportsRealtime();
     loadSocialSettings();
+    watchModalsForChatWidget();
     ACW.init();
   }
   init();
