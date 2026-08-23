@@ -1053,7 +1053,7 @@
               <div class="toggle-label"><strong>24/7 AI Chat Concierge</strong><span>An AI trained on this listing's own details answers routine buyer questions instantly — availability, price, amenities — and hands off anything it can't answer to you</span></div>
               <label class="switch"><input type="checkbox" id="ai-concierge-toggle" onchange="toggleAiConcierge(this.checked)"/><span class="switch-track"></span></label>
             </div>
-            <button id="elite-upgrade-btn" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:14px;background:#7c3aed" onclick="showToast('Elite plans coming soon','')">Upgrade to Elite — from KES 3,000/mo</button>
+            <a href="/plans" id="elite-upgrade-btn" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:14px;background:#7c3aed;text-decoration:none">Upgrade to Elite — from KES 3,000/mo</a>
             <button id="elite-storefront-btn" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:10px;display:none" onclick="copyStorefrontLink()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy my storefront link</button>
             <button id="elite-valuation-btn" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:10px;display:none" onclick="openValuationModal()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Instant Valuation Tool</button>
             <button id="elite-ai-listing-btn" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:10px;display:none" onclick="openAiListingModal()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>AI Listing Assistant</button>
@@ -3676,7 +3676,9 @@ let mvActiveListingId=null,mvVideos=[];
 function videoWalkthroughLimit(){
   const sub=subscriptionInfo();
   if(!sub.active)return 0;
-  return currentProfile?.subscription_tier==='yearly' ? Infinity : 1;
+  const isYearly=currentProfile?.subscription_tier==='yearly';
+  if(sub.plan==='elite')return isYearly?Infinity:3;
+  return isYearly?5:1;
 }
 
 async function openManageVideosModal(listingId){
