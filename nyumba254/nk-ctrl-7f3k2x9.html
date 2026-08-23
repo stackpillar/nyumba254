@@ -618,6 +618,47 @@
       .acw-launcher-label { display: none; }
       .acw-launcher { padding: 12px; }
     }
+
+    /* ══════════════════════════════════════════════════════════════
+       CONCIERGE INBOX — standalone, isolated managed-chat workspace.
+       This is admin replying to BUYERS on behalf of concierge-enabled
+       sellers — a different thing from ACW (admin↔seller support chat).
+    ══════════════════════════════════════════════════════════════ */
+    .cc-stat-strip { display:flex; gap:14px; flex-wrap:wrap; padding:14px 22px 0; }
+    .cc-stat-pill { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px 16px; min-width:120px; }
+    .cc-stat-pill .cc-stat-val { font-size:20px; font-weight:700; color:var(--text); }
+    .cc-stat-pill .cc-stat-lbl { font-size:11px; color:var(--text-3); margin-top:2px; }
+    .cc-toolbar { display:flex; gap:8px; align-items:center; padding:14px 22px; flex-wrap:wrap; }
+    .cc-seller-chips { display:flex; gap:6px; flex-wrap:wrap; padding:0 22px 12px; overflow-x:auto; }
+    .cc-layout { display:grid; grid-template-columns: 320px 1fr; height:640px; border-top:1px solid var(--border); }
+    .cc-list-col { border-right:1px solid var(--border); overflow-y:auto; }
+    .cc-active { background: var(--green-light) !important; }
+    .cc-thread-col { display:flex; flex-direction:column; min-height:0; }
+    .cc-thread-head { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; flex-shrink:0; }
+    .cc-thread-head-info { flex:1; min-width:0; }
+    .cc-thread-head-name { font-size:14px; font-weight:700; color:var(--text); }
+    .cc-thread-head-meta { font-size:11.5px; color:var(--text-3); margin-top:1px; }
+    .cc-messages-pane { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:8px; background:var(--surface); }
+    .cc-suggestion { display:none; margin:0 16px; padding:12px 14px; background:var(--gold-light); border:1px solid #f2d29b; border-radius:10px; }
+    .cc-suggest-label { font-size:11px; font-weight:700; color:var(--gold); text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
+    .cc-suggest-body { font-size:13px; color:var(--text-2); line-height:1.5; margin-bottom:10px; }
+    .cc-suggest-actions { display:flex; gap:8px; }
+    .cc-quickbar { display:flex; gap:6px; flex-wrap:wrap; padding:10px 16px 0; }
+    .cc-chip { font-size:12px; font-weight:600; padding:6px 12px; border-radius:20px; border:1.5px solid var(--green); background:white; color:var(--green-dark); cursor:pointer; transition:all .15s; }
+    .cc-chip:hover { background:var(--green); color:white; }
+    .cc-composer { display:flex; gap:8px; align-items:flex-end; padding:12px 16px; border-top:1px solid var(--border); flex-shrink:0; }
+    .cc-composer textarea { flex:1; padding:10px 14px; border:1.5px solid var(--border); border-radius:16px; font-size:13.5px; font-family:inherit; resize:none; outline:none; min-height:42px; max-height:110px; background:var(--surface); color:var(--text); }
+    .cc-composer textarea:focus { border-color:var(--green); background:white; }
+    .cc-send-btn { width:42px; height:42px; border-radius:50%; background:var(--green); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .cc-send-btn:hover { background:var(--green-dark); }
+    .cc-send-btn svg { width:16px; height:16px; stroke:white; fill:none; stroke-width:2.4; }
+    .cc-empty-state { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-3); padding:40px; text-align:center; }
+    .cc-empty-state svg { width:44px; height:44px; stroke:var(--border); fill:none; stroke-width:1.4; margin-bottom:14px; }
+    @media (max-width:900px) {
+      .cc-layout { grid-template-columns:1fr; height:auto; }
+      .cc-list-col { border-right:none; border-bottom:1px solid var(--border); max-height:280px; }
+      .cc-thread-col { min-height:480px; }
+    }
   </style>
 </head>
 <body>
@@ -856,6 +897,10 @@
           </select>
           <input class="filter-search" id="filter-search" type="text" placeholder="Search title or area…" oninput="debouncedLoad()" aria-label="Search listings by title or area"/>
         </div>
+        <div id="seller-filter-banner" style="display:none;align-items:center;gap:10px;padding:10px 22px;background:var(--blue-light);border-bottom:1px solid var(--border);font-size:13px;color:var(--blue)">
+          <span id="seller-filter-banner-text"></span>
+          <button class="action-btn view" style="margin-left:auto" onclick="clearSellerFilter()">Clear filter ✕</button>
+        </div>
         <div class="bulk-bar" id="bulk-bar">
           <span class="bulk-count" id="bulk-count"></span>
           <button class="action-btn approve" onclick="bulkApprove()">Approve selected</button>
@@ -1048,14 +1093,48 @@
 
     <!-- CONCIERGE -->
     <div class="view" id="view-concierge">
-      <div class="card">
-        <div class="card-header"><span class="card-title">Concierge sellers</span></div>
-        <p style="padding:0 22px 14px;font-size:12px;color:var(--text-3)">Sellers who've turned on managed chat. Open a seller to reply to their buyer enquiries on their behalf.</p>
-        <div class="table-wrap mobile-hide">
-          <table>
-            <thead><tr><th>Seller</th><th>Enabled since</th><th>Actions</th></tr></thead>
-            <tbody id="concierge-body"><tr class="skeleton-row"><td colspan="3"><div class="skel"></div></td></tr></tbody>
-          </table>
+      <div class="card" style="margin-bottom:0">
+        <div class="card-header">
+          <span class="card-title">Concierge inbox</span>
+          <span style="font-size:12px;color:var(--text-3)">Managed chat — replying to buyers for Premium/Elite sellers</span>
+        </div>
+        <div class="cc-stat-strip">
+          <div class="cc-stat-pill"><div class="cc-stat-val" id="cc-stat-unread">—</div><div class="cc-stat-lbl">Unread messages</div></div>
+          <div class="cc-stat-pill"><div class="cc-stat-val" id="cc-stat-convos">—</div><div class="cc-stat-lbl">Open conversations</div></div>
+          <div class="cc-stat-pill"><div class="cc-stat-val" id="cc-stat-sellers">—</div><div class="cc-stat-lbl">Sellers on concierge</div></div>
+        </div>
+        <div class="cc-toolbar">
+          <input class="filter-search" type="text" placeholder="Search buyer, listing, or seller…" oninput="ccSearchInput(this.value)" style="flex:1;min-width:200px" aria-label="Search concierge conversations"/>
+          <button class="action-btn view" onclick="loadConciergeInbox()">↻ Refresh</button>
+        </div>
+        <div class="cc-seller-chips" id="cc-seller-chips"></div>
+        <div class="cc-layout">
+          <div class="cc-list-col">
+            <div style="padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-3)" id="cc-thread-count">Loading…</div>
+            <div id="cc-thread-list"><div class="acw-spinner"></div></div>
+          </div>
+          <div class="cc-thread-col">
+            <div class="cc-empty-state" id="cc-empty-state">
+              <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              <p>Select a conversation to view and reply</p>
+            </div>
+            <div id="cc-thread-pane" style="display:none;flex-direction:column;flex:1;min-height:0">
+              <div class="cc-thread-head">
+                <div class="cc-thread-head-info">
+                  <div class="cc-thread-head-name" id="cc-thread-buyer">Buyer</div>
+                  <div class="cc-thread-head-meta" id="cc-thread-meta"></div>
+                </div>
+                <div style="display:flex;gap:6px" id="cc-thread-actions"></div>
+              </div>
+              <div class="cc-messages-pane" id="cc-messages"></div>
+              <div class="cc-suggestion" id="cc-suggestion"></div>
+              <div class="cc-quickbar" id="cc-quickbar"></div>
+              <div class="cc-composer">
+                <textarea id="cc-reply-input" rows="1" placeholder="Type a reply as the seller…" onkeydown="ccComposerKeydown(event)" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,110)+'px'"></textarea>
+                <button class="cc-send-btn" onclick="ccSendComposer()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1075,7 +1154,7 @@
           <button class="tab-btn"        id="ptab-all"      onclick="setPremiumTab('all')">All <span class="count" id="ptc-all">—</span></button>
         </div>
         <div class="filters-row">
-          <input class="filter-search" id="premium-search" type="text" placeholder="Search seller name or email…" oninput="debouncedLoadPremium()" aria-label="Search sellers"/>
+          <input class="filter-search" id="premium-search" type="text" placeholder="Search any seller — name, email, or phone…" oninput="debouncedLoadPremium()" aria-label="Search sellers"/>
           <button class="action-btn approve" onclick="openGrantPremiumModal()">+ Grant Premium</button>
         </div>
         <div class="table-wrap mobile-hide">
@@ -1547,7 +1626,10 @@ function notifySms(type, payload) {
       body: ()=>'' },
   ];
   let emailReminderTarget = null;
-  function openEmailReminderModal(sellerId, sellerName, sellerEmail) {
+  function openEmailReminderModal(sellerId) {
+    const seller = _users[sellerId];
+    const sellerName = seller?.full_name || 'Seller';
+    const sellerEmail = seller?.email || '';
     if (!sellerEmail) { toast('This seller has no email on file','error'); return; }
     emailReminderTarget = { id: sellerId, name: sellerName, email: sellerEmail };
     document.getElementById('email-reminder-title').textContent = `Email ${sellerName||'seller'}`;
@@ -2821,7 +2903,7 @@ function notifySms(type, payload) {
       <div class="field"><label>Area</label><div class="val">${esc(l.area)}${l.sub_area?' — '+esc(l.sub_area):''}</div></div>
       ${!l.is_multi_unit?`<div class="field"><label>Bedrooms</label><div class="val">${l.bedrooms==0?'Bedsitter/studio':(l.bedrooms+' bedroom(s)')}</div></div>
       <div class="field"><label>Furnished</label><div class="val">${l.furnished?'Yes':'No'}</div></div>`:''}
-      <div class="field"><label>Plan</label><div class="val">${l.payment_status==='trial'?`${TRIAL_DAYS}-day free trial`:(l.is_featured?`Featured (KES ${SETTINGS.featured_fee.toLocaleString()})`:`Standard (KES ${SETTINGS.standard_fee.toLocaleString()})`)}</div></div>
+      <div class="field"><label>Plan</label><div class="val">${l.payment_status==='trial'?`${TRIAL_DAYS}-day free trial`:(l.is_featured?`Featured (${fmtPrice(calcUpgradeAmount(l,'featured'))})`:`Standard (${fmtPrice(calcUpgradeAmount(l,'basic'))})`)}</div></div>
       <div class="field"><label>Payment</label><div class="val"><span class="badge ${l.payment_status==='paid'?'paid':l.payment_status==='trial'?'trial':'unpaid'}">${l.payment_status==='trial'?'trial':(l.payment_status||'unpaid')}</span></div></div>
       ${l.trial_expires_at?`<div class="field"><label>Trial expires</label><div class="val">${fmtDate(l.trial_expires_at)}</div></div>`:''}
       <div class="field"><label>Listing ID</label><div class="val mono">${l.id}</div></div>
@@ -3117,24 +3199,24 @@ async function loadUsers(append) {
         <td>
           <div class="action-btns" style="position:relative">
             ${aBtn('view','Manage profile','view',`openProfileModal('${u.id}')`)}
-            ${aBtn('list','View listings','view',`filterByUser('${u.id}','${esc(u.full_name || '')}')`)}
+            ${aBtn('list','View listings','view',`filterByUser('${u.id}')`)}
             <span style="position:relative;display:inline-block">
-              ${aBtn('message','Message seller','message',`messageSellerInChat('${u.id}','${esc(u.full_name || 'Seller')}')`)}
+              ${aBtn('message','Message seller','message',`messageSellerInChat('${u.id}')`)}
               ${u.unreadFromSeller > 0 ? `<span class="seller-msg-badge" style="position:absolute;top:-6px;right:-6px;margin:0">${u.unreadFromSeller}</span>` : ''}
             </span>
-            ${aBtn('mail','Email reminder','message',`openEmailReminderModal('${u.id}','${esc(u.full_name || 'Seller')}','${esc(u.email || '')}')`)}
+            ${aBtn('mail','Email reminder','message',`openEmailReminderModal('${u.id}')`)}
             ${u.is_disabled
               ? aBtn('reinstate','Reinstate account','approve',`enableProfile('${u.id}')`)
               : aBtn('suspend','Suspend account','reject',`disableProfileFlow('${u.id}')`)}
           </div>
           ${mobileMenu(u.id, [
             { label: 'Manage profile', cls: '',     fn: `openProfileModal('${u.id}')` },
-            { label: 'View listings',  cls: '',     fn: `filterByUser('${u.id}','${esc(u.full_name || '')}')` },
+            { label: 'View listings',  cls: '',     fn: `filterByUser('${u.id}')` },
             { label: u.unreadFromSeller > 0
                 ? `Message (${u.unreadFromSeller} new)`
                 : 'Send message',
-              cls: 'blue', fn: `messageSellerInChat('${u.id}','${esc(u.full_name || 'Seller')}')` },
-            { label: 'Email reminder…', cls: 'blue', fn: `openEmailReminderModal('${u.id}','${esc(u.full_name || 'Seller')}','${esc(u.email || '')}')` },
+              cls: 'blue', fn: `messageSellerInChat('${u.id}')` },
+            { label: 'Email reminder…', cls: 'blue', fn: `openEmailReminderModal('${u.id}')` },
             u.is_disabled
               ? { label: 'Reinstate account', cls: 'success', fn: `enableProfile('${u.id}')` }
               : { label: 'Suspend account',   cls: 'danger',  fn: `disableProfileFlow('${u.id}')` },
@@ -3164,9 +3246,9 @@ async function loadUsers(append) {
         </div>
         <div class="mobile-card-actions">
           ${aBtn('view','Manage','view',`openProfileModal('${u.id}')`)}
-          ${aBtn('list','Listings','view',`filterByUser('${u.id}','${esc(u.full_name || '')}')`)}
-          ${aBtn('message','Message','message',`messageSellerInChat('${u.id}','${esc(u.full_name || 'Seller')}')`)}
-          ${aBtn('mail','Email','message',`openEmailReminderModal('${u.id}','${esc(u.full_name || 'Seller')}','${esc(u.email || '')}')`)}
+          ${aBtn('list','Listings','view',`filterByUser('${u.id}')`)}
+          ${aBtn('message','Message','message',`messageSellerInChat('${u.id}')`)}
+          ${aBtn('mail','Email','message',`openEmailReminderModal('${u.id}')`)}
           ${u.is_disabled
             ? aBtn('reinstate','Reinstate','approve',`enableProfile('${u.id}')`)
             : aBtn('suspend','Suspend','reject',`disableProfileFlow('${u.id}')`)}
@@ -3213,7 +3295,8 @@ async function loadUsers(append) {
     });
   }
 
-async function messageSellerInChat(sellerId, sellerName) {
+async function messageSellerInChat(sellerId) {
+    const sellerName = _users[sellerId]?.full_name || 'Seller';
     const sessionKey = `seller_${sellerId}_support`;
     let { data: existing } = await db
       .from('chat_sessions')
@@ -3260,9 +3343,9 @@ async function messageSellerInChat(sellerId, sellerName) {
       <div class="field"><label>Profile ID</label><div class="val mono">${u.id}</div></div>`;
     document.getElementById('profile-modal-footer').innerHTML = `
       <button class="btn-modal cancel"  onclick="closeProfileModal()">Cancel</button>
-      <button class="btn-modal cancel"  onclick="closeProfileModal(); messageSellerInChat('${u.id}','${esc(u.full_name||'Seller')}')">Message seller</button>
-      <button class="btn-modal cancel"  onclick="closeProfileModal(); openEmailReminderModal('${u.id}','${esc(u.full_name||'Seller')}','${esc(u.email||'')}')">Email reminder</button>
-      <button class="btn-modal cancel"  onclick="closeProfileModal(); requestExtraVerification('${u.id}','${esc(u.full_name||'')}')">Request extra documents</button>
+      <button class="btn-modal cancel"  onclick="closeProfileModal(); messageSellerInChat('${u.id}')">Message seller</button>
+      <button class="btn-modal cancel"  onclick="closeProfileModal(); openEmailReminderModal('${u.id}')">Email reminder</button>
+      <button class="btn-modal cancel"  onclick="closeProfileModal(); requestExtraVerification('${u.id}')">Request extra documents</button>
       ${u.is_disabled
         ? `<button class="btn-modal approve" onclick="enableProfile('${u.id}')">Reinstate account</button>`
         : `<button class="btn-modal reject"  onclick="disableProfileFlow('${u.id}')">Suspend account</button>`}
@@ -3630,11 +3713,11 @@ async function messageSellerInChat(sellerId, sellerName) {
           {label:'✕ Reject',  cls:'danger',  fn:`rejectVerification('${p.id}')`},
         ]:[]),
         ...(p.extra_verification_status==='submitted'?[{label:'Approve extra docs', cls:'success', fn:`approveExtraVerification('${p.id}')`}]:[]),
-        {label:'Request extra documents', cls:'blue', fn:`requestExtraVerification('${p.id}','${esc(p.full_name||'')}')`},
+        {label:'Request extra documents', cls:'blue', fn:`requestExtraVerification('${p.id}')`},
       ];
       const actionsHtml = isVerifiedTab
         ? aBtn('reject','Revoke verification','reject',`revokeVerification('${p.id}')`)
-        : `${aBtn('idcard','View ID (front)','view',`viewVerifyDoc('${p.id}','id')`)}${aBtn('idcard','View ID (back)','view',`viewVerifyDoc('${p.id}','id2')`)}${aBtn('doc','View proof of ownership','view',`viewVerifyDoc('${p.id}','proof')`)}${p.verification_status==='pending'?(aBtn('approve','Approve','approve',`approveVerification('${p.id}')`)+aBtn('reject','Reject','reject',`rejectVerification('${p.id}')`)):''}${p.extra_verification_status==='submitted'?aBtn('approve','Approve extra docs','approve',`approveExtraVerification('${p.id}')`):''}${aBtn('mail','Request extra documents','message',`requestExtraVerification('${p.id}','${esc(p.full_name||'')}')`)}`;
+        : `${aBtn('idcard','View ID (front)','view',`viewVerifyDoc('${p.id}','id')`)}${aBtn('idcard','View ID (back)','view',`viewVerifyDoc('${p.id}','id2')`)}${aBtn('doc','View proof of ownership','view',`viewVerifyDoc('${p.id}','proof')`)}${p.verification_status==='pending'?(aBtn('approve','Approve','approve',`approveVerification('${p.id}')`)+aBtn('reject','Reject','reject',`rejectVerification('${p.id}')`)):''}${p.extra_verification_status==='submitted'?aBtn('approve','Approve extra docs','approve',`approveExtraVerification('${p.id}')`):''}${aBtn('mail','Request extra documents','message',`requestExtraVerification('${p.id}')`)}`;
       return `<tr>
         <td>${esc(p.full_name||'—')}<div class="listing-meta">${esc(p.email||'')}</div></td>
         <td>${isVerifiedTab ? '<span class="badge active">✓ Verified — documents not shown here</span>' : `${p.verification_is_owner===false?'Not owner':'Owner'}${p.extra_verification_status==='submitted'?' · Extra docs submitted':''}`}</td>
@@ -3724,10 +3807,11 @@ async function messageSellerInChat(sellerId, sellerName) {
     });
   }
 
-  function requestExtraVerification(sellerId, sellerName) {
+  function requestExtraVerification(sellerId) {
+    const sellerName = _verifySellers[sellerId]?.full_name || _users[sellerId]?.full_name || 'This seller';
     openConfirm({
       title:'Request additional verification documents?',
-      message:`${sellerName||'This seller'} will be asked to upload extra proof (e.g. search certificate, CR12, rates clearance) because of this report.`,
+      message:`${sellerName} will be asked to upload extra proof (e.g. search certificate, CR12, rates clearance) because of this report.`,
       requireReason:true, reasonLabel:'What to request / why (shown to seller)',
       confirmText:'Send request', confirmClass:'approve',
       onConfirm: async (reason) => {
@@ -3755,29 +3839,40 @@ async function messageSellerInChat(sellerId, sellerName) {
     renderPremiumTable();
   }
 
+  let _premiumSearchActive = false;
   async function loadPremiumSellers() {
     const tbody = document.getElementById('premium-body');
     const mobileEl = document.getElementById('premium-mobile');
-    tbody.innerHTML = `<tr class="skeleton-row"><td colspan="5"><div class="skel"></div></td></tr>`.repeat(3);
+    tbody.innerHTML = `<tr class="skeleton-row"><td colspan="6"><div class="skel"></div></td></tr>`.repeat(3);
     mobileEl.innerHTML = '';
     const search = document.getElementById('premium-search')?.value.trim() || '';
-    let q = db.from('profiles').select('*').neq('role','admin').neq('subscription_tier','none');
-    if (search) q = q.or(`full_name.ilike.%${search}%,email.ilike.%${search}%`);
-    const { data, error } = await q.order('subscription_expires_at',{ascending:true});
-    if (error) { tbody.innerHTML = `<tr><td colspan="5"><div class="table-loading"><p>Could not load: ${esc(error.message)}</p></div></td></tr>`; return; }
+    _premiumSearchActive = !!search;
+    let q = db.from('profiles').select('*').neq('role','admin');
+    if (search) {
+      // Platform-wide: any seller by name/email/phone, not just existing
+      // subscribers — lets you find a seller and grant them a plan directly.
+      q = q.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`).limit(30);
+    } else {
+      q = q.neq('subscription_tier','none').order('subscription_expires_at',{ascending:true, nullsFirst:false});
+    }
+    const { data, error } = await q;
+    if (error) { tbody.innerHTML = `<tr><td colspan="6"><div class="table-loading"><p>Could not load: ${esc(error.message)}</p></div></td></tr>`; return; }
     _premiumSellers = data || [];
     data.forEach(p => { _users[p.id] = p; });
 
     const now = Date.now(), soon = now + 7*86400000;
-    const counts = { active:0, expiring:0, expired:0, all:_premiumSellers.length };
-    _premiumSellers.forEach(p => {
+    const subscribed = _premiumSellers.filter(p => p.subscription_tier && p.subscription_tier !== 'none');
+    const counts = { active:0, expiring:0, expired:0, all:subscribed.length };
+    subscribed.forEach(p => {
       const exp = p.subscription_expires_at ? new Date(p.subscription_expires_at).getTime() : null;
       if (exp && exp < now) counts.expired++;
       else if (exp && exp < soon) counts.expiring++;
       else counts.active++;
     });
     Object.entries(counts).forEach(([k,v]) => { const el=document.getElementById('ptc-'+k); if(el) el.textContent=v; });
-    document.getElementById('premium-count').textContent = `${counts.all} premium seller(s)`;
+    document.getElementById('premium-count').textContent = _premiumSearchActive
+      ? `${_premiumSellers.length} seller(s) match "${search}"`
+      : `${counts.all} premium seller(s)`;
     await loadPremiumBadge();
     renderPremiumTable();
   }
@@ -3801,8 +3896,10 @@ async function messageSellerInChat(sellerId, sellerName) {
 
   function renderPremiumTable() {
     const now = Date.now(), soon = now + 7*86400000;
-    const filtered = _premiumSellers.filter(p => {
+    const filtered = _premiumSearchActive ? _premiumSellers : _premiumSellers.filter(p => {
+      const subscribed = p.subscription_tier && p.subscription_tier !== 'none';
       const exp = p.subscription_expires_at ? new Date(p.subscription_expires_at).getTime() : null;
+      if (!subscribed) return false;
       if (premiumTab==='all') return true;
       if (premiumTab==='expired') return exp && exp < now;
       if (premiumTab==='expiring') return exp && exp >= now && exp < soon;
@@ -3812,51 +3909,60 @@ async function messageSellerInChat(sellerId, sellerName) {
     const tbody = document.getElementById('premium-body');
     const mobileEl = document.getElementById('premium-mobile');
     if (!filtered.length) {
-      tbody.innerHTML = `<tr><td colspan="5"><div class="table-loading"><p>No sellers here</p></div></td></tr>`;
-      mobileEl.innerHTML = `<div class="table-loading"><p>No sellers here</p></div>`;
+      const msg = _premiumSearchActive ? 'No sellers match your search' : 'No sellers here';
+      tbody.innerHTML = `<tr><td colspan="6"><div class="table-loading"><p>${msg}</p></div></td></tr>`;
+      mobileEl.innerHTML = `<div class="table-loading"><p>${msg}</p></div>`;
       return;
     }
     tbody.innerHTML = filtered.map(p => {
-      const st = premiumRowStatus(p);
+      const subscribed = p.subscription_tier && p.subscription_tier !== 'none';
+      const st = subscribed ? premiumRowStatus(p) : { text:'Not subscribed', cls:'standard' };
+      const rowActions = subscribed ? `
+            ${p.subscription_plan==='elite'?aBtn('external','Open storefront','view',`window.open('/storefront?seller=${p.id}','_blank','noopener,noreferrer')`):''}
+            ${aBtn('edit','Change plan / extend','view',`openGrantPremiumModal('${p.id}')`)}
+            ${aBtn('message','Message seller','message',`messageSellerInChat('${p.id}')`)}
+            ${aBtn('reject','Revoke Premium','reject',`revokePremiumFlow('${p.id}')`)}` : `
+            ${aBtn('upgrade','Grant Premium','approve',`openGrantPremiumModal('${p.id}')`)}
+            ${aBtn('message','Message seller','message',`messageSellerInChat('${p.id}')`)}`;
+      const menuActions = subscribed ? [
+            ...(p.subscription_plan==='elite'?[{label:'🔗 Open storefront', cls:'', fn:`window.open('/storefront?seller=${p.id}','_blank','noopener,noreferrer')`}]:[]),
+            {label:'Change plan / extend', cls:'', fn:`openGrantPremiumModal('${p.id}')`},
+            {label:'Message seller', cls:'blue', fn:`messageSellerInChat('${p.id}')`},
+            {label:'Revoke Premium', cls:'danger', fn:`revokePremiumFlow('${p.id}')`},
+          ] : [
+            {label:'Grant Premium', cls:'success', fn:`openGrantPremiumModal('${p.id}')`},
+            {label:'Message seller', cls:'blue', fn:`messageSellerInChat('${p.id}')`},
+          ];
       return `<tr>
-        <td>${esc(p.full_name||'—')}<div class="listing-meta">${esc(p.email||'')}</div></td>
-        <td><span class="badge ${p.subscription_plan==='elite'?'multiunit':'featured'}">${p.subscription_plan==='elite'?'Elite':'Premium'}</span></td>
-        <td><span class="badge ${p.subscription_tier==='yearly'?'featured':'active'}">${p.subscription_tier}</span></td>
+        <td>${esc(p.full_name||'—')}<div class="listing-meta">${esc(p.email||'')}${p.phone?' · '+esc(p.phone):''}</div></td>
+        <td>${subscribed?`<span class="badge ${p.subscription_plan==='elite'?'multiunit':'featured'}">${p.subscription_plan==='elite'?'Elite':'Premium'}</span>`:'<span class="badge standard">—</span>'}</td>
+        <td>${subscribed?`<span class="badge ${p.subscription_tier==='yearly'?'featured':'active'}">${p.subscription_tier}</span>`:'—'}</td>
         <td>${p.is_pro?'<span class="badge active">✓ Pro badge</span>':'<span class="badge standard">Off</span>'}</td>
         <td><span class="badge ${st.cls}">${st.text}</span></td>
         <td>
-          <div class="action-btns">
-            ${p.subscription_plan==='elite'?aBtn('external','Open storefront','view',`window.open('/storefront?seller=${p.id}','_blank','noopener,noreferrer')`):''}
-            ${aBtn('edit','Change plan / extend','view',`openGrantPremiumModal('${p.id}')`)}
-            ${aBtn('reject','Revoke Premium','reject',`revokePremiumFlow('${p.id}')`)}
-          </div>
-          ${mobileMenu(p.id,[
-            ...(p.subscription_plan==='elite'?[{label:'🔗 Open storefront', cls:'', fn:`window.open('/storefront?seller=${p.id}','_blank','noopener,noreferrer')`}]:[]),
-            {label:'Change plan / extend', cls:'', fn:`openGrantPremiumModal('${p.id}')`},
-            {label:'Revoke Premium', cls:'danger', fn:`revokePremiumFlow('${p.id}')`},
-          ])}
+          <div class="action-btns">${rowActions}</div>
+          ${mobileMenu(p.id, menuActions)}
         </td>
       </tr>`;
     }).join('');
     mobileEl.innerHTML = filtered.map(p => {
-      const st = premiumRowStatus(p);
+      const subscribed = p.subscription_tier && p.subscription_tier !== 'none';
+      const st = subscribed ? premiumRowStatus(p) : { text:'Not subscribed', cls:'standard' };
       return `<div class="mobile-card">
         <div class="mobile-card-header">
           <div style="flex:1;min-width:0">
             <div style="font-weight:600;font-size:13px">${esc(p.full_name||'—')}</div>
             <div style="font-size:11px;color:var(--text-3)">${esc(p.email||'')}</div>
           </div>
-          <span class="badge ${p.subscription_tier==='yearly'?'featured':'active'}">${p.subscription_tier}</span>
+          <span class="badge ${st.cls}">${st.text}</span>
         </div>
         <div class="mobile-card-body">
-          <div class="mobile-card-row"><span>Plan</span><span>${p.subscription_plan==='elite'?'Elite':'Premium'}</span></div>
-          <div class="mobile-card-row"><span>Expires</span><span>${st.text}</span></div>
+          <div class="mobile-card-row"><span>Plan</span><span>${subscribed?(p.subscription_plan==='elite'?'Elite':'Premium'):'—'}</span></div>
           <div class="mobile-card-row"><span>Pro badge</span><span>${p.is_pro?'On':'Off'}</span></div>
         </div>
         <div class="mobile-card-actions">
-          ${p.subscription_plan==='elite'?aBtn('external','Storefront','view',`window.open('/storefront?seller=${p.id}','_blank','noopener,noreferrer')`):''}
-          ${aBtn('edit','Edit','view',`openGrantPremiumModal('${p.id}')`)}
-          ${aBtn('reject','Revoke','reject',`revokePremiumFlow('${p.id}')`)}
+          ${subscribed?`${p.subscription_plan==='elite'?aBtn('external','Storefront','view',`window.open('/storefront?seller=${p.id}','_blank','noopener,noreferrer')`):''}${aBtn('edit','Edit','view',`openGrantPremiumModal('${p.id}')`)}${aBtn('reject','Revoke','reject',`revokePremiumFlow('${p.id}')`)}`:aBtn('upgrade','Grant Premium','approve',`openGrantPremiumModal('${p.id}')`)}
+          ${aBtn('message','Message','message',`messageSellerInChat('${p.id}')`)}
         </div>
       </div>`;
     }).join('');
@@ -3917,15 +4023,17 @@ async function messageSellerInChat(sellerId, sellerName) {
       if (!q.trim()) { resultsEl.innerHTML = ''; return; }
       const { data } = await db.from('profiles').select('id,full_name,email').neq('role','admin')
         .or(`full_name.ilike.%${q}%,email.ilike.%${q}%`).limit(8);
+      (data||[]).forEach(p => { _users[p.id] = { ..._users[p.id], ...p }; });
       resultsEl.innerHTML = (data||[]).map(p =>
-        `<div style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:4px;cursor:pointer" onclick="pickGrantSeller('${p.id}','${esc(p.full_name||'')}')">
+        `<div style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:4px;cursor:pointer" onclick="pickGrantSeller('${p.id}')">
           <strong>${esc(p.full_name||'—')}</strong><div style="font-size:11px;color:var(--text-3)">${esc(p.email||'')}</div>
         </div>`
       ).join('') || '<div style="font-size:12px;color:var(--text-3)">No matches</div>';
     }, 300);
   }
-  function pickGrantSeller(id, name) {
+  function pickGrantSeller(id) {
     grantingSellerId = id;
+    const name = _users[id]?.full_name || 'Seller';
     document.getElementById('grant-premium-title').textContent = `Grant Premium — ${name}`;
     document.getElementById('grant-seller-picker')?.remove();
   }
@@ -3989,27 +4097,326 @@ async function messageSellerInChat(sellerId, sellerName) {
     });
   }
 
-  async function loadConcierge() {
-    const tbody = document.getElementById('concierge-body');
-    tbody.innerHTML = `<tr class="skeleton-row"><td colspan="3"><div class="skel"></div></td></tr>`.repeat(3);
-    const { data, error } = await db.from('profiles').select('*').eq('concierge_enabled', true).order('concierge_enabled_at',{ascending:false});
-    document.getElementById('nav-badge-concierge').textContent = data?.length||0;
-    if (error || !data?.length) { tbody.innerHTML = `<tr><td colspan="3"><div class="table-loading"><p>No sellers on managed chat</p></div></td></tr>`; return; }
-    tbody.innerHTML = data.map(p => `<tr>
-      <td>${esc(p.full_name||'—')}<div class="listing-meta">${esc(p.email||'')}</div></td>
-      <td>${p.concierge_enabled_at?fmtDate(p.concierge_enabled_at):'—'}</td>
-      <td><div class="action-btns">${aBtn('message','Manage enquiries','message',`openConciergeInbox('${p.id}','${esc(p.full_name||'')}')`)}</div></td>
-    </tr>`).join('');
+  // ════════════════════════════════════
+  // CONCIERGE INBOX — standalone, high-priority
+  // ════════════════════════════════════
+  let _ccSellers = [];
+  let _ccListings = [];
+  let _ccListingsById = {};
+  let _ccThreads = [];
+  let _ccActiveKey = null;
+  let _ccSearch = '';
+  let _ccSellerFilter = 'all';
+  let _ccChannel = null;
+
+  const CC_QUICK_REPLIES = [
+    { id:'available', label:'✅ Still available', match:['available','still there','is it taken','still open','vacant'],
+      body: (ctx) => `Hi ${ctx.buyerFirst}! Yes, ${ctx.listingTitle} is still available. Let me know if you'd like to arrange a viewing.` },
+    { id:'price', label:'💰 Price & fees', match:['price','how much','cost','rent is','fee'],
+      body: (ctx) => `Hi ${ctx.buyerFirst}! ${ctx.listingTitle} is ${ctx.priceText}. ${ctx.rentNote}` },
+    { id:'location', label:'📍 Location', match:['where','location','directions','area','nearby'],
+      body: (ctx) => `Hi ${ctx.buyerFirst}! It's located in ${ctx.area}${ctx.subArea?`, ${ctx.subArea}`:''}. Happy to share directions closer to your visit.` },
+    { id:'viewing', label:'📅 Book a viewing', match:['view','see it','visit','viewing','come see','when can i'],
+      body: (ctx) => `Hi ${ctx.buyerFirst}! We'd love to show you around. What day and time works best for you this week?` },
+    { id:'thanks', label:'🙏 Thank you', match:['thank','thanks','asante'],
+      body: (ctx) => `You're most welcome, ${ctx.buyerFirst}! Let us know if you have any other questions.` },
+    { id:'followup', label:'👋 Friendly follow-up', match:[],
+      body: (ctx) => `Hi ${ctx.buyerFirst}, just checking in — are you still interested in ${ctx.listingTitle}? Happy to answer any questions.` },
+  ];
+
+  function ccBuildContext(t) {
+    const l = t.listing || {};
+    const buyerFirst = (t.buyerName||'there').split(' ')[0];
+    const priceText = l.is_multi_unit ? `priced from ${fmtListingPrice(l)}` : `${fmtListingPrice(l)}`;
+    const rentNote = l.price_type==='rent' ? "That's the monthly rent." : "That's the asking price.";
+    return { buyerFirst, listingTitle: l.title||'the listing', priceText, rentNote, area: l.area||'the area', subArea: l.sub_area||'' };
+  }
+  function ccSuggestFor(t) {
+    const lastBuyerMsg = [...t.messages].reverse().find(m=>m.sender==='buyer');
+    const text = (lastBuyerMsg?.content || '').toLowerCase();
+    const ctx = ccBuildContext(t);
+    let tpl = CC_QUICK_REPLIES.find(q => q.match.some(k => text.includes(k)));
+    if (!tpl) tpl = CC_QUICK_REPLIES.find(q=>q.id==='followup');
+    return { template: tpl, body: tpl.body(ctx) };
   }
 
-  function openConciergeInbox(sellerId, sellerName) {
-    showView('enquiries');
-    setEnqTab('message');
-    setTimeout(() => {
-      const filtered = _enqItems.filter(i => i.type==='message' && _enqThreads[i.id]?.sellerId === sellerId);
-      document.getElementById('enquiries-count').textContent = `${filtered.length} conversation(s) — ${sellerName}`;
-      const prevItems = _enqItems; _enqItems = filtered; renderEnquiriesTable(); _enqItems = prevItems;
-    }, 300);
+  async function loadConciergeSellers() {
+    const { data } = await db.from('profiles').select('id,full_name,email,phone,concierge_enabled_at').eq('concierge_enabled', true).order('concierge_enabled_at',{ascending:false});
+    _ccSellers = data || [];
+    _ccSellers.forEach(s => { _users[s.id] = { ..._users[s.id], ...s }; });
+  }
+
+  async function loadConciergeInbox() {
+    const listPane = document.getElementById('cc-thread-list');
+    if (listPane) listPane.innerHTML = '<div class="acw-spinner"></div>';
+    await loadConciergeSellers();
+    ccRenderSellerChips();
+    if (!_ccSellers.length) {
+      _ccListings = []; _ccListingsById = {}; _ccThreads = [];
+      ccRenderEmptyState('No sellers have managed chat turned on yet.');
+      ccUpdateStats();
+      return;
+    }
+    const sellerIds = _ccSellers.map(s=>s.id);
+    const { data: listings } = await db.from('listings').select('id,title,area,sub_area,price,price_type,is_multi_unit,price_min,price_max,listing_number,seller_id').in('seller_id', sellerIds);
+    _ccListings = listings || [];
+    _ccListingsById = {}; _ccListings.forEach(l => { _ccListingsById[l.id] = l; });
+    const listingIds = _ccListings.map(l=>l.id);
+    if (!listingIds.length) { _ccThreads = []; ccRenderEmptyState('These sellers have no listings yet.'); ccUpdateStats(); return; }
+
+    const cutoff = new Date(Date.now() - 120*86400000).toISOString();
+    const [{ data: enqData }, { data: msgData }] = await Promise.all([
+      db.from('enquiries').select('*').in('listing_id', listingIds).gte('created_at', cutoff).order('created_at',{ascending:false}).limit(400),
+      db.from('messages').select('*').in('listing_id', listingIds).gte('created_at', cutoff).order('created_at',{ascending:true}).limit(1000),
+    ]);
+    ccBuildThreads(enqData||[], msgData||[]);
+    ccRenderThreadList();
+    ccUpdateStats();
+    ccSubscribeRealtime(listingIds);
+  }
+
+  function ccBuildThreads(enqRows, msgRows) {
+    const map = new Map();
+    enqRows.forEach(e => {
+      const key = `${e.listing_id}__${e.buyer_phone || e.buyer_token || e.id}`;
+      if (!map.has(key)) {
+        const listing = _ccListingsById[e.listing_id];
+        map.set(key, {
+          key, listingId: e.listing_id, listing,
+          sellerId: listing?.seller_id, buyerToken: e.buyer_token||null, buyerPhone: e.buyer_phone||'',
+          buyerName: e.buyer_name || 'Unknown buyer',
+          messages: [{ id:'enq-'+e.id, sender:'buyer', content: e.message||'', created_at: e.created_at, admin_read_at: e.admin_read_at, _table:'enquiries', _rawId:e.id }],
+          lastAt: e.created_at,
+        });
+      }
+    });
+    msgRows.forEach(m => {
+      const key = `${m.listing_id}__${m.buyer_phone || m.buyer_token || ''}`;
+      if (map.has(key)) {
+        const t = map.get(key);
+        const dupe = t.messages.some(x => x.id==='enq-'+m.id);
+        if (!dupe) t.messages.push({ ...m, content: m.content||m.message, _table:'messages', _rawId:m.id });
+        if (new Date(m.created_at) > new Date(t.lastAt)) t.lastAt = m.created_at;
+      } else {
+        const listing = _ccListingsById[m.listing_id];
+        map.set(key, {
+          key, listingId: m.listing_id, listing,
+          sellerId: listing?.seller_id, buyerToken: m.buyer_token||null, buyerPhone: m.buyer_phone||'',
+          buyerName: m.buyer_name || 'Buyer',
+          messages: [{ ...m, content: m.content||m.message, _table:'messages', _rawId:m.id }],
+          lastAt: m.created_at,
+        });
+      }
+    });
+    _ccThreads = Array.from(map.values()).map(t => {
+      t.messages.sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+      t.unreadCount = t.messages.filter(m=>m.sender==='buyer' && !m.admin_read_at).length;
+      t.sellerName = _users[t.sellerId]?.full_name || 'Seller';
+      return t;
+    }).sort((a,b)=> new Date(b.lastAt) - new Date(a.lastAt));
+  }
+
+  function ccSubscribeRealtime(listingIds) {
+    if (_ccChannel) { _ccChannel.unsubscribe(); _ccChannel = null; }
+    if (!listingIds.length) return;
+    _ccChannel = db.channel('cc-inbox-'+Date.now())
+      .on('postgres_changes', {event:'INSERT', schema:'public', table:'messages', filter:`listing_id=in.(${listingIds.join(',')})`}, payload => {
+        ccHandleIncoming(payload.new);
+      })
+      .subscribe();
+  }
+  function ccHandleIncoming(m) {
+    const key = `${m.listing_id}__${m.buyer_phone || m.buyer_token || ''}`;
+    let t = _ccThreads.find(x=>x.key===key);
+    const rec = { ...m, content: m.content||m.message, _table:'messages', _rawId:m.id };
+    if (t) {
+      if (t.messages.some(x=>x.id===m.id)) return;
+      t.messages.push(rec);
+      t.lastAt = m.created_at;
+      if (m.sender==='buyer' && !m.admin_read_at) t.unreadCount++;
+      _ccThreads = _ccThreads.filter(x=>x.key!==key);
+      _ccThreads.unshift(t);
+    } else {
+      const listing = _ccListingsById[m.listing_id];
+      if (!listing) return;
+      t = { key, listingId:m.listing_id, listing, sellerId:listing.seller_id, buyerToken:m.buyer_token||null, buyerPhone:m.buyer_phone||'', buyerName:m.buyer_name||'Buyer', messages:[rec], lastAt:m.created_at, unreadCount: m.sender==='buyer'?1:0, sellerName: _users[listing.seller_id]?.full_name||'Seller' };
+      _ccThreads.unshift(t);
+    }
+    ccRenderThreadList();
+    ccUpdateStats();
+    if (_ccActiveKey === key) ccRenderThread(t);
+    if (m.sender === 'buyer') toast(`New buyer message — ${t.buyerName}`, 'success');
+  }
+
+  function ccRenderSellerChips() {
+    const wrap = document.getElementById('cc-seller-chips');
+    if (!wrap) return;
+    wrap.innerHTML = `<button class="acw-tab ${_ccSellerFilter==='all'?'active':''}" onclick="ccSetSellerFilter('all')">All sellers</button>` +
+      _ccSellers.map(s => `<button class="acw-tab ${_ccSellerFilter===s.id?'active':''}" onclick="ccSetSellerFilter('${s.id}')">${esc((s.full_name||'Seller').split(' ')[0])}</button>`).join('');
+  }
+  function ccSetSellerFilter(id) { _ccSellerFilter = id; ccRenderSellerChips(); ccRenderThreadList(); }
+
+  function ccFilteredThreads() {
+    let list = _ccThreads;
+    if (_ccSellerFilter !== 'all') list = list.filter(t=>t.sellerId===_ccSellerFilter);
+    if (_ccSearch.trim()) {
+      const q = _ccSearch.toLowerCase();
+      list = list.filter(t => (t.buyerName||'').toLowerCase().includes(q) || (t.listing?.title||'').toLowerCase().includes(q) || (t.sellerName||'').toLowerCase().includes(q));
+    }
+    return list;
+  }
+  function ccRenderThreadList() {
+    const el = document.getElementById('cc-thread-list');
+    if (!el) return;
+    const list = ccFilteredThreads();
+    const countEl = document.getElementById('cc-thread-count');
+    if (countEl) countEl.textContent = `${list.length} conversation${list.length!==1?'s':''}`;
+    if (!list.length) { el.innerHTML = `<div class="acw-empty">No conversations found</div>`; return; }
+    el.innerHTML = list.map(t => {
+      const last = t.messages[t.messages.length-1];
+      const preview = last ? (last.sender==='seller'?'You: ':'') + (last.content||'') : '';
+      const unread = t.unreadCount > 0;
+      return `<div class="acw-item${unread?' unread':''}${_ccActiveKey===t.key?' cc-active':''}" onclick="ccOpenThread('${t.key}')">
+        <div class="acw-item-top"><span class="acw-item-name">${esc(t.buyerName)}</span><span class="acw-item-time">${ccTimeAgo(t.lastAt)}</span></div>
+        <div class="acw-item-preview">${esc(preview.slice(0,70))}</div>
+        <div class="acw-item-meta">
+          ${unread?'<span class="acw-dot"></span>':''}
+          <span class="acw-tag seller">${esc(t.sellerName)}</span>
+          <span class="acw-tag">${esc(t.listing?.title||'Listing')}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  function ccSearchInput(v) { _ccSearch = v; ccRenderThreadList(); }
+  function ccTimeAgo(iso) {
+    const m = Math.floor((Date.now()-new Date(iso))/60000);
+    if (m<1) return 'now'; if (m<60) return `${m}m`;
+    const h = Math.floor(m/60); if (h<24) return `${h}h`;
+    const d = Math.floor(h/24); if (d<7) return `${d}d`;
+    return new Date(iso).toLocaleDateString('en-KE',{day:'numeric',month:'short'});
+  }
+
+  async function ccOpenThread(key) {
+    const t = _ccThreads.find(x=>x.key===key); if (!t) return;
+    _ccActiveKey = key;
+    ccRenderThreadList();
+    document.getElementById('cc-empty-state').style.display = 'none';
+    document.getElementById('cc-thread-pane').style.display = 'flex';
+    ccRenderThread(t);
+    await ccMarkThreadRead(t);
+  }
+  function ccRenderThread(t) {
+    document.getElementById('cc-thread-buyer').textContent = t.buyerName;
+    document.getElementById('cc-thread-meta').innerHTML = `${esc(t.sellerName)} · ${esc(t.listing?.title||'Listing')}${t.buyerPhone?' · '+esc(t.buyerPhone):''}`;
+    const waLink = t.buyerPhone ? `<a href="https://wa.me/${(t.buyerPhone||'').replace(/[\s+]/g,'').replace(/^0/,'254')}" target="_blank" class="acw-mini-btn" style="text-decoration:none;color:#25D366;border-color:#25D366">WhatsApp</a>` : '';
+    const listingLink = t.listing ? `<a href="/listing?id=${String(t.listing.listing_number).padStart(6,'0')}" target="_blank" class="acw-mini-btn" style="text-decoration:none">View listing</a>` : '';
+    document.getElementById('cc-thread-actions').innerHTML = waLink + listingLink;
+
+    const msgsEl = document.getElementById('cc-messages');
+    msgsEl.innerHTML = t.messages.map(m => {
+      const time = new Date(m.created_at).toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'});
+      const who = m.sender==='seller' ? (m.sent_by_admin_id?'You (as seller)':'Seller') : t.buyerName;
+      return `<div class="acw-msg-wrap ${m.sender==='seller'?'admin':'visitor'}">
+        <div class="acw-msg-bubble ${m.sender==='seller'?'admin':'visitor'}">${esc(m.content||'')}</div>
+        <div class="acw-msg-time">${esc(who)} · ${time}</div>
+      </div>`;
+    }).join('');
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+
+    ccRenderSuggestion(t);
+    document.getElementById('cc-quickbar').innerHTML = ccQuickBarHtml(t.key);
+  }
+  async function ccMarkThreadRead(t) {
+    if (!t.unreadCount) return;
+    const enqIds = t.messages.filter(m=>m._table==='enquiries' && m.sender==='buyer' && !m.admin_read_at).map(m=>m._rawId);
+    const msgIds = t.messages.filter(m=>m._table==='messages' && m.sender==='buyer' && !m.admin_read_at).map(m=>m._rawId);
+    const now = new Date().toISOString();
+    if (enqIds.length) await db.from('enquiries').update({ admin_read_at: now }).in('id', enqIds);
+    if (msgIds.length) await db.from('messages').update({ admin_read_at: now }).in('id', msgIds);
+    t.messages.forEach(m => { if (m.sender==='buyer' && !m.admin_read_at) m.admin_read_at = now; });
+    t.unreadCount = 0;
+    ccRenderThreadList();
+    ccUpdateStats();
+    loadConciergeBadge();
+  }
+
+  function ccRenderSuggestion(t) {
+    const wrap = document.getElementById('cc-suggestion');
+    if (!wrap) return;
+    const lastBuyerMsg = [...t.messages].reverse().find(m=>m.sender==='buyer');
+    if (!lastBuyerMsg) { wrap.style.display='none'; return; }
+    const { template, body } = ccSuggestFor(t);
+    wrap.style.display = 'block';
+    wrap.innerHTML = `
+      <div class="cc-suggest-label">💡 Suggested reply (${esc(template.label.replace(/^\S+\s/,''))})</div>
+      <div class="cc-suggest-body">${esc(body)}</div>
+      <div class="cc-suggest-actions">
+        <button class="acw-mini-btn resolve" onclick="ccSendQuick('${t.key}','${template.id}')">⚡ Send this</button>
+        <button class="acw-mini-btn" onclick="ccEditSuggestion('${t.key}','${template.id}')">✎ Edit first</button>
+      </div>`;
+  }
+  function ccQuickBarHtml(key) {
+    return CC_QUICK_REPLIES.map(q => `<button class="cc-chip" onclick="ccSendQuick('${key}','${q.id}')">${q.label}</button>`).join('');
+  }
+  async function ccSendQuick(key, templateId) {
+    const t = _ccThreads.find(x=>x.key===key); if (!t) return;
+    const tpl = CC_QUICK_REPLIES.find(q=>q.id===templateId); if (!tpl) return;
+    const body = tpl.body(ccBuildContext(t));
+    await ccSendMessage(t, body);
+    toast('Quick reply sent ✓','success');
+  }
+  function ccEditSuggestion(key, templateId) {
+    const t = _ccThreads.find(x=>x.key===key); if (!t) return;
+    const tpl = CC_QUICK_REPLIES.find(q=>q.id===templateId); if (!tpl) return;
+    document.getElementById('cc-reply-input').value = tpl.body(ccBuildContext(t));
+    document.getElementById('cc-reply-input').focus();
+  }
+
+  async function ccSendMessage(t, body) {
+    if (!body || !body.trim()) return;
+    const payload = { listing_id: t.listingId, buyer_token: t.buyerToken, buyer_name: t.buyerName, buyer_phone: t.buyerPhone||null, sender:'seller', content: body.trim(), sent_by_admin_id: currentUser?.id||null };
+    const { data, error } = await db.from('messages').insert(payload).select().single();
+    if (error) { toast('Could not send: '+error.message,'error'); return; }
+    t.messages.push({ ...data, content: data.content||data.message, _table:'messages', _rawId:data.id });
+    t.lastAt = data.created_at;
+    _ccThreads = _ccThreads.filter(x=>x.key!==t.key); _ccThreads.unshift(t);
+    ccRenderThreadList();
+    if (_ccActiveKey === t.key) ccRenderThread(t);
+    logAction('concierge_reply','listing',t.listingId,`Replied to ${t.buyerName}`);
+  }
+  async function ccSendComposer() {
+    const t = _ccThreads.find(x=>x.key===_ccActiveKey); if (!t) return;
+    const input = document.getElementById('cc-reply-input');
+    const body = input.value.trim();
+    if (!body) return;
+    input.value=''; input.style.height='auto';
+    await ccSendMessage(t, body);
+  }
+  function ccComposerKeydown(e) { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); ccSendComposer(); } }
+
+  function ccUpdateStats() {
+    const totalUnread = _ccThreads.reduce((s,t)=>s+(t.unreadCount||0),0);
+    const statUnread = document.getElementById('cc-stat-unread'); if (statUnread) statUnread.textContent = totalUnread;
+    const statConvos = document.getElementById('cc-stat-convos'); if (statConvos) statConvos.textContent = _ccThreads.length;
+    const statSellers = document.getElementById('cc-stat-sellers'); if (statSellers) statSellers.textContent = _ccSellers.length;
+    const badge = document.getElementById('nav-badge-concierge');
+    if (badge) badge.textContent = totalUnread;
+  }
+  function ccRenderEmptyState(msg) {
+    const el = document.getElementById('cc-thread-list');
+    if (el) el.innerHTML = `<div class="acw-empty">${esc(msg)}</div>`;
+    ccRenderThreadList();
+  }
+  async function loadConciergeBadge() {
+    if (!_ccSellers.length) await loadConciergeSellers();
+    const listingIds = _ccListings.length ? _ccListings.map(l=>l.id) : [];
+    const badge = document.getElementById('nav-badge-concierge');
+    if (!listingIds.length) { if (badge) badge.textContent = '0'; return; }
+    const [{count:c1},{count:c2}] = await Promise.all([
+      db.from('enquiries').select('*',{count:'exact',head:true}).in('listing_id',listingIds).is('admin_read_at',null),
+      db.from('messages').select('*',{count:'exact',head:true}).in('listing_id',listingIds).eq('sender','buyer').is('admin_read_at',null),
+    ]);
+    if (badge) badge.textContent = (c1||0)+(c2||0);
   }
   function closeInquiryModal() { document.getElementById('inquiry-modal').classList.remove('open'); }
 
@@ -4270,7 +4677,7 @@ async function messageSellerInChat(sellerId, sellerName) {
       ${listing?`<button class="btn-modal cancel" onclick="window.open('listing.html?id=${listing.id}','_blank','noopener,noreferrer')">View listing</button>`:''}
       ${seller?`<button class="btn-modal cancel" onclick="closeReportModal(); openProfileModal('${seller.id}')">View seller profile</button>`:''}
       ${seller && !seller.is_disabled?`<button class="btn-modal reject" onclick="closeReportModal(); disableProfileFlow('${seller.id}')">Suspend seller</button>`:''}
-      ${seller?`<button class="btn-modal cancel" onclick="closeReportModal(); requestExtraVerification('${seller.id}','${esc(seller.full_name||'')}')">Request extra documents</button>`:''}
+      ${seller?`<button class="btn-modal cancel" onclick="closeReportModal(); requestExtraVerification('${seller.id}')">Request extra documents</button>`:''}
       ${listing && !listing.is_disabled?`<button class="btn-modal reject" onclick="closeReportModal(); recycleListing('${listing.id}')">Recycle listing</button>`:''}
       <button class="btn-modal cancel"  onclick="setReportStatus('${r.id}','dismissed')">Dismiss</button>
       <button class="btn-modal reject"  onclick="setReportStatus('${r.id}','reviewing')">Mark reviewing</button>
@@ -4846,7 +5253,7 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
     // marked read via markInquiryRead() when opened (see openInquiryModal).
     if(v==='enquiries')    { loadConciergeSellerIds(); loadEnquiries(); }
     if(v==='verification') loadVerification();
-    if(v==='concierge')    loadConcierge();
+    if(v==='concierge')    loadConciergeInbox();
     if(v==='premium-sellers') loadPremiumSellers();
     if(v==='reports')      loadReports();
     if(v==='reviews')      loadReviews();
@@ -4879,13 +5286,14 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
     loadAllListings();
   }, 500);
 
-  function filterByUser(id, name) {
+  function filterByUser(id) {
     filterSellerId = id;
+    const name = _users[id]?.full_name || 'this seller';
     document.getElementById('filter-search').value = '';
     showView('listings');
     const banner = document.getElementById('seller-filter-banner');
     if (banner) {
-      document.getElementById('seller-filter-banner-text').textContent = `Showing listings by ${name || 'this seller'}`;
+      document.getElementById('seller-filter-banner-text').textContent = `Showing listings by ${name}`;
       banner.style.display = 'flex';
     }
     loadAllListings();
@@ -4942,6 +5350,7 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
     let currentSellerName = null;
     let currentThreadSessionKey = null;
     let currentIsSellerThread = false;
+    let _acwSellerCache = {};
 
     function escT(s) { return esc(s); }
 
@@ -5223,9 +5632,10 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
         .or(`full_name.ilike.%${q}%,email.ilike.%${q}%,phone.ilike.%${q}%`).limit(20);
       if (error) { resultsEl.innerHTML = `<div class="acw-empty">Search failed: ${escT(error.message)}</div>`; return; }
       if (!data || !data.length) { resultsEl.innerHTML = '<div class="acw-empty">No sellers found</div>'; return; }
+      data.forEach(p => { _acwSellerCache[p.id] = p; });
       resultsEl.innerHTML = data.map(p => {
         const ini = (p.full_name||'?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-        return `<div class="acw-seller-row" onclick="ACW.startChatWith('${p.id}','${escT(p.full_name||'Seller')}')">
+        return `<div class="acw-seller-row" onclick="ACW.startChatWith('${p.id}')">
           <div class="acw-seller-avatar">${ini}</div>
           <div class="acw-seller-info">
             <div class="acw-seller-name">${escT(p.full_name||'—')}</div>
@@ -5234,7 +5644,8 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
         </div>`;
       }).join('');
     }
-    async function startChatWith(sellerId, sellerName) {
+    async function startChatWith(sellerId) {
+      const sellerName = _acwSellerCache[sellerId]?.full_name || 'Seller';
       const sessionKey = `seller_${sellerId}_support`;
       let { data: existing } = await db.from('chat_sessions').select('id').eq('session_key', sessionKey).maybeSingle();
       if (!existing) {
@@ -5425,6 +5836,7 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
     loadReportsBadge();
     loadReviewsBadge();
     loadPremiumBadge();
+    loadConciergeBadge();
     subscribeReportsRealtime();
     loadSocialSettings();
     ACW.init();
