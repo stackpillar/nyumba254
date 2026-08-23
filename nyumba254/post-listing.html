@@ -822,7 +822,9 @@
 
       <div class="verify-section">
         <label>M-Pesa transaction code (from your confirmation SMS)</label>
-        <input type="text" id="mpesa-code" placeholder="e.g. QFT7H8K2LM" style="text-transform:uppercase"/>
+        <input type="text" id="mpesa-code" placeholder="e.g. QFT7H8K2LM" maxlength="10" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,''); validateMpesaRefInput('mpesa-code')" style="text-transform:uppercase;letter-spacing:.03em"/>
+        <div class="field-hint" id="mpesa-code-hint">10 characters — letters and numbers only, exactly as shown in your M-Pesa SMS</div>
+        <div class="field-error" id="mpesa-code-error">That doesn't look like a valid M-Pesa code — it should be exactly 10 letters/numbers</div>
       </div>
       <button class="btn-pay-primary" onclick="confirmManualPayment('mpesa')" style="margin-top:0">
         ✓ Verify M-Pesa Payment
@@ -842,7 +844,9 @@
       </div>
       <div class="verify-section">
         <label>M-Pesa transaction code (from your confirmation SMS)</label>
-        <input type="text" id="bank-ref" placeholder="e.g. QFT7H8K2LM" style="text-transform:uppercase"/>
+        <input type="text" id="bank-ref" placeholder="e.g. QFT7H8K2LM" maxlength="10" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,''); validateMpesaRefInput('bank-ref')" style="text-transform:uppercase;letter-spacing:.03em"/>
+        <div class="field-hint" id="bank-ref-hint">10 characters — letters and numbers only, exactly as shown in your M-Pesa SMS</div>
+        <div class="field-error" id="bank-ref-error">That doesn't look like a valid M-Pesa code — it should be exactly 10 letters/numbers</div>
       </div>
       <button class="btn-pay-primary" onclick="confirmManualPayment('paybill')" style="margin-top:8px">
         ✓ Verify Paybill Payment
@@ -2241,11 +2245,36 @@ function startPaymentPolling() {
   }, 5000);
 }
 
+// Real Safaricom M-Pesa confirmation codes are always a fixed 10-character
+// uppercase alphanumeric string (e.g. QFT7H8K2LM) — no spaces, no lowercase,
+// no symbols. This catches typos/garbage input; it can't confirm the code
+// is a genuine, unused payment — only Safaricom's own systems know that.
+function isValidMpesaCode(code) {
+  return /^[A-Z0-9]{10}$/.test(String(code || '').trim().toUpperCase());
+}
+function validateMpesaRefInput(inputId) {
+  const el = document.getElementById(inputId);
+  const err = document.getElementById(inputId + '-error');
+  const hint = document.getElementById(inputId + '-hint');
+  const val = el.value.trim();
+  const bad = val.length > 0 && !isValidMpesaCode(val);
+  el.classList.toggle('error', bad);
+  err.classList.toggle('show', bad);
+  if (hint) hint.style.display = bad ? 'none' : 'block';
+  return !bad && val.length === 10;
+}
+
 async function confirmManualPayment(method) {
   const codeEl = method === 'mpesa' ? document.getElementById('mpesa-code') : document.getElementById('bank-ref');
   const code   = codeEl.value.trim().toUpperCase();
   if (!code) {
     showToast(method === 'mpesa' ? 'Please enter your M-Pesa code' : 'Please enter your M-Pesa transaction code', 'error');
+    return;
+  }
+  if (!isValidMpesaCode(code)) {
+    validateMpesaRefInput(codeEl.id);
+    showToast('Please enter a valid 10-character M-Pesa code', 'error');
+    codeEl.focus();
     return;
   }
 
