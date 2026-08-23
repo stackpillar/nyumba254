@@ -430,10 +430,11 @@
     });
     btn.disabled = false; btn.textContent = '✓ Submit for verification';
     if (error) { subToast('Could not submit — please try again'); console.error(error); return; }
+    const { data: profileRow } = await db.from('profiles').select('full_name').eq('id', currentUser.id).single();
     fetch(`${SUPABASE_URL}/functions/v1/send-notification-email`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
-      body: JSON.stringify({ type: 'premium_payment_submitted', audience: 'admin', plan: checkoutPlan, tier: checkoutTier, amount: checkoutAmount, reference: code, sellerEmail: currentUser.email }),
+      body: JSON.stringify({ type: 'premium_payment_submitted', audience: 'admin', plan: checkoutPlan, tier: checkoutTier, amount: checkoutAmount, reference: code, sellerName: profileRow?.full_name, sellerEmail: currentUser.email }),
     }).catch(()=>{});
     closeSubPaymentModal();
     subToast('Payment submitted — we\'ll activate your plan shortly ✓');
