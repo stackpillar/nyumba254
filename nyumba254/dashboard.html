@@ -1608,6 +1608,7 @@ async function init(){
     scwInit();
     try{ Tour.maybeStart(); }catch(tourErr){ console.error('Tour error (non-fatal):',tourErr); }
   }catch(err){
+    if(err && err.message==='account_deleted') return; // handleDeletedAccount() is already redirecting
     console.error('Init error:',err);
     document.getElementById('loading-screen').innerHTML =
       '<p style="color:white;max-width:320px;text-align:center">Something went wrong loading your dashboard. Please refresh the page.<br><span style="opacity:.6;font-size:11px">'+escHtml(err.message||String(err))+'</span></p>';
@@ -1642,8 +1643,30 @@ async function updateOwnerProfile(patch){
   return error;
 }
 
+// If the profile row is gone (e.g. the account was deleted from another
+// device/tab), the current session can still look "valid" for a while —
+// Supabase doesn't instantly invalidate an already-issued access token when
+// a row is deleted. Signs out and sends the person to login instead of
+// silently continuing with a null profile.
+async function handleDeletedAccount(){
+  try{ await db.auth.signOut(); }catch(e){}
+  window.location.href='/login?deleted=1';
+}
+
+// Lightweight existence check reused by the periodic status poll below, so
+// a deletion is caught even if the seller never refreshes the tab.
+async function verifyAccountStillActive(){
+  if(!currentUser)return;
+  const{count,error}=await db.from('profiles').select('id',{count:'exact',head:true}).eq('id',currentUser.id);
+  if(!error && count===0){ await handleDeletedAccount(); }
+}
+
 async function loadProfile(){
-  const{data}=await db.from('profiles').select('*').eq('id',currentUser.id).single();
+  const{data,error}=await db.from('profiles').select('*').eq('id',currentUser.id).single();
+  if(error || !data){
+    await handleDeletedAccount();
+    throw new Error('account_deleted');
+  }
   currentProfile=data;
   const email=currentUser.email||'';
   const name=(data&&data.full_name)?data.full_name:email.split('@')[0];
@@ -4241,6 +4264,7 @@ function playActivitySound(){
 }
 
 async function pollListingStatusChanges(){
+  await verifyAccountStillActive();
   if(!allListings.length)return;
   const ids=allListings.map(l=>l.id);
   const{data,error}=await db.from('listings').select('id,status,title').in('id',ids);
