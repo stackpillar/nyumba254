@@ -231,7 +231,7 @@
        untouched since they don't contain .action-btn.icon children. */
     .action-btns:has(> .action-btn.icon) {
       display: grid;
-      grid-template-columns: repeat(2, 30px);
+      grid-template-columns: repeat(6, 30px);
       gap: 6px;
       align-items: start;
       width: max-content;
@@ -255,7 +255,7 @@
     [data-tip]:hover::before, [data-tip]:focus-visible::before { opacity: 1; visibility: visible; }
 
     /* MOBILE ACTION MENU (dropdown) */
-    .action-menu-wrap { position: relative; display: none; }
+    .action-menu-wrap { position: relative; display: inline-block; }
     .action-menu-btn {
       display: flex; align-items: center; gap: 6px;
       padding: 9px 14px; border-radius: 8px; font-size: 13px; font-weight: 500;
@@ -2448,16 +2448,7 @@ function notifySms(type, payload) {
         <td>
           <div class="action-btns">
             ${l.status==='pending'?(aBtn('approve','Approve listing','approve',`approveListing('${l.id}')`)+aBtn('reject','Reject listing','reject',`rejectListing('${l.id}')`)):''}
-            ${isTrial?aBtn('upgrade','Process upgrade','upgrade',`openUpgradeModal('${l.id}')`):''}
-            ${l.status==='active'&&!l.is_featured?aBtn('feature','Feature listing','feature',`featureListing('${l.id}')`):''}
-            ${l.is_featured?aBtn('unfeature','Unfeature listing','view',`unfeatureListing('${l.id}')`):''}
-            ${l.status==='active'&&!l.is_disabled?renderSocialButtons(l):''}
             ${aBtn('view','View details','view',`openListingModal('${l.id}')`)}
-            ${l.is_disabled
-              ? aBtn('activate','Activate listing','approve',`activateListing('${l.id}')`)
-              : aBtn('deactivate','Deactivate listing','reject',`deactivateListing('${l.id}')`)}
-            ${aBtn('recycle','Move to recycle bin','reject',`recycleListing('${l.id}')`)}
-            ${aBtn('delete','Delete permanently','delete',`deleteListingPermanently('${l.id}')`)}
           </div>
           ${mobileMenu(l.id, menuItems)}
         </td>
