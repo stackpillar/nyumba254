@@ -376,6 +376,49 @@
     .di-mine-badge{display:inline-block;font-size:10px;font-weight:700;background:var(--green);color:white;padding:2px 8px;border-radius:20px;margin-left:6px}
     @media(max-width:700px){.di-breakdown-grid{grid-template-columns:1fr}}
 
+    /* ===== Rent Ledger v3 — Elite overhaul ===== */
+    .rl-health-ring{width:64px;height:64px;position:relative;flex-shrink:0}
+    .rl-health-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+    .rl-health-ring circle{fill:none;stroke-width:6}
+    .rl-health-ring .rl-ring-bg{stroke:var(--surface)}
+    .rl-health-ring .rl-ring-fill{stroke:#7c3aed;stroke-linecap:round;transition:stroke-dashoffset .5s ease}
+    .rl-health-ring .rl-ring-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:var(--text)}
+    .rl-property-card{border-radius:var(--radius-lg);border:1.5px solid var(--border);padding:16px 18px;margin-bottom:14px;position:relative;overflow:hidden}
+    .rl-property-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:4px}
+    .rl-property-card.health-good::before{background:#16a34a}
+    .rl-property-card.health-warn::before{background:var(--amber)}
+    .rl-property-card.health-bad::before{background:var(--red)}
+    .rl-aging-bar{display:flex;height:14px;border-radius:8px;overflow:hidden;background:var(--surface);margin:8px 0}
+    .rl-aging-seg{transition:width .3s ease}
+    .rl-aging-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--text-3);margin-top:6px}
+    .rl-aging-legend span{display:inline-flex;align-items:center;gap:4px}
+    .rl-aging-dot{width:8px;height:8px;border-radius:2px;display:inline-block}
+    .rl-heatmap{display:grid;grid-template-columns:repeat(12,1fr);gap:3px}
+    .rl-heatmap-cell{aspect-ratio:1;border-radius:3px;cursor:default;transition:transform .1s}
+    .rl-heatmap-cell:hover{transform:scale(1.25)}
+    .rl-heatmap-labels{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin-top:4px}
+    .rl-heatmap-labels span{font-size:9px;color:var(--text-3);text-align:center}
+    .rl-kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .rl-kanban-col{background:var(--surface);border-radius:var(--radius);padding:12px}
+    .rl-kanban-col h4{font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:10px;display:flex;justify-content:space-between}
+    .rl-kanban-card{background:white;border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:12.5px}
+    .rl-kanban-card strong{display:block;font-size:13px;margin-bottom:2px}
+    .rl-goal-bar{height:20px;border-radius:12px;background:var(--surface);overflow:hidden;position:relative;margin:8px 0}
+    .rl-goal-fill{height:100%;background:linear-gradient(90deg,#7c3aed,#a78bfa);border-radius:12px;transition:width .5s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:8px}
+    .rl-goal-fill span{font-size:10px;color:white;font-weight:700}
+    .rl-leaderboard-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12.5px}
+    .rl-leaderboard-rank{width:22px;height:22px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+    .rl-leaderboard-rank.gold{background:#fef3c7;color:#92400e}
+    .rl-leaderboard-rank.silver{background:#e5e7eb;color:#374151}
+    .rl-leaderboard-rank.bronze{background:#fed7aa;color:#9a3412}
+    .rl-badge-pill{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+    .rl-badge-pill.escalation{background:#DBEAFE;color:#1e40af}
+    .rl-badge-pill.reminder{background:#FEF3C7;color:#92400e}
+    .rl-forecast-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+    .rl-toolbar-icon-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+    .rl-toolbar-icon-btn:hover{border-color:#7c3aed;color:#7c3aed}
+    @media(max-width:700px){.rl-kanban{grid-template-columns:1fr}.rl-heatmap{grid-template-columns:repeat(6,1fr)}.rl-heatmap-labels{grid-template-columns:repeat(6,1fr)}}
+
     /* ===== Support Chat Widget v2 ===== */
     .scw-fab{position:fixed;bottom:calc(28px + env(safe-area-inset-bottom));right:calc(28px + env(safe-area-inset-right));z-index:400;display:flex;align-items:center;gap:9px;padding:10px 20px 10px 10px;border-radius:40px;background:var(--white);border:1px solid var(--border);box-shadow:var(--shadow-lg);cursor:pointer;transition:transform .18s,opacity .15s;font-family:'Inter',sans-serif}
     .scw-fab.scw-hidden{display:none !important}
@@ -877,7 +920,11 @@
     <div class="page" id="page-rent-ledger">
       <div class="section-head">
         <h2>Rent &amp; Tenant Ledger</h2>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <div class="rl-toolbar-icon-btn" title="Replay Rent Ledger tour" onclick="RLTour.restart()" role="button" tabindex="0" aria-label="Replay Rent Ledger tour" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#7c3aed" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          </div>
+          <button class="btn btn-outline" id="btn-reminder-settings" style="display:none" onclick="openReminderSettingsModal()">🔔 Reminder settings</button>
           <button class="btn btn-outline" id="btn-remind-overdue" style="display:none;color:var(--red);border-color:var(--red)" onclick="sendAllOverdueReminders()">✉️ Remind all overdue</button>
           <button class="btn btn-outline" id="btn-export-rl-csv" style="display:none" onclick="exportRentLedgerCSV()">⬇️ CSV</button>
           <button class="btn btn-outline" id="btn-export-rl-pdf" style="display:none" onclick="exportRentLedgerPDF()">⬇️ Rent roll PDF</button>
@@ -897,18 +944,26 @@
       </div>
       <div id="rent-ledger-content" style="display:none">
         <div id="rl-lease-alerts" class="rl-lease-alert" style="display:none"></div>
+        <div id="rl-portfolio-health-card" class="card" style="padding:18px 20px;margin-bottom:16px;display:flex;gap:18px;align-items:center;flex-wrap:wrap"></div>
         <div class="rl-summary-grid" id="rl-summary-grid"></div>
+        <div id="rl-goal-card" class="card" style="padding:16px 20px;margin-bottom:16px"></div>
         <div class="rl-tabs">
           <button class="rl-tab active" data-tab="units" onclick="rlSetTab('units')">Units</button>
           <button class="rl-tab" data-tab="ledger" onclick="rlSetTab('ledger')">Full 12-month ledger</button>
           <button class="rl-tab" data-tab="analytics" onclick="rlSetTab('analytics')">📈 Analytics</button>
+          <button class="rl-tab" data-tab="pipeline" onclick="rlSetTab('pipeline')">🗂️ Lease pipeline</button>
+          <button class="rl-tab" data-tab="finances" onclick="rlSetTab('finances')">💰 Finances</button>
+          <button class="rl-tab" data-tab="maintenance" onclick="rlSetTab('maintenance')">🔧 Maintenance</button>
         </div>
-        <div class="rl-toolbar">
+        <div class="rl-toolbar" id="rl-units-toolbar">
           <input type="text" placeholder="Search unit or tenant…" oninput="rlFilterInput(this.value)"/>
         </div>
         <div id="rental-units-list"><div style="padding:30px;text-align:center;color:var(--text-3);font-size:13px">Loading…</div></div>
         <div id="rl-ledger-wrap" class="card" style="padding:18px 20px;display:none"></div>
         <div id="rl-analytics-wrap" style="display:none"></div>
+        <div id="rl-pipeline-wrap" style="display:none"></div>
+        <div id="rl-finances-wrap" style="display:none"></div>
+        <div id="rl-maintenance-wrap" style="display:none"></div>
       </div>
     </div>
 
@@ -1339,7 +1394,90 @@
   </div>
 </div>
 
-<!-- SUPPORT CHAT WIDGET -->
+<!-- REMINDER SETTINGS MODAL -->
+<div class="modal-overlay" id="modal-reminder-settings">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-head"><h3>Automatic reminders</h3><div class="modal-close" onclick="closeModal('modal-reminder-settings')">✕</div></div>
+    <div class="modal-body">
+      <div class="toggle-row"><div class="toggle-label"><strong>Auto-remind tenants</strong><span>Sends escalating reminders as rent becomes due/overdue</span></div><label class="switch"><input type="checkbox" id="rs-auto-enabled"/><span class="switch-track"></span></label></div>
+      <div class="form-group" style="margin-top:14px"><label>Remind this many days before due date</label><input type="number" id="rs-days-before" min="0" max="15"/></div>
+      <p style="font-size:11.5px;color:var(--text-3);line-height:1.6">Tenants move through three stages automatically: <strong>Reminder</strong> (before/on due date) → <strong>Notice</strong> (1–14 days overdue) → <strong>Final Notice</strong> (15+ days overdue). Each stage has its own tone. Use "Remind all overdue" any time to send immediately regardless of schedule.</p>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-reminder-settings')">Cancel</button><button class="btn btn-primary" onclick="saveReminderSettings()">Save</button></div>
+  </div>
+</div>
+
+<!-- DEPOSIT MODAL -->
+<div class="modal-overlay" id="modal-deposit">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-head"><h3>Manage deposit</h3><div class="modal-close" onclick="closeModal('modal-deposit')">✕</div></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Status</label><select id="dep-status"><option value="held">Held</option><option value="partially_refunded">Partially refunded</option><option value="refunded">Fully refunded</option><option value="forfeited">Forfeited</option></select></div>
+      <div class="form-group"><label>Amount refunded (KES)</label><input type="number" id="dep-refund-amount" min="0"/></div>
+      <div class="form-group"><label>Refund date</label><input type="date" id="dep-refund-date"/></div>
+      <div class="form-group"><label>Deduction notes</label><textarea id="dep-notes" placeholder="e.g. KES 3,000 deducted for wall repainting"></textarea></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-deposit')">Cancel</button><button class="btn btn-primary" onclick="saveDeposit()">Save</button></div>
+  </div>
+</div>
+
+<!-- EXPENSE MODAL -->
+<div class="modal-overlay" id="modal-add-expense">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head"><h3>Log expense</h3><div class="modal-close" onclick="closeModal('modal-add-expense')">✕</div></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Unit</label><select id="exp-unit"></select></div>
+      <div class="form-grid">
+        <div class="form-group"><label>Category</label><select id="exp-category"><option value="repair">Repair</option><option value="rates">Land rates/rent</option><option value="insurance">Insurance</option><option value="utilities">Utilities</option><option value="management_fee">Management fee</option><option value="other">Other</option></select></div>
+        <div class="form-group"><label>Amount (KES)</label><input type="number" id="exp-amount" min="0"/></div>
+      </div>
+      <div class="form-group"><label>Date</label><input type="date" id="exp-date"/></div>
+      <div class="form-group"><label>Description</label><textarea id="exp-desc"></textarea></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-add-expense')">Cancel</button><button class="btn btn-primary" onclick="saveExpense()">Save expense</button></div>
+  </div>
+</div>
+
+<!-- MAINTENANCE MODAL -->
+<div class="modal-overlay" id="modal-add-maintenance">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head"><h3>Log maintenance request</h3><div class="modal-close" onclick="closeModal('modal-add-maintenance')">✕</div></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Unit</label><select id="mt-unit"></select></div>
+      <div class="form-group"><label>Title</label><input type="text" id="mt-title" placeholder="e.g. Leaking kitchen tap"/></div>
+      <div class="form-group"><label>Notes</label><textarea id="mt-notes"></textarea></div>
+      <div class="form-grid">
+        <div class="form-group"><label>Status</label><select id="mt-status"><option value="open">Open</option><option value="in_progress">In progress</option><option value="done">Done</option></select></div>
+        <div class="form-group"><label>Cost so far (KES)</label><input type="number" id="mt-cost" min="0"/></div>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-add-maintenance')">Cancel</button><button class="btn btn-primary" onclick="saveMaintenance()">Save</button></div>
+  </div>
+</div>
+
+<!-- ESCALATION MODAL -->
+<div class="modal-overlay" id="modal-escalation">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-head"><h3>Rent escalation schedule</h3><div class="modal-close" onclick="closeModal('modal-escalation')">✕</div></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Annual increase (%)</label><input type="number" id="esc-percent" min="0" step="0.5" placeholder="e.g. 5"/></div>
+      <div class="form-group"><label>Every how many months</label><input type="number" id="esc-freq" min="1" value="12"/></div>
+      <p style="font-size:11.5px;color:var(--text-3);line-height:1.6">We'll calculate and flag exactly when the next increase is due and what the new rent will be — you apply it with one click when you're ready.</p>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-escalation')">Cancel</button><button class="btn btn-primary" onclick="saveEscalation()">Save schedule</button></div>
+  </div>
+</div>
+
+<!-- GOAL MODAL -->
+<div class="modal-overlay" id="modal-rent-goal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-head"><h3>Set a rent-roll goal</h3><div class="modal-close" onclick="closeModal('modal-rent-goal')">✕</div></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Monthly rent roll target (KES)</label><input type="number" id="goal-amount" min="0"/></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-rent-goal')">Cancel</button><button class="btn btn-primary" onclick="saveRentGoal()">Save goal</button></div>
+  </div>
+</div>
 <button class="scw-fab" id="scw-fab" onclick="scwToggle()">
   <span class="scw-fab-avatar"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span>
   <span class="scw-fab-text">Let's Chat</span>
@@ -1446,7 +1584,26 @@
     </div>
   </div>
 </div>
-
+<div class="tour-overlay" id="rl-tour-overlay">
+  <div class="tour-spotlight" id="rl-tour-spotlight"></div>
+  <div class="tour-tooltip" id="rl-tour-tooltip">
+    <div class="tour-tooltip-scroll">
+      <div class="tour-tooltip-step">
+        <span id="rl-tour-step-label">Step 1 of 8</span>
+        <span class="tour-tooltip-progress"><span class="tour-tooltip-progress-fill" id="rl-tour-progress-fill" style="width:0%"></span></span>
+      </div>
+      <h3 class="tour-tooltip-title" id="rl-tour-title"></h3>
+      <p class="tour-tooltip-desc" id="rl-tour-desc"></p>
+    </div>
+    <div class="tour-tooltip-actions">
+      <div class="tour-tooltip-actions-left">
+        <button class="tour-btn-back" id="rl-tour-btn-back" onclick="RLTour.back()">← Back</button>
+        <button class="tour-btn-skip" onclick="RLTour.skip()">Skip tour</button>
+      </div>
+      <button class="tour-btn-continue" id="rl-tour-btn-continue" onclick="RLTour.next()">Continue</button>
+    </div>
+  </div>
+</div>
 <script>
 const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
@@ -2018,11 +2175,18 @@ async function loadRentalUnits(){
   const{data,error}=await db.from('rental_units').select('*, tenants(*, rent_payments(*))').eq('seller_id',effectiveSellerId).order('created_at',{ascending:false});
   if(error){wrap.innerHTML=`<div class="empty-state"><p>Could not load: ${escHtml(error.message)}</p></div>`;return;}
   rentalUnitsCache=data||[];
+  await rlLoadExtras();
   renderRentLedgerSummary();
   renderLeaseAlerts();
+  renderPortfolioHealthCard();
+  renderGoalCard();
   renderRentalUnits();
   renderFullLedgerTable();
   if(rlActiveTab==='analytics') renderRentAnalytics();
+  if(rlActiveTab==='pipeline') renderPipeline();
+  if(rlActiveTab==='finances') renderFinancesTab();
+  if(rlActiveTab==='maintenance') renderMaintenanceTab();
+  try{RLTour.maybeStart();}catch(e){console.error('RLTour error:',e);}
 }
 
 // ── Portfolio analytics ──
@@ -2091,6 +2255,10 @@ function renderRentAnalytics(){
       <div class="rl-stat ${reliabilityAvg==null?'':reliabilityAvg>=85?'good':reliabilityAvg>=60?'warn':'danger'}"><div class="rl-label">On-time payment rate (12mo)</div><div class="rl-val">${reliabilityAvg==null?'—':reliabilityAvg+'%'}</div></div>
       <div class="rl-stat purple"><div class="rl-label">Annualized portfolio value</div><div class="rl-val">KES ${portfolioValue.toLocaleString('en-KE')}</div></div>
     </div>
+    ${renderAgingCard()}
+    ${renderForecastCard()}
+    ${renderHeatmapCard()}
+    ${renderLeaderboardCard()}
     <div class="card" style="padding:18px 20px;margin-bottom:16px">
       <h3 style="font-size:13.5px;font-weight:700;margin-bottom:14px">Collection rate — last 6 months</h3>
       <div style="display:flex;gap:6px">${bars}</div>
@@ -2315,9 +2483,16 @@ function rlSetTab(tab){
   rlActiveTab=tab;
   document.querySelectorAll('.rl-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
   document.getElementById('rental-units-list').style.display=tab==='units'?'block':'none';
+  document.getElementById('rl-units-toolbar').style.display=tab==='units'?'flex':'none';
   document.getElementById('rl-ledger-wrap').style.display=tab==='ledger'?'block':'none';
   document.getElementById('rl-analytics-wrap').style.display=tab==='analytics'?'block':'none';
+  document.getElementById('rl-pipeline-wrap').style.display=tab==='pipeline'?'block':'none';
+  document.getElementById('rl-finances-wrap').style.display=tab==='finances'?'block':'none';
+  document.getElementById('rl-maintenance-wrap').style.display=tab==='maintenance'?'block':'none';
   if(tab==='analytics') renderRentAnalytics();
+  if(tab==='pipeline') renderPipeline();
+  if(tab==='finances') renderFinancesTab();
+  if(tab==='maintenance') renderMaintenanceTab();
 }
 function rlFilterInput(v){rlSearchQuery=(v||'').toLowerCase();renderRentalUnits();}
 
@@ -2348,15 +2523,18 @@ function renderRentalUnits(){
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           ${tenant?`<button class="btn btn-outline btn-sm" onclick="openLogRentPaymentModal('${u.id}','${tenant.id}')">Log payment</button>`:`<button class="btn btn-primary btn-sm" onclick="openAddTenantModal('${u.id}')">Add tenant</button>`}
           ${tenant?`<button class="btn btn-outline btn-sm" onclick="openTenantDetailModal('${u.id}','${tenant.id}')">View history</button>`:''}
-          ${tenant&&tenant.email?`<button class="btn btn-outline btn-sm" onclick="sendRentReminder('${u.id}','${tenant.id}')">Remind tenant</button>`:''}
+          ${tenant&&tenant.email?`<button class="btn btn-outline btn-sm" onclick="sendStagedReminder('${u.id}','${tenant.id}')">🔔 Remind tenant</button>`:''}
+          <button class="btn btn-outline btn-sm" onclick="openEscalationModal('${u.id}')">📈 Escalation</button>
           <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="openDeleteRentalUnitFlow('${u.id}','${escAttr(u.unit_label)}')">Delete</button>
         </div>
       </div>
+      ${(()=>{const esc=rlNextEscalationInfo(u);return esc?`<div style="margin-top:8px"><span class="rl-badge-pill escalation">📈 +${u.escalation_percent}% in ${esc.daysLeft<0?'overdue':esc.daysLeft+'d'} → KES ${esc.newRent.toLocaleString('en-KE')}${esc.daysLeft<=0?` <button class="btn btn-outline btn-sm" style="margin-left:6px;padding:2px 8px" onclick="applyEscalationNow('${u.id}')">Apply now</button>`:''}</span></div>`:'';})()}
+      ${tenant?.reminder_stage&&tenant.reminder_stage!=='none'?`<div style="margin-top:6px"><span class="rl-badge-pill reminder">🔔 Last sent: ${tenant.reminder_stage.replace('_',' ')}</span></div>`:''}
       ${tenant?`<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
         <div style="font-size:13px;font-weight:600;margin-bottom:2px">${escHtml(tenant.full_name)}${tenant.phone?' · '+escHtml(tenant.phone):''}</div>
         ${leaseTxt?`<div style="font-size:11.5px;color:var(--text-3);margin-bottom:6px">${leaseTxt}</div>`:''}
         <div style="display:flex;flex-wrap:wrap;gap:4px">${monthCells}</div>
-      </div>`:`<div style="margin-top:10px;font-size:12px;color:var(--text-3)">No active tenant — add one to start the ledger.</div>`}
+      </div>`:(()=>{const v=rlVacancyInfo(u);return`<div style="margin-top:10px;font-size:12px;color:var(--red)">Vacant ${v.days} day${v.days!==1?'s':''} — approx. KES ${v.lost.toLocaleString('en-KE')} in lost rent. <a href="#" onclick="event.preventDefault();openAddTenantModal('${u.id}')" style="color:var(--red);font-weight:600;text-decoration:underline">Add tenant</a></div>`;})()}
     </div>`;
   }).join('');
 }
@@ -2574,6 +2752,404 @@ async function exportRentLedgerPDF(){
   showToast('Rent roll PDF downloaded ✓','success');
 }
 
+// ══════════════════════════════════════
+// RENT LEDGER v3 — automation, health scoring, finances, pipeline
+// ══════════════════════════════════════
+let unitExpensesCache=[],maintenanceCache=[];
+
+async function rlLoadExtras(){
+  if(!eliteActive())return;
+  const[{data:exp},{data:maint}]=await Promise.all([
+    db.from('unit_expenses').select('*').eq('seller_id',effectiveSellerId).order('expense_date',{ascending:false}),
+    db.from('maintenance_requests').select('*').eq('seller_id',effectiveSellerId).order('reported_date',{ascending:false}),
+  ]);
+  unitExpensesCache=exp||[];
+  maintenanceCache=maint||[];
+}
+
+// ── Health Score: 0-100 composite per unit ──
+function rlHealthScore(u){
+  const t=rlActiveTenant(u);
+  let score=0;
+  // Occupancy (30 pts)
+  score += t ? 30 : 0;
+  if(!t) return Math.round(score);
+  // Collection rate this month (30 pts)
+  const st=rentStatusForMonth(t,currentMonthKey());
+  score += st==='paid'?30:st==='partial'?15:0;
+  // Reliability last 12mo (25 pts)
+  const rel=tenantReliability(t);
+  score += rel==null?12:Math.round((rel/100)*25);
+  // Lease risk (15 pts) — full points unless expiring soon/expired
+  if(t.lease_end_date){
+    const days=Math.ceil((new Date(t.lease_end_date)-new Date())/86400000);
+    score += days<0?0:days<=30?7:15;
+  }else{
+    score += 15;
+  }
+  return Math.max(0,Math.min(100,Math.round(score)));
+}
+function rlHealthClass(score){return score>=75?'health-good':score>=45?'health-warn':'health-bad';}
+function rlHealthColor(score){return score>=75?'#16a34a':score>=45?'var(--amber)':'var(--red)';}
+
+function renderPortfolioHealthCard(){
+  const el=document.getElementById('rl-portfolio-health-card');
+  if(!el)return;
+  if(!rentalUnitsCache.length){el.innerHTML='';return;}
+  const scores=rentalUnitsCache.map(rlHealthScore);
+  const avg=Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
+  const circumference=2*Math.PI*28;
+  const offset=circumference*(1-avg/100);
+  el.innerHTML=`
+    <div class="rl-health-ring">
+      <svg viewBox="0 0 64 64"><circle class="rl-ring-bg" cx="32" cy="32" r="28"/><circle class="rl-ring-fill" cx="32" cy="32" r="28" stroke="${rlHealthColor(avg)}" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"/></svg>
+      <div class="rl-ring-num">${avg}</div>
+    </div>
+    <div style="flex:1;min-width:200px">
+      <div style="font-weight:700;font-size:14px;margin-bottom:2px">Portfolio Health Score</div>
+      <div style="font-size:12.5px;color:var(--text-3);line-height:1.6">Blends occupancy, this month's collection, 12-month payment reliability, and lease-expiry risk into one number. ${avg>=75?'Your portfolio is in great shape. 🎉':avg>=45?'A few things need attention — check units flagged amber/red below.':'Several units need attention — check overdue rent and expiring leases.'}</div>
+    </div>`;
+}
+
+// ── Arrears aging buckets ──
+function rlAgingBuckets(){
+  const buckets={b30:0,b60:0,b90:0,b90p:0};
+  const now=new Date();
+  rentalUnitsCache.forEach(u=>{
+    const t=rlActiveTenant(u);if(!t)return;
+    last12Months().filter(m=>m<currentMonthKey()).forEach(m=>{
+      if(rentStatusForMonth(t,m)!=='overdue')return;
+      const days=Math.floor((now-new Date(m+'-01'))/86400000);
+      const amt=overdueAmountForUnit(u,1);
+      if(days<=30)buckets.b30+=amt;
+      else if(days<=60)buckets.b60+=amt;
+      else if(days<=90)buckets.b90+=amt;
+      else buckets.b90p+=amt;
+    });
+  });
+  return buckets;
+}
+function renderAgingCard(){
+  const b=rlAgingBuckets();
+  const total=b.b30+b.b60+b.b90+b.b90p;
+  const pct=(v)=>total>0?Math.round((v/total)*100):0;
+  const wrap=document.getElementById('rl-goal-card'); // reused container area below, see finances tab instead
+  return `<div class="card" style="padding:18px 20px;margin-bottom:16px">
+    <h3 style="font-size:13.5px;font-weight:700;margin-bottom:10px">⏳ Arrears aging</h3>
+    ${total===0?'<div style="font-size:12.5px;color:var(--text-3)">No arrears — clean sheet! 🎉</div>':`
+    <div class="rl-aging-bar">
+      <div class="rl-aging-seg" style="width:${pct(b.b30)}%;background:var(--amber)"></div>
+      <div class="rl-aging-seg" style="width:${pct(b.b60)}%;background:#f97316"></div>
+      <div class="rl-aging-seg" style="width:${pct(b.b90)}%;background:#dc2626"></div>
+      <div class="rl-aging-seg" style="width:${pct(b.b90p)}%;background:#7f1d1d"></div>
+    </div>
+    <div class="rl-aging-legend">
+      <span><i class="rl-aging-dot" style="background:var(--amber)"></i>0–30d: KES ${b.b30.toLocaleString('en-KE')}</span>
+      <span><i class="rl-aging-dot" style="background:#f97316"></i>31–60d: KES ${b.b60.toLocaleString('en-KE')}</span>
+      <span><i class="rl-aging-dot" style="background:#dc2626"></i>61–90d: KES ${b.b90.toLocaleString('en-KE')}</span>
+      <span><i class="rl-aging-dot" style="background:#7f1d1d"></i>90d+: KES ${b.b90p.toLocaleString('en-KE')}</span>
+    </div>`}
+  </div>`;
+}
+
+// ── Cash-flow forecast (next 3 months) ──
+function renderForecastCard(){
+  const months=[];
+  const d=new Date();d.setDate(1);
+  for(let i=1;i<=3;i++){const m=new Date(d.getFullYear(),d.getMonth()+i,1);months.push(m);}
+  const activeRent=rentalUnitsCache.reduce((s,u)=>s+(rlActiveTenant(u)?Number(u.monthly_rent)||0:0),0);
+  const rows=months.map(m=>{
+    // account for known upcoming lease expiries reducing forecast
+    const expiring=rentalUnitsCache.filter(u=>{
+      const t=rlActiveTenant(u);
+      if(!t||!t.lease_end_date)return false;
+      const le=new Date(t.lease_end_date);
+      return le.getFullYear()===m.getFullYear()&&le.getMonth()===m.getMonth();
+    });
+    const atRisk=expiring.reduce((s,u)=>s+(Number(u.monthly_rent)||0),0);
+    return`<div class="rl-forecast-row"><span>${m.toLocaleDateString('en-KE',{month:'long',year:'numeric'})}</span><span style="text-align:right"><strong>KES ${activeRent.toLocaleString('en-KE')}</strong>${atRisk>0?`<div style="font-size:11px;color:var(--amber)">⚠️ KES ${atRisk.toLocaleString('en-KE')} at risk — lease(s) expiring</div>`:''}</span></div>`;
+  }).join('');
+  return `<div class="card" style="padding:18px 20px;margin-bottom:16px">
+    <h3 style="font-size:13.5px;font-weight:700;margin-bottom:6px">📈 3-month cash-flow forecast</h3>
+    <p style="font-size:11.5px;color:var(--text-3);margin-bottom:10px">Based on currently active leases. Amounts at risk reflect leases expiring that month.</p>
+    ${rows||'<div style="font-size:12.5px;color:var(--text-3)">No active tenants to forecast yet.</div>'}
+  </div>`;
+}
+
+// ── Payment calendar heatmap (12 months) ──
+function renderHeatmapCard(){
+  const months=last12Months();
+  const rate=months.map(rlCollectionRateForMonth);
+  const cellColor=(r)=>{if(r==null)return'var(--border)';if(r>=90)return'#16a34a';if(r>=70)return'#86efac';if(r>=40)return'var(--amber)';return'var(--red)';};
+  const cells=rate.map((r,i)=>`<div class="rl-heatmap-cell" style="background:${cellColor(r)}" title="${new Date(months[i]+'-01').toLocaleDateString('en-KE',{month:'long',year:'numeric'})}: ${r==null?'no active tenants':r+'% collected'}"></div>`).join('');
+  const labels=months.map(m=>`<span>${new Date(m+'-01').toLocaleDateString('en-KE',{month:'short'})}</span>`).join('');
+  return `<div class="card" style="padding:18px 20px;margin-bottom:16px">
+    <h3 style="font-size:13.5px;font-weight:700;margin-bottom:10px">🗓️ Collection heatmap — 12 months</h3>
+    <div class="rl-heatmap">${cells}</div>
+    <div class="rl-heatmap-labels">${labels}</div>
+  </div>`;
+}
+
+// ── Reliability leaderboard ──
+function renderLeaderboardCard(){
+  const rows=rentalUnitsCache.map(u=>({u,t:rlActiveTenant(u)})).filter(x=>x.t)
+    .map(x=>({name:x.t.full_name,unit:x.u.unit_label,rel:tenantReliability(x.t)}))
+    .filter(x=>x.rel!==null).sort((a,b)=>b.rel-a.rel);
+  if(!rows.length)return'';
+  const medal=(i)=>i===0?'gold':i===1?'silver':i===2?'bronze':'';
+  return `<div class="card" style="padding:18px 20px;margin-bottom:16px">
+    <h3 style="font-size:13.5px;font-weight:700;margin-bottom:8px">🏆 Tenant reliability leaderboard</h3>
+    ${rows.slice(0,8).map((r,i)=>`<div class="rl-leaderboard-row"><span class="rl-leaderboard-rank ${medal(i)}">${i+1}</span><span style="flex:1"><strong>${escHtml(r.name)}</strong><div style="color:var(--text-3);font-size:11px">${escHtml(r.unit)}</div></span><span style="font-weight:700;color:${r.rel>=85?'#16a34a':r.rel>=60?'var(--amber)':'var(--red)'}">${r.rel}%</span></div>`).join('')}
+  </div>`;
+}
+
+// ── Rent-roll goal tracker ──
+function renderGoalCard(){
+  const el=document.getElementById('rl-goal-card');
+  if(!el)return;
+  const goal=Number(currentProfile?.rent_roll_goal)||0;
+  const current=rentalUnitsCache.reduce((s,u)=>s+(rlActiveTenant(u)?Number(u.monthly_rent)||0:0),0);
+  if(!goal){el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px"><div><strong style="font-size:13.5px">Set a rent-roll goal</strong><div style="font-size:12px;color:var(--text-3)">Track your progress toward a monthly income target</div></div><button class="btn btn-outline btn-sm" onclick="openRentGoalModal()">Set goal</button></div>`;return;}
+  const pct=Math.min(100,Math.round((current/goal)*100));
+  el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px"><strong style="font-size:13.5px">🎯 Rent-roll goal</strong><span style="font-size:12px;color:var(--text-3)">KES ${current.toLocaleString('en-KE')} of ${goal.toLocaleString('en-KE')}</span></div>
+    <div class="rl-goal-bar"><div class="rl-goal-fill" style="width:${pct}%"><span>${pct}%</span></div></div>
+    <div style="text-align:right"><button class="btn btn-outline btn-sm" onclick="openRentGoalModal()">Edit goal</button></div>`;
+}
+function openRentGoalModal(){document.getElementById('goal-amount').value=currentProfile?.rent_roll_goal||'';openModal('modal-rent-goal');}
+async function saveRentGoal(){
+  const val=parseFloat(document.getElementById('goal-amount').value)||0;
+  const{error}=await db.from('profiles').update({rent_roll_goal:val}).eq('id',currentUser.id);
+  if(error){showToast('Could not save: '+error.message,'error');return;}
+  currentProfile={...currentProfile,rent_roll_goal:val};
+  closeModal('modal-rent-goal');renderGoalCard();
+  showToast('Goal saved ✓','success');
+}
+
+// ── Lease pipeline (Kanban: 30/60/90 day expiry buckets) ──
+function renderPipeline(){
+  const wrap=document.getElementById('rl-pipeline-wrap');
+  if(!wrap)return;
+  const now=new Date();
+  const buckets={b30:[],b60:[],b90:[]};
+  rentalUnitsCache.forEach(u=>{
+    const t=rlActiveTenant(u);
+    if(!t||!t.lease_end_date)return;
+    const days=Math.ceil((new Date(t.lease_end_date)-now)/86400000);
+    if(days<0||days>90)return;
+    const item={u,t,days};
+    if(days<=30)buckets.b30.push(item);else if(days<=60)buckets.b60.push(item);else buckets.b90.push(item);
+  });
+  const col=(title,items,color)=>`<div class="rl-kanban-col"><h4>${title}<span>${items.length}</span></h4>${items.length?items.map(i=>`<div class="rl-kanban-card"><strong>${escHtml(i.t.full_name)}</strong>${escHtml(i.u.unit_label)}<div style="margin-top:4px;color:${color};font-weight:700">${i.days}d left · ${new Date(i.t.lease_end_date).toLocaleDateString('en-KE',{day:'numeric',month:'short'})}</div><button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="openTenantDetailModal('${i.u.id}','${i.t.id}')">Renew / view</button></div>`).join(''):'<div style="font-size:11.5px;color:var(--text-3)">Nothing here</div>'}</div>`;
+  wrap.innerHTML=`<div class="rl-kanban">${col('⚠️ Expiring in 30 days',buckets.b30,'var(--red)')}${col('Expiring in 60 days',buckets.b60,'var(--amber)')}${col('Expiring in 90 days',buckets.b90,'#2563eb')}</div>`;
+}
+
+// ── Finances tab: P&L, expenses, deposits ──
+function renderFinancesTab(){
+  const wrap=document.getElementById('rl-finances-wrap');
+  if(!wrap)return;
+  const rentCollected=(()=>{let s=0;rentalUnitsCache.forEach(u=>{const t=rlActiveTenant(u);if(!t)return;last12Months().forEach(m=>{const st=rentStatusForMonth(t,m);const amt=rentAmountForMonth(t,m);if(st==='paid')s+=amt||Number(u.monthly_rent)||0;else if(st==='partial')s+=amt;});});return s;})();
+  const totalExpenses=unitExpensesCache.filter(e=>last12Months().includes(String(e.expense_date).slice(0,7))).reduce((s,e)=>s+(Number(e.amount)||0),0);
+  const net=rentCollected-totalExpenses;
+  const byCategory={};
+  unitExpensesCache.forEach(e=>{byCategory[e.category]=(byCategory[e.category]||0)+Number(e.amount||0);});
+  const catMax=Math.max(...Object.values(byCategory),1);
+  wrap.innerHTML=`
+    <div class="rl-summary-grid" style="margin-bottom:16px">
+      <div class="rl-stat good"><div class="rl-label">Rent collected (12mo)</div><div class="rl-val">KES ${rentCollected.toLocaleString('en-KE')}</div></div>
+      <div class="rl-stat danger"><div class="rl-label">Expenses (12mo)</div><div class="rl-val">KES ${totalExpenses.toLocaleString('en-KE')}</div></div>
+      <div class="rl-stat ${net>=0?'good':'danger'}"><div class="rl-label">Net income</div><div class="rl-val">KES ${net.toLocaleString('en-KE')}</div></div>
+    </div>
+    <div class="card" style="padding:18px 20px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="font-size:13.5px;font-weight:700">Expenses by category</h3><button class="btn btn-primary btn-sm" style="background:#7c3aed" onclick="openAddExpenseModal()">+ Log expense</button></div>
+      ${Object.keys(byCategory).length?Object.entries(byCategory).map(([k,v])=>`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span style="text-transform:capitalize">${k.replace('_',' ')}</span><span style="color:var(--text-3)">KES ${v.toLocaleString('en-KE')}</span></div><div style="background:var(--surface);border-radius:6px;height:6px;overflow:hidden"><div style="background:#7c3aed;height:100%;width:${Math.round((v/catMax)*100)}%"></div></div></div>`).join(''):'<div style="font-size:12.5px;color:var(--text-3)">No expenses logged yet.</div>'}
+      <div style="max-height:220px;overflow-y:auto;margin-top:10px">
+        ${unitExpensesCache.slice(0,20).map(e=>{const u=rentalUnitsCache.find(x=>x.id===e.rental_unit_id);return`<div style="display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--border);font-size:12px"><span>${new Date(e.expense_date).toLocaleDateString('en-KE',{day:'numeric',month:'short'})} · ${escHtml(u?.unit_label||'—')} · ${escHtml(e.description||e.category)}</span><span style="font-weight:600">KES ${Number(e.amount).toLocaleString('en-KE')}</span></div>`;}).join('')}
+      </div>
+    </div>
+    <div class="card" style="padding:18px 20px">
+      <h3 style="font-size:13.5px;font-weight:700;margin-bottom:12px">🔐 Deposits</h3>
+      ${rentalUnitsCache.map(u=>{const t=rlActiveTenant(u);if(!t||!t.deposit_amount)return'';const status=t.deposit_status||'held';const refunded=Number(t.deposit_refunded_amount)||0;return`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:12.5px"><span><strong>${escHtml(t.full_name)}</strong> · ${escHtml(u.unit_label)}<div style="color:var(--text-3);font-size:11px">Deposit: KES ${Number(t.deposit_amount).toLocaleString('en-KE')}${refunded?' · Refunded: KES '+refunded.toLocaleString('en-KE'):''}</div></span><span style="display:flex;gap:8px;align-items:center"><span class="rl-chip ${status==='refunded'?'paid':status==='forfeited'?'overdue':'due'}">${status.replace('_',' ')}</span><button class="btn btn-outline btn-sm" onclick="openDepositModal('${u.id}','${t.id}')">Manage</button></span></div>`;}).join('')||'<div style="font-size:12.5px;color:var(--text-3)">No deposits on file.</div>'}
+    </div>`;
+}
+
+let depActiveUnitId=null,depActiveTenantId=null;
+function openDepositModal(unitId,tenantId){
+  const u=rentalUnitsCache.find(x=>String(x.id)===String(unitId));
+  const t=u?.tenants?.find(x=>String(x.id)===String(tenantId));
+  if(!t)return;
+  depActiveUnitId=unitId;depActiveTenantId=tenantId;
+  document.getElementById('dep-status').value=t.deposit_status||'held';
+  document.getElementById('dep-refund-amount').value=t.deposit_refunded_amount||'';
+  document.getElementById('dep-refund-date').value=t.deposit_refund_date||'';
+  document.getElementById('dep-notes').value=t.deposit_deduction_notes||'';
+  openModal('modal-deposit');
+}
+async function saveDeposit(){
+  const payload={deposit_status:document.getElementById('dep-status').value,deposit_refunded_amount:parseFloat(document.getElementById('dep-refund-amount').value)||0,deposit_refund_date:document.getElementById('dep-refund-date').value||null,deposit_deduction_notes:document.getElementById('dep-notes').value.trim()||null};
+  const{error}=await db.from('tenants').update(payload).eq('id',depActiveTenantId);
+  if(error){showToast('Could not save: '+error.message,'error');return;}
+  closeModal('modal-deposit');showToast('Deposit updated ✓','success');loadRentalUnits();
+}
+
+function openAddExpenseModal(){
+  const sel=document.getElementById('exp-unit');
+  sel.innerHTML=rentalUnitsCache.map(u=>`<option value="${u.id}">${escHtml(u.unit_label)}</option>`).join('');
+  document.getElementById('exp-amount').value='';document.getElementById('exp-desc').value='';
+  document.getElementById('exp-date').value=new Date().toISOString().slice(0,10);
+  openModal('modal-add-expense');
+}
+async function saveExpense(){
+  const payload={rental_unit_id:document.getElementById('exp-unit').value,seller_id:effectiveSellerId,category:document.getElementById('exp-category').value,amount:parseFloat(document.getElementById('exp-amount').value)||0,expense_date:document.getElementById('exp-date').value||new Date().toISOString().slice(0,10),description:document.getElementById('exp-desc').value.trim()||null};
+  const{error}=await db.from('unit_expenses').insert(payload);
+  if(error){showToast('Could not save: '+error.message,'error');return;}
+  closeModal('modal-add-expense');showToast('Expense logged ✓','success');
+  await rlLoadExtras();renderFinancesTab();
+}
+
+// ── Maintenance tab ──
+function renderMaintenanceTab(){
+  const wrap=document.getElementById('rl-maintenance-wrap');
+  if(!wrap)return;
+  const open=maintenanceCache.filter(m=>m.status!=='done');
+  const done=maintenanceCache.filter(m=>m.status==='done');
+  const row=(m)=>{const u=rentalUnitsCache.find(x=>x.id===m.rental_unit_id);return`<div class="card" style="padding:14px 16px;margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <div><strong style="font-size:13px">${escHtml(m.title)}</strong><div style="font-size:11.5px;color:var(--text-3)">${escHtml(u?.unit_label||'—')} · Reported ${new Date(m.reported_date).toLocaleDateString('en-KE',{day:'numeric',month:'short'})}</div></div>
+      <span class="rl-chip ${m.status==='done'?'paid':m.status==='in_progress'?'partial':'due'}">${m.status.replace('_',' ')}</span>
+    </div>
+    ${m.notes?`<div style="font-size:12.5px;color:var(--text-2);margin-top:6px">${escHtml(m.notes)}</div>`:''}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+      <span style="font-size:12px;font-weight:700;color:var(--text)">${m.cost?'KES '+Number(m.cost).toLocaleString('en-KE'):'No cost logged'}</span>
+      ${m.status!=='done'?`<button class="btn btn-outline btn-sm" onclick="markMaintenanceDone(${m.id})">Mark done</button>`:''}
+    </div></div>`;};
+  wrap.innerHTML=`<div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="btn btn-primary btn-sm" style="background:#7c3aed" onclick="openAddMaintenanceModal()">+ Log request</button></div>
+    <h3 style="font-size:13px;font-weight:700;margin-bottom:8px">Open (${open.length})</h3>
+    ${open.length?open.map(row).join(''):'<div style="font-size:12.5px;color:var(--text-3);margin-bottom:16px">Nothing open — nice! 🎉</div>'}
+    ${done.length?`<h3 style="font-size:13px;font-weight:700;margin:16px 0 8px">Completed (${done.length})</h3>${done.slice(0,10).map(row).join('')}`:''}`;
+}
+function openAddMaintenanceModal(){
+  const sel=document.getElementById('mt-unit');
+  sel.innerHTML=rentalUnitsCache.map(u=>`<option value="${u.id}">${escHtml(u.unit_label)}</option>`).join('');
+  document.getElementById('mt-title').value='';document.getElementById('mt-notes').value='';document.getElementById('mt-cost').value='';document.getElementById('mt-status').value='open';
+  openModal('modal-add-maintenance');
+}
+async function saveMaintenance(){
+  const payload={rental_unit_id:document.getElementById('mt-unit').value,seller_id:effectiveSellerId,title:document.getElementById('mt-title').value.trim(),notes:document.getElementById('mt-notes').value.trim()||null,status:document.getElementById('mt-status').value,cost:parseFloat(document.getElementById('mt-cost').value)||0};
+  if(!payload.title){showToast('Please give the request a title','error');return;}
+  const{error}=await db.from('maintenance_requests').insert(payload);
+  if(error){showToast('Could not save: '+error.message,'error');return;}
+  closeModal('modal-add-maintenance');showToast('Maintenance request logged ✓','success');
+  await rlLoadExtras();renderMaintenanceTab();
+}
+async function markMaintenanceDone(id){
+  const{error}=await db.from('maintenance_requests').update({status:'done',resolved_date:new Date().toISOString().slice(0,10)}).eq('id',id);
+  if(error){showToast('Could not update: '+error.message,'error');return;}
+  showToast('Marked done ✓','success');
+  await rlLoadExtras();renderMaintenanceTab();
+}
+
+// ── Rent escalation ──
+let escActiveUnitId=null;
+function openEscalationModal(unitId){
+  const u=rentalUnitsCache.find(x=>String(x.id)===String(unitId));if(!u)return;
+  escActiveUnitId=unitId;
+  document.getElementById('esc-percent').value=u.escalation_percent||'';
+  document.getElementById('esc-freq').value=u.escalation_frequency_months||12;
+  openModal('modal-escalation');
+}
+async function saveEscalation(){
+  const payload={escalation_percent:parseFloat(document.getElementById('esc-percent').value)||0,escalation_frequency_months:parseInt(document.getElementById('esc-freq').value)||12};
+  const{error}=await db.from('rental_units').update(payload).eq('id',escActiveUnitId);
+  if(error){showToast('Could not save: '+error.message,'error');return;}
+  closeModal('modal-escalation');showToast('Escalation schedule saved ✓','success');
+  loadRentalUnits();
+}
+function rlNextEscalationInfo(u){
+  if(!u.escalation_percent)return null;
+  const base=u.last_escalation_date?new Date(u.last_escalation_date):new Date(u.created_at);
+  const next=new Date(base);next.setMonth(next.getMonth()+(u.escalation_frequency_months||12));
+  const daysLeft=Math.ceil((next-new Date())/86400000);
+  const newRent=Math.round(Number(u.monthly_rent)*(1+u.escalation_percent/100));
+  return{next,daysLeft,newRent};
+}
+async function applyEscalationNow(unitId){
+  const u=rentalUnitsCache.find(x=>String(x.id)===String(unitId));if(!u)return;
+  const info=rlNextEscalationInfo(u);if(!info)return;
+  if(!confirm(`Apply the scheduled increase? Rent will change from KES ${Number(u.monthly_rent).toLocaleString('en-KE')} to KES ${info.newRent.toLocaleString('en-KE')}.`))return;
+  const{error}=await db.from('rental_units').update({monthly_rent:info.newRent,last_escalation_date:new Date().toISOString().slice(0,10)}).eq('id',unitId);
+  if(error){showToast('Could not update: '+error.message,'error');return;}
+  showToast('Rent escalation applied ✓','success');
+  loadRentalUnits();
+}
+
+// ── Automatic reminder engine (manual-trigger version; pair with a Supabase
+// cron + edge function for true unattended auto-send) ──
+function openReminderSettingsModal(){
+  document.getElementById('rs-auto-enabled').checked=currentProfile?.rent_reminder_auto_enabled!==false;
+  document.getElementById('rs-days-before').value=currentProfile?.rent_reminder_days_before??3;
+  openModal('modal-reminder-settings');
+}
+async function saveReminderSettings(){
+  const payload={rent_reminder_auto_enabled:document.getElementById('rs-auto-enabled').checked,rent_reminder_days_before:parseInt(document.getElementById('rs-days-before').value)||3};
+  const{error}=await db.from('profiles').update(payload).eq('id',currentUser.id);
+  if(error){showToast('Could not save: '+error.message,'error');return;}
+  currentProfile={...currentProfile,...payload};
+  closeModal('modal-reminder-settings');showToast('Reminder settings saved ✓','success');
+}
+function rlReminderStageFor(tenant,unit){
+  const daysBefore=currentProfile?.rent_reminder_days_before??3;
+  const now=new Date();
+  const dueDate=new Date(now.getFullYear(),now.getMonth(),1); // rent due 1st, adjust if you track a custom due-day
+  const daysSinceDue=Math.floor((now-dueDate)/86400000);
+  const st=rentStatusForMonth(tenant,currentMonthKey());
+  if(st==='paid')return null;
+  if(daysSinceDue<-daysBefore)return null;
+  if(daysSinceDue<0)return'reminder';
+  if(daysSinceDue<=14)return'notice';
+  return'final_notice';
+}
+const RL_STAGE_COPY={
+  reminder:{subject:'Rent reminder',tone:'A friendly heads-up that rent is due soon.'},
+  notice:{subject:'Rent overdue notice',tone:'A firmer notice that rent is now overdue.'},
+  final_notice:{subject:'FINAL notice — rent seriously overdue',tone:'A final, formal notice before further action.'},
+};
+async function sendStagedReminder(unitId,tenantId){
+  const u=rentalUnitsCache.find(x=>String(x.id)===String(unitId));
+  const t=u?.tenants?.find(x=>String(x.id)===String(tenantId));
+  if(!t?.email){showToast('This tenant has no email on file','error');return;}
+  const stage=rlReminderStageFor(t,u)||'reminder';
+  const copy=RL_STAGE_COPY[stage];
+  await notifyByEmail('rent_reminder',{tenantName:t.full_name,tenantEmail:t.email,unitLabel:u.unit_label,monthlyRent:u.monthly_rent,sellerName:currentProfile?.full_name,sellerEmail:currentUser?.email,stage,stageSubject:copy.subject});
+  await db.from('tenants').update({reminder_stage:stage,last_reminder_sent_at:new Date().toISOString()}).eq('id',tenantId);
+  await db.from('rent_reminder_log').insert({tenant_id:tenantId,stage,channel:'email'});
+  t.reminder_stage=stage;t.last_reminder_sent_at=new Date().toISOString();
+  showToast(`${copy.subject} sent ✓`,'success');
+  renderRentalUnits();
+}
+
+// ── Vacancy tracking ──
+function rlVacancyInfo(u){
+  if(rlActiveTenant(u))return null;
+  const lastTenant=(u.tenants||[]).filter(t=>t.status==='past').sort((a,b)=>new Date(b.move_out_date||0)-new Date(a.move_out_date||0))[0];
+  const since=lastTenant?.move_out_date?new Date(lastTenant.move_out_date):new Date(u.created_at);
+  const days=Math.floor((new Date()-since)/86400000);
+  const lost=Math.round((days/30)*(Number(u.monthly_rent)||0));
+  return{days,lost};
+}
+
+// ── Demand Insights — portfolio-aware "where to expand" ──
+function renderDemandPortfolioOverlay(){
+  const wrap=document.getElementById('demand-mine-list');
+  if(!wrap||!eliteActive())return;
+  if(!rentalUnitsCache.length)return; // only adds value once they have rental units tracked
+  const occupied=rentalUnitsCache.filter(u=>rlActiveTenant(u)).length;
+  const myOccRate=rentalUnitsCache.length?Math.round((occupied/rentalUnitsCache.length)*100):0;
+  const note=document.createElement('div');
+  note.style.cssText='margin-top:14px;padding-top:14px;border-top:1px dashed var(--border);font-size:12.5px;color:#5b21b6';
+  note.innerHTML=`📊 Your portfolio occupancy is <strong>${myOccRate}%</strong>. ${myOccRate<80?'Below-average occupancy combined with high-demand areas below could mean it\'s time to review pricing or list a vacant unit more aggressively.':'Solid occupancy — consider whether any high-demand areas below are worth expanding into.'}`;
+  wrap.appendChild(note);
+}
+
 // ── Demand Insights (Elite) — full market-intelligence dashboard ──
 let diRangeDays=90;
 
@@ -2683,6 +3259,7 @@ async function loadDemandInsights(){
   }else{
     mineWrap.innerHTML='<div style="font-size:12.5px;color:var(--text-3)">Post a listing to see how it compares to area demand.</div>';
   }
+  renderDemandPortfolioOverlay();
 }
 
 function diDownloadBlob(filename,content,mime){
@@ -4229,6 +4806,7 @@ function scwSyncOverlayVisibility(){
   const blocking = !!(
     document.querySelector('.modal-overlay.open') ||
     document.getElementById('tour-overlay')?.classList.contains('open') ||
+    document.getElementById('rl-tour-overlay')?.classList.contains('open') ||
     document.getElementById('sidebar-overlay')?.classList.contains('open') ||
     document.body.style.overflow === 'hidden'
   );
@@ -4246,7 +4824,7 @@ function closeModal(id){document.getElementById(id).classList.remove('open');doc
 // Safety net: automatically re-checks visibility whenever ANY popup opens/closes,
 // even ones added later that forget to call scwSyncOverlayVisibility() directly.
 (function scwWatchOverlays(){
-  const watchTargets=[document.body, document.getElementById('tour-overlay'), document.getElementById('sidebar-overlay')];
+  const watchTargets=[document.body, document.getElementById('tour-overlay'), document.getElementById('rl-tour-overlay'), document.getElementById('sidebar-overlay')];
   document.querySelectorAll('.modal-overlay').forEach(el=>watchTargets.push(el));
   const observer=new MutationObserver(()=>scwSyncOverlayVisibility());
   watchTargets.filter(Boolean).forEach(el=>observer.observe(el,{attributes:true,attributeFilter:['class','style']}));
@@ -5311,7 +5889,127 @@ const Tour = (() => {
 
   return { maybeStart, next, back, skip, restart };
 })();
+/* ══════════════════════════════════════
+   RENT LEDGER TOUR — fully independent of the main onboarding Tour.
+   Own overlay ids (rl-tour-*), own localStorage key, own replay button
+   (top of the Rent Ledger toolbar). Never touches window.Tour.
+══════════════════════════════════════ */
+const RLTour = (() => {
+  const STEPS = [
+    { selector:'#rl-portfolio-health-card', title:'Your Portfolio Health Score', desc:'One number blending occupancy, this month\'s collection rate, 12-month tenant reliability, and lease-expiry risk. Aim to keep this green.' },
+    { selector:'#rl-goal-card', title:'Set a rent-roll goal', desc:'Give yourself a monthly income target and watch this bar fill up as your active leases add up.' },
+    { selector:'.rl-tabs', title:'Six views into your portfolio', desc:'Units, the full 12-month ledger, Analytics, the Lease pipeline, Finances (income vs expenses), and Maintenance — all in one place.' },
+    { selector:'#rental-units-list', title:'Each unit, at a glance', desc:'Colour-coded by health. Log payments, view full tenant history, send staged rent reminders, set up automatic rent escalation, or mark a unit vacant/occupied.' },
+    { selector:'#btn-reminder-settings', title:'Automatic reminders', desc:'Turn on auto-reminders and choose how many days before rent is due tenants get a heads-up. Reminders escalate automatically the longer rent stays unpaid.' },
+    { selector:'[data-tab="pipeline"]', title:'Lease renewal pipeline', desc:'Tap "Lease pipeline" — every lease expiring in the next 90 days, sorted so you never get caught off guard by a move-out.', click:true },
+    { selector:'[data-tab="finances"]', title:'Real income vs expenses', desc:'Tap "Finances" — log repairs, rates, and other costs, and see your true net income per unit and across your whole portfolio.', click:true },
+    { selector:'[data-tab="maintenance"]', title:'Maintenance log', desc:'Tap "Maintenance" — track every repair request from reported to resolved, with cost, so nothing falls through the cracks.', click:true },
+    { selector:'#btn-remind-overdue', title:"That's the tour!", desc:'One more thing: "Remind all overdue" sends a reminder to every tenant currently behind on rent, in one click. Enjoy your upgraded ledger! 🎉' },
+  ];
+  let idx = 0, storageKey = null, advancedThisStep = false, clickListener = null;
 
+  function isVisible(el){ if(!el) return false; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; }
+  function isMobile(){ return window.matchMedia('(max-width:640px)').matches; }
+
+  function maybeStart(){
+    if(!currentUser || !eliteActive()) return;
+    storageKey = `ny_rl_tour_seen_${currentUser.id}`;
+    if(localStorage.getItem(storageKey)) return;
+    idx = 0;
+    start();
+  }
+  function restart(){
+    if(currentUser) localStorage.removeItem(`ny_rl_tour_seen_${currentUser.id}`);
+    idx = 0;
+    start();
+  }
+  function start(){
+    document.getElementById('rl-tour-overlay').classList.add('open');
+    scwSyncOverlayVisibility();
+    showStep(1);
+  }
+
+  function showStep(dir){
+    dir = dir || 1;
+    if(idx < 0) idx = 0;
+    const step = STEPS[idx];
+    if(!step){ finish(); return; }
+    requestAnimationFrame(() => {
+      const target = document.querySelector(step.selector);
+      if(!target || !isVisible(target)){ idx += dir; showStep(dir); return; }
+      target.scrollIntoView({ block:'center', inline:'nearest' });
+      setTimeout(() => renderStep(step, target), 80);
+    });
+  }
+
+  function renderStep(step, target){
+    advancedThisStep = false;
+    detachClickListener();
+    document.getElementById('rl-tour-step-label').textContent = `Step ${idx+1} of ${STEPS.length}`;
+    document.getElementById('rl-tour-progress-fill').style.width = Math.round(((idx+1)/STEPS.length)*100) + '%';
+    document.getElementById('rl-tour-title').textContent = step.title;
+    document.getElementById('rl-tour-desc').textContent = step.desc;
+    document.getElementById('rl-tour-btn-continue').textContent = (idx === STEPS.length-1) ? 'Finish' : (step.click ? 'Click it for me' : 'Continue');
+    document.getElementById('rl-tour-btn-back').style.visibility = idx === 0 ? 'hidden' : 'visible';
+    document.getElementById('rl-tour-overlay').classList.toggle('tour-passthrough', !!step.click);
+    document.getElementById('rl-tour-spotlight').classList.toggle('tour-clickable', !!step.click);
+    positionSpotlight(target);
+    positionTooltip(target);
+    if(step.click) attachClickListener(target);
+  }
+
+  function positionSpotlight(target){
+    const r = target.getBoundingClientRect(); const pad = 8;
+    const spot = document.getElementById('rl-tour-spotlight');
+    spot.style.top = Math.max(0, r.top - pad) + 'px';
+    spot.style.left = Math.max(0, r.left - pad) + 'px';
+    spot.style.width = Math.min(r.width + pad*2, window.innerWidth) + 'px';
+    spot.style.height = (r.height + pad*2) + 'px';
+  }
+  function positionTooltip(target){
+    const tip = document.getElementById('rl-tour-tooltip');
+    tip.style.bottom = 'auto';
+    const margin = isMobile() ? 8 : 16;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const r = target.getBoundingClientRect();
+    const tipRect = tip.getBoundingClientRect();
+    const tipH = Math.min(tipRect.height, vh - margin*2);
+    const tipW = tipRect.width;
+    let top;
+    const below = r.bottom + 14, above = r.top - 14 - tipH;
+    if(below + tipH <= vh - margin) top = below;
+    else if(above >= margin) top = above;
+    else top = (r.top > vh - r.bottom) ? margin : Math.max(margin, vh - tipH - margin);
+    top = Math.max(margin, Math.min(top, vh - tipH - margin));
+    let left = isMobile() ? margin : r.left;
+    if(!isMobile()){ if(left + tipW > vw - margin) left = vw - tipW - margin; if(left < margin) left = margin; }
+    tip.style.top = top + 'px'; tip.style.left = left + 'px';
+  }
+  function attachClickListener(target){
+    const fn = function(){ if(advancedThisStep) return; advancedThisStep = true; setTimeout(() => { idx += 1; showStep(1); }, 180); };
+    target.addEventListener('click', fn, true);
+    clickListener = { el: target, fn };
+  }
+  function detachClickListener(){ if(clickListener){ clickListener.el.removeEventListener('click', clickListener.fn, true); clickListener = null; } }
+
+  function next(){
+    const step = STEPS[idx];
+    if(step && step.click && !advancedThisStep){ const target = document.querySelector(step.selector); if(target){ target.click(); return; } }
+    idx += 1; showStep(1);
+  }
+  function back(){ if(idx <= 0) return; idx -= 1; showStep(-1); }
+  function skip(){ finish(); }
+  function finish(){
+    detachClickListener();
+    document.getElementById('rl-tour-overlay').classList.remove('open','tour-passthrough');
+    scwSyncOverlayVisibility();
+    if(storageKey) localStorage.setItem(storageKey, '1');
+  }
+
+  window.addEventListener('resize', () => { if(document.getElementById('rl-tour-overlay').classList.contains('open')){ const step=STEPS[idx]; const target=step&&document.querySelector(step.selector); if(target){ positionSpotlight(target); positionTooltip(target); } } });
+
+  return { maybeStart, next, back, skip, restart };
+})();
 init();
 </script>
 <script>
