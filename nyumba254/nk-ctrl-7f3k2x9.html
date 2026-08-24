@@ -422,7 +422,16 @@
       .action-menu-wrap { display: block; }
       .modal { max-width: 100%; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
       .modal-footer { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
-      .filters-row { padding: 10px 12px; }
+      /* Filters (county/area/category/search, date-range pickers, etc.)
+         were sized by content and refused to wrap properly on narrow
+         screens, pushing past the viewport. Stacking them full-width
+         removes the overflow at the source instead of just clipping it. */
+      .filters-row { padding: 10px 12px; flex-direction: column; align-items: stretch; }
+      .filter-select, .filter-search { width: 100%; min-width: 0; }
+      .filters-row label { width: 100%; display: flex; align-items: center; gap: 6px; }
+      .filters-row label input { flex: 1; min-width: 0; }
+      #seller-filter-banner { flex-wrap: wrap; }
+      input, select, textarea { max-width: 100%; }
       .card-header { padding: 14px 16px 12px; }
       /* Prevent iOS auto-zoom-on-focus: any focusable field under 16px
          triggers it, forcing the user to pinch back out. */
