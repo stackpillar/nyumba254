@@ -291,18 +291,24 @@
     .mobile-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; }
     .mobile-card-header { display: flex; align-items: center; gap: 12px; padding: 14px; border-bottom: 1px solid var(--border); }
     .mobile-card-body { padding: 10px 14px; }
-    /* Row content was overflowing to the right and being silently clipped
-       by the page's overflow-x:hidden — labels showed but values vanished
-       off-screen. Constraining the value to its own row (right-aligned,
-       ellipsis-truncated) guarantees it's always visible, even if long. */
-    .mobile-card-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; border-bottom: 1px solid var(--border); gap: 8px; }
+    /* The flex + ellipsis combo used previously could compute a zero-width
+       box for the value span on some mobile browsers — text present in the
+       DOM but rendered invisibly, not just clipped. Block-stacking the
+       label above the value removes flex/overflow tricks entirely, so the
+       value ALWAYS has real space and ALWAYS wraps into view instead of
+       vanishing. Still compact — a tight two-line block per field. */
+    .mobile-card-row { padding: 5px 0; font-size: 12.5px; border-bottom: 1px solid var(--border); }
     .mobile-card-row:last-child { border-bottom: none; }
-    .mobile-card-row span:first-child { color: var(--text-3); font-size: 12px; flex-shrink: 0; }
-    .mobile-card-row span:last-child  { font-weight: 500; color: var(--text); text-align: right; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .mobile-card-actions { padding: 12px 14px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-wrap: wrap; }
-    .mobile-card-actions .action-btn { flex: 1; min-width: 80px; text-align: center; padding: 10px; font-size: 13px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
-    .mobile-card-actions .action-btn.icon { flex: 0 0 auto; min-width: 44px; width: 44px; }
-    .mobile-card-actions .action-btn.icon svg { width: 17px; height: 17px; }
+    .mobile-card-row span:first-child { display: block; color: var(--text-3); font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; margin-bottom: 1px; }
+    .mobile-card-row span:last-child  { display: block; font-weight: 500; color: var(--text); word-break: break-word; }
+    .mobile-card-actions { padding: 10px 14px; border-top: 1px solid var(--border); display: flex; gap: 6px; flex-wrap: wrap; }
+    .mobile-card-actions .action-btn { flex: 1; min-width: 76px; text-align: center; padding: 8px; font-size: 12.5px; min-height: 40px; display: flex; align-items: center; justify-content: center; }
+    /* !important because the previous non-important rule was losing to
+       something and letting icon buttons stretch full-width, which is
+       what made the star/eye/pencil/play/trash row balloon into six huge
+       squares instead of compact 40px icon buttons. */
+    .mobile-card-actions .action-btn.icon { flex: 0 0 auto !important; min-width: 40px !important; width: 40px !important; padding: 0 !important; }
+    .mobile-card-actions .action-btn.icon svg { width: 16px; height: 16px; }
 
     /* TWO COL */
     .two-col { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
@@ -321,10 +327,10 @@
     .quick-panel { display: flex; flex-direction: column; gap: 16px; }
     .quick-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; }
     .quick-card h4 { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 14px; }
-    .quick-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; gap: 8px; }
+    .quick-row { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; gap: 4px 8px; }
     .quick-row:last-child { border-bottom: none; }
-    .quick-row span:first-child { color: var(--text-2); flex-shrink: 0; }
-    .quick-row span:last-child { font-weight: 600; color: var(--text); text-align: right; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .quick-row span:first-child { color: var(--text-2); }
+    .quick-row span:last-child { font-weight: 600; color: var(--text); word-break: break-word; }
 
     .table-loading { text-align: center; padding: 48px; color: var(--text-3); }
     .skeleton-row td { padding: 12px 16px; }
