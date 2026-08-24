@@ -396,6 +396,15 @@
       .stat-grid { grid-template-columns: repeat(2,1fr); }
       .two-col { grid-template-columns: 1fr; }
     }
+    /* Catches ANY inline style="grid-template-columns:..." anywhere in the
+       page and forces it to a single column on phones — fixes the settings
+       form, edit-listing modal rows, and any inline grid added later, all
+       in one place, without hunting down each instance individually. */
+    @media (max-width: 640px) {
+      [style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+    }
+    html, body { overflow-x: hidden; }
+
     @media (max-width: 768px) {
       .sidebar { transform: translateX(-100%); }
       .sidebar.open { transform: translateX(0); }
