@@ -2658,9 +2658,75 @@ function openTenantDetailModal(unitId,tenantId){
         <span class="rl-chip ${p.status}">${p.status}</span>
         <span style="font-weight:600">KES ${Number(p.amount||0).toLocaleString('en-KE')}</span>
       </div>`).join(''):'<div style="color:var(--text-3);font-size:12.5px">No payments logged yet.</div>'}
+    </div>
+    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-3);margin:16px 0 8px">Documents</div>
+    <div id="td-doc-list" style="max-height:160px;overflow-y:auto;margin-bottom:10px"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <select id="td-doc-type" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12.5px;background:white">
+        <option value="lease">Lease</option>
+        <option value="id_copy">ID copy</option>
+        <option value="inspection_photo">Inspection photo</option>
+        <option value="other">Other</option>
+      </select>
+      <input type="file" id="td-doc-file" accept="image/*,.pdf" style="flex:1;min-width:140px;font-size:12px"/>
+      <button class="btn btn-outline btn-sm" id="td-doc-upload-btn" onclick="uploadTenantDocument('${unitId}','${tenantId}')">Upload</button>
     </div>`;
   openModal('modal-tenant-detail');
+  loadTenantDocuments(unitId,tenantId);
 }
+const TENANT_DOCS_BUCKET = 'tenant-docs';
+
+async function loadTenantDocuments(unitId,tenantId){
+  const el=document.getElementById('td-doc-list');
+  if(!el)return;
+  el.innerHTML='<div style="color:var(--text-3);font-size:12px">Loading documents…</div>';
+  const{data,error}=await db.from('tenant_documents').select('*').eq('tenant_id',tenantId).order('created_at',{ascending:false});
+  if(error){el.innerHTML=`<div style="color:var(--red);font-size:12px">Could not load: ${escHtml(error.message)}</div>`;return;}
+  if(!data||!data.length){el.innerHTML='<div style="color:var(--text-3);font-size:12.5px">No documents uploaded yet.</div>';return;}
+  const rows=await Promise.all(data.map(async d=>{
+    const{data:signed}=await db.storage.from(TENANT_DOCS_BUCKET).createSignedUrl(d.file_path,3600);
+    return{...d,url:signed?.signedUrl||'#'};
+  }));
+  el.innerHTML=rows.map(d=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12.5px">
+      <a href="${d.url}" target="_blank" style="color:var(--green-dark);font-weight:600;text-decoration:underline;word-break:break-all">${escHtml(d.doc_type||'Document')} — ${escHtml(d.file_name||'')}</a>
+      <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red);flex-shrink:0;margin-left:8px" onclick="deleteTenantDocument(${d.id},'${unitId}','${tenantId}')">Delete</button>
+    </div>`).join('');
+}
+
+async function uploadTenantDocument(unitId,tenantId){
+  const fileInput=document.getElementById('td-doc-file');
+  const typeSelect=document.getElementById('td-doc-type');
+  const file=fileInput.files[0];
+  if(!file){showToast('Please choose a file first','error');return;}
+  const btn=document.getElementById('td-doc-upload-btn');
+  btn.disabled=true;btn.textContent='Uploading…';
+  try{
+    const ext=(file.name.split('.').pop()||'pdf').toLowerCase();
+    const path=`${effectiveSellerId}/${tenantId}/${typeSelect.value}-${Date.now()}.${ext}`;
+    const{error:upErr}=await db.storage.from(TENANT_DOCS_BUCKET).upload(path,file,{upsert:false});
+    if(upErr)throw upErr;
+    const{error:insErr}=await db.from('tenant_documents').insert({tenant_id:tenantId,rental_unit_id:unitId,seller_id:effectiveSellerId,doc_type:typeSelect.value,file_name:file.name,file_path:path});
+    if(insErr)throw insErr;
+    fileInput.value='';
+    showToast('Document uploaded ✓','success');
+    loadTenantDocuments(unitId,tenantId);
+  }catch(e){
+    showToast('Upload failed: '+(e.message||String(e)),'error');
+  }finally{
+    btn.disabled=false;btn.textContent='Upload';
+  }
+}
+
+async function deleteTenantDocument(docId,unitId,tenantId){
+  if(!confirm('Delete this document?'))return;
+  const{data:row}=await db.from('tenant_documents').select('file_path').eq('id',docId).maybeSingle();
+  const{error}=await db.from('tenant_documents').delete().eq('id',docId);
+  if(error){showToast('Could not delete: '+error.message,'error');return;}
+  if(row?.file_path){await db.storage.from(TENANT_DOCS_BUCKET).remove([row.file_path]).catch(()=>{});}
+  showToast('Document deleted','success');
+  loadTenantDocuments(unitId,tenantId);
+}
+
 async function moveOutTenant(){
   if(!tdActiveTenantId)return;
   if(!confirm('Mark this tenant as moved out? The unit will become vacant and ready for a new tenant.'))return;
