@@ -291,10 +291,14 @@
     .mobile-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; }
     .mobile-card-header { display: flex; align-items: center; gap: 12px; padding: 14px; border-bottom: 1px solid var(--border); }
     .mobile-card-body { padding: 10px 14px; }
-    .mobile-card-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; border-bottom: 1px solid var(--border); }
+    /* Row content was overflowing to the right and being silently clipped
+       by the page's overflow-x:hidden — labels showed but values vanished
+       off-screen. Constraining the value to its own row (right-aligned,
+       ellipsis-truncated) guarantees it's always visible, even if long. */
+    .mobile-card-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; border-bottom: 1px solid var(--border); gap: 8px; }
     .mobile-card-row:last-child { border-bottom: none; }
-    .mobile-card-row span:first-child { color: var(--text-3); font-size: 12px; }
-    .mobile-card-row span:last-child  { font-weight: 500; color: var(--text); }
+    .mobile-card-row span:first-child { color: var(--text-3); font-size: 12px; flex-shrink: 0; }
+    .mobile-card-row span:last-child  { font-weight: 500; color: var(--text); text-align: right; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .mobile-card-actions { padding: 12px 14px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-wrap: wrap; }
     .mobile-card-actions .action-btn { flex: 1; min-width: 80px; text-align: center; padding: 10px; font-size: 13px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
     .mobile-card-actions .action-btn.icon { flex: 0 0 auto; min-width: 44px; width: 44px; }
@@ -317,10 +321,10 @@
     .quick-panel { display: flex; flex-direction: column; gap: 16px; }
     .quick-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; }
     .quick-card h4 { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 14px; }
-    .quick-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .quick-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; gap: 8px; }
     .quick-row:last-child { border-bottom: none; }
-    .quick-row span:first-child { color: var(--text-2); }
-    .quick-row span:last-child { font-weight: 600; color: var(--text); }
+    .quick-row span:first-child { color: var(--text-2); flex-shrink: 0; }
+    .quick-row span:last-child { font-weight: 600; color: var(--text); text-align: right; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
     .table-loading { text-align: center; padding: 48px; color: var(--text-3); }
     .skeleton-row td { padding: 12px 16px; }
