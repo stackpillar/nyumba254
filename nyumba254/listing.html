@@ -362,13 +362,6 @@
     .safety-tip { margin-top:16px; padding:12px 14px; background:var(--gold-light); border-radius:var(--radius); border:1px solid #FAC775; font-size:12px; color:#5C3A00; line-height:1.6; display:flex; gap:8px; }
     .safety-tip svg { width:14px; height:14px; stroke:var(--gold); fill:none; stroke-width:2; flex-shrink:0; margin-top:2px; }
 
-    /* Finder's-fee note — rentals only */
-    .fee-note { display:none; margin-top:12px; padding:12px 14px; background:#E6F1FB; border-radius:var(--radius); border:1px solid #BEDBF5; font-size:12px; color:#0F3D66; line-height:1.6; gap:8px; }
-    .fee-note.show { display:flex; }
-    .fee-note svg { width:14px; height:14px; stroke:#185FA5; fill:none; stroke-width:2; flex-shrink:0; margin-top:2px; }
-    .fee-note-link { color:#185FA5; font-weight:600; text-decoration:underline; cursor:pointer; background:none; border:none; padding:0; font-size:12px; font-family:inherit; }
-
-    /* ══════════════════════════════════════
        VIEWS BADGE — Live counter
     ══════════════════════════════════════ */
     .views-loading { opacity:.4; }
@@ -974,13 +967,6 @@
             </div>
             <div class="chat-wa-note" id="chat-wa-note"></div>
           </div>
-
-          <!-- Finder's-fee note — shown only for rental listings -->
-          <div class="fee-note" id="fee-note">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <span>Remember: some landlords ask tenants for a small finder's fee once they move in, since you found the home through Nyumba254 instead of an agent — that's normal and settled directly between you two. If a seller asks for more than feels fair, or wants payment before you've even viewed the unit, <button type="button" class="fee-note-link" onclick="nkOpenReportModal('listing', listingId)">report it</button> so we can look into it.</span>
-          </div>
-
           <!-- Safety tip -->
           <div class="safety-tip">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -1688,17 +1674,6 @@ function renderListing(l) {
   // is off pops a toast via handleContactClick() instead of hiding the buttons.
   const phoneFieldEl = document.getElementById('enq-phone-field');
   if (phoneFieldEl) phoneFieldEl.style.display = contactHidden ? 'none' : 'block';
-
-  // Finder's-fee note only makes sense for rentals, not sales
-  const feeNoteEl = document.getElementById('fee-note');
-  if (feeNoteEl) feeNoteEl.classList.toggle('show', l.price_type === 'rent');
-
-  /* NOTE: the seller's phone is intentionally NOT touched here. Nothing
-     about it is written to the DOM, an href, or even fetched, until the
-     buyer clicks Call/WhatsApp and passes the rate-limit check in
-     handleContactClick() further down this script. The Call/WhatsApp
-     buttons keep their generic "Call seller" / "WhatsApp seller" labels
-     until that point. */
 
   document.getElementById('skeleton-wrap').style.display = 'none';
   document.getElementById('listing-content').style.display = 'block';
