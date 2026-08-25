@@ -231,7 +231,7 @@
        untouched since they don't contain .action-btn.icon children. */
     .action-btns:has(> .action-btn.icon) {
       display: grid;
-      grid-template-columns: repeat(6, 30px);
+      grid-template-columns: repeat(3, 30px);
       gap: 6px;
       align-items: start;
       width: max-content;
@@ -648,7 +648,7 @@
     @keyframes acwspin { to { transform: rotate(360deg); } }
 
     @media (max-width: 480px) {
-      .acw-panel { right: 8px; left: 8px; bottom: 8px; width: auto; height: calc(100vh - 16px); max-height: none; }
+      .acw-panel { right: 8px; left: 8px; top: 8px; bottom: 8px; width: auto; height: auto; max-height: none; }
       .acw-launcher { right: 14px; bottom: 14px; }
       .acw-launcher-label { display: none; }
       .acw-launcher { padding: 12px; }
