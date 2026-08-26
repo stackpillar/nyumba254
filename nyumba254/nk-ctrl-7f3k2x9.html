@@ -162,6 +162,7 @@
 
     /* TABLE */
     .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table-wrap table { min-width: 920px; }
     table { width: 100%; border-collapse: collapse; }
     th { padding: 10px 16px; text-align: left; font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border); background: var(--surface); white-space: nowrap; }
     td { padding: 13px 16px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text-2); vertical-align: middle; }
@@ -913,7 +914,6 @@
           <button class="tab-btn"        id="tab-trial"    onclick="setTab('trial')">Trial <span class="count" id="tc-trial">—</span></button>
           <button class="tab-btn"        id="tab-featured" onclick="setTab('featured')">Featured <span class="count" id="tc-featured">—</span></button>
           <button class="tab-btn"        id="tab-multiunit" onclick="setTab('multiunit')">Multi-unit <span class="count" id="tc-multiunit">—</span></button>
-          <button class="tab-btn"        id="tab-expired"  onclick="setTab('expired')">Expired <span class="count" id="tc-expired">—</span></button>
           <button class="tab-btn"        id="tab-inactive" onclick="setTab('inactive')">Inactive <span class="count" id="tc-inactive">—</span></button>
         </div>
         <div class="filters-row">
@@ -2097,7 +2097,11 @@ function notifySms(type, payload) {
   // expires_at column, so this mirrors the same math the public site
   // would need to decide when a listing quietly goes stale).
   function listingDaysLeft(l) {
-    if (l.status === 'expired') return { text: 'Expired', cls: 'rejected' };
+    if (l.status === 'expired' && !l.expiry_override) return { text: 'Expired', cls: 'rejected' };
+    if (l.expiry_override) {
+      const days = Math.ceil((new Date(l.expiry_override) - new Date()) / 86400000);
+      return { text: days < 0 ? 'Expired' : `${days}d left (extended)`, cls: days < 0 ? 'rejected' : days <= 3 ? 'pending' : 'active' };
+    }
     if (l.payment_status === 'trial') {
       if (!l.trial_expires_at) return { text: '—', cls: 'standard' };
       const days = Math.ceil((new Date(l.trial_expires_at) - new Date()) / 86400000);
@@ -2127,6 +2131,7 @@ function notifySms(type, payload) {
     activate: '<polygon points="5 3 19 12 5 21 5 3"/>',
     deactivate:'<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>',
     restore:  '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/>',
+    extend:   '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/>',
     recycle:  '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/>',
     suspend:  '<path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="18" y1="8" x2="23" y2="13"/><line x1="23" y1="8" x2="18" y2="13"/>',
     reinstate:'<path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/>',
@@ -2318,11 +2323,10 @@ function notifySms(type, payload) {
 
   async function loadTabCounts() {
     const [
-      {count:pend}, {count:actv}, {count:exp}, {count:feat}, {count:tot}, {count:trial}, {count:multi}, {count:inactive}
+      {count:pend}, {count:actv}, {count:feat}, {count:tot}, {count:trial}, {count:multi}, {count:inactive}
     ] = await Promise.all([
       db.from('listings').select('*',{count:'exact',head:true}).eq('status','pending').eq('recycle_bin',false),
       db.from('listings').select('*',{count:'exact',head:true}).eq('status','active').eq('is_disabled',false).eq('recycle_bin',false),
-      db.from('listings').select('*',{count:'exact',head:true}).eq('status','expired').eq('recycle_bin',false),
       db.from('listings').select('*',{count:'exact',head:true}).eq('is_featured',true).eq('status','active').eq('is_disabled',false).eq('recycle_bin',false),
       db.from('listings').select('*',{count:'exact',head:true}).eq('recycle_bin',false),
       db.from('listings').select('*',{count:'exact',head:true}).eq('payment_status','trial').eq('recycle_bin',false),
@@ -2333,7 +2337,6 @@ function notifySms(type, payload) {
     document.getElementById('tc-pending').textContent  = pend||0;
     document.getElementById('tc-active').textContent   = actv||0;
     document.getElementById('tc-featured').textContent = feat||0;
-    document.getElementById('tc-expired').textContent  = exp||0;
     document.getElementById('tc-trial').textContent    = trial||0;
     document.getElementById('tc-multiunit').textContent = multi||0;
     document.getElementById('tc-inactive').textContent = inactive||0;
@@ -2376,7 +2379,6 @@ function notifySms(type, payload) {
     if (currentTab==='pending')       q = q.eq('status','pending');
     else if (currentTab==='active')   q = q.eq('status','active').eq('is_disabled',false);
     else if (currentTab==='featured') q = q.eq('is_featured',true).eq('status','active').eq('is_disabled',false);
-    else if (currentTab==='expired')  q = q.eq('status','expired');
     else if (currentTab==='trial')    q = q.eq('payment_status','trial');
     else if (currentTab==='multiunit') q = q.eq('is_multi_unit',true);
     else if (currentTab==='inactive') q = q.eq('is_disabled',true);
@@ -2417,6 +2419,7 @@ function notifySms(type, payload) {
           {label:'✕ Reject',  cls:'danger',  fn:`rejectListing('${l.id}')`},
         ]:[]),
         ...(isTrial?[{label:'⬆ Process upgrade', cls:'blue', fn:`openUpgradeModal('${l.id}')`}]:[]),
+        ...(l.status==='active'?[{label:'📅 Extend expiry date', cls:'blue', fn:`extendListingDate('${l.id}')`}]:[]),
         ...(l.status==='active'&&!l.is_featured?[{label:'★ Feature', cls:'gold', fn:`featureListing('${l.id}')`}]:[]),
         ...(l.is_featured?[{label:'☆ Unfeature', cls:'', fn:`unfeatureListing('${l.id}')`}]:[]),
         {label:'View details', cls:'', fn:`openListingModal('${l.id}')`},
@@ -2448,6 +2451,7 @@ function notifySms(type, payload) {
         <td>
           <div class="action-btns">
             ${l.status==='pending'?(aBtn('approve','Approve listing','approve',`approveListing('${l.id}')`)+aBtn('reject','Reject listing','reject',`rejectListing('${l.id}')`)):''}
+            ${l.status==='active'?aBtn('extend','Extend expiry date','view',`extendListingDate('${l.id}')`):''}
             ${aBtn('view','View details','view',`openListingModal('${l.id}')`)}
           </div>
           ${mobileMenu(l.id, menuItems)}
@@ -2479,6 +2483,7 @@ function notifySms(type, payload) {
         <div class="mobile-card-actions">
           ${l.status==='pending'?(aBtn('approve','Approve','approve',`approveListing('${l.id}')`)+aBtn('reject','Reject','reject',`rejectListing('${l.id}')`)):''}
           ${isTrial?aBtn('upgrade','Upgrade','upgrade',`openUpgradeModal('${l.id}')`):''}
+          ${l.status==='active'?aBtn('extend','Extend','view',`extendListingDate('${l.id}')`):''}
           ${l.status==='active'&&!l.is_featured?aBtn('feature','Feature','feature',`featureListing('${l.id}')`):''}
           ${l.is_featured?aBtn('unfeature','Unfeature','view',`unfeatureListing('${l.id}')`):''}
           ${l.status==='active'&&!l.is_disabled?renderSocialButtons(l):''}
@@ -2719,6 +2724,36 @@ function notifySms(type, payload) {
     loadOverview();
     if (currentView==='listings') loadAllListings();
     if (currentView==='payments') loadPayments();
+  }
+
+  function extendListingDate(id) {
+    const l = _listings[id]; if (!l) return;
+    const input = prompt(`Extend "${l.title}" by how many days?`, '30');
+    if (input === null) return;
+    const days = parseInt(input, 10);
+    if (!days || days <= 0) { toast('Enter a valid number of days','error'); return; }
+    doExtendListing(id, days);
+  }
+  async function doExtendListing(id, days) {
+    const l = _listings[id]; if (!l) return;
+    const e = listingDaysLeft(l);
+    const isDead = e.text === 'Expired' || e.text === 'Trial expired' || e.text === '—';
+    const base = isDead
+      ? new Date()
+      : l.expiry_override
+        ? new Date(l.expiry_override)
+        : l.payment_status === 'trial'
+          ? new Date(l.trial_expires_at)
+          : new Date(new Date(l.created_at).getTime() + (l.is_featured ? SETTINGS.featured_duration_days : SETTINGS.standard_duration_days) * 86400000);
+    const newExpiry = new Date(Math.max(base.getTime(), Date.now()) + days * 86400000).toISOString();
+    const { data, error } = await db.from('listings').update({ expiry_override: newExpiry }).eq('id', id).select();
+    if (error) { toast('Error extending: '+error.message,'error'); return; }
+    if (!data?.length) { toast('Blocked by RLS — check Supabase policy','error'); return; }
+    logAction('extend_listing_date','listing',id,`+${days} day(s) → ${newExpiry}`);
+    l.expiry_override = newExpiry;
+    toast(`Listing extended by ${days} day(s) ✓`,'success');
+    if (currentView==='listings') loadAllListings();
+    loadOverview();
   }
 
   function deactivateListing(id) {
