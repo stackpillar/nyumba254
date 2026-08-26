@@ -3007,11 +3007,14 @@ function notifySms(type, payload) {
     document.getElementById('modal-footer').innerHTML = `
       ${l.status==='pending'?`<button class="btn-modal approve" onclick="approveListing('${l.id}');closeModal()">Approve</button><button class="btn-modal reject" onclick="rejectListing('${l.id}');closeModal()">Reject</button>`:''}
       ${l.payment_status==='trial'?`<button class="btn-modal approve" onclick="closeModal();openUpgradeModal('${l.id}')">Process upgrade</button>`:''}
+      ${l.status==='active'?`<button class="btn-modal cancel" onclick="closeModal();extendListingDate('${l.id}')">📅 Extend expiry</button>`:''}
       ${l.status==='active'&&!l.is_featured?`<button class="btn-modal approve" onclick="featureListing('${l.id}');closeModal()">★ Feature</button>`:''}
       ${l.is_featured?`<button class="btn-modal cancel" onclick="unfeatureListing('${l.id}');closeModal()">☆ Unfeature</button>`:''}
       ${l.is_disabled?`<button class="btn-modal approve" onclick="activateListing('${l.id}');closeModal()">Activate</button>`:`<button class="btn-modal reject" onclick="deactivateListing('${l.id}');closeModal()">Deactivate</button>`}
       ${l.status==='active'&&!l.is_disabled?`<button class="btn-modal cancel" onclick="postToSocial('${l.id}','facebook')">📘 Post to Facebook</button><button class="btn-modal cancel" onclick="postToSocial('${l.id}','instagram')">📷 Post to Instagram</button><button class="btn-modal cancel" onclick="postToSocial('${l.id}','tiktok')">🎵 Post to TikTok (private)</button>`:''}
       <button class="btn-modal cancel" onclick="openEditListingModal('${l.id}');closeModal()">Edit</button>
+      <button class="btn-modal reject" onclick="closeModal();recycleListing('${l.id}')">🗑 Move to recycle bin</button>
+      <button class="btn-modal reject" onclick="closeModal();deleteListingPermanently('${l.id}')">Delete permanently</button>
       <button class="btn-modal cancel" onclick="closeModal()">Close</button>`;
     openModal();
   }
