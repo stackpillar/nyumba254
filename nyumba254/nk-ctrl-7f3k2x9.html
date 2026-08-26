@@ -99,7 +99,15 @@
       to   { transform:scale(1); opacity:1; }
     }
     /* MAIN */
-    .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+    /* .sidebar is fixed, so it's out of flow and contributes nothing to
+       this flex row — flex:1 was stretching .main to the FULL viewport
+       width, then margin-left pushed that box another 240px right,
+       overflowing the page by exactly one sidebar width. Combined with
+       overflow-x:hidden below, that overflow was invisible and
+       unreachable: real content (4th stat card, last table columns) was
+       rendered off-screen with no way to scroll to it. Sizing .main
+       explicitly removes the overflow at the source. */
+    .main { margin-left: var(--sidebar-w); width: calc(100% - var(--sidebar-w)); display: flex; flex-direction: column; min-height: 100vh; }
     .topbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 28px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
     .topbar-left { display: flex; align-items: center; gap: 12px; }
     .mobile-menu-btn { display: none; background: none; padding: 6px; border-radius: 6px; }
@@ -419,7 +427,7 @@
     @media (max-width: 768px) {
       .sidebar { transform: translateX(-100%); }
       .sidebar.open { transform: translateX(0); }
-      .main { margin-left: 0; }
+      .main { margin-left: 0; width: 100%; }
       .mobile-menu-btn { display: flex; }
       .stat-grid { grid-template-columns: 1fr 1fr; }
       .page-area { padding: 12px; }
