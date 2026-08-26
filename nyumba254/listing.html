@@ -4,17 +4,17 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Listing — Nyumba254</title>
-  <meta name="description" content="View apartment listing details on Nyumba254 — photos, specs, price, and contact the seller directly."/>
+  <meta name="description" content="View property listing details on Nyumba254 — photos, specs, price, and contact the seller directly."/>
   <meta property="og:type" content="website"/>
   <meta property="og:title" id="og-title" content="Nyumba254 listing"/>
-  <meta property="og:description" id="og-description" content="View apartment listing details on Nyumba254."/>
+  <meta property="og:description" id="og-description" content="View property listing details on Nyumba254."/>
   <meta property="og:image" id="og-image" content=""/>
   <meta property="og:url" id="og-url" content=""/>
   <meta property="og:site_name" content="Nyumba254"/>
   <link rel="canonical" id="canonical-link" href="https://nyumba254.com/listings"/>
   <meta name="twitter:card" content="summary_large_image"/>
   <meta name="twitter:title" id="twitter-title" content="Nyumba254 listing"/>
-  <meta name="twitter:description" id="twitter-description" content="View apartment listing details on Nyumba254."/>
+  <meta name="twitter:description" id="twitter-description" content="View property listing details on Nyumba254."/>
   <meta name="twitter:image" id="twitter-image" content="https://nyumba254.com/hero-photo.jpg"/>
   <meta name="twitter:site" content="@Nyumba254"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -22,13 +22,15 @@
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script type="application/ld+json" id="listing-jsonld"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --green:#0F6E56; --green-light:#E1F5EE; --green-mid:#1D9E75; --green-dark:#085041;
-      --gold:#BA7517; --gold-light:#FAEEDA; --red:#C53030; --red-light:#FFF5F5;
+      --red:#C53030; --red-light:#FFF5F5;
       --text:#1a1a18; --text-2:#4a4a46; --text-3:#888780;
       --border:#e0ded8; --surface:#f7f6f2; --white:#ffffff;
       --radius:10px; --radius-lg:16px;
@@ -72,34 +74,10 @@
     .page-wrap { max-width:1100px; margin:0 auto; padding:32px 24px 80px; }
     .layout { display:grid; grid-template-columns:1fr 360px; gap:32px; align-items:start; }
 
-    /* ══════════════════════════════════════
-       GALLERY — Full quality image display
-       object-fit:contain ensures the image
-       is never cropped or stretched, preserving
-       the original aspect ratio and sharpness.
-       A blurred backdrop layer fills the rest
-       of the frame so portrait/odd-ratio photos
-       never leave stark black bars.
-    ══════════════════════════════════════ */
+    /* Gallery */
     .gallery { border-radius:var(--radius-lg); overflow:hidden; background:#111; margin-bottom:24px; position:relative; }
-    .gallery-main {
-      width:100%; aspect-ratio:var(--gallery-ratio, 16/9); position:relative; overflow:hidden;
-      background:#111; display:flex; align-items:center; justify-content:center;
-      transition:aspect-ratio .25s ease;
-      max-height:65vh;
-    }
-    
-    /* object-fit:cover fills the frame completely — no letterboxing/gaps —
-       while keeping the image at native resolution (only edge pixels are
-       clipped when the photo's ratio doesn't match the box, never
-       downscaled or recompressed). */
-    .gallery-main img {
-      position:relative; z-index:1;
-      width:100%; height:100%;
-      object-fit:cover;             /* fills frame, no empty space */
-      object-position:center;
-      transition:opacity .3s;
-    }
+    .gallery-main { width:100%; aspect-ratio:var(--gallery-ratio, 16/9); position:relative; overflow:hidden; background:#111; display:flex; align-items:center; justify-content:center; transition:aspect-ratio .25s ease; max-height:65vh; }
+    .gallery-main img { position:relative; z-index:1; width:100%; height:100%; object-fit:cover; object-position:center; transition:opacity .3s; }
     .gallery-no-photo { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:12px; color:var(--text-3); }
     .gallery-no-photo svg { width:48px; height:48px; stroke:var(--border); fill:none; stroke-width:1.5; }
     .gallery-arrow { position:absolute; top:50%; transform:translateY(-50%); width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,0.92); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .15s; z-index:2; }
@@ -112,9 +90,8 @@
     .gallery-thumb { width:72px; height:52px; border-radius:6px; overflow:hidden; flex-shrink:0; border:2px solid transparent; cursor:pointer; transition:border-color .15s; }
     .gallery-thumb.active { border-color:var(--green); }
     .gallery-thumb:focus-visible, .gallery-main img:focus-visible { outline:2px solid var(--green); outline-offset:2px; }
-    /* Thumbnails use cover since they're small previews */
     .gallery-thumb img { width:100%; height:100%; object-fit:cover; }
-    .featured-overlay { position:absolute; top:14px; left:14px; z-index:2; background:var(--gold); color:white; font-size:11px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:.04em; display:flex; align-items:center; gap:5px; }
+    .featured-overlay { position:absolute; top:14px; left:14px; z-index:2; background:var(--green-dark); color:white; font-size:11px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:.04em; display:flex; align-items:center; gap:5px; }
 
     /* Action row */
     .action-row { display:flex; align-items:center; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
@@ -126,13 +103,11 @@
     .listing-header { margin-bottom:20px; }
     .listing-badges { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
     .badge { display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:600; padding:4px 10px; border-radius:20px; }
-    .badge.student  { background:var(--green-light); color:var(--green-dark); }
-    .badge.standard { background:var(--surface); color:var(--text-2); border:1px solid var(--border); }
-    .badge.luxury   { background:var(--gold-light); color:var(--gold); }
-    .badge.commercial { background:#EAEEF7; color:#2A3B7A; border:1px solid #B9C6EA; }
-    .badge.sale     { background:var(--green-light); color:var(--green-dark); }
-    .badge.rent     { background:#E6F1FB; color:#185FA5; }
-    .badge.multiunit { background:#EDE7F6; color:#5B3E96; border:1px solid #D3C4EE; }
+    .badge.apartment { background:var(--green-light); color:var(--green-dark); }
+    .badge.house     { background:var(--surface); color:var(--text-2); border:1px solid var(--border); }
+    .badge.boarding  { background:var(--green-light); color:var(--green-dark); border:1px solid var(--green-mid); }
+    .badge.airbnb    { background:var(--surface); color:var(--text-2); border:1px solid var(--border); }
+    .badge.freq      { background:var(--green-light); color:var(--green-dark); }
     .listing-title  { font-family:'Playfair Display',serif; font-size:clamp(22px,3vw,32px); color:var(--text); line-height:1.2; margin-bottom:10px; }
     .listing-location { display:flex; align-items:center; gap:6px; font-size:14px; color:var(--text-3); }
     .listing-location svg { width:15px; height:15px; stroke:var(--green); fill:none; stroke-width:2; flex-shrink:0; }
@@ -155,9 +130,14 @@
     .spec-val { font-size:15px; font-weight:700; color:var(--text); line-height:1.2; }
     .spec-lbl { font-size:11px; color:var(--text-3); margin-top:3px; }
 
-    /* ══════════════════════════════════════
-       AVAILABLE UNITS — multi-unit properties
-    ══════════════════════════════════════ */
+    /* Amenities */
+    .amenities-card { background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; margin-bottom:20px; display:none; }
+    .amenities-card h3 { font-size:15px; font-weight:600; color:var(--text); margin-bottom:16px; }
+    .amenities-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; }
+    .amenity-row { display:flex; align-items:center; gap:8px; font-size:13.5px; color:var(--text-2); }
+    .amenity-row svg { width:16px; height:16px; stroke:var(--green); fill:none; stroke-width:2.4; flex-shrink:0; }
+
+    /* Room types (boarding house) */
     .units-card { background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; margin-bottom:20px; display:none; }
     .units-card h3 { font-size:15px; font-weight:600; color:var(--text); margin-bottom:4px; }
     .units-card p.hint { font-size:13px; color:var(--text-3); margin-bottom:16px; }
@@ -169,18 +149,10 @@
     .unit-type-card-price { font-size:16px; font-weight:700; color:var(--green-dark); text-align:right; }
     .unit-type-card-price span { display:block; font-size:11px; font-weight:400; color:var(--text-3); }
     .unit-avail-pill { display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:700; padding:4px 10px; border-radius:20px; background:var(--green-light); color:var(--green-dark); white-space:nowrap; }
-    .unit-avail-pill.low { background:var(--gold-light); color:var(--gold); }
+    .unit-avail-pill.low { background:var(--surface); color:var(--text-2); border:1px solid var(--border); }
     .unit-avail-pill.none { background:var(--red-light); color:var(--red); }
 
-    /* ══════════════════════════════════════
-       VIDEO WALKTHROUGH — Premium/Elite feature
-    ══════════════════════════════════════ */
-    .video-card { background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; margin-bottom:20px; display:none; }
-    .video-card h3 { font-size:15px; font-weight:600; color:var(--text); margin-bottom:14px; }
-
-    /* ══════════════════════════════════════
-       SELLER: MANAGE UNITS PANEL
-    ══════════════════════════════════════ */
+    /* Seller: Manage rooms panel */
     .manage-units-card { background:var(--white); border:2px solid var(--green); border-radius:var(--radius-lg); padding:24px; margin-bottom:20px; display:none; }
     .manage-units-card h3 { font-size:15px; font-weight:700; color:var(--green-dark); margin-bottom:4px; display:flex; align-items:center; gap:8px; }
     .manage-units-card p.hint { font-size:13px; color:var(--text-3); margin-bottom:18px; }
@@ -214,19 +186,15 @@
     .desc-text.collapsed { display:-webkit-box; -webkit-line-clamp:5; -webkit-box-orient:vertical; overflow:hidden; }
     .read-more { font-size:13px; color:var(--green); font-weight:500; margin-top:10px; cursor:pointer; display:inline-block; }
 
-    /* ══════════════════════════════════════
-       MAP CARD — Live Google Maps embed
-    ══════════════════════════════════════ */
+    /* Map card — Leaflet, driven by lat/lng saved at post-listing */
     .map-card { background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; margin-bottom:20px; }
     .map-card-header { padding:16px 20px 12px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
     .map-card-header h3 { font-size:15px; font-weight:600; color:var(--text); }
     .map-card-header p { font-size:12px; color:var(--text-3); margin-top:2px; }
     .map-card-header a { font-size:12px; color:var(--green); font-weight:500; white-space:nowrap; display:flex; align-items:center; gap:4px; }
     .map-card-header a svg { width:13px; height:13px; stroke:var(--green); fill:none; stroke-width:2; }
-    /* The live map iframe */
-    .map-iframe-wrap { position:relative; width:100%; height:300px; background:var(--surface); }
-    .map-iframe-wrap iframe { position:absolute; top:0; left:0; width:100%; height:100%; border:none; }
-    /* Fallback shown while iframe loads */
+    .map-frame-wrap { position:relative; width:100%; height:300px; background:var(--surface); }
+    #listing-map { position:absolute; inset:0; }
     .map-loading { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; color:var(--text-3); z-index:1; pointer-events:none; }
     .map-loading.hidden { display:none; }
     .map-loading svg { width:32px; height:32px; stroke:var(--border); fill:none; stroke-width:1.5; }
@@ -257,19 +225,16 @@
     .seller-since { font-size:12px; color:var(--text-3); }
     .verified-badge { display:inline-flex; align-items:center; gap:3px; font-size:11px; color:var(--green); font-weight:700; margin-top:3px; background:var(--green-light); padding:2px 8px; border-radius:20px; }
     .verified-badge svg { width:12px; height:12px; stroke:var(--green); fill:none; stroke-width:3; }
-    .unverified-badge { display:inline-flex; align-items:center; gap:3px; font-size:11px; color:#92400E; font-weight:600; margin-top:3px; background:var(--gold-light); padding:2px 8px; border-radius:20px; }
-    .unverified-badge svg { width:12px; height:12px; stroke:#92400E; fill:none; stroke-width:2; }
+    .unverified-badge { display:inline-flex; align-items:center; gap:3px; font-size:11px; color:var(--text-2); font-weight:600; margin-top:3px; background:var(--surface); border:1px solid var(--border); padding:2px 8px; border-radius:20px; }
+    .unverified-badge svg { width:12px; height:12px; stroke:var(--text-2); fill:none; stroke-width:2; }
     .contact-btns { display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
     .btn-call { display:flex; align-items:center; justify-content:center; gap:8px; padding:13px; border-radius:var(--radius); font-size:15px; font-weight:600; background:var(--green); color:white; transition:background .15s; }
     .btn-call:hover { background:var(--green-dark); }
-    .btn-whatsapp { display:flex; align-items:center; justify-content:center; gap:8px; padding:13px; border-radius:var(--radius); font-size:15px; font-weight:600; background:#25D366; color:white; transition:background .15s; }
-    .btn-whatsapp:hover { background:#128C3E; }
+    .btn-whatsapp { display:flex; align-items:center; justify-content:center; gap:8px; padding:13px; border-radius:var(--radius); font-size:15px; font-weight:600; background:var(--green-dark); color:white; transition:background .15s; }
+    .btn-whatsapp:hover { background:var(--text); }
     .or-divider { display:flex; align-items:center; gap:10px; font-size:12px; color:var(--text-3); margin-bottom:18px; }
     .or-divider::before,.or-divider::after { content:''; flex:1; height:1px; background:var(--border); }
 
-    /* ══════════════════════════════════════
-       CONTACT PROTECTION — disabled state while revealing
-    ══════════════════════════════════════ */
     .btn-call:disabled,.btn-whatsapp:disabled { opacity:.7; cursor:wait; }
     .btn-call svg,.btn-whatsapp svg { width:18px; height:18px; flex-shrink:0; }
 
@@ -345,10 +310,10 @@
     .btn-contact-admin:hover { background:var(--green-dark); }
     .btn-browse-more { background:white; color:var(--text-2); border:1.5px solid var(--border); }
     .btn-browse-more:hover { border-color:var(--green); color:var(--green); }
-    .seller-recycle-banner { background:#FFFBEB; border:1.5px solid #F6E05E; border-radius:var(--radius-lg); padding:32px 28px; margin-top:16px; }
-    .seller-recycle-banner h3 { font-size:14px; font-weight:600; color:#744210; margin-bottom:6px; }
+    .seller-recycle-banner { background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius-lg); padding:32px 28px; margin-top:16px; }
+    .seller-recycle-banner h3 { font-size:14px; font-weight:600; color:var(--text); margin-bottom:6px; }
     .seller-recycle-banner p { font-size:13px; color:var(--text-2); line-height:1.7; }
-    .countdown-pill { display:inline-flex; align-items:center; gap:6px; background:#FEF3C7; border:1px solid #F6E05E; border-radius:20px; font-size:12px; font-weight:700; color:#92400E; padding:4px 12px; margin-top:8px; }
+    .countdown-pill { display:inline-flex; align-items:center; gap:6px; background:var(--white); border:1px solid var(--border); border-radius:20px; font-size:12px; font-weight:700; color:var(--text-2); padding:4px 12px; margin-top:8px; }
     .countdown-pill svg { width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:2; }
 
     /* Enquiry success */
@@ -359,11 +324,9 @@
     .enquiry-success p { font-size:13px; color:var(--text-3); margin-bottom:12px; }
 
     /* Safety tip */
-    .safety-tip { margin-top:16px; padding:12px 14px; background:var(--gold-light); border-radius:var(--radius); border:1px solid #FAC775; font-size:12px; color:#5C3A00; line-height:1.6; display:flex; gap:8px; }
-    .safety-tip svg { width:14px; height:14px; stroke:var(--gold); fill:none; stroke-width:2; flex-shrink:0; margin-top:2px; }
+    .safety-tip { margin-top:16px; padding:12px 14px; background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); font-size:12px; color:var(--text-2); line-height:1.6; display:flex; gap:8px; }
+    .safety-tip svg { width:14px; height:14px; stroke:var(--green); fill:none; stroke-width:2; flex-shrink:0; margin-top:2px; }
 
-       VIEWS BADGE — Live counter
-    ══════════════════════════════════════ */
     .views-loading { opacity:.4; }
     @keyframes views-pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
     .views-loading { animation: views-pulse .8s ease-in-out infinite; }
@@ -404,7 +367,7 @@
       footer { padding:40px 16px 24px; }
       .footer-top { grid-template-columns:1fr 1fr; gap:28px; }
       .seller-disabled-banner-inner { flex-direction:column; }
-      .map-iframe-wrap { height:220px; }
+      .map-frame-wrap { height:220px; }
     }
     @media(max-width:480px) {
       .specs-grid { grid-template-columns:repeat(2,1fr); }
@@ -412,9 +375,7 @@
       .similar-grid { grid-template-columns:1fr 1fr; }
     }
 
-    /* ══════════════════════════════════════
-       REVIEWS & REPORTS — banner + modals
-    ══════════════════════════════════════ */
+    /* Reviews & reports */
     #nk-review-banner {
       position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
       z-index:2000; background:var(--white); border:1px solid var(--border);
@@ -441,7 +402,7 @@
     .nk-review-modal p.sub { font-size:13px;color:var(--text-3);margin-bottom:20px;line-height:1.6; }
     .nk-star-row { display:flex;gap:6px;margin-bottom:18px;justify-content:center; }
     .nk-star { width:34px;height:34px;cursor:pointer;stroke:var(--border);fill:none;stroke-width:1.5;transition:all .15s; }
-    .nk-star.filled { fill:var(--gold);stroke:var(--gold); }
+    .nk-star.filled { fill:var(--green);stroke:var(--green); }
     .nk-review-modal textarea { width:100%;min-height:90px;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:13px;color:var(--text);outline:none;resize:vertical;margin-bottom:16px; }
     .nk-review-modal textarea:focus { border-color:var(--green); }
     .nk-review-modal .nk-modal-actions { display:flex;gap:10px;justify-content:flex-end; }
@@ -460,7 +421,6 @@
     #nk-report-trigger { font-size:12px;color:var(--text-3);text-decoration:underline;cursor:pointer;background:none;border:none;font-family:inherit; }
     #nk-report-trigger:hover { color:var(--red); }
 
-    /* ══ Prominent scam/fraud report button ══ */
     .report-scam-btn {
       display:flex; align-items:center; justify-content:center; gap:8px;
       width:100%; padding:11px; margin-bottom:18px;
@@ -474,69 +434,30 @@
     .report-scam-btn.reported:hover { background:var(--surface); border-color:var(--border); }
     .report-scam-btn.reported svg { stroke:var(--text-3); }
 
-    /* ══ Full-screen photo lightbox ══ */
-    #nk-lightbox {
-      display:none; position:fixed; inset:0; background:rgba(0,0,0,0.94); z-index:3000;
-      align-items:center; justify-content:center; flex-direction:column;
-    }
+    /* Lightbox */
+    #nk-lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.94); z-index:3000; align-items:center; justify-content:center; flex-direction:column; }
     #nk-lightbox.open { display:flex; }
     #nk-lightbox-img-wrap { flex:1; width:100%; display:flex; align-items:center; justify-content:center; overflow:auto; padding:8px; }
     #nk-lightbox-img { max-width:96vw; max-height:92vh; width:auto; height:auto; object-fit:contain; user-select:none; }
     @media(min-width:1000px){ #nk-lightbox-img { max-width:min(96vw,1800px); max-height:94vh; } }
-    .nk-lb-close {
-      position:absolute; top:18px; right:22px; width:40px; height:40px; border-radius:50%;
-      background:rgba(255,255,255,0.12); border:none; cursor:pointer; z-index:2;
-      display:flex; align-items:center; justify-content:center; transition:background .15s;
-    }
+    .nk-lb-close { position:absolute; top:18px; right:22px; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.12); border:none; cursor:pointer; z-index:2; display:flex; align-items:center; justify-content:center; transition:background .15s; }
     .nk-lb-close:hover { background:rgba(255,255,255,0.22); }
     .nk-lb-close svg { width:20px; height:20px; stroke:white; fill:none; stroke-width:2; }
-    .nk-lb-arrow {
-      position:absolute; top:50%; transform:translateY(-50%); width:48px; height:48px; border-radius:50%;
-      background:rgba(255,255,255,0.1); border:none; cursor:pointer; z-index:2;
-      display:flex; align-items:center; justify-content:center; transition:background .15s;
-    }
+    .nk-lb-arrow { position:absolute; top:50%; transform:translateY(-50%); width:48px; height:48px; border-radius:50%; background:rgba(255,255,255,0.1); border:none; cursor:pointer; z-index:2; display:flex; align-items:center; justify-content:center; transition:background .15s; }
     .nk-lb-arrow:hover { background:rgba(255,255,255,0.2); }
     .nk-lb-arrow svg { width:22px; height:22px; stroke:white; fill:none; stroke-width:2.5; }
     .nk-lb-arrow.prev { left:16px; }
     .nk-lb-arrow.next { right:16px; }
-    #nk-lightbox-counter {
-      position:absolute; bottom:18px; left:50%; transform:translateX(-50%);
-      background:rgba(255,255,255,0.12); color:white; font-size:13px; font-weight:500;
-      padding:5px 14px; border-radius:20px;
-    }
+    #nk-lightbox-counter { position:absolute; bottom:18px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.12); color:white; font-size:13px; font-weight:500; padding:5px 14px; border-radius:20px; }
     .gallery-main img { cursor:zoom-in; }
-    @media(max-width:600px) {
-      .nk-lb-arrow { width:38px; height:38px; }
-      .nk-lb-arrow svg { width:18px; height:18px; }
-      #nk-lightbox-img-wrap { padding:8px; }
-    }
+    @media(max-width:600px) { .nk-lb-arrow { width:38px; height:38px; } .nk-lb-arrow svg { width:18px; height:18px; } #nk-lightbox-img-wrap { padding:8px; } }
 
-    /* ══════════════════════════════════════
-       AMENITIES — reuse specs-card visual language
-    ══════════════════════════════════════ */
-    .amenity-yes { color:var(--green-dark); }
-
-    /* FLOATING CHAT WIDGET */
-    #nk-chat-widget-btn {
-      position:fixed; bottom:24px; right:24px; z-index:1500;
-      width:58px; height:58px; border-radius:50%; background:var(--green);
-      display:flex; align-items:center; justify-content:center; cursor:pointer;
-      box-shadow:0 6px 20px rgba(0,0,0,0.25); transition:transform .15s, background .15s;
-    }
+    /* Floating chat widget */
+    #nk-chat-widget-btn { position:fixed; bottom:24px; right:24px; z-index:1500; width:58px; height:58px; border-radius:50%; background:var(--green); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 6px 20px rgba(0,0,0,0.25); transition:transform .15s, background .15s; }
     #nk-chat-widget-btn:hover { background:var(--green-dark); transform:translateY(-2px); }
-    #nk-chat-widget-badge {
-      position:absolute; top:-4px; right:-4px; min-width:20px; height:20px; padding:0 5px;
-      background:var(--red); color:white; font-size:11px; font-weight:700; border-radius:20px;
-      display:flex; align-items:center; justify-content:center; border:2px solid white;
-      animation:nk-badge-pop .25s ease;
-    }
+    #nk-chat-widget-badge { position:absolute; top:-4px; right:-4px; min-width:20px; height:20px; padding:0 5px; background:var(--red); color:white; font-size:11px; font-weight:700; border-radius:20px; display:flex; align-items:center; justify-content:center; border:2px solid white; animation:nk-badge-pop .25s ease; }
     @keyframes nk-badge-pop { from{ transform:scale(0);} to{ transform:scale(1);} }
-    #nk-chat-widget-panel {
-      position:fixed; bottom:96px; right:24px; z-index:1500;
-      width:340px; max-width:calc(100vw - 32px); height:460px; max-height:calc(100vh - 140px);
-      background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg);
-      box-shadow:0 12px 40px rgba(0,0,0,0.22); display:none; flex-direction:column; overflow:hidden;
-    }
+    #nk-chat-widget-panel { position:fixed; bottom:96px; right:24px; z-index:1500; width:340px; max-width:calc(100vw - 32px); height:460px; max-height:calc(100vh - 140px); background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:0 12px 40px rgba(0,0,0,0.22); display:none; flex-direction:column; overflow:hidden; }
     #nk-chat-widget-panel.open { display:flex; }
     #nk-chat-widget-header { background:var(--green); color:white; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
     #nk-chat-widget-header-info { display:flex; align-items:center; gap:10px; }
@@ -582,7 +503,6 @@
     <a href="/listings" class="nav-link">Browse</a>
     <a href="/how-it-works" class="nav-link">How it works</a>
     <a href="/about" class="nav-link">About us</a>
-    <a href="/pricing" class="nav-link">Pricing</a>
     <a href="/faq" class="nav-link">FAQ</a>
     <a href="/login" class="nav-link" id="nav-account-link">Sign in</a>
     <a href="/saved" class="nav-link">
@@ -590,7 +510,7 @@
       Saved
       <span class="nav-count" id="nav-count-badge" style="display:none">0</span>
     </a>
-    <a href="/post-listing" class="btn-primary">List your apartment</a>
+    <a href="/post-listing" class="btn-primary">List your property</a>
   </div>
   <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Open menu" aria-expanded="false" id="mobile-menu-btn">
     <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -602,11 +522,10 @@
   <a href="/listings">Browse listings</a>
   <a href="/how-it-works">How it works</a>
   <a href="/about" class="nav-link">About us</a>
-  <a href="/pricing">Pricing</a>
   <a href="/faq">FAQ</a>
   <a href="/login" id="mobile-account-link">Sign in</a>
   <a href="/saved">Saved <span class="nav-count" id="nav-count-badge-mobile" style="display:none">0</span></a>
-  <a href="/post-listing" class="btn-primary">List your apartment</a>
+  <a href="/post-listing" class="btn-primary">List your property</a>
 </div>
 
 <div class="breadcrumb" id="breadcrumb">
@@ -627,7 +546,7 @@
     <a href="/listings" class="btn-primary" style="display:inline-flex;margin:0 auto">Browse all listings</a>
   </div>
 
-  <!-- LOAD ERROR (network/unexpected failure — distinct from a genuine 404) -->
+  <!-- LOAD ERROR -->
   <div class="not-found" id="load-error" style="display:none">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
     <h2>Couldn't load this listing</h2>
@@ -699,7 +618,7 @@
       <div>
         <!-- Gallery -->
         <div class="gallery" id="gallery">
-          <div class="gallery-main" id="gallery-main">            
+          <div class="gallery-main" id="gallery-main">
             <div class="gallery-no-photo" id="gallery-no-photo" style="display:none">
               <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
               <p>No photos for this listing yet</p>
@@ -713,8 +632,8 @@
             </button>
             <div class="gallery-counter" id="gallery-counter" style="display:none"></div>
             <div class="featured-overlay" id="featured-badge" style="display:none">
-              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              Featured listing
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              Verified by Nyumba254
             </div>
           </div>
           <div class="gallery-thumbs" id="gallery-thumbs" style="display:none"></div>
@@ -764,27 +683,27 @@
           <div class="specs-grid" id="specs-grid"></div>
         </div>
 
-        <!-- ══ Available units — multi-unit properties only ══ -->
+        <!-- Amenities -->
+        <div class="amenities-card" id="amenities-card">
+          <h3>Amenities</h3>
+          <div class="amenities-grid" id="amenities-grid"></div>
+        </div>
+
+        <!-- Room types — boarding house only -->
         <div class="units-card" id="units-card">
-          <h3>Available units</h3>
-          <p class="hint" id="units-card-hint">Unit types and current availability in this property</p>
+          <h3>Room types & availability</h3>
+          <p class="hint" id="units-card-hint">Pick the room type that suits you — pricing and openings are per room type</p>
           <div id="unit-type-list"></div>
         </div>
 
-        <!-- ══ Seller: Manage units panel — only visible to the listing owner ══ -->
+        <!-- Seller: Manage rooms panel -->
         <div class="manage-units-card" id="manage-units-card">
           <h3>
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg>
-            Manage units
+            Manage rooms
           </h3>
-          <p class="hint">Mark a unit as occupied once it's booked — this updates availability for buyers immediately. Only you can see this panel.</p>
+          <p class="hint">Mark a room as occupied once it's booked — this updates availability for buyers immediately. Only you can see this panel.</p>
           <div id="manage-unit-list"></div>
-        </div>
-
-        <!-- Video walkthrough -->
-        <div class="video-card" id="video-card">
-          <h3>Video walkthrough</h3>
-          <div id="video-embed-wrap"></div>
         </div>
 
         <!-- Description -->
@@ -794,12 +713,7 @@
           <span class="read-more" id="read-more" onclick="toggleDesc()">Read more ↓</span>
         </div>
 
-        <!-- ══════════════════════════════════════
-             LIVE MAP — Google Maps embed
-             Renders the real area on a map using
-             the Google Maps embed API (no key needed
-             for the basic embed URL).
-        ══════════════════════════════════════ -->
+        <!-- Map — Leaflet, pin dropped at post-listing time -->
         <div class="map-card">
           <div class="map-card-header">
             <div>
@@ -808,16 +722,15 @@
             </div>
             <a id="map-open-link" href="#" target="_blank" rel="noopener">
               <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              Open in Google Maps
+              Open in Maps
             </a>
           </div>
-          <div class="map-iframe-wrap">
+          <div class="map-frame-wrap">
             <div class="map-loading" id="map-loading">
               <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
               <span style="font-size:13px">Loading map…</span>
             </div>
-            <!-- iframe injected by JS after listing loads -->
-            <div id="map-iframe-container"></div>
+            <div id="listing-map"></div>
           </div>
           <div class="map-privacy-note">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -865,11 +778,6 @@
           </button>
 
           <div class="contact-btns">
-            <!-- These are buttons (not links) on purpose: the seller's real
-                 phone number is never present in the page HTML or href at
-                 load time. A click runs handleContactClick(), which checks
-                 a per-device rate limit and then fetches + reveals the
-                 number — see the CONTACT PROTECTION block further down. -->
             <button type="button" class="btn-call" id="btn-call" onclick="handleContactClick('call')">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.12 1.2 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
               Call seller
@@ -884,21 +792,16 @@
 
           <!-- Enquiry form -->
           <div id="enquiry-form">
-            <!-- Shown only for multi-unit properties -->
             <div class="field" id="enq-unit-type-field" style="display:none">
-              <label>Interested unit type <span style="font-size:10px;font-weight:400;color:var(--text-3)">optional</span></label>
-              <select id="enq-unit-type"><option value="">Any available unit</option></select>
-            </div>
-            <div class="field" id="enq-unit-pref-field" style="display:none">
-              <label>Preferred floor / position <span style="font-size:10px;font-weight:400;color:var(--text-3)">optional</span></label>
-              <input type="text" id="enq-unit-pref" placeholder="e.g. Middle floor, corner unit, left side"/>
+              <label>Interested room type <span style="font-size:10px;font-weight:400;color:var(--text-3)">optional</span></label>
+              <select id="enq-unit-type"><option value="">Any available room</option></select>
             </div>
             <div class="field">
               <label>Your name</label>
               <input type="text" id="enq-name" placeholder="e.g. Brian Otieno"/>
               <div class="field-error" id="err-enq-name">Please enter your name</div>
             </div>
-            <div class="field">
+            <div class="field" id="enq-phone-field">
               <label>Phone number</label>
               <input type="tel" id="enq-phone" placeholder="07XX XXX XXX"/>
               <div class="field-error" id="err-enq-phone">Please enter your phone number</div>
@@ -909,7 +812,7 @@
             </div>
             <div class="field">
               <label>Message</label>
-              <textarea id="enq-message" rows="3" maxlength="1000" placeholder="Hi, I'm interested in this apartment. Is it still available?"></textarea>
+              <textarea id="enq-message" rows="3" maxlength="1000" placeholder="Hi, I'm interested in this property. Is it still available?"></textarea>
               <div class="field-error" id="err-enq-msg">Please enter a message</div>
             </div>
             <button class="btn-enquire" id="btn-enquire" onclick="sendEnquiry()">
@@ -919,10 +822,6 @@
             <p class="enquiry-note">Your contact details are shared only with the seller of this listing.</p>
           </div>
 
-          <!-- Success (shown right after sending a NEW enquiry). Stays visible
-               exactly as-is — "View conversation" now only opens the floating
-               chat widget, it no longer swaps this panel out for an inline
-               thread. -->
           <div class="enquiry-success" id="enquiry-success">
             <div class="enquiry-success-icon">
               <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
@@ -932,9 +831,6 @@
             <button onclick="if (typeof NKGlobalChat !== 'undefined') NKGlobalChat.registerAndOpen(listingId)" style="margin-top:8px;font-size:13px;color:var(--green);background:none;border:none;cursor:pointer;font-weight:500">View conversation →</button>
           </div>
 
-          <!-- Conversation card (shown on RETURN visits, once a buyer already
-               has an open thread with this seller). Same idea — it just
-               points at the floating widget, it never expands inline. -->
           <div class="enquiry-success" id="conversation-card" style="display:none">
             <div class="enquiry-success-icon">
               <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
@@ -945,10 +841,6 @@
             <button onclick="clearThread()" style="margin-top:10px;font-size:12px;color:var(--text-3);background:none;border:none;cursor:pointer;display:block;margin-left:auto;margin-right:auto">Start new enquiry</button>
           </div>
 
-          <!-- Thread (legacy inline chat box) — intentionally never shown
-               anymore; all conversation now happens only in the floating
-               widget. Left in the DOM (hidden) so old helper code still
-               has somewhere to write without erroring. -->
           <div id="thread-section" class="thread-section" style="display:none">
             <div class="thread-header">
               <h4>Your conversation</h4>
@@ -967,10 +859,9 @@
             </div>
             <div class="chat-wa-note" id="chat-wa-note"></div>
           </div>
-          <!-- Safety tip -->
           <div class="safety-tip">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <span>Always view the property in person before making any payment. Never send money before seeing the apartment.</span>
+            <span>Always view the property in person before making any payment. Never send money before seeing the property.</span>
           </div>
         </div>
       </div>
@@ -979,7 +870,7 @@
   </div>
 </div>
 
-<!-- ══ FULL-SCREEN PHOTO LIGHTBOX ══ -->
+<!-- Lightbox -->
 <div id="nk-lightbox" onclick="nkLightboxBackdropClick(event)">
   <button class="nk-lb-close" onclick="closeLightbox()" aria-label="Close">
     <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -996,14 +887,13 @@
   <div id="nk-lightbox-counter"></div>
 </div>
 
-
 <!-- FOOTER -->
 <footer>
   <div class="footer-inner">
     <div class="footer-top">
       <div>
         <div class="footer-logo">Nyumba254</div>
-        <p class="footer-tagline">Find and list apartments across Kenya — no agents, no commission.</p>
+        <p class="footer-tagline">Find and list apartments, houses, boarding rooms, and holiday rentals across Kenya — no agents, no commission.</p>
         <div class="footer-social">
           <a href="https://wa.me/254700000000" target="_blank" rel="noopener" title="WhatsApp">
             <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
@@ -1025,10 +915,10 @@
       <div class="footer-col">
         <h4>Browse</h4>
         <a href="/listings">All listings</a>
-        <a href="/listings?category=student">Student housing</a>
-        <a href="/listings?category=standard">Standard</a>
-        <a href="/listings?category=luxury">Luxury</a>
-        <a href="/listings?category=commercial">Shops & offices</a>
+        <a href="/listings?category=apartment">Apartments</a>
+        <a href="/listings?category=house">Houses</a>
+        <a href="/listings?category=boarding">Boarding houses</a>
+        <a href="/listings?category=airbnb">Airbnb / Holiday rentals</a>
       </div>
       <div class="footer-col">
         <h4>Counties</h4>
@@ -1049,7 +939,7 @@
   </div>
 </footer>
 
-<!-- ══ REVIEW PROMPT BANNER ══ -->
+<!-- Review prompt banner -->
 <div id="nk-review-banner">
   <button class="rb-close" onclick="nkDismissBanner()" aria-label="Dismiss">✕</button>
   <div class="rb-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>
@@ -1061,7 +951,7 @@
   </div>
 </div>
 
-<!-- ══ Seller review modal ══ -->
+<!-- Seller review modal -->
 <div class="nk-review-modal-overlay" id="nk-seller-review-modal">
   <div class="nk-review-modal" role="dialog" aria-modal="true" aria-labelledby="nk-seller-review-title">
     <h3 id="nk-seller-review-title">How was <span id="nk-review-seller-name">the seller</span>?</h3>
@@ -1083,7 +973,7 @@
   </div>
 </div>
 
-<!-- ══ Platform review modal ══ -->
+<!-- Platform review modal -->
 <div class="nk-review-modal-overlay" id="nk-platform-review-modal">
   <div class="nk-review-modal" role="dialog" aria-modal="true" aria-labelledby="nk-platform-review-title">
     <h3 id="nk-platform-review-title">One last thing 🙂</h3>
@@ -1105,7 +995,7 @@
   </div>
 </div>
 
-<!-- ══ Report modal ══ -->
+<!-- Report modal -->
 <div class="nk-review-modal-overlay" id="nk-report-modal">
   <div class="nk-review-modal" role="dialog" aria-modal="true" aria-labelledby="nk-report-title">
     <h3 id="nk-report-title">Report a problem</h3>
@@ -1141,7 +1031,6 @@ const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
 const EDGE_URL = `${SUPABASE_URL}/functions/v1`;
 const { createClient } = supabase;
 
-// ── Match the "Remember me" storage adapter used on the sign-in page ──
 const authStorage = {
   getItem: (key) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).getItem(key),
   setItem: (key, value) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).setItem(key, value),
@@ -1152,122 +1041,119 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { storage: authStorage, persistSession: true, autoRefreshToken: true }
 });
 
-// ── Single shared session check — every script below reuses this ──
 const nkSessionPromise = db.auth.getSession();
 
-  const NK_COUNTIES = [
-    "Mombasa","Kwale","Kilifi","Tana River","Lamu","Taita-Taveta","Garissa","Wajir","Mandera",
-    "Marsabit","Isiolo","Meru","Tharaka-Nithi","Embu","Kitui","Machakos","Makueni","Nyandarua",
-    "Nyeri","Kirinyaga","Murang'a","Kiambu","Turkana","West Pokot","Samburu","Trans Nzoia",
-    "Uasin Gishu","Elgeyo-Marakwet","Nandi","Baringo","Laikipia","Nakuru","Narok","Kajiado",
-    "Kericho","Bomet","Kakamega","Vihiga","Bungoma","Busia","Siaya","Kisumu","Homa Bay",
-    "Migori","Kisii","Nyamira","Nairobi"
-  ].sort();
-  const NK_AREAS_BY_COUNTY = {
-    "Kisumu": ["Ahero","Car Wash","Dunga","Elgon View","Kanyakwar","Kibos","Kibuye","Kisumu CBD","Kombewa","Kondele","Luanda","Mamboleo","Manyatta","Maseno","Matibabu","Migosi","Milimani","Nyalenda","Nyamasaria","Obunga","Otonglo","Riat Hills","Sega"],
-    "Nairobi": ["Nairobi CBD","Westlands","Parklands","Highridge","Kangemi","Kitisuru","Runda","Loresho","Muthaiga","Gigiri","Spring Valley","Nyari","Rosslyn","Thome","Garden Estate","Ridgeways","Kilimani","Kileleshwa","Lavington","Kawangware","Hurlingham","Upper Hill","Adams Arcade","Karen","Langata","South B","South C","Nairobi West","Madaraka","Otiende","Kibera","Woodley","Roysambu","Zimmerman","Kahawa West","Githurai","Mirema","Kasarani","Mwiki","Njiru","Ruaraka","Baba Dogo","Mathare","Huruma","Pipeline","Imara Daima","Nyayo Estate","Dandora","Kariobangi","Kayole","Komarock","Utawala","Tassia","Umoja","Buruburu","Donholm","Makadara","Eastleigh","Ngara","Pangani"],
-    "Mombasa": ["Mombasa CBD (Old Town)","Nyali","Bamburi","Kizingo","Tudor","Likoni","Changamwe","Kisauni","Shanzu","Mkomani","Bombolulu","Kiembeni","Port Reitz","Miritini","Chaani","Migadini","Kongowea","Junda","Mwakirunge","Mtopanga","Jomvu","Magongo"],
-    "Nakuru": ["Nakuru CBD","Milimani","Section 58","Langalanga","Pangani","Shabab","Bangladesh","Lanet","Free Area","Freehold","Ngata","Bahati","London","Afraha","Naka","Kiamunyi","White House","Pipeline","Kaptembwa","Rhoda","Menengai","Naivasha"],
-    "Uasin Gishu": ["Eldoret CBD","Kapsoya","Langas","Kimumu","Huruma","Elgon View","Pioneer","Annex","Rupa Village","Hazina","Kamukunji","Munyaka","West Indies"],
-    "Kiambu": ["Thika CBD","Landless","Makongeni","Section 9","Blue Post","Thika Greens","Kiganjo","Tora","Ngoingwa","Bahati Ridge","Kisii Estate","Ruiru","Membley","Kamakis","Juja","Kiambu Town","Kikuyu","Limuru"],
-    "Kilifi": ["Kilifi Town","Malindi CBD","Kisumu Ndogo","Majengo (Malindi)","Silversands","Watamu","Mtwapa","Mariakani","Kaloleni","Mazeras","Magarini"],
-    "Machakos": ["Machakos CBD","Mua Hills","Kalama","Mitaboni","Athi River","Mlolongo","Syokimau","Katani","Kangundo Road","Kola"],
-    "Kakamega": ["Kakamega CBD","Amalemba","Milimani","Shirere","Lurambi","Mahiakalo","Sudi","Mumias","Butere","Malava","Lugari"],
-    "Meru": ["Meru CBD","Makutano","Kinoru","Ntharene","Nkubu","Maua","Timau","Laare","Mikinduri","Kianjai"],
-    "Nyeri": ["Nyeri CBD","Ring Road","Mountain View Estate","Garden Estate","Kamakwa","Ruring'u","Majengo","Karatina","Othaya Town","Mukurweini Town","Naromoru"],
-    "Kericho": ["Kericho CBD","Kapsoit","Ainamoi","Litein","Kipkelion","Fort Ternan","Sosiot","Chepseon","Kedowa","Cheborge"],
-    "Trans Nzoia": ["Kitale CBD","Milimani","Mitume","Matisi","Tuwan","Endebess","Kiminini","Kwanza","Saboti","Cherangany"],
-    "Kwale": ["Kwale Town","Diani","Ukunda","Tiwi","Msambweni","Lunga Lunga","Matuga","Kinango","Waa","Shimoni","Mackinon Road","Vanga"],
-    "Tana River": ["Hola","Garsen","Bura","Galole","Wenje","Kipini","Madogo","Chewele","Bangale","Wayu"],
-    "Lamu": ["Lamu Town","Mokowe","Faza","Matondoni","Mpeketoni","Witu","Hindi","Kizingitini","Shela","Kiunga"],
-    "Taita-Taveta": ["Voi","Taveta","Wundanyi","Mwatate","Mgange","Wesu","Bura (Taita)","Mbale (Taveta)","Tausa","Werugha"],
-    "Garissa": ["Garissa Town","Dadaab","Balambala","Fafi","Ijara","Lagdera","Modogashe","Bura (Garissa)","Sankuri","Hulugho"],
-    "Wajir": ["Wajir Town","Habaswein","Griftu","Eldas","Tarbaj","Bute","Buna","Diif","Elnur","Khorof Harar"],
-    "Mandera": ["Mandera Town","Rhamu","Banissa","Lafey","Takaba","El Wak","Kotulo","Fino","Arabia","Warankara"],
-    "Marsabit": ["Marsabit Town","Moyale","Loiyangalani","North Horr","Laisamis","Sololo","Turbi","Maikona","Illeret","Dukana"],
-    "Isiolo": ["Isiolo Town","Garbatulla","Merti","Kinna","Oldonyiro","Burat","Bulapesa","Wabera","Chari","Cherab"],
-    "Tharaka-Nithi": ["Chuka","Marimanti","Kathwana","Chogoria","Gatunga","Nkondi","Igambang'ombe","Muthambi","Mitheru","Tunyai"],
-    "Embu": ["Embu Town","Runyenjes","Manyatta","Siakago","Ishiara","Kiritiri","Kyeni","Karurumo","Kirimari","Gaturi"],
-    "Kitui": ["Kitui Town","Mwingi","Mutomo","Mutitu","Migwani","Zombe","Kabati","Ikutha","Mutha","Kanyangi"],
-    "Makueni": ["Wote","Emali","Sultan Hamud","Kibwezi","Kilome","Mbooni","Kaiti","Nunguni","Makindu","Tawa"],
-    "Nyandarua": ["Ol Kalou","Engineer","Njabini","Nyahururu","Ndaragwa","Ol Joro Orok","North Kinangop","South Kinangop","Kipipiri","Shamata"],
-    "Kirinyaga": ["Kerugoya","Kutus","Sagana","Kagio","Wang'uru","Baricho","Kianyaga","Kimbimbi","Mwea","Kutus Town"],
-    "Murang'a": ["Murang'a Town","Kenol","Kangema","Maragua","Kandara","Kigumo","Gatanga","Kiria-ini","Kabati","Makuyu"],
-    "Turkana": ["Lodwar","Kakuma","Lokichogio","Lokitaung","Kalokol","Lokichar","Kainuk","Todonyang","Kibish","Katilu"],
-    "West Pokot": ["Kapenguria","Makutano (Pokot)","Chepareria","Kacheliba","Sigor","Alale","Chepnyal","Lomut","Ortum","Kongelai"],
-    "Samburu": ["Maralal","Baragoi","Wamba","Archer's Post","Suguta Marmar","Kirisia","South Horr","Poro","Loosuk","Kisima"],
-    "Elgeyo-Marakwet": ["Iten","Tambach","Kapsowar","Chepkorio","Kapyego","Kapsait","Chesoi","Kaptarakwa","Kamogoi","Kabiemit"],
-    "Nandi": ["Kapsabet","Nandi Hills","Mosoriot","Kabiyet","Kaptumo","Kobujoi","Kapsisiywa","Kapsabet Town","Chepterit","Kilibwoni"],
-    "Baringo": ["Kabarnet","Eldama Ravine","Marigat","Kabartonjo","Mogotio","Kimalel","Kabernet Town","Loruk","Kampi ya Samaki","Mochongoi"],
-    "Laikipia": ["Nanyuki","Nyahururu","Rumuruti","Dol Dol","Kinamba","Ngobit","Sipili","Marmanet","Mukogodo","Salama"],
-    "Narok": ["Narok Town","Kilgoris","Ololulunga","Suswa","Ewaso Ngiro","Nairagie Enkare","Naikarra","Ntulele","Melili","Lolgorian"],
-    "Kajiado": ["Kajiado Town","Ngong","Kitengela","Ongata Rongai","Kiserian","Loitokitok","Namanga","Isinya","Bissil","Mashuuru"],
-    "Bomet": ["Bomet Town","Sotik","Longisa","Mulot","Chepalungu","Silibwet","Sigor (Bomet)","Chebunyo","Kaplong","Mogogosiek"],
-    "Vihiga": ["Mbale","Luanda (Vihiga)","Chavakali","Majengo (Vihiga)","Emuhaya","Sabatia","Hamisi","Wodanga","Bunyore","Gisambai"],
-    "Bungoma": ["Bungoma CBD","Kanduyi","Sikata","Webuye","Kimilili","Chwele","Bumula","Sirisia","Naitiri","Malakisi"],
-    "Busia": ["Busia Town","Malaba","Nambale","Funyula","Budalangi","Amagoro","Port Victoria","Matayos","Alupe","Angurai"],
-    "Siaya": ["Siaya Town","Bondo","Ugunja","Yala","Ukwala","Usenge","Sega (Siaya)","Nyang'oma Kogelo","Uranga","Yenga"],
-    "Homa Bay": ["Homa Bay Central","Asego","Arujo","Kalanya","Kanyabala","Katuma","Posta/Bonde","Oyugis","Kendu Bay","Rangwe","Ndhiwa","Mbita","Sindo","Kabondo","Kasipul","Karachuonyo"],
-    "Migori": ["Migori Town","Rongo","Awendo","Isebania","Kehancha","Macalder","Muhuru Bay","Uriri","Ntimaru","Suna"],
-    "Kisii": ["Kisii CBD","Milimani","Nyanchwa","Nyamataro","Daraja Mbili","Mwembe","Jogoo","Nyamage","Nyakoe","Nyangena","Gesonso"],
-    "Nyamira": ["Nyamira Town","Keroka","Ekerenyo","Nyansiongo","Manga","Ikonge","Magwagwa","Nyamaiya","Bomwagamo","Ainapngetuny"]
-  };
-  const NK_TIER1 = ["Kisumu", "Nairobi", "Mombasa"];
-  const NK_COUNTY_LABEL = {
-    "Uasin Gishu": "Uasin Gishu (Eldoret)",
-    "Trans Nzoia": "Trans Nzoia (Kitale)",
-    "Kiambu": "Kiambu (Thika)",
-    "Kilifi": "Kilifi (Malindi)",
-    "Kwale": "Kwale (Diani)",
-    "Taita-Taveta": "Taita-Taveta (Voi)",
-    "West Pokot": "West Pokot (Kapenguria)",
-    "Vihiga": "Vihiga (Mbale)",
-    "Nyandarua": "Nyandarua (Ol Kalou)",
-    "Turkana": "Turkana (Lodwar)",
-    "Samburu": "Samburu (Maralal)",
-    "Elgeyo-Marakwet": "Elgeyo-Marakwet (Iten)",
-    "Nandi": "Nandi (Kapsabet)",
-    "Baringo": "Baringo (Kabarnet)",
-    "Laikipia": "Laikipia (Nanyuki)",
-    "Tharaka-Nithi": "Tharaka-Nithi (Chuka)",
-    "Kirinyaga": "Kirinyaga (Kerugoya)",
-    "Makueni": "Makueni (Wote)"
-  };
+/* ══════════════════════════════════════════════════════════════
+   PROPERTY TYPES + AMENITIES — must mirror post-listing.html exactly
+   ══════════════════════════════════════════════════════════════ */
+const NK_CATEGORIES = {
+  apartment: { label: 'Apartment', group: 'standard' },
+  house:     { label: 'House',     group: 'standard' },
+  boarding:  { label: 'Boarding House', group: 'boarding' },
+  airbnb:    { label: 'Airbnb / Holiday Rental', group: 'airbnb' },
+};
+const NK_AMENITIES = [
+  { key:'has_water', label:'Water supply' },
+  { key:'has_electricity', label:'Electricity' },
+  { key:'has_security', label:'Security' },
+  { key:'has_solar', label:'Solar power' },
+  { key:'has_wifi', label:'WiFi' },
+  { key:'has_parking', label:'Parking' },
+  { key:'has_balcony', label:'Balcony' },
+  { key:'has_private_bathroom', label:'Private bathroom' },
+  { key:'has_shared_bathroom', label:'Shared bathroom' },
+  { key:'has_study_area', label:'Study area' },
+  { key:'has_gym', label:'Gym' },
+  { key:'has_pool', label:'Swimming pool' },
+  { key:'has_pets_allowed', label:'Pets allowed' },
+  { key:'has_backup_power', label:'Backup power' },
+];
+const NK_FREQ_LABEL = { month:'/month', once:'', night:'/night', term:'/term', week:'/week' };
+const NK_FREQ_META  = { month:'Monthly — negotiable', once:'Asking price — negotiable', night:'Nightly rate — negotiable', term:'Per term — negotiable', week:'Weekly rate — negotiable' };
 
-  function nkCountyLabel(county) { return NK_COUNTY_LABEL[county] || county; }
+const NK_COUNTIES = [
+  "Mombasa","Kwale","Kilifi","Tana River","Lamu","Taita-Taveta","Garissa","Wajir","Mandera",
+  "Marsabit","Isiolo","Meru","Tharaka-Nithi","Embu","Kitui","Machakos","Makueni","Nyandarua",
+  "Nyeri","Kirinyaga","Murang'a","Kiambu","Turkana","West Pokot","Samburu","Trans Nzoia",
+  "Uasin Gishu","Elgeyo-Marakwet","Nandi","Baringo","Laikipia","Nakuru","Narok","Kajiado",
+  "Kericho","Bomet","Kakamega","Vihiga","Bungoma","Busia","Siaya","Kisumu","Homa Bay",
+  "Migori","Kisii","Nyamira","Nairobi"
+].sort();
+const NK_AREAS_BY_COUNTY = {
+  "Kisumu": ["Ahero","Car Wash","Dunga","Elgon View","Kanyakwar","Kibos","Kibuye","Kisumu CBD","Kombewa","Kondele","Luanda","Mamboleo","Manyatta","Maseno","Matibabu","Migosi","Milimani","Nyalenda","Nyamasaria","Obunga","Otonglo","Riat Hills","Sega"],
+  "Nairobi": ["Nairobi CBD","Westlands","Parklands","Highridge","Kangemi","Kitisuru","Runda","Loresho","Muthaiga","Gigiri","Spring Valley","Nyari","Rosslyn","Thome","Garden Estate","Ridgeways","Kilimani","Kileleshwa","Lavington","Kawangware","Hurlingham","Upper Hill","Adams Arcade","Karen","Langata","South B","South C","Nairobi West","Madaraka","Otiende","Kibera","Woodley","Roysambu","Zimmerman","Kahawa West","Githurai","Mirema","Kasarani","Mwiki","Njiru","Ruaraka","Baba Dogo","Mathare","Huruma","Pipeline","Imara Daima","Nyayo Estate","Dandora","Kariobangi","Kayole","Komarock","Utawala","Tassia","Umoja","Buruburu","Donholm","Makadara","Eastleigh","Ngara","Pangani"],
+  "Mombasa": ["Mombasa CBD (Old Town)","Nyali","Bamburi","Kizingo","Tudor","Likoni","Changamwe","Kisauni","Shanzu","Mkomani","Bombolulu","Kiembeni","Port Reitz","Miritini","Chaani","Migadini","Kongowea","Junda","Mwakirunge","Mtopanga","Jomvu","Magongo"],
+  "Nakuru": ["Nakuru CBD","Milimani","Section 58","Langalanga","Pangani","Shabab","Bangladesh","Lanet","Free Area","Freehold","Ngata","Bahati","London","Afraha","Naka","Kiamunyi","White House","Pipeline","Kaptembwa","Rhoda","Menengai","Naivasha"],
+  "Uasin Gishu": ["Eldoret CBD","Kapsoya","Langas","Kimumu","Huruma","Elgon View","Pioneer","Annex","Rupa Village","Hazina","Kamukunji","Munyaka","West Indies"],
+  "Kiambu": ["Thika CBD","Landless","Makongeni","Section 9","Blue Post","Thika Greens","Kiganjo","Tora","Ngoingwa","Bahati Ridge","Kisii Estate","Ruiru","Membley","Kamakis","Juja","Kiambu Town","Kikuyu","Limuru"],
+  "Kilifi": ["Kilifi Town","Malindi CBD","Kisumu Ndogo","Majengo (Malindi)","Silversands","Watamu","Mtwapa","Mariakani","Kaloleni","Mazeras","Magarini"],
+  "Machakos": ["Machakos CBD","Mua Hills","Kalama","Mitaboni","Athi River","Mlolongo","Syokimau","Katani","Kangundo Road","Kola"],
+  "Kakamega": ["Kakamega CBD","Amalemba","Milimani","Shirere","Lurambi","Mahiakalo","Sudi","Mumias","Butere","Malava","Lugari"],
+  "Meru": ["Meru CBD","Makutano","Kinoru","Ntharene","Nkubu","Maua","Timau","Laare","Mikinduri","Kianjai"],
+  "Nyeri": ["Nyeri CBD","Ring Road","Mountain View Estate","Garden Estate","Kamakwa","Ruring'u","Majengo","Karatina","Othaya Town","Mukurweini Town","Naromoru"],
+  "Kericho": ["Kericho CBD","Kapsoit","Ainamoi","Litein","Kipkelion","Fort Ternan","Sosiot","Chepseon","Kedowa","Cheborge"],
+  "Trans Nzoia": ["Kitale CBD","Milimani","Mitume","Matisi","Tuwan","Endebess","Kiminini","Kwanza","Saboti","Cherangany"],
+  "Kwale": ["Kwale Town","Diani","Ukunda","Tiwi","Msambweni","Lunga Lunga","Matuga","Kinango","Waa","Shimoni","Mackinon Road","Vanga"],
+  "Tana River": ["Hola","Garsen","Bura","Galole","Wenje","Kipini","Madogo","Chewele","Bangale","Wayu"],
+  "Lamu": ["Lamu Town","Mokowe","Faza","Matondoni","Mpeketoni","Witu","Hindi","Kizingitini","Shela","Kiunga"],
+  "Taita-Taveta": ["Voi","Taveta","Wundanyi","Mwatate","Mgange","Wesu","Bura (Taita)","Mbale (Taveta)","Tausa","Werugha"],
+  "Garissa": ["Garissa Town","Dadaab","Balambala","Fafi","Ijara","Lagdera","Modogashe","Bura (Garissa)","Sankuri","Hulugho"],
+  "Wajir": ["Wajir Town","Habaswein","Griftu","Eldas","Tarbaj","Bute","Buna","Diif","Elnur","Khorof Harar"],
+  "Mandera": ["Mandera Town","Rhamu","Banissa","Lafey","Takaba","El Wak","Kotulo","Fino","Arabia","Warankara"],
+  "Marsabit": ["Marsabit Town","Moyale","Loiyangalani","North Horr","Laisamis","Sololo","Turbi","Maikona","Illeret","Dukana"],
+  "Isiolo": ["Isiolo Town","Garbatulla","Merti","Kinna","Oldonyiro","Burat","Bulapesa","Wabera","Chari","Cherab"],
+  "Tharaka-Nithi": ["Chuka","Marimanti","Kathwana","Chogoria","Gatunga","Nkondi","Igambang'ombe","Muthambi","Mitheru","Tunyai"],
+  "Embu": ["Embu Town","Runyenjes","Manyatta","Siakago","Ishiara","Kiritiri","Kyeni","Karurumo","Kirimari","Gaturi"],
+  "Kitui": ["Kitui Town","Mwingi","Mutomo","Mutitu","Migwani","Zombe","Kabati","Ikutha","Mutha","Kanyangi"],
+  "Makueni": ["Wote","Emali","Sultan Hamud","Kibwezi","Kilome","Mbooni","Kaiti","Nunguni","Makindu","Tawa"],
+  "Nyandarua": ["Ol Kalou","Engineer","Njabini","Nyahururu","Ndaragwa","Ol Joro Orok","North Kinangop","South Kinangop","Kipipiri","Shamata"],
+  "Kirinyaga": ["Kerugoya","Kutus","Sagana","Kagio","Wang'uru","Baricho","Kianyaga","Kimbimbi","Mwea","Kutus Town"],
+  "Murang'a": ["Murang'a Town","Kenol","Kangema","Maragua","Kandara","Kigumo","Gatanga","Kiria-ini","Kabati","Makuyu"],
+  "Turkana": ["Lodwar","Kakuma","Lokichogio","Lokitaung","Kalokol","Lokichar","Kainuk","Todonyang","Kibish","Katilu"],
+  "West Pokot": ["Kapenguria","Makutano (Pokot)","Chepareria","Kacheliba","Sigor","Alale","Chepnyal","Lomut","Ortum","Kongelai"],
+  "Samburu": ["Maralal","Baragoi","Wamba","Archer's Post","Suguta Marmar","Kirisia","South Horr","Poro","Loosuk","Kisima"],
+  "Elgeyo-Marakwet": ["Iten","Tambach","Kapsowar","Chepkorio","Kapyego","Kapsait","Chesoi","Kaptarakwa","Kamogoi","Kabiemit"],
+  "Nandi": ["Kapsabet","Nandi Hills","Mosoriot","Kabiyet","Kaptumo","Kobujoi","Kapsisiywa","Kapsabet Town","Chepterit","Kilibwoni"],
+  "Baringo": ["Kabarnet","Eldama Ravine","Marigat","Kabartonjo","Mogotio","Kimalel","Kabernet Town","Loruk","Kampi ya Samaki","Mochongoi"],
+  "Laikipia": ["Nanyuki","Nyahururu","Rumuruti","Dol Dol","Kinamba","Ngobit","Sipili","Marmanet","Mukogodo","Salama"],
+  "Narok": ["Narok Town","Kilgoris","Ololulunga","Suswa","Ewaso Ngiro","Nairagie Enkare","Naikarra","Ntulele","Melili","Lolgorian"],
+  "Kajiado": ["Kajiado Town","Ngong","Kitengela","Ongata Rongai","Kiserian","Loitokitok","Namanga","Isinya","Bissil","Mashuuru"],
+  "Bomet": ["Bomet Town","Sotik","Longisa","Mulot","Chepalungu","Silibwet","Sigor (Bomet)","Chebunyo","Kaplong","Mogogosiek"],
+  "Vihiga": ["Mbale","Luanda (Vihiga)","Chavakali","Majengo (Vihiga)","Emuhaya","Sabatia","Hamisi","Wodanga","Bunyore","Gisambai"],
+  "Bungoma": ["Bungoma CBD","Kanduyi","Sikata","Webuye","Kimilili","Chwele","Bumula","Sirisia","Naitiri","Malakisi"],
+  "Busia": ["Busia Town","Malaba","Nambale","Funyula","Budalangi","Amagoro","Port Victoria","Matayos","Alupe","Angurai"],
+  "Siaya": ["Siaya Town","Bondo","Ugunja","Yala","Ukwala","Usenge","Sega (Siaya)","Nyang'oma Kogelo","Uranga","Yenga"],
+  "Homa Bay": ["Homa Bay Central","Asego","Arujo","Kalanya","Kanyabala","Katuma","Posta/Bonde","Oyugis","Kendu Bay","Rangwe","Ndhiwa","Mbita","Sindo","Kabondo","Kasipul","Karachuonyo"],
+  "Migori": ["Migori Town","Rongo","Awendo","Isebania","Kehancha","Macalder","Muhuru Bay","Uriri","Ntimaru","Suna"],
+  "Kisii": ["Kisii CBD","Milimani","Nyanchwa","Nyamataro","Daraja Mbili","Mwembe","Jogoo","Nyamage","Nyakoe","Nyangena","Gesonso"],
+  "Nyamira": ["Nyamira Town","Keroka","Ekerenyo","Nyansiongo","Manga","Ikonge","Magwagwa","Nyamaiya","Bomwagamo","Ainapngetuny"]
+};
+const NK_COUNTY_LABEL = {
+  "Uasin Gishu": "Uasin Gishu (Eldoret)", "Trans Nzoia": "Trans Nzoia (Kitale)", "Kiambu": "Kiambu (Thika)",
+  "Kilifi": "Kilifi (Malindi)", "Kwale": "Kwale (Diani)", "Taita-Taveta": "Taita-Taveta (Voi)",
+  "West Pokot": "West Pokot (Kapenguria)", "Vihiga": "Vihiga (Mbale)", "Nyandarua": "Nyandarua (Ol Kalou)",
+  "Turkana": "Turkana (Lodwar)", "Samburu": "Samburu (Maralal)", "Elgeyo-Marakwet": "Elgeyo-Marakwet (Iten)",
+  "Nandi": "Nandi (Kapsabet)", "Baringo": "Baringo (Kabarnet)", "Laikipia": "Laikipia (Nanyuki)",
+  "Tharaka-Nithi": "Tharaka-Nithi (Chuka)", "Kirinyaga": "Kirinyaga (Kerugoya)", "Makueni": "Makueni (Wote)"
+};
+function nkCountyLabel(county) { return NK_COUNTY_LABEL[county] || county; }
+const NK_AREA_TO_COUNTY = {};
+for (const [county, areas] of Object.entries(NK_AREAS_BY_COUNTY)) { areas.forEach(a => { NK_AREA_TO_COUNTY[a] = county; }); }
+function nkCountyForArea(area) { return NK_AREA_TO_COUNTY[area] ? nkCountyLabel(NK_AREA_TO_COUNTY[area]) : 'Kenya'; }
+function nkListingCounty(l) { if (!l) return 'Kenya'; return l.county ? nkCountyLabel(l.county) : nkCountyForArea(l.area); }
 
-  // Reverse lookup: area name -> county (used to fix location text that used
-  // to hardcode 'Kisumu' — meta description, live map query, WhatsApp share).
-  const NK_AREA_TO_COUNTY = {};
-  for (const [county, areas] of Object.entries(NK_AREAS_BY_COUNTY)) {
-    areas.forEach(a => { NK_AREA_TO_COUNTY[a] = county; });
-  }
-  function nkCountyForArea(area) {
-    return NK_AREA_TO_COUNTY[area] ? nkCountyLabel(NK_AREA_TO_COUNTY[area]) : 'Kenya';
-  }
-
-  // ── Preferred county resolver for a listing: use the listing's own
-  // `county` column when the seller/admin has set it (e.g. via the edit
-  // forms in dashboard.html / admin.html), and fall back to the reverse
-  // area→county lookup above for older rows that don't have it set yet. ──
-  function nkListingCounty(l) {
-    if (!l) return 'Kenya';
-    return l.county ? nkCountyLabel(l.county) : nkCountyForArea(l.area);
-  }
-
-  function nkPopulateFooterCounties() {
-    const el = document.getElementById('footer-counties');
-    if (!el) return;
-    el.innerHTML = NK_COUNTIES.map(county => {
-      const hasAreas = (NK_AREAS_BY_COUNTY[county] || []).length > 0;
-      const href = hasAreas ? `listings.html?county=${encodeURIComponent(county)}` : '#';
-      return `<a href="${href}">${nkCountyLabel(county)}</a>`;
-    }).join('');
-  }
-
+function nkPopulateFooterCounties() {
+  const el = document.getElementById('footer-counties');
+  if (!el) return;
+  el.innerHTML = NK_COUNTIES.map(county => {
+    const hasAreas = (NK_AREAS_BY_COUNTY[county] || []).length > 0;
+    const href = hasAreas ? `listings.html?county=${encodeURIComponent(county)}` : '#';
+    return `<a href="${href}">${nkCountyLabel(county)}</a>`;
+  }).join('');
+}
 
 const listingNumber = new URLSearchParams(window.location.search).get('id');
-let listingId = null; // set to the real uuid after we look the listing up below
+let listingId = null;
 
 let listing      = null;
 let photos       = [];
@@ -1276,36 +1162,25 @@ let buyerToken   = null;
 let buyerName    = '';
 let buyerPhone   = '';
 let threadMessages = [];
-let currentBuyerId = null; // signed-in buyer's auth id, if any — lets a conversation follow them across devices
+let currentBuyerId = null;
 
-/* ── Multi-unit state ── */
-let listingUnits    = [];   // rows from listing_units for this listing
+/* Boarding-house room-tier state (reuses listing_units table) */
+let listingUnits    = [];
 let isListingOwner  = false;
 
-/* ── Flexible gallery frame limits ──
-   The gallery frame's aspect ratio now follows each photo's own
-   width/height instead of forcing everything into 16:9. These two
-   constants just stop an extreme photo (e.g. a tall receipt-shaped
-   screenshot, or a super-wide panorama) from making the frame look
-   broken — anything outside this range gets clamped back to it. */
-const NK_GALLERY_MIN_RATIO = 0.75; // tallest allowed frame (~4:5) — prevents oversized portrait frames
-const NK_GALLERY_MAX_RATIO = 1.9;  // widest allowed frame (~19:10 panorama)
+const NK_GALLERY_MIN_RATIO = 0.75;
+const NK_GALLERY_MAX_RATIO = 1.9;
 
-/* CONTACT PROTECTION state — see handleContactClick() further down.
-   sellerPhoneRaw stays null until a successful reveal_seller_contact()
-   call returns it; contactRevealed just avoids re-fetching/re-logging
-   on a second click in the same page visit. */
 let sellerPhoneRaw   = null;
 let contactRevealed  = false;
 let contactRevealBusy = false;
 
-/* Safe localStorage wrappers — private browsing / storage-disabled
-   browsers throw on getItem/setItem instead of failing quietly. */
+let leafletMap = null, leafletMarker = null;
+
 function nkLSGet(key) { try { return localStorage.getItem(key); } catch(e) { return null; } }
 function nkLSSet(key, val) { try { localStorage.setItem(key, val); return true; } catch(e) { return false; } }
 function nkLSRemove(key) { try { localStorage.removeItem(key); } catch(e) {} }
 
-/* ── Buyer token ── */
 function getBuyerToken()    { return nkLSGet('nk_buyer_' + listingId); }
 function setBuyerToken(t)   { nkLSSet('nk_buyer_' + listingId, t); nkLSSet('nk_buyer_name_' + listingId, buyerName); nkLSSet('nk_buyer_phone_' + listingId, buyerPhone); }
 function getSavedBuyerInfo(){ buyerName = nkLSGet('nk_buyer_name_' + listingId)||''; buyerPhone = nkLSGet('nk_buyer_phone_' + listingId)||''; }
@@ -1325,53 +1200,44 @@ async function loadListing() {
   try {
     const { data, error } = await db
       .from('listings')
-      /* NOTE: profiles(phone) is deliberately NOT selected here. The seller's
-         real number is never shipped to the browser on page load — it is
-         fetched only once a buyer has unlocked contact (see handleContactClick
-         and the CONTACT PROTECTION block near the bottom of this script). This
-         is what stops bots from bulk-scraping every seller's number straight
-         out of the page source or browser memory. Multi-unit properties also
-         pull their listing_units rows here (unit types + live availability). */
-      .select('*, profiles(full_name, created_at, verification_status, hide_buyer_contact), listing_photos(*), listing_units(*), listing_videos(*)')
+      /* Seller's real phone/whatsapp is never selected here — only revealed
+         via handleContactClick()'s reveal_seller_contact RPC after a click,
+         same protection model as before. */
+      .select('*, profiles(full_name, created_at, verification_status), listing_photos(*), listing_units(*)')
       .eq('listing_number', parseInt(listingNumber, 10))
       .single();
 
     if (error) {
-      // PGRST116 = no row found — a genuine 404, not a failure
       if (error.code === 'PGRST116') { showNotFound(); } else { showLoadError(); }
       return;
     }
     if (!data) { showNotFound(); return; }
 
     listing = data;
-    listingId = data.id; // real uuid — everything else in this file (messages, photos, RPCs) uses this
+    listingId = data.id;
     listingUnits = (data.listing_units || []).sort((a,b) => (a.id||0) - (b.id||0));
 
     const isFullyActive = (data.status === 'active') && !data.is_disabled && !data.recycle_bin;
 
-    // Determine viewer identity once, up front — used both for the
-    // disabled-listing gate below and for the seller "Manage units" panel.
     const { data: { session } } = await nkSessionPromise;
     const viewerUserId = session?.user?.id || null;
     isListingOwner = !!viewerUserId && (data.seller_id === viewerUserId);
-    currentBuyerId = isListingOwner ? null : viewerUserId; // don't treat the seller viewing their own listing as a "buyer"
+    currentBuyerId = isListingOwner ? null : viewerUserId;
 
     if (isFullyActive) {
-      trackView(data);   // ← handles one-per-device atomically
+      trackView(data);
       renderListing(data);
       renderLiveMap(data);
       loadSimilar(data.area, data.id);
       handleBuyerThread(data);
-      loadSellerReviewStats(data.seller_id);   // ★ seller rating summary
-      nkCheckReviewPrompt(data.id);            // ★ "did you secure this property?" prompt
-      nkUpdateReportButtonState(data.id);      // ★ show "Reported ✓" if already flagged from this browser
+      loadSellerReviewStats(data.seller_id);
+      nkCheckReviewPrompt(data.id);
+      nkUpdateReportButtonState(data.id);
       if (isListingOwner) renderManageUnitsPanel();
       return;
     }
 
-    /* Disabled/recycled/pending — check if seller or admin */
     let isOwner = isListingOwner, isAdmin = false;
-
     if (viewerUserId && !isOwner) {
       const { data: profile } = await db.from('profiles').select('role').eq('id', viewerUserId).single();
       isAdmin = (profile?.role === 'admin');
@@ -1386,56 +1252,29 @@ async function loadListing() {
 }
 
 /* ════════════════════════════════════════════════════
-   VIEWS — One per device per listing, atomic increment
-   ════════════════════════════════════════════════════
-   HOW IT WORKS:
-   1. We check localStorage for the key 'nk_viewed_<id>'.
-   2. If NOT present → this device hasn't counted yet:
-        a. Set the key immediately (prevents double-fire
-           if user has two tabs open at the same time).
-        b. Call the Supabase RPC which atomically does
-           UPDATE listings SET views = views + 1 WHERE id = ?
-           and returns the new value.
-        c. Display the returned (fresh) count.
-   3. If key IS present → already counted, just show
-      the current value from the fetched listing data.
-   This means repeated visits, refreshes, or multiple
-   tabs on the same device never double-count.
+   VIEWS
 ════════════════════════════════════════════════════ */
 async function trackView(data) {
   const viewedKey = 'nk_viewed_' + listingId;
   const alreadyCounted = !!nkLSGet(viewedKey);
 
   if (!alreadyCounted) {
-    /* Mark immediately to block any race (second tab, double load) */
     nkLSSet(viewedKey, '1');
-
-    /* Atomic server-side increment via RPC */
-    const { data: newCount, error } = await db.rpc('increment_listing_views', {
-      listing_id: listingId
-    });
-
+    const { data: newCount, error } = await db.rpc('increment_listing_views', { listing_id: listingId });
     if (!error && newCount !== null) {
-      /* Show the fresh server count */
       updateViewsDisplay(newCount);
     } else {
-      /* RPC not available yet — fall back to client-side increment */
       const fallbackCount = (data.views || 0) + 1;
       await db.from('listings').update({ views: fallbackCount }).eq('id', listingId);
       updateViewsDisplay(fallbackCount);
     }
   } else {
-    /* Already counted — just display stored value */
     updateViewsDisplay(data.views || 0);
   }
 }
-
 function updateViewsDisplay(count) {
   const el = document.getElementById('listing-views');
-  if (el) {
-    el.textContent = `${Number(count).toLocaleString('en-KE')} view${count !== 1 ? 's' : ''}`;
-    el.classList.remove('views-loading');
-  }
+  if (el) { el.textContent = `${Number(count).toLocaleString('en-KE')} view${count !== 1 ? 's' : ''}`; el.classList.remove('views-loading'); }
 }
 
 /* ════════════════════════════════════════════════════
@@ -1446,7 +1285,6 @@ function showNotFound() {
   document.getElementById('not-found').style.display = 'block';
   document.getElementById('breadcrumb-area').textContent = 'Not found';
 }
-
 function showSellerDisabledView(data) {
   document.getElementById('skeleton-wrap').style.display = 'none';
   document.getElementById('breadcrumb-area').textContent = escHtml(data.title || 'Your listing');
@@ -1489,27 +1327,20 @@ function showSellerDisabledView(data) {
 }
 
 /* ════════════════════════════════════════════════════
-   RENDER LISTING
+   BUYER THREAD
 ════════════════════════════════════════════════════ */
 async function handleBuyerThread(data) {
   buyerToken = getBuyerToken();
 
-  // Signed-in buyer: look up their conversation for THIS listing by
-  // account, not just this device's local token — this is what makes a
-  // conversation follow them to a new phone/browser.
   if (currentBuyerId) {
     const { data: existing } = await db
-      .from('messages')
-      .select('*')
-      .eq('listing_id', listingId)
-      .eq('buyer_id', currentBuyerId)
-      .order('created_at', { ascending: true })
-      .limit(1);
+      .from('messages').select('*').eq('listing_id', listingId).eq('buyer_id', currentBuyerId)
+      .order('created_at', { ascending: true }).limit(1);
     if (existing && existing.length) {
       buyerToken = existing[0].buyer_token || buyerToken;
       buyerName  = existing[0].buyer_name  || '';
       buyerPhone = existing[0].buyer_phone || '';
-      if (buyerToken) setBuyerToken(buyerToken); // also cache locally for this device
+      if (buyerToken) setBuyerToken(buyerToken);
       document.getElementById('enquiry-form').style.display = 'none';
       await showConversationCard();
       if (typeof NKGlobalChat !== 'undefined') NKGlobalChat.refresh();
@@ -1520,17 +1351,22 @@ async function handleBuyerThread(data) {
   if (buyerToken) {
     getSavedBuyerInfo();
     document.getElementById('enquiry-form').style.display = 'none';
-    await showConversationCard();   // wait for threadMessages to actually load first
+    await showConversationCard();
     if (typeof NKGlobalChat !== 'undefined') NKGlobalChat.refresh();
   } else {
-    document.getElementById('enq-message').value =
-      `Hello, I'm interested in "${data.title}". Is it still available?`;
+    document.getElementById('enq-message').value = `Hello, I'm interested in "${data.title}". Is it still available?`;
   }
 }
 
+/* ════════════════════════════════════════════════════
+   RENDER LISTING — driven entirely by the post-listing.html schema
+════════════════════════════════════════════════════ */
 function renderListing(l) {
+  const meta = NK_CATEGORIES[l.category] || { label: l.category, group: 'standard' };
+  const freq = l.price_frequency || (meta.group === 'boarding' ? 'month' : meta.group === 'airbnb' ? 'night' : 'once');
+
   document.title = `${l.title} — Nyumba254`;
-  const ogDesc = `${l.title} in ${l.area}, ${nkListingCounty(l)}. ${l.price_type==='rent'?'KES '+Number(l.price).toLocaleString()+'/month rent':'For sale at KES '+Number(l.price).toLocaleString()}. Contact seller on Nyumba254.`;
+  const ogDesc = `${l.title} in ${l.area}, ${nkListingCounty(l)}. KES ${Number(l.price||0).toLocaleString()}${NK_FREQ_LABEL[freq]||''}. Contact seller on Nyumba254.`;
   document.querySelector('meta[name="description"]').setAttribute('content', ogDesc);
   document.getElementById('og-title').setAttribute('content', `${l.title} — Nyumba254`);
   document.getElementById('og-description').setAttribute('content', ogDesc);
@@ -1550,84 +1386,51 @@ function renderListing(l) {
   currentPhoto = cover ? Math.max(0, photos.indexOf(cover)) : 0;
   renderGallery();
 
-  if (l.is_featured) document.getElementById('featured-badge').style.display = 'flex';
+  if (l.verification_status === 'verified' || l.is_admin_verified) document.getElementById('featured-badge').style.display = 'flex';
 
-  const catLabel = l.category.charAt(0).toUpperCase() + l.category.slice(1);
   document.getElementById('listing-badges').innerHTML = `
-    <span class="badge ${l.category}">${catLabel}</span>
-    <span class="badge ${l.price_type}">${l.price_type==='sale'?'For sale':'To let / rent'}</span>
-    ${l.is_multi_unit?'<span class="badge multiunit">Multi-unit property</span>':''}
-    ${l.furnished?'<span class="badge standard">Furnished</span>':''}
+    <span class="badge ${l.category}">${meta.label}</span>
+    <span class="badge freq">${freq === 'once' ? 'For sale' : freq === 'month' ? 'To let / monthly' : freq === 'night' ? 'Short stay' : freq === 'week' ? 'Weekly' : 'Per term'}</span>
   `;
 
   document.getElementById('listing-title').textContent = l.title;
-  // Location line: County · Area, Sub-area — Address (each part only shown when present)
   document.getElementById('listing-loc-text').textContent =
-    `${nkListingCounty(l)} · ${l.area}${l.sub_area?', '+l.sub_area:''}${l.address?' — '+l.address:''}`;
+    `${nkListingCounty(l)} · ${l.area}${l.address ? ' — ' + l.address : ''}`;
 
-  /* ── Price display: single-unit shows one price; multi-unit shows the
-     range across unit types (falls back to price_min/price_max columns
-     if listing_units hasn't loaded any rows for some reason). ── */
-  if (l.is_multi_unit) {
-    const prices = listingUnits.map(u => Number(u.price)).filter(p => !isNaN(p));
-    const min = prices.length ? Math.min(...prices) : Number(l.price_min) || Number(l.price) || 0;
-    const max = prices.length ? Math.max(...prices) : Number(l.price_max) || Number(l.price) || 0;
-    const suffix = l.price_type === 'rent' ? '<span>/month</span>' : '';
-    document.getElementById('listing-price').innerHTML = min === max
-      ? `KES ${min.toLocaleString('en-KE')}${suffix}`
-      : `KES ${min.toLocaleString('en-KE')} – ${max.toLocaleString('en-KE')}${suffix}`;
-    const totalUnits = l.total_units || listingUnits.reduce((s,u) => s + (u.quantity_total ?? u.quantity_available ?? 0), 0);
-    document.getElementById('listing-price-meta').textContent =
-      `${totalUnits} unit${totalUnits!==1?'s':''} in this property${l.num_buildings?` · ${l.num_buildings} building${l.num_buildings!==1?'s':''}`:''} — price varies by unit type`;
-  } else {
-    document.getElementById('listing-price').innerHTML =
-      `KES ${Number(l.price).toLocaleString('en-KE')}${l.price_type==='rent'?'<span>/month</span>':''}`;
-    document.getElementById('listing-price-meta').textContent =
-      l.price_type==='rent'?'Monthly rent — negotiable':'Asking price — negotiable';
-  }
-  /* Views shown as loading until trackView() resolves */
+  document.getElementById('listing-price').innerHTML =
+    `KES ${Number(l.price||0).toLocaleString('en-KE')}${NK_FREQ_LABEL[freq] ? `<span>${NK_FREQ_LABEL[freq]}</span>` : ''}`;
+  document.getElementById('listing-price-meta').textContent = NK_FREQ_META[freq] || 'Negotiable';
+
   document.getElementById('listing-views').textContent = `${l.views||0} views`;
 
+  /* ── Specs — built from l.details (jsonb) per property-type group ── */
+  const d = l.details || {};
   const specs = [];
-  document.getElementById('specs-card-title').textContent = l.is_multi_unit ? 'Property details' : 'Property details';
-  if (l.is_multi_unit) {
-    const totalUnits = l.total_units || listingUnits.reduce((s,u) => s + (u.quantity_total ?? u.quantity_available ?? 0), 0);
-    const availUnits = listingUnits.reduce((s,u) => s + (u.quantity_available ?? 0), 0);
-    specs.push({ icon:typeIcon, val:totalUnits, lbl:'Total units' });
-    specs.push({ icon:bedIcon,  val:availUnits, lbl:'Currently available' });
-    if (l.num_buildings) specs.push({ icon:catIcon, val:l.num_buildings, lbl:'Buildings' });
-  } else {
-    if (l.bedrooms !== null) specs.push({ icon:bedIcon, val:l.bedrooms==0?'Studio':l.bedrooms, lbl:l.bedrooms==0?'Bedsitter':'Bedrooms' });
-    if (l.bathrooms)  specs.push({ icon:bathIcon, val:l.bathrooms, lbl:'Bathrooms' });
-    if (l.size_sqm)   specs.push({ icon:sizeIcon, val:l.size_sqm+'m²', lbl:'Floor area' });
-    specs.push({ icon:furnIcon, val:l.furnished?'Yes':'No', lbl:'Furnished' });
-  }
-  specs.push({ icon:typeIcon, val:l.price_type==='rent'?'Rent':'Sale', lbl:'Listing type' });
-  specs.push({ icon:catIcon,  val:catLabel, lbl:'Category' });
+  document.getElementById('specs-card-title').textContent = 'Property details';
 
-  /* ══════════════════════════════════════
-     AMENITIES / EXTRA DETAILS
-     These booleans live on the listings row (has_parking, has_water,
-     has_security, has_wifi, has_backup_power, has_gym, has_pool,
-     has_balcony) and are editable later by the seller (dashboard.html)
-     or admin (admin.html) — this page never needed to know about them
-     before. Pushing them into the same specs grid means any of these
-     the seller/admin fills in later shows up here automatically, and
-     any left blank/false are simply skipped — no layout ever breaks.
-     To support a future amenity, just add one line to NK_AMENITY_DEFS. ══*/
-  const NK_AMENITY_DEFS = [
-    { key:'has_parking',      icon:parkIcon,     lbl:'Parking' },
-    { key:'has_water',        icon:waterIcon,    lbl:'Water supply' },
-    { key:'has_security',     icon:securityIcon, lbl:'Security' },
-    { key:'has_wifi',         icon:wifiIcon,     lbl:'WiFi ready' },
-    { key:'has_backup_power', icon:powerIcon,    lbl:'Backup power' },
-    { key:'has_gym',          icon:gymIcon,      lbl:'Gym' },
-    { key:'has_pool',         icon:poolIcon,     lbl:'Swimming pool' },
-    { key:'has_balcony',      icon:balconyIcon,  lbl:'Balcony' },
-  ];
-  NK_AMENITY_DEFS.forEach(a => {
-    if (l[a.key]) specs.push({ icon:a.icon, val:'Yes', lbl:a.lbl });
-  });
+  if (meta.group === 'standard') {
+    if (l.category === 'apartment' && d.units) specs.push({ icon: unitsIcon, val: d.units, lbl: 'Units' });
+    if (d.bedrooms !== undefined && d.bedrooms !== null && d.bedrooms !== '') specs.push({ icon: bedIcon, val: d.bedrooms == 0 ? 'Studio' : d.bedrooms, lbl: d.bedrooms == 0 ? 'Bedsitter' : 'Bedrooms' });
+    if (d.bathrooms) specs.push({ icon: bathIcon, val: d.bathrooms, lbl: 'Bathrooms' });
+    if (d.size_sqm) specs.push({ icon: sizeIcon, val: d.size_sqm + 'm²', lbl: 'Floor area' });
+    if (d.furnished) specs.push({ icon: furnIcon, val: d.furnished === 'yes' ? 'Yes' : d.furnished === 'partial' ? 'Partial' : 'No', lbl: 'Furnished' });
+    if (d.parking) specs.push({ icon: parkIcon, val: nkTitleCase(d.parking), lbl: 'Parking' });
+    if (d.security) specs.push({ icon: securityIcon, val: nkTitleCase(d.security), lbl: 'Security' });
+  } else if (meta.group === 'boarding') {
+    const totalUnits = listingUnits.reduce((s,u) => s + (u.quantity_total ?? u.quantity_available ?? 0), 0) || d.total_beds || 0;
+    const availUnits = listingUnits.reduce((s,u) => s + (u.quantity_available ?? 0), 0);
+    specs.push({ icon: unitsIcon, val: totalUnits, lbl: 'Total bed spaces' });
+    specs.push({ icon: bedIcon,   val: availUnits, lbl: 'Currently open' });
+    specs.push({ icon: catIcon,   val: nkTitleCase(d.gender || 'mixed'), lbl: 'Residents' });
+    if (d.institution) specs.push({ icon: securityIcon, val: d.institution, lbl: 'Nearby' });
+  } else if (meta.group === 'airbnb') {
+    if (d.guests) specs.push({ icon: catIcon, val: d.guests, lbl: 'Guests' });
+    if (d.bedrooms) specs.push({ icon: bedIcon, val: d.bedrooms, lbl: 'Bedrooms' });
+    if (d.bathrooms) specs.push({ icon: bathIcon, val: d.bathrooms, lbl: 'Bathrooms' });
+    if (d.min_stay) specs.push({ icon: sizeIcon, val: `${d.min_stay} night${d.min_stay==1?'':'s'}`, lbl: 'Min. stay' });
+    if (d.checkin) specs.push({ icon: securityIcon, val: d.checkin, lbl: 'Check-in/out' });
+  }
+  specs.push({ icon: typeIcon, val: meta.label, lbl: 'Property type' });
 
   document.getElementById('specs-grid').innerHTML = specs.map(s=>`
     <div class="spec-item">
@@ -1636,32 +1439,39 @@ function renderListing(l) {
       <div class="spec-lbl">${s.lbl}</div>
     </div>`).join('');
 
+  /* ── Amenities — driven by l.amenities array against NK_AMENITIES ── */
+  const amenities = Array.isArray(l.amenities) ? l.amenities : [];
+  if (amenities.length) {
+    document.getElementById('amenities-card').style.display = 'block';
+    document.getElementById('amenities-grid').innerHTML = NK_AMENITIES
+      .filter(a => amenities.includes(a.key))
+      .map(a => `<div class="amenity-row"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>${a.label}</div>`)
+      .join('');
+  }
+
   if (l.description) {
     document.getElementById('desc-card').style.display = 'block';
     document.getElementById('desc-text').textContent = l.description;
   }
 
-  /* ── Available units card (buyer-facing) ── */
-  if (l.is_multi_unit) renderUnitAvailability();
-  renderVideoSection(l.listing_videos || []);
+  /* ── Boarding house room types (buyer-facing) + enquiry room-type select ── */
+  if (meta.group === 'boarding') renderUnitAvailability();
 
-  /* ── Enquiry form: unit-type + floor/position preference (multi-unit only) ── */
-  if (l.is_multi_unit && listingUnits.length) {
+  if (meta.group === 'boarding' && listingUnits.length) {
     document.getElementById('enq-unit-type-field').style.display = 'block';
-    document.getElementById('enq-unit-pref-field').style.display = 'block';
     const sel = document.getElementById('enq-unit-type');
-    sel.innerHTML = '<option value="">Any available unit</option>' + listingUnits
+    sel.innerHTML = '<option value="">Any available room</option>' + listingUnits
       .filter(u => (u.quantity_available ?? 0) > 0)
-      .map(u => `<option value="${escHtml(u.unit_label)}">${escHtml(u.unit_label)} — KES ${Number(u.price).toLocaleString('en-KE')}${l.price_type==='rent'?'/mo':''}</option>`)
+      .map(u => `<option value="${escHtml(u.unit_label)}">${escHtml(u.unit_label)} — KES ${Number(u.price).toLocaleString('en-KE')}/mo</option>`)
       .join('');
   }
 
-  /* Seller card */
+  /* ── Seller card ── */
   const profile = l.profiles || {};
-  const name = profile.full_name || 'Seller';
-  const initials = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  const sellerDisplayName = l.contact_name || profile.full_name || 'Seller';
+  const initials = sellerDisplayName.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
   document.getElementById('seller-avatar').textContent = initials;
-  document.getElementById('seller-name').textContent = name;
+  document.getElementById('seller-name').textContent = sellerDisplayName;
   document.getElementById('seller-since').textContent = profile.created_at
     ? `Member since ${new Date(profile.created_at).toLocaleDateString('en-KE',{month:'long',year:'numeric'})}`
     : '';
@@ -1669,42 +1479,31 @@ function renderListing(l) {
   document.getElementById('seller-verified-badge').style.display = nkIsVerifiedSeller ? 'inline-flex' : 'none';
   document.getElementById('seller-unverified-badge').style.display = nkIsVerifiedSeller ? 'none' : 'inline-flex';
 
-  const contactHidden = !!(l.contact_hidden || l.profiles?.hide_buyer_contact);
-  // Buttons stay visible either way now — clicking them when contact reveal
-  // is off pops a toast via handleContactClick() instead of hiding the buttons.
+  const contactHidden = !!l.contact_hidden;
   const phoneFieldEl = document.getElementById('enq-phone-field');
   if (phoneFieldEl) phoneFieldEl.style.display = contactHidden ? 'none' : 'block';
 
   document.getElementById('skeleton-wrap').style.display = 'none';
   document.getElementById('listing-content').style.display = 'block';
 
-  // ── JSON-LD structured data so Google can show price/availability
-  // directly in search results for this listing. ──
-  const jsonLdPrice = l.is_multi_unit
-    ? (listingUnits.length ? Math.min(...listingUnits.map(u => Number(u.price)).filter(p => !isNaN(p))) : Number(l.price_min) || Number(l.price) || 0)
-    : Number(l.price) || 0;
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     "name": l.title,
     "description": l.description || ogDesc,
     "image": ogImageUrl,
-    "offers": {
-      "@type": "Offer",
-      "priceCurrency": "KES",
-      "price": jsonLdPrice,
-      "availability": "https://schema.org/InStock",
-      "url": window.location.href
-    }
+    "offers": { "@type": "Offer", "priceCurrency": "KES", "price": Number(l.price||0), "availability": "https://schema.org/InStock", "url": window.location.href }
   };
   document.getElementById('listing-jsonld').textContent = JSON.stringify(jsonLd);
 }
 
+function nkTitleCase(s) {
+  if (!s) return '';
+  return String(s).replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
 /* ════════════════════════════════════════════════════
-   AVAILABLE UNITS — buyer-facing card
-   Shows each unit type with live "X of Y available" pill.
-   Falls back gracefully if quantity_total isn't set on
-   older rows (shows just "X available" without a total).
+   BOARDING ROOM TYPES — buyer-facing availability card
 ════════════════════════════════════════════════════ */
 function renderUnitAvailability() {
   const card = document.getElementById('units-card');
@@ -1717,80 +1516,27 @@ function renderUnitAvailability() {
     const soldOut = available <= 0;
     const low = !soldOut && total && (available / total) <= 0.2;
     const pillClass = soldOut ? 'none' : (low ? 'low' : '');
-    const pillText = soldOut
-      ? 'Fully booked'
-      : total
-        ? `${available} of ${total} available`
-        : `${available} available`;
-    const bedLabel = u.bedrooms == 0 ? 'Studio' : `${u.bedrooms} bed`;
-    const metaParts = [bedLabel];
-    if (u.bathrooms) metaParts.push(`${u.bathrooms} bath`);
-    if (u.size_sqm) metaParts.push(`${u.size_sqm}m²`);
+    const pillText = soldOut ? 'Fully booked' : total ? `${available} of ${total} available` : `${available} available`;
     return `
       <div class="unit-type-card ${soldOut ? 'sold-out' : ''}">
         <div class="unit-type-card-main">
           <div class="unit-type-card-label">${escHtml(u.unit_label)}</div>
-          <div class="unit-type-card-meta">${metaParts.join(' · ')}</div>
         </div>
         <div class="unit-avail-pill ${pillClass}">${pillText}</div>
-        <div class="unit-type-card-price">KES ${Number(u.price).toLocaleString('en-KE')}${listing?.price_type==='rent'?'<span>/month</span>':'<span>total</span>'}</div>
+        <div class="unit-type-card-price">KES ${Number(u.price).toLocaleString('en-KE')}<span>/month</span></div>
       </div>`;
   }).join('');
 }
 
-/* ── Video walkthrough — YouTube/Vimeo get an embedded player;
-   any other link (direct mp4, 360° tour host) gets a native <video>
-   tag with a fallback "open link" line in case that host blocks
-   inline playback. ── */
-function nkVideoEmbedUrl(url) {
-  try {
-    const u = new URL(url);
-    if (u.hostname.includes('youtube.com') || u.hostname.includes('youtu.be')) {
-      let vid = u.searchParams.get('v');
-      if (!vid && u.hostname.includes('youtu.be')) vid = u.pathname.slice(1);
-      if (!vid && u.pathname.includes('/embed/')) return url;
-      return vid ? `https://www.youtube.com/embed/${vid}` : null;
-    }
-    if (u.hostname.includes('vimeo.com')) {
-      const id = u.pathname.split('/').filter(Boolean).pop();
-      return id ? `https://player.vimeo.com/video/${id}` : null;
-    }
-    return null;
-  } catch(e) { return null; }
-}
-
-function renderVideoSection(videos) {
-  const card = document.getElementById('video-card');
-  const wrap = document.getElementById('video-embed-wrap');
-  if (!videos || !videos.length) { card.style.display = 'none'; return; }
-  card.style.display = 'block';
-  wrap.innerHTML = videos.map(v => {
-    const embed = nkVideoEmbedUrl(v.url);
-    if (embed) {
-      return `<div style="position:relative;padding-top:56.25%;margin-bottom:14px;border-radius:10px;overflow:hidden;background:#000"><iframe src="${escHtml(embed)}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`;
-    }
-    return `<video controls style="width:100%;border-radius:10px;margin-bottom:6px;background:#000" preload="metadata"><source src="${escHtml(v.url)}"></video><p style="font-size:12px;color:var(--text-3);margin:0 0 14px"><a href="${escHtml(v.url)}" target="_blank" rel="noopener" style="color:var(--green)">Open video link</a> if it doesn't play above.</p>`;
-  }).join('');
-}
-
 /* ════════════════════════════════════════════════════
-   SELLER: MANAGE UNITS PANEL
-   ════════════════════════════════════════════════════
-   Only rendered when isListingOwner is true. For each unit
-   type, lets the seller mark one unit occupied (optionally
-   logging floor / door number / position) or free one up
-   again if they made a mistake. Writes go straight to
-   listing_units.quantity_available, plus an audit row in
-   unit_occupancy_log (see contact-protection-setup.sql-style
-   migration note below — the table needs to exist first).
+   SELLER: MANAGE ROOMS PANEL (boarding houses)
 ════════════════════════════════════════════════════ */
 function renderManageUnitsPanel() {
   const panel = document.getElementById('manage-units-card');
-  if (!listing?.is_multi_unit || !listingUnits.length) { panel.style.display = 'none'; return; }
+  if (listing?.category !== 'boarding' || !listingUnits.length) { panel.style.display = 'none'; return; }
   panel.style.display = 'block';
   renderManageUnitRows();
 }
-
 function renderManageUnitRows() {
   document.getElementById('manage-unit-list').innerHTML = listingUnits.map(u => {
     const available = u.quantity_available ?? 0;
@@ -1806,18 +1552,7 @@ function renderManageUnitRows() {
         </div>
         <div class="occupy-form" id="occupy-form-${u.id}">
           <div class="occupy-form-grid">
-            <div><label>Floor</label><input type="text" id="occ-floor-${u.id}" placeholder="e.g. 2nd floor"/></div>
-            <div><label>Door / unit number</label><input type="text" id="occ-door-${u.id}" placeholder="e.g. Door 4B"/></div>
-            <div><label>Position</label>
-              <select id="occ-pos-${u.id}">
-                <option value="">Not specified</option>
-                <option value="left">Left side</option>
-                <option value="right">Right side</option>
-                <option value="middle">Middle</option>
-                <option value="corner">Corner unit</option>
-                <option value="end">End of corridor</option>
-              </select>
-            </div>
+            <div><label>Notes</label><input type="text" id="occ-floor-${u.id}" placeholder="e.g. Room 4B"/></div>
           </div>
           <div style="display:flex;gap:8px">
             <button class="btn-confirm-occupy" onclick="confirmMarkOccupied(${u.id})">Confirm — mark occupied</button>
@@ -1827,42 +1562,28 @@ function renderManageUnitRows() {
         <div class="occupancy-log" id="occupancy-log-${u.id}"></div>
       </div>`;
   }).join('');
-
   listingUnits.forEach(u => loadOccupancyLog(u.id));
 }
-
-function toggleOccupyForm(unitTypeId) {
-  document.getElementById(`occupy-form-${unitTypeId}`).classList.toggle('open');
-}
+function toggleOccupyForm(unitTypeId) { document.getElementById(`occupy-form-${unitTypeId}`).classList.toggle('open'); }
 
 async function confirmMarkOccupied(unitTypeId) {
-  const floor = document.getElementById(`occ-floor-${unitTypeId}`).value.trim() || null;
-  const door  = document.getElementById(`occ-door-${unitTypeId}`).value.trim() || null;
-  const pos   = document.getElementById(`occ-pos-${unitTypeId}`).value || null;
-
+  const floor = document.getElementById(`occ-floor-${unitTypeId}`)?.value.trim() || null;
   const unit = listingUnits.find(u => u.id === unitTypeId);
   if (!unit || (unit.quantity_available ?? 0) <= 0) return;
 
   const btn = document.querySelector(`#manage-unit-${unitTypeId} .btn-confirm-occupy`);
   if (btn) btn.disabled = true;
 
-  const { data: newAvailable, error } = await db.rpc('mark_unit_occupied', {
-    p_unit_id: unitTypeId, p_floor: floor, p_door: door, p_position: pos
-  });
-
+  const { data: newAvailable, error } = await db.rpc('mark_unit_occupied', { p_unit_id: unitTypeId, p_floor: floor, p_door: null, p_position: null });
   if (btn) btn.disabled = false;
-  if (error || newAvailable === null) {
-    showToastNK('Could not update unit availability — please try again.');
-    return;
-  }
+  if (error || newAvailable === null) { showToastNK('Could not update availability — please try again.'); return; }
 
   unit.quantity_available = newAvailable;
   toggleOccupyForm(unitTypeId);
   renderManageUnitRows();
   renderUnitAvailability();
-  showToastNK('Unit marked as occupied — availability updated.');
+  showToastNK('Marked as occupied — availability updated.');
 }
-
 async function markUnitAvailable(unitTypeId) {
   const unit = listingUnits.find(u => u.id === unitTypeId);
   if (!unit) return;
@@ -1870,93 +1591,76 @@ async function markUnitAvailable(unitTypeId) {
   if ((unit.quantity_available ?? 0) >= total) return;
 
   const { data: newAvailable, error } = await db.rpc('mark_unit_available', { p_unit_id: unitTypeId });
-  if (error || newAvailable === null) {
-    showToastNK('Could not update unit availability — please try again.');
-    return;
-  }
+  if (error || newAvailable === null) { showToastNK('Could not update availability — please try again.'); return; }
 
   unit.quantity_available = newAvailable;
   renderManageUnitRows();
   renderUnitAvailability();
-  showToastNK('Unit marked as available again.');
+  showToastNK('Marked as available again.');
 }
-
 async function loadOccupancyLog(unitTypeId) {
   const el = document.getElementById(`occupancy-log-${unitTypeId}`);
   if (!el) return;
   try {
-    const { data, error } = await db
-      .from('unit_occupancy_log')
-      .select('*')
-      .eq('listing_unit_id', unitTypeId)
-      .order('created_at', { ascending: false })
-      .limit(5);
+    const { data, error } = await db.from('unit_occupancy_log').select('*').eq('listing_unit_id', unitTypeId).order('created_at', { ascending: false }).limit(5);
     if (error || !data || !data.length) { el.innerHTML = ''; return; }
     el.innerHTML = data.map(row => {
       const when = row.created_at ? new Date(row.created_at).toLocaleDateString('en-KE', { day:'numeric', month:'short' }) : '';
-      const detail = row.action === 'occupied'
-        ? [row.floor, row.door_number, row.position].filter(Boolean).join(' · ') || 'Marked occupied'
-        : 'Marked available again';
+      const detail = row.action === 'occupied' ? (row.floor || 'Marked occupied') : 'Marked available again';
       return `<div class="occupancy-log-item"><span>${escHtml(detail)}</span><span>${when}</span></div>`;
     }).join('');
   } catch(e) { el.innerHTML = ''; }
 }
 
 /* ════════════════════════════════════════════════════
-   LIVE MAP — Google Maps embed
-   Uses the free embed URL (no API key required).
-   Builds a search query from area + sub_area + address
-   so the map centres on the right neighbourhood.
+   LIVE MAP — Leaflet, pin dropped/geocoded at post-listing time
 ════════════════════════════════════════════════════ */
 function renderLiveMap(l) {
-  /* Build human-readable location query */
-  const parts = [l.area];
-  if (l.sub_area) parts.push(l.sub_area);
-  parts.push(nkListingCounty(l), 'Kenya');
+  const parts = [l.area, nkListingCounty(l), 'Kenya'].filter(Boolean);
   const query = parts.join(', ');
-
-  /* Update header text and "Open in Maps" link */
   document.getElementById('map-sub').textContent = query;
-  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+
+  const hasPin = typeof l.latitude === 'number' && typeof l.longitude === 'number';
+  const lat = hasPin ? l.latitude : -1.286389;
+  const lng = hasPin ? l.longitude : 36.817223;
+
+  const mapsUrl = hasPin
+    ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
   document.getElementById('map-open-link').href = mapsUrl;
 
-  /* Build the embed iframe.
-     The embed URL https://maps.google.com/maps?q=...&output=embed
-     works without an API key for basic map display. */
-  const embedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=15&output=embed&hl=en`;
+  leafletMap = L.map('listing-map', { zoomControl: true, scrollWheelZoom: false }).setView([lat, lng], hasPin ? 15 : 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors', maxZoom: 19 }).addTo(leafletMap);
+  leafletMarker = L.marker([lat, lng]).addTo(leafletMap);
+  leafletMarker.bindPopup(escHtml(l.title)).openPopup();
 
-  const iframe = document.createElement('iframe');
-  iframe.src = embedUrl;
-  iframe.width = '100%';
-  iframe.height = '100%';
-  iframe.style.border = 'none';
-  iframe.style.position = 'absolute';
-  iframe.style.top = '0';
-  iframe.style.left = '0';
-  iframe.loading = 'lazy';
-  iframe.referrerpolicy = 'no-referrer-when-downgrade';
-  iframe.title = `Map showing ${query}`;
-  iframe.allow = 'fullscreen';
+  document.getElementById('map-loading').classList.add('hidden');
+  setTimeout(() => leafletMap.invalidateSize(), 200);
 
-  /* Hide the loading placeholder once the iframe fires load */
-  iframe.addEventListener('load', () => {
-    const loader = document.getElementById('map-loading');
-    if (loader) loader.classList.add('hidden');
-  });
-
-  document.getElementById('map-iframe-container').appendChild(iframe);
+  if (!hasPin) {
+    // Older listings without a saved pin — best-effort geocode from area text
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`)
+      .then(r => r.json())
+      .then(results => {
+        if (results && results[0]) {
+          const glat = parseFloat(results[0].lat), glng = parseFloat(results[0].lon);
+          leafletMap.setView([glat, glng], 14);
+          leafletMarker.setLatLng([glat, glng]);
+        }
+      }).catch(() => {});
+  }
 }
 
 /* ════════════════════════════════════════════════════
    GALLERY
 ════════════════════════════════════════════════════ */
 function renderGallery() {
-  const img      = document.getElementById('gallery-img');
-  const noPhoto  = document.getElementById('gallery-no-photo');
-  const thumbWrap= document.getElementById('gallery-thumbs');
-  const counter  = document.getElementById('gallery-counter');
-  const prevBtn  = document.getElementById('prev-btn');
-  const nextBtn  = document.getElementById('next-btn');
+  const img = document.getElementById('gallery-img');
+  const noPhoto = document.getElementById('gallery-no-photo');
+  const thumbWrap = document.getElementById('gallery-thumbs');
+  const counter = document.getElementById('gallery-counter');
+  const prevBtn = document.getElementById('prev-btn');
+  const nextBtn = document.getElementById('next-btn');
 
   if (!photos.length) { noPhoto.style.display='flex'; img.style.display='none'; return; }
 
@@ -1964,10 +1668,8 @@ function renderGallery() {
   img.style.display = 'block';
   img.onerror = () => { noPhoto.style.display='flex'; img.style.display='none'; };
   img.src = photos[currentPhoto].url;
-  img.alt = listing?.title || 'Apartment photo';
+  img.alt = listing?.title || 'Property photo';
 
-  /* Flexible frame: match the photo's own aspect ratio (clamped to sane
-     bounds) instead of forcing every photo into 16:9. */
   const mainBox = document.getElementById('gallery-main');
   const applyRatio = () => {
     if (!img.naturalWidth || !img.naturalHeight) return;
@@ -1988,70 +1690,34 @@ function renderGallery() {
         <img src="${p.url}" alt="Photo ${i+1}" loading="lazy"/>
       </div>`).join('');
   } else {
-    counter.style.display = 'none';
-    prevBtn.style.display = 'none';
-    nextBtn.style.display = 'none';
-    thumbWrap.style.display = 'none';
+    counter.style.display = 'none'; prevBtn.style.display = 'none'; nextBtn.style.display = 'none'; thumbWrap.style.display = 'none';
   }
 }
-
 function changePhoto(dir) { currentPhoto=(currentPhoto+dir+photos.length)%photos.length; renderGallery(); if (document.getElementById('nk-lightbox').classList.contains('open')) renderLightbox(); }
 function goPhoto(i) { currentPhoto=i; renderGallery(); }
 document.addEventListener('keydown', e => {
   const tag = document.activeElement?.tagName;
   const lbOpen = document.getElementById('nk-lightbox').classList.contains('open');
-
   if (e.key === 'Escape') {
     if (lbOpen) { closeLightbox(); return; }
     const openModal = document.querySelector('.nk-review-modal-overlay.open');
     if (openModal) { openModal.classList.remove('open'); return; }
   }
-
   if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-
-  if (lbOpen) {
-    if (e.key==='ArrowLeft')  lightboxChange(-1);
-    if (e.key==='ArrowRight') lightboxChange(1);
-    return;
-  }
-  if (e.key==='ArrowLeft')  changePhoto(-1);
+  if (lbOpen) { if (e.key==='ArrowLeft') lightboxChange(-1); if (e.key==='ArrowRight') lightboxChange(1); return; }
+  if (e.key==='ArrowLeft') changePhoto(-1);
   if (e.key==='ArrowRight') changePhoto(1);
 });
 
-/* ════════════════════════════════════════════════════
-   FULL-SCREEN PHOTO LIGHTBOX
-   Opens on click of the main gallery image, showing the
-   photo at full resolution with prev/next navigation that
-   stays in sync with the gallery's current photo index.
-════════════════════════════════════════════════════ */
-function openLightbox() {
-  if (!photos.length) return;
-  renderLightbox();
-  document.getElementById('nk-lightbox').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeLightbox() {
-  document.getElementById('nk-lightbox').classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-function nkLightboxBackdropClick(e) {
-  // Only close when clicking the dark backdrop itself, not the image or controls
-  if (e.target.id === 'nk-lightbox' || e.target.id === 'nk-lightbox-img-wrap') closeLightbox();
-}
-
-function lightboxChange(dir) {
-  currentPhoto = (currentPhoto + dir + photos.length) % photos.length;
-  renderLightbox();
-  renderGallery(); // keep thumbnail strip in sync
-}
-
+function openLightbox() { if (!photos.length) return; renderLightbox(); document.getElementById('nk-lightbox').classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeLightbox() { document.getElementById('nk-lightbox').classList.remove('open'); document.body.style.overflow = ''; }
+function nkLightboxBackdropClick(e) { if (e.target.id === 'nk-lightbox' || e.target.id === 'nk-lightbox-img-wrap') closeLightbox(); }
+function lightboxChange(dir) { currentPhoto = (currentPhoto + dir + photos.length) % photos.length; renderLightbox(); renderGallery(); }
 function renderLightbox() {
   const img = document.getElementById('nk-lightbox-img');
   img.onerror = () => showToastNK('This photo failed to load.');
   img.src = photos[currentPhoto].url;
-  img.alt = listing?.title || 'Apartment photo';
+  img.alt = listing?.title || 'Property photo';
   const multi = photos.length > 1;
   document.getElementById('nk-lb-prev').style.display = multi ? 'flex' : 'none';
   document.getElementById('nk-lb-next').style.display = multi ? 'flex' : 'none';
@@ -2071,30 +1737,22 @@ function toggleDesc() {
    SIMILAR LISTINGS
 ════════════════════════════════════════════════════ */
 async function loadSimilar(area, excludeId) {
-  const { data } = await db
-    .from('listings')
-    .select('*, listing_photos(*)')
-    .eq('status', 'active')
-    .eq('is_disabled', false)
-    .eq('recycle_bin', false)
-    .eq('area', area)
-    .neq('id', excludeId)
-    .limit(3);
+  const { data } = await db.from('listings').select('*, listing_photos(*)')
+    .eq('status', 'active').eq('is_disabled', false).eq('recycle_bin', false)
+    .eq('area', area).neq('id', excludeId).limit(3);
 
   const grid = document.getElementById('similar-grid');
-  if (!data?.length) {
-    grid.innerHTML = '<p style="font-size:13px;color:var(--text-3);grid-column:1/-1">No similar listings in this area yet.</p>';
-    return;
-  }
+  if (!data?.length) { grid.innerHTML = '<p style="font-size:13px;color:var(--text-3);grid-column:1/-1">No similar listings in this area yet.</p>'; return; }
   grid.innerHTML = data.map(l => {
     const cover = (l.listing_photos||[]).find(p=>p.is_cover)||(l.listing_photos||[])[0];
     const href = `/listing?id=${String(l.listing_number).padStart(6,'0')}`;
+    const freq = l.price_frequency || 'once';
     return `<div class="similar-card" onclick="window.location='${href}'" role="button" tabindex="0" aria-label="${escHtml(l.title)}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.location='${href}'}">
       <div class="similar-img">${cover?`<img src="${cover.url}" alt="${escHtml(l.title)}" loading="lazy"/>`:''}</div>
       <div class="similar-body">
         <div class="similar-area">${escHtml(l.area)}</div>
         <div class="similar-title">${escHtml(l.title)}</div>
-        <div class="similar-price">KES ${Number(l.price).toLocaleString('en-KE')}${l.price_type==='rent'?'<span style="font-size:12px;font-weight:400;color:var(--text-3)">/mo</span>':''}</div>
+        <div class="similar-price">KES ${Number(l.price||0).toLocaleString('en-KE')}${NK_FREQ_LABEL[freq]?`<span style="font-size:12px;font-weight:400;color:var(--text-3)">${NK_FREQ_LABEL[freq]}</span>`:''}</div>
       </div>
     </div>`;
   }).join('');
@@ -2104,7 +1762,7 @@ async function loadSimilar(area, excludeId) {
    ENQUIRY / MESSAGING
 ════════════════════════════════════════════════════ */
 async function sendEnquiry() {
-  const contactHidden = !!(listing?.contact_hidden || listing?.profiles?.hide_buyer_contact);
+  const contactHidden = !!listing?.contact_hidden;
   const name    = document.getElementById('enq-name').value.trim();
   const phone   = document.getElementById('enq-phone').value.trim();
   const email   = document.getElementById('enq-email').value.trim();
@@ -2114,20 +1772,14 @@ async function sendEnquiry() {
   ['enq-name','enq-phone','enq-message'].forEach(id => document.getElementById(id).classList.remove('error'));
   ['err-enq-name','err-enq-phone','err-enq-msg'].forEach(id => document.getElementById(id).classList.remove('show'));
 
-  if (!name)    { document.getElementById('enq-name').classList.add('error');    document.getElementById('err-enq-name').classList.add('show');  ok=false; }
+  if (!name) { document.getElementById('enq-name').classList.add('error'); document.getElementById('err-enq-name').classList.add('show'); ok=false; }
   if (!contactHidden && (!phone || phone.replace(/\s/g,'').length < 9)) { document.getElementById('enq-phone').classList.add('error'); document.getElementById('err-enq-phone').classList.add('show'); ok=false; }
-  if (!message) { document.getElementById('enq-message').classList.add('error'); document.getElementById('err-enq-msg').classList.add('show');   ok=false; }
+  if (!message) { document.getElementById('enq-message').classList.add('error'); document.getElementById('err-enq-msg').classList.add('show'); ok=false; }
   if (!ok) return;
 
-  // For multi-unit properties, fold the unit-type + floor/position
-  // preference into the stored message so the seller sees it in the thread.
-  if (listing?.is_multi_unit) {
+  if (listing?.category === 'boarding') {
     const unitType = document.getElementById('enq-unit-type')?.value || '';
-    const unitPref = document.getElementById('enq-unit-pref')?.value.trim() || '';
-    const extras = [];
-    if (unitType) extras.push(`Interested unit type: ${unitType}.`);
-    if (unitPref) extras.push(`Preferred floor/position: ${unitPref}.`);
-    if (extras.length) message = `${extras.join(' ')} ${message}`;
+    if (unitType) message = `Interested room type: ${unitType}. ${message}`;
   }
 
   const btn = document.getElementById('btn-enquire');
@@ -2159,8 +1811,6 @@ async function sendEnquiry() {
 
   btn.disabled = false; btn.classList.remove('loading');
   if (msgErr) {
-    // Message failed after the enquiry succeeded — roll back the enquiry
-    // row rather than leaving an orphaned enquiry with no matching thread.
     if (insertedEnq?.id) await db.from('enquiries').delete().eq('id', insertedEnq.id);
     console.error('Message insert failed:', msgErr);
     alert('Something went wrong: ' + (msgErr.message || 'unknown error') + ' — please try calling the seller directly.');
@@ -2168,38 +1818,16 @@ async function sendEnquiry() {
   }
 
   setBuyerToken(token);
-
-  /* Seed the local thread with the message we just sent, so the widget
-     shows it immediately instead of waiting for a realtime event (which
-     can be missed if it fires before the subscription below finishes
-     connecting) or a full page refresh. */
   threadMessages = [insertedMsg || { sender:'buyer', content:message, created_at:new Date().toISOString() }];
+  nkTrackContact(listingId, listing?.seller_id, listing?.contact_name || listing?.profiles?.full_name || 'the seller');
 
-  /* ★ Track this contact so we can prompt for a review later, once the
-     buyer has had a realistic chance to actually secure the property. */
-  nkTrackContact(listingId, listing?.seller_id, listing?.profiles?.full_name || 'the seller');
-
-  /* If this seller has the Elite AI Chat Concierge on, this quietly asks it
-     for an instant reply grounded in the listing's own facts. No-ops (via
-     {skipped:true}) for every seller who doesn't have it enabled. */
-  nkMaybeTriggerAiConcierge(listingId, token, name, message);
-
-  // Notify the Nyumba254 admin inbox(es) directly — this is on top of the
-  // enquiry already being visible in the admin dashboard. Fire-and-forget,
-  // never blocks the success screen.
   fetch(`${EDGE_URL}/send-notification-email`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
-    body: JSON.stringify({
-      type: 'new_buyer_enquiry',
-      buyerName: name, buyerPhone: phone, buyerEmail: email || null,
-      message, listingId, listingTitle: listing?.title,
-    }),
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+    body: JSON.stringify({ type: 'new_buyer_enquiry', buyerName: name, buyerPhone: phone, buyerEmail: email || null, message, listingId, listingTitle: listing?.title }),
   }).catch(e => console.error('Enquiry notify email failed:', e));
 
   fetch(`${EDGE_URL}/send-sms-alert`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
     body: JSON.stringify({ type: 'new_enquiry', listingId, buyerName: name, messagePreview: message, listingTitle: listing?.title }),
   }).catch(e => console.error('SMS alert failed:', e));
 
@@ -2208,10 +1836,6 @@ async function sendEnquiry() {
   if (typeof NKGlobalChat !== 'undefined') NKGlobalChat.registerAndOpen(listingId);
 }
 
-/* Shown on return visits when a buyer already has an open thread. Unlike
-   the old inline chat box, this is just a small pointer card — the
-   floating widget is now the only place the actual conversation renders,
-   so this never expands into a chat window itself. */
 async function showConversationCard() {
   document.getElementById('enquiry-form').style.display      = 'none';
   document.getElementById('enquiry-success').style.display   = 'none';
@@ -2219,7 +1843,6 @@ async function showConversationCard() {
   document.getElementById('conversation-card').style.display = 'block';
   await loadThread();
 }
-
 async function loadThread() {
   if (!buyerToken && !currentBuyerId) return;
   let q = db.from('messages').select('*').eq('listing_id', listingId);
@@ -2228,14 +1851,10 @@ async function loadThread() {
   threadMessages = data || [];
   renderThread();
 }
-
 function renderThread() {
   const box = document.getElementById('chat-messages-box');
-  if (!threadMessages.length) {
-    box.innerHTML = '<div style="text-align:center;font-size:12px;color:var(--text-3);padding:16px">No messages yet</div>';
-    return;
-  }
-  const sellerName = listing?.profiles?.full_name || 'Seller';
+  if (!threadMessages.length) { box.innerHTML = '<div style="text-align:center;font-size:12px;color:var(--text-3);padding:16px">No messages yet</div>'; return; }
+  const sellerName = listing?.contact_name || listing?.profiles?.full_name || 'Seller';
   const sellerInit = sellerName.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase() || 'S';
   const buyerInit  = buyerName.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase() || 'B';
   let lastDate = '';
@@ -2246,22 +1865,14 @@ function renderThread() {
     const timeStr = d.toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'});
     const sep = dateStr !== lastDate ? `<div class="chat-date-sep">${dateStr}</div>` : '';
     lastDate = dateStr;
-    const init   = isSeller ? sellerInit : buyerInit;
-    const avCls  = isSeller ? 'seller-av' : 'buyer-av';
-    const bubCls = isSeller ? 'seller-b'  : 'buyer-b';
+    const init = isSeller ? sellerInit : buyerInit;
+    const avCls = isSeller ? 'seller-av' : 'buyer-av';
+    const bubCls = isSeller ? 'seller-b' : 'buyer-b';
     const rowCls = isSeller ? 'seller-row-msg' : '';
-    return `${sep}
-      <div class="chat-bubble-row ${rowCls}">
-        <div class="bubble-av ${avCls}">${init}</div>
-        <div>
-          <div class="chat-bubble ${bubCls}">${escHtml(m.content||m.message||'')}</div>
-          <div class="bubble-time">${timeStr}${isSeller?' · Seller':''}</div>
-        </div>
-      </div>`;
+    return `${sep}<div class="chat-bubble-row ${rowCls}"><div class="bubble-av ${avCls}">${init}</div><div><div class="chat-bubble ${bubCls}">${escHtml(m.content||m.message||'')}</div><div class="bubble-time">${timeStr}${isSeller?' · Seller':''}</div></div></div>`;
   }).join('');
   box.scrollTop = box.scrollHeight;
 }
-
 async function sendFollowUp() {
   const input = document.getElementById('chat-follow-input');
   const text  = input.value.trim();
@@ -2269,116 +1880,59 @@ async function sendFollowUp() {
   const btn = document.getElementById('chat-follow-send');
   btn.disabled = true;
   const followId = (crypto.randomUUID ? crypto.randomUUID() : Date.now()+'-'+Math.random().toString(36).slice(2));
-  const { error } = await db.from('messages').insert({
-    id: followId, listing_id: listingId, buyer_token: buyerToken,
-    buyer_name: buyerName, buyer_phone: buyerPhone||null,
-    buyer_id: currentBuyerId, sender: 'buyer', content: text
-  });
+  const { error } = await db.from('messages').insert({ id: followId, listing_id: listingId, buyer_token: buyerToken, buyer_name: buyerName, buyer_phone: buyerPhone||null, buyer_id: currentBuyerId, sender: 'buyer', content: text });
   const data = error ? null : { id: followId, listing_id: listingId, buyer_token: buyerToken, buyer_name: buyerName, buyer_phone: buyerPhone||null, sender: 'buyer', content: text, created_at: new Date().toISOString() };
   btn.disabled = false;
   if (error) { alert('Could not send message. Please try again.'); return; }
   threadMessages.push(data || { sender:'buyer', content:text, created_at:new Date().toISOString() });
   input.value = ''; input.style.height = 'auto';
   renderThread();
-
-  nkMaybeTriggerAiConcierge(listingId, buyerToken, buyerName, text);
 }
-
 function clearThread() {
   if (!confirm('This will clear your conversation history from this device. The seller will still have the messages. Continue?')) return;
-  nkLSRemove('nk_buyer_' + listingId);
-  nkLSRemove('nk_buyer_name_' + listingId);
-  nkLSRemove('nk_buyer_phone_' + listingId);
+  nkLSRemove('nk_buyer_' + listingId); nkLSRemove('nk_buyer_name_' + listingId); nkLSRemove('nk_buyer_phone_' + listingId);
   buyerToken = null; buyerName = ''; buyerPhone = '';
   document.getElementById('thread-section').style.display     = 'none';
   document.getElementById('conversation-card').style.display  = 'none';
   document.getElementById('enquiry-success').style.display    = 'none';
   document.getElementById('enquiry-form').style.display       = 'block';
   document.getElementById('enq-message').value = `Hello, I'm interested in "${listing?.title}". Is it still available?`;
-
- /* Reset conversation state so a fresh enquiry doesn't show the old thread */
   threadMessages = [];
   if (typeof NKGlobalChat !== 'undefined') NKGlobalChat.refresh();
 }
-
 function handleFollowKeydown(e) { if (e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendFollowUp(); } }
 function autoResizeTa(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
 
 /* ════════════════════════════════════════════════════
-   CONTACT PROTECTION
-   ════════════════════════════════════════════════════
-   Problem this solves: the seller's phone number used to be written
-   straight into the page (as both the visible button label AND the
-   tel:/wa.me href) the instant the listing loaded — scrapeable by any
-   bot in one request, no click required.
-
-   How it works now (simple click-to-reveal — no need to message the
-   seller first):
-   1. The initial listing query (see loadListing()) never fetches the
-      seller's phone at all — it isn't in browser memory to begin with.
-   2. Call/WhatsApp are plain buttons. Clicking one runs handleContactClick().
-   3. The first click calls the `reveal_seller_contact` Supabase function
-      (SECURITY DEFINER — see contact-protection-setup.sql). That function:
-        - checks this device hasn't revealed more than N contacts in the
-          last hour (rate limit — blocks bulk/bot scraping),
-        - logs the reveal (listing, device, channel, time) for later
-          admin review of suspicious patterns,
-        - and only then returns the actual phone number.
-   4. The number is cached in memory (sellerPhoneRaw) for the rest of the
-      visit so a second click (e.g. WhatsApp after Call) doesn't re-log
-      or re-check the limit.
-
-   IMPORTANT: contact-protection-setup.sql must be run once in the
-   Supabase SQL editor before this works — until then, reveal_seller_contact
-   won't exist and clicks will show a "try again shortly" message rather
-   than silently failing.
+   CONTACT PROTECTION — reveals l.phone/l.whatsapp on click only
 ════════════════════════════════════════════════════ */
 function nkBuildWaLink(rawPhone) {
   const clean = (rawPhone||'').replace(/[\s+]/g,'');
-  // Only rewrite a leading 0 → 254 for a plain local Kenyan number.
-  // Numbers already starting with 254 (or any other country code) pass through untouched.
   const wa254 = /^0\d{9}$/.test(clean) ? '254'+clean.slice(1) : clean;
-  const msg   = encodeURIComponent(`Hello, I saw your listing "${listing?.title||''}" on Nyumba254 and I'm interested. Is it still available?`);
+  const msg = encodeURIComponent(`Hello, I saw your listing "${listing?.title||''}" on Nyumba254 and I'm interested. Is it still available?`);
   return `https://wa.me/${wa254}?text=${msg}`;
 }
-
 async function handleContactClick(channel) {
-  if (listing?.contact_hidden || listing?.profiles?.hide_buyer_contact) {
+  if (listing?.contact_hidden) {
     showToastNK('For security, this seller has turned off contact reveal — please send a message below and they\'ll get back to you.');
     document.getElementById('enq-message')?.focus();
     return;
   }
   if (contactRevealBusy) return;
 
-  // Fetch + unlock (only once per page visit).
   if (!contactRevealed) {
     contactRevealBusy = true;
     const callBtn = document.getElementById('btn-call');
     const waBtn   = document.getElementById('btn-whatsapp');
     const callOrig = callBtn.innerHTML, waOrig = waBtn.innerHTML;
     callBtn.disabled = true; waBtn.disabled = true;
-    callBtn.innerHTML = 'Loading…';
-    waBtn.innerHTML = 'Loading…';
+    callBtn.innerHTML = 'Loading…'; waBtn.innerHTML = 'Loading…';
 
     try {
-      const { data: phone, error } = await db.rpc('reveal_seller_contact', {
-        p_listing_id: listingId,
-        p_device_id: nkGetDeviceId(),
-        p_channel: channel
-      });
-
-      if (error) {
-        console.error('reveal_seller_contact error:', error);
-        showToastNK('Contact is temporarily unavailable — please try again shortly, or send a message below.');
-        return;
-      }
-      if (!phone) {
-        showToastNK("You've reached the contact limit for now — please try again a bit later, or send a message below.");
-        return;
-      }
-
-      sellerPhoneRaw  = phone;
-      contactRevealed = true;
+      const { data: phone, error } = await db.rpc('reveal_seller_contact', { p_listing_id: listingId, p_device_id: nkGetDeviceId(), p_channel: channel });
+      if (error) { console.error('reveal_seller_contact error:', error); showToastNK('Contact is temporarily unavailable — please try again shortly, or send a message below.'); return; }
+      if (!phone) { showToastNK("You've reached the contact limit for now — please try again a bit later, or send a message below."); return; }
+      sellerPhoneRaw = phone; contactRevealed = true;
     } catch (e) {
       console.error('reveal_seller_contact threw:', e);
       showToastNK('Contact is temporarily unavailable — please try again shortly, or send a message below.');
@@ -2389,38 +1943,29 @@ async function handleContactClick(channel) {
     }
   }
 
-  if (!sellerPhoneRaw) return; // reveal failed above — nothing to act on
-
-  if (channel === 'call') {
-    window.location.href = `tel:${sellerPhoneRaw.replace(/\s/g,'')}`;
-  } else {
-    window.open(nkBuildWaLink(sellerPhoneRaw), '_blank', 'noopener,noreferrer');
-  }
+  if (!sellerPhoneRaw) return;
+  if (channel === 'call') window.location.href = `tel:${sellerPhoneRaw.replace(/\s/g,'')}`;
+  else window.open(nkBuildWaLink(sellerPhoneRaw), '_blank', 'noopener,noreferrer');
 }
-
-/* Small reusable toast so contact-protection messages don't need a browser alert() */
 function showToastNK(msg) {
   let el = document.getElementById('nk-inline-toast');
   if (!el) {
-    el = document.createElement('div');
-    el.id = 'nk-inline-toast';
+    el = document.createElement('div'); el.id = 'nk-inline-toast';
     el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:white;padding:12px 18px;border-radius:10px;font-size:13px;max-width:min(400px,calc(100% - 32px));text-align:center;z-index:2500;box-shadow:0 8px 24px rgba(0,0,0,0.2);transition:opacity .25s;';
     document.body.appendChild(el);
   }
-  el.textContent = msg;
-  el.style.opacity = '1';
-  clearTimeout(el._t);
-  el._t = setTimeout(() => { el.style.opacity = '0'; }, 4200);
+  el.textContent = msg; el.style.opacity = '1';
+  clearTimeout(el._t); el._t = setTimeout(() => { el.style.opacity = '0'; }, 4200);
 }
 
 /* Share */
 function shareWhatsApp() {
-  const url   = window.location.href;
-  const title = listing?.title || 'Apartment listing';
-  const price = listing ? `KES ${Number(listing.price).toLocaleString('en-KE')}${listing.price_type==='rent'?'/month':''}` : '';
+  const url = window.location.href;
+  const title = listing?.title || 'Property listing';
+  const freq = listing?.price_frequency || 'once';
+  const price = listing ? `KES ${Number(listing.price||0).toLocaleString('en-KE')}${NK_FREQ_LABEL[freq]||''}` : '';
   window.open(`https://wa.me/?text=${encodeURIComponent(`🏠 *${title}*\n📍 ${listing?.area||''}, ${listing ? nkListingCounty(listing) : 'Kenya'}\n💰 ${price}\n\nView on Nyumba254: ${url}`)}`, '_blank', 'noopener,noreferrer');
 }
-
 function copyLink(evt) {
   navigator.clipboard.writeText(window.location.href).then(() => {
     const btn = evt.target.closest('.action-pill');
@@ -2428,12 +1973,9 @@ function copyLink(evt) {
     btn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
     btn.style.borderColor='var(--green)'; btn.style.color='var(--green)';
     setTimeout(() => { btn.innerHTML=orig; btn.style.borderColor=''; btn.style.color=''; }, 2000);
-  }).catch(() => {
-    showToastNK('Could not copy the link — you can copy it from the address bar instead.');
-  });
+  }).catch(() => { showToastNK('Could not copy the link — you can copy it from the address bar instead.'); });
 }
 
-/* Utils */
 function escHtml(str) {
   if (!str) return '';
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -2445,32 +1987,21 @@ const bathIcon = `<svg viewBox="0 0 24 24"><path d="M9 6l1-1a2 2 0 012.83 0l6.17
 const sizeIcon = `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M9 21V9"/></svg>`;
 const furnIcon = `<svg viewBox="0 0 24 24"><rect x="2" y="8" width="20" height="10" rx="2"/><path d="M6 8V6a2 2 0 012-2h8a2 2 0 012 2v2"/><line x1="6" y1="14" x2="6" y2="18"/><line x1="18" y1="14" x2="18" y2="18"/></svg>`;
 const typeIcon = `<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
-const catIcon  = `<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
-/* Amenity icons — kept in the same minimal line-icon style as the specs above */
-const parkIcon    = `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17V7h4a3 3 0 010 6H9"/></svg>`;
-const waterIcon   = `<svg viewBox="0 0 24 24"><path d="M12 2s6 7 6 12a6 6 0 01-12 0c0-5 6-12 6-12z"/></svg>`;
-const securityIcon= `<svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>`;
-const wifiIcon    = `<svg viewBox="0 0 24 24"><path d="M5 13a10 10 0 0114 0"/><path d="M8.5 16.5a5 5 0 017 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>`;
-const powerIcon   = `<svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`;
-const gymIcon     = `<svg viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M4 4l4 4M20 20l-4-4M2 8l3 3M8 2l3 3M22 16l-3-3M16 22l-3-3"/></svg>`;
-const poolIcon    = `<svg viewBox="0 0 24 24"><path d="M2 12h20"/><path d="M2 17c1.5 1.5 3 1.5 4.5 0s3-1.5 4.5 0 3 1.5 4.5 0 3-1.5 4.5 0"/><path d="M12 3v9"/></svg>`;
-const balconyIcon = `<svg viewBox="0 0 24 24"><rect x="3" y="10" width="18" height="4" rx="1"/><line x1="6" y1="14" x2="6" y2="21"/><line x1="12" y1="14" x2="12" y2="21"/><line x1="18" y1="14" x2="18" y2="21"/></svg>`;
+const catIcon  = `<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0116 0v1"/></svg>`;
+const parkIcon = `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17V7h4a3 3 0 010 6H9"/></svg>`;
+const securityIcon = `<svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>`;
+const unitsIcon = `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg>`;
 
-/* Stable per-browser id, shared by page-view tracking and the contact
-   rate-limiter below — same nk_sid key/behavior as before, just callable. */
 function nkGetDeviceId() {
   let sid = nkLSGet('nk_sid');
   if (!sid) { sid=(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2)); nkLSSet('nk_sid',sid); }
   return sid;
 }
-
-/* Page view tracking */
 (function() {
   const sid = nkGetDeviceId();
   db.from('page_views').insert({ path:location.pathname, referrer:document.referrer||null, user_agent:navigator.userAgent, session_id:sid });
 })();
 
-/* Mobile menu */
 function toggleMobileMenu() {
   const nav = document.getElementById('mobile-nav');
   const isOpen = nav.classList.toggle('open');
@@ -2482,7 +2013,6 @@ document.addEventListener('click', e => {
   if (nav && nav.classList.contains('open') && !nav.contains(e.target) && !btn.contains(e.target)) nav.classList.remove('open');
 });
 
-/* Nav: Sign in → My Account when logged in (reuses the shared session check) */
 nkSessionPromise.then(({ data: { session } }) => {
   if (!session) return;
   const d = document.getElementById('nav-account-link');
@@ -2493,26 +2023,13 @@ nkSessionPromise.then(({ data: { session } }) => {
 
 /* ════════════════════════════════════════════════════
    REVIEWS & REPORTS
-   ════════════════════════════════════════════════════
-   - nkTrackContact()      → called from sendEnquiry() once a buyer messages a seller
-   - nkCheckReviewPrompt() → called on page load; shows the "did you secure this
-                             property?" banner if this buyer contacted a seller
-                             (on any listing) and hasn't been asked yet
-   - loadSellerReviewStats() → shows ★ average + review count next to the seller
-
-   ── Fix: banner used to keep re-appearing on every page load because
-   clicking "Skip" on the review modal never marked the pending entry as
-   done — only actually submitting a review did. Now Skip snoozes the
-   entry (same as "Not yet") so it doesn't nag on every single visit.
-   The banner also no longer shows to the seller viewing their own
-   listing (isListingOwner) — it's meant for buyers only. ══
 ════════════════════════════════════════════════════ */
 const NK_REVIEW_PENDING_KEY  = 'nk_pending_reviews';
 const NK_PLATFORM_REVIEW_KEY = 'nk_platform_review_done';
-const NK_REVIEW_SNOOZE_MS    = 3 * 24 * 60 * 60 * 1000; // 3 days
-const NK_REVIEW_ELIGIBLE_MS  = 2 * 60 * 60 * 1000;      // 2 hrs since conversation started
-const NK_REVIEW_MIN_VISITS   = 6;                       // "more than 5" visits
-const NK_REVIEW_TAB_OPEN_MS  = 2 * 60 * 60 * 1000;       // 2 hrs with the tab open
+const NK_REVIEW_SNOOZE_MS    = 3 * 24 * 60 * 60 * 1000;
+const NK_REVIEW_ELIGIBLE_MS  = 2 * 60 * 60 * 1000;
+const NK_REVIEW_MIN_VISITS   = 6;
+const NK_REVIEW_TAB_OPEN_MS  = 2 * 60 * 60 * 1000;
 let nkCurrentPendingEntry = null;
 let nkSellerStarRating    = 0;
 let nkPlatformStarRating  = 0;
@@ -2528,29 +2045,6 @@ function nkTrackContact(lId, sellerId, sellerName) {
     nkLSSet(NK_REVIEW_PENDING_KEY, JSON.stringify(pending));
   }
 }
-
-/* Fire-and-forget: asks the ai-concierge-reply edge function for an instant
-   answer grounded in this listing's own facts. The function itself checks
-   whether this seller actually has the Elite AI Concierge turned on and
-   quietly no-ops (skipped:true) if not — nothing here needs to know or care. */
-async function nkMaybeTriggerAiConcierge(lId, token, name, message) {
-  try {
-    const res = await fetch(`${EDGE_URL}/ai-concierge-reply`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
-      body: JSON.stringify({ listingId: lId, buyerToken: token, buyerName: name, buyerMessage: message }),
-    });
-    const body = await res.json().catch(() => ({}));
-    if (!res.ok || body.skipped) return;
-    await loadThread();
-    if (typeof NKGlobalChat !== 'undefined' && NKGlobalChat.refresh) NKGlobalChat.refresh();
-  } catch (e) {
-    console.error('AI concierge trigger failed (non-fatal):', e);
-  }
-}
-
-// Counts a page open toward the "visited 5+ times" eligibility path —
-// only for listings that already have an active conversation.
 function nkRecordListingVisit(lId) {
   const pending = JSON.parse(nkLSGet(NK_REVIEW_PENDING_KEY) || '[]');
   const e = pending.find(p => p.listingId === lId && !p.done);
@@ -2558,70 +2052,41 @@ function nkRecordListingVisit(lId) {
   e.visitCount = (e.visitCount || 0) + 1;
   nkSavePending(pending);
 }
-
-// Stamped once per browser tab per listing (sessionStorage clears when the
-// tab closes) so a long-open tab counts toward the 2-hour threshold even
-// without a reload.
 function nkTabOpenElapsedMs(lId) {
   const key = 'nk_tab_open_' + lId;
   let start = sessionStorage.getItem(key);
   if (!start) { start = String(Date.now()); sessionStorage.setItem(key, start); }
   return Date.now() - Number(start);
 }
-
 function nkEntryEligible(entry) {
   const now = Date.now();
   if (now <= entry.snoozedUntil) return false;
   const conversationAge = now - entry.contactedAt;
   const visits = entry.visitCount || 0;
   const tabOpenMs = nkTabOpenElapsedMs(entry.listingId);
-  return conversationAge >= NK_REVIEW_ELIGIBLE_MS
-      || visits >= NK_REVIEW_MIN_VISITS
-      || tabOpenMs >= NK_REVIEW_TAB_OPEN_MS;
+  return conversationAge >= NK_REVIEW_ELIGIBLE_MS || visits >= NK_REVIEW_MIN_VISITS || tabOpenMs >= NK_REVIEW_TAB_OPEN_MS;
 }
-
 function nkCheckReviewPrompt(currentListingId) {
-  // Never show the "did you secure this property?" prompt to the seller
-  // browsing their own listing — it's a buyer-only flow.
   if (isListingOwner || !currentListingId) return;
-
-  // Requires proof the conversation/widget actually exists for THIS
-  // exact listing — the buyer must have an active token for it.
   if (!nkLSGet('nk_buyer_' + currentListingId)) return;
-
   const pending = JSON.parse(nkLSGet(NK_REVIEW_PENDING_KEY) || '[]');
   const entry = pending.find(p => p.listingId === currentListingId && !p.done);
-  if (!entry) return; // no tracked conversation for this listing — nothing to show, ever
-
+  if (!entry) return;
   nkRecordListingVisit(currentListingId);
-
-  // Re-read after recording the visit so visitCount reflects this load.
   const freshPending = JSON.parse(nkLSGet(NK_REVIEW_PENDING_KEY) || '[]');
   const freshEntry = freshPending.find(p => p.listingId === currentListingId && !p.done);
-  if (!freshEntry || !nkEntryEligible(freshEntry)) {
-    nkScheduleReviewRecheck(currentListingId);
-    return;
-  }
-
+  if (!freshEntry || !nkEntryEligible(freshEntry)) { nkScheduleReviewRecheck(currentListingId); return; }
   nkCurrentPendingEntry = freshEntry;
   document.getElementById('nk-review-banner').classList.add('show');
 }
-
-// Re-checks periodically in case the person just leaves the tab open long
-// enough to cross the 2-hour threshold, without needing a reload.
 function nkScheduleReviewRecheck(currentListingId) {
   if (!currentListingId || nkReviewRecheckTimer) return;
   const remaining = NK_REVIEW_TAB_OPEN_MS - nkTabOpenElapsedMs(currentListingId);
   const delay = (remaining > 0 ? Math.min(remaining, 30 * 60 * 1000) : 30 * 60 * 1000) + 1000;
-  nkReviewRecheckTimer = setTimeout(() => {
-    nkReviewRecheckTimer = null;
-    nkCheckReviewPrompt(currentListingId);
-  }, delay);
+  nkReviewRecheckTimer = setTimeout(() => { nkReviewRecheckTimer = null; nkCheckReviewPrompt(currentListingId); }, delay);
 }
-
 function nkSavePending(pending) { nkLSSet(NK_REVIEW_PENDING_KEY, JSON.stringify(pending)); }
 function nkDismissBanner() { document.getElementById('nk-review-banner').classList.remove('show'); }
-
 function nkSnoozeCurrentEntry() {
   if (!nkCurrentPendingEntry) return;
   const pending = JSON.parse(nkLSGet(NK_REVIEW_PENDING_KEY) || '[]');
@@ -2629,38 +2094,29 @@ function nkSnoozeCurrentEntry() {
   if (e) e.snoozedUntil = Date.now() + NK_REVIEW_SNOOZE_MS;
   nkSavePending(pending);
 }
-
 function nkBannerYes() {
   document.getElementById('nk-review-banner').classList.remove('show');
   document.getElementById('nk-review-seller-name').textContent = nkCurrentPendingEntry.sellerName || 'the seller';
   nkRenderStars('nk-seller-stars', 'seller');
   const nameInput = document.getElementById('nk-seller-review-name');
-  nameInput.value = buyerName || '';
-  nameInput.disabled = false;
+  nameInput.value = buyerName || ''; nameInput.disabled = false;
   document.getElementById('nk-seller-review-anon').checked = false;
   document.getElementById('nk-seller-review-modal').classList.add('open');
 }
-
-function nkBannerNotYet() {
-  nkSnoozeCurrentEntry(); // ask again in a few days
-  nkDismissBanner();
-}
-
+function nkBannerNotYet() { nkSnoozeCurrentEntry(); nkDismissBanner(); }
 function nkBannerNo() {
   const pending = JSON.parse(nkLSGet(NK_REVIEW_PENDING_KEY) || '[]');
   const e = pending.find(p => p.listingId === nkCurrentPendingEntry.listingId);
-  if (e) e.done = true; // no transaction happened — stop asking about this one
+  if (e) e.done = true;
   nkSavePending(pending);
   nkDismissBanner();
 }
-
 function nkRenderStars(containerId, kind) {
   const el = document.getElementById(containerId);
   el.innerHTML = [1,2,3,4,5].map(n =>
     `<svg class="nk-star" data-n="${n}" viewBox="0 0 24 24" tabindex="0" role="button" aria-label="${n} star${n>1?'s':''}" onclick="nkSetStar('${kind}',${n})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nkSetStar('${kind}',${n});}"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
   ).join('');
 }
-
 function nkSetStar(kind, n) {
   if (kind === 'seller') nkSellerStarRating = n; else nkPlatformStarRating = n;
   const container = document.getElementById(kind === 'seller' ? 'nk-seller-stars' : 'nk-platform-stars');
@@ -2668,46 +2124,28 @@ function nkSetStar(kind, n) {
 }
 function nkToggleAnon(kind) {
   const nameInput = document.getElementById(`nk-${kind}-review-name`);
-  const anonBox   = document.getElementById(`nk-${kind}-review-anon`);
-  if (anonBox.checked) {
-    nameInput.dataset.savedValue = nameInput.value;
-    nameInput.value = '';
-    nameInput.disabled = true;
-  } else {
-    nameInput.disabled = false;
-    nameInput.value = nameInput.dataset.savedValue || buyerName || '';
-  }
+  const anonBox = document.getElementById(`nk-${kind}-review-anon`);
+  if (anonBox.checked) { nameInput.dataset.savedValue = nameInput.value; nameInput.value = ''; nameInput.disabled = true; }
+  else { nameInput.disabled = false; nameInput.value = nameInput.dataset.savedValue || buyerName || ''; }
 }
-
 function nkCloseReviewModal(id) {
   document.getElementById(id).classList.remove('open');
-  // "Skip" on the seller-review modal used to leave the pending entry open
-  // forever, so the "did you secure this property?" banner kept coming
-  // back on every page load. Snoozing it here (same cooldown as "Not
-  // yet") stops the nagging while still asking again after a few days.
   if (id === 'nk-seller-review-modal' && nkCurrentPendingEntry) nkSnoozeCurrentEntry();
   if (id === 'nk-seller-review-modal') nkMaybePromptPlatformReview();
 }
-
 let nkSellerReviewSubmitting = false;
 async function nkSubmitSellerReview() {
   if (nkSellerReviewSubmitting) return;
   if (!nkSellerStarRating) { alert('Please pick a star rating'); return; }
   nkSellerReviewSubmitting = true;
-  const comment    = document.getElementById('nk-seller-review-text').value.trim();
-  const isAnon     = document.getElementById('nk-seller-review-anon').checked;
-  const typedName  = document.getElementById('nk-seller-review-name').value.trim();
+  const comment = document.getElementById('nk-seller-review-text').value.trim();
+  const isAnon = document.getElementById('nk-seller-review-anon').checked;
+  const typedName = document.getElementById('nk-seller-review-name').value.trim();
   const reviewerName = isAnon ? null : (typedName || buyerName || null);
 
   await db.from('reviews').insert({
-    review_type: 'seller',
-    target_seller_id: nkCurrentPendingEntry.sellerId,
-    listing_id: nkCurrentPendingEntry.listingId,
-    reviewer_role: 'buyer',
-    reviewer_name: reviewerName,
-    is_anonymous: isAnon,
-    rating: nkSellerStarRating,
-    comment: comment || null,
+    review_type: 'seller', target_seller_id: nkCurrentPendingEntry.sellerId, listing_id: nkCurrentPendingEntry.listingId,
+    reviewer_role: 'buyer', reviewer_name: reviewerName, is_anonymous: isAnon, rating: nkSellerStarRating, comment: comment || null,
   });
 
   const pending = JSON.parse(nkLSGet(NK_REVIEW_PENDING_KEY) || '[]');
@@ -2720,41 +2158,31 @@ async function nkSubmitSellerReview() {
   document.getElementById('nk-seller-review-name').value = '';
   document.getElementById('nk-seller-review-name').disabled = false;
   document.getElementById('nk-seller-review-anon').checked = false;
-   nkSellerStarRating = 0;
+  nkSellerStarRating = 0;
   nkSellerReviewSubmitting = false;
-  loadSellerReviewStats(nkCurrentPendingEntry.sellerId); // refresh the visible average immediately
+  loadSellerReviewStats(nkCurrentPendingEntry.sellerId);
   nkMaybePromptPlatformReview();
 }
-
 function nkMaybePromptPlatformReview() {
-  if (nkLSGet(NK_PLATFORM_REVIEW_KEY)) return; // ask at most once, ever
+  if (nkLSGet(NK_PLATFORM_REVIEW_KEY)) return;
   nkPlatformStarRating = 0;
   nkRenderStars('nk-platform-stars', 'platform');
   const nameInput = document.getElementById('nk-platform-review-name');
-  nameInput.value = buyerName || '';
-  nameInput.disabled = false;
+  nameInput.value = buyerName || ''; nameInput.disabled = false;
   document.getElementById('nk-platform-review-anon').checked = false;
   setTimeout(() => document.getElementById('nk-platform-review-modal').classList.add('open'), 400);
 }
-
 let nkPlatformReviewSubmitting = false;
 async function nkSubmitPlatformReview() {
   if (nkPlatformReviewSubmitting) return;
   if (!nkPlatformStarRating) { alert('Please pick a star rating'); return; }
   nkPlatformReviewSubmitting = true;
-  const comment    = document.getElementById('nk-platform-review-text').value.trim();
-  const isAnon     = document.getElementById('nk-platform-review-anon').checked;
-  const typedName  = document.getElementById('nk-platform-review-name').value.trim();
+  const comment = document.getElementById('nk-platform-review-text').value.trim();
+  const isAnon = document.getElementById('nk-platform-review-anon').checked;
+  const typedName = document.getElementById('nk-platform-review-name').value.trim();
   const reviewerName = isAnon ? null : (typedName || buyerName || null);
 
-  await db.from('reviews').insert({
-    review_type: 'platform',
-    reviewer_role: 'buyer',
-    reviewer_name: reviewerName,
-    is_anonymous: isAnon,
-    rating: nkPlatformStarRating,
-    comment: comment || null,
-  });
+  await db.from('reviews').insert({ review_type: 'platform', reviewer_role: 'buyer', reviewer_name: reviewerName, is_anonymous: isAnon, rating: nkPlatformStarRating, comment: comment || null });
 
   nkLSSet(NK_PLATFORM_REVIEW_KEY, '1');
   nkPlatformReviewSubmitting = false;
@@ -2764,45 +2192,33 @@ async function nkSubmitPlatformReview() {
   document.getElementById('nk-platform-review-name').disabled = false;
   document.getElementById('nk-platform-review-anon').checked = false;
 }
-
-/* ── Report a listing ── */
 function nkOpenReportModal(targetType, targetId) {
   nkReportTargetType = targetType || 'listing';
-  nkReportTargetId   = targetId || null;
+  nkReportTargetId = targetId || null;
   document.getElementById('nk-report-reason').value = '';
   const amtEl = document.getElementById('nk-report-amount');
   if (amtEl) amtEl.value = '';
   nkToggleReportAmountField();
   document.getElementById('nk-report-modal').classList.add('open');
 }
-
 function nkToggleReportAmountField() {
   const reason = document.getElementById('nk-report-reason').value;
   const wrap = document.getElementById('nk-report-amount-wrap');
   if (!wrap) return;
   wrap.style.display = (reason === 'unreasonable_fee' || reason === 'scam_attempt') ? 'block' : 'none';
 }
-
-function nkCloseReportModal() {
-  document.getElementById('nk-report-modal').classList.remove('open');
-}
-
+function nkCloseReportModal() { document.getElementById('nk-report-modal').classList.remove('open'); }
 let nkReportSubmitting = false;
 async function nkSubmitReport() {
   if (nkReportSubmitting) return;
-  const reason  = document.getElementById('nk-report-reason').value;
-  const amount  = document.getElementById('nk-report-amount')?.value.trim();
-  let   details = document.getElementById('nk-report-details').value.trim();
+  const reason = document.getElementById('nk-report-reason').value;
+  const amount = document.getElementById('nk-report-amount')?.value.trim();
+  let details = document.getElementById('nk-report-details').value.trim();
   if (!reason) { alert('Please select a reason'); return; }
   if (amount) details = `Amount seller asked for: KES ${Number(amount).toLocaleString('en-KE')}\n\n${details}`;
 
   nkReportSubmitting = true;
-  await db.from('reports').insert({
-    target_type: nkReportTargetType,
-    target_id: nkReportTargetId,
-    reason,
-    details: details || null,
-  });
+  await db.from('reports').insert({ target_type: nkReportTargetType, target_id: nkReportTargetId, reason, details: details || null });
   nkReportSubmitting = false;
 
   document.getElementById('nk-report-modal').classList.remove('open');
@@ -2812,22 +2228,15 @@ async function nkSubmitReport() {
   if (amtReset) amtReset.value = '';
   nkToggleReportAmountField();
 
-  if (nkReportTargetType === 'listing' && nkReportTargetId) {
-    nkMarkListingReported(nkReportTargetId);
-  }
-
+  if (nkReportTargetType === 'listing' && nkReportTargetId) nkMarkListingReported(nkReportTargetId);
   alert("Thanks — we've received your report. Our team reviews every one, and impostor or scam accounts get suspended immediately once confirmed.");
 }
-
-/* ── Remembers which listings this browser has already reported, so the
-   button gives clear feedback instead of inviting repeat spam-clicking. ── */
 function nkMarkListingReported(lId) {
   const key = 'nk_reported_listings';
   const reported = JSON.parse(nkLSGet(key) || '[]');
   if (!reported.includes(lId)) { reported.push(lId); nkLSSet(key, JSON.stringify(reported)); }
   nkUpdateReportButtonState(lId);
 }
-
 function nkUpdateReportButtonState(lId) {
   const reported = JSON.parse(nkLSGet('nk_reported_listings') || '[]');
   const btn = document.getElementById('report-scam-btn');
@@ -2838,36 +2247,23 @@ function nkUpdateReportButtonState(lId) {
     btn.onclick = () => { if (confirm('You already reported this listing. Submit another report anyway?')) nkOpenReportModal('listing', lId); };
   }
 }
-
-/* ── Seller rating summary shown in the contact card ── */
 async function loadSellerReviewStats(sellerId) {
   if (!sellerId) return;
-  const { data, error } = await db
-    .from('reviews')
-    .select('rating')
-    .eq('review_type', 'seller')
-    .eq('target_seller_id', sellerId)
-    .eq('status', 'published');
-
+  const { data, error } = await db.from('reviews').select('rating').eq('review_type', 'seller').eq('target_seller_id', sellerId).eq('status', 'published');
   const wrap = document.getElementById('seller-rating');
   if (error || !data || !data.length) { wrap.style.display = 'none'; return; }
-
   const avg = data.reduce((s,r) => s + r.rating, 0) / data.length;
   const rounded = Math.round(avg * 10) / 10;
   const fullStars = Math.round(avg);
-
   wrap.innerHTML = `
     <span style="display:inline-flex;gap:1px;vertical-align:middle">${[1,2,3,4,5].map(n => `
-      <svg viewBox="0 0 24 24" width="13" height="13" style="${n<=fullStars?'fill:var(--gold);stroke:var(--gold)':'fill:none;stroke:var(--border)'};stroke-width:1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`).join('')}</span>
+      <svg viewBox="0 0 24 24" width="13" height="13" style="${n<=fullStars?'fill:var(--green);stroke:var(--green)':'fill:none;stroke:var(--border)'};stroke-width:1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`).join('')}</span>
     <span style="font-size:12px;color:var(--text-2);font-weight:600;margin-left:4px">${rounded}</span>
     <span style="font-size:11px;color:var(--text-3)">(${data.length} review${data.length!==1?'s':''})</span>`;
-  wrap.style.display = 'flex';
-  wrap.style.alignItems = 'center';
+  wrap.style.display = 'flex'; wrap.style.alignItems = 'center';
 }
 
-
-
-//* Boot */
+/* Boot */
 document.getElementById('footer-year').textContent = new Date().getFullYear();
 nkPopulateFooterCounties();
 loadListing();
@@ -2879,7 +2275,7 @@ loadListing();
   function nkWaitForListingUuid(cb, tries) {
     tries = tries || 0;
     if (listingId) { cb(listingId); return; }
-    if (tries > 100) return; // gave up after ~10s — listing likely failed to load
+    if (tries > 100) return;
     setTimeout(() => nkWaitForListingUuid(cb, tries + 1), 100);
   }
   NKSaved.init().then(() => {
