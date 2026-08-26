@@ -2485,8 +2485,18 @@ function notifySms(type, payload) {
         <td>
           <div class="action-btns">
             ${l.status==='pending'?(aBtn('approve','Approve listing','approve',`approveListing('${l.id}')`)+aBtn('reject','Reject listing','reject',`rejectListing('${l.id}')`)):''}
-            ${l.status==='active'?aBtn('extend','Extend expiry date','view',`extendListingDate('${l.id}')`):''}
+            ${isTrial?aBtn('upgrade','Process upgrade','upgrade',`openUpgradeModal('${l.id}')`):''}
+            ${aBtn('extend','Extend expiry date','view',`extendListingDate('${l.id}')`)}
+            ${l.status==='active'&&!l.is_featured?aBtn('feature','Feature listing','feature',`featureListing('${l.id}')`):''}
+            ${l.is_featured?aBtn('unfeature','Unfeature listing','view',`unfeatureListing('${l.id}')`):''}
             ${aBtn('view','View details','view',`openListingModal('${l.id}')`)}
+            ${aBtn('edit','Edit listing','view',`openEditListingModal('${l.id}')`)}
+            ${l.is_disabled
+              ? aBtn('activate','Activate listing','approve',`activateListing('${l.id}')`)
+              : aBtn('deactivate','Deactivate listing','reject',`deactivateListing('${l.id}')`)}
+            ${l.status==='active'&&!l.is_disabled?renderSocialButtons(l):''}
+            ${aBtn('recycle','Move to recycle bin','reject',`recycleListing('${l.id}')`)}
+            ${aBtn('delete','Delete permanently','delete',`deleteListingPermanently('${l.id}')`)}
           </div>
           ${mobileMenu(l.id, menuItems)}
         </td>
@@ -2517,7 +2527,7 @@ function notifySms(type, payload) {
         <div class="mobile-card-actions">
           ${l.status==='pending'?(aBtn('approve','Approve','approve',`approveListing('${l.id}')`)+aBtn('reject','Reject','reject',`rejectListing('${l.id}')`)):''}
           ${isTrial?aBtn('upgrade','Upgrade','upgrade',`openUpgradeModal('${l.id}')`):''}
-          ${l.status==='active'?aBtn('extend','Extend','view',`extendListingDate('${l.id}')`):''}
+          ${aBtn('extend','Extend','view',`extendListingDate('${l.id}')`)}
           ${l.status==='active'&&!l.is_featured?aBtn('feature','Feature','feature',`featureListing('${l.id}')`):''}
           ${l.is_featured?aBtn('unfeature','Unfeature','view',`unfeatureListing('${l.id}')`):''}
           ${l.status==='active'&&!l.is_disabled?renderSocialButtons(l):''}
