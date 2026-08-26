@@ -176,6 +176,20 @@
     td { padding: 13px 16px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text-2); vertical-align: middle; }
     tr:last-child td { border-bottom: none; }
     tr:hover td { background: var(--surface); }
+    /* Every table in this dashboard ends with an Actions column. When the
+       table scrolls horizontally (min-width:920px above), that column was
+       the first thing to disappear off the right edge — reading as "the
+       actions are gone" when they're really just one scroll away. Pinning
+       the last column keeps Actions on-screen at all times, however far
+       the rest of the row is scrolled. */
+    .table-wrap table th:last-child,
+    .table-wrap table td:last-child {
+      position: sticky; right: 0; z-index: 5;
+      background: var(--white);
+      box-shadow: -1px 0 0 var(--border);
+    }
+    .table-wrap table th:last-child { background: var(--surface); }
+    .table-wrap table tr:hover td:last-child { background: var(--surface); }
     input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--green); cursor: pointer; }
 
     .listing-thumb { display: flex; align-items: center; gap: 12px; }
