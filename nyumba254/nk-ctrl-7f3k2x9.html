@@ -2487,14 +2487,14 @@ function notifySms(type, payload) {
             ${l.status==='pending'?(aBtn('approve','Approve listing','approve',`approveListing('${l.id}')`)+aBtn('reject','Reject listing','reject',`rejectListing('${l.id}')`)):''}
             ${isTrial?aBtn('upgrade','Process upgrade','upgrade',`openUpgradeModal('${l.id}')`):''}
             ${aBtn('extend','Extend expiry date','view',`extendListingDate('${l.id}')`)}
-            ${l.status==='active'&&!l.is_featured?aBtn('feature','Feature listing','feature',`featureListing('${l.id}')`):''}
+            ${!l.is_featured?aBtn('feature','Feature listing','feature',`featureListing('${l.id}')`):''}
             ${l.is_featured?aBtn('unfeature','Unfeature listing','view',`unfeatureListing('${l.id}')`):''}
             ${aBtn('view','View details','view',`openListingModal('${l.id}')`)}
             ${aBtn('edit','Edit listing','view',`openEditListingModal('${l.id}')`)}
             ${l.is_disabled
               ? aBtn('activate','Activate listing','approve',`activateListing('${l.id}')`)
               : aBtn('deactivate','Deactivate listing','reject',`deactivateListing('${l.id}')`)}
-            ${l.status==='active'&&!l.is_disabled?renderSocialButtons(l):''}
+            ${renderSocialButtons(l)}
             ${aBtn('recycle','Move to recycle bin','reject',`recycleListing('${l.id}')`)}
             ${aBtn('delete','Delete permanently','delete',`deleteListingPermanently('${l.id}')`)}
           </div>
@@ -2528,9 +2528,9 @@ function notifySms(type, payload) {
           ${l.status==='pending'?(aBtn('approve','Approve','approve',`approveListing('${l.id}')`)+aBtn('reject','Reject','reject',`rejectListing('${l.id}')`)):''}
           ${isTrial?aBtn('upgrade','Upgrade','upgrade',`openUpgradeModal('${l.id}')`):''}
           ${aBtn('extend','Extend','view',`extendListingDate('${l.id}')`)}
-          ${l.status==='active'&&!l.is_featured?aBtn('feature','Feature','feature',`featureListing('${l.id}')`):''}
+          ${!l.is_featured?aBtn('feature','Feature','feature',`featureListing('${l.id}')`):''}
           ${l.is_featured?aBtn('unfeature','Unfeature','view',`unfeatureListing('${l.id}')`):''}
-          ${l.status==='active'&&!l.is_disabled?renderSocialButtons(l):''}
+          ${renderSocialButtons(l)}
           ${aBtn('view','View','view',`openListingModal('${l.id}')`)}
           ${aBtn('edit','Edit','view',`openEditListingModal('${l.id}')`)}
           ${l.is_disabled
@@ -3017,11 +3017,11 @@ function notifySms(type, payload) {
     document.getElementById('modal-footer').innerHTML = `
       ${l.status==='pending'?`<button class="btn-modal approve" onclick="approveListing('${l.id}');closeModal()">Approve</button><button class="btn-modal reject" onclick="rejectListing('${l.id}');closeModal()">Reject</button>`:''}
       ${l.payment_status==='trial'?`<button class="btn-modal approve" onclick="closeModal();openUpgradeModal('${l.id}')">Process upgrade</button>`:''}
-      ${l.status==='active'?`<button class="btn-modal cancel" onclick="closeModal();extendListingDate('${l.id}')">📅 Extend expiry</button>`:''}
-      ${l.status==='active'&&!l.is_featured?`<button class="btn-modal approve" onclick="featureListing('${l.id}');closeModal()">★ Feature</button>`:''}
+      <button class="btn-modal cancel" onclick="closeModal();extendListingDate('${l.id}')">📅 Extend expiry</button>
+      ${!l.is_featured?`<button class="btn-modal approve" onclick="featureListing('${l.id}');closeModal()">★ Feature</button>`:''}
       ${l.is_featured?`<button class="btn-modal cancel" onclick="unfeatureListing('${l.id}');closeModal()">☆ Unfeature</button>`:''}
       ${l.is_disabled?`<button class="btn-modal approve" onclick="activateListing('${l.id}');closeModal()">Activate</button>`:`<button class="btn-modal reject" onclick="deactivateListing('${l.id}');closeModal()">Deactivate</button>`}
-      ${l.status==='active'&&!l.is_disabled?`<button class="btn-modal cancel" onclick="postToSocial('${l.id}','facebook')">📘 Post to Facebook</button><button class="btn-modal cancel" onclick="postToSocial('${l.id}','instagram')">📷 Post to Instagram</button><button class="btn-modal cancel" onclick="postToSocial('${l.id}','tiktok')">🎵 Post to TikTok (private)</button>`:''}
+      <button class="btn-modal cancel" onclick="postToSocial('${l.id}','facebook')">📘 Post to Facebook</button><button class="btn-modal cancel" onclick="postToSocial('${l.id}','instagram')">📷 Post to Instagram</button><button class="btn-modal cancel" onclick="postToSocial('${l.id}','tiktok')">🎵 Post to TikTok (private)</button>
       <button class="btn-modal cancel" onclick="openEditListingModal('${l.id}');closeModal()">Edit</button>
       <button class="btn-modal reject" onclick="closeModal();recycleListing('${l.id}')">🗑 Move to recycle bin</button>
       <button class="btn-modal reject" onclick="closeModal();deleteListingPermanently('${l.id}')">Delete permanently</button>
