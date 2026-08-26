@@ -169,8 +169,9 @@
     .bulk-count { font-size: 13px; font-weight: 600; color: var(--green-dark); }
 
     /* TABLE */
-    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; }
     .table-wrap table { min-width: 920px; }
+    .table-wrap table th, .table-wrap table td { scroll-snap-align: start; }
     table { width: 100%; border-collapse: collapse; }
     th { padding: 10px 16px; text-align: left; font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border); background: var(--surface); white-space: nowrap; }
     td { padding: 13px 16px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text-2); vertical-align: middle; }
@@ -187,6 +188,11 @@
       position: sticky; right: 0; z-index: 5;
       background: var(--white);
       box-shadow: -1px 0 0 var(--border);
+      min-width: 112px;
+    }
+    .table-wrap table td:last-child .action-btns:has(> .action-btn.icon) {
+      grid-template-columns: repeat(3, 28px);
+      gap: 4px;
     }
     .table-wrap table th:last-child { background: var(--surface); }
     .table-wrap table tr:hover td:last-child { background: var(--surface); }
