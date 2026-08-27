@@ -60,6 +60,24 @@
     #gcw-send:disabled{opacity:.5;cursor:not-allowed}
     @media(max-width:480px){#gcw-panel{right:16px;bottom:88px;width:calc(100vw - 32px)}#gcw-btn{right:16px;bottom:16px}}
     @media(max-width:380px){#gcw-btn-label{display:none}#gcw-btn{padding:0;width:52px;justify-content:center}}
+    .gcw-thread-subbar{padding:8px 14px;background:#E1F5EE;border-bottom:1px solid #e0ded8;flex-shrink:0}
+    #gcw-book-viewing-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:9px;background:#fff;color:#085041;border:1.5px solid #0F6E56;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s}
+    #gcw-book-viewing-btn:hover{background:#E1F5EE}
+    #gcw-viewing-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2200;align-items:center;justify-content:center;padding:20px;font-family:'Inter',sans-serif}
+    #gcw-viewing-overlay.open{display:flex}
+    #gcw-viewing-modal{background:#fff;border-radius:16px;max-width:420px;width:100%;padding:26px 24px;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+    #gcw-viewing-modal h3{font-size:18px;font-weight:700;color:#1a1a18;margin-bottom:4px}
+    #gcw-viewing-modal p.gcw-v-sub{font-size:12.5px;color:#888780;margin-bottom:18px;line-height:1.5}
+    .gcw-v-field{margin-bottom:14px}
+    .gcw-v-field label{display:block;font-size:11.5px;font-weight:700;color:#4a4a46;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+    .gcw-v-field input,.gcw-v-field textarea,.gcw-v-field select{width:100%;padding:10px 13px;border:1.5px solid #e0ded8;border-radius:10px;font-size:13.5px;color:#1a1a18;background:#f7f6f2;outline:none;font-family:inherit;transition:border-color .15s,background .15s}
+    .gcw-v-field input:focus,.gcw-v-field textarea:focus,.gcw-v-field select:focus{border-color:#0F6E56;background:#fff}
+    .gcw-v-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .gcw-v-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
+    #gcw-viewing-modal .gcw-v-cancel{background:#f7f6f2;color:#4a4a46;padding:10px 18px;border-radius:8px;font-size:13px;border:none;cursor:pointer;font-family:inherit}
+    #gcw-viewing-modal .gcw-v-submit{background:#0F6E56;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:inherit}
+    #gcw-viewing-modal .gcw-v-submit:hover{background:#085041}
+    #gcw-viewing-modal .gcw-v-submit:disabled{opacity:.6;cursor:not-allowed}
   `;
   const styleEl = document.createElement('style');
   styleEl.textContent = STYLE;
@@ -84,6 +102,12 @@
             <a id="gcw-thread-link" href="#">View listing →</a>
           </div>
         </div>
+        <div class="gcw-thread-subbar">
+          <button id="gcw-book-viewing-btn" type="button">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Book a viewing
+          </button>
+        </div>
         <div id="gcw-messages"></div>
         <div id="gcw-input-row">
           <textarea id="gcw-input" placeholder="Type a message…" rows="1"></textarea>
@@ -92,6 +116,116 @@
       </div>
     </div>
   `);
+
+  document.body.insertAdjacentHTML('beforeend', `
+    <div id="gcw-viewing-overlay">
+      <div id="gcw-viewing-modal" role="dialog" aria-modal="true" aria-labelledby="gcw-viewing-title">
+        <h3 id="gcw-viewing-title">Book a viewing</h3>
+        <p class="gcw-v-sub">Request a time to view this property — the seller will confirm.</p>
+        <div class="gcw-v-row2">
+          <div class="gcw-v-field">
+            <label>Date <span style="color:#C53030">*</span></label>
+            <input type="date" id="gcw-v-date"/>
+          </div>
+          <div class="gcw-v-field">
+            <label>Time <span style="color:#C53030">*</span></label>
+            <select id="gcw-v-time">
+              <option value="">Select time</option>
+              <option value="Morning (8am–11am)">Morning (8am–11am)</option>
+              <option value="Midday (11am–2pm)">Midday (11am–2pm)</option>
+              <option value="Afternoon (2pm–5pm)">Afternoon (2pm–5pm)</option>
+              <option value="Evening (5pm–7pm)">Evening (5pm–7pm)</option>
+            </select>
+          </div>
+        </div>
+        <div class="gcw-v-field">
+          <label>Full name <span style="color:#C53030">*</span></label>
+          <input type="text" id="gcw-v-name" placeholder="Your full name"/>
+        </div>
+        <div class="gcw-v-field">
+          <label>Phone <span style="color:#C53030">*</span></label>
+          <input type="tel" id="gcw-v-phone" placeholder="07XX XXX XXX"/>
+        </div>
+        <div class="gcw-v-field">
+          <label>Notes <span style="text-transform:none;font-weight:400;color:#888780">optional</span></label>
+          <textarea id="gcw-v-notes" rows="2" placeholder="Anything the seller should know…"></textarea>
+        </div>
+        <div class="gcw-v-actions">
+          <button class="gcw-v-cancel" type="button" id="gcw-v-cancel">Cancel</button>
+          <button class="gcw-v-submit" type="button" id="gcw-v-submit">Request viewing</button>
+        </div>
+      </div>
+    </div>
+  `);
+
+  let viewingContext = { listingId: null, buyerToken: null };
+  let viewingSubmitting = false;
+
+  function openBookViewing(listingId, buyerToken) {
+    listingId = String(listingId);
+    buyerToken = buyerToken || localStorage.getItem('nk_buyer_' + listingId) || null;
+    viewingContext = { listingId, buyerToken };
+    document.getElementById('gcw-v-date').value = '';
+    document.getElementById('gcw-v-date').min = new Date().toISOString().split('T')[0];
+    document.getElementById('gcw-v-time').value = '';
+    document.getElementById('gcw-v-name').value = localStorage.getItem('nk_buyer_name_' + listingId) || '';
+    document.getElementById('gcw-v-phone').value = localStorage.getItem('nk_buyer_phone_' + listingId) || '';
+    document.getElementById('gcw-v-notes').value = '';
+    document.getElementById('gcw-viewing-overlay').classList.add('open');
+  }
+  function closeBookViewing() { document.getElementById('gcw-viewing-overlay').classList.remove('open'); }
+
+  async function submitBookViewing() {
+    if (viewingSubmitting) return;
+    const { listingId } = viewingContext;
+    if (!listingId) return;
+    const date = document.getElementById('gcw-v-date').value;
+    const time = document.getElementById('gcw-v-time').value;
+    const name = document.getElementById('gcw-v-name').value.trim();
+    const phone = document.getElementById('gcw-v-phone').value.trim();
+    const notes = document.getElementById('gcw-v-notes').value.trim();
+    if (!date || !time || !name || !phone) { alert('Please fill in date, time, name and phone.'); return; }
+
+    viewingSubmitting = true;
+    const submitBtn = document.getElementById('gcw-v-submit');
+    submitBtn.disabled = true; submitBtn.textContent = 'Sending…';
+
+    let buyerToken = viewingContext.buyerToken || localStorage.getItem('nk_buyer_' + listingId);
+    if (!buyerToken) {
+      buyerToken = (crypto.randomUUID ? crypto.randomUUID() : Date.now()+'-'+Math.random().toString(36).slice(2));
+      localStorage.setItem('nk_buyer_' + listingId, buyerToken);
+    }
+    localStorage.setItem('nk_buyer_name_' + listingId, name);
+    localStorage.setItem('nk_buyer_phone_' + listingId, phone);
+
+    const vId = (crypto.randomUUID ? crypto.randomUUID() : Date.now()+'-'+Math.random().toString(36).slice(2));
+    const { error: vErr } = await gdb.from('viewing_requests').insert({
+      id: vId, listing_id: listingId, buyer_token: buyerToken,
+      buyer_name: name, buyer_phone: phone,
+      requested_date: date, requested_time: time, notes: notes || null,
+    });
+    if (vErr) {
+      viewingSubmitting = false;
+      submitBtn.disabled = false; submitBtn.textContent = 'Request viewing';
+      alert('Could not send your viewing request: ' + (vErr.message || 'unknown error') + ' — please try again.');
+      return;
+    }
+
+    const summary = `📅 Viewing requested\nDate: ${date}\nTime: ${time}${notes ? `\nNotes: ${notes}` : ''}`;
+    await gdb.from('messages').insert({
+      listing_id: listingId, buyer_token: buyerToken,
+      buyer_name: name, buyer_phone: phone,
+      sender: 'buyer', content: summary
+    });
+
+    fetch(`${EDGE_URL}/send-notification-email`, { method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`},
+      body: JSON.stringify({ type:'viewing_request', listingId, buyerName:name, buyerPhone:phone, date, time, notes }) }).catch(()=>{});
+
+    viewingSubmitting = false;
+    submitBtn.disabled = false; submitBtn.textContent = 'Request viewing';
+    closeBookViewing();
+    loadConversations().then(() => openConversation(listingId, buyerToken));
+  }
 
   let conversations = [];
   let activeListingId = null;
@@ -370,6 +504,10 @@
   document.getElementById('gcw-input').addEventListener('input', function(){
     this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,100)+'px';
   });
+  document.getElementById('gcw-v-cancel').addEventListener('click', closeBookViewing);
+  document.getElementById('gcw-v-submit').addEventListener('click', submitBookViewing);
+  document.getElementById('gcw-viewing-overlay').addEventListener('click', (e) => { if (e.target.id === 'gcw-viewing-overlay') closeBookViewing(); });
+  document.getElementById('gcw-book-viewing-btn').addEventListener('click', () => { if (activeListingId) openBookViewing(activeListingId, activeBuyerToken); });
 
   // Public API — call this from listing.html the instant a buyer sends a
   // new enquiry, so the widget shows it immediately without waiting.
@@ -377,6 +515,7 @@
     refresh: loadConversations,
     open: openConversation,
     registerAndOpen: function(listingId, buyerToken) { openConversation(listingId, buyerToken); },
+    openBookViewing: openBookViewing,
   };
 
   loadConversations();
