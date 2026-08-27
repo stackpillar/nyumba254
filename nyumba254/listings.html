@@ -197,7 +197,6 @@
     .card-img img { width: 100%; height: 100%; object-fit: cover; }
     .card-img-placeholder { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--text-3); }
     .card-img-placeholder svg { width: 32px; height: 32px; opacity: .3; stroke: currentColor; fill: none; stroke-width: 1.5; }
-    .badge-featured { position: absolute; top: 10px; left: 10px; background: var(--green-dark); color: white; font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
     .badge-cat { position: absolute; top: 10px; right: 10px; font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; text-transform: capitalize; }
     .badge-cat.apartment { background: var(--green); color: white; }
     .badge-cat.house { background: var(--green-dark); color: white; }
@@ -212,6 +211,52 @@
     .card-meta { display: flex; gap: 12px; font-size: 12px; color: var(--text-2); padding-top: 10px; border-top: 1px solid var(--border); flex-wrap: wrap; }
     .card-meta-item { display: flex; align-items: center; gap: 4px; }
     .card-meta-item svg { width: 13px; height: 13px; stroke: var(--text-3); fill: none; stroke-width: 2; }
+
+    /* ── Expanded card additions: carousel, status pill, room types, amenities, inline inquiry ── */
+    .card-carousel-arrow {
+      position: absolute; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; border-radius: 50%;
+      background: rgba(255,255,255,0.92); border: none; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 3; transition: background .15s;
+    }
+    .card-carousel-arrow:hover { background: white; }
+    .card-carousel-arrow svg { width: 14px; height: 14px; stroke: var(--text); fill: none; stroke-width: 2.5; }
+    .card-carousel-arrow.prev { left: 8px; }
+    .card-carousel-arrow.next { right: 8px; }
+    .card-photo-counter { position: absolute; bottom: 8px; right: 10px; background: rgba(0,0,0,0.55); color: white; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; z-index: 2; }
+    .card-photo-dots { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); display: flex; gap: 3px; z-index: 2; }
+    .card-photo-dots span { width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,0.5); }
+    .card-photo-dots span.active { background: white; }
+    .card-status-pill { position: absolute; top: 10px; left: 10px; z-index: 2; display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; background: white; color: var(--green-dark); }
+    .card-status-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+    .card-status-pill.low::before { background: var(--text-3); }
+    .card-status-pill.low { color: var(--text-2); }
+
+    .card-roomtypes { display: grid; grid-template-columns: repeat(auto-fit, minmax(72px, 1fr)); gap: 6px; margin-bottom: 10px; }
+    .card-roomtype-chip { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; text-align: left; }
+    .card-roomtype-chip .rt-label { font-size: 10.5px; font-weight: 600; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-roomtype-chip .rt-price { font-size: 12px; font-weight: 700; color: var(--green-dark); margin-top: 1px; }
+
+    .card-specs-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .card-spec-chip { display: flex; align-items: center; gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 4px 9px; font-size: 11px; color: var(--text-2); font-weight: 500; }
+    .card-spec-chip svg { width: 12px; height: 12px; stroke: var(--text-3); fill: none; stroke-width: 2; }
+
+    .card-amenities { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
+    .card-amenity-chip { background: var(--green-light); color: var(--green-dark); border-radius: 20px; padding: 3px 9px; font-size: 10.5px; font-weight: 600; }
+    .card-amenity-chip.more { background: var(--surface); color: var(--text-3); border: 1px solid var(--border); }
+
+    .card-inquire-btn {
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 10px; border-radius: var(--radius); background: var(--green); color: white;
+      font-size: 13px; font-weight: 600; transition: background .15s;
+    }
+    .card-inquire-btn:hover { background: var(--green-dark); }
+    .card-inquire-btn svg { width: 14px; height: 14px; stroke: white; fill: none; stroke-width: 2; }
+
+    .ci-success { display: none; text-align: center; padding: 10px 0 4px; }
+    .ci-success-icon { width: 46px; height: 46px; background: var(--green-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
+    .ci-success-icon svg { width: 22px; height: 22px; stroke: var(--green); fill: none; stroke-width: 2.5; }
+    .ci-success h4 { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .ci-success p { font-size: 13px; color: var(--text-3); }
 
     .skeleton { background: white; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); }
     .skeleton-img { height: 180px; background: linear-gradient(90deg, #f0efe9 25%, #e8e7e1 50%, #f0efe9 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
@@ -353,7 +398,6 @@
     <a href="/listings" class="nav-link" style="color:var(--green);font-weight:500">Browse</a>
     <a href="/how-it-works" class="nav-link">How it works</a>
     <a href="/about" class="nav-link">About us</a>
-    <a href="/pricing" class="nav-link">Pricing</a>
     <a href="/faq" class="nav-link">FAQ</a>
     <a href="/login" class="nav-link" id="nav-account-link">Sign in</a>
     <a href="/saved" class="nav-link">
@@ -373,7 +417,6 @@
   <a href="/listings">Browse listings</a>
   <a href="/how-it-works">How it works</a>
   <a href="/about" class="nav-link">About us</a>
-  <a href="/pricing">Pricing</a>
   <a href="/faq">FAQ</a>
   <a href="/login" id="mobile-account-link">Sign in</a>
   <a href="/saved">
@@ -649,6 +692,54 @@
   </div>
 </div>
 <div class="notify-success-toast" id="notify-success-toast">✓ You're set! We'll reach out the moment a match goes live.</div>
+
+<!-- ══ INLINE CARD INQUIRY POPUP ══ -->
+<div class="notify-modal-overlay" id="card-inquiry-overlay" onclick="if(event.target===this) closeCardInquiry()">
+  <div class="notify-modal" style="max-width:420px" role="dialog" aria-modal="true" aria-labelledby="ci-title">
+    <div class="notify-modal-head">
+      <h3 id="ci-title">Send an enquiry</h3>
+      <button class="notify-modal-close" onclick="closeCardInquiry()" aria-label="Close">✕</button>
+    </div>
+    <div class="notify-modal-body">
+      <p class="notify-modal-sub" id="ci-listing-title">About this listing</p>
+
+      <div id="ci-form">
+        <div class="nf-field" id="ci-roomtype-field" style="display:none">
+          <label>Interested room type <span class="nf-optional">optional</span></label>
+          <select id="ci-roomtype"><option value="">Any available room</option></select>
+        </div>
+        <div class="nf-field">
+          <label>Your name</label>
+          <input type="text" id="ci-name" placeholder="e.g. Brian Otieno"/>
+        </div>
+        <div class="nf-field" id="ci-phone-field">
+          <label>Phone number</label>
+          <input type="tel" id="ci-phone" placeholder="07XX XXX XXX"/>
+        </div>
+        <div class="nf-field">
+          <label>Email <span class="nf-optional">optional</span></label>
+          <input type="email" id="ci-email" placeholder="you@example.com"/>
+        </div>
+        <div class="nf-field">
+          <label>Message</label>
+          <textarea id="ci-message" rows="3" maxlength="1000"></textarea>
+        </div>
+        <button class="card-inquire-btn" id="ci-submit-btn" onclick="submitCardInquiry()">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          Send message
+        </button>
+        <p class="enquiry-note">Your contact details are shared only with the seller of this listing.</p>
+      </div>
+
+      <div class="ci-success" id="ci-success">
+        <div class="ci-success-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <h4>Message sent!</h4>
+        <p>The seller will get back to you — you can view or continue this conversation from the listing page.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ EXIT INTENT — "did you find what you were looking for?" ══ -->
 <div class="notify-modal-overlay" id="exit-overlay">
   <div class="notify-modal" style="max-width:440px" role="dialog" aria-modal="true" aria-labelledby="exit-modal-title">
@@ -702,6 +793,7 @@
 <script>
   const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
+  const EDGE_URL = `${SUPABASE_URL}/functions/v1`;
   const { createClient } = supabase;
 
   const authStorage = {
@@ -1111,7 +1203,7 @@
     grid.innerHTML = Array(6).fill(`<div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line xshort"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>`).join('');
     document.getElementById('result-count').textContent = 'Loading…';
 
-    let query = db.from('listings').select('*, listing_photos(*)', { count: 'exact' }).eq('status', 'active');
+    let query = db.from('listings').select('*, listing_photos(*), listing_units(*)', { count: 'exact' }).eq('status', 'active');
 
     if (f.freq)     query = query.eq('price_frequency', f.freq);
     if (f.cat)      query = query.eq('category', f.cat);
@@ -1140,7 +1232,7 @@
 
     if (f.sort === 'price_asc')       query = query.order('price', { ascending: true });
     else if (f.sort === 'price_desc') query = query.order('price', { ascending: false });
-    else if (f.sort === 'featured')   query = query.order('is_featured', { ascending: false }).order('created_at', { ascending: false });
+    else if (f.sort === 'featured')   query = query.order('is_admin_verified', { ascending: false }).order('created_at', { ascending: false });
     else                              query = query.order('created_at', { ascending: false });
 
     const from = (currentPage - 1) * PAGE_SIZE;
@@ -1165,7 +1257,21 @@
     renderPagination(totalCount);
   }
 
-  /* ── Render listing cards ── */
+  /* ── Render listing cards (expanded style — carousel, status pill,
+     room-type/spec chips, amenity chips, inline Send Inquiry) ── */
+  const ciBedIcon  = `<svg viewBox="0 0 24 24"><path d="M2 4v16M22 4v16M2 12h20M2 8h4a2 2 0 012 2v2H2V8zM16 8h4a2 2 0 012 2v2h-6V8z"/></svg>`;
+  const ciBathIcon = `<svg viewBox="0 0 24 24"><path d="M9 6l1-1a2 2 0 012.83 0l6.17 6.17a1 1 0 010 1.41L17 14M3 20h18M5 20v-4a3 3 0 013-3h1"/></svg>`;
+  const ciSizeIcon = `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/></svg>`;
+  const ciFurnIcon = `<svg viewBox="0 0 24 24"><rect x="2" y="8" width="20" height="10" rx="2"/><path d="M6 8V6a2 2 0 012-2h8a2 2 0 012 2v2"/><line x1="6" y1="14" x2="6" y2="18"/><line x1="18" y1="14" x2="18" y2="18"/></svg>`;
+  const ciGroupIcon = `<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>`;
+  const ciWalkIcon = `<svg viewBox="0 0 24 24"><circle cx="12" cy="4" r="2"/><path d="M12 6v6l-3 8M12 12l3 8M9 10l-3 2M15 10l3 2"/></svg>`;
+
+  /* Per-listing state/lookup used by the card carousel + inquiry popup */
+  const cardPhotoIndex = {};
+  const cardDataById = {};
+  let ciActiveListingId = null;
+  let ciBuyerToken = null;
+
   function formatPrice(l) {
     const meta = NK_CATEGORIES[l.category] || { group: 'standard' };
     const prefix = meta.group === 'boarding' ? 'From ' : '';
@@ -1174,63 +1280,149 @@
     return `${prefix}KES ${p}${suffix ? `<span>${suffix}</span>` : ''}`;
   }
 
-  function buildCardMeta(l) {
-    const meta = NK_CATEGORIES[l.category] || { group: 'standard' };
-    const d = l.details || {};
-    const items = [];
-    const bedIcon  = `<svg viewBox="0 0 24 24"><path d="M2 4v16M22 4v16M2 12h20M2 8h4a2 2 0 012 2v2H2V8zM16 8h4a2 2 0 012 2v2h-6V8z"/></svg>`;
-    const bathIcon = `<svg viewBox="0 0 24 24"><path d="M9 6l1-1a2 2 0 012.83 0l6.17 6.17a1 1 0 010 1.41L17 14M3 20h18M5 20v-4a3 3 0 013-3h1"/></svg>`;
-    const sizeIcon = `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/></svg>`;
-    const furnIcon = `<svg viewBox="0 0 24 24"><rect x="2" y="8" width="20" height="10" rx="2"/><path d="M6 8V6a2 2 0 012-2h8a2 2 0 012 2v2"/><line x1="6" y1="14" x2="6" y2="18"/><line x1="18" y1="14" x2="18" y2="18"/></svg>`;
-    const groupIcon = `<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>`;
-    const tagIcon = `<svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`;
-
-    if (meta.group === 'standard') {
-      const beds = d.bedrooms;
-      if (beds !== undefined && beds !== null && beds !== '') items.push(`<div class="card-meta-item">${bedIcon}${beds == 0 ? 'Studio' : beds + ' bed'}</div>`);
-      if (d.bathrooms) items.push(`<div class="card-meta-item">${bathIcon}${d.bathrooms} bath</div>`);
-      if (d.size_sqm) items.push(`<div class="card-meta-item">${sizeIcon}${d.size_sqm}m²</div>`);
-      if (d.furnished === 'yes') items.push(`<div class="card-meta-item">${furnIcon}Furnished</div>`);
-      else if (d.furnished === 'partial') items.push(`<div class="card-meta-item">${furnIcon}Part-furnished</div>`);
-    } else if (meta.group === 'boarding') {
-      if (d.total_beds) items.push(`<div class="card-meta-item">${bedIcon}${d.total_beds} beds</div>`);
-      if (d.gender && d.gender !== 'mixed') items.push(`<div class="card-meta-item">${groupIcon}${d.gender.charAt(0).toUpperCase()+d.gender.slice(1)} only</div>`);
-      const rt = Array.isArray(d.room_types) ? d.room_types : [];
-      if (rt.length) items.push(`<div class="card-meta-item">${tagIcon}${rt.length} room type${rt.length!==1?'s':''}</div>`);
-    } else if (meta.group === 'airbnb') {
-      if (d.guests) items.push(`<div class="card-meta-item">${groupIcon}${d.guests} guests</div>`);
-      if (d.bedrooms) items.push(`<div class="card-meta-item">${bedIcon}${d.bedrooms} bed</div>`);
-      if (d.bathrooms) items.push(`<div class="card-meta-item">${bathIcon}${d.bathrooms} bath</div>`);
+  function buildStatusPill(l, meta) {
+    if (meta.group === 'boarding') {
+      const units = l.listing_units || [];
+      const total = units.reduce((s,u) => s + (u.quantity_total ?? u.quantity_available ?? 0), 0);
+      const available = units.reduce((s,u) => s + (u.quantity_available ?? 0), 0);
+      if (total > 0) {
+        if (available <= 0) return `<span class="card-status-pill low">Full</span>`;
+        if (available / total <= 0.2) return `<span class="card-status-pill low">Almost full</span>`;
+        return `<span class="card-status-pill">Available now</span>`;
+      }
     }
-    return items.join('');
+    return `<span class="card-status-pill">Available now</span>`;
   }
 
+  function buildRoomTypesHtml(l, d) {
+    const units = l.listing_units || [];
+    const rows = units.length
+      ? units.map(u => ({ label: u.unit_label, price: u.price }))
+      : (Array.isArray(d.room_types) ? d.room_types.map(t => ({ label: t.label, price: t.price })) : []);
+    if (!rows.length) return '';
+    return `<div class="card-roomtypes">${rows.slice(0,4).map(r => `
+      <div class="card-roomtype-chip">
+        <div class="rt-label">${escHtmlC(r.label)}</div>
+        <div class="rt-price">KES ${Number(r.price).toLocaleString('en-KE')}</div>
+      </div>`).join('')}</div>`;
+  }
+
+  function buildSpecsChipsHtml(l, meta, d) {
+    const chips = [];
+    if (meta.group === 'standard') {
+      if (d.bedrooms !== undefined && d.bedrooms !== null && d.bedrooms !== '') chips.push([ciBedIcon, d.bedrooms == 0 ? 'Studio' : d.bedrooms + ' bed']);
+      if (d.bathrooms) chips.push([ciBathIcon, d.bathrooms + ' bath']);
+      if (d.size_sqm) chips.push([ciSizeIcon, d.size_sqm + 'm²']);
+      if (d.furnished === 'yes') chips.push([ciFurnIcon, 'Furnished']);
+      else if (d.furnished === 'partial') chips.push([ciFurnIcon, 'Part-furnished']);
+    } else if (meta.group === 'airbnb') {
+      if (d.guests) chips.push([ciGroupIcon, d.guests + ' guests']);
+      if (d.bedrooms) chips.push([ciBedIcon, d.bedrooms + ' bed']);
+      if (d.bathrooms) chips.push([ciBathIcon, d.bathrooms + ' bath']);
+      if (d.min_stay) chips.push([ciSizeIcon, `${d.min_stay}+ night${d.min_stay==1?'':'s'}`]);
+    }
+    if (!chips.length) return '';
+    return `<div class="card-specs-chips">${chips.map(([icon,label]) => `<div class="card-spec-chip">${icon}${label}</div>`).join('')}</div>`;
+  }
+
+  function buildBoardingMetaHtml(l, d) {
+    const items = [];
+    if (d.gender && d.gender !== 'mixed') items.push(`<div class="card-meta-item">${ciGroupIcon}${d.gender.charAt(0).toUpperCase()+d.gender.slice(1)} only</div>`);
+    else items.push(`<div class="card-meta-item">${ciGroupIcon}Mixed</div>`);
+    if (d.institution) items.push(`<div class="card-meta-item">${ciWalkIcon}${escHtmlC(d.institution)}</div>`);
+    return items.length ? `<div class="card-meta">${items.join('')}</div>` : '';
+  }
+
+  function buildAmenitiesHtml(l) {
+    const list = Array.isArray(l.amenities) ? l.amenities : [];
+    if (!list.length) return '';
+    const labels = list.map(k => (NK_AMENITIES.find(a => a.key === k) || {}).label).filter(Boolean);
+    const shown = labels.slice(0, 3);
+    const extra = labels.length - shown.length;
+    return `<div class="card-amenities">
+      ${shown.map(l2 => `<span class="card-amenity-chip">${l2}</span>`).join('')}
+      ${extra > 0 ? `<span class="card-amenity-chip more">+${extra} more</span>` : ''}
+    </div>`;
+  }
+
+  function escHtmlC(str) { if (!str) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
   function buildCard(l) {
-    const photos = l.listing_photos || [];
+    const photos = l.listing_photos && l.listing_photos.length
+      ? [...l.listing_photos].sort((a,b) => a.position - b.position)
+      : [];
     const cover = photos.find(p => p.is_cover) || photos[0];
-    const imgHtml = cover
-      ? `<img src="${cover.url}" alt="${l.title}" loading="lazy"/>`
-      : `<div class="card-img-placeholder"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="font-size:11px">No photo</span></div>`;
+    if (cover) {
+      const coverIdx = photos.indexOf(cover);
+      if (cardPhotoIndex[l.id] === undefined) cardPhotoIndex[l.id] = coverIdx >= 0 ? coverIdx : 0;
+    }
+    cardDataById[l.id] = l;
+
     const meta = NK_CATEGORIES[l.category] || { label: l.category, group: 'standard' };
+    const d = l.details || {};
+    const idx = cardPhotoIndex[l.id] || 0;
+    const current = photos[idx];
+
+    const imgHtml = current
+      ? `<img id="card-img-${l.id}" src="${current.url}" alt="${l.title}" loading="lazy"/>`
+      : `<div class="card-img-placeholder" id="card-img-${l.id}"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="font-size:11px">No photo</span></div>`;
+
+    const carouselArrows = photos.length > 1 ? `
+      <button class="card-carousel-arrow prev" onclick="nkCardPhotoNav(event,'${l.id}',-1)" aria-label="Previous photo"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="card-carousel-arrow next" onclick="nkCardPhotoNav(event,'${l.id}',1)" aria-label="Next photo"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+      <div class="card-photo-counter" id="card-counter-${l.id}">${idx+1}/${photos.length}</div>` : '';
+
     const catBadge = `<span class="badge-cat ${l.category}">${meta.label}</span>`;
+    const statusPill = buildStatusPill(l, meta);
     const subText = l.address || (NK_AREA_TO_COUNTY[l.area] ? l.area + ', ' + nkCountyLabel(NK_AREA_TO_COUNTY[l.area]) : (l.county ? l.area + ', ' + nkCountyLabel(l.county) : 'Kenya'));
 
+    const middleHtml = meta.group === 'boarding'
+      ? buildBoardingMetaHtml(l, d) + buildRoomTypesHtml(l, d)
+      : buildSpecsChipsHtml(l, meta, d);
+
+    const goto = `window.location='/listing?id=${String(l.listing_number).padStart(6,'0')}'`;
+
     return `
-      <div class="card" onclick="window.location='/listing?id=${String(l.listing_number).padStart(6,'0')}'" role="button" tabindex="0" aria-label="${l.title}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.location='/listing?id=${String(l.listing_number).padStart(6,'0')}'}">
-        <div class="card-img">
+      <div class="card" onclick="${goto}" role="button" tabindex="0" aria-label="${l.title}" onkeydown="if(event.key==='Enter'){${goto}}">
+        <div class="card-img" id="card-imgwrap-${l.id}">
           ${imgHtml}
-          ${l.is_featured ? '<span class="badge-featured">Featured</span>' : ''}
+          ${statusPill}
           <div class="nk-heart-overlay">${typeof NKSaved !== 'undefined' ? NKSaved.buildHeartBtn(l.id) : ''}</div>
           ${catBadge}
+          ${carouselArrows}
         </div>
         <div class="card-body">
           <div class="card-area">${l.area}</div>
           <div class="card-title">${l.title}</div>
           <div class="card-sub">${subText}</div>
           <div class="card-price">${formatPrice(l)}</div>
-          <div class="card-meta">${buildCardMeta(l)}</div>
+          ${middleHtml}
+          ${buildAmenitiesHtml(l)}
+          <button type="button" class="card-inquire-btn" onclick="openCardInquiry(event,'${l.id}')">
+            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            Send Inquiry
+          </button>
         </div>
       </div>`;
+  }
+
+  /* Swap only the photo/counter DOM for one card — avoids re-rendering the
+     whole grid on every arrow click. */
+  function nkCardPhotoNav(event, listingId, dir) {
+    event.stopPropagation();
+    const l = cardDataById[listingId];
+    if (!l) return;
+    const photos = l.listing_photos && l.listing_photos.length
+      ? [...l.listing_photos].sort((a,b) => a.position - b.position)
+      : [];
+    if (photos.length < 2) return;
+    let idx = cardPhotoIndex[listingId] || 0;
+    idx = (idx + dir + photos.length) % photos.length;
+    cardPhotoIndex[listingId] = idx;
+    const imgEl = document.getElementById(`card-img-${listingId}`);
+    if (imgEl && imgEl.tagName === 'IMG') imgEl.src = photos[idx].url;
+    const counterEl = document.getElementById(`card-counter-${listingId}`);
+    if (counterEl) counterEl.textContent = `${idx+1}/${photos.length}`;
   }
 
   function renderResults(listings, count) {
@@ -1248,6 +1440,117 @@
       return;
     }
     grid.innerHTML = listings.map(buildCard).join('');
+  }
+
+  /* ════════════════════════════════════════════════════
+     INLINE CARD INQUIRY — same enquiries/messages tables
+     and buyer-token model as listing.html, but launched
+     from the grid card instead of the detail page.
+  ════════════════════════════════════════════════════ */
+  function openCardInquiry(event, listingId) {
+    event.stopPropagation();
+    const l = cardDataById[listingId];
+    if (!l) return;
+    ciActiveListingId = listingId;
+    ciBuyerToken = nkLSGetC('nk_buyer_' + listingId);
+
+    document.getElementById('ci-listing-title').textContent = l.title;
+    document.getElementById('ci-form').style.display = 'block';
+    document.getElementById('ci-success').style.display = 'none';
+    document.getElementById('ci-name').value = nkLSGetC('nk_buyer_name_' + listingId) || '';
+    document.getElementById('ci-phone').value = nkLSGetC('nk_buyer_phone_' + listingId) || '';
+    document.getElementById('ci-email').value = '';
+    document.getElementById('ci-message').value = `Hi, I'm interested in "${l.title}". Is it still available?`;
+    document.getElementById('ci-phone-field').style.display = l.contact_hidden ? 'none' : 'block';
+
+    const meta = NK_CATEGORIES[l.category] || { group: 'standard' };
+    const roomField = document.getElementById('ci-roomtype-field');
+    if (meta.group === 'boarding' && (l.listing_units || []).length) {
+      roomField.style.display = 'block';
+      const sel = document.getElementById('ci-roomtype');
+      sel.innerHTML = '<option value="">Any available room</option>' + l.listing_units
+        .filter(u => (u.quantity_available ?? 0) > 0)
+        .map(u => `<option value="${escHtmlC(u.unit_label)}">${escHtmlC(u.unit_label)} — KES ${Number(u.price).toLocaleString('en-KE')}/mo</option>`)
+        .join('');
+    } else {
+      roomField.style.display = 'none';
+    }
+
+    document.getElementById('card-inquiry-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeCardInquiry() {
+    document.getElementById('card-inquiry-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+    ciActiveListingId = null;
+  }
+
+  function nkLSGetC(key) { try { return localStorage.getItem(key); } catch(e) { return null; } }
+  function nkLSSetC(key, val) { try { localStorage.setItem(key, val); } catch(e) {} }
+
+  async function submitCardInquiry() {
+    if (!ciActiveListingId) return;
+    const l = cardDataById[ciActiveListingId];
+    const name = document.getElementById('ci-name').value.trim();
+    const phone = document.getElementById('ci-phone').value.trim();
+    const email = document.getElementById('ci-email').value.trim();
+    let message = document.getElementById('ci-message').value.trim();
+    const contactHidden = !!l?.contact_hidden;
+
+    if (!name) { alert('Please enter your name'); return; }
+    if (!contactHidden && (!phone || phone.replace(/\s/g,'').length < 9)) { alert('Please enter a valid phone number'); return; }
+    if (!message) { alert('Please enter a message'); return; }
+
+    const meta = NK_CATEGORIES[l.category] || { group: 'standard' };
+    if (meta.group === 'boarding') {
+      const roomType = document.getElementById('ci-roomtype').value;
+      if (roomType) message = `Interested room type: ${roomType}. ${message}`;
+    }
+
+    const btn = document.getElementById('ci-submit-btn');
+    btn.disabled = true; btn.textContent = 'Sending…';
+
+    const token = ciBuyerToken || (crypto.randomUUID ? crypto.randomUUID() : Date.now()+'-'+Math.random().toString(36).slice(2));
+    const enqId = (crypto.randomUUID ? crypto.randomUUID() : Date.now()+'-'+Math.random().toString(36).slice(2));
+    const { data: { session } } = await nkSessionPromise;
+    const currentUserId = session?.user?.id || null;
+
+    const { error: enqErr } = await db.from('enquiries').insert({
+      id: enqId, listing_id: ciActiveListingId, buyer_name: name, buyer_phone: phone,
+      buyer_email: email || null, buyer_token: token, buyer_id: currentUserId, message
+    });
+    if (enqErr) {
+      btn.disabled = false; btn.textContent = 'Send message';
+      alert('Something went wrong: ' + (enqErr.message || 'unknown error'));
+      return;
+    }
+
+    const msgId = (crypto.randomUUID ? crypto.randomUUID() : Date.now()+'-'+Math.random().toString(36).slice(2));
+    const { error: msgErr } = await db.from('messages').insert({
+      id: msgId, listing_id: ciActiveListingId, buyer_token: token, buyer_name: name,
+      buyer_phone: phone, buyer_id: currentUserId, sender: 'buyer', content: message
+    });
+    btn.disabled = false; btn.textContent = 'Send message';
+    if (msgErr) {
+      await db.from('enquiries').delete().eq('id', enqId);
+      alert('Something went wrong: ' + (msgErr.message || 'unknown error'));
+      return;
+    }
+
+    nkLSSetC('nk_buyer_' + ciActiveListingId, token);
+    nkLSSetC('nk_buyer_name_' + ciActiveListingId, name);
+    nkLSSetC('nk_buyer_phone_' + ciActiveListingId, phone);
+
+    fetch(`${EDGE_URL}/send-notification-email`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+      body: JSON.stringify({ type: 'new_buyer_enquiry', buyerName: name, buyerPhone: phone, buyerEmail: email || null, message, listingId: ciActiveListingId, listingTitle: l?.title }),
+    }).catch(e => console.error('Enquiry notify email failed:', e));
+
+    document.getElementById('ci-form').style.display = 'none';
+    document.getElementById('ci-success').style.display = 'block';
+    if (typeof NKGlobalChat !== 'undefined' && NKGlobalChat.registerAndOpen) NKGlobalChat.registerAndOpen(ciActiveListingId);
+    setTimeout(() => { closeCardInquiry(); }, 2200);
   }
 
   function renderPagination(count) {
