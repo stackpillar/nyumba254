@@ -202,6 +202,7 @@
     .badge-cat.house { background: var(--green-dark); color: white; }
     .badge-cat.boarding { background: var(--green-light); color: var(--green-dark); border: 1px solid var(--green-mid); }
     .badge-cat.airbnb { background: white; color: var(--green-dark); border: 1px solid var(--green); }
+    .badge-cat.commercial { background: var(--text); color: white; }
     .card-body { padding: 14px 16px; }
     .card-area { font-size: 11px; font-weight: 600; color: var(--green); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
     .card-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 3px; line-height: 1.35; }
@@ -357,6 +358,26 @@
     .exit-star.filled { fill:var(--green); stroke:var(--green); }
     .notify-success-toast.show { transform: translateY(0); opacity: 1; }
 
+    /* Footer */
+    footer { background: var(--text); color: rgba(255,255,255,0.6); padding: 48px 32px 28px; margin-top: 32px; }
+    .footer-inner { max-width: 1100px; margin: 0 auto; }
+    .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+    .footer-logo { font-family: 'Playfair Display', serif; font-size: 20px; color: white; margin-bottom: 10px; }
+    .footer-tagline { font-size: 13px; line-height: 1.7; max-width: 240px; }
+    .footer-col h4 { font-size: 12px; font-weight: 700; color: white; margin-bottom: 14px; letter-spacing: .08em; text-transform: uppercase; }
+    .footer-col a { display: block; font-size: 13px; color: rgba(255,255,255,0.55); margin-bottom: 8px; transition: color .15s; }
+    .footer-col a:hover { color: white; }
+    .footer-social { display: flex; gap: 8px; margin-top: 14px; }
+    .footer-social a { width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; transition: background .15s; }
+    .footer-social a:hover { background: var(--green); }
+    .footer-social svg { width: 15px; height: 15px; stroke: rgba(255,255,255,0.6); fill: none; stroke-width: 2; }
+    .footer-counties { column-count: 2; column-gap: 14px; max-height: 180px; overflow-y: auto; padding-right: 6px; }
+    .footer-counties a { margin-bottom: 8px; break-inside: avoid; }
+    .footer-counties::-webkit-scrollbar { width: 5px; }
+    .footer-counties::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .footer-bottom p { font-size: 12px; }
+
     @media (max-width: 900px) {
       .layout { grid-template-columns: 1fr; }
       .sidebar {
@@ -367,6 +388,8 @@
       .filter-toggle { display: flex; }
       .page-header { padding: 20px 16px 0; }
       .main { padding: 16px; }
+      footer { padding: 40px 16px 24px; }
+      .footer-top { grid-template-columns: 1fr 1fr; gap: 28px; }
     }
     @media (max-width: 768px) {
       nav { padding: 0 16px; }
@@ -381,6 +404,7 @@
       .header-search input, .header-search button { width: 100%; }
       .notify-strip-inner { flex-direction: column; align-items: flex-start; }
       .notify-strip-inner .btn { width: 100%; justify-content: center; }
+      .footer-top { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -459,6 +483,7 @@
         <div class="filter-pill" data-val="house" onclick="setPill(this,'cat-pills')">House</div>
         <div class="filter-pill" data-val="boarding" onclick="setPill(this,'cat-pills')">Boarding house</div>
         <div class="filter-pill" data-val="airbnb" onclick="setPill(this,'cat-pills')">Airbnb / Holiday</div>
+        <div class="filter-pill" data-val="commercial" onclick="setPill(this,'cat-pills')">Shops & offices</div>
       </div>
     </div>
 
@@ -590,6 +615,59 @@
   </main>
 </div>
 
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">Nyumba254</div>
+        <p class="footer-tagline">Find and list apartments, houses, boarding rooms, holiday rentals, and commercial spaces across Kenya — no agents, no commission.</p>
+        <div class="footer-social">
+          <a href="https://wa.me/254700000000" target="_blank" rel="noopener" title="WhatsApp">
+            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+          </a>
+          <a href="https://www.instagram.com/nyumba.254?igsh=Z2VhNzJkMm1td2Jz" target="_blank" rel="noopener" title="Instagram">
+            <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+          </a>
+          <a href="https://www.facebook.com/share/1EdzJKujSK/" target="_blank" rel="noopener" title="Facebook">
+            <svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+          </a>
+          <a href="https://www.tiktok.com/@nyumba.254?_r=1&_t=ZS-98w137YXueA" target="_blank" rel="noopener" title="TikTok">
+            <svg viewBox="0 0 24 24"><path d="M9 12a4 4 0 104 4V4a5 5 0 005 5"/></svg>
+          </a>
+          <a href="https://x.com/Nyumba254" target="_blank" rel="noopener" title="X (Twitter)">
+            <svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Browse</h4>
+        <a href="/listings">All listings</a>
+        <a href="/listings?category=apartment">Apartments</a>
+        <a href="/listings?category=house">Houses</a>
+        <a href="/listings?category=boarding">Boarding houses</a>
+        <a href="/listings?category=airbnb">Airbnb / Holiday rentals</a>
+        <a href="/listings?category=commercial">Shops & offices</a>
+      </div>
+      <div class="footer-col">
+        <h4>Counties</h4>
+        <div class="footer-counties" id="footer-counties"></div>
+      </div>
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <a href="/post-listing">List a property</a>
+        <a href="/login">Seller login</a>
+        <a href="/how-it-works">How it works</a>
+        <a href="/contact">Contact us</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© <span id="footer-year">2026</span> Nyumba254. All rights reserved.</p>
+      <p>Kisumu · Nairobi · Mombasa · Kenya</p>
+    </div>
+  </div>
+</footer>
+
 <!-- ══ NOTIFY ME MODAL ══ -->
 <div class="notify-modal-overlay" id="notify-modal-overlay" onclick="if(event.target===this) closeNotifyModal()">
   <div class="notify-modal" role="dialog" aria-modal="true" aria-labelledby="notify-modal-title">
@@ -635,6 +713,7 @@
           <div class="filter-pill" data-val="house" onclick="nfSetPill(this,'nf-cat-pills')">House</div>
           <div class="filter-pill" data-val="boarding" onclick="nfSetPill(this,'nf-cat-pills')">Boarding house</div>
           <div class="filter-pill" data-val="airbnb" onclick="nfSetPill(this,'nf-cat-pills')">Airbnb / Holiday</div>
+          <div class="filter-pill" data-val="commercial" onclick="nfSetPill(this,'nf-cat-pills')">Shops & offices</div>
         </div>
       </div>
 
@@ -812,10 +891,11 @@
      PROPERTY TYPES — must mirror NK_CATEGORIES in post-listing.html
      ══════════════════════════════════════════════════════════════ */
   const NK_CATEGORIES = {
-    apartment: { label: 'Apartment', group: 'standard' },
-    house:     { label: 'House',     group: 'standard' },
-    boarding:  { label: 'Boarding house', group: 'boarding' },
-    airbnb:    { label: 'Airbnb / Holiday', group: 'airbnb' },
+    apartment:  { label: 'Apartment', group: 'standard' },
+    house:      { label: 'House',     group: 'standard' },
+    boarding:   { label: 'Boarding house', group: 'boarding' },
+    airbnb:     { label: 'Airbnb / Holiday', group: 'airbnb' },
+    commercial: { label: 'Shops & offices', group: 'commercial' },
   };
   const NK_FREQ_LABEL = { month: '/mo', night: '/night', week: '/week', term: '/term', once: '' };
   const NK_FREQ_TAG_LABEL = { month: 'Monthly', night: 'Nightly', week: 'Weekly', term: 'Per term', once: 'One-time (sale)' };
@@ -931,6 +1011,16 @@
     if (!sel) return;
     sel.innerHTML = '<option value="">All counties</option>' +
       NK_COUNTIES.map(c => `<option value="${c}">${nkCountyLabel(c)}</option>`).join('');
+  }
+
+  function nkPopulateFooterCounties() {
+    const el = document.getElementById('footer-counties');
+    if (!el) return;
+    el.innerHTML = NK_COUNTIES.map(county => {
+      const hasAreas = (NK_AREAS_BY_COUNTY[county] || []).length > 0;
+      const href = hasAreas ? `listings.html?county=${encodeURIComponent(county)}` : '#';
+      return `<a href="${href}">${nkCountyLabel(county)}</a>`;
+    }).join('');
   }
 
   function renderAreaChecklist(county) {
@@ -1051,14 +1141,14 @@
     const bedSection = document.getElementById('bedrooms-filter-section');
     const furnSection = document.getElementById('furnished-filter-section');
 
-    if (group === 'boarding') {
+    if (group === 'boarding' || group === 'commercial') {
       setPill(document.querySelector('#bed-pills .filter-pill[data-val=""]'), 'bed-pills');
       bedSection.style.display = 'none';
     } else {
       bedSection.style.display = '';
     }
 
-    if (group === 'boarding' || group === 'airbnb') {
+    if (group === 'boarding' || group === 'airbnb' || group === 'commercial') {
       setPill(document.querySelector('#furn-pills .filter-pill[data-val=""]'), 'furn-pills');
       furnSection.style.display = 'none';
     } else {
@@ -1307,6 +1397,9 @@
       </div>`).join('')}</div>`;
   }
 
+  const ciParkIcon = `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17V7h4a3 3 0 010 6H9"/></svg>`;
+  const ciSecurityIcon = `<svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>`;
+
   function buildSpecsChipsHtml(l, meta, d) {
     const chips = [];
     if (meta.group === 'standard') {
@@ -1320,10 +1413,17 @@
       if (d.bedrooms) chips.push([ciBedIcon, d.bedrooms + ' bed']);
       if (d.bathrooms) chips.push([ciBathIcon, d.bathrooms + ' bath']);
       if (d.min_stay) chips.push([ciSizeIcon, `${d.min_stay}+ night${d.min_stay==1?'':'s'}`]);
+    } else if (meta.group === 'commercial') {
+      if (d.size_sqm) chips.push([ciSizeIcon, d.size_sqm + 'm²']);
+      if (d.parking) chips.push([ciParkIcon, nkTitleCaseC(d.parking)]);
+      if (d.security) chips.push([ciSecurityIcon, nkTitleCaseC(d.security)]);
+      if (d.unit_type) chips.push([ciGroupIcon, nkTitleCaseC(d.unit_type)]);
     }
     if (!chips.length) return '';
     return `<div class="card-specs-chips">${chips.map(([icon,label]) => `<div class="card-spec-chip">${icon}${label}</div>`).join('')}</div>`;
   }
+
+  function nkTitleCaseC(s) { if (!s) return ''; return String(s).replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase()); }
 
   function buildBoardingMetaHtml(l, d) {
     const items = [];
@@ -1776,6 +1876,8 @@
     }
   }
 
+  document.getElementById('footer-year').textContent = new Date().getFullYear();
+  nkPopulateFooterCounties();
   nkPopulateCountySelect();
   renderAreaChecklist('');
   renderAmenityChecks();
