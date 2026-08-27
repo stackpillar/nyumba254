@@ -872,6 +872,7 @@ let tierRows           = [];
 let tierSeq             = 0;
 let mapObj = null, mapMarker = null;
 let mapLat = -1.286389, mapLng = 36.817223; // default Nairobi center until geocoded/GPS'd
+let draftsReady = false; // blocks autosave until any existing draft has been loaded, so init-time calls (like the first addTierRow) can't overwrite it with blank data
 
 const STEP_LABELS = { 1:'Type', 2:'Basics', 3:'Details', 4:'Photos', 5:'Contact' };
 
@@ -902,6 +903,7 @@ async function init() {
   }
 
   await loadAndApplyDraft();
+  draftsReady = true;
 
   document.querySelector('.page-wrap').addEventListener('input', scheduleDraftSave);
   document.querySelector('.page-wrap').addEventListener('change', scheduleDraftSave);
@@ -1346,6 +1348,7 @@ function collectDraftData() {
   };
 }
 function scheduleDraftSave() {
+  if (!draftsReady) return;
   clearTimeout(draftLocalTimer);
   draftLocalTimer = setTimeout(() => {
     document.getElementById('save-status').textContent = '✓ Draft saved';
