@@ -1167,7 +1167,7 @@
         <div class="form-group"><label>Area</label>
           <select id="edit-area"></select>
         </div>
-        <div class="form-group"><label>Category</label><select id="edit-category"><option value="apartment">Apartment</option><option value="house">House</option><option value="boarding">Boarding House</option><option value="airbnb">Airbnb / Holiday Rental</option></select></div>
+        <div class="form-group"><label>Category</label><select id="edit-category"><option value="apartment">Apartment</option><option value="house">House</option><option value="boarding">Boarding House</option><option value="airbnb">Airbnb / Holiday Rental</option><option value="commercial">Shops & Offices</option></select></div>
         <div class="form-group" style="grid-column:1/-1"><label>Address / sub-area</label><input type="text" id="edit-address"/></div>
         <div class="form-group" style="grid-column:1/-1"><label>Description</label><textarea id="edit-description" style="min-height:120px"></textarea></div>
         <div class="form-group" style="grid-column:1/-1"><label>Furnished</label><label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:10px;background:var(--surface);border-radius:6px;text-transform:none;letter-spacing:0"><input type="checkbox" id="edit-furnished"/> This apartment is furnished</label></div>
@@ -1274,7 +1274,7 @@
       <div class="form-grid">
         <div class="form-group"><label>County</label><select id="val-county" onchange="valPopulateAreas()"></select></div>
         <div class="form-group"><label>Area</label><select id="val-area"><option value="">Any area in county</option></select></div>
-        <div class="form-group"><label>Category</label><select id="val-category"><option value="apartment">Apartment</option><option value="house">House</option><option value="boarding">Boarding House</option><option value="airbnb">Airbnb / Holiday Rental</option></select></div>
+        <div class="form-group"><label>Category</label><select id="val-category"><option value="apartment">Apartment</option><option value="house">House</option><option value="boarding">Boarding House</option><option value="airbnb">Airbnb / Holiday Rental</option><option value="commercial">Shops & Offices</option></select></div>
         <div class="form-group"><label>Sale or rent</label><select id="val-price-type"><option value="rent">To let (monthly)</option><option value="sale">For sale</option></select></div>
         <div class="form-group"><label>Bedrooms</label><input type="number" id="val-bedrooms" min="0" max="20" placeholder="e.g. 2"/></div>
       </div>
@@ -1293,7 +1293,7 @@
       <p style="font-size:12.5px;color:var(--text-3);margin-bottom:16px;line-height:1.6">Jot down a few bullet points about the property and let AI draft a polished title, description, and a suggested price range based on similar listings.</p>
       <div class="form-group"><label>Apply to an existing listing (optional)</label><select id="ai-listing-select" onchange="document.getElementById('btn-apply-ai-listing').style.display = (this.value && aiListingLastResult) ? 'inline-flex' : 'none'"><option value="">Just generate text — I'll copy it myself</option></select></div>
       <div class="form-grid">
-        <div class="form-group"><label>Category</label><select id="ai-listing-category"><option value="apartment">Apartment</option><option value="house">House</option><option value="boarding">Boarding House</option><option value="airbnb">Airbnb / Holiday Rental</option></select></div>
+        <div class="form-group"><label>Category</label><select id="ai-listing-category"><option value="apartment">Apartment</option><option value="house">House</option><option value="boarding">Boarding House</option><option value="airbnb">Airbnb / Holiday Rental</option><option value="commercial">Shops & Offices</option></select></div>
         <div class="form-group"><label>Sale or rent</label><select id="ai-listing-price-type"><option value="rent">To let (monthly)</option><option value="sale">For sale</option></select></div>
         <div class="form-group"><label>Bedrooms</label><input type="number" id="ai-listing-bedrooms" min="0" max="20" placeholder="e.g. 2"/></div>
         <div class="form-group"><label>Area</label><input type="text" id="ai-listing-area" placeholder="e.g. Milimani, Kisumu"/></div>
@@ -3275,7 +3275,7 @@ async function loadDemandInsights(){
     </div>`;
   }).join('');
 
-  const catLabels={apartment:'Apartment',house:'House',boarding:'Boarding House',airbnb:'Airbnb / Holiday Rental'};
+  const catLabels={apartment:'Apartment',house:'House',boarding:'Boarding House',airbnb:'Airbnb / Holiday Rental',commercial:'Shops & Offices'};
   const catMax=Math.max(...Object.values(catCounts),1);
   catWrap.innerHTML=Object.keys(catLabels).map(k=>{
     const c=catCounts[k]||0;

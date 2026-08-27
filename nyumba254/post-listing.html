@@ -71,7 +71,7 @@
     .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
 
     /* ── Property type cards (Step 1) ── */
-    .cat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+    .cat-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
     .cat-option { border:2px solid var(--border); border-radius:var(--radius-lg); padding:20px 16px; cursor:pointer; transition:all .2s; text-align:left; background:white; position:relative; }
     .cat-option:hover { border-color:var(--green-mid); }
     .cat-option.selected { border-color:var(--green); background:var(--green-light); }
@@ -292,6 +292,12 @@
           <div class="cat-option-icon"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
           <div class="cat-option-title">Airbnb / Holiday Rental</div>
           <div class="cat-option-desc">Short stays and furnished rentals</div>
+        </div>
+        <div class="cat-option" data-cat="commercial" onclick="selectCat(this)">
+          <div class="cat-option-check">✓</div>
+          <div class="cat-option-icon"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6M9 11h.01M15 11h.01M9 7h.01M15 7h.01"/></svg></div>
+          <div class="cat-option-title">Shops & Offices</div>
+          <div class="cat-option-desc">Retail shops, offices, and business spaces</div>
         </div>
       </div>
     </div>
@@ -523,6 +529,59 @@
       </div>
     </div>
 
+    <!-- Shops & Offices details -->
+    <div class="form-card" id="details-commercial" style="display:none">
+      <h2>Shop / Office Details</h2>
+      <p class="hint">Business tenants care about space, access, and lease terms most.</p>
+      <div class="grid-2">
+        <div class="field">
+          <label>Property type <span class="req">*</span></label>
+          <select id="comm_type">
+            <option value="">Select…</option>
+            <option value="shop">Retail shop</option>
+            <option value="office">Office space</option>
+            <option value="warehouse">Warehouse / godown</option>
+            <option value="showroom">Showroom</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Floor area (m²) <span class="req">*</span></label>
+          <input type="number" id="comm_size" placeholder="e.g. 120" min="0"/>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Lease/Sale type <span class="req">*</span></label>
+          <select id="comm_lease_type">
+            <option value="lease">Lease (rent)</option>
+            <option value="sale">For sale</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Parking <span class="req">*</span></label>
+          <select id="comm_parking">
+            <option value="">Select…</option>
+            <option value="private">Private/dedicated parking</option>
+            <option value="shared">Shared compound parking</option>
+            <option value="street">Street parking only</option>
+            <option value="none">No parking</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Frontage / visibility <span class="opt">optional</span></label>
+        <input type="text" id="comm_frontage" placeholder="e.g. Main road frontage, high foot traffic"/>
+      </div>
+      <div class="field">
+        <label>Fit-out condition <span class="req">*</span></label>
+        <select id="comm_condition">
+          <option value="">Select…</option>
+          <option value="shell">Shell / bare — tenant fits out</option>
+          <option value="fitted">Fitted / ready to use</option>
+        </select>
+      </div>
+    </div>
+
     <!-- Shared amenities — every property type -->
     <div class="form-card">
       <h2>Amenities</h2>
@@ -665,10 +724,11 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY);
    what "group" its structured fields belong to when saved.
    ══════════════════════════════════════════════════════════════ */
 const NK_CATEGORIES = {
-  apartment: { label: 'Apartment', group: 'standard', detailsTitle: 'Apartment Details' },
-  house:     { label: 'House',     group: 'standard', detailsTitle: 'House Details' },
-  boarding:  { label: 'Boarding House', group: 'boarding', detailsTitle: 'Boarding House Details' },
-  airbnb:    { label: 'Airbnb / Holiday Rental', group: 'airbnb', detailsTitle: 'Airbnb / Holiday Rental Details' },
+  apartment:  { label: 'Apartment', group: 'standard', detailsTitle: 'Apartment Details' },
+  house:      { label: 'House',     group: 'standard', detailsTitle: 'House Details' },
+  boarding:   { label: 'Boarding House', group: 'boarding', detailsTitle: 'Boarding House Details' },
+  airbnb:     { label: 'Airbnb / Holiday Rental', group: 'airbnb', detailsTitle: 'Airbnb / Holiday Rental Details' },
+  commercial: { label: 'Shops & Offices', group: 'commercial', detailsTitle: 'Shop / Office Details' },
 };
 
 const NK_AMENITIES = [
@@ -855,6 +915,7 @@ function applyCategoryUI() {
   document.getElementById('details-standard').style.display = meta.group === 'standard' ? 'block' : 'none';
   document.getElementById('details-boarding').style.display = meta.group === 'boarding' ? 'block' : 'none';
   document.getElementById('details-airbnb').style.display   = meta.group === 'airbnb'   ? 'block' : 'none';
+  document.getElementById('details-commercial').style.display = meta.group === 'commercial' ? 'block' : 'none';
   document.getElementById('details-standard-title').textContent = meta.detailsTitle;
   document.getElementById('units-field').style.display = selectedCat === 'apartment' ? 'block' : 'none';
   document.getElementById('bedrooms-row').style.display = selectedCat === 'house' || selectedCat === 'apartment' ? 'grid' : 'none';
@@ -871,6 +932,9 @@ function applyCategoryUI() {
     priceLabel.innerHTML = 'Price per night (KES) <span class="req">*</span>';
     priceHint.textContent = 'Nightly rate shown to guests browsing short stays.';
     freqSel.value = 'night';
+  } else if (meta.group === 'commercial') {
+    priceLabel.innerHTML = 'Price (KES) <span class="req">*</span>';
+    priceHint.textContent = 'Monthly lease rate, or asking price if for sale.';
   } else {
     priceLabel.innerHTML = 'Price (KES) <span class="req">*</span>';
     priceHint.textContent = 'Enter digits only — choose the payment frequency alongside it.';
@@ -1213,6 +1277,13 @@ function renderReview() {
       <div class="summary-row"><span>Guests</span><strong>${document.getElementById('air_guests').value || '—'}</strong></div>
       <div class="summary-row"><span>Bedrooms / Bathrooms</span><strong>${document.getElementById('air_bedrooms').value || '—'} / ${document.getElementById('air_bathrooms').value || '—'}</strong></div>
       <div class="summary-row"><span>Minimum stay</span><strong>${document.getElementById('air_min_stay').value} night(s)</strong></div>`;
+  } else if (meta.group === 'commercial') {
+    detailRows = `
+      <div class="summary-row"><span>Property type</span><strong>${document.getElementById('comm_type').value || '—'}</strong></div>
+      <div class="summary-row"><span>Floor area</span><strong>${document.getElementById('comm_size').value || '—'} m²</strong></div>
+      <div class="summary-row"><span>Lease/Sale</span><strong>${document.getElementById('comm_lease_type').value}</strong></div>
+      <div class="summary-row"><span>Parking</span><strong>${document.getElementById('comm_parking').value || '—'}</strong></div>
+      <div class="summary-row"><span>Condition</span><strong>${document.getElementById('comm_condition').value || '—'}</strong></div>`;
   }
 
   const amenityLabels = NK_AMENITIES.filter(a => selectedAmenities.has(a.key)).map(a => a.label).join(', ') || 'None selected';
@@ -1443,6 +1514,15 @@ async function submitListing() {
         min_stay: document.getElementById('air_min_stay').value,
         checkin: document.getElementById('air_checkin').value || null,
         house_rules: document.getElementById('air_rules').value || null,
+      });
+    } else if (meta.group === 'commercial') {
+      Object.assign(detailsPayload, {
+        property_type: document.getElementById('comm_type').value || null,
+        size_sqm: document.getElementById('comm_size').value || null,
+        lease_type: document.getElementById('comm_lease_type').value,
+        parking: document.getElementById('comm_parking').value || null,
+        frontage: document.getElementById('comm_frontage').value || null,
+        condition: document.getElementById('comm_condition').value || null,
       });
     }
 
