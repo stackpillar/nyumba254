@@ -18,7 +18,7 @@
   <meta name="twitter:image" id="twitter-image" content="https://nyumba254.com/hero-photo.jpg"/>
   <meta name="twitter:site" content="@Nyumba254"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
@@ -41,7 +41,6 @@
     button { font-family:inherit; cursor:pointer; border:none; }
     input,select,textarea { font-family:inherit; }
 
-    /* Navbar */
     nav { position:sticky; top:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:0 32px; height:64px; background:var(--white); border-bottom:1px solid var(--border); }
     .logo { display:flex; align-items:center; gap:10px; font-family:'Playfair Display',serif; font-size:20px; color:var(--green-dark); }
     .logo-icon { width:34px; height:34px; background:var(--green); border-radius:8px; display:flex; align-items:center; justify-content:center; }
@@ -52,8 +51,6 @@
     .btn-primary { display:inline-flex; align-items:center; gap:6px; font-size:14px; font-weight:500; padding:9px 18px; border-radius:var(--radius); background:var(--green); color:white; transition:background .15s; }
     .btn-primary:hover { background:var(--green-dark); }
     .nav-count { background: var(--green); color: white; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; min-width: 16px; text-align: center; }
-
-    /* Mobile menu */
     .mobile-menu-btn { display:none; background:none; border:none; cursor:pointer; padding:6px; border-radius:6px; }
     .mobile-menu-btn svg { width:22px; height:22px; stroke:var(--text); fill:none; stroke-width:2; display:block; }
     .mobile-nav { display:none; position:fixed; top:64px; left:0; right:0; background:var(--white); border-bottom:1px solid var(--border); padding:16px; z-index:99; flex-direction:column; gap:4px; box-shadow:0 8px 24px rgba(0,0,0,0.1); }
@@ -63,20 +60,22 @@
     .mobile-nav .btn-primary { text-align:center; justify-content:center; margin-top:8px; }
     @media (max-width:768px) { .nav-links { display:none; } .mobile-menu-btn { display:flex; } }
 
-    /* Breadcrumb */
-    .breadcrumb { padding:14px 32px; display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-3); background:var(--white); border-bottom:1px solid var(--border); }
-    .breadcrumb a { color:var(--text-3); transition:color .15s; }
-    .breadcrumb a:hover { color:var(--green); }
-    .breadcrumb svg { width:14px; height:14px; stroke:var(--border); fill:none; stroke-width:2; flex-shrink:0; }
-    .breadcrumb span { color:var(--text-2); font-weight:500; }
+    .page-wrap { max-width:1120px; margin:0 auto; padding:20px 24px 80px; }
+    .layout { display:grid; grid-template-columns:1fr 360px; gap:28px; align-items:start; }
 
-    /* Page layout */
-    .page-wrap { max-width:1100px; margin:0 auto; padding:32px 24px 80px; }
-    .layout { display:grid; grid-template-columns:1fr 360px; gap:32px; align-items:start; }
+    .top-bar { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px; }
+    .back-link { display:inline-flex; align-items:center; gap:6px; font-size:14px; font-weight:600; color:var(--green-dark); }
+    .back-link svg { width:16px; height:16px; stroke:var(--green-dark); fill:none; stroke-width:2.2; }
+    .top-bar-actions { display:flex; gap:8px; }
+    .top-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:20px; border:1.5px solid var(--border); background:var(--white); font-size:13px; font-weight:600; cursor:pointer; transition:all .15s; }
+    .top-btn svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2; }
+    .top-btn.report { color:var(--red); border-color:#f3c6c6; }
+    .top-btn.report:hover { background:var(--red-light); }
+    .top-btn.share { color:var(--green-dark); border-color:var(--green-mid); }
+    .top-btn.share:hover { background:var(--green-light); }
 
-    /* Gallery */
-    .gallery { border-radius:var(--radius-lg); overflow:hidden; background:#111; margin-bottom:24px; position:relative; }
-    .gallery-main { width:100%; aspect-ratio:var(--gallery-ratio, 16/9); position:relative; overflow:hidden; background:#111; display:flex; align-items:center; justify-content:center; transition:aspect-ratio .25s ease; max-height:65vh; }
+    .gallery { border-radius:var(--radius-lg); overflow:hidden; background:#111; margin-bottom:20px; position:relative; }
+    .gallery-main { width:100%; aspect-ratio:var(--gallery-ratio, 16/9); position:relative; overflow:hidden; background:#111; display:flex; align-items:center; justify-content:center; transition:aspect-ratio .25s ease; max-height:62vh; }
     .gallery-main img { position:relative; z-index:1; width:100%; height:100%; object-fit:cover; object-position:center; transition:opacity .3s; }
     .gallery-no-photo { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:12px; color:var(--text-3); }
     .gallery-no-photo svg { width:48px; height:48px; stroke:var(--border); fill:none; stroke-width:1.5; }
@@ -87,123 +86,100 @@
     .gallery-arrow.next { right:12px; }
     .gallery-counter { position:absolute; bottom:12px; right:14px; background:rgba(0,0,0,0.55); color:white; font-size:12px; font-weight:500; padding:3px 10px; border-radius:20px; z-index:2; }
     .gallery-thumbs { display:flex; gap:8px; padding:10px; overflow-x:auto; background:var(--white); border-top:1px solid var(--border); }
-    .gallery-thumb { width:72px; height:52px; border-radius:6px; overflow:hidden; flex-shrink:0; border:2px solid transparent; cursor:pointer; transition:border-color .15s; }
+    .gallery-thumb { width:72px; height:52px; border-radius:6px; overflow:hidden; flex-shrink:0; border:2px solid transparent; cursor:pointer; transition:border-color .15s; position:relative; }
     .gallery-thumb.active { border-color:var(--green); }
+    .gallery-thumb.more-overlay::after { content:attr(data-more); position:absolute; inset:0; background:rgba(8,80,65,0.72); color:white; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; text-align:center; line-height:1.3; }
     .gallery-thumb:focus-visible, .gallery-main img:focus-visible { outline:2px solid var(--green); outline-offset:2px; }
     .gallery-thumb img { width:100%; height:100%; object-fit:cover; }
-    .featured-overlay { position:absolute; top:14px; left:14px; z-index:2; background:var(--green-dark); color:white; font-size:11px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:.04em; display:flex; align-items:center; gap:5px; }
+    .gallery-main img { cursor:zoom-in; }
 
-    /* Action row */
-    .action-row { display:flex; align-items:center; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
-    .action-pill { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:20px; border:1.5px solid var(--border); background:var(--white); font-size:13px; font-weight:500; color:var(--text-2); cursor:pointer; transition:all .15s; }
-    .action-pill:hover { border-color:var(--green); color:var(--green); }
-    .action-pill svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2; }
+    .badge-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+    .status-pill { display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; padding:5px 12px; border-radius:20px; background:var(--green-light); color:var(--green-dark); text-transform:uppercase; letter-spacing:.02em; }
+    .status-pill svg { width:12px; height:12px; stroke:var(--green-dark); fill:none; stroke-width:2.4; }
+    .status-pill.verified { background:var(--green-dark); color:white; }
+    .status-pill.verified svg { stroke:white; }
+    .status-pill.plain { background:var(--surface); color:var(--text-2); border:1px solid var(--border); }
 
-    /* Listing header */
-    .listing-header { margin-bottom:20px; }
-    .listing-badges { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
-    .badge { display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:600; padding:4px 10px; border-radius:20px; }
-    .badge.apartment { background:var(--green-light); color:var(--green-dark); }
-    .badge.house     { background:var(--surface); color:var(--text-2); border:1px solid var(--border); }
-    .badge.boarding  { background:var(--green-light); color:var(--green-dark); border:1px solid var(--green-mid); }
-    .badge.airbnb    { background:var(--surface); color:var(--text-2); border:1px solid var(--border); }
-    .badge.freq      { background:var(--green-light); color:var(--green-dark); }
-    .listing-title  { font-family:'Playfair Display',serif; font-size:clamp(22px,3vw,32px); color:var(--text); line-height:1.2; margin-bottom:10px; }
-    .listing-location { display:flex; align-items:center; gap:6px; font-size:14px; color:var(--text-3); }
+    .listing-title { font-family:'Playfair Display',serif; font-size:clamp(22px,3vw,30px); color:var(--text); line-height:1.2; margin-bottom:8px; }
+    .listing-location { display:flex; align-items:center; gap:6px; font-size:14px; color:var(--text-3); margin-bottom:14px; }
     .listing-location svg { width:15px; height:15px; stroke:var(--green); fill:none; stroke-width:2; flex-shrink:0; }
+    .listing-price { font-family:'Playfair Display',serif; font-size:32px; font-weight:700; color:var(--green-dark); margin-bottom:18px; }
+    .listing-price span { font-family:'Inter',sans-serif; font-size:14px; font-weight:400; color:var(--text-3); }
 
-    /* Price block */
-    .price-block { background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px 24px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
-    .price-main { font-family:'Playfair Display',serif; font-size:34px; font-weight:700; color:var(--green-dark); }
-    .price-main span { font-family:'Inter',sans-serif; font-size:15px; font-weight:400; color:var(--text-3); }
-    .price-meta { font-size:13px; color:var(--text-3); margin-top:4px; }
-    .price-views { display:flex; align-items:center; gap:5px; font-size:13px; color:var(--text-3); }
-    .price-views svg { width:15px; height:15px; stroke:var(--text-3); fill:none; stroke-width:2; }
+    .stat-strip { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; margin-bottom:16px; }
+    .stat-box { background:var(--white); padding:16px 12px; text-align:center; }
+    .stat-box .val { font-size:17px; font-weight:700; color:var(--text); }
+    .stat-box .lbl { font-size:11.5px; color:var(--text-3); margin-top:3px; }
 
-    /* Specs */
-    .specs-card { background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; margin-bottom:20px; }
-    .specs-card h3 { font-size:15px; font-weight:600; color:var(--text); margin-bottom:18px; }
-    .specs-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:14px; }
-    .spec-item { display:flex; flex-direction:column; align-items:center; text-align:center; padding:14px 10px; background:var(--surface); border-radius:var(--radius); }
-    .spec-icon { width:36px; height:36px; border-radius:8px; background:var(--green-light); display:flex; align-items:center; justify-content:center; margin-bottom:8px; }
-    .spec-icon svg { width:18px; height:18px; stroke:var(--green); fill:none; stroke-width:1.8; stroke-linecap:round; }
-    .spec-val { font-size:15px; font-weight:700; color:var(--text); line-height:1.2; }
-    .spec-lbl { font-size:11px; color:var(--text-3); margin-top:3px; }
+    .meta-line { display:flex; align-items:center; gap:16px; flex-wrap:wrap; font-size:12.5px; color:var(--text-3); padding-bottom:16px; margin-bottom:18px; border-bottom:1px solid var(--border); }
+    .meta-line span { display:inline-flex; align-items:center; gap:5px; }
+    .meta-line svg { width:13px; height:13px; stroke:var(--text-3); fill:none; stroke-width:2; }
 
-    /* Amenities */
-    .amenities-card { background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; margin-bottom:20px; display:none; }
-    .amenities-card h3 { font-size:15px; font-weight:600; color:var(--text); margin-bottom:16px; }
-    .amenities-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; }
-    .amenity-row { display:flex; align-items:center; gap:8px; font-size:13.5px; color:var(--text-2); }
-    .amenity-row svg { width:16px; height:16px; stroke:var(--green); fill:none; stroke-width:2.4; flex-shrink:0; }
+    .lcard { background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); padding:22px 24px; margin-bottom:18px; }
+    .lcard-head { display:flex; align-items:center; gap:9px; margin-bottom:16px; }
+    .lcard-head svg { width:17px; height:17px; stroke:var(--green); fill:none; stroke-width:2; flex-shrink:0; }
+    .lcard-head h3 { font-size:15.5px; font-weight:700; color:var(--text); }
 
-    /* Room types (boarding house) */
-    .units-card { background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; margin-bottom:20px; display:none; }
-    .units-card h3 { font-size:15px; font-weight:600; color:var(--text); margin-bottom:4px; }
-    .units-card p.hint { font-size:13px; color:var(--text-3); margin-bottom:16px; }
-    .unit-type-card { border:1.5px solid var(--border); border-radius:var(--radius); padding:16px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
-    .unit-type-card.sold-out { opacity:.55; }
-    .unit-type-card-main { flex:1; min-width:180px; }
-    .unit-type-card-label { font-size:14px; font-weight:700; color:var(--text); margin-bottom:4px; }
-    .unit-type-card-meta { font-size:12.5px; color:var(--text-3); }
-    .unit-type-card-price { font-size:16px; font-weight:700; color:var(--green-dark); text-align:right; }
-    .unit-type-card-price span { display:block; font-size:11px; font-weight:400; color:var(--text-3); }
-    .unit-avail-pill { display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:700; padding:4px 10px; border-radius:20px; background:var(--green-light); color:var(--green-dark); white-space:nowrap; }
-    .unit-avail-pill.low { background:var(--surface); color:var(--text-2); border:1px solid var(--border); }
-    .unit-avail-pill.none { background:var(--red-light); color:var(--red); }
+    .room-row { display:flex; align-items:center; gap:14px; padding:14px 0; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+    .room-row:last-child { border-bottom:none; padding-bottom:0; }
+    .room-row-icon { width:40px; height:40px; border-radius:50%; background:var(--green-light); color:var(--green-dark); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .room-row-icon svg { width:18px; height:18px; stroke:var(--green-dark); fill:none; stroke-width:2; }
+    .room-row-main { flex:1; min-width:140px; }
+    .room-row-label { font-size:14px; font-weight:700; color:var(--text); }
+    .room-row-sub { font-size:12px; color:var(--text-3); margin-top:2px; }
+    .room-row-avail { text-align:right; font-size:12px; color:var(--text-3); min-width:80px; }
+    .room-row-avail strong { display:block; font-size:13px; font-weight:700; color:var(--green-dark); }
+    .room-row-avail.none strong { color:var(--red); }
+    .room-row-price { text-align:right; min-width:100px; }
+    .room-row-price strong { font-size:15px; font-weight:700; color:var(--green-dark); }
+    .room-row-price span { display:block; font-size:11px; color:var(--text-3); }
+    .room-row-btn { padding:9px 16px; border-radius:20px; background:var(--green); color:white; font-size:12.5px; font-weight:700; white-space:nowrap; transition:background .15s; }
+    .room-row-btn:hover { background:var(--green-dark); }
+    .room-row-btn:disabled { opacity:.45; cursor:not-allowed; }
 
-    /* Seller: Manage rooms panel */
-    .manage-units-card { background:var(--white); border:2px solid var(--green); border-radius:var(--radius-lg); padding:24px; margin-bottom:20px; display:none; }
-    .manage-units-card h3 { font-size:15px; font-weight:700; color:var(--green-dark); margin-bottom:4px; display:flex; align-items:center; gap:8px; }
-    .manage-units-card p.hint { font-size:13px; color:var(--text-3); margin-bottom:18px; }
-    .manage-unit-row { border:1.5px solid var(--border); border-radius:var(--radius); padding:16px; margin-bottom:12px; }
-    .manage-unit-row-top { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
-    .manage-unit-row-top strong { font-size:14px; color:var(--text); }
-    .manage-unit-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-    .btn-mark-occupied { padding:8px 14px; border-radius:8px; background:var(--green); color:white; font-size:12.5px; font-weight:600; }
-    .btn-mark-occupied:hover { background:var(--green-dark); }
-    .btn-mark-occupied:disabled { opacity:.5; cursor:not-allowed; }
-    .btn-mark-available { padding:8px 14px; border-radius:8px; background:var(--surface); color:var(--text-2); font-size:12.5px; font-weight:600; border:1.5px solid var(--border); }
-    .btn-mark-available:hover { border-color:var(--green); color:var(--green); }
-    .btn-mark-available:disabled { opacity:.5; cursor:not-allowed; }
-    .occupy-form { display:none; margin-top:12px; padding-top:12px; border-top:1px dashed var(--border); }
-    .occupy-form.open { display:block; }
-    .occupy-form-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:10px; }
-    .occupy-form-grid label { display:block; font-size:11px; font-weight:600; color:var(--text-2); margin-bottom:4px; }
-    .occupy-form-grid input, .occupy-form-grid select { width:100%; padding:8px 10px; border:1.5px solid var(--border); border-radius:8px; font-size:13px; background:var(--surface); outline:none; }
-    .occupy-form-grid input:focus, .occupy-form-grid select:focus { border-color:var(--green); }
-    .btn-confirm-occupy { padding:8px 16px; border-radius:8px; background:var(--green); color:white; font-size:12.5px; font-weight:600; }
-    .btn-confirm-occupy:hover { background:var(--green-dark); }
-    .btn-cancel-occupy { padding:8px 14px; border-radius:8px; background:none; color:var(--text-3); font-size:12.5px; }
-    .occupancy-log { margin-top:10px; }
-    .occupancy-log-item { font-size:12px; color:var(--text-3); padding:5px 0; border-top:1px solid var(--border); display:flex; justify-content:space-between; gap:8px; }
-    @media(max-width:640px) { .occupy-form-grid { grid-template-columns:1fr; } }
+    .occ-card-body { display:flex; align-items:center; gap:24px; flex-wrap:wrap; }
+    .occ-donut-wrap { position:relative; width:120px; height:120px; flex-shrink:0; }
+    .occ-donut { width:120px; height:120px; border-radius:50%; }
+    .occ-donut-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .occ-donut-center .pct { font-size:22px; font-weight:700; color:var(--text); }
+    .occ-donut-center .lbl { font-size:10.5px; color:var(--text-3); }
+    .occ-legend { flex:1; min-width:180px; }
+    .occ-legend-title { font-size:14px; font-weight:700; color:var(--text); margin-bottom:10px; }
+    .occ-legend-row { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-2); margin-bottom:6px; }
+    .occ-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+    .occ-dot.occupied { background:var(--green-dark); }
+    .occ-dot.available { background:var(--green-mid); }
+    .occ-dot.total { background:var(--border); border:1px solid var(--text-3); }
 
-    /* Description */
-    .desc-card { background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; margin-bottom:20px; }
-    .desc-card h3 { font-size:15px; font-weight:600; color:var(--text); margin-bottom:14px; }
+    .amenity-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; }
+    .amenity-chip { display:flex; align-items:center; gap:8px; padding:12px; border-radius:var(--radius); background:var(--surface); font-size:13px; font-weight:600; color:var(--text-2); }
+    .amenity-chip svg { width:16px; height:16px; stroke:var(--green-dark); fill:none; stroke-width:2.6; flex-shrink:0; }
+
     .desc-text { font-size:14px; color:var(--text-2); line-height:1.8; white-space:pre-line; }
-    .desc-text.collapsed { display:-webkit-box; -webkit-line-clamp:5; -webkit-box-orient:vertical; overflow:hidden; }
-    .read-more { font-size:13px; color:var(--green); font-weight:500; margin-top:10px; cursor:pointer; display:inline-block; }
+    .desc-text.collapsed { display:-webkit-box; -webkit-line-clamp:6; -webkit-box-orient:vertical; overflow:hidden; }
+    .read-more { font-size:13px; color:var(--green); font-weight:600; margin-top:10px; cursor:pointer; display:inline-block; }
 
-    /* Map card — Leaflet, driven by lat/lng saved at post-listing */
-    .map-card { background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; margin-bottom:20px; }
-    .map-card-header { padding:16px 20px 12px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
-    .map-card-header h3 { font-size:15px; font-weight:600; color:var(--text); }
-    .map-card-header p { font-size:12px; color:var(--text-3); margin-top:2px; }
-    .map-card-header a { font-size:12px; color:var(--green); font-weight:500; white-space:nowrap; display:flex; align-items:center; gap:4px; }
-    .map-card-header a svg { width:13px; height:13px; stroke:var(--green); fill:none; stroke-width:2; }
-    .map-frame-wrap { position:relative; width:100%; height:300px; background:var(--surface); }
+    .where-grid { display:grid; grid-template-columns:1fr 1fr; gap:22px; align-items:start; }
+    .where-left dl { display:grid; grid-template-columns:auto 1fr; gap:5px 10px; font-size:13.5px; }
+    .where-left dt { color:var(--text-3); }
+    .where-left dd { color:var(--text); font-weight:600; }
+    .private-pill { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; color:var(--green-dark); background:var(--green-light); padding:3px 10px; border-radius:20px; margin-bottom:10px; }
+    .private-pill svg { width:11px; height:11px; stroke:var(--green-dark); fill:none; stroke-width:2.4; }
+    .house-rules-title { font-size:12.5px; font-weight:700; color:var(--text); margin:14px 0 6px; }
+    .house-rules-list { list-style:none; padding:0; }
+    .house-rules-list li { font-size:13px; color:var(--text-2); padding:4px 0; display:flex; align-items:flex-start; gap:7px; }
+    .house-rules-list li::before { content:'•'; color:var(--green); font-weight:700; }
+    .map-frame-wrap { position:relative; width:100%; height:230px; background:var(--surface); border-radius:var(--radius); overflow:hidden; border:1px solid var(--border); }
     #listing-map { position:absolute; inset:0; }
     .map-loading { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; color:var(--text-3); z-index:1; pointer-events:none; }
     .map-loading.hidden { display:none; }
-    .map-loading svg { width:32px; height:32px; stroke:var(--border); fill:none; stroke-width:1.5; }
-    .map-privacy-note { padding:8px 16px; font-size:11px; color:var(--text-3); background:var(--surface); border-top:1px solid var(--border); display:flex; align-items:center; gap:6px; }
-    .map-privacy-note svg { width:12px; height:12px; stroke:var(--text-3); fill:none; stroke-width:2; flex-shrink:0; }
+    .map-loading svg { width:28px; height:28px; stroke:var(--border); fill:none; stroke-width:1.5; }
+    .map-open-link { font-size:12px; color:var(--green); font-weight:600; display:inline-flex; align-items:center; gap:4px; margin-top:8px; }
+    .map-open-link svg { width:12px; height:12px; stroke:var(--green); fill:none; stroke-width:2; }
+    @media(max-width:700px) { .where-grid { grid-template-columns:1fr; } }
 
-    /* Similar listings */
     .similar-section { margin-top:8px; }
-    .similar-section h3 { font-size:16px; font-weight:600; color:var(--text); margin-bottom:16px; }
+    .similar-section h3 { font-size:16px; font-weight:700; color:var(--text); margin-bottom:16px; }
     .similar-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px; }
     .similar-card { background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; cursor:pointer; transition:transform .2s,box-shadow .2s; }
     .similar-card:hover, .similar-card:focus-visible { transform:translateY(-2px); box-shadow:0 4px 16px rgba(0,0,0,0.08); }
@@ -215,49 +191,58 @@
     .similar-title { font-size:13px; font-weight:600; color:var(--text); margin-bottom:6px; line-height:1.3; }
     .similar-price { font-size:15px; font-weight:700; color:var(--green-dark); }
 
-    /* Contact card */
-    .contact-card { background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; position:sticky; top:80px; }
-    .contact-card-title { font-size:16px; font-weight:600; color:var(--text); margin-bottom:4px; }
-    .contact-card-sub { font-size:13px; color:var(--text-3); margin-bottom:20px; }
-    .seller-row { display:flex; align-items:center; gap:12px; padding:14px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border); margin-bottom:20px; }
+    .sidebar-card { background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); padding:22px; position:sticky; top:80px; margin-bottom:16px; }
+    .sidebar-kicker { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--green); margin-bottom:4px; }
+    .sidebar-title { font-size:17px; font-weight:700; color:var(--text); margin-bottom:6px; }
+    .sidebar-sub { font-size:12.5px; color:var(--text-3); margin-bottom:18px; line-height:1.6; }
+
+    .seller-row { display:flex; align-items:center; gap:12px; padding:14px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border); margin-bottom:18px; }
     .seller-avatar { width:42px; height:42px; border-radius:50%; background:var(--green-light); display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; color:var(--green-dark); flex-shrink:0; }
-    .seller-name { font-size:14px; font-weight:600; color:var(--text); }
+    .seller-name { font-size:14px; font-weight:700; color:var(--text); }
     .seller-since { font-size:12px; color:var(--text-3); }
     .verified-badge { display:inline-flex; align-items:center; gap:3px; font-size:11px; color:var(--green); font-weight:700; margin-top:3px; background:var(--green-light); padding:2px 8px; border-radius:20px; }
     .verified-badge svg { width:12px; height:12px; stroke:var(--green); fill:none; stroke-width:3; }
     .unverified-badge { display:inline-flex; align-items:center; gap:3px; font-size:11px; color:var(--text-2); font-weight:600; margin-top:3px; background:var(--surface); border:1px solid var(--border); padding:2px 8px; border-radius:20px; }
     .unverified-badge svg { width:12px; height:12px; stroke:var(--text-2); fill:none; stroke-width:2; }
-    .contact-btns { display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
-    .btn-call { display:flex; align-items:center; justify-content:center; gap:8px; padding:13px; border-radius:var(--radius); font-size:15px; font-weight:600; background:var(--green); color:white; transition:background .15s; }
-    .btn-call:hover { background:var(--green-dark); }
-    .btn-whatsapp { display:flex; align-items:center; justify-content:center; gap:8px; padding:13px; border-radius:var(--radius); font-size:15px; font-weight:600; background:var(--green-dark); color:white; transition:background .15s; }
-    .btn-whatsapp:hover { background:var(--text); }
-    .or-divider { display:flex; align-items:center; gap:10px; font-size:12px; color:var(--text-3); margin-bottom:18px; }
-    .or-divider::before,.or-divider::after { content:''; flex:1; height:1px; background:var(--border); }
+    #seller-rating { display:flex; align-items:center; gap:2px; }
 
+    .contact-btns { display:flex; flex-direction:column; gap:10px; margin-bottom:18px; }
+    .btn-call { display:flex; align-items:center; justify-content:center; gap:8px; padding:13px; border-radius:var(--radius); font-size:14.5px; font-weight:700; background:var(--green); color:white; transition:background .15s; }
+    .btn-call:hover { background:var(--green-dark); }
+    .btn-whatsapp { display:flex; align-items:center; justify-content:center; gap:8px; padding:13px; border-radius:var(--radius); font-size:14.5px; font-weight:700; background:var(--green-dark); color:white; transition:background .15s; }
+    .btn-whatsapp:hover { background:var(--text); }
     .btn-call:disabled,.btn-whatsapp:disabled { opacity:.7; cursor:wait; }
     .btn-call svg,.btn-whatsapp svg { width:18px; height:18px; flex-shrink:0; }
+    .or-divider { display:flex; align-items:center; gap:10px; font-size:12px; color:var(--text-3); margin-bottom:16px; }
+    .or-divider::before,.or-divider::after { content:''; flex:1; height:1px; background:var(--border); }
 
-    /* Enquiry form */
+    .report-scam-btn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:11px; margin-bottom:18px; background:var(--red-light); color:var(--red); border:1.5px solid #feb2b2; border-radius:var(--radius); font-size:13px; font-weight:600; cursor:pointer; transition:all .15s; font-family:inherit; }
+    .report-scam-btn:hover { background:#fed7d7; border-color:var(--red); }
+    .report-scam-btn svg { width:15px; height:15px; stroke:var(--red); fill:none; stroke-width:2; flex-shrink:0; }
+    .report-scam-btn.reported { background:var(--surface); color:var(--text-3); border-color:var(--border); cursor:default; }
+    .report-scam-btn.reported:hover { background:var(--surface); border-color:var(--border); }
+    .report-scam-btn.reported svg { stroke:var(--text-3); }
+
     .field { margin-bottom:14px; }
-    .field label { display:block; font-size:12px; font-weight:600; color:var(--text-2); text-transform:uppercase; letter-spacing:.05em; margin-bottom:5px; }
+    .field label { display:block; font-size:11.5px; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:.04em; margin-bottom:5px; }
+    .field label .opt-lbl { text-transform:none; font-weight:400; color:var(--text-3); letter-spacing:0; }
     .field input,.field textarea,.field select { width:100%; padding:10px 14px; border:1.5px solid var(--border); border-radius:var(--radius); font-size:14px; color:var(--text); background:var(--surface); outline:none; transition:border-color .15s,background .15s; }
     .field input:focus,.field textarea:focus,.field select:focus { border-color:var(--green); background:var(--white); }
     .field input.error,.field textarea.error { border-color:var(--red); }
-    .field textarea { resize:vertical; min-height:80px; line-height:1.6; }
+    .field textarea { resize:vertical; min-height:76px; line-height:1.6; }
+    .field-row-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
     .field-error { font-size:11px; color:var(--red); margin-top:4px; display:none; }
     .field-error.show { display:block; }
-    .btn-enquire { width:100%; padding:13px; background:var(--green); color:white; font-size:15px; font-weight:600; border-radius:var(--radius); transition:background .15s; display:flex; align-items:center; justify-content:center; gap:8px; }
+    .btn-enquire { width:100%; padding:13px; background:var(--green); color:white; font-size:14.5px; font-weight:700; border-radius:var(--radius); transition:background .15s; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:4px; }
     .btn-enquire:hover:not(:disabled) { background:var(--green-dark); }
     .btn-enquire:disabled { opacity:.6; cursor:not-allowed; }
     .spinner { width:16px; height:16px; border:2px solid rgba(255,255,255,.3); border-top-color:white; border-radius:50%; animation:spin .7s linear infinite; display:none; }
     .btn-enquire.loading .spinner { display:block; }
     .btn-enquire.loading .btn-text { display:none; }
     @keyframes spin { to { transform:rotate(360deg); } }
-    .enquiry-note { font-size:11px; color:var(--text-3); text-align:center; margin-top:10px; line-height:1.5; }
+    .enquiry-note { font-size:11px; color:var(--text-3); text-align:center; margin-top:10px; line-height:1.5; display:flex; align-items:center; justify-content:center; gap:5px; }
+    .enquiry-note svg { width:12px; height:12px; stroke:var(--text-3); fill:none; stroke-width:2; flex-shrink:0; }
 
-    /* Thread */
-    .thread-section { margin-top:0; }
     .thread-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
     .thread-header h4 { font-size:14px; font-weight:600; color:var(--text); }
     .thread-header button { font-size:12px; color:var(--text-3); background:none; border:none; cursor:pointer; }
@@ -284,15 +269,28 @@
     .chat-send:disabled { opacity:.5; cursor:not-allowed; }
     .chat-send svg { width:14px; height:14px; stroke:white; fill:none; stroke-width:2; }
     .chat-date-sep { text-align:center; font-size:10px; color:var(--text-3); padding:4px 0; }
-    .chat-wa-note { font-size:11px; color:var(--text-3); text-align:center; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:4px; }
 
-    /* Not found */
+    .enquiry-success { display:none; text-align:center; padding:16px 0; }
+    .enquiry-success-icon { width:52px; height:52px; background:var(--green-light); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
+    .enquiry-success-icon svg { width:24px; height:24px; stroke:var(--green); fill:none; stroke-width:2.5; }
+    .enquiry-success h4 { font-size:15px; font-weight:600; color:var(--text); margin-bottom:6px; }
+    .enquiry-success p { font-size:13px; color:var(--text-3); margin-bottom:12px; }
+
+    .trust-card-head { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+    .trust-card-head svg { width:18px; height:18px; stroke:var(--green-dark); fill:none; stroke-width:2; }
+    .trust-card-head strong { font-size:14px; color:var(--text); }
+    .trust-list { list-style:none; padding:0; }
+    .trust-list li { display:flex; align-items:flex-start; gap:8px; font-size:13px; color:var(--text-2); padding:5px 0; }
+    .trust-list li svg { width:14px; height:14px; stroke:var(--green); fill:none; stroke-width:2.4; flex-shrink:0; margin-top:2px; }
+    .response-card { background:var(--green-light); border:none; }
+    .response-card .rc-title { font-size:13px; font-weight:700; color:var(--green-dark); margin-bottom:3px; }
+    .response-card .rc-sub { font-size:12px; color:var(--green-dark); opacity:.85; }
+
     .not-found { text-align:center; padding:80px 24px; }
     .not-found svg { width:48px; height:48px; stroke:var(--border); fill:none; stroke-width:1.5; margin:0 auto 16px; display:block; }
     .not-found h2 { font-size:20px; font-weight:600; color:var(--text); margin-bottom:8px; }
     .not-found p { font-size:14px; color:var(--text-3); margin-bottom:20px; }
 
-    /* Seller disabled view */
     .seller-disabled-wrap { max-width:620px; margin:48px auto; }
     .seller-disabled-banner { background:var(--red-light); border:1.5px solid #feb2b2; border-radius:var(--radius-lg); padding:32px 28px; }
     .seller-disabled-banner-inner { display:flex; gap:20px; align-items:flex-start; }
@@ -300,8 +298,8 @@
     .seller-disabled-icon svg { width:26px; height:26px; stroke:var(--red); fill:none; stroke-width:2; }
     .seller-disabled-content h2 { font-size:18px; font-weight:700; color:var(--red); margin-bottom:6px; }
     .seller-disabled-content p { font-size:13px; color:var(--text-2); line-height:1.7; margin-bottom:10px; }
-    .seller-disabled-reason { background:white; border:1px solid #feb2b2; border-radius:var(--radius); padding:12px 16px; font-size:13px; color:var(--text-2); margin:12px 0; line-height:1.6; }
-    .seller-disabled-reason strong { color:var(--red); display:block; font-size:11px; text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
+    .seller-disabled-reason-box { background:white; border:1px solid #feb2b2; border-radius:var(--radius); padding:12px 16px; font-size:13px; color:var(--text-2); margin:12px 0; line-height:1.6; }
+    .seller-disabled-reason-box strong { color:var(--red); display:block; font-size:11px; text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
     .seller-disabled-notice { background:#FFF5F5; border:1px solid #FEB2B2; border-radius:var(--radius); padding:10px 14px; font-size:12px; color:#742A2A; display:flex; gap:8px; align-items:flex-start; margin-top:12px; line-height:1.6; }
     .seller-disabled-notice svg { width:14px; height:14px; stroke:#C53030; fill:none; stroke-width:2; flex-shrink:0; margin-top:1px; }
     .seller-disabled-actions { display:flex; gap:10px; margin-top:20px; flex-wrap:wrap; }
@@ -316,29 +314,16 @@
     .countdown-pill { display:inline-flex; align-items:center; gap:6px; background:var(--white); border:1px solid var(--border); border-radius:20px; font-size:12px; font-weight:700; color:var(--text-2); padding:4px 12px; margin-top:8px; }
     .countdown-pill svg { width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:2; }
 
-    /* Enquiry success */
-    .enquiry-success { display:none; text-align:center; padding:16px 0; }
-    .enquiry-success-icon { width:52px; height:52px; background:var(--green-light); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
-    .enquiry-success-icon svg { width:24px; height:24px; stroke:var(--green); fill:none; stroke-width:2.5; }
-    .enquiry-success h4 { font-size:15px; font-weight:600; color:var(--text); margin-bottom:6px; }
-    .enquiry-success p { font-size:13px; color:var(--text-3); margin-bottom:12px; }
-
-    /* Safety tip */
-    .safety-tip { margin-top:16px; padding:12px 14px; background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); font-size:12px; color:var(--text-2); line-height:1.6; display:flex; gap:8px; }
-    .safety-tip svg { width:14px; height:14px; stroke:var(--green); fill:none; stroke-width:2; flex-shrink:0; margin-top:2px; }
-
     .views-loading { opacity:.4; }
     @keyframes views-pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
     .views-loading { animation: views-pulse .8s ease-in-out infinite; }
 
-    /* Skeleton */
     .skel { height:14px; background:linear-gradient(90deg,#f0efe9 25%,#e8e7e1 50%,#f0efe9 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:4px; }
     .skel.short { width:55%; }
     .skel.xshort { width:35%; }
     .skel-block { background:linear-gradient(90deg,#f0efe9 25%,#e8e7e1 50%,#f0efe9 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:var(--radius-lg); }
     @keyframes shimmer { to { background-position:-200% 0; } }
 
-    /* Footer */
     footer { background:var(--text); color:rgba(255,255,255,0.6); padding:48px 32px 28px; }
     .footer-inner { max-width:1100px; margin:0 auto; }
     .footer-top { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:40px; margin-bottom:40px; }
@@ -360,29 +345,22 @@
 
     @media(max-width:900px) {
       .layout { grid-template-columns:1fr; }
-      .contact-card { position:static; }
+      .sidebar-card { position:static; }
       nav { padding:0 16px; }
-      .breadcrumb { padding:12px 16px; }
-      .page-wrap { padding:20px 16px 60px; }
+      .page-wrap { padding:16px 16px 60px; }
       footer { padding:40px 16px 24px; }
       .footer-top { grid-template-columns:1fr 1fr; gap:28px; }
       .seller-disabled-banner-inner { flex-direction:column; }
-      .map-frame-wrap { height:220px; }
+      .map-frame-wrap { height:200px; }
     }
     @media(max-width:480px) {
-      .specs-grid { grid-template-columns:repeat(2,1fr); }
+      .stat-strip { grid-template-columns:1fr 1fr; }
       .footer-top { grid-template-columns:1fr; }
       .similar-grid { grid-template-columns:1fr 1fr; }
+      .field-row-2 { grid-template-columns:1fr; }
     }
 
-    /* Reviews & reports */
-    #nk-review-banner {
-      position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
-      z-index:2000; background:var(--white); border:1px solid var(--border);
-      border-radius:var(--radius-lg); box-shadow:0 8px 32px rgba(0,0,0,0.15);
-      padding:16px 20px; max-width:460px; width:calc(100% - 32px);
-      display:none; align-items:center; gap:14px;
-    }
+    #nk-review-banner { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:2000; background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:0 8px 32px rgba(0,0,0,0.15); padding:16px 20px; max-width:460px; width:calc(100% - 32px); display:none; align-items:center; gap:14px; }
     #nk-review-banner.show { display:flex; }
     #nk-review-banner .rb-icon { width:38px;height:38px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;flex-shrink:0; }
     #nk-review-banner .rb-icon svg { width:18px;height:18px;stroke:var(--green);fill:none;stroke-width:2; }
@@ -416,25 +394,9 @@
     .nk-name-field input[type="text"]:disabled { background:var(--surface); color:var(--text-3); cursor:not-allowed; }
     .nk-anon-check { display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-2); font-weight:500; cursor:pointer; }
     .nk-anon-check input { width:15px; height:15px; accent-color:var(--green); cursor:pointer; }
-
-    #seller-rating { display:flex; align-items:center; gap:2px; }
     #nk-report-trigger { font-size:12px;color:var(--text-3);text-decoration:underline;cursor:pointer;background:none;border:none;font-family:inherit; }
     #nk-report-trigger:hover { color:var(--red); }
 
-    .report-scam-btn {
-      display:flex; align-items:center; justify-content:center; gap:8px;
-      width:100%; padding:11px; margin-bottom:18px;
-      background:var(--red-light); color:var(--red); border:1.5px solid #feb2b2;
-      border-radius:var(--radius); font-size:13px; font-weight:600;
-      cursor:pointer; transition:all .15s; font-family:inherit;
-    }
-    .report-scam-btn:hover { background:#fed7d7; border-color:var(--red); }
-    .report-scam-btn svg { width:15px; height:15px; stroke:var(--red); fill:none; stroke-width:2; flex-shrink:0; }
-    .report-scam-btn.reported { background:var(--surface); color:var(--text-3); border-color:var(--border); cursor:default; }
-    .report-scam-btn.reported:hover { background:var(--surface); border-color:var(--border); }
-    .report-scam-btn.reported svg { stroke:var(--text-3); }
-
-    /* Lightbox */
     #nk-lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.94); z-index:3000; align-items:center; justify-content:center; flex-direction:column; }
     #nk-lightbox.open { display:flex; }
     #nk-lightbox-img-wrap { flex:1; width:100%; display:flex; align-items:center; justify-content:center; overflow:auto; padding:8px; }
@@ -449,10 +411,8 @@
     .nk-lb-arrow.prev { left:16px; }
     .nk-lb-arrow.next { right:16px; }
     #nk-lightbox-counter { position:absolute; bottom:18px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.12); color:white; font-size:13px; font-weight:500; padding:5px 14px; border-radius:20px; }
-    .gallery-main img { cursor:zoom-in; }
     @media(max-width:600px) { .nk-lb-arrow { width:38px; height:38px; } .nk-lb-arrow svg { width:18px; height:18px; } #nk-lightbox-img-wrap { padding:8px; } }
 
-    /* Floating chat widget */
     #nk-chat-widget-btn { position:fixed; bottom:24px; right:24px; z-index:1500; width:58px; height:58px; border-radius:50%; background:var(--green); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 6px 20px rgba(0,0,0,0.25); transition:transform .15s, background .15s; }
     #nk-chat-widget-btn:hover { background:var(--green-dark); transform:translateY(-2px); }
     #nk-chat-widget-badge { position:absolute; top:-4px; right:-4px; min-width:20px; height:20px; padding:0 5px; background:var(--red); color:white; font-size:11px; font-weight:700; border-radius:20px; display:flex; align-items:center; justify-content:center; border:2px solid white; animation:nk-badge-pop .25s ease; }
@@ -477,20 +437,17 @@
     @media(max-width:480px) { #nk-chat-widget-panel { right:16px; bottom:88px; width:calc(100vw - 32px); } #nk-chat-widget-btn { right:16px; bottom:16px; } }
 
     @media print {
-      nav, .breadcrumb, .mobile-nav, .action-row, footer,
-      #nk-chat-widget-btn, #nk-chat-widget-panel, #nk-review-banner,
-      .nk-review-modal-overlay, #nk-lightbox, .contact-btns, #enquiry-form,
-      .report-scam-btn, .similar-section, .gallery-thumbs, .gallery-arrow {
+      nav, .top-bar, .mobile-nav, footer, #nk-chat-widget-btn, #nk-chat-widget-panel, #nk-review-banner,
+      .nk-review-modal-overlay, #nk-lightbox, .contact-btns, #enquiry-form, .report-scam-btn, .similar-section, .gallery-thumbs, .gallery-arrow {
         display: none !important;
       }
       body { background: white; }
-      .contact-card { position: static; border: none; }
+      .sidebar-card { position: static; border: none; }
     }
   </style>
 </head>
 <body>
 
-<!-- NAVBAR -->
 <nav>
   <a href="/" class="logo">
     <div class="logo-icon">
@@ -526,14 +483,6 @@
   <a href="/login" id="mobile-account-link">Sign in</a>
   <a href="/saved">Saved <span class="nav-count" id="nav-count-badge-mobile" style="display:none">0</span></a>
   <a href="/post-listing" class="btn-primary">List your property</a>
-</div>
-
-<div class="breadcrumb" id="breadcrumb">
-  <a href="/">Home</a>
-  <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
-  <a href="/listings">Listings</a>
-  <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
-  <span id="breadcrumb-area">Loading…</span>
 </div>
 
 <div class="page-wrap">
@@ -612,6 +561,21 @@
 
   <!-- LISTING CONTENT -->
   <div id="listing-content" style="display:none">
+
+    <div class="top-bar">
+      <a href="/listings" class="back-link"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Back to listings</a>
+      <div class="top-bar-actions">
+        <button class="top-btn report" id="report-scam-btn-top" onclick="nkOpenReportModal('listing', listingId)">
+          <svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+          Report
+        </button>
+        <button class="top-btn share" onclick="copyLink(event)">
+          <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Share
+        </button>
+      </div>
+    </div>
+
     <div class="layout">
 
       <!-- LEFT -->
@@ -624,117 +588,121 @@
               <p>No photos for this listing yet</p>
             </div>
             <img id="gallery-img" src="" alt="" style="display:none" onclick="openLightbox()" role="button" tabindex="0" aria-label="View photo full-screen" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openLightbox()}"/>
-            <button class="gallery-arrow prev" id="prev-btn" onclick="changePhoto(-1)" style="display:none">
-              <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-            </button>
-            <button class="gallery-arrow next" id="next-btn" onclick="changePhoto(1)" style="display:none">
-              <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
-            </button>
+            <button class="gallery-arrow prev" id="prev-btn" onclick="changePhoto(-1)" style="display:none"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+            <button class="gallery-arrow next" id="next-btn" onclick="changePhoto(1)" style="display:none"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
             <div class="gallery-counter" id="gallery-counter" style="display:none"></div>
-            <div class="featured-overlay" id="featured-badge" style="display:none">
-              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-              Verified by Nyumba254
-            </div>
           </div>
           <div class="gallery-thumbs" id="gallery-thumbs" style="display:none"></div>
         </div>
 
-        <!-- Action pills -->
-        <div class="action-row">
-          <button class="action-pill" onclick="shareWhatsApp()">
-            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-            Share on WhatsApp
-          </button>
-           <button class="action-pill" onclick="copyLink(event)">
-            <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-            Copy link
-          </button>
-          <button class="action-pill" onclick="window.print()">
-            <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-            Print
-          </button>
-        </div>
+        <!-- Badges -->
+        <div class="badge-row" id="badge-row"></div>
 
         <!-- Title & location -->
-        <div class="listing-header">
-          <div class="listing-badges" id="listing-badges"></div>
-          <h1 class="listing-title" id="listing-title"></h1>
-          <div class="listing-location">
-            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <span id="listing-loc-text"></span>
+        <h1 class="listing-title" id="listing-title"></h1>
+        <div class="listing-location">
+          <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span id="listing-loc-text"></span>
+        </div>
+        <div class="listing-price" id="listing-price"></div>
+
+        <!-- Stat strip -->
+        <div class="stat-strip" id="stat-strip"></div>
+
+        <!-- Meta line -->
+        <div class="meta-line">
+          <span><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg><span id="listing-views" class="views-loading">— views</span></span>
+          <span><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span id="listing-enq-count">— enquiries</span></span>
+          <span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span id="listing-posted">Posted —</span></span>
+        </div>
+
+        <!-- Room options & pricing (boarding houses) -->
+        <div class="lcard" id="units-card" style="display:none">
+          <div class="lcard-head">
+            <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="13" rx="1"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+            <h3>Room Options &amp; Pricing</h3>
           </div>
-        </div>
-
-        <!-- Price -->
-        <div class="price-block">
-          <div>
-            <div class="price-main" id="listing-price"></div>
-            <div class="price-meta" id="listing-price-meta"></div>
-          </div>
-          <div class="price-views">
-            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            <span id="listing-views" class="views-loading">— views</span>
-          </div>
-        </div>
-
-        <!-- Specs -->
-        <div class="specs-card">
-          <h3 id="specs-card-title">Property details</h3>
-          <div class="specs-grid" id="specs-grid"></div>
-        </div>
-
-        <!-- Amenities -->
-        <div class="amenities-card" id="amenities-card">
-          <h3>Amenities</h3>
-          <div class="amenities-grid" id="amenities-grid"></div>
-        </div>
-
-        <!-- Room types — boarding house only -->
-        <div class="units-card" id="units-card">
-          <h3>Room types & availability</h3>
-          <p class="hint" id="units-card-hint">Pick the room type that suits you — pricing and openings are per room type</p>
           <div id="unit-type-list"></div>
         </div>
 
         <!-- Seller: Manage rooms panel -->
-        <div class="manage-units-card" id="manage-units-card">
-          <h3>
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg>
-            Manage rooms
-          </h3>
-          <p class="hint">Mark a room as occupied once it's booked — this updates availability for buyers immediately. Only you can see this panel.</p>
+        <div class="lcard" id="manage-units-card" style="display:none;border:2px solid var(--green)">
+          <div class="lcard-head">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg>
+            <h3 style="color:var(--green-dark)">Manage rooms</h3>
+          </div>
+          <p style="font-size:13px;color:var(--text-3);margin-bottom:16px">Mark a room as occupied once it's booked — this updates availability for buyers immediately. Only you can see this panel.</p>
           <div id="manage-unit-list"></div>
         </div>
 
-        <!-- Description -->
-        <div class="desc-card" id="desc-card" style="display:none">
-          <h3>About this property</h3>
+        <!-- Occupancy overview (boarding houses) -->
+        <div class="lcard" id="occ-card" style="display:none">
+          <div class="lcard-head">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            <h3>Occupancy Overview</h3>
+          </div>
+          <div class="occ-card-body">
+            <div class="occ-donut-wrap">
+              <div class="occ-donut" id="occ-donut"></div>
+              <div class="occ-donut-center"><span class="pct" id="occ-pct">0%</span><span class="lbl">Occupied</span></div>
+            </div>
+            <div class="occ-legend">
+              <div class="occ-legend-title" id="occ-legend-title">0 of 0 spaces taken</div>
+              <div class="occ-legend-row"><span class="occ-dot occupied"></span><span id="occ-occupied-txt">0 Occupied</span></div>
+              <div class="occ-legend-row"><span class="occ-dot available"></span><span id="occ-available-txt">0 Available</span></div>
+              <div class="occ-legend-row"><span class="occ-dot total"></span><span id="occ-total-txt">0 Total Spaces</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Amenities -->
+        <div class="lcard" id="amenities-card" style="display:none">
+          <div class="lcard-head">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <h3>Property Amenities</h3>
+          </div>
+          <div class="amenity-grid" id="amenities-grid"></div>
+        </div>
+
+        <!-- About -->
+        <div class="lcard" id="desc-card" style="display:none">
+          <div class="lcard-head">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            <h3>About This Property</h3>
+          </div>
           <div class="desc-text collapsed" id="desc-text"></div>
           <span class="read-more" id="read-more" onclick="toggleDesc()">Read more ↓</span>
         </div>
 
-        <!-- Map — Leaflet, pin dropped at post-listing time -->
-        <div class="map-card">
-          <div class="map-card-header">
+        <!-- Where you'll be -->
+        <div class="lcard">
+          <div class="lcard-head">
+            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <h3>Where you'll be</h3>
+          </div>
+          <div class="where-grid">
+            <div class="where-left">
+              <div class="private-pill"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg>Private</div>
+              <dl>
+                <dt>Area</dt><dd id="where-area">—</dd>
+                <dt>County</dt><dd id="where-county">—</dd>
+              </dl>
+              <div id="house-rules-wrap" style="display:none">
+                <div class="house-rules-title">House rules</div>
+                <ul class="house-rules-list" id="house-rules-list"></ul>
+              </div>
+              <p style="font-size:11.5px;color:var(--text-3);margin-top:14px;line-height:1.6">Exact address is shared with buyers only after they send an enquiry, for seller privacy.</p>
+            </div>
             <div>
-              <h3>Location</h3>
-              <p id="map-sub">Kenya</p>
+              <div class="map-frame-wrap">
+                <div class="map-loading" id="map-loading"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg><span style="font-size:12px">Loading map…</span></div>
+                <div id="listing-map"></div>
+              </div>
+              <a id="map-open-link" href="#" target="_blank" rel="noopener" class="map-open-link">
+                <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Open in Maps
+              </a>
             </div>
-            <a id="map-open-link" href="#" target="_blank" rel="noopener">
-              <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              Open in Maps
-            </a>
-          </div>
-          <div class="map-frame-wrap">
-            <div class="map-loading" id="map-loading">
-              <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              <span style="font-size:13px">Loading map…</span>
-            </div>
-            <div id="listing-map"></div>
-          </div>
-          <div class="map-privacy-note">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            Exact address is shared with buyers only after they send an enquiry, for seller privacy.
           </div>
         </div>
 
@@ -751,9 +719,10 @@
 
       <!-- RIGHT -->
       <div>
-        <div class="contact-card">
-          <div class="contact-card-title">Interested in this property?</div>
-          <div class="contact-card-sub">Contact the seller directly — no agents, no commission.</div>
+        <div class="sidebar-card">
+          <div class="sidebar-kicker">Secure Inquiry</div>
+          <div class="sidebar-title">Interested in this property?</div>
+          <div class="sidebar-sub">Message the seller directly on Nyumba254 — no agents, no commission.</div>
 
           <div class="seller-row">
             <div class="seller-avatar" id="seller-avatar">?</div>
@@ -772,11 +741,6 @@
             </div>
           </div>
 
-          <button class="report-scam-btn" id="report-scam-btn" onclick="nkOpenReportModal('listing', listingId)">
-            <svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-            Report scam or suspicious listing
-          </button>
-
           <div class="contact-btns">
             <button type="button" class="btn-call" id="btn-call" onclick="handleContactClick('call')">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.12 1.2 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
@@ -790,79 +754,109 @@
 
           <div class="or-divider">or send a message</div>
 
-          <!-- Enquiry form -->
+          <button class="report-scam-btn" id="report-scam-btn" onclick="nkOpenReportModal('listing', listingId)">
+            <svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+            Report scam or suspicious listing
+          </button>
+
           <div id="enquiry-form">
             <div class="field" id="enq-unit-type-field" style="display:none">
-              <label>Interested room type <span style="font-size:10px;font-weight:400;color:var(--text-3)">optional</span></label>
+              <label>Interested room type <span class="opt-lbl">optional</span></label>
               <select id="enq-unit-type"><option value="">Any available room</option></select>
             </div>
             <div class="field">
-              <label>Your name</label>
-              <input type="text" id="enq-name" placeholder="e.g. Brian Otieno"/>
+              <label>Full name <span style="color:var(--red)">*</span></label>
+              <input type="text" id="enq-name" placeholder="Your full name"/>
               <div class="field-error" id="err-enq-name">Please enter your name</div>
             </div>
-            <div class="field" id="enq-phone-field">
-              <label>Phone number</label>
-              <input type="tel" id="enq-phone" placeholder="07XX XXX XXX"/>
-              <div class="field-error" id="err-enq-phone">Please enter your phone number</div>
+            <div class="field-row-2">
+              <div class="field" id="enq-phone-field">
+                <label>Phone <span style="color:var(--red)">*</span></label>
+                <input type="tel" id="enq-phone" placeholder="07XX XXX XXX"/>
+                <div class="field-error" id="err-enq-phone">Enter a phone number</div>
+              </div>
+              <div class="field">
+                <label>Email <span class="opt-lbl">optional</span></label>
+                <input type="email" id="enq-email" placeholder="you@example.com"/>
+              </div>
             </div>
-            <div class="field">
-              <label>Email <span style="font-size:10px;font-weight:400;color:var(--text-3)">optional</span></label>
-              <input type="email" id="enq-email" placeholder="you@example.com"/>
+            <div class="field-row-2">
+              <div class="field">
+                <label>Move-in <span class="opt-lbl">optional</span></label>
+                <input type="date" id="enq-movein"/>
+              </div>
+              <div class="field">
+                <label>Budget <span class="opt-lbl">optional</span></label>
+                <select id="enq-budget">
+                  <option value="">Select range</option>
+                  <option value="under_10k">Under KES 10,000</option>
+                  <option value="10k_25k">KES 10,000 – 25,000</option>
+                  <option value="25k_50k">KES 25,000 – 50,000</option>
+                  <option value="50k_100k">KES 50,000 – 100,000</option>
+                  <option value="over_100k">Over KES 100,000</option>
+                </select>
+              </div>
             </div>
             <div class="field">
               <label>Message</label>
-              <textarea id="enq-message" rows="3" maxlength="1000" placeholder="Hi, I'm interested in this property. Is it still available?"></textarea>
+              <textarea id="enq-message" rows="3" maxlength="1000" placeholder="Preferred viewing time, move-in plans, or any question…"></textarea>
               <div class="field-error" id="err-enq-msg">Please enter a message</div>
             </div>
             <button class="btn-enquire" id="btn-enquire" onclick="sendEnquiry()">
               <div class="spinner"></div>
-              <span class="btn-text">Send message</span>
+              <span class="btn-text">Send inquiry</span>
             </button>
-            <p class="enquiry-note">Your contact details are shared only with the seller of this listing.</p>
+            <p class="enquiry-note">
+              <svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg>
+              No account needed — you'll get a link to your conversation after sending.
+            </p>
           </div>
 
           <div class="enquiry-success" id="enquiry-success">
-            <div class="enquiry-success-icon">
-              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-            </div>
+            <div class="enquiry-success-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
             <h4>Message sent!</h4>
             <p>The seller will reply here and may also contact you on your phone. Check back on this page to see their reply.</p>
-            <button onclick="if (typeof NKGlobalChat !== 'undefined') NKGlobalChat.registerAndOpen(listingId)" style="margin-top:8px;font-size:13px;color:var(--green);background:none;border:none;cursor:pointer;font-weight:500">View conversation →</button>
+            <button onclick="if (typeof NKGlobalChat !== 'undefined') NKGlobalChat.registerAndOpen(listingId)" style="margin-top:8px;font-size:13px;color:var(--green);background:none;border:none;cursor:pointer;font-weight:600">View conversation →</button>
           </div>
 
           <div class="enquiry-success" id="conversation-card" style="display:none">
-            <div class="enquiry-success-icon">
-              <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-            </div>
+            <div class="enquiry-success-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
             <h4>You have an ongoing conversation</h4>
             <p>Continue chatting with the seller in the chat window.</p>
-            <button onclick="if (typeof NKGlobalChat !== 'undefined') NKGlobalChat.registerAndOpen(listingId)" style="margin-top:8px;font-size:13px;color:var(--green);background:none;border:none;cursor:pointer;font-weight:500">View conversation →</button>
+            <button onclick="if (typeof NKGlobalChat !== 'undefined') NKGlobalChat.registerAndOpen(listingId)" style="margin-top:8px;font-size:13px;color:var(--green);background:none;border:none;cursor:pointer;font-weight:600">View conversation →</button>
             <button onclick="clearThread()" style="margin-top:10px;font-size:12px;color:var(--text-3);background:none;border:none;cursor:pointer;display:block;margin-left:auto;margin-right:auto">Start new enquiry</button>
           </div>
 
-          <div id="thread-section" class="thread-section" style="display:none">
-            <div class="thread-header">
-              <h4>Your conversation</h4>
-              <button onclick="clearThread()">Start new enquiry</button>
-            </div>
+          <div id="thread-section" style="display:none">
+            <div class="thread-header"><h4>Your conversation</h4><button onclick="clearThread()">Start new enquiry</button></div>
             <div class="chat-window">
-              <div class="chat-messages-box" id="chat-messages-box">
-                <div style="text-align:center;font-size:12px;color:var(--text-3);padding:16px">Loading messages…</div>
-              </div>
+              <div class="chat-messages-box" id="chat-messages-box"><div style="text-align:center;font-size:12px;color:var(--text-3);padding:16px">Loading messages…</div></div>
               <div class="chat-input-row">
                 <textarea id="chat-follow-input" placeholder="Send a follow-up message…" rows="1" maxlength="1000" oninput="autoResizeTa(this)" onkeydown="handleFollowKeydown(event)"></textarea>
-              <button class="chat-send" id="chat-follow-send" onclick="sendFollowUp()" aria-label="Send message">
-                  <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                </button>
+                <button class="chat-send" id="chat-follow-send" onclick="sendFollowUp()" aria-label="Send message"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
               </div>
             </div>
-            <div class="chat-wa-note" id="chat-wa-note"></div>
           </div>
-          <div class="safety-tip">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <span>Always view the property in person before making any payment. Never send money before seeing the property.</span>
+        </div>
+
+        <!-- Platform response reassurance -->
+        <div class="sidebar-card response-card" style="position:static">
+          <div class="rc-title">⚡ Fast responses</div>
+          <div class="rc-sub">Sellers on Nyumba254 are notified the moment you send a message.</div>
+        </div>
+
+        <!-- Trust card -->
+        <div class="sidebar-card" style="position:static">
+          <div class="trust-card-head">
+            <svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>
+            <strong>Safe &amp; Verified</strong>
           </div>
+          <ul class="trust-list">
+            <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Photos required before a listing goes live</li>
+            <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Every listing reviewed by our team before publishing</li>
+            <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Enquiries go through Nyumba254 messaging</li>
+            <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Scam and fraud reports are actively monitored</li>
+          </ul>
         </div>
       </div>
 
@@ -872,18 +866,10 @@
 
 <!-- Lightbox -->
 <div id="nk-lightbox" onclick="nkLightboxBackdropClick(event)">
-  <button class="nk-lb-close" onclick="closeLightbox()" aria-label="Close">
-    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-  </button>
-  <button class="nk-lb-arrow prev" id="nk-lb-prev" onclick="lightboxChange(-1)" aria-label="Previous photo">
-    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-  </button>
-  <div id="nk-lightbox-img-wrap">
-    <img id="nk-lightbox-img" src="" alt=""/>
-  </div>
-  <button class="nk-lb-arrow next" id="nk-lb-next" onclick="lightboxChange(1)" aria-label="Next photo">
-    <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
-  </button>
+  <button class="nk-lb-close" onclick="closeLightbox()" aria-label="Close"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  <button class="nk-lb-arrow prev" id="nk-lb-prev" onclick="lightboxChange(-1)" aria-label="Previous photo"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+  <div id="nk-lightbox-img-wrap"><img id="nk-lightbox-img" src="" alt=""/></div>
+  <button class="nk-lb-arrow next" id="nk-lb-next" onclick="lightboxChange(1)" aria-label="Next photo"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
   <div id="nk-lightbox-counter"></div>
 </div>
 
@@ -895,21 +881,11 @@
         <div class="footer-logo">Nyumba254</div>
         <p class="footer-tagline">Find and list apartments, houses, boarding rooms, and holiday rentals across Kenya — no agents, no commission.</p>
         <div class="footer-social">
-          <a href="https://wa.me/254700000000" target="_blank" rel="noopener" title="WhatsApp">
-            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
-          </a>
-          <a href="https://www.instagram.com/nyumba.254?igsh=Z2VhNzJkMm1td2Jz" target="_blank" rel="noopener" title="Instagram">
-            <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
-          </a>
-          <a href="https://www.facebook.com/share/1EdzJKujSK/" target="_blank" rel="noopener" title="Facebook">
-            <svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
-          </a>
-          <a href="https://www.tiktok.com/@nyumba.254?_r=1&_t=ZS-98w137YXueA" target="_blank" rel="noopener" title="TikTok">
-            <svg viewBox="0 0 24 24"><path d="M9 12a4 4 0 104 4V4a5 5 0 005 5"/></svg>
-          </a>
-          <a href="https://x.com/Nyumba254" target="_blank" rel="noopener" title="X (Twitter)">
-            <svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20"/></svg>
-          </a>
+          <a href="https://wa.me/254700000000" target="_blank" rel="noopener" title="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></a>
+          <a href="https://www.instagram.com/nyumba.254?igsh=Z2VhNzJkMm1td2Jz" target="_blank" rel="noopener" title="Instagram"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+          <a href="https://www.facebook.com/share/1EdzJKujSK/" target="_blank" rel="noopener" title="Facebook"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
+          <a href="https://www.tiktok.com/@nyumba.254?_r=1&_t=ZS-98w137YXueA" target="_blank" rel="noopener" title="TikTok"><svg viewBox="0 0 24 24"><path d="M9 12a4 4 0 104 4V4a5 5 0 005 5"/></svg></a>
+          <a href="https://x.com/Nyumba254" target="_blank" rel="noopener" title="X (Twitter)"><svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20"/></svg></a>
         </div>
       </div>
       <div class="footer-col">
@@ -960,10 +936,7 @@
     <div class="nk-name-field">
       <label>Your name (shown publicly with your review)</label>
       <input type="text" id="nk-seller-review-name" placeholder="e.g. Brian Otieno" maxlength="60"/>
-      <label class="nk-anon-check">
-        <input type="checkbox" id="nk-seller-review-anon" onchange="nkToggleAnon('seller')"/>
-        Post anonymously instead
-      </label>
+      <label class="nk-anon-check"><input type="checkbox" id="nk-seller-review-anon" onchange="nkToggleAnon('seller')"/>Post anonymously instead</label>
     </div>
     <textarea id="nk-seller-review-text" maxlength="1000" placeholder="What went well, or what should other buyers know? (optional)"></textarea>
     <div class="nk-modal-actions">
@@ -982,10 +955,7 @@
     <div class="nk-name-field">
       <label>Your name (shown publicly with your review)</label>
       <input type="text" id="nk-platform-review-name" placeholder="e.g. Brian Otieno" maxlength="60"/>
-      <label class="nk-anon-check">
-        <input type="checkbox" id="nk-platform-review-anon" onchange="nkToggleAnon('platform')"/>
-        Post anonymously instead
-      </label>
+      <label class="nk-anon-check"><input type="checkbox" id="nk-platform-review-anon" onchange="nkToggleAnon('platform')"/>Post anonymously instead</label>
     </div>
     <textarea id="nk-platform-review-text" maxlength="1000" placeholder="Anything we could do better? (optional)"></textarea>
     <div class="nk-modal-actions">
@@ -1036,16 +1006,10 @@ const authStorage = {
   setItem: (key, value) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).setItem(key, value),
   removeItem: (key) => { localStorage.removeItem(key); sessionStorage.removeItem(key); }
 };
-
-const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: { storage: authStorage, persistSession: true, autoRefreshToken: true }
-});
-
+const db = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storage: authStorage, persistSession: true, autoRefreshToken: true } });
 const nkSessionPromise = db.auth.getSession();
 
-/* ══════════════════════════════════════════════════════════════
-   PROPERTY TYPES + AMENITIES — must mirror post-listing.html exactly
-   ══════════════════════════════════════════════════════════════ */
+/* ── Property types + amenities — must mirror post-listing.html ── */
 const NK_CATEGORIES = {
   apartment: { label: 'Apartment', group: 'standard' },
   house:     { label: 'House',     group: 'standard' },
@@ -1053,20 +1017,13 @@ const NK_CATEGORIES = {
   airbnb:    { label: 'Airbnb / Holiday Rental', group: 'airbnb' },
 };
 const NK_AMENITIES = [
-  { key:'has_water', label:'Water supply' },
-  { key:'has_electricity', label:'Electricity' },
-  { key:'has_security', label:'Security' },
-  { key:'has_solar', label:'Solar power' },
-  { key:'has_wifi', label:'WiFi' },
-  { key:'has_parking', label:'Parking' },
-  { key:'has_balcony', label:'Balcony' },
-  { key:'has_private_bathroom', label:'Private bathroom' },
-  { key:'has_shared_bathroom', label:'Shared bathroom' },
-  { key:'has_study_area', label:'Study area' },
-  { key:'has_gym', label:'Gym' },
-  { key:'has_pool', label:'Swimming pool' },
-  { key:'has_pets_allowed', label:'Pets allowed' },
-  { key:'has_backup_power', label:'Backup power' },
+  { key:'has_water', label:'Water supply' }, { key:'has_electricity', label:'Electricity' },
+  { key:'has_security', label:'Security' }, { key:'has_solar', label:'Solar power' },
+  { key:'has_wifi', label:'WiFi' }, { key:'has_parking', label:'Parking' },
+  { key:'has_balcony', label:'Balcony' }, { key:'has_private_bathroom', label:'Private bathroom' },
+  { key:'has_shared_bathroom', label:'Shared bathroom' }, { key:'has_study_area', label:'Study area' },
+  { key:'has_gym', label:'Gym' }, { key:'has_pool', label:'Swimming pool' },
+  { key:'has_pets_allowed', label:'Pets allowed' }, { key:'has_backup_power', label:'Backup power' },
 ];
 const NK_FREQ_LABEL = { month:'/month', once:'', night:'/night', term:'/term', week:'/week' };
 const NK_FREQ_META  = { month:'Monthly — negotiable', once:'Asking price — negotiable', night:'Nightly rate — negotiable', term:'Per term — negotiable', week:'Weekly rate — negotiable' };
@@ -1154,35 +1111,27 @@ function nkPopulateFooterCounties() {
 
 const listingNumber = new URLSearchParams(window.location.search).get('id');
 let listingId = null;
-
-let listing      = null;
-let photos       = [];
+let listing = null;
+let photos = [];
 let currentPhoto = 0;
-let buyerToken   = null;
-let buyerName    = '';
-let buyerPhone   = '';
+let buyerToken = null, buyerName = '', buyerPhone = '';
 let threadMessages = [];
 let currentBuyerId = null;
-
-/* Boarding-house room-tier state (reuses listing_units table) */
-let listingUnits    = [];
-let isListingOwner  = false;
+let listingUnits = [];
+let isListingOwner = false;
+let enquiryCount = 0;
 
 const NK_GALLERY_MIN_RATIO = 0.75;
 const NK_GALLERY_MAX_RATIO = 1.9;
 
-let sellerPhoneRaw   = null;
-let contactRevealed  = false;
-let contactRevealBusy = false;
-
+let sellerPhoneRaw = null, contactRevealed = false, contactRevealBusy = false;
 let leafletMap = null, leafletMarker = null;
 
 function nkLSGet(key) { try { return localStorage.getItem(key); } catch(e) { return null; } }
 function nkLSSet(key, val) { try { localStorage.setItem(key, val); return true; } catch(e) { return false; } }
 function nkLSRemove(key) { try { localStorage.removeItem(key); } catch(e) {} }
-
-function getBuyerToken()    { return nkLSGet('nk_buyer_' + listingId); }
-function setBuyerToken(t)   { nkLSSet('nk_buyer_' + listingId, t); nkLSSet('nk_buyer_name_' + listingId, buyerName); nkLSSet('nk_buyer_phone_' + listingId, buyerPhone); }
+function getBuyerToken() { return nkLSGet('nk_buyer_' + listingId); }
+function setBuyerToken(t) { nkLSSet('nk_buyer_' + listingId, t); nkLSSet('nk_buyer_name_' + listingId, buyerName); nkLSSet('nk_buyer_phone_' + listingId, buyerPhone); }
 function getSavedBuyerInfo(){ buyerName = nkLSGet('nk_buyer_name_' + listingId)||''; buyerPhone = nkLSGet('nk_buyer_phone_' + listingId)||''; }
 
 /* ════════════════════════════════════════════════════
@@ -1191,26 +1140,15 @@ function getSavedBuyerInfo(){ buyerName = nkLSGet('nk_buyer_name_' + listingId)|
 function showLoadError() {
   document.getElementById('skeleton-wrap').style.display = 'none';
   document.getElementById('load-error').style.display = 'block';
-  document.getElementById('breadcrumb-area').textContent = 'Error';
 }
-
 async function loadListing() {
   if (!listingNumber || !/^\d+$/.test(listingNumber)) { showNotFound(); return; }
-
   try {
-    const { data, error } = await db
-      .from('listings')
-      /* Seller's real phone/whatsapp is never selected here — only revealed
-         via handleContactClick()'s reveal_seller_contact RPC after a click,
-         same protection model as before. */
+    const { data, error } = await db.from('listings')
       .select('*, profiles(full_name, created_at, verification_status), listing_photos(*), listing_units(*)')
-      .eq('listing_number', parseInt(listingNumber, 10))
-      .single();
+      .eq('listing_number', parseInt(listingNumber, 10)).single();
 
-    if (error) {
-      if (error.code === 'PGRST116') { showNotFound(); } else { showLoadError(); }
-      return;
-    }
+    if (error) { if (error.code === 'PGRST116') showNotFound(); else showLoadError(); return; }
     if (!data) { showNotFound(); return; }
 
     listing = data;
@@ -1218,7 +1156,6 @@ async function loadListing() {
     listingUnits = (data.listing_units || []).sort((a,b) => (a.id||0) - (b.id||0));
 
     const isFullyActive = (data.status === 'active') && !data.is_disabled && !data.recycle_bin;
-
     const { data: { session } } = await nkSessionPromise;
     const viewerUserId = session?.user?.id || null;
     isListingOwner = !!viewerUserId && (data.seller_id === viewerUserId);
@@ -1229,6 +1166,7 @@ async function loadListing() {
       renderListing(data);
       renderLiveMap(data);
       loadSimilar(data.area, data.id);
+      loadEnquiryCount(data.id);
       handleBuyerThread(data);
       loadSellerReviewStats(data.seller_id);
       nkCheckReviewPrompt(data.id);
@@ -1242,7 +1180,6 @@ async function loadListing() {
       const { data: profile } = await db.from('profiles').select('role').eq('id', viewerUserId).single();
       isAdmin = (profile?.role === 'admin');
     }
-
     if (isOwner || isAdmin) showSellerDisabledView(data);
     else showNotFound();
   } catch (e) {
@@ -1251,95 +1188,64 @@ async function loadListing() {
   }
 }
 
-/* ════════════════════════════════════════════════════
-   VIEWS
-════════════════════════════════════════════════════ */
+async function loadEnquiryCount(lId) {
+  const { count } = await db.from('enquiries').select('id', { count: 'exact', head: true }).eq('listing_id', lId);
+  enquiryCount = count || 0;
+  const el = document.getElementById('listing-enq-count');
+  if (el) el.textContent = `${enquiryCount} enquir${enquiryCount === 1 ? 'y' : 'ies'}`;
+}
+
+/* Views */
 async function trackView(data) {
   const viewedKey = 'nk_viewed_' + listingId;
   const alreadyCounted = !!nkLSGet(viewedKey);
-
   if (!alreadyCounted) {
     nkLSSet(viewedKey, '1');
     const { data: newCount, error } = await db.rpc('increment_listing_views', { listing_id: listingId });
-    if (!error && newCount !== null) {
-      updateViewsDisplay(newCount);
-    } else {
+    if (!error && newCount !== null) updateViewsDisplay(newCount);
+    else {
       const fallbackCount = (data.views || 0) + 1;
       await db.from('listings').update({ views: fallbackCount }).eq('id', listingId);
       updateViewsDisplay(fallbackCount);
     }
-  } else {
-    updateViewsDisplay(data.views || 0);
-  }
+  } else updateViewsDisplay(data.views || 0);
 }
 function updateViewsDisplay(count) {
   const el = document.getElementById('listing-views');
   if (el) { el.textContent = `${Number(count).toLocaleString('en-KE')} view${count !== 1 ? 's' : ''}`; el.classList.remove('views-loading'); }
 }
 
-/* ════════════════════════════════════════════════════
-   DISABLED VIEW
-════════════════════════════════════════════════════ */
 function showNotFound() {
   document.getElementById('skeleton-wrap').style.display = 'none';
   document.getElementById('not-found').style.display = 'block';
-  document.getElementById('breadcrumb-area').textContent = 'Not found';
 }
 function showSellerDisabledView(data) {
   document.getElementById('skeleton-wrap').style.display = 'none';
-  document.getElementById('breadcrumb-area').textContent = escHtml(data.title || 'Your listing');
-
-  const isRecycleBin = !!data.recycle_bin;
-  const isPending    = data.status === 'pending';
-  const isRejected   = data.status === 'rejected';
-
+  const isRecycleBin = !!data.recycle_bin, isPending = data.status === 'pending', isRejected = data.status === 'rejected';
   let heading = 'Your listing has been deactivated';
-  let intro   = 'This listing is currently hidden from the public site. Only you and the admin team can see this notice — visitors will see a generic "not found" page.';
-
-  if (isRecycleBin) {
-    heading = 'Your listing is in the recycle bin';
-    intro   = 'An admin has moved this listing to the recycle bin. It is hidden from the public and will be permanently deleted after the grace period.';
-  } else if (isPending) {
-    heading = 'Your listing is pending review';
-    intro   = 'Your listing is under review by our admin team. It will be visible to the public once approved — usually within a few hours.';
-  } else if (isRejected) {
-    heading = 'Your listing was rejected';
-    intro   = 'Your listing was rejected by the admin team. Please review the reason below and resubmit via your dashboard.';
-  }
-
+  let intro = 'This listing is currently hidden from the public site. Only you and the admin team can see this notice — visitors will see a generic "not found" page.';
+  if (isRecycleBin) { heading = 'Your listing is in the recycle bin'; intro = 'An admin has moved this listing to the recycle bin. It is hidden from the public and will be permanently deleted after the grace period.'; }
+  else if (isPending) { heading = 'Your listing is pending review'; intro = 'Your listing is under review by our admin team. It will be visible to the public once approved — usually within a few hours.'; }
+  else if (isRejected) { heading = 'Your listing was rejected'; intro = 'Your listing was rejected by the admin team. Please review the reason below and resubmit via your dashboard.'; }
   document.getElementById('seller-disabled-heading').textContent = heading;
-  document.getElementById('seller-disabled-intro').textContent   = intro;
-
+  document.getElementById('seller-disabled-intro').textContent = intro;
   const reason = data.disabled_reason || null;
-  if (reason) {
-    document.getElementById('seller-disabled-reason-text').textContent = reason;
-    document.getElementById('seller-disabled-reason-box').style.display = 'block';
-  }
-
+  if (reason) { document.getElementById('seller-disabled-reason-text').textContent = reason; document.getElementById('seller-disabled-reason-box').style.display = 'block'; }
   if (isRecycleBin && data.purge_at) {
     const daysLeft = Math.max(0, Math.ceil((new Date(data.purge_at) - new Date()) / 86400000));
-    document.getElementById('seller-recycle-days').textContent =
-      daysLeft > 0 ? `Permanent deletion in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}` : 'Deletion imminent — contact admin now';
+    document.getElementById('seller-recycle-days').textContent = daysLeft > 0 ? `Permanent deletion in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}` : 'Deletion imminent — contact admin now';
     document.getElementById('seller-recycle-extra').style.display = 'block';
   }
-
   document.getElementById('seller-disabled-view').style.display = 'block';
 }
 
-/* ════════════════════════════════════════════════════
-   BUYER THREAD
-════════════════════════════════════════════════════ */
 async function handleBuyerThread(data) {
   buyerToken = getBuyerToken();
-
   if (currentBuyerId) {
-    const { data: existing } = await db
-      .from('messages').select('*').eq('listing_id', listingId).eq('buyer_id', currentBuyerId)
-      .order('created_at', { ascending: true }).limit(1);
+    const { data: existing } = await db.from('messages').select('*').eq('listing_id', listingId).eq('buyer_id', currentBuyerId).order('created_at', { ascending: true }).limit(1);
     if (existing && existing.length) {
       buyerToken = existing[0].buyer_token || buyerToken;
-      buyerName  = existing[0].buyer_name  || '';
-      buyerPhone = existing[0].buyer_phone || '';
+      buyerName = existing[0].buyer_name || ''; buyerPhone = existing[0].buyer_phone || '';
       if (buyerToken) setBuyerToken(buyerToken);
       document.getElementById('enquiry-form').style.display = 'none';
       await showConversationCard();
@@ -1347,23 +1253,23 @@ async function handleBuyerThread(data) {
       return;
     }
   }
-
   if (buyerToken) {
     getSavedBuyerInfo();
     document.getElementById('enquiry-form').style.display = 'none';
     await showConversationCard();
     if (typeof NKGlobalChat !== 'undefined') NKGlobalChat.refresh();
   } else {
-    document.getElementById('enq-message').value = `Hello, I'm interested in "${data.title}". Is it still available?`;
+    document.getElementById('enq-message').value = '';
   }
 }
 
 /* ════════════════════════════════════════════════════
-   RENDER LISTING — driven entirely by the post-listing.html schema
+   RENDER LISTING
 ════════════════════════════════════════════════════ */
 function renderListing(l) {
   const meta = NK_CATEGORIES[l.category] || { label: l.category, group: 'standard' };
   const freq = l.price_frequency || (meta.group === 'boarding' ? 'month' : meta.group === 'airbnb' ? 'night' : 'once');
+  const d = l.details || {};
 
   document.title = `${l.title} — Nyumba254`;
   const ogDesc = `${l.title} in ${l.area}, ${nkListingCounty(l)}. KES ${Number(l.price||0).toLocaleString()}${NK_FREQ_LABEL[freq]||''}. Contact seller on Nyumba254.`;
@@ -1379,102 +1285,89 @@ function renderListing(l) {
   document.getElementById('twitter-description').setAttribute('content', ogDesc);
   document.getElementById('twitter-image').setAttribute('content', ogImageUrl);
 
-  document.getElementById('breadcrumb-area').textContent = `${nkListingCounty(l)} · ${l.area}`;
-
   photos = (l.listing_photos || []).sort((a,b) => a.position - b.position);
   const cover = photos.find(p=>p.is_cover) || photos[0];
   currentPhoto = cover ? Math.max(0, photos.indexOf(cover)) : 0;
   renderGallery();
 
-  if (l.verification_status === 'verified' || l.is_admin_verified) document.getElementById('featured-badge').style.display = 'flex';
-
-  document.getElementById('listing-badges').innerHTML = `
-    <span class="badge ${l.category}">${meta.label}</span>
-    <span class="badge freq">${freq === 'once' ? 'For sale' : freq === 'month' ? 'To let / monthly' : freq === 'night' ? 'Short stay' : freq === 'week' ? 'Weekly' : 'Per term'}</span>
-  `;
+  /* Badge row */
+  const badges = [`<span class="status-pill"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Available now</span>`];
+  if (l.profiles?.verification_status === 'verified') badges.push(`<span class="status-pill verified"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg>Reviewed by Nyumba254</span>`);
+  badges.push(`<span class="status-pill plain">${meta.label}</span>`);
+  if (meta.group === 'boarding') badges.push(`<span class="status-pill plain">Student friendly</span>`);
+  document.getElementById('badge-row').innerHTML = badges.join('');
 
   document.getElementById('listing-title').textContent = l.title;
-  document.getElementById('listing-loc-text').textContent =
-    `${nkListingCounty(l)} · ${l.area}${l.address ? ' — ' + l.address : ''}`;
+  document.getElementById('listing-loc-text').textContent = `${l.area}, ${nkListingCounty(l)}`;
+  document.getElementById('listing-price').innerHTML = `KES ${Number(l.price||0).toLocaleString('en-KE')}${NK_FREQ_LABEL[freq] ? `<span>${NK_FREQ_LABEL[freq]}</span>` : ''}`;
 
-  document.getElementById('listing-price').innerHTML =
-    `KES ${Number(l.price||0).toLocaleString('en-KE')}${NK_FREQ_LABEL[freq] ? `<span>${NK_FREQ_LABEL[freq]}</span>` : ''}`;
-  document.getElementById('listing-price-meta').textContent = NK_FREQ_META[freq] || 'Negotiable';
-
-  document.getElementById('listing-views').textContent = `${l.views||0} views`;
-
-  /* ── Specs — built from l.details (jsonb) per property-type group ── */
-  const d = l.details || {};
-  const specs = [];
-  document.getElementById('specs-card-title').textContent = 'Property details';
-
+  /* Stat strip — 3 boxes, category-driven */
+  let stats = [];
   if (meta.group === 'standard') {
-    if (l.category === 'apartment' && d.units) specs.push({ icon: unitsIcon, val: d.units, lbl: 'Units' });
-    if (d.bedrooms !== undefined && d.bedrooms !== null && d.bedrooms !== '') specs.push({ icon: bedIcon, val: d.bedrooms == 0 ? 'Studio' : d.bedrooms, lbl: d.bedrooms == 0 ? 'Bedsitter' : 'Bedrooms' });
-    if (d.bathrooms) specs.push({ icon: bathIcon, val: d.bathrooms, lbl: 'Bathrooms' });
-    if (d.size_sqm) specs.push({ icon: sizeIcon, val: d.size_sqm + 'm²', lbl: 'Floor area' });
-    if (d.furnished) specs.push({ icon: furnIcon, val: d.furnished === 'yes' ? 'Yes' : d.furnished === 'partial' ? 'Partial' : 'No', lbl: 'Furnished' });
-    if (d.parking) specs.push({ icon: parkIcon, val: nkTitleCase(d.parking), lbl: 'Parking' });
-    if (d.security) specs.push({ icon: securityIcon, val: nkTitleCase(d.security), lbl: 'Security' });
+    const totalUnits = l.category === 'apartment' && d.units ? d.units : null;
+    stats = [
+      { val: totalUnits || (d.bedrooms == 0 ? 'Studio' : d.bedrooms || '—'), lbl: totalUnits ? 'Units' : (d.bedrooms == 0 ? 'Bedsitter' : 'Bedrooms') },
+      { val: nkTitleCase(d.furnished === 'yes' ? 'Furnished' : d.furnished === 'partial' ? 'Partly furnished' : d.furnished === 'no' ? 'Unfurnished' : '—'), lbl: 'Furnishing' },
+      { val: NK_FREQ_META[freq] ? NK_FREQ_META[freq].split(' —')[0] : '—', lbl: 'Terms' },
+    ];
   } else if (meta.group === 'boarding') {
     const totalUnits = listingUnits.reduce((s,u) => s + (u.quantity_total ?? u.quantity_available ?? 0), 0) || d.total_beds || 0;
-    const availUnits = listingUnits.reduce((s,u) => s + (u.quantity_available ?? 0), 0);
-    specs.push({ icon: unitsIcon, val: totalUnits, lbl: 'Total bed spaces' });
-    specs.push({ icon: bedIcon,   val: availUnits, lbl: 'Currently open' });
-    specs.push({ icon: catIcon,   val: nkTitleCase(d.gender || 'mixed'), lbl: 'Residents' });
-    if (d.institution) specs.push({ icon: securityIcon, val: d.institution, lbl: 'Nearby' });
+    stats = [
+      { val: totalUnits, lbl: 'Spaces' },
+      { val: nkTitleCase(d.gender || 'mixed'), lbl: 'Accommodation' },
+      { val: d.institution || '—', lbl: 'Nearby' },
+    ];
   } else if (meta.group === 'airbnb') {
-    if (d.guests) specs.push({ icon: catIcon, val: d.guests, lbl: 'Guests' });
-    if (d.bedrooms) specs.push({ icon: bedIcon, val: d.bedrooms, lbl: 'Bedrooms' });
-    if (d.bathrooms) specs.push({ icon: bathIcon, val: d.bathrooms, lbl: 'Bathrooms' });
-    if (d.min_stay) specs.push({ icon: sizeIcon, val: `${d.min_stay} night${d.min_stay==1?'':'s'}`, lbl: 'Min. stay' });
-    if (d.checkin) specs.push({ icon: securityIcon, val: d.checkin, lbl: 'Check-in/out' });
+    stats = [
+      { val: d.guests || '—', lbl: 'Guests' },
+      { val: d.bedrooms || '—', lbl: 'Bedrooms' },
+      { val: d.min_stay ? `${d.min_stay} night${d.min_stay==1?'':'s'}` : '—', lbl: 'Min. stay' },
+    ];
   }
-  specs.push({ icon: typeIcon, val: meta.label, lbl: 'Property type' });
+  document.getElementById('stat-strip').innerHTML = stats.map(s => `<div class="stat-box"><div class="val">${s.val}</div><div class="lbl">${s.lbl}</div></div>`).join('');
 
-  document.getElementById('specs-grid').innerHTML = specs.map(s=>`
-    <div class="spec-item">
-      <div class="spec-icon">${s.icon}</div>
-      <div class="spec-val">${s.val}</div>
-      <div class="spec-lbl">${s.lbl}</div>
-    </div>`).join('');
+  document.getElementById('listing-views').textContent = `${l.views||0} views`;
+  document.getElementById('listing-posted').textContent = `Posted ${l.created_at ? timeAgoShort(l.created_at) : '—'}`;
 
-  /* ── Amenities — driven by l.amenities array against NK_AMENITIES ── */
+  /* Amenities */
   const amenities = Array.isArray(l.amenities) ? l.amenities : [];
   if (amenities.length) {
     document.getElementById('amenities-card').style.display = 'block';
-    document.getElementById('amenities-grid').innerHTML = NK_AMENITIES
-      .filter(a => amenities.includes(a.key))
-      .map(a => `<div class="amenity-row"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>${a.label}</div>`)
-      .join('');
+    document.getElementById('amenities-grid').innerHTML = NK_AMENITIES.filter(a => amenities.includes(a.key))
+      .map(a => `<div class="amenity-chip"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>${a.label}</div>`).join('');
   }
 
-  if (l.description) {
-    document.getElementById('desc-card').style.display = 'block';
-    document.getElementById('desc-text').textContent = l.description;
-  }
+  if (l.description) { document.getElementById('desc-card').style.display = 'block'; document.getElementById('desc-text').textContent = l.description; }
 
-  /* ── Boarding house room types (buyer-facing) + enquiry room-type select ── */
-  if (meta.group === 'boarding') renderUnitAvailability();
+  /* Boarding room options + occupancy donut */
+  if (meta.group === 'boarding') { renderUnitAvailability(); renderOccupancyOverview(); }
 
   if (meta.group === 'boarding' && listingUnits.length) {
     document.getElementById('enq-unit-type-field').style.display = 'block';
     const sel = document.getElementById('enq-unit-type');
-    sel.innerHTML = '<option value="">Any available room</option>' + listingUnits
-      .filter(u => (u.quantity_available ?? 0) > 0)
-      .map(u => `<option value="${escHtml(u.unit_label)}">${escHtml(u.unit_label)} — KES ${Number(u.price).toLocaleString('en-KE')}/mo</option>`)
-      .join('');
+    sel.innerHTML = '<option value="">Any available room</option>' + listingUnits.filter(u => (u.quantity_available ?? 0) > 0)
+      .map(u => `<option value="${escHtml(u.unit_label)}">${escHtml(u.unit_label)} — KES ${Number(u.price).toLocaleString('en-KE')}/mo</option>`).join('');
   }
 
-  /* ── Seller card ── */
+  /* Where you'll be */
+  document.getElementById('where-area').textContent = l.area || '—';
+  document.getElementById('where-county').textContent = nkListingCounty(l);
+  const houseRulesText = d.house_rules || null;
+  if (houseRulesText) {
+    const rules = houseRulesText.split(/\n|,/).map(r => r.trim()).filter(Boolean);
+    if (rules.length) {
+      document.getElementById('house-rules-wrap').style.display = 'block';
+      document.getElementById('house-rules-list').innerHTML = rules.map(r => `<li>${escHtml(r)}</li>`).join('');
+    }
+  }
+
+  /* Seller card */
   const profile = l.profiles || {};
   const sellerDisplayName = l.contact_name || profile.full_name || 'Seller';
   const initials = sellerDisplayName.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
   document.getElementById('seller-avatar').textContent = initials;
   document.getElementById('seller-name').textContent = sellerDisplayName;
-  document.getElementById('seller-since').textContent = profile.created_at
-    ? `Member since ${new Date(profile.created_at).toLocaleDateString('en-KE',{month:'long',year:'numeric'})}`
-    : '';
+  document.getElementById('seller-since').textContent = profile.created_at ? `Member since ${new Date(profile.created_at).toLocaleDateString('en-KE',{month:'long',year:'numeric'})}` : '';
   const nkIsVerifiedSeller = profile.verification_status === 'verified';
   document.getElementById('seller-verified-badge').style.display = nkIsVerifiedSeller ? 'inline-flex' : 'none';
   document.getElementById('seller-unverified-badge').style.display = nkIsVerifiedSeller ? 'none' : 'inline-flex';
@@ -1486,51 +1379,67 @@ function renderListing(l) {
   document.getElementById('skeleton-wrap').style.display = 'none';
   document.getElementById('listing-content').style.display = 'block';
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    "name": l.title,
-    "description": l.description || ogDesc,
-    "image": ogImageUrl,
-    "offers": { "@type": "Offer", "priceCurrency": "KES", "price": Number(l.price||0), "availability": "https://schema.org/InStock", "url": window.location.href }
-  };
+  const jsonLd = { "@context": "https://schema.org", "@type": "Product", "name": l.title, "description": l.description || ogDesc, "image": ogImageUrl,
+    "offers": { "@type": "Offer", "priceCurrency": "KES", "price": Number(l.price||0), "availability": "https://schema.org/InStock", "url": window.location.href } };
   document.getElementById('listing-jsonld').textContent = JSON.stringify(jsonLd);
 }
 
-function nkTitleCase(s) {
-  if (!s) return '';
-  return String(s).replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+function nkTitleCase(s) { if (!s) return ''; return String(s).replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase()); }
+function timeAgoShort(iso) {
+  const d = (Date.now() - new Date(iso)) / 1000;
+  if (d < 86400) return 'today';
+  if (d < 2592000) return `${Math.floor(d/86400)}d ago`;
+  return `${Math.floor(d/2592000)} month${Math.floor(d/2592000)===1?'':'s'} ago`;
 }
 
-/* ════════════════════════════════════════════════════
-   BOARDING ROOM TYPES — buyer-facing availability card
-════════════════════════════════════════════════════ */
+/* ── Boarding: room options & pricing card ── */
 function renderUnitAvailability() {
   const card = document.getElementById('units-card');
   if (!listingUnits.length) { card.style.display = 'none'; return; }
   card.style.display = 'block';
-
   document.getElementById('unit-type-list').innerHTML = listingUnits.map(u => {
     const available = u.quantity_available ?? 0;
     const total = u.quantity_total ?? null;
     const soldOut = available <= 0;
-    const low = !soldOut && total && (available / total) <= 0.2;
-    const pillClass = soldOut ? 'none' : (low ? 'low' : '');
-    const pillText = soldOut ? 'Fully booked' : total ? `${available} of ${total} available` : `${available} available`;
     return `
-      <div class="unit-type-card ${soldOut ? 'sold-out' : ''}">
-        <div class="unit-type-card-main">
-          <div class="unit-type-card-label">${escHtml(u.unit_label)}</div>
+      <div class="room-row">
+        <div class="room-row-icon"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="13" rx="1"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>
+        <div class="room-row-main">
+          <div class="room-row-label">${escHtml(u.unit_label)}</div>
         </div>
-        <div class="unit-avail-pill ${pillClass}">${pillText}</div>
-        <div class="unit-type-card-price">KES ${Number(u.price).toLocaleString('en-KE')}<span>/month</span></div>
+        <div class="room-row-avail ${soldOut?'none':''}">${total ? `${available} of ${total}` : `${available}`}<strong>${soldOut ? 'Full' : 'spaces open'}</strong></div>
+        <div class="room-row-price"><strong>KES ${Number(u.price).toLocaleString('en-KE')}</strong><span>/month</span></div>
+        <button class="room-row-btn" ${soldOut?'disabled':''} onclick="selectRoomAndScroll('${escAttr(u.unit_label)}')">${soldOut ? 'Fully booked' : 'Send Inquiry'}</button>
       </div>`;
   }).join('');
 }
+function selectRoomAndScroll(label) {
+  const sel = document.getElementById('enq-unit-type');
+  if (sel) sel.value = label;
+  document.querySelector('.sidebar-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('enq-name')?.focus();
+}
 
-/* ════════════════════════════════════════════════════
-   SELLER: MANAGE ROOMS PANEL (boarding houses)
-════════════════════════════════════════════════════ */
+/* ── Boarding: occupancy donut ── */
+function renderOccupancyOverview() {
+  const card = document.getElementById('occ-card');
+  if (!listingUnits.length) { card.style.display = 'none'; return; }
+  const total = listingUnits.reduce((s,u) => s + (u.quantity_total ?? u.quantity_available ?? 0), 0);
+  const available = listingUnits.reduce((s,u) => s + (u.quantity_available ?? 0), 0);
+  const occupied = Math.max(0, total - available);
+  if (!total) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  const pct = Math.round((occupied/total)*100);
+  const donut = document.getElementById('occ-donut');
+  donut.style.background = `conic-gradient(var(--green-dark) 0deg ${pct*3.6}deg, var(--green-light) ${pct*3.6}deg 360deg)`;
+  document.getElementById('occ-pct').textContent = `${pct}%`;
+  document.getElementById('occ-legend-title').textContent = `${occupied} of ${total} spaces taken`;
+  document.getElementById('occ-occupied-txt').textContent = `${occupied} Occupied`;
+  document.getElementById('occ-available-txt').textContent = `${available} Available`;
+  document.getElementById('occ-total-txt').textContent = `${total} Total Spaces`;
+}
+
+/* ── Seller: Manage rooms panel ── */
 function renderManageUnitsPanel() {
   const panel = document.getElementById('manage-units-card');
   if (listing?.category !== 'boarding' || !listingUnits.length) { panel.style.display = 'none'; return; }
@@ -1542,46 +1451,22 @@ function renderManageUnitRows() {
     const available = u.quantity_available ?? 0;
     const total = u.quantity_total ?? available;
     return `
-      <div class="manage-unit-row" id="manage-unit-${u.id}">
-        <div class="manage-unit-row-top">
-          <strong>${escHtml(u.unit_label)} — ${available} of ${total} available</strong>
-          <div class="manage-unit-actions">
-            <button class="btn-mark-occupied" ${available<=0?'disabled':''} onclick="toggleOccupyForm(${u.id})">Mark one occupied</button>
-            <button class="btn-mark-available" ${available>=total?'disabled':''} onclick="markUnitAvailable(${u.id})">Mark one available</button>
-          </div>
+      <div class="room-row" id="manage-unit-${u.id}" style="flex-wrap:wrap">
+        <div class="room-row-main" style="min-width:100%;margin-bottom:8px">
+          <div class="room-row-label">${escHtml(u.unit_label)} — ${available} of ${total} available</div>
         </div>
-        <div class="occupy-form" id="occupy-form-${u.id}">
-          <div class="occupy-form-grid">
-            <div><label>Notes</label><input type="text" id="occ-floor-${u.id}" placeholder="e.g. Room 4B"/></div>
-          </div>
-          <div style="display:flex;gap:8px">
-            <button class="btn-confirm-occupy" onclick="confirmMarkOccupied(${u.id})">Confirm — mark occupied</button>
-            <button class="btn-cancel-occupy" onclick="toggleOccupyForm(${u.id})">Cancel</button>
-          </div>
-        </div>
-        <div class="occupancy-log" id="occupancy-log-${u.id}"></div>
+        <button class="room-row-btn" style="background:var(--green)" ${available<=0?'disabled':''} onclick="confirmMarkOccupied(${u.id})">Mark one occupied</button>
+        <button class="room-row-btn" style="background:var(--white);color:var(--text-2);border:1.5px solid var(--border)" ${available>=total?'disabled':''} onclick="markUnitAvailable(${u.id})">Mark one available</button>
       </div>`;
   }).join('');
-  listingUnits.forEach(u => loadOccupancyLog(u.id));
 }
-function toggleOccupyForm(unitTypeId) { document.getElementById(`occupy-form-${unitTypeId}`).classList.toggle('open'); }
-
 async function confirmMarkOccupied(unitTypeId) {
-  const floor = document.getElementById(`occ-floor-${unitTypeId}`)?.value.trim() || null;
   const unit = listingUnits.find(u => u.id === unitTypeId);
   if (!unit || (unit.quantity_available ?? 0) <= 0) return;
-
-  const btn = document.querySelector(`#manage-unit-${unitTypeId} .btn-confirm-occupy`);
-  if (btn) btn.disabled = true;
-
-  const { data: newAvailable, error } = await db.rpc('mark_unit_occupied', { p_unit_id: unitTypeId, p_floor: floor, p_door: null, p_position: null });
-  if (btn) btn.disabled = false;
+  const { data: newAvailable, error } = await db.rpc('mark_unit_occupied', { p_unit_id: unitTypeId, p_floor: null, p_door: null, p_position: null });
   if (error || newAvailable === null) { showToastNK('Could not update availability — please try again.'); return; }
-
   unit.quantity_available = newAvailable;
-  toggleOccupyForm(unitTypeId);
-  renderManageUnitRows();
-  renderUnitAvailability();
+  renderManageUnitRows(); renderUnitAvailability(); renderOccupancyOverview();
   showToastNK('Marked as occupied — availability updated.');
 }
 async function markUnitAvailable(unitTypeId) {
@@ -1589,87 +1474,51 @@ async function markUnitAvailable(unitTypeId) {
   if (!unit) return;
   const total = unit.quantity_total ?? unit.quantity_available;
   if ((unit.quantity_available ?? 0) >= total) return;
-
   const { data: newAvailable, error } = await db.rpc('mark_unit_available', { p_unit_id: unitTypeId });
   if (error || newAvailable === null) { showToastNK('Could not update availability — please try again.'); return; }
-
   unit.quantity_available = newAvailable;
-  renderManageUnitRows();
-  renderUnitAvailability();
+  renderManageUnitRows(); renderUnitAvailability(); renderOccupancyOverview();
   showToastNK('Marked as available again.');
 }
-async function loadOccupancyLog(unitTypeId) {
-  const el = document.getElementById(`occupancy-log-${unitTypeId}`);
-  if (!el) return;
-  try {
-    const { data, error } = await db.from('unit_occupancy_log').select('*').eq('listing_unit_id', unitTypeId).order('created_at', { ascending: false }).limit(5);
-    if (error || !data || !data.length) { el.innerHTML = ''; return; }
-    el.innerHTML = data.map(row => {
-      const when = row.created_at ? new Date(row.created_at).toLocaleDateString('en-KE', { day:'numeric', month:'short' }) : '';
-      const detail = row.action === 'occupied' ? (row.floor || 'Marked occupied') : 'Marked available again';
-      return `<div class="occupancy-log-item"><span>${escHtml(detail)}</span><span>${when}</span></div>`;
-    }).join('');
-  } catch(e) { el.innerHTML = ''; }
-}
 
-/* ════════════════════════════════════════════════════
-   LIVE MAP — Leaflet, pin dropped/geocoded at post-listing time
-════════════════════════════════════════════════════ */
+/* ── Map ── */
 function renderLiveMap(l) {
   const parts = [l.area, nkListingCounty(l), 'Kenya'].filter(Boolean);
   const query = parts.join(', ');
-  document.getElementById('map-sub').textContent = query;
-
   const hasPin = typeof l.latitude === 'number' && typeof l.longitude === 'number';
   const lat = hasPin ? l.latitude : -1.286389;
   const lng = hasPin ? l.longitude : 36.817223;
-
-  const mapsUrl = hasPin
-    ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+  const mapsUrl = hasPin ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
   document.getElementById('map-open-link').href = mapsUrl;
 
   leafletMap = L.map('listing-map', { zoomControl: true, scrollWheelZoom: false }).setView([lat, lng], hasPin ? 15 : 12);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors', maxZoom: 19 }).addTo(leafletMap);
   leafletMarker = L.marker([lat, lng]).addTo(leafletMap);
-  leafletMarker.bindPopup(escHtml(l.title)).openPopup();
 
   document.getElementById('map-loading').classList.add('hidden');
   setTimeout(() => leafletMap.invalidateSize(), 200);
 
   if (!hasPin) {
-    // Older listings without a saved pin — best-effort geocode from area text
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`)
-      .then(r => r.json())
-      .then(results => {
-        if (results && results[0]) {
-          const glat = parseFloat(results[0].lat), glng = parseFloat(results[0].lon);
-          leafletMap.setView([glat, glng], 14);
-          leafletMarker.setLatLng([glat, glng]);
-        }
-      }).catch(() => {});
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`).then(r => r.json()).then(results => {
+      if (results && results[0]) {
+        const glat = parseFloat(results[0].lat), glng = parseFloat(results[0].lon);
+        leafletMap.setView([glat, glng], 14);
+        leafletMarker.setLatLng([glat, glng]);
+      }
+    }).catch(() => {});
   }
 }
 
-/* ════════════════════════════════════════════════════
-   GALLERY
-════════════════════════════════════════════════════ */
+/* ── Gallery ── */
 function renderGallery() {
-  const img = document.getElementById('gallery-img');
-  const noPhoto = document.getElementById('gallery-no-photo');
-  const thumbWrap = document.getElementById('gallery-thumbs');
-  const counter = document.getElementById('gallery-counter');
-  const prevBtn = document.getElementById('prev-btn');
-  const nextBtn = document.getElementById('next-btn');
-
+  const img = document.getElementById('gallery-img'), noPhoto = document.getElementById('gallery-no-photo');
+  const thumbWrap = document.getElementById('gallery-thumbs'), counter = document.getElementById('gallery-counter');
+  const prevBtn = document.getElementById('prev-btn'), nextBtn = document.getElementById('next-btn');
   if (!photos.length) { noPhoto.style.display='flex'; img.style.display='none'; return; }
-
-  noPhoto.style.display = 'none';
-  img.style.display = 'block';
+  noPhoto.style.display = 'none'; img.style.display = 'block';
   img.onerror = () => { noPhoto.style.display='flex'; img.style.display='none'; };
   img.src = photos[currentPhoto].url;
   img.alt = listing?.title || 'Property photo';
-
   const mainBox = document.getElementById('gallery-main');
   const applyRatio = () => {
     if (!img.naturalWidth || !img.naturalHeight) return;
@@ -1678,20 +1527,15 @@ function renderGallery() {
     mainBox.style.setProperty('--gallery-ratio', ratio);
   };
   if (img.complete) applyRatio(); else img.onload = applyRatio;
-
   if (photos.length > 1) {
-    counter.style.display = 'block';
-    counter.textContent   = `${currentPhoto+1} / ${photos.length}`;
-    prevBtn.style.display = 'flex';
-    nextBtn.style.display = 'flex';
-    thumbWrap.style.display = 'flex';
-    thumbWrap.innerHTML = photos.map((p,i) => `
-      <div class="gallery-thumb ${i===currentPhoto?'active':''}" onclick="goPhoto(${i})" role="button" tabindex="0" aria-label="Photo ${i+1}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goPhoto(${i})}">
-        <img src="${p.url}" alt="Photo ${i+1}" loading="lazy"/>
-      </div>`).join('');
-  } else {
-    counter.style.display = 'none'; prevBtn.style.display = 'none'; nextBtn.style.display = 'none'; thumbWrap.style.display = 'none';
-  }
+    counter.style.display = 'block'; counter.textContent = `${currentPhoto+1} / ${photos.length}`;
+    prevBtn.style.display = 'flex'; nextBtn.style.display = 'flex'; thumbWrap.style.display = 'flex';
+    const maxThumbs = 4;
+    thumbWrap.innerHTML = photos.slice(0, maxThumbs).map((p,i) => {
+      const isLast = i === maxThumbs - 1 && photos.length > maxThumbs;
+      return `<div class="gallery-thumb ${i===currentPhoto?'active':''} ${isLast?'more-overlay':''}" ${isLast?`data-more="+${photos.length-maxThumbs}\\nPhotos"`:''} onclick="goPhoto(${i})" role="button" tabindex="0" aria-label="Photo ${i+1}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goPhoto(${i})}"><img src="${p.url}" alt="Photo ${i+1}" loading="lazy"/></div>`;
+    }).join('');
+  } else { counter.style.display = 'none'; prevBtn.style.display = 'none'; nextBtn.style.display = 'none'; thumbWrap.style.display = 'none'; }
 }
 function changePhoto(dir) { currentPhoto=(currentPhoto+dir+photos.length)%photos.length; renderGallery(); if (document.getElementById('nk-lightbox').classList.contains('open')) renderLightbox(); }
 function goPhoto(i) { currentPhoto=i; renderGallery(); }
@@ -1708,7 +1552,6 @@ document.addEventListener('keydown', e => {
   if (e.key==='ArrowLeft') changePhoto(-1);
   if (e.key==='ArrowRight') changePhoto(1);
 });
-
 function openLightbox() { if (!photos.length) return; renderLightbox(); document.getElementById('nk-lightbox').classList.add('open'); document.body.style.overflow = 'hidden'; }
 function closeLightbox() { document.getElementById('nk-lightbox').classList.remove('open'); document.body.style.overflow = ''; }
 function nkLightboxBackdropClick(e) { if (e.target.id === 'nk-lightbox' || e.target.id === 'nk-lightbox-img-wrap') closeLightbox(); }
@@ -1716,8 +1559,7 @@ function lightboxChange(dir) { currentPhoto = (currentPhoto + dir + photos.lengt
 function renderLightbox() {
   const img = document.getElementById('nk-lightbox-img');
   img.onerror = () => showToastNK('This photo failed to load.');
-  img.src = photos[currentPhoto].url;
-  img.alt = listing?.title || 'Property photo';
+  img.src = photos[currentPhoto].url; img.alt = listing?.title || 'Property photo';
   const multi = photos.length > 1;
   document.getElementById('nk-lb-prev').style.display = multi ? 'flex' : 'none';
   document.getElementById('nk-lb-next').style.display = multi ? 'flex' : 'none';
@@ -1725,7 +1567,6 @@ function renderLightbox() {
   counter.style.display = multi ? 'block' : 'none';
   counter.textContent = `${currentPhoto+1} / ${photos.length}`;
 }
-
 let descExpanded = false;
 function toggleDesc() {
   descExpanded = !descExpanded;
@@ -1733,14 +1574,9 @@ function toggleDesc() {
   document.getElementById('read-more').textContent = descExpanded ? 'Show less ↑' : 'Read more ↓';
 }
 
-/* ════════════════════════════════════════════════════
-   SIMILAR LISTINGS
-════════════════════════════════════════════════════ */
+/* ── Similar listings ── */
 async function loadSimilar(area, excludeId) {
-  const { data } = await db.from('listings').select('*, listing_photos(*)')
-    .eq('status', 'active').eq('is_disabled', false).eq('recycle_bin', false)
-    .eq('area', area).neq('id', excludeId).limit(3);
-
+  const { data } = await db.from('listings').select('*, listing_photos(*)').eq('status', 'active').eq('is_disabled', false).eq('recycle_bin', false).eq('area', area).neq('id', excludeId).limit(3);
   const grid = document.getElementById('similar-grid');
   if (!data?.length) { grid.innerHTML = '<p style="font-size:13px;color:var(--text-3);grid-column:1/-1">No similar listings in this area yet.</p>'; return; }
   grid.innerHTML = data.map(l => {
@@ -1758,15 +1594,15 @@ async function loadSimilar(area, excludeId) {
   }).join('');
 }
 
-/* ════════════════════════════════════════════════════
-   ENQUIRY / MESSAGING
-════════════════════════════════════════════════════ */
+/* ── Enquiry / messaging ── */
 async function sendEnquiry() {
   const contactHidden = !!listing?.contact_hidden;
-  const name    = document.getElementById('enq-name').value.trim();
-  const phone   = document.getElementById('enq-phone').value.trim();
-  const email   = document.getElementById('enq-email').value.trim();
-  let   message = document.getElementById('enq-message').value.trim();
+  const name = document.getElementById('enq-name').value.trim();
+  const phone = document.getElementById('enq-phone').value.trim();
+  const email = document.getElementById('enq-email').value.trim();
+  const movein = document.getElementById('enq-movein').value;
+  const budget = document.getElementById('enq-budget').value;
+  let message = document.getElementById('enq-message').value.trim();
   let ok = true;
 
   ['enq-name','enq-phone','enq-message'].forEach(id => document.getElementById(id).classList.remove('error'));
@@ -1774,13 +1610,20 @@ async function sendEnquiry() {
 
   if (!name) { document.getElementById('enq-name').classList.add('error'); document.getElementById('err-enq-name').classList.add('show'); ok=false; }
   if (!contactHidden && (!phone || phone.replace(/\s/g,'').length < 9)) { document.getElementById('enq-phone').classList.add('error'); document.getElementById('err-enq-phone').classList.add('show'); ok=false; }
-  if (!message) { document.getElementById('enq-message').classList.add('error'); document.getElementById('err-enq-msg').classList.add('show'); ok=false; }
+  if (!message) message = "Hi, I'm interested in this property. Is it still available?";
   if (!ok) return;
 
+  const extras = [];
   if (listing?.category === 'boarding') {
     const unitType = document.getElementById('enq-unit-type')?.value || '';
-    if (unitType) message = `Interested room type: ${unitType}. ${message}`;
+    if (unitType) extras.push(`Interested room type: ${unitType}.`);
   }
+  if (movein) extras.push(`Preferred move-in: ${movein}.`);
+  if (budget) {
+    const budgetLabels = { under_10k:'Under KES 10,000', '10k_25k':'KES 10,000–25,000', '25k_50k':'KES 25,000–50,000', '50k_100k':'KES 50,000–100,000', over_100k:'Over KES 100,000' };
+    extras.push(`Budget: ${budgetLabels[budget]||budget}.`);
+  }
+  if (extras.length) message = `${extras.join(' ')} ${message}`;
 
   const btn = document.getElementById('btn-enquire');
   btn.disabled = true; btn.classList.add('loading');
@@ -1789,57 +1632,35 @@ async function sendEnquiry() {
   buyerToken = token; buyerName = name; buyerPhone = phone;
 
   const enqId = (crypto.randomUUID ? crypto.randomUUID() : Date.now()+'-'+Math.random().toString(36).slice(2));
-  const { error: enqErr } = await db.from('enquiries').insert({
-    id: enqId, listing_id: listingId, buyer_name: name, buyer_phone: phone,
-    buyer_email: email||null, buyer_token: token, buyer_id: currentBuyerId, message
-  });
+  const { error: enqErr } = await db.from('enquiries').insert({ id: enqId, listing_id: listingId, buyer_name: name, buyer_phone: phone, buyer_email: email||null, buyer_token: token, buyer_id: currentBuyerId, message });
   const insertedEnq = enqErr ? null : { id: enqId };
-
-  if (enqErr) {
-    btn.disabled = false; btn.classList.remove('loading');
-    console.error('Enquiry insert failed:', enqErr);
-    alert('Something went wrong: ' + (enqErr.message || 'unknown error') + ' — please try calling the seller directly.');
-    return;
-  }
+  if (enqErr) { btn.disabled = false; btn.classList.remove('loading'); alert('Something went wrong: ' + (enqErr.message || 'unknown error') + ' — please try calling the seller directly.'); return; }
 
   const msgId = (crypto.randomUUID ? crypto.randomUUID() : Date.now()+'-'+Math.random().toString(36).slice(2));
-  const { error: msgErr } = await db.from('messages').insert({
-    id: msgId, listing_id: listingId, buyer_token: token, buyer_name: name,
-    buyer_phone: phone, buyer_id: currentBuyerId, sender: 'buyer', content: message
-  });
+  const { error: msgErr } = await db.from('messages').insert({ id: msgId, listing_id: listingId, buyer_token: token, buyer_name: name, buyer_phone: phone, buyer_id: currentBuyerId, sender: 'buyer', content: message });
   const insertedMsg = msgErr ? null : { id: msgId, listing_id: listingId, buyer_token: token, buyer_name: name, buyer_phone: phone, sender: 'buyer', content: message, created_at: new Date().toISOString() };
 
   btn.disabled = false; btn.classList.remove('loading');
-  if (msgErr) {
-    if (insertedEnq?.id) await db.from('enquiries').delete().eq('id', insertedEnq.id);
-    console.error('Message insert failed:', msgErr);
-    alert('Something went wrong: ' + (msgErr.message || 'unknown error') + ' — please try calling the seller directly.');
-    return;
-  }
+  if (msgErr) { if (insertedEnq?.id) await db.from('enquiries').delete().eq('id', insertedEnq.id); alert('Something went wrong: ' + (msgErr.message || 'unknown error') + ' — please try calling the seller directly.'); return; }
 
   setBuyerToken(token);
   threadMessages = [insertedMsg || { sender:'buyer', content:message, created_at:new Date().toISOString() }];
   nkTrackContact(listingId, listing?.seller_id, listing?.contact_name || listing?.profiles?.full_name || 'the seller');
 
-  fetch(`${EDGE_URL}/send-notification-email`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
-    body: JSON.stringify({ type: 'new_buyer_enquiry', buyerName: name, buyerPhone: phone, buyerEmail: email || null, message, listingId, listingTitle: listing?.title }),
-  }).catch(e => console.error('Enquiry notify email failed:', e));
+  fetch(`${EDGE_URL}/send-notification-email`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+    body: JSON.stringify({ type: 'new_buyer_enquiry', buyerName: name, buyerPhone: phone, buyerEmail: email || null, message, listingId, listingTitle: listing?.title }) }).catch(()=>{});
+  fetch(`${EDGE_URL}/send-sms-alert`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+    body: JSON.stringify({ type: 'new_enquiry', listingId, buyerName: name, messagePreview: message, listingTitle: listing?.title }) }).catch(()=>{});
 
-  fetch(`${EDGE_URL}/send-sms-alert`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
-    body: JSON.stringify({ type: 'new_enquiry', listingId, buyerName: name, messagePreview: message, listingTitle: listing?.title }),
-  }).catch(e => console.error('SMS alert failed:', e));
-
-  document.getElementById('enquiry-form').style.display   = 'none';
+  document.getElementById('enquiry-form').style.display = 'none';
   document.getElementById('enquiry-success').style.display = 'block';
   if (typeof NKGlobalChat !== 'undefined') NKGlobalChat.registerAndOpen(listingId);
 }
 
 async function showConversationCard() {
-  document.getElementById('enquiry-form').style.display      = 'none';
-  document.getElementById('enquiry-success').style.display   = 'none';
-  document.getElementById('thread-section').style.display    = 'none';
+  document.getElementById('enquiry-form').style.display = 'none';
+  document.getElementById('enquiry-success').style.display = 'none';
+  document.getElementById('thread-section').style.display = 'none';
   document.getElementById('conversation-card').style.display = 'block';
   await loadThread();
 }
@@ -1856,26 +1677,22 @@ function renderThread() {
   if (!threadMessages.length) { box.innerHTML = '<div style="text-align:center;font-size:12px;color:var(--text-3);padding:16px">No messages yet</div>'; return; }
   const sellerName = listing?.contact_name || listing?.profiles?.full_name || 'Seller';
   const sellerInit = sellerName.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase() || 'S';
-  const buyerInit  = buyerName.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase() || 'B';
+  const buyerInit = buyerName.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase() || 'B';
   let lastDate = '';
   box.innerHTML = threadMessages.map(m => {
     const isSeller = m.sender === 'seller';
     const d = new Date(m.created_at);
     const dateStr = d.toLocaleDateString('en-KE',{weekday:'short',day:'numeric',month:'short'});
     const timeStr = d.toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'});
-    const sep = dateStr !== lastDate ? `<div class="chat-date-sep">${dateStr}</div>` : '';
-    lastDate = dateStr;
-    const init = isSeller ? sellerInit : buyerInit;
-    const avCls = isSeller ? 'seller-av' : 'buyer-av';
-    const bubCls = isSeller ? 'seller-b' : 'buyer-b';
-    const rowCls = isSeller ? 'seller-row-msg' : '';
+    const sep = dateStr !== lastDate ? `<div class="chat-date-sep">${dateStr}</div>` : ''; lastDate = dateStr;
+    const init = isSeller ? sellerInit : buyerInit, avCls = isSeller ? 'seller-av' : 'buyer-av', bubCls = isSeller ? 'seller-b' : 'buyer-b', rowCls = isSeller ? 'seller-row-msg' : '';
     return `${sep}<div class="chat-bubble-row ${rowCls}"><div class="bubble-av ${avCls}">${init}</div><div><div class="chat-bubble ${bubCls}">${escHtml(m.content||m.message||'')}</div><div class="bubble-time">${timeStr}${isSeller?' · Seller':''}</div></div></div>`;
   }).join('');
   box.scrollTop = box.scrollHeight;
 }
 async function sendFollowUp() {
   const input = document.getElementById('chat-follow-input');
-  const text  = input.value.trim();
+  const text = input.value.trim();
   if (!text || !buyerToken) return;
   const btn = document.getElementById('chat-follow-send');
   btn.disabled = true;
@@ -1892,20 +1709,17 @@ function clearThread() {
   if (!confirm('This will clear your conversation history from this device. The seller will still have the messages. Continue?')) return;
   nkLSRemove('nk_buyer_' + listingId); nkLSRemove('nk_buyer_name_' + listingId); nkLSRemove('nk_buyer_phone_' + listingId);
   buyerToken = null; buyerName = ''; buyerPhone = '';
-  document.getElementById('thread-section').style.display     = 'none';
-  document.getElementById('conversation-card').style.display  = 'none';
-  document.getElementById('enquiry-success').style.display    = 'none';
-  document.getElementById('enquiry-form').style.display       = 'block';
-  document.getElementById('enq-message').value = `Hello, I'm interested in "${listing?.title}". Is it still available?`;
+  document.getElementById('thread-section').style.display = 'none';
+  document.getElementById('conversation-card').style.display = 'none';
+  document.getElementById('enquiry-success').style.display = 'none';
+  document.getElementById('enquiry-form').style.display = 'block';
   threadMessages = [];
   if (typeof NKGlobalChat !== 'undefined') NKGlobalChat.refresh();
 }
 function handleFollowKeydown(e) { if (e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendFollowUp(); } }
 function autoResizeTa(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
 
-/* ════════════════════════════════════════════════════
-   CONTACT PROTECTION — reveals l.phone/l.whatsapp on click only
-════════════════════════════════════════════════════ */
+/* ── Contact protection ── */
 function nkBuildWaLink(rawPhone) {
   const clean = (rawPhone||'').replace(/[\s+]/g,'');
   const wa254 = /^0\d{9}$/.test(clean) ? '254'+clean.slice(1) : clean;
@@ -1913,159 +1727,78 @@ function nkBuildWaLink(rawPhone) {
   return `https://wa.me/${wa254}?text=${msg}`;
 }
 async function handleContactClick(channel) {
-  if (listing?.contact_hidden) {
-    showToastNK('For security, this seller has turned off contact reveal — please send a message below and they\'ll get back to you.');
-    document.getElementById('enq-message')?.focus();
-    return;
-  }
+  if (listing?.contact_hidden) { showToastNK('For security, this seller has turned off contact reveal — please send a message below and they\'ll get back to you.'); document.getElementById('enq-message')?.focus(); return; }
   if (contactRevealBusy) return;
-
   if (!contactRevealed) {
     contactRevealBusy = true;
-    const callBtn = document.getElementById('btn-call');
-    const waBtn   = document.getElementById('btn-whatsapp');
+    const callBtn = document.getElementById('btn-call'), waBtn = document.getElementById('btn-whatsapp');
     const callOrig = callBtn.innerHTML, waOrig = waBtn.innerHTML;
-    callBtn.disabled = true; waBtn.disabled = true;
-    callBtn.innerHTML = 'Loading…'; waBtn.innerHTML = 'Loading…';
-
+    callBtn.disabled = true; waBtn.disabled = true; callBtn.innerHTML = 'Loading…'; waBtn.innerHTML = 'Loading…';
     try {
       const { data: phone, error } = await db.rpc('reveal_seller_contact', { p_listing_id: listingId, p_device_id: nkGetDeviceId(), p_channel: channel });
-      if (error) { console.error('reveal_seller_contact error:', error); showToastNK('Contact is temporarily unavailable — please try again shortly, or send a message below.'); return; }
+      if (error) { showToastNK('Contact is temporarily unavailable — please try again shortly, or send a message below.'); return; }
       if (!phone) { showToastNK("You've reached the contact limit for now — please try again a bit later, or send a message below."); return; }
       sellerPhoneRaw = phone; contactRevealed = true;
-    } catch (e) {
-      console.error('reveal_seller_contact threw:', e);
-      showToastNK('Contact is temporarily unavailable — please try again shortly, or send a message below.');
-    } finally {
-      contactRevealBusy = false;
-      callBtn.disabled = false; waBtn.disabled = false;
-      callBtn.innerHTML = callOrig; waBtn.innerHTML = waOrig;
-    }
+    } catch (e) { showToastNK('Contact is temporarily unavailable — please try again shortly, or send a message below.'); }
+    finally { contactRevealBusy = false; callBtn.disabled = false; waBtn.disabled = false; callBtn.innerHTML = callOrig; waBtn.innerHTML = waOrig; }
   }
-
   if (!sellerPhoneRaw) return;
   if (channel === 'call') window.location.href = `tel:${sellerPhoneRaw.replace(/\s/g,'')}`;
   else window.open(nkBuildWaLink(sellerPhoneRaw), '_blank', 'noopener,noreferrer');
 }
 function showToastNK(msg) {
   let el = document.getElementById('nk-inline-toast');
-  if (!el) {
-    el = document.createElement('div'); el.id = 'nk-inline-toast';
-    el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:white;padding:12px 18px;border-radius:10px;font-size:13px;max-width:min(400px,calc(100% - 32px));text-align:center;z-index:2500;box-shadow:0 8px 24px rgba(0,0,0,0.2);transition:opacity .25s;';
-    document.body.appendChild(el);
-  }
+  if (!el) { el = document.createElement('div'); el.id = 'nk-inline-toast'; el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:white;padding:12px 18px;border-radius:10px;font-size:13px;max-width:min(400px,calc(100% - 32px));text-align:center;z-index:2500;box-shadow:0 8px 24px rgba(0,0,0,0.2);transition:opacity .25s;'; document.body.appendChild(el); }
   el.textContent = msg; el.style.opacity = '1';
   clearTimeout(el._t); el._t = setTimeout(() => { el.style.opacity = '0'; }, 4200);
 }
 
-/* Share */
 function shareWhatsApp() {
-  const url = window.location.href;
-  const title = listing?.title || 'Property listing';
-  const freq = listing?.price_frequency || 'once';
+  const url = window.location.href, title = listing?.title || 'Property listing', freq = listing?.price_frequency || 'once';
   const price = listing ? `KES ${Number(listing.price||0).toLocaleString('en-KE')}${NK_FREQ_LABEL[freq]||''}` : '';
   window.open(`https://wa.me/?text=${encodeURIComponent(`🏠 *${title}*\n📍 ${listing?.area||''}, ${listing ? nkListingCounty(listing) : 'Kenya'}\n💰 ${price}\n\nView on Nyumba254: ${url}`)}`, '_blank', 'noopener,noreferrer');
 }
 function copyLink(evt) {
   navigator.clipboard.writeText(window.location.href).then(() => {
-    const btn = evt.target.closest('.action-pill');
+    const btn = evt.target.closest('.top-btn') || evt.target.closest('button');
     const orig = btn.innerHTML;
-    btn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
-    btn.style.borderColor='var(--green)'; btn.style.color='var(--green)';
-    setTimeout(() => { btn.innerHTML=orig; btn.style.borderColor=''; btn.style.color=''; }, 2000);
-  }).catch(() => { showToastNK('Could not copy the link — you can copy it from the address bar instead.'); });
+    btn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied`;
+    setTimeout(() => { btn.innerHTML = orig; }, 2000);
+  }).catch(() => showToastNK('Could not copy the link — you can copy it from the address bar instead.'));
 }
 
-function escHtml(str) {
-  if (!str) return '';
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-/* SVG icons */
-const bedIcon  = `<svg viewBox="0 0 24 24"><path d="M2 4v16M22 4v16M2 12h20M2 8h4a2 2 0 012 2v2H2V8zM16 8h4a2 2 0 012 2v2h-6V8z"/></svg>`;
-const bathIcon = `<svg viewBox="0 0 24 24"><path d="M9 6l1-1a2 2 0 012.83 0l6.17 6.17a1 1 0 010 1.41L17 14M3 20h18M5 20v-4a3 3 0 013-3h1"/></svg>`;
-const sizeIcon = `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M9 21V9"/></svg>`;
-const furnIcon = `<svg viewBox="0 0 24 24"><rect x="2" y="8" width="20" height="10" rx="2"/><path d="M6 8V6a2 2 0 012-2h8a2 2 0 012 2v2"/><line x1="6" y1="14" x2="6" y2="18"/><line x1="18" y1="14" x2="18" y2="18"/></svg>`;
-const typeIcon = `<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
-const catIcon  = `<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0116 0v1"/></svg>`;
-const parkIcon = `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17V7h4a3 3 0 010 6H9"/></svg>`;
-const securityIcon = `<svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>`;
-const unitsIcon = `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg>`;
+function escHtml(str) { if (!str) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(str) { if (!str) return ''; return String(str).replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 function nkGetDeviceId() {
   let sid = nkLSGet('nk_sid');
   if (!sid) { sid=(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2)); nkLSSet('nk_sid',sid); }
   return sid;
 }
-(function() {
-  const sid = nkGetDeviceId();
-  db.from('page_views').insert({ path:location.pathname, referrer:document.referrer||null, user_agent:navigator.userAgent, session_id:sid });
-})();
+(function() { const sid = nkGetDeviceId(); db.from('page_views').insert({ path:location.pathname, referrer:document.referrer||null, user_agent:navigator.userAgent, session_id:sid }); })();
 
-function toggleMobileMenu() {
-  const nav = document.getElementById('mobile-nav');
-  const isOpen = nav.classList.toggle('open');
-  document.getElementById('mobile-menu-btn')?.setAttribute('aria-expanded', isOpen);
-}
-document.addEventListener('click', e => {
-  const nav = document.getElementById('mobile-nav');
-  const btn = document.querySelector('.mobile-menu-btn');
-  if (nav && nav.classList.contains('open') && !nav.contains(e.target) && !btn.contains(e.target)) nav.classList.remove('open');
-});
-
+function toggleMobileMenu() { const nav = document.getElementById('mobile-nav'); const isOpen = nav.classList.toggle('open'); document.getElementById('mobile-menu-btn')?.setAttribute('aria-expanded', isOpen); }
+document.addEventListener('click', e => { const nav = document.getElementById('mobile-nav'); const btn = document.querySelector('.mobile-menu-btn'); if (nav && nav.classList.contains('open') && !nav.contains(e.target) && !btn.contains(e.target)) nav.classList.remove('open'); });
 nkSessionPromise.then(({ data: { session } }) => {
   if (!session) return;
-  const d = document.getElementById('nav-account-link');
-  const m = document.getElementById('mobile-account-link');
+  const d = document.getElementById('nav-account-link'), m = document.getElementById('mobile-account-link');
   if (d) { d.textContent='My Account'; d.href='/dashboard'; d.style.fontWeight='600'; d.style.color='var(--green)'; }
   if (m) { m.textContent='My Account'; m.href='/dashboard'; }
 });
 
-/* ════════════════════════════════════════════════════
-   REVIEWS & REPORTS
-════════════════════════════════════════════════════ */
-const NK_REVIEW_PENDING_KEY  = 'nk_pending_reviews';
-const NK_PLATFORM_REVIEW_KEY = 'nk_platform_review_done';
-const NK_REVIEW_SNOOZE_MS    = 3 * 24 * 60 * 60 * 1000;
-const NK_REVIEW_ELIGIBLE_MS  = 2 * 60 * 60 * 1000;
-const NK_REVIEW_MIN_VISITS   = 6;
-const NK_REVIEW_TAB_OPEN_MS  = 2 * 60 * 60 * 1000;
-let nkCurrentPendingEntry = null;
-let nkSellerStarRating    = 0;
-let nkPlatformStarRating  = 0;
-let nkReportTargetType    = 'listing';
-let nkReportTargetId      = null;
-let nkReviewRecheckTimer  = null;
+/* ── Reviews & reports ── */
+const NK_REVIEW_PENDING_KEY = 'nk_pending_reviews', NK_PLATFORM_REVIEW_KEY = 'nk_platform_review_done';
+const NK_REVIEW_SNOOZE_MS = 3*24*60*60*1000, NK_REVIEW_ELIGIBLE_MS = 2*60*60*1000, NK_REVIEW_MIN_VISITS = 6, NK_REVIEW_TAB_OPEN_MS = 2*60*60*1000;
+let nkCurrentPendingEntry = null, nkSellerStarRating = 0, nkPlatformStarRating = 0, nkReportTargetType = 'listing', nkReportTargetId = null, nkReviewRecheckTimer = null;
 
 function nkTrackContact(lId, sellerId, sellerName) {
   if (!lId) return;
   const pending = JSON.parse(nkLSGet(NK_REVIEW_PENDING_KEY) || '[]');
-  if (!pending.some(p => p.listingId === lId)) {
-    pending.push({ listingId: lId, sellerId, sellerName, contactedAt: Date.now(), snoozedUntil: 0, done: false, visitCount: 0 });
-    nkLSSet(NK_REVIEW_PENDING_KEY, JSON.stringify(pending));
-  }
+  if (!pending.some(p => p.listingId === lId)) { pending.push({ listingId: lId, sellerId, sellerName, contactedAt: Date.now(), snoozedUntil: 0, done: false, visitCount: 0 }); nkLSSet(NK_REVIEW_PENDING_KEY, JSON.stringify(pending)); }
 }
-function nkRecordListingVisit(lId) {
-  const pending = JSON.parse(nkLSGet(NK_REVIEW_PENDING_KEY) || '[]');
-  const e = pending.find(p => p.listingId === lId && !p.done);
-  if (!e) return;
-  e.visitCount = (e.visitCount || 0) + 1;
-  nkSavePending(pending);
-}
-function nkTabOpenElapsedMs(lId) {
-  const key = 'nk_tab_open_' + lId;
-  let start = sessionStorage.getItem(key);
-  if (!start) { start = String(Date.now()); sessionStorage.setItem(key, start); }
-  return Date.now() - Number(start);
-}
-function nkEntryEligible(entry) {
-  const now = Date.now();
-  if (now <= entry.snoozedUntil) return false;
-  const conversationAge = now - entry.contactedAt;
-  const visits = entry.visitCount || 0;
-  const tabOpenMs = nkTabOpenElapsedMs(entry.listingId);
-  return conversationAge >= NK_REVIEW_ELIGIBLE_MS || visits >= NK_REVIEW_MIN_VISITS || tabOpenMs >= NK_REVIEW_TAB_OPEN_MS;
-}
+function nkRecordListingVisit(lId) { const pending = JSON.parse(nkLSGet(NK_REVIEW_PENDING_KEY) || '[]'); const e = pending.find(p => p.listingId === lId && !p.done); if (!e) return; e.visitCount = (e.visitCount || 0) + 1; nkSavePending(pending); }
+function nkTabOpenElapsedMs(lId) { const key = 'nk_tab_open_' + lId; let start = sessionStorage.getItem(key); if (!start) { start = String(Date.now()); sessionStorage.setItem(key, start); } return Date.now() - Number(start); }
+function nkEntryEligible(entry) { const now = Date.now(); if (now <= entry.snoozedUntil) return false; const conversationAge = now - entry.contactedAt; const visits = entry.visitCount || 0; const tabOpenMs = nkTabOpenElapsedMs(entry.listingId); return conversationAge >= NK_REVIEW_ELIGIBLE_MS || visits >= NK_REVIEW_MIN_VISITS || tabOpenMs >= NK_REVIEW_TAB_OPEN_MS; }
 function nkCheckReviewPrompt(currentListingId) {
   if (isListingOwner || !currentListingId) return;
   if (!nkLSGet('nk_buyer_' + currentListingId)) return;
@@ -2087,44 +1820,24 @@ function nkScheduleReviewRecheck(currentListingId) {
 }
 function nkSavePending(pending) { nkLSSet(NK_REVIEW_PENDING_KEY, JSON.stringify(pending)); }
 function nkDismissBanner() { document.getElementById('nk-review-banner').classList.remove('show'); }
-function nkSnoozeCurrentEntry() {
-  if (!nkCurrentPendingEntry) return;
-  const pending = JSON.parse(nkLSGet(NK_REVIEW_PENDING_KEY) || '[]');
-  const e = pending.find(p => p.listingId === nkCurrentPendingEntry.listingId);
-  if (e) e.snoozedUntil = Date.now() + NK_REVIEW_SNOOZE_MS;
-  nkSavePending(pending);
-}
+function nkSnoozeCurrentEntry() { if (!nkCurrentPendingEntry) return; const pending = JSON.parse(nkLSGet(NK_REVIEW_PENDING_KEY) || '[]'); const e = pending.find(p => p.listingId === nkCurrentPendingEntry.listingId); if (e) e.snoozedUntil = Date.now() + NK_REVIEW_SNOOZE_MS; nkSavePending(pending); }
 function nkBannerYes() {
   document.getElementById('nk-review-banner').classList.remove('show');
   document.getElementById('nk-review-seller-name').textContent = nkCurrentPendingEntry.sellerName || 'the seller';
   nkRenderStars('nk-seller-stars', 'seller');
-  const nameInput = document.getElementById('nk-seller-review-name');
-  nameInput.value = buyerName || ''; nameInput.disabled = false;
+  const nameInput = document.getElementById('nk-seller-review-name'); nameInput.value = buyerName || ''; nameInput.disabled = false;
   document.getElementById('nk-seller-review-anon').checked = false;
   document.getElementById('nk-seller-review-modal').classList.add('open');
 }
 function nkBannerNotYet() { nkSnoozeCurrentEntry(); nkDismissBanner(); }
-function nkBannerNo() {
-  const pending = JSON.parse(nkLSGet(NK_REVIEW_PENDING_KEY) || '[]');
-  const e = pending.find(p => p.listingId === nkCurrentPendingEntry.listingId);
-  if (e) e.done = true;
-  nkSavePending(pending);
-  nkDismissBanner();
-}
+function nkBannerNo() { const pending = JSON.parse(nkLSGet(NK_REVIEW_PENDING_KEY) || '[]'); const e = pending.find(p => p.listingId === nkCurrentPendingEntry.listingId); if (e) e.done = true; nkSavePending(pending); nkDismissBanner(); }
 function nkRenderStars(containerId, kind) {
   const el = document.getElementById(containerId);
-  el.innerHTML = [1,2,3,4,5].map(n =>
-    `<svg class="nk-star" data-n="${n}" viewBox="0 0 24 24" tabindex="0" role="button" aria-label="${n} star${n>1?'s':''}" onclick="nkSetStar('${kind}',${n})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nkSetStar('${kind}',${n});}"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
-  ).join('');
+  el.innerHTML = [1,2,3,4,5].map(n => `<svg class="nk-star" data-n="${n}" viewBox="0 0 24 24" tabindex="0" role="button" aria-label="${n} star${n>1?'s':''}" onclick="nkSetStar('${kind}',${n})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();nkSetStar('${kind}',${n});}"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`).join('');
 }
-function nkSetStar(kind, n) {
-  if (kind === 'seller') nkSellerStarRating = n; else nkPlatformStarRating = n;
-  const container = document.getElementById(kind === 'seller' ? 'nk-seller-stars' : 'nk-platform-stars');
-  [...container.children].forEach((star, i) => star.classList.toggle('filled', i < n));
-}
+function nkSetStar(kind, n) { if (kind === 'seller') nkSellerStarRating = n; else nkPlatformStarRating = n; const container = document.getElementById(kind === 'seller' ? 'nk-seller-stars' : 'nk-platform-stars'); [...container.children].forEach((star, i) => star.classList.toggle('filled', i < n)); }
 function nkToggleAnon(kind) {
-  const nameInput = document.getElementById(`nk-${kind}-review-name`);
-  const anonBox = document.getElementById(`nk-${kind}-review-anon`);
+  const nameInput = document.getElementById(`nk-${kind}-review-name`), anonBox = document.getElementById(`nk-${kind}-review-anon`);
   if (anonBox.checked) { nameInput.dataset.savedValue = nameInput.value; nameInput.value = ''; nameInput.disabled = true; }
   else { nameInput.disabled = false; nameInput.value = nameInput.dataset.savedValue || buyerName || ''; }
 }
@@ -2142,24 +1855,14 @@ async function nkSubmitSellerReview() {
   const isAnon = document.getElementById('nk-seller-review-anon').checked;
   const typedName = document.getElementById('nk-seller-review-name').value.trim();
   const reviewerName = isAnon ? null : (typedName || buyerName || null);
-
-  await db.from('reviews').insert({
-    review_type: 'seller', target_seller_id: nkCurrentPendingEntry.sellerId, listing_id: nkCurrentPendingEntry.listingId,
-    reviewer_role: 'buyer', reviewer_name: reviewerName, is_anonymous: isAnon, rating: nkSellerStarRating, comment: comment || null,
-  });
-
+  await db.from('reviews').insert({ review_type: 'seller', target_seller_id: nkCurrentPendingEntry.sellerId, listing_id: nkCurrentPendingEntry.listingId, reviewer_role: 'buyer', reviewer_name: reviewerName, is_anonymous: isAnon, rating: nkSellerStarRating, comment: comment || null });
   const pending = JSON.parse(nkLSGet(NK_REVIEW_PENDING_KEY) || '[]');
   const e = pending.find(p => p.listingId === nkCurrentPendingEntry.listingId);
   if (e) e.done = true;
   nkSavePending(pending);
-
   document.getElementById('nk-seller-review-modal').classList.remove('open');
-  document.getElementById('nk-seller-review-text').value = '';
-  document.getElementById('nk-seller-review-name').value = '';
-  document.getElementById('nk-seller-review-name').disabled = false;
-  document.getElementById('nk-seller-review-anon').checked = false;
-  nkSellerStarRating = 0;
-  nkSellerReviewSubmitting = false;
+  document.getElementById('nk-seller-review-text').value = ''; document.getElementById('nk-seller-review-name').value = ''; document.getElementById('nk-seller-review-name').disabled = false; document.getElementById('nk-seller-review-anon').checked = false;
+  nkSellerStarRating = 0; nkSellerReviewSubmitting = false;
   loadSellerReviewStats(nkCurrentPendingEntry.sellerId);
   nkMaybePromptPlatformReview();
 }
@@ -2167,8 +1870,7 @@ function nkMaybePromptPlatformReview() {
   if (nkLSGet(NK_PLATFORM_REVIEW_KEY)) return;
   nkPlatformStarRating = 0;
   nkRenderStars('nk-platform-stars', 'platform');
-  const nameInput = document.getElementById('nk-platform-review-name');
-  nameInput.value = buyerName || ''; nameInput.disabled = false;
+  const nameInput = document.getElementById('nk-platform-review-name'); nameInput.value = buyerName || ''; nameInput.disabled = false;
   document.getElementById('nk-platform-review-anon').checked = false;
   setTimeout(() => document.getElementById('nk-platform-review-modal').classList.add('open'), 400);
 }
@@ -2181,32 +1883,19 @@ async function nkSubmitPlatformReview() {
   const isAnon = document.getElementById('nk-platform-review-anon').checked;
   const typedName = document.getElementById('nk-platform-review-name').value.trim();
   const reviewerName = isAnon ? null : (typedName || buyerName || null);
-
   await db.from('reviews').insert({ review_type: 'platform', reviewer_role: 'buyer', reviewer_name: reviewerName, is_anonymous: isAnon, rating: nkPlatformStarRating, comment: comment || null });
-
-  nkLSSet(NK_PLATFORM_REVIEW_KEY, '1');
-  nkPlatformReviewSubmitting = false;
+  nkLSSet(NK_PLATFORM_REVIEW_KEY, '1'); nkPlatformReviewSubmitting = false;
   document.getElementById('nk-platform-review-modal').classList.remove('open');
-  document.getElementById('nk-platform-review-text').value = '';
-  document.getElementById('nk-platform-review-name').value = '';
-  document.getElementById('nk-platform-review-name').disabled = false;
-  document.getElementById('nk-platform-review-anon').checked = false;
+  document.getElementById('nk-platform-review-text').value = ''; document.getElementById('nk-platform-review-name').value = ''; document.getElementById('nk-platform-review-name').disabled = false; document.getElementById('nk-platform-review-anon').checked = false;
 }
 function nkOpenReportModal(targetType, targetId) {
-  nkReportTargetType = targetType || 'listing';
-  nkReportTargetId = targetId || null;
+  nkReportTargetType = targetType || 'listing'; nkReportTargetId = targetId || null;
   document.getElementById('nk-report-reason').value = '';
-  const amtEl = document.getElementById('nk-report-amount');
-  if (amtEl) amtEl.value = '';
+  const amtEl = document.getElementById('nk-report-amount'); if (amtEl) amtEl.value = '';
   nkToggleReportAmountField();
   document.getElementById('nk-report-modal').classList.add('open');
 }
-function nkToggleReportAmountField() {
-  const reason = document.getElementById('nk-report-reason').value;
-  const wrap = document.getElementById('nk-report-amount-wrap');
-  if (!wrap) return;
-  wrap.style.display = (reason === 'unreasonable_fee' || reason === 'scam_attempt') ? 'block' : 'none';
-}
+function nkToggleReportAmountField() { const reason = document.getElementById('nk-report-reason').value; const wrap = document.getElementById('nk-report-amount-wrap'); if (!wrap) return; wrap.style.display = (reason === 'unreasonable_fee' || reason === 'scam_attempt') ? 'block' : 'none'; }
 function nkCloseReportModal() { document.getElementById('nk-report-modal').classList.remove('open'); }
 let nkReportSubmitting = false;
 async function nkSubmitReport() {
@@ -2216,36 +1905,32 @@ async function nkSubmitReport() {
   let details = document.getElementById('nk-report-details').value.trim();
   if (!reason) { alert('Please select a reason'); return; }
   if (amount) details = `Amount seller asked for: KES ${Number(amount).toLocaleString('en-KE')}\n\n${details}`;
-
   nkReportSubmitting = true;
   await db.from('reports').insert({ target_type: nkReportTargetType, target_id: nkReportTargetId, reason, details: details || null });
   nkReportSubmitting = false;
-
   document.getElementById('nk-report-modal').classList.remove('open');
-  document.getElementById('nk-report-reason').value = '';
-  document.getElementById('nk-report-details').value = '';
-  const amtReset = document.getElementById('nk-report-amount');
-  if (amtReset) amtReset.value = '';
+  document.getElementById('nk-report-reason').value = ''; document.getElementById('nk-report-details').value = '';
+  const amtReset = document.getElementById('nk-report-amount'); if (amtReset) amtReset.value = '';
   nkToggleReportAmountField();
-
   if (nkReportTargetType === 'listing' && nkReportTargetId) nkMarkListingReported(nkReportTargetId);
   alert("Thanks — we've received your report. Our team reviews every one, and impostor or scam accounts get suspended immediately once confirmed.");
 }
 function nkMarkListingReported(lId) {
-  const key = 'nk_reported_listings';
-  const reported = JSON.parse(nkLSGet(key) || '[]');
+  const key = 'nk_reported_listings', reported = JSON.parse(nkLSGet(key) || '[]');
   if (!reported.includes(lId)) { reported.push(lId); nkLSSet(key, JSON.stringify(reported)); }
   nkUpdateReportButtonState(lId);
 }
 function nkUpdateReportButtonState(lId) {
   const reported = JSON.parse(nkLSGet('nk_reported_listings') || '[]');
-  const btn = document.getElementById('report-scam-btn');
-  if (!btn) return;
-  if (reported.includes(lId)) {
-    btn.classList.add('reported');
-    btn.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Reported — thank you`;
-    btn.onclick = () => { if (confirm('You already reported this listing. Submit another report anyway?')) nkOpenReportModal('listing', lId); };
-  }
+  ['report-scam-btn','report-scam-btn-top'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    if (reported.includes(lId)) {
+      btn.classList.add('reported');
+      btn.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Reported`;
+      btn.onclick = () => { if (confirm('You already reported this listing. Submit another report anyway?')) nkOpenReportModal('listing', lId); };
+    }
+  });
 }
 async function loadSellerReviewStats(sellerId) {
   if (!sellerId) return;
@@ -2253,13 +1938,8 @@ async function loadSellerReviewStats(sellerId) {
   const wrap = document.getElementById('seller-rating');
   if (error || !data || !data.length) { wrap.style.display = 'none'; return; }
   const avg = data.reduce((s,r) => s + r.rating, 0) / data.length;
-  const rounded = Math.round(avg * 10) / 10;
-  const fullStars = Math.round(avg);
-  wrap.innerHTML = `
-    <span style="display:inline-flex;gap:1px;vertical-align:middle">${[1,2,3,4,5].map(n => `
-      <svg viewBox="0 0 24 24" width="13" height="13" style="${n<=fullStars?'fill:var(--green);stroke:var(--green)':'fill:none;stroke:var(--border)'};stroke-width:1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`).join('')}</span>
-    <span style="font-size:12px;color:var(--text-2);font-weight:600;margin-left:4px">${rounded}</span>
-    <span style="font-size:11px;color:var(--text-3)">(${data.length} review${data.length!==1?'s':''})</span>`;
+  const rounded = Math.round(avg * 10) / 10, fullStars = Math.round(avg);
+  wrap.innerHTML = `<span style="display:inline-flex;gap:1px;vertical-align:middle">${[1,2,3,4,5].map(n => `<svg viewBox="0 0 24 24" width="13" height="13" style="${n<=fullStars?'fill:var(--green);stroke:var(--green)':'fill:none;stroke:var(--border)'};stroke-width:1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`).join('')}</span><span style="font-size:12px;color:var(--text-2);font-weight:600;margin-left:4px">${rounded}</span><span style="font-size:11px;color:var(--text-3)">(${data.length} review${data.length!==1?'s':''})</span>`;
   wrap.style.display = 'flex'; wrap.style.alignItems = 'center';
 }
 
@@ -2269,7 +1949,6 @@ nkPopulateFooterCounties();
 loadListing();
 </script>
 
-<!-- Saved listings heart button -->
 <script src="saved-listings.js"></script>
 <script>
   function nkWaitForListingUuid(cb, tries) {
