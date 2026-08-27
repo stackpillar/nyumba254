@@ -218,7 +218,10 @@
     .badge.paid     { background: var(--green-light); color: var(--green-dark); }
     .badge.unpaid   { background: var(--red-light); color: var(--red); }
     .badge.trial    { background: var(--blue-light); color: var(--blue); }
-    .badge.commercial { background: var(--gold-light); color: var(--gold); }
+    .badge.apartment { background: var(--green-light); color: var(--green-dark); }
+    .badge.house { background: var(--blue-light); color: var(--blue); }
+    .badge.boarding { background: var(--gold-light); color: var(--gold); }
+    .badge.airbnb { background: var(--purple-light); color: var(--purple); }
     .badge.open       { background: var(--red-light); color: var(--red); }
     .badge.reviewing  { background: var(--gold-light); color: var(--gold); }
     .badge.resolved   { background: var(--green-light); color: var(--green-dark); }
@@ -922,10 +925,10 @@
           </div>
           <div class="quick-card">
             <h4>Listings by category</h4>
-            <div class="quick-row"><span>Student</span><span id="cat-student">—</span></div>
-            <div class="quick-row"><span>Standard</span><span id="cat-standard">—</span></div>
-            <div class="quick-row"><span>Luxury</span><span id="cat-luxury">—</span></div>
-            <div class="quick-row"><span>Commercial</span><span id="cat-commercial">—</span></div>
+            <div class="quick-row"><span>Apartment</span><span id="cat-apartment">—</span></div>
+            <div class="quick-row"><span>House</span><span id="cat-house">—</span></div>
+            <div class="quick-row"><span>Boarding House</span><span id="cat-boarding">—</span></div>
+            <div class="quick-row"><span>Airbnb / Holiday</span><span id="cat-airbnb">—</span></div>
           </div>
         </div>
       </div>
@@ -959,10 +962,10 @@
           </select>
           <select class="filter-select" id="filter-cat" onchange="loadAllListings()" aria-label="Filter by category">
             <option value="">All categories</option>
-            <option value="student">Student</option>
-            <option value="standard">Standard</option>
-            <option value="luxury">Luxury</option>
-            <option value="commercial">Commercial</option>
+            <option value="apartment">Apartment</option>
+            <option value="house">House</option>
+            <option value="boarding">Boarding House</option>
+            <option value="airbnb">Airbnb / Holiday Rental</option>
           </select>
           <input class="filter-search" id="filter-search" type="text" placeholder="Search title or area…" oninput="debouncedLoad()" aria-label="Search listings by title or area"/>
         </div>
@@ -2307,7 +2310,7 @@ function notifySms(type, payload) {
       ? countyBreakdown.map(([county,count])=>`<div class="quick-row"><span>${esc(county)}</span><span>${count}</span></div>`).join('')
       : '<div class="quick-row"><span>No active listings yet</span><span>—</span></div>';
 
-    for (const cat of ['student','standard','luxury','commercial']) {
+    for (const cat of ['apartment','house','boarding','airbnb']) {
       const {count} = await db.from('listings').select('*',{count:'exact',head:true}).eq('category',cat).eq('status','active').eq('recycle_bin',false);
       const el = document.getElementById('cat-'+cat);
       if (el) el.textContent = count||0;
@@ -3063,7 +3066,7 @@ function notifySms(type, payload) {
         <div class="field"><label>County</label><select id="el-county" onchange="onEditCountyChange()">
           ${NK_COUNTIES.map(c=>`<option value="${esc(c)}" ${c===currentCounty?'selected':''}>${esc(c)}</option>`).join('')}
         </select></div>
-        <div class="field"><label>Category</label><select id="el-category"><option value="student" ${l.category==='student'?'selected':''}>Student</option><option value="standard" ${l.category==='standard'?'selected':''}>Standard</option><option value="luxury" ${l.category==='luxury'?'selected':''}>Luxury</option><option value="commercial" ${l.category==='commercial'?'selected':''}>Commercial</option></select></div>
+        <div class="field"><label>Category</label><select id="el-category"><option value="apartment" ${l.category==='apartment'?'selected':''}>Apartment</option><option value="house" ${l.category==='house'?'selected':''}>House</option><option value="boarding" ${l.category==='boarding'?'selected':''}>Boarding House</option><option value="airbnb" ${l.category==='airbnb'?'selected':''}>Airbnb / Holiday Rental</option></select></div>
       </div>
       <div class="field" id="el-area-wrap"><label>Area</label>${buildEditAreaField(currentCounty, l.area||'')}</div>
       <div class="field"><label>Sub-area</label><input type="text" id="el-sub_area" value="${esc(l.sub_area||'')}"/></div>
