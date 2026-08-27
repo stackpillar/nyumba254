@@ -252,6 +252,9 @@
     }
     .card-inquire-btn:hover { background: var(--green-dark); }
     .card-inquire-btn svg { width: 14px; height: 14px; stroke: white; fill: none; stroke-width: 2; }
+    .card-inquire-btn.sent { background: white; color: var(--green-dark); border: 1.5px solid var(--green); }
+    .card-inquire-btn.sent:hover { background: var(--green-light); }
+    .card-inquire-btn.sent svg { stroke: var(--green-dark); }
 
     .ci-success { display: none; text-align: center; padding: 10px 0 4px; }
     .ci-success-icon { width: 46px; height: 46px; background: var(--green-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
@@ -1498,12 +1501,38 @@
           <div class="card-price">${formatPrice(l)}</div>
           ${middleHtml}
           ${buildAmenitiesHtml(l)}
-          <button type="button" class="card-inquire-btn" onclick="openCardInquiry(event,'${l.id}')">
-            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-            Send Inquiry
-          </button>
+          ${cardCtaButtonHtml(l.id)}
         </div>
       </div>`;
+  }
+
+  /* ── Card CTA button: "Send Inquiry" the first time, "View conversation"
+     once this buyer already has a thread with this listing (checked via
+     the same nk_buyer_<id> localStorage key listing.html uses). ── */
+  function nkHasCardThread(listingId) { return !!nkLSGetC('nk_buyer_' + listingId); }
+
+  function ciSentIconHtml() { return `<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>`; }
+
+  function cardCtaButtonHtml(listingId) {
+    if (nkHasCardThread(listingId)) {
+      return `<button type="button" class="card-inquire-btn sent" id="card-cta-${listingId}" onclick="handleCardCta(event,'${listingId}')">
+        ${ciSentIconHtml()}
+        View conversation
+      </button>`;
+    }
+    return `<button type="button" class="card-inquire-btn" id="card-cta-${listingId}" onclick="handleCardCta(event,'${listingId}')">
+      ${ciSentIconHtml()}
+      Send Inquiry
+    </button>`;
+  }
+
+  function handleCardCta(event, listingId) {
+    event.stopPropagation();
+    if (nkHasCardThread(listingId)) {
+      if (typeof NKGlobalChat !== 'undefined' && NKGlobalChat.registerAndOpen) NKGlobalChat.registerAndOpen(listingId);
+    } else {
+      openCardInquiry(event, listingId);
+    }
   }
 
   /* Swap only the photo/counter DOM for one card — avoids re-rendering the
@@ -1641,6 +1670,7 @@
     nkLSSetC('nk_buyer_' + ciActiveListingId, token);
     nkLSSetC('nk_buyer_name_' + ciActiveListingId, name);
     nkLSSetC('nk_buyer_phone_' + ciActiveListingId, phone);
+    nkUpdateCardCtaToSent(ciActiveListingId);
 
     fetch(`${EDGE_URL}/send-notification-email`, {
       method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
@@ -1651,6 +1681,15 @@
     document.getElementById('ci-success').style.display = 'block';
     if (typeof NKGlobalChat !== 'undefined' && NKGlobalChat.registerAndOpen) NKGlobalChat.registerAndOpen(ciActiveListingId);
     setTimeout(() => { closeCardInquiry(); }, 2200);
+  }
+
+  /* Flips one card's CTA button to "View conversation" immediately after a
+     successful send — no full grid re-render needed. */
+  function nkUpdateCardCtaToSent(listingId) {
+    const btn = document.getElementById(`card-cta-${listingId}`);
+    if (!btn) return;
+    btn.classList.add('sent');
+    btn.innerHTML = `${ciSentIconHtml()}View conversation`;
   }
 
   function renderPagination(count) {
