@@ -2309,7 +2309,7 @@ function notifySms(type, payload) {
       db.from('listings').select('*',{count:'exact',head:true}).eq('recycle_bin',false),
       db.from('listings').select('*',{count:'exact',head:true}).eq('recycle_bin',true),
       db.from('profiles').select('*',{count:'exact',head:true}).neq('role','admin'),
-      db.from('payments').select('*',{count:'exact',head:true}).eq('status','pending'),
+      db.from('payments').select('*',{count:'exact',head:true}).in('status',['pending','pending_verification']),
     ]);
     document.getElementById('stat-active').textContent = active||0;
     document.getElementById('stat-pending').textContent = pending||0;

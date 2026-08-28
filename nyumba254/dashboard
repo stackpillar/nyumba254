@@ -4225,6 +4225,11 @@ function renderListingsTable(){
     const bnbDays=getBnbDaysLeft(l);
     const bnbNote=bnbDays!==null?`<div class="trial-note${bnbDays<=3?' urgent':''}">📅 BNB plan — ${bnbDays} day${bnbDays!==1?'s':''} left <a href="/plans" class="upgrade-link">Renew plan</a></div>`:(l.category==='airbnb'?`<div class="trial-note urgent">⚠️ No active BNB plan <a href="/plans" class="upgrade-link">Subscribe</a></div>`:'');
     const occupiedNote=(l.status==='occupied'&&d.banner)?`<div class="occupied-note">${d.banner}</div>`:'';
+    const payDueNote = l.status==='approved_unpaid'
+      ? `<div class="trial-note urgent">💳 Approved — pay <strong>KES ${Number(l.payment_due_amount||0).toLocaleString('en-KE')}</strong> to make this listing live. <span class="upgrade-link" onclick="openPayListingModal('${l.id}')">Pay now →</span></div>`
+      : l.status==='approved_unpaid_bnb'
+        ? `<div class="trial-note urgent">📅 Approved — subscribe to a BNB plan to make this listing live. <a href="/plans" class="upgrade-link">Subscribe →</a></div>`
+        : '';
     const availSummary=l.is_multi_unit?muAvailabilitySummary(l):null;
     const multiUnitNote=l.is_multi_unit?`<div class="multiunit-note">🏢 Multi-unit property${availSummary?' · '+availSummary:''} <span class="manage-link" onclick="openManageUnitsModal('${l.id}')">Manage units</span></div>`:'';
 
@@ -4279,7 +4284,7 @@ const contactHideBtn=l.contact_hidden
         <div class="listing-title-text">${escHtml(l.title)}</div>
         <div class="listing-area-text">${l.area}${l.sub_area?' · '+l.sub_area:''}</div>
         ${l.status!=='occupied'&&d.banner?`<div class="disabled-note">${d.banner}</div>`:''}
-        ${occupiedNote}${trialNote}${multiUnitNote}
+        ${occupiedNote}${trialNote}${payDueNote}${bnbNote}${multiUnitNote}
       </div></div></td>
       <td><div class="listing-price-text">${l.is_multi_unit?muPriceRangeText(l):`KES ${Number(l.price).toLocaleString('en-KE')}${l.price_type==='rent'?'/mo':''}`}</div><div class="listing-price-sub">${l.is_multi_unit?(l.total_units?l.total_units+' units total':''):(l.price_type==='rent'?'Monthly rent':'For sale')}</div></td>
       <td><span class="status ${d.cls}">${d.label}</span></td>
