@@ -372,14 +372,64 @@
       .footer-top > *:nth-child(4),
       .footer-top > *:nth-child(5) { display: block; }
       .cta-banner { padding: 32px 24px; }
-      .areas { grid-template-columns: repeat(3, 1fr); }
+
+      /* ── Categories: horizontal scroll ── */
+      .categories {
+        display: flex;
+        grid-template-columns: none;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        gap: 14px;
+        padding-bottom: 6px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      .categories::-webkit-scrollbar { display: none; }
+      .cat-card {
+        flex: 0 0 76%;
+        max-width: 300px;
+        scroll-snap-align: start;
+      }
+
+      /* ── Listings (Featured + Latest): horizontal scroll ── */
+      .listings-grid {
+        display: flex;
+        grid-template-columns: none;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        gap: 16px;
+        padding-bottom: 6px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      .listings-grid::-webkit-scrollbar { display: none; }
+      .listings-grid .card {
+        flex: 0 0 78%;
+        max-width: 300px;
+        scroll-snap-align: start;
+      }
+
+      /* ── Browse by county: 2 fixed rows, scroll horizontally for the rest ── */
+      .areas {
+        display: grid;
+        grid-template-columns: none;
+        grid-auto-flow: column;
+        grid-template-rows: repeat(2, 1fr);
+        grid-auto-columns: 150px;
+        overflow-x: auto;
+        gap: 12px;
+        padding-bottom: 6px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      .areas::-webkit-scrollbar { display: none; }
     }
     @media (max-width: 480px) {
       .footer-top { grid-template-columns: 1fr; }
       .search-box { flex-direction: column; }
       .search-box select, .search-box input, .search-box button { width: 100%; }
       .footer-bottom { flex-direction: column; align-items: flex-start; gap: 8px; }
-      .areas { grid-template-columns: repeat(2, 1fr); }
+      .areas { grid-auto-columns: 130px; }
     }
   </style>
 </head>
