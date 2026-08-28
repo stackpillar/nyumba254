@@ -4341,56 +4341,72 @@ async function messageSellerInChat(sellerId) {
     const plan = document.getElementById('grant-plan').value;
     const tier = document.getElementById('grant-tier')?.value || 'premium';
     const isPro = document.getElementById('grant-is-pro').checked;
-    const days = plan === 'yearly' ? 365 : 30;
+    const isBnb = BNB_TIERS.includes(tier);
+    const days = isBnb ? 30 : (plan === 'yearly' ? 365 : 30);
     const expiresAt = new Date(Date.now() + days*86400000).toISOString();
 
     grantPremiumBusy = true;
     const btn = document.getElementById('btn-confirm-grant-premium');
     if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
 
-    const planCategory = document.getElementById('grant-plan-category')?.value || 'rental';
-    const reconciledPaid = parseFloat(document.getElementById('grant-reconcile-paid')?.value) || 0;
-    const requiredAmount = tier === 'elite'
-      ? (plan === 'yearly' ? SETTINGS.elite_yearly_price : SETTINGS.elite_monthly_price)
-      : (plan === 'yearly' ? SETTINGS.premium_yearly_price : SETTINGS.premium_monthly_price);
-    const { data: prevProfile } = await db.from('profiles').select('plan_balance_carryover').eq('id', grantingSellerId).single();
-    let newCarryover = Number(prevProfile?.plan_balance_carryover) || 0;
-    let shortfallNote = '';
-    if (reconciledPaid > 0) {
-      const totalAvailable = reconciledPaid + newCarryover;
-      if (totalAvailable < requiredAmount) {
-        const shortfall = requiredAmount - totalAvailable;
-        shortfallNote = `Shortfall of KES ${shortfall.toLocaleString('en-KE')} — seller must pay this to activate.`;
-        newCarryover = 0;
-      } else {
-        newCarryover = totalAvailable - requiredAmount; // excess rolls to next month
-      }
-    }
+    let data, error, amount;
 
-    const { data, error } = await db.from('profiles').update({
-      subscription_tier: plan, subscription_plan: tier, subscription_expires_at: expiresAt, is_pro: isPro,
-      plan_category: planCategory, subscription_started_at: new Date().toISOString(),
-      plan_balance_carryover: newCarryover,
-    }).eq('id', grantingSellerId).select();
-    if (shortfallNote) toast(shortfallNote, 'error');
+    if (isBnb) {
+      // BNB tiers don't use the rental plan_category/reconciliation flow —
+      // they're a flat monthly fee tracked on separate bnb_* profile columns.
+      amount = SETTINGS[tier + '_price'] || 0;
+      ({ data, error } = await db.from('profiles').update({
+        bnb_plan: tier,
+        bnb_unit_limit: tier === 'bnb_unlimited' ? null : (tier === 'bnb_bundle' ? 5 : 1),
+        bnb_expires_at: expiresAt,
+        plan_category: 'bnb',
+      }).eq('id', grantingSellerId).select());
+    } else {
+      const planCategory = document.getElementById('grant-plan-category')?.value || 'rental';
+      const reconciledPaid = parseFloat(document.getElementById('grant-reconcile-paid')?.value) || 0;
+      const requiredAmount = tier === 'elite'
+        ? (plan === 'yearly' ? SETTINGS.elite_yearly_price : SETTINGS.elite_monthly_price)
+        : (plan === 'yearly' ? SETTINGS.premium_yearly_price : SETTINGS.premium_monthly_price);
+      const { data: prevProfile } = await db.from('profiles').select('plan_balance_carryover').eq('id', grantingSellerId).single();
+      let newCarryover = Number(prevProfile?.plan_balance_carryover) || 0;
+      let shortfallNote = '';
+      if (reconciledPaid > 0) {
+        const totalAvailable = reconciledPaid + newCarryover;
+        if (totalAvailable < requiredAmount) {
+          const shortfall = requiredAmount - totalAvailable;
+          shortfallNote = `Shortfall of KES ${shortfall.toLocaleString('en-KE')} — seller must pay this to activate.`;
+          newCarryover = 0;
+        } else {
+          newCarryover = totalAvailable - requiredAmount; // excess rolls to next month
+        }
+      }
+      amount = requiredAmount;
+
+      ({ data, error } = await db.from('profiles').update({
+        subscription_tier: plan, subscription_plan: tier, subscription_expires_at: expiresAt, is_pro: isPro,
+        plan_category: planCategory, subscription_started_at: new Date().toISOString(),
+        plan_balance_carryover: newCarryover,
+      }).eq('id', grantingSellerId).select());
+      if (shortfallNote) toast(shortfallNote, 'error');
+    }
 
     grantPremiumBusy = false;
     if (btn) { btn.disabled = false; btn.textContent = 'Grant Premium'; }
     if (error) { toast('Error: '+error.message,'error'); return; }
     if (!data?.length) { toast('Blocked by RLS — check Supabase policy','error'); return; }
 
-    const amount = tier === 'elite'
-      ? (plan === 'yearly' ? SETTINGS.elite_yearly_price : SETTINGS.elite_monthly_price)
-      : (plan === 'yearly' ? SETTINGS.premium_yearly_price : SETTINGS.premium_monthly_price);
     await db.from('payments').insert({
       seller_id: grantingSellerId, amount, method:'manual',
-      reference:`Admin-granted ${tier}`, type: tier === 'elite' ? 'elite_subscription' : 'premium_subscription', status:'confirmed',
+      reference:`Admin-granted ${tier}`,
+      type: isBnb ? 'bnb_subscription' : (tier === 'elite' ? 'elite_subscription' : 'premium_subscription'),
+      plan_key: isBnb ? tier : null,
+      status:'confirmed',
     });
 
-    logAction('grant_premium','profile',grantingSellerId,`${tier} ${plan} plan`);
+    logAction('grant_premium','profile',grantingSellerId,`${tier} ${isBnb?'monthly':plan} plan`);
     const seller = data[0];
-    if (seller?.email) notifySeller('premium_granted', { sellerName: seller.full_name, sellerEmail: seller.email, plan, expiresAt });
-    toast('Premium granted ✓','success');
+    if (seller?.email) notifySeller('premium_granted', { sellerName: seller.full_name, sellerEmail: seller.email, plan: isBnb ? 'monthly' : plan, expiresAt });
+    toast(isBnb ? 'BNB plan granted ✓' : 'Premium granted ✓','success');
     closeGrantPremiumModal();
     loadPremiumSellers();
     if (currentView==='users') loadUsers();
