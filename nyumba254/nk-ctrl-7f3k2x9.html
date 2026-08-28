@@ -2658,22 +2658,59 @@ function notifySms(type, payload) {
     const l = _listings[id];
     const now = new Date();
     const isFutureScheduled = l?.publish_at && new Date(l.publish_at) > now;
-    const newStatus = isFutureScheduled ? 'scheduled' : 'active';
+    const isTrial = l?.payment_status === 'trial';
+    const isPaid  = l?.payment_status === 'paid';
+    const isAirbnb = l?.category === 'airbnb';
+
+    // Airbnb runs on a monthly BNB subscription, not a one-time listing fee.
+    // Go live only if the seller already has an active BNB plan; otherwise
+    // hold it and ask them to subscribe (never route them to the per-listing
+    // pay flow below — that's for rental/sale categories only).
+    let bnbActive = false;
+    if (isAirbnb && !isTrial) {
+      const { data: prof } = await db.from('profiles').select('plan_category,bnb_expires_at').eq('id', l.seller_id).single();
+      bnbActive = prof?.plan_category === 'bnb' && prof?.bnb_expires_at && new Date(prof.bnb_expires_at) > new Date();
+    }
+
+    const newStatus = isFutureScheduled ? 'scheduled'
+      : (isTrial || isPaid || (isAirbnb && bnbActive)) ? 'active'
+      : isAirbnb ? 'approved_unpaid_bnb'
+      : 'approved_unpaid';
 
     const {data,error} = await db.from('listings').update({status:newStatus}).eq('id',id).select();
     if (error)       { toast('Error approving: '+error.message,'error'); return; }
     if (!data?.length){ toast('Blocked by RLS — check Supabase policy','error'); return; }
     logAction(isFutureScheduled ? 'approve_listing_scheduled' : 'approve_listing','listing',id,title||'');
+
     if (l?.profiles?.email) {
-      notifySeller(isFutureScheduled ? 'listing_scheduled' : 'listing_approved', {
-        listingId: id, listingTitle: title, publishAt: l.publish_at,
-        sellerName: l.profiles.full_name, sellerEmail: l.profiles.email,
-      });
+      if (isTrial) {
+        notifySeller('listing_approved', { listingId: id, listingTitle: title, sellerName: l.profiles.full_name, sellerEmail: l.profiles.email });
+      } else if (isFutureScheduled) {
+        notifySeller('listing_scheduled', { listingId: id, listingTitle: title, publishAt: l.publish_at, sellerName: l.profiles.full_name, sellerEmail: l.profiles.email });
+      } else if (isAirbnb && !bnbActive) {
+        notifySeller('listing_approved_subscribe_bnb', { listingId: id, listingTitle: title, sellerName: l.profiles.full_name, sellerEmail: l.profiles.email });
+      } else if (!isPaid && !(isAirbnb && bnbActive)) {
+        const standardAmount = calcUpgradeAmount(l,'basic');
+        const featuredAmount = calcUpgradeAmount(l,'featured');
+        await db.from('listings').update({ payment_due_amount: standardAmount }).eq('id', id);
+        notifySeller('listing_approved_payment_required', {
+          listingId: id, listingTitle: title, standardAmount, featuredAmount,
+          sellerName: l.profiles.full_name, sellerEmail: l.profiles.email,
+        });
+      } else {
+        notifySeller('listing_approved', { listingId: id, listingTitle: title, sellerName: l.profiles.full_name, sellerEmail: l.profiles.email });
+      }
     }
-    notifySms('listing_status', { listingId: id, listingTitle: title, status: isFutureScheduled ? 'scheduled' : 'active' });
-    toast(isFutureScheduled ? `Listing approved — will go live ${new Date(l.publish_at).toLocaleString('en-KE')} ✓` : 'Listing approved and live ✓','success');
+    notifySms('listing_status', { listingId: id, listingTitle: title, status: newStatus });
+    toast(
+      isFutureScheduled ? `Listing approved — will go live ${new Date(l.publish_at).toLocaleString('en-KE')} ✓` :
+      newStatus==='active' ? 'Listing approved and live ✓' :
+      newStatus==='approved_unpaid_bnb' ? 'Approved — seller notified to subscribe to a BNB plan' :
+      'Listing approved — seller notified to pay before it goes live',
+      'success'
+    );
     loadOverview(); if(currentView==='listings') loadAllListings();
-    if (!isFutureScheduled) { maybeAutoPostSocial(id); checkAndNotifyDemandMatches(id, l); }
+    if (newStatus==='active') { maybeAutoPostSocial(id); checkAndNotifyDemandMatches(id, l); }
   }
 
   async function checkAndNotifyDemandMatches(listingId, l) {
@@ -4233,6 +4270,14 @@ async function messageSellerInChat(sellerId) {
           <option value="elite">Elite</option>
         </select>
       </div>
+      <div class="field"><label>Plan category — what they're allowed to list</label>
+        <select id="grant-plan-category">
+          <option value="rental">Rental (apartment/house/boarding/shop)</option>
+          <option value="bnb">BNB / Airbnb only</option>
+        </select>
+      </div>
+      <div class="confirm-warning" style="background:var(--red-light);color:var(--red)">Sellers can only submit listings matching this category. If they're on the wrong one (e.g. subscribed BNB but want to list rentals), change it here — no new payment needed unless the new plan costs more (use the reconciliation field below for that).</div>
+      <div class="field"><label>Amount already paid for this change (KES) — optional</label><input type="number" id="grant-reconcile-paid" placeholder="Leave blank if not reconciling a payment"/></div>
       <div class="field"><label>Billing period</label>
         <select id="grant-plan"></select>
       </div>
@@ -4294,9 +4339,31 @@ async function messageSellerInChat(sellerId) {
     const btn = document.getElementById('btn-confirm-grant-premium');
     if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
 
+    const planCategory = document.getElementById('grant-plan-category')?.value || 'rental';
+    const reconciledPaid = parseFloat(document.getElementById('grant-reconcile-paid')?.value) || 0;
+    const requiredAmount = tier === 'elite'
+      ? (plan === 'yearly' ? SETTINGS.elite_yearly_price : SETTINGS.elite_monthly_price)
+      : (plan === 'yearly' ? SETTINGS.premium_yearly_price : SETTINGS.premium_monthly_price);
+    const { data: prevProfile } = await db.from('profiles').select('plan_balance_carryover').eq('id', grantingSellerId).single();
+    let newCarryover = Number(prevProfile?.plan_balance_carryover) || 0;
+    let shortfallNote = '';
+    if (reconciledPaid > 0) {
+      const totalAvailable = reconciledPaid + newCarryover;
+      if (totalAvailable < requiredAmount) {
+        const shortfall = requiredAmount - totalAvailable;
+        shortfallNote = `Shortfall of KES ${shortfall.toLocaleString('en-KE')} — seller must pay this to activate.`;
+        newCarryover = 0;
+      } else {
+        newCarryover = totalAvailable - requiredAmount; // excess rolls to next month
+      }
+    }
+
     const { data, error } = await db.from('profiles').update({
       subscription_tier: plan, subscription_plan: tier, subscription_expires_at: expiresAt, is_pro: isPro,
+      plan_category: planCategory, subscription_started_at: new Date().toISOString(),
+      plan_balance_carryover: newCarryover,
     }).eq('id', grantingSellerId).select();
+    if (shortfallNote) toast(shortfallNote, 'error');
 
     grantPremiumBusy = false;
     if (btn) { btn.disabled = false; btn.textContent = 'Grant Premium'; }

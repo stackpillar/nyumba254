@@ -747,7 +747,7 @@
         </div>
       </div>
       <div class="topbar-right">
-        <a href="/post-listing" class="btn btn-primary" id="btn-new-listing-tour">
+        <a href="/post-listing" class="btn btn-primary" id="btn-new-listing-tour" onclick="return confirmListingCategoryBeforeLeaving()">
           <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New listing
         </a>
       </div>
@@ -1196,7 +1196,37 @@
     <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-occupied')">Cancel</button><button class="btn btn-primary" id="btn-confirm-occupied" onclick="confirmOccupied()" style="background:#5b21b6">Yes, mark it</button></div>
   </div>
 </div>
-
+<!-- PAY LISTING MODAL (seller-side, for approved_unpaid) -->
+<div class="modal-overlay" id="modal-pay-listing">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-head"><h3>Pay to go live</h3><div class="modal-close" onclick="closeModal('modal-pay-listing')">✕</div></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-2);margin-bottom:16px;line-height:1.6" id="pay-listing-intro"></p>
+      <div class="field" style="margin-bottom:14px">
+        <label style="display:flex;align-items:center;gap:10px;padding:12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer" id="pay-plan-standard-row">
+          <input type="radio" name="pay-plan" value="basic" checked onchange="updatePayListingAmount()"/>
+          <span style="flex:1"><strong>Standard</strong><br><span style="font-size:12px;color:var(--text-3)" id="pay-standard-amount">—</span></span>
+        </label>
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label style="display:flex;align-items:center;gap:10px;padding:12px;border:1.5px solid var(--gold);border-radius:10px;cursor:pointer;background:var(--gold-light)" id="pay-plan-featured-row">
+          <input type="radio" name="pay-plan" value="featured" onchange="updatePayListingAmount()"/>
+          <span style="flex:1"><strong>Featured ⭐</strong><br><span style="font-size:12px;color:var(--text-3)" id="pay-featured-amount">—</span></span>
+        </label>
+      </div>
+      <div style="background:var(--surface);border-radius:10px;padding:14px;font-size:13px;color:var(--text-2);margin-bottom:14px">
+        <strong id="pay-listing-amount-display">KES —</strong> via M-Pesa Paybill<br>
+        <span style="font-size:12px;color:var(--text-3)">Paybill 522522 · Account 1298476615</span>
+      </div>
+      <div class="field">
+        <label>M-Pesa transaction code</label>
+        <input type="text" id="pay-listing-ref" placeholder="e.g. QFT7H8K2LM" maxlength="10" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"/>
+      </div>
+      <p style="font-size:12px;color:var(--text-3);margin-top:14px;text-align:center">Manage many listings? <a href="/plans" style="color:var(--green);font-weight:700">A subscription may work out cheaper →</a></p>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-pay-listing')">Cancel</button><button class="btn btn-primary" id="btn-submit-pay-listing" onclick="submitPayListing()">Submit for verification</button></div>
+  </div>
+</div>
 <!-- MANAGE UNITS MODAL (multi-unit properties) -->
 <div class="modal-overlay" id="modal-manage-units">
   <div class="modal" style="max-width:620px">
@@ -1901,6 +1931,14 @@ function subscriptionInfo(){
   return { active, plan: active ? (p?.subscription_plan || 'premium') : null, expiresAt: active ? expiresAt : null };
 }
 function fmtSubDate(d){ return new Date(d).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'}); }
+function confirmListingCategoryBeforeLeaving(){
+  const sub = subscriptionInfo();
+  if (sub.active && currentProfile?.plan_category) {
+    const label = currentProfile.plan_category === 'bnb' ? 'Airbnb / BNB' : 'sale & rental';
+    return confirm(`Your active plan only covers ${label} listings — post-listing will block anything else. Continue?`);
+  }
+  return true;
+}
 
 function loadSubscriptionUI(){
   const sub = subscriptionInfo();
@@ -2036,10 +2074,34 @@ function updateEliteGatedPages(sub){
   });
 }
 
+async function requestPlanCategorySwitch(){
+  const current = currentProfile?.plan_category || 'rental';
+  const target = current === 'bnb' ? 'rental' : 'bnb';
+  if(!confirm(`Switch your plan to cover ${target==='bnb'?'Airbnb/BNB':'sale & rental'} listings instead? This opens a support ticket for our team to confirm any payment difference before it takes effect.`)) return;
+  const sessionKey = `seller_${currentUser.id}_plan_switch_${Date.now()}`;
+  const { data, error } = await db.from('chat_sessions').insert({
+    session_key: sessionKey, session_type:'seller', seller_id: currentUser.id, visitor_name: scwSellerName,
+    page:'dashboard.html', topic:'Plan category switch request', status:'open', is_resolved:false, last_msg_at:new Date().toISOString(),
+  }).select().single();
+  if(error){ showToast('Could not start request: '+error.message,'error'); return; }
+  await db.from('chat_messages').insert({ session_id:data.id, sender:'visitor', body:`I'd like to switch my plan from ${current} to ${target}. Please let me know if I owe anything or have credit.` });
+  showToast('Request sent — check Messages for our reply ✓','success');
+}
 function updatePremiumSectionUI(sub){
   const btn = document.getElementById('premium-upgrade-btn');
   const banner = document.getElementById('premium-status-banner');
   if(!btn || !banner) return;
+  const catRow = document.getElementById('plan-category-row');
+  if (catRow) {
+    if (sub.active && currentProfile?.plan_category) {
+      catRow.style.display = 'block';
+      document.getElementById('plan-category-label').textContent = currentProfile.plan_category === 'bnb' ? 'Airbnb / BNB listings only' : 'Sale & rental listings only';
+      const carry = Number(currentProfile?.plan_balance_carryover) || 0;
+      document.getElementById('plan-balance-note').textContent = carry > 0 ? `KES ${carry.toLocaleString('en-KE')} credit on file — applied to your next renewal.` : '';
+    } else {
+      catRow.style.display = 'none';
+    }
+  }
   if(sub.active){
     const exp = sub.expiresAt ? ` — renews/expires ${fmtSubDate(sub.expiresAt)}` : '';
     banner.style.display = 'block';
@@ -2071,13 +2133,15 @@ function updatePremiumNavBadge(sub){
   if(!link || !textEl) return;
 
   if(sub.active && sub.plan==='elite'){
-    textEl.innerHTML = '👑 Elite member';
+    const catLabel = currentProfile?.plan_category === 'bnb' ? ' · BNB' : currentProfile?.plan_category === 'rental' ? ' · Rental' : '';
+    textEl.innerHTML = `👑 Elite member${catLabel}`;
     link.removeAttribute('href');
     link.style.cursor = 'default';
     link.style.opacity = '0.85';
     link.onclick = (e)=>e.preventDefault();
   } else if(sub.active && sub.plan==='premium'){
-    textEl.innerHTML = '⭐ Pro · Upgrade to Elite';
+    const catLabel = currentProfile?.plan_category === 'bnb' ? ' · BNB' : currentProfile?.plan_category === 'rental' ? ' · Rental' : '';
+    textEl.innerHTML = `⭐ Pro${catLabel} · Upgrade to Elite`;
     link.setAttribute('href','/plans');
     link.style.cursor = 'pointer';
     link.style.opacity = '1';
@@ -3890,10 +3954,22 @@ function updateNavBadges(){
 
 function getListingStatusDisplay(l){
   if(l.recycle_bin){const d=l.purge_at?Math.max(0,Math.ceil((new Date(l.purge_at)-new Date())/86400000)):null;return{label:'In recycle bin',cls:'status-disabled',banner:`Disabled by admin${l.disabled_reason?': '+escHtml(l.disabled_reason):''}. Contact admin for more information.`+(d!==null?` Removed in ${d} day(s).`:'')};}
-  if(l.is_disabled)return{label:'Disabled by admin',cls:'status-disabled',banner:`Disabled by admin${l.disabled_reason?': '+escHtml(l.disabled_reason):''}. Contact admin for more information.`};
+  if(l.is_disabled)return{label:l.disabled_by_subscription?'Plan expired':'Disabled by admin',cls:'status-disabled',banner:l.disabled_by_subscription?'Your BNB plan expired — subscribe again from Settings to bring this listing back.':`Disabled by admin${l.disabled_reason?': '+escHtml(l.disabled_reason):''}. Contact admin for more information.`};
   if(l.status==='occupied'){const word=l.price_type==='rent'?'occupied':'sold';return{label:l.price_type==='rent'?'Occupied':'Sold',cls:'status-occupied',banner:`Marked as ${word} — hidden from public search and listing pages.`};}
   if(l.status==='scheduled')return{label:'Scheduled',cls:'status-pending',banner:l.publish_at?`Approved — goes live automatically on ${new Date(l.publish_at).toLocaleString('en-KE')}.`:null};
+  if(l.status==='approved_unpaid')return{label:'Awaiting payment',cls:'status-pending',banner:'Approved — pay the listing fee to make it live.'};
+  if(l.status==='approved_unpaid_bnb')return{label:'Awaiting BNB plan',cls:'status-pending',banner:'Approved — subscribe to a BNB plan to make it live.'};
   return{label:statusLabel(l.status),cls:'status-'+l.status,banner:null};
+}
+// BNB (airbnb) listings expire with the seller's BNB plan, not with a fixed
+// trial window — this mirrors getTrialDaysLeft() but reads bnb_expires_at
+// off the owner profile instead of the listing itself.
+function getBnbDaysLeft(l){
+  if(l.category!=='airbnb')return null;
+  const p=ownerProfile||currentProfile;
+  if(p?.plan_category!=='bnb'||!p?.bnb_expires_at)return null;
+  const diffMs=new Date(p.bnb_expires_at)-new Date();
+  return Math.max(0,Math.ceil(diffMs/86400000));
 }
 
 async function loadDemandMatches(){
@@ -4004,6 +4080,41 @@ function openOccupiedModal(id,title){
   openModal('modal-occupied');
 }
 
+let payListingTargetId=null;
+function openPayListingModal(id){
+  const l=allListings.find(x=>x.id===id);if(!l)return;
+  payListingTargetId=id;
+  document.getElementById('pay-listing-intro').textContent=`Your listing "${l.title}" is approved. Choose a plan and pay to make it live.`;
+  document.getElementById('pay-standard-amount').textContent='KES '+Number(l.payment_due_amount||0).toLocaleString('en-KE');
+  const featuredEstimate=Math.round((l.payment_due_amount||0)*1.6);
+  document.getElementById('pay-featured-amount').textContent='KES '+featuredEstimate.toLocaleString('en-KE')+' · top placement, more photos';
+  document.querySelector('input[name="pay-plan"][value="basic"]').checked=true;
+  document.getElementById('pay-listing-ref').value='';
+  updatePayListingAmount();
+  openModal('modal-pay-listing');
+}
+function updatePayListingAmount(){
+  const plan=document.querySelector('input[name="pay-plan"]:checked')?.value||'basic';
+  const el=plan==='basic'?document.getElementById('pay-standard-amount'):document.getElementById('pay-featured-amount');
+  document.getElementById('pay-listing-amount-display').textContent=el.textContent.split(' · ')[0]||el.textContent;
+}
+async function submitPayListing(){
+  const code=document.getElementById('pay-listing-ref').value.trim();
+  if(!code||code.length!==10){showToast('Enter a valid 10-character M-Pesa code','error');return;}
+  const plan=document.querySelector('input[name="pay-plan"]:checked')?.value||'basic';
+  const l=allListings.find(x=>x.id===payListingTargetId);
+  const amountText=(plan==='basic'?document.getElementById('pay-standard-amount'):document.getElementById('pay-featured-amount')).textContent;
+  const amount=parseFloat(amountText.replace(/[^\d.]/g,''))||l?.payment_due_amount||0;
+  const btn=document.getElementById('btn-submit-pay-listing');btn.disabled=true;btn.textContent='Submitting…';
+  const{error}=await db.from('payments').insert({listing_id:payListingTargetId,seller_id:effectiveSellerId,amount,method:'paybill',reference:code,type:plan==='featured'?'featured_upgrade':'listing_fee',status:'pending_verification'});
+  btn.disabled=false;btn.textContent='Submit for verification';
+  if(error){showToast('Could not submit: '+error.message,'error');return;}
+  if(plan==='featured'&&l)await db.from('listings').update({is_featured:true}).eq('id',payListingTargetId);
+  closeModal('modal-pay-listing');
+  showToast('Payment submitted — we\'ll confirm and activate it shortly ✓','success');
+  notifyAdmin('listing_payment_submitted',{listingId:payListingTargetId,listingTitle:l?.title,plan,amount,reference:code,sellerName:currentProfile?.full_name,sellerEmail:currentUser?.email});
+}
+
 async function confirmOccupied(){
   if(!occupiedTargetId)return;
   const btn=document.getElementById('btn-confirm-occupied');btn.disabled=true;btn.innerHTML='<span class="spinner-sm"></span> Updating…';
@@ -4065,6 +4176,8 @@ function renderListingsTable(){
     const d=getListingStatusDisplay(l);
     const trialDays=getTrialDaysLeft(l);
     const trialNote=trialDays!==null?`<div class="trial-note${trialDays<=2?' urgent':''}">🕐 Free trial — ${trialDays} day${trialDays!==1?'s':''} left <span class="upgrade-link" onclick="requestTrialUpgrade('${escAttr(l.title)}')">Upgrade now</span></div>`:'';
+    const bnbDays=getBnbDaysLeft(l);
+    const bnbNote=bnbDays!==null?`<div class="trial-note${bnbDays<=3?' urgent':''}">📅 BNB plan — ${bnbDays} day${bnbDays!==1?'s':''} left <a href="/plans" class="upgrade-link">Renew plan</a></div>`:(l.category==='airbnb'?`<div class="trial-note urgent">⚠️ No active BNB plan <a href="/plans" class="upgrade-link">Subscribe</a></div>`:'');
     const occupiedNote=(l.status==='occupied'&&d.banner)?`<div class="occupied-note">${d.banner}</div>`:'';
     const availSummary=l.is_multi_unit?muAvailabilitySummary(l):null;
     const multiUnitNote=l.is_multi_unit?`<div class="multiunit-note">🏢 Multi-unit property${availSummary?' · '+availSummary:''} <span class="manage-link" onclick="openManageUnitsModal('${l.id}')">Manage units</span></div>`:'';
@@ -4090,7 +4203,11 @@ const statusBtn=l.is_disabled
 const pauseBtn=isActive
   ?`<div class="icon-btn" data-id="${l.id}" data-status="${l.status}" onclick="togglePause(this.dataset.id,this.dataset.status)" title="Pause listing" role="button" tabindex="0" aria-label="Pause listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></div>`
   :'';
-
+const payNowBtn = (l.status==='approved_unpaid')
+  ?`<div class="icon-btn purple" data-id="${l.id}" onclick="openPayListingModal(this.dataset.id)" title="Pay to go live" role="button" tabindex="0" aria-label="Pay to go live"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>`
+  :(l.status==='approved_unpaid_bnb')
+    ?`<a href="/plans" class="icon-btn purple" title="Subscribe to a BNB plan"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></a>`
+    :'';
 const publishNowBtn = (l.status==='scheduled')
   ?`<div class="icon-btn purple" data-id="${l.id}" onclick="publishScheduledNow(this.dataset.id)" title="Publish now instead of waiting" role="button" tabindex="0" aria-label="Publish now" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>`
   :'';
