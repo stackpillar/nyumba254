@@ -249,6 +249,27 @@
     .action-btn.upgrade { background: var(--blue-light); color: var(--blue); }
     .action-btn.upgrade:hover { background: var(--blue); color: white; }
 
+    .action-btn.disabled,
+    .action-btn:disabled {
+      opacity: .32;
+      filter: grayscale(1) blur(.4px);
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .action-menu-item.disabled {
+      opacity: .32;
+      filter: grayscale(1);
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .btn-modal.disabled,
+    .btn-modal:disabled {
+      opacity: .32;
+      filter: grayscale(1) blur(.4px);
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
     .action-btns .action-btn.icon {
       width: 30px; height: 30px; padding: 0; border-radius: 8px;
       display: inline-flex; align-items: center; justify-content: center;
@@ -2030,11 +2051,11 @@ function notifySms(type, payload) {
     if(tt) out+=`<span class="badge active" title="Posted ${fmtDate(tt.created_at)} — private until TikTok audit clears">TT ✓</span> `;
     return out;
   }
-  function renderSocialButtons(l){
+  function renderSocialButtons(l, locked=false){
     const fb=socialPostedInfo(l,'facebook'), ig=socialPostedInfo(l,'instagram'), tt=socialPostedInfo(l,'tiktok');
-    return aBtn('facebook', fb?'Posted to Facebook — post again':'Post to Facebook','view',`postToSocial('${l.id}','facebook')`)
-         + aBtn('instagram', ig?'Posted to Instagram — post again':'Post to Instagram','view',`postToSocial('${l.id}','instagram')`)
-         + aBtn('tiktok', tt?'Posted to TikTok (private until audit) — post again':'Post to TikTok (private until audit)','view',`postToSocial('${l.id}','tiktok')`);
+    return aBtn('facebook', fb?'Posted to Facebook — post again':'Post to Facebook','view',`postToSocial('${l.id}','facebook')`, locked, LOCKED_ACTION_TIP)
+         + aBtn('instagram', ig?'Posted to Instagram — post again':'Post to Instagram','view',`postToSocial('${l.id}','instagram')`, locked, LOCKED_ACTION_TIP)
+         + aBtn('tiktok', tt?'Posted to TikTok (private until audit) — post again':'Post to TikTok (private until audit)','view',`postToSocial('${l.id}','tiktok')`, locked, LOCKED_ACTION_TIP);
   }
   async function postToSocial(id, platform){
     const label = platform==='facebook'?'Facebook':platform==='instagram'?'Instagram':'TikTok';
@@ -2186,9 +2207,17 @@ function notifySms(type, payload) {
     instagram:'<rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>',
     tiktok:   '<path d="M9 12a4 4 0 104 4V4c1 2 3 3 5 3"/>',
   };
-  function aBtn(icon, tip, cls, onclick) {
+  function aBtn(icon, tip, cls, onclick, disabled=false, disabledTip=null) {
+    if (disabled) {
+      return `<button class="action-btn icon ${cls} disabled" disabled><svg viewBox="0 0 24 24">${ICONS[icon]}</svg></button>`;
+    }
     return `<button class="action-btn icon ${cls}" data-tip="${esc(tip)}" aria-label="${esc(tip)}" onclick="${onclick}"><svg viewBox="0 0 24 24">${ICONS[icon]}</svg></button>`;
   }
+  // Rejected or deactivated ("postponed") listings shouldn't have their
+  // expiry/feature/social actions triggered by accident — grey those out
+  // instead of hiding them, so it's clear *why* they can't be clicked.
+  function listingActionsLocked(l) { return l.status === 'rejected' || !!l.is_disabled; }
+  const LOCKED_ACTION_TIP = 'Unavailable — listing is rejected or deactivated';
 
   function debounce(fn, ms) {
     let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
@@ -2386,7 +2415,9 @@ function notifySms(type, payload) {
 
   function mobileMenu(id, items) {
     const opts = items.map(i =>
-      `<button class="action-menu-item ${i.cls}" onclick="${i.fn}">${esc(i.label)}</button>`
+      i.disabled
+        ? `<button class="action-menu-item ${i.cls} disabled" disabled>${esc(i.label)}</button>`
+        : `<button class="action-menu-item ${i.cls}" onclick="${i.fn}">${esc(i.label)}</button>`
     ).join('');
     return `<div class="action-menu-wrap">
       <button class="action-menu-btn" onclick="toggleActionMenu(this)">
@@ -2453,25 +2484,24 @@ function notifySms(type, payload) {
       const thumb = cover ? `<img src="${esc(cover.url)}" alt=""/>` : `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`;
       const payClass = l.payment_status==='paid'?'paid':l.payment_status==='trial'?'trial':l.payment_status==='submitted'?'pending':'unpaid';
       const isTrial = l.payment_status==='trial';
+      const locked = listingActionsLocked(l);
       const menuItems = [
         ...(l.status==='pending'?[
           {label:'✓ Approve', cls:'success', fn:`approveListing('${l.id}')`},
           {label:'✕ Reject',  cls:'danger',  fn:`rejectListing('${l.id}')`},
         ]:[]),
         ...(isTrial?[{label:'⬆ Process upgrade', cls:'blue', fn:`openUpgradeModal('${l.id}')`}]:[]),
-        ...(l.status==='active'?[{label:'📅 Extend expiry date', cls:'blue', fn:`extendListingDate('${l.id}')`}]:[]),
-        ...(l.status==='active'&&!l.is_featured?[{label:'★ Feature', cls:'gold', fn:`featureListing('${l.id}')`}]:[]),
-        ...(l.is_featured?[{label:'☆ Unfeature', cls:'', fn:`unfeatureListing('${l.id}')`}]:[]),
+        {label:'📅 Extend expiry date', cls:'blue', fn:`extendListingDate('${l.id}')`, disabled: locked},
+        ...(!l.is_featured?[{label:'★ Feature', cls:'gold', fn:`featureListing('${l.id}')`, disabled: locked}]:[]),
+        ...(l.is_featured?[{label:'☆ Unfeature', cls:'', fn:`unfeatureListing('${l.id}')`, disabled: locked}]:[]),
         {label:'View details', cls:'', fn:`openListingModal('${l.id}')`},
         {label:'Edit listing',  cls:'', fn:`openEditListingModal('${l.id}')`},
         l.is_disabled
           ? {label:'Activate',   cls:'success', fn:`activateListing('${l.id}')`}
           : {label:'Deactivate', cls:'danger',  fn:`deactivateListing('${l.id}')`},
-        ...(l.status==='active'&&!l.is_disabled?[
-          {label:'📘 Post to Facebook', cls:'blue', fn:`postToSocial('${l.id}','facebook')`},
-          {label:'📷 Post to Instagram', cls:'blue', fn:`postToSocial('${l.id}','instagram')`},
-          {label:'🎵 Post to TikTok (private)', cls:'blue', fn:`postToSocial('${l.id}','tiktok')`},
-        ]:[]),
+        {label:'📘 Post to Facebook', cls:'blue', fn:`postToSocial('${l.id}','facebook')`, disabled: locked},
+        {label:'📷 Post to Instagram', cls:'blue', fn:`postToSocial('${l.id}','instagram')`, disabled: locked},
+        {label:'🎵 Post to TikTok (private)', cls:'blue', fn:`postToSocial('${l.id}','tiktok')`, disabled: locked},
         {label:'Move to recycle bin',   cls:'danger', fn:`recycleListing('${l.id}')`},
         {label:'Delete permanently',    cls:'danger', fn:`deleteListingPermanently('${l.id}')`},
       ];
@@ -2492,15 +2522,15 @@ function notifySms(type, payload) {
           <div class="action-btns">
             ${l.status==='pending'?(aBtn('approve','Approve listing','approve',`approveListing('${l.id}')`)+aBtn('reject','Reject listing','reject',`rejectListing('${l.id}')`)):''}
             ${isTrial?aBtn('upgrade','Process upgrade','upgrade',`openUpgradeModal('${l.id}')`):''}
-            ${aBtn('extend','Extend expiry date','view',`extendListingDate('${l.id}')`)}
-            ${!l.is_featured?aBtn('feature','Feature listing','feature',`featureListing('${l.id}')`):''}
-            ${l.is_featured?aBtn('unfeature','Unfeature listing','view',`unfeatureListing('${l.id}')`):''}
+            ${aBtn('extend','Extend expiry date','view',`extendListingDate('${l.id}')`, locked, LOCKED_ACTION_TIP)}
+            ${!l.is_featured?aBtn('feature','Feature listing','feature',`featureListing('${l.id}')`, locked, LOCKED_ACTION_TIP):''}
+            ${l.is_featured?aBtn('unfeature','Unfeature listing','view',`unfeatureListing('${l.id}')`, locked, LOCKED_ACTION_TIP):''}
             ${aBtn('view','View details','view',`openListingModal('${l.id}')`)}
             ${aBtn('edit','Edit listing','view',`openEditListingModal('${l.id}')`)}
             ${l.is_disabled
               ? aBtn('activate','Activate listing','approve',`activateListing('${l.id}')`)
               : aBtn('deactivate','Deactivate listing','reject',`deactivateListing('${l.id}')`)}
-            ${renderSocialButtons(l)}
+            ${renderSocialButtons(l, locked)}
             ${aBtn('recycle','Move to recycle bin','reject',`recycleListing('${l.id}')`)}
             ${aBtn('delete','Delete permanently','delete',`deleteListingPermanently('${l.id}')`)}
           </div>
@@ -2514,6 +2544,7 @@ function notifySms(type, payload) {
       const thumb = cover ? `<img src="${esc(cover.url)}" alt=""/>` : `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`;
       const payClass = l.payment_status==='paid'?'paid':l.payment_status==='trial'?'trial':l.payment_status==='submitted'?'pending':'unpaid';
       const isTrial = l.payment_status==='trial';
+      const locked = listingActionsLocked(l);
       return `<div class="mobile-card">
         <div class="mobile-card-header">
           <div class="thumb-img" style="width:52px;height:42px">${thumb}</div>
@@ -2533,10 +2564,10 @@ function notifySms(type, payload) {
         <div class="mobile-card-actions">
           ${l.status==='pending'?(aBtn('approve','Approve','approve',`approveListing('${l.id}')`)+aBtn('reject','Reject','reject',`rejectListing('${l.id}')`)):''}
           ${isTrial?aBtn('upgrade','Upgrade','upgrade',`openUpgradeModal('${l.id}')`):''}
-          ${aBtn('extend','Extend','view',`extendListingDate('${l.id}')`)}
-          ${!l.is_featured?aBtn('feature','Feature','feature',`featureListing('${l.id}')`):''}
-          ${l.is_featured?aBtn('unfeature','Unfeature','view',`unfeatureListing('${l.id}')`):''}
-          ${renderSocialButtons(l)}
+          ${aBtn('extend','Extend','view',`extendListingDate('${l.id}')`, locked, LOCKED_ACTION_TIP)}
+          ${!l.is_featured?aBtn('feature','Feature','feature',`featureListing('${l.id}')`, locked, LOCKED_ACTION_TIP):''}
+          ${l.is_featured?aBtn('unfeature','Unfeature','view',`unfeatureListing('${l.id}')`, locked, LOCKED_ACTION_TIP):''}
+          ${renderSocialButtons(l, locked)}
           ${aBtn('view','View','view',`openListingModal('${l.id}')`)}
           ${aBtn('edit','Edit','view',`openEditListingModal('${l.id}')`)}
           ${l.is_disabled
@@ -2987,6 +3018,7 @@ function notifySms(type, payload) {
   // ─── LISTING DETAIL MODAL ───
   function openListingModal(id) {
     const l = _listings[id]; if(!l) return;
+    const locked = listingActionsLocked(l);
     document.getElementById('modal-title').textContent = l.title;
 
     let multiUnitSection = '';
@@ -3023,11 +3055,11 @@ function notifySms(type, payload) {
     document.getElementById('modal-footer').innerHTML = `
       ${l.status==='pending'?`<button class="btn-modal approve" onclick="approveListing('${l.id}');closeModal()">Approve</button><button class="btn-modal reject" onclick="rejectListing('${l.id}');closeModal()">Reject</button>`:''}
       ${l.payment_status==='trial'?`<button class="btn-modal approve" onclick="closeModal();openUpgradeModal('${l.id}')">Process upgrade</button>`:''}
-      <button class="btn-modal cancel" onclick="closeModal();extendListingDate('${l.id}')">📅 Extend expiry</button>
-      ${!l.is_featured?`<button class="btn-modal approve" onclick="featureListing('${l.id}');closeModal()">★ Feature</button>`:''}
-      ${l.is_featured?`<button class="btn-modal cancel" onclick="unfeatureListing('${l.id}');closeModal()">☆ Unfeature</button>`:''}
+      <button class="btn-modal cancel ${locked?'disabled':''}" ${locked?'disabled':`onclick="closeModal();extendListingDate('${l.id}')"`}>📅 Extend expiry</button>
+      ${!l.is_featured?`<button class="btn-modal approve ${locked?'disabled':''}" ${locked?'disabled':`onclick="featureListing('${l.id}');closeModal()"`}>★ Feature</button>`:''}
+      ${l.is_featured?`<button class="btn-modal cancel ${locked?'disabled':''}" ${locked?'disabled':`onclick="unfeatureListing('${l.id}');closeModal()"`}>☆ Unfeature</button>`:''}
       ${l.is_disabled?`<button class="btn-modal approve" onclick="activateListing('${l.id}');closeModal()">Activate</button>`:`<button class="btn-modal reject" onclick="deactivateListing('${l.id}');closeModal()">Deactivate</button>`}
-      <button class="btn-modal cancel" onclick="postToSocial('${l.id}','facebook')">📘 Post to Facebook</button><button class="btn-modal cancel" onclick="postToSocial('${l.id}','instagram')">📷 Post to Instagram</button><button class="btn-modal cancel" onclick="postToSocial('${l.id}','tiktok')">🎵 Post to TikTok (private)</button>
+      <button class="btn-modal cancel ${locked?'disabled':''}" ${locked?'disabled':`onclick="postToSocial('${l.id}','facebook')"`}>📘 Post to Facebook</button><button class="btn-modal cancel ${locked?'disabled':''}" ${locked?'disabled':`onclick="postToSocial('${l.id}','instagram')"`}>📷 Post to Instagram</button><button class="btn-modal cancel ${locked?'disabled':''}" ${locked?'disabled':`onclick="postToSocial('${l.id}','tiktok')"`}>🎵 Post to TikTok (private)</button>
       <button class="btn-modal cancel" onclick="openEditListingModal('${l.id}');closeModal()">Edit</button>
       <button class="btn-modal reject" onclick="closeModal();recycleListing('${l.id}')">🗑 Move to recycle bin</button>
       <button class="btn-modal reject" onclick="closeModal();deleteListingPermanently('${l.id}')">Delete permanently</button>
