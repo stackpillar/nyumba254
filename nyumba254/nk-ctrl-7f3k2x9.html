@@ -4268,6 +4268,9 @@ async function messageSellerInChat(sellerId) {
         <select id="grant-tier" onchange="updateGrantPlanOptions()">
           <option value="premium">Premium</option>
           <option value="elite">Elite</option>
+          <option value="bnb_basic">BNB Basic</option>
+          <option value="bnb_bundle">BNB Bundle</option>
+          <option value="bnb_unlimited">BNB Unlimited</option>
         </select>
       </div>
       <div class="field"><label>Plan category — what they're allowed to list</label>
@@ -4289,10 +4292,16 @@ async function messageSellerInChat(sellerId) {
     focusModalField('grant-premium-modal', grantingSellerId ? '#grant-tier' : '#grant-seller-search');
   }
 
+  const BNB_TIERS = ['bnb_basic','bnb_bundle','bnb_unlimited'];
   function updateGrantPlanOptions() {
     const tier = document.getElementById('grant-tier')?.value || 'premium';
     const sel = document.getElementById('grant-plan');
     if (!sel) return;
+    if (BNB_TIERS.includes(tier)) {
+      const monthlyPrice = SETTINGS[tier + '_price'] || 0;
+      sel.innerHTML = `<option value="monthly">Monthly — KES ${monthlyPrice.toLocaleString('en-KE')}</option>`;
+      return;
+    }
     const monthlyPrice = tier === 'elite' ? (SETTINGS.elite_monthly_price||3000) : (SETTINGS.premium_monthly_price||1200);
     const yearlyPrice  = tier === 'elite' ? (SETTINGS.elite_yearly_price||30000) : (SETTINGS.premium_yearly_price||12000);
     sel.innerHTML = `

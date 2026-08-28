@@ -714,7 +714,7 @@
       <button class="nav-item" id="nav-settings" onclick="showPage('settings')">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Settings
       </button>
-      <a href="/plans" class="nav-item" id="nav-premium-upgrade">
+      <a href="#" class="nav-item" id="nav-premium-upgrade" onclick="goToPremiumSettings(event)">
         <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         <span id="nav-premium-upgrade-text">Upgrade to Premium</span>
       </a>
@@ -1072,6 +1072,15 @@
               <span style="font-size:11px;font-weight:700;color:var(--gold);background:var(--gold-light);padding:3px 9px;border-radius:20px">Premium</span>
             </div>
             <a href="/plans" id="premium-upgrade-btn" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:14px;text-decoration:none">Upgrade — from KES 1,200/mo</a>
+          </div>
+          <div class="settings-section" id="settings-bnb-section">
+            <h3><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Airbnb / BNB plan</h3>
+            <p style="font-size:12.5px;color:var(--text-3);margin-bottom:14px;line-height:1.6">A separate monthly plan for Airbnb/holiday-rental listings — keeps them live and bookable. Independent of your Premium/Elite plan above.</p>
+            <div id="bnb-status-banner" style="display:none;font-size:12.5px;font-weight:700;color:var(--green-dark);background:var(--green-light);border-radius:8px;padding:8px 12px;margin-bottom:14px"></div>
+            <div class="toggle-row"><div class="toggle-label"><strong>BNB Basic</strong><span>1 active Airbnb listing</span></div><span style="font-size:12px;font-weight:700;color:var(--text-2)" id="bnb-basic-price-label">—</span></div>
+            <div class="toggle-row"><div class="toggle-label"><strong>BNB Bundle</strong><span>Up to 5 active Airbnb listings</span></div><span style="font-size:12px;font-weight:700;color:var(--text-2)" id="bnb-bundle-price-label">—</span></div>
+            <div class="toggle-row" style="border-bottom:none"><div class="toggle-label"><strong>BNB Unlimited</strong><span>Unlimited active Airbnb listings</span></div><span style="font-size:12px;font-weight:700;color:var(--text-2)" id="bnb-unlimited-price-label">—</span></div>
+            <a href="/pricing#bnb-plans-grid" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:14px;text-decoration:none">Get a BNB plan →</a>
           </div>
           <div class="settings-section" id="settings-rm-section" style="display:none">
             <h3><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Your relationship manager</h3>
@@ -1952,6 +1961,7 @@ function loadSubscriptionUI(){
   loadRelationshipManager(sub);
   loadTeamSeats(sub);
   updateStorefrontBanner(sub);
+  updateBnbStatusBanner();
 }
 
 // Surfaces the storefront link somewhere the seller can't miss it — a
@@ -2127,31 +2137,30 @@ async function syncProBadge(sub){
 //   since a Premium seller can still upgrade further to Elite.
 // - Active Elite: top tier — nothing left to upgrade to, so the link
 //   becomes a static, disabled badge (no href, no click).
+function goToPremiumSettings(e){
+  if(e) e.preventDefault();
+  showPage('settings');
+  setTimeout(()=>document.getElementById('settings-premium-section')?.scrollIntoView({behavior:'smooth',block:'start'}),80);
+}
 function updatePremiumNavBadge(sub){
   const link = document.getElementById('nav-premium-upgrade');
   const textEl = document.getElementById('nav-premium-upgrade-text');
   if(!link || !textEl) return;
+  link.setAttribute('href','#');
+  link.onclick = goToPremiumSettings;
+  link.style.cursor = 'pointer';
 
   if(sub.active && sub.plan==='elite'){
     const catLabel = currentProfile?.plan_category === 'bnb' ? ' · BNB' : currentProfile?.plan_category === 'rental' ? ' · Rental' : '';
     textEl.innerHTML = `👑 Elite member${catLabel}`;
-    link.removeAttribute('href');
-    link.style.cursor = 'default';
     link.style.opacity = '0.85';
-    link.onclick = (e)=>e.preventDefault();
   } else if(sub.active && sub.plan==='premium'){
     const catLabel = currentProfile?.plan_category === 'bnb' ? ' · BNB' : currentProfile?.plan_category === 'rental' ? ' · Rental' : '';
     textEl.innerHTML = `⭐ Pro${catLabel} · Upgrade to Elite`;
-    link.setAttribute('href','/plans');
-    link.style.cursor = 'pointer';
     link.style.opacity = '1';
-    link.onclick = null;
   } else {
     textEl.textContent = 'Upgrade to Premium';
-    link.setAttribute('href','/plans');
-    link.style.cursor = 'pointer';
     link.style.opacity = '1';
-    link.onclick = null;
   }
 }
 
@@ -3695,17 +3704,34 @@ const VERIFY_BUCKET = 'verification-docs';
 // ── Live Premium/Elite prices — reads the same platform_settings rows the
 // admin's Pricing settings page writes, so this dashboard never shows a
 // stale hardcoded number after an admin changes a price. ──
-let platformPrices = { premium_monthly_price: 1200, elite_monthly_price: 3000 };
+let platformPrices = { premium_monthly_price: 1200, elite_monthly_price: 3000, bnb_basic_price: 700, bnb_bundle_price: 2000, bnb_unlimited_price: 4500 };
 async function loadPlatformPrices(){
   try{
-    const{data,error}=await db.from('platform_settings').select('key,value').in('key',['premium_monthly_price','elite_monthly_price']);
+    const{data,error}=await db.from('platform_settings').select('key,value').in('key',['premium_monthly_price','elite_monthly_price','bnb_basic_price','bnb_bundle_price','bnb_unlimited_price']);
     if(error||!data)return;
     data.forEach(row=>{ if(row.key in platformPrices) platformPrices[row.key]=Number(row.value)||platformPrices[row.key]; });
     const pBtn=document.getElementById('premium-upgrade-btn');
     if(pBtn) pBtn.textContent=`Upgrade — from KES ${platformPrices.premium_monthly_price.toLocaleString('en-KE')}/mo`;
     const eBtn=document.getElementById('elite-upgrade-btn');
     if(eBtn) eBtn.textContent=`Upgrade to Elite — from KES ${platformPrices.elite_monthly_price.toLocaleString('en-KE')}/mo`;
+    const bBasic=document.getElementById('bnb-basic-price-label'); if(bBasic) bBasic.textContent=`KES ${platformPrices.bnb_basic_price.toLocaleString('en-KE')}/mo`;
+    const bBundle=document.getElementById('bnb-bundle-price-label'); if(bBundle) bBundle.textContent=`KES ${platformPrices.bnb_bundle_price.toLocaleString('en-KE')}/mo`;
+    const bUnlim=document.getElementById('bnb-unlimited-price-label'); if(bUnlim) bUnlim.textContent=`KES ${platformPrices.bnb_unlimited_price.toLocaleString('en-KE')}/mo`;
+    updateBnbStatusBanner();
   }catch(e){console.error('loadPlatformPrices failed:',e);}
+}
+function updateBnbStatusBanner(){
+  const banner=document.getElementById('bnb-status-banner');
+  if(!banner)return;
+  const p=currentProfile;
+  const active=p?.bnb_plan && p?.bnb_expires_at && new Date(p.bnb_expires_at)>new Date();
+  if(active){
+    const labelMap={bnb_basic:'BNB Basic',bnb_bundle:'BNB Bundle',bnb_unlimited:'BNB Unlimited'};
+    banner.style.display='block';
+    banner.textContent=`✓ ${labelMap[p.bnb_plan]||'BNB plan'} active — renews/expires ${fmtSubDate(p.bnb_expires_at)}`;
+  } else {
+    banner.style.display='none';
+  }
 }
 
 function loadVerificationUI() {
