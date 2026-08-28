@@ -178,7 +178,6 @@
   <a href="/listings">Browse</a>
   <a href="/how-it-works">How it works</a>
   <a href="/about">About us</a>
-  <a href="/pricing" style="color:var(--green);font-weight:600">Pricing</a>
   <a href="/faq">FAQ</a>
   <a href="/login" id="mobile-account-link">Sign in</a>
   <a href="/saved">Saved <span class="nav-count" id="nav-count-badge-mobile" style="display:none">0</span></a>
