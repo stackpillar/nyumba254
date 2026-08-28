@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Your Shortlist — Nyumba254</title>
-  <meta name="description" content="Your saved apartment listings on Nyumba254 — keep track of properties you're interested in across Kenya, from Kisumu to Nairobi to Mombasa."/>
+  <meta name="description" content="Your saved property listings on Nyumba254 — keep track of apartments, houses, boarding rooms and Airbnb rentals you're interested in across Kenya."/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
   <link rel="icon" href="/favicon.ico" sizes="any">
@@ -115,7 +115,7 @@
     .card-img img { width: 100%; height: 100%; object-fit: cover; }
     .card-img-placeholder { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--text-3); }
     .card-img-placeholder svg { width: 32px; height: 32px; opacity: .3; stroke: currentColor; fill: none; stroke-width: 1.5; }
-    .badge-featured { position: absolute; top: 10px; left: 10px; background: var(--gold); color: white; font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 20px; z-index: 2; }
+    .badge-featured { position: absolute; top: 10px; left: 10px; background: var(--green-dark); color: white; font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 20px; z-index: 2; }
     .badge-unavailable { position: absolute; inset: 0; background: rgba(20,20,18,0.55); color: white; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; text-align: center; padding: 12px; z-index: 2; }
 
     .remove-heart-btn {
@@ -148,13 +148,14 @@
     .card-top-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
     .card-area { font-size: 11px; font-weight: 600; color: var(--green); text-transform: uppercase; letter-spacing: .06em; }
     .card-cat-pill { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 12px; background: var(--surface); color: var(--text-3); border: 1px solid var(--border); white-space: nowrap; }
-    .card-cat-pill.luxury { background: var(--gold-light); color: var(--gold); border-color: var(--gold); }
-    .card-cat-pill.student { background: var(--green-light); color: var(--green-dark); border-color: var(--green-mid); }
+    .card-cat-pill.apartment, .card-cat-pill.house, .card-cat-pill.boarding { background: var(--green-light); color: var(--green-dark); border-color: var(--green-mid); }
+    .card-cat-pill.airbnb { background: var(--gold-light); color: var(--gold); border-color: var(--gold); }
+    .card-cat-pill.commercial { background: var(--surface); color: var(--text-2); border-color: var(--text-3); }
     .card-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 3px; line-height: 1.35; }
     .card-sub { font-size: 12px; color: var(--text-3); margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .card-price { font-size: 17px; font-weight: 700; color: var(--green-dark); margin-bottom: 10px; }
     .card-price span { font-size: 12px; font-weight: 400; color: var(--text-3); }
-    .card-meta { display: flex; gap: 12px; font-size: 12px; color: var(--text-2); padding-top: 10px; border-top: 1px solid var(--border); margin-bottom: 12px; }
+    .card-meta { display: flex; gap: 12px; font-size: 12px; color: var(--text-2); padding-top: 10px; border-top: 1px solid var(--border); margin-bottom: 12px; flex-wrap: wrap; }
     .card-meta-item { display: flex; align-items: center; gap: 4px; }
     .card-meta-item svg { width: 13px; height: 13px; stroke: var(--text-3); fill: none; stroke-width: 2; }
     .card-saved-date { font-size: 11px; color: var(--text-3); margin-bottom: 10px; }
@@ -208,6 +209,14 @@
     .footer-col h4 { font-size: 12px; font-weight: 700; color: white; margin-bottom: 14px; letter-spacing: .08em; text-transform: uppercase; }
     .footer-col a { display: block; font-size: 13px; color: rgba(255,255,255,0.55); margin-bottom: 8px; transition: color .15s; }
     .footer-col a:hover { color: white; }
+    .footer-social { display: flex; gap: 8px; margin-top: 14px; }
+    .footer-social a { width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; transition: background .15s; }
+    .footer-social a:hover { background: var(--green); }
+    .footer-social svg { width: 15px; height: 15px; stroke: rgba(255,255,255,0.6); fill: none; stroke-width: 2; }
+    .footer-counties { column-count: 2; column-gap: 14px; max-height: 180px; overflow-y: auto; padding-right: 6px; }
+    .footer-counties a { margin-bottom: 8px; break-inside: avoid; }
+    .footer-counties::-webkit-scrollbar { width: 5px; }
+    .footer-counties::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
     .footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
     .footer-bottom p { font-size: 12px; }
 
@@ -244,10 +253,10 @@
     Nyumba254
   </a>
   <div class="nav-links">
+    <a href="/" class="nav-link">Home</a>
     <a href="/listings" class="nav-link">Browse</a>
     <a href="/how-it-works" class="nav-link">How it works</a>
     <a href="/about" class="nav-link">About us</a>
-    <a href="/pricing" class="nav-link">Pricing</a>
     <a href="/faq" class="nav-link">FAQ</a>
     <a href="/login" class="nav-link" id="nav-account-link">Sign in</a>
     <a href="/saved" class="nav-link" style="color:var(--green);font-weight:500">
@@ -255,19 +264,19 @@
       Saved
       <span class="nav-count" id="nav-count-badge" style="display:none">0</span>
     </a>
-    <a href="/post-listing" class="btn btn-primary">List your apartment</a>
+    <a href="/post-listing" class="btn btn-primary">List your property</a>
   </div>
-  <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Open menu">
+  <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Open menu" aria-expanded="false" id="mobile-menu-btn">
     <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
   </button>
 </nav>
 
 <!-- ── MOBILE NAV ── -->
 <div class="mobile-nav" id="mobile-nav">
+  <a href="/" class="nav-link">Home</a>
   <a href="/listings">Browse listings</a>
   <a href="/how-it-works">How it works</a>
   <a href="/about" class="nav-link">About us</a>
-  <a href="/pricing">Pricing</a>
   <a href="/faq">FAQ</a>
   <a href="/login" id="mobile-account-link">Sign in</a>
   <a href="/saved">
@@ -275,7 +284,7 @@
     Saved
     <span class="nav-count" id="nav-count-badge-mobile" style="display:none">0</span>
   </a>
-  <a href="/post-listing" class="btn btn-primary">List your apartment</a>
+  <a href="/post-listing" class="btn btn-primary">List your property</a>
 </div>
 
 <!-- ── PAGE HEADER ── -->
@@ -283,7 +292,7 @@
   <div class="page-header-inner">
     <div>
       <h1>Your shortlist</h1>
-      <p>Apartments you've saved to come back to later</p>
+      <p>Properties you've saved to come back to later</p>
     </div>
   </div>
 </div>
@@ -356,22 +365,37 @@
     <div class="footer-top">
       <div>
         <div class="footer-logo">Nyumba254</div>
-        <p class="footer-tagline">Find and list apartments, shops, and offices across Kenya — no agents, no commission.</p>
+        <p class="footer-tagline">Find and list apartments, houses, boarding rooms, holiday rentals, and commercial spaces across Kenya — no agents, no commission.</p>
+        <div class="footer-social">
+          <a href="https://wa.me/254700000000" target="_blank" rel="noopener" title="WhatsApp">
+            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+          </a>
+          <a href="https://www.instagram.com/nyumba.254?igsh=Z2VhNzJkMm1td2Jz" target="_blank" rel="noopener" title="Instagram">
+            <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+          </a>
+          <a href="https://www.facebook.com/share/1EdzJKujSK/" target="_blank" rel="noopener" title="Facebook">
+            <svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+          </a>
+          <a href="https://www.tiktok.com/@nyumba.254?_r=1&_t=ZS-98w137YXueA" target="_blank" rel="noopener" title="TikTok">
+            <svg viewBox="0 0 24 24"><path d="M9 12a4 4 0 104 4V4a5 5 0 005 5"/></svg>
+          </a>
+          <a href="https://x.com/Nyumba254" target="_blank" rel="noopener" title="X (Twitter)">
+            <svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20"/></svg>
+          </a>
+        </div>
       </div>
       <div class="footer-col">
         <h4>Browse</h4>
         <a href="/listings">All listings</a>
-        <a href="/listings?category=student">Student housing</a>
-        <a href="/listings?category=standard">Standard</a>
-        <a href="/listings?category=luxury">Luxury</a>
+        <a href="/listings?category=apartment">Apartments</a>
+        <a href="/listings?category=house">Houses</a>
+        <a href="/listings?category=boarding">Boarding houses</a>
+        <a href="/listings?category=airbnb">Airbnb / Holiday rentals</a>
         <a href="/listings?category=commercial">Shops & offices</a>
       </div>
       <div class="footer-col">
         <h4>Counties</h4>
-        <a href="/listings?county=Kisumu">Kisumu</a>
-        <a href="/listings?county=Nairobi">Nairobi</a>
-        <a href="/listings?county=Mombasa">Mombasa</a>
-        <a href="/listings">All 47 counties</a>
+        <div class="footer-counties" id="footer-counties"></div>
       </div>
       <div class="footer-col">
         <h4>Platform</h4>
@@ -382,8 +406,8 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <p>© 2026 Nyumba254. All rights reserved.</p>
-      <p>Kisumu · Nairobi · Mombasa · Nationwide across Kenya</p>
+      <p>© <span id="footer-year">2026</span> Nyumba254. All rights reserved.</p>
+      <p>Kisumu · Nairobi · Mombasa · Kenya</p>
     </div>
   </div>
 </footer>
@@ -392,12 +416,105 @@
   const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
   const { createClient } = supabase;
-  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const authStorage = {
+    getItem: (key) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).getItem(key),
+    setItem: (key, value) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).setItem(key, value),
+    removeItem: (key) => { localStorage.removeItem(key); sessionStorage.removeItem(key); }
+  };
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storage: authStorage, persistSession: true, autoRefreshToken: true } });
 
   const SAVED_KEY = 'nk_saved_listings';
   let currentUser = null;
   let savedRows = [];
   let recommendedRows = [];
+
+  /* ── Categories — must mirror NK_CATEGORIES in listing.html / listings.html ── */
+  const NK_CATEGORIES = {
+    apartment:  { label: 'Apartment' },
+    house:      { label: 'House' },
+    boarding:   { label: 'Boarding house' },
+    airbnb:     { label: 'Airbnb / Holiday' },
+    commercial: { label: 'Shops & offices' },
+  };
+  const NK_FREQ_LABEL = { month: '/mo', night: '/night', week: '/week', term: '/term', once: '' };
+
+  /* ── Counties/areas — must mirror listing.html / listings.html ── */
+  const NK_COUNTIES = [
+    "Mombasa","Kwale","Kilifi","Tana River","Lamu","Taita-Taveta","Garissa","Wajir","Mandera",
+    "Marsabit","Isiolo","Meru","Tharaka-Nithi","Embu","Kitui","Machakos","Makueni","Nyandarua",
+    "Nyeri","Kirinyaga","Murang'a","Kiambu","Turkana","West Pokot","Samburu","Trans Nzoia",
+    "Uasin Gishu","Elgeyo-Marakwet","Nandi","Baringo","Laikipia","Nakuru","Narok","Kajiado",
+    "Kericho","Bomet","Kakamega","Vihiga","Bungoma","Busia","Siaya","Kisumu","Homa Bay",
+    "Migori","Kisii","Nyamira","Nairobi"
+  ].sort();
+  const NK_AREAS_BY_COUNTY = {
+    "Kisumu": ["Ahero","Car Wash","Dunga","Elgon View","Kanyakwar","Kibos","Kibuye","Kisumu CBD","Kombewa","Kondele","Luanda","Mamboleo","Manyatta","Maseno","Matibabu","Migosi","Milimani","Nyalenda","Nyamasaria","Obunga","Otonglo","Riat Hills","Sega"],
+    "Nairobi": ["Nairobi CBD","Westlands","Parklands","Highridge","Kangemi","Kitisuru","Runda","Loresho","Muthaiga","Gigiri","Spring Valley","Nyari","Rosslyn","Thome","Garden Estate","Ridgeways","Kilimani","Kileleshwa","Lavington","Kawangware","Hurlingham","Upper Hill","Adams Arcade","Karen","Langata","South B","South C","Nairobi West","Madaraka","Otiende","Kibera","Woodley","Roysambu","Zimmerman","Kahawa West","Githurai","Mirema","Kasarani","Mwiki","Njiru","Ruaraka","Baba Dogo","Mathare","Huruma","Pipeline","Imara Daima","Nyayo Estate","Dandora","Kariobangi","Kayole","Komarock","Utawala","Tassia","Umoja","Buruburu","Donholm","Makadara","Eastleigh","Ngara","Pangani"],
+    "Mombasa": ["Mombasa CBD (Old Town)","Nyali","Bamburi","Kizingo","Tudor","Likoni","Changamwe","Kisauni","Shanzu","Mkomani","Bombolulu","Kiembeni","Port Reitz","Miritini","Chaani","Migadini","Kongowea","Junda","Mwakirunge","Mtopanga","Jomvu","Magongo"],
+    "Nakuru": ["Nakuru CBD","Milimani","Section 58","Langalanga","Pangani","Shabab","Bangladesh","Lanet","Free Area","Freehold","Ngata","Bahati","London","Afraha","Naka","Kiamunyi","White House","Pipeline","Kaptembwa","Rhoda","Menengai","Naivasha"],
+    "Uasin Gishu": ["Eldoret CBD","Kapsoya","Langas","Kimumu","Huruma","Elgon View","Pioneer","Annex","Rupa Village","Hazina","Kamukunji","Munyaka","West Indies"],
+    "Kiambu": ["Thika CBD","Landless","Makongeni","Section 9","Blue Post","Thika Greens","Kiganjo","Tora","Ngoingwa","Bahati Ridge","Kisii Estate","Ruiru","Membley","Kamakis","Juja","Kiambu Town","Kikuyu","Limuru"],
+    "Kilifi": ["Kilifi Town","Malindi CBD","Kisumu Ndogo","Majengo (Malindi)","Silversands","Watamu","Mtwapa","Mariakani","Kaloleni","Mazeras","Magarini"],
+    "Machakos": ["Machakos CBD","Mua Hills","Kalama","Mitaboni","Athi River","Mlolongo","Syokimau","Katani","Kangundo Road","Kola"],
+    "Kakamega": ["Kakamega CBD","Amalemba","Milimani","Shirere","Lurambi","Mahiakalo","Sudi","Mumias","Butere","Malava","Lugari"],
+    "Meru": ["Meru CBD","Makutano","Kinoru","Ntharene","Nkubu","Maua","Timau","Laare","Mikinduri","Kianjai"],
+    "Nyeri": ["Nyeri CBD","Ring Road","Mountain View Estate","Garden Estate","Kamakwa","Ruring'u","Majengo","Karatina","Othaya Town","Mukurweini Town","Naromoru"],
+    "Kericho": ["Kericho CBD","Kapsoit","Ainamoi","Litein","Kipkelion","Fort Ternan","Sosiot","Chepseon","Kedowa","Cheborge"],
+    "Trans Nzoia": ["Kitale CBD","Milimani","Mitume","Matisi","Tuwan","Endebess","Kiminini","Kwanza","Saboti","Cherangany"],
+    "Kwale": ["Kwale Town","Diani","Ukunda","Tiwi","Msambweni","Lunga Lunga","Matuga","Kinango","Waa","Shimoni","Mackinon Road","Vanga"],
+    "Tana River": ["Hola","Garsen","Bura","Galole","Wenje","Kipini","Madogo","Chewele","Bangale","Wayu"],
+    "Lamu": ["Lamu Town","Mokowe","Faza","Matondoni","Mpeketoni","Witu","Hindi","Kizingitini","Shela","Kiunga"],
+    "Taita-Taveta": ["Voi","Taveta","Wundanyi","Mwatate","Mgange","Wesu","Bura (Taita)","Mbale (Taveta)","Tausa","Werugha"],
+    "Garissa": ["Garissa Town","Dadaab","Balambala","Fafi","Ijara","Lagdera","Modogashe","Bura (Garissa)","Sankuri","Hulugho"],
+    "Wajir": ["Wajir Town","Habaswein","Griftu","Eldas","Tarbaj","Bute","Buna","Diif","Elnur","Khorof Harar"],
+    "Mandera": ["Mandera Town","Rhamu","Banissa","Lafey","Takaba","El Wak","Kotulo","Fino","Arabia","Warankara"],
+    "Marsabit": ["Marsabit Town","Moyale","Loiyangalani","North Horr","Laisamis","Sololo","Turbi","Maikona","Illeret","Dukana"],
+    "Isiolo": ["Isiolo Town","Garbatulla","Merti","Kinna","Oldonyiro","Burat","Bulapesa","Wabera","Chari","Cherab"],
+    "Tharaka-Nithi": ["Chuka","Marimanti","Kathwana","Chogoria","Gatunga","Nkondi","Igambang'ombe","Muthambi","Mitheru","Tunyai"],
+    "Embu": ["Embu Town","Runyenjes","Manyatta","Siakago","Ishiara","Kiritiri","Kyeni","Karurumo","Kirimari","Gaturi"],
+    "Kitui": ["Kitui Town","Mwingi","Mutomo","Mutitu","Migwani","Zombe","Kabati","Ikutha","Mutha","Kanyangi"],
+    "Makueni": ["Wote","Emali","Sultan Hamud","Kibwezi","Kilome","Mbooni","Kaiti","Nunguni","Makindu","Tawa"],
+    "Nyandarua": ["Ol Kalou","Engineer","Njabini","Nyahururu","Ndaragwa","Ol Joro Orok","North Kinangop","South Kinangop","Kipipiri","Shamata"],
+    "Kirinyaga": ["Kerugoya","Kutus","Sagana","Kagio","Wang'uru","Baricho","Kianyaga","Kimbimbi","Mwea","Kutus Town"],
+    "Murang'a": ["Murang'a Town","Kenol","Kangema","Maragua","Kandara","Kigumo","Gatanga","Kiria-ini","Kabati","Makuyu"],
+    "Turkana": ["Lodwar","Kakuma","Lokichogio","Lokitaung","Kalokol","Lokichar","Kainuk","Todonyang","Kibish","Katilu"],
+    "West Pokot": ["Kapenguria","Makutano (Pokot)","Chepareria","Kacheliba","Sigor","Alale","Chepnyal","Lomut","Ortum","Kongelai"],
+    "Samburu": ["Maralal","Baragoi","Wamba","Archer's Post","Suguta Marmar","Kirisia","South Horr","Poro","Loosuk","Kisima"],
+    "Elgeyo-Marakwet": ["Iten","Tambach","Kapsowar","Chepkorio","Kapyego","Kapsait","Chesoi","Kaptarakwa","Kamogoi","Kabiemit"],
+    "Nandi": ["Kapsabet","Nandi Hills","Mosoriot","Kabiyet","Kaptumo","Kobujoi","Kapsisiywa","Kapsabet Town","Chepterit","Kilibwoni"],
+    "Baringo": ["Kabarnet","Eldama Ravine","Marigat","Kabartonjo","Mogotio","Kimalel","Kabernet Town","Loruk","Kampi ya Samaki","Mochongoi"],
+    "Laikipia": ["Nanyuki","Nyahururu","Rumuruti","Dol Dol","Kinamba","Ngobit","Sipili","Marmanet","Mukogodo","Salama"],
+    "Narok": ["Narok Town","Kilgoris","Ololulunga","Suswa","Ewaso Ngiro","Nairagie Enkare","Naikarra","Ntulele","Melili","Lolgorian"],
+    "Kajiado": ["Kajiado Town","Ngong","Kitengela","Ongata Rongai","Kiserian","Loitokitok","Namanga","Isinya","Bissil","Mashuuru"],
+    "Bomet": ["Bomet Town","Sotik","Longisa","Mulot","Chepalungu","Silibwet","Sigor (Bomet)","Chebunyo","Kaplong","Mogogosiek"],
+    "Vihiga": ["Mbale","Luanda (Vihiga)","Chavakali","Majengo (Vihiga)","Emuhaya","Sabatia","Hamisi","Wodanga","Bunyore","Gisambai"],
+    "Bungoma": ["Bungoma CBD","Kanduyi","Sikata","Webuye","Kimilili","Chwele","Bumula","Sirisia","Naitiri","Malakisi"],
+    "Busia": ["Busia Town","Malaba","Nambale","Funyula","Budalangi","Amagoro","Port Victoria","Matayos","Alupe","Angurai"],
+    "Siaya": ["Siaya Town","Bondo","Ugunja","Yala","Ukwala","Usenge","Sega (Siaya)","Nyang'oma Kogelo","Uranga","Yenga"],
+    "Homa Bay": ["Homa Bay Central","Asego","Arujo","Kalanya","Kanyabala","Katuma","Posta/Bonde","Oyugis","Kendu Bay","Rangwe","Ndhiwa","Mbita","Sindo","Kabondo","Kasipul","Karachuonyo"],
+    "Migori": ["Migori Town","Rongo","Awendo","Isebania","Kehancha","Macalder","Muhuru Bay","Uriri","Ntimaru","Suna"],
+    "Kisii": ["Kisii CBD","Milimani","Nyanchwa","Nyamataro","Daraja Mbili","Mwembe","Jogoo","Nyamage","Nyakoe","Nyangena","Gesonso"],
+    "Nyamira": ["Nyamira Town","Keroka","Ekerenyo","Nyansiongo","Manga","Ikonge","Magwagwa","Nyamaiya","Bomwagamo","Ainapngetuny"]
+  };
+  const NK_COUNTY_LABEL = {
+    "Uasin Gishu": "Uasin Gishu (Eldoret)", "Trans Nzoia": "Trans Nzoia (Kitale)", "Kiambu": "Kiambu (Thika)",
+    "Kilifi": "Kilifi (Malindi)", "Kwale": "Kwale (Diani)", "Taita-Taveta": "Taita-Taveta (Voi)",
+    "West Pokot": "West Pokot (Kapenguria)", "Vihiga": "Vihiga (Mbale)", "Nyandarua": "Nyandarua (Ol Kalou)",
+    "Turkana": "Turkana (Lodwar)", "Samburu": "Samburu (Maralal)", "Elgeyo-Marakwet": "Elgeyo-Marakwet (Iten)",
+    "Nandi": "Nandi (Kapsabet)", "Baringo": "Baringo (Kabarnet)", "Laikipia": "Laikipia (Nanyuki)",
+    "Tharaka-Nithi": "Tharaka-Nithi (Chuka)", "Kirinyaga": "Kirinyaga (Kerugoya)", "Makueni": "Makueni (Wote)"
+  };
+  function nkCountyLabel(county) { return NK_COUNTY_LABEL[county] || county; }
+  function nkPopulateFooterCounties() {
+    const el = document.getElementById('footer-counties');
+    if (!el) return;
+    el.innerHTML = NK_COUNTIES.map(county => {
+      const hasAreas = (NK_AREAS_BY_COUNTY[county] || []).length > 0;
+      const href = hasAreas ? `/listings?county=${encodeURIComponent(county)}` : '/listings';
+      return `<a href="${href}">${nkCountyLabel(county)}</a>`;
+    }).join('');
+  }
 
   function getLocalSavedIds() {
     try { const raw = localStorage.getItem(SAVED_KEY); return raw ? JSON.parse(raw) : []; } catch { return []; }
@@ -415,7 +532,9 @@
 
   // ── Mobile nav toggle ──
   function toggleMobileMenu() {
-    document.getElementById('mobile-nav').classList.toggle('open');
+    const nav = document.getElementById('mobile-nav');
+    const isOpen = nav.classList.toggle('open');
+    document.getElementById('mobile-menu-btn')?.setAttribute('aria-expanded', isOpen);
   }
   document.addEventListener('click', e => {
     const nav = document.getElementById('mobile-nav');
@@ -430,12 +549,11 @@
     const { data: { session } } = await db.auth.getSession();
     currentUser = session?.user || null;
 
-    // Update nav account link — buyers now use buyer-account.html, not the seller login page
     const desktopLink = document.getElementById('nav-account-link');
     const mobileLink  = document.getElementById('mobile-account-link');
     if (currentUser) {
-      if (desktopLink) { desktopLink.textContent = 'My Account'; desktopLink.style.fontWeight = '600'; desktopLink.style.color = 'var(--green)'; }
-      if (mobileLink)  { mobileLink.textContent = 'My Account'; }
+      if (desktopLink) { desktopLink.textContent = 'My Account'; desktopLink.href = '/dashboard'; desktopLink.style.fontWeight = '600'; desktopLink.style.color = 'var(--green)'; }
+      if (mobileLink)  { mobileLink.textContent = 'My Account'; mobileLink.href = '/dashboard'; }
     }
 
     if (currentUser) {
@@ -454,7 +572,7 @@
   async function loadFromAccount() {
     const { data, error } = await db
       .from('saved_listings')
-      .select('listing_id, created_at, listings(*, listing_photos(*))')
+      .select('listing_id, created_at, listings(*, listing_photos(*), listing_units(*))')
       .eq('user_id', currentUser.id)
       .order('created_at', { ascending: false });
     if (error) { console.error('Load saved listings error:', error.message); savedRows = []; return; }
@@ -465,7 +583,7 @@
   async function loadFromLocalStorage() {
     const ids = getLocalSavedIds();
     if (!ids.length) { savedRows = []; return; }
-    const { data, error } = await db.from('listings').select('*, listing_photos(*)').in('id', ids);
+    const { data, error } = await db.from('listings').select('*, listing_photos(*), listing_units(*)').in('id', ids);
     if (error) { console.error('Load saved listings error:', error.message); savedRows = []; return; }
     savedRows = ids.slice().reverse().map(id => (data || []).find(l => l.id === id)).filter(Boolean).map(l => ({ listing_id: l.id, created_at: null, listing: l }));
   }
@@ -530,10 +648,11 @@
     window.location.reload();
   }
 
-  // ── Render ──
-  function formatPrice(price, type) {
+  // ── Render helpers ──
+  function formatPrice(price, freq) {
     const p = Number(price).toLocaleString('en-KE');
-    return type === 'rent' ? `KES ${p}<span>/mo</span>` : `KES ${p}`;
+    const suffix = NK_FREQ_LABEL[freq] || '';
+    return suffix ? `KES ${p}<span>${suffix}</span>` : `KES ${p}`;
   }
 
   // listing.html's URL param is the zero-padded listing_number, not the
@@ -541,27 +660,40 @@
   // missing, so an old/incomplete row doesn't produce a dead link silently.
   function nkListingUrl(l) {
     return l.listing_number != null
-      ? `listing.html?id=${String(l.listing_number).padStart(6, '0')}`
-      : `listing.html?id=${l.id}`;
+      ? `/listing?id=${String(l.listing_number).padStart(6, '0')}`
+      : `/listing?id=${l.id}`;
   }
+
+  function nkListingCounty(l) {
+    if (!l) return 'Kenya';
+    if (l.county) return nkCountyLabel(l.county);
+    for (const [county, areas] of Object.entries(NK_AREAS_BY_COUNTY)) {
+      if (areas.includes(l.area)) return nkCountyLabel(county);
+    }
+    return 'Kenya';
+  }
+
+  function escHtmlS(str) { if (!str) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
   function buildCard(row) {
     const l = row.listing;
+    const d = l.details || {};
     const photos = l.listing_photos || [];
     const cover = photos.find(p => p.is_cover) || photos[0];
     const imgHtml = cover
-      ? `<img src="${cover.url}" alt="${l.title}" loading="lazy" decoding="async"/>`
+      ? `<img src="${cover.url}" alt="${escHtmlS(l.title)}" loading="lazy" decoding="async"/>`
       : `<div class="card-img-placeholder"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="font-size:11px">No photo</span></div>`;
-    const unavailable = l.is_disabled || l.status !== 'active';
+    const unavailable = l.is_disabled || l.recycle_bin || l.status !== 'active';
     const savedDate = row.created_at
       ? `Saved ${new Date(row.created_at).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'})}`
       : 'Saved on this device';
+    const catLabel = (NK_CATEGORIES[l.category] || {}).label || l.category;
     return `
       <div class="card ${unavailable ? 'unavailable' : ''}" data-id="${l.id}">
         <a class="card-img-link" href="${unavailable ? 'javascript:void(0)' : nkListingUrl(l)}">
           <div class="card-img">
             ${imgHtml}
-            ${l.is_featured && !unavailable ? '<span class="badge-featured">Featured</span>' : ''}
+            ${l.is_admin_verified && !unavailable ? '<span class="badge-featured">Reviewed by Nyumba254</span>' : ''}
             ${unavailable ? `<div class="badge-unavailable">${l.is_disabled ? (l.disabled_reason ? 'Disabled by admin' : 'No longer available') : 'No longer available'}</div>` : ''}
           </div>
         </a>
@@ -570,16 +702,16 @@
         </button>
         <div class="card-body">
           <div class="card-top-row">
-            <div class="card-area">${l.area}${l.sub_area ? ' · ' + l.sub_area : ''}</div>
-            <span class="card-cat-pill ${l.category}">${l.category}</span>
+            <div class="card-area">${escHtmlS(l.area)}</div>
+            <span class="card-cat-pill ${l.category}">${escHtmlS(catLabel)}</span>
           </div>
-          <div class="card-title">${l.title}</div>
-          <div class="card-sub">${l.address || l.area || 'Kenya'}</div>
-          <div class="card-price">${formatPrice(l.price, l.price_type)}</div>
+          <div class="card-title">${escHtmlS(l.title)}</div>
+          <div class="card-sub">${escHtmlS(l.address || l.area || nkListingCounty(l))}</div>
+          <div class="card-price">${formatPrice(l.price, l.price_frequency)}</div>
           <div class="card-meta">
-            ${l.bedrooms !== null ? `<div class="card-meta-item"><svg viewBox="0 0 24 24"><path d="M2 4v16M22 4v16M2 12h20M2 8h4a2 2 0 012 2v2H2V8zM16 8h4a2 2 0 012 2v2h-6V8z"/></svg>${l.bedrooms === 0 ? 'Studio' : l.bedrooms + ' bed'}</div>` : ''}
-            ${l.bathrooms ? `<div class="card-meta-item"><svg viewBox="0 0 24 24"><path d="M9 6l1-1a2 2 0 012.83 0l6.17 6.17a1 1 0 010 1.41L17 14M3 20h18M5 20v-4a3 3 0 013-3h1"/></svg>${l.bathrooms} bath</div>` : ''}
-            ${l.size_sqm ? `<div class="card-meta-item"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/></svg>${l.size_sqm}m²</div>` : ''}
+            ${d.bedrooms !== undefined && d.bedrooms !== null && d.bedrooms !== '' ? `<div class="card-meta-item"><svg viewBox="0 0 24 24"><path d="M2 4v16M22 4v16M2 12h20M2 8h4a2 2 0 012 2v2H2V8zM16 8h4a2 2 0 012 2v2h-6V8z"/></svg>${d.bedrooms == 0 ? 'Studio' : d.bedrooms + ' bed'}</div>` : ''}
+            ${d.bathrooms ? `<div class="card-meta-item"><svg viewBox="0 0 24 24"><path d="M9 6l1-1a2 2 0 012.83 0l6.17 6.17a1 1 0 010 1.41L17 14M3 20h18M5 20v-4a3 3 0 013-3h1"/></svg>${d.bathrooms} bath</div>` : ''}
+            ${d.size_sqm ? `<div class="card-meta-item"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/></svg>${d.size_sqm}m²</div>` : ''}
           </div>
           <div class="card-saved-date">${savedDate}</div>
           ${unavailable
@@ -616,8 +748,8 @@
   async function loadRecommended() {
     const excludeIds = savedRows.map(r => r.listing_id);
     const fetchLimit = excludeIds.length + 8;
-    let q = db.from('listings').select('*, listing_photos(*)')
-      .eq('status', 'active').eq('is_disabled', false)
+    let q = db.from('listings').select('*, listing_photos(*), listing_units(*)')
+      .eq('status', 'active').eq('is_disabled', false).eq('recycle_bin', false)
       .order('created_at', { ascending: false })
       .limit(fetchLimit);
     const { data, error } = await q;
@@ -627,17 +759,19 @@
   }
 
   function buildRecommendedCard(l) {
+    const d = l.details || {};
     const photos = l.listing_photos || [];
     const cover = photos.find(p => p.is_cover) || photos[0];
     const imgHtml = cover
-      ? `<img src="${cover.url}" alt="${l.title}" loading="lazy" decoding="async"/>`
+      ? `<img src="${cover.url}" alt="${escHtmlS(l.title)}" loading="lazy" decoding="async"/>`
       : `<div class="card-img-placeholder"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="font-size:11px">No photo</span></div>`;
+    const catLabel = (NK_CATEGORIES[l.category] || {}).label || l.category;
     return `
       <div class="card" data-id="${l.id}">
         <a class="card-img-link" href="${nkListingUrl(l)}">
           <div class="card-img">
             ${imgHtml}
-            ${l.is_featured ? '<span class="badge-featured">Featured</span>' : ''}
+            ${l.is_admin_verified ? '<span class="badge-featured">Reviewed by Nyumba254</span>' : ''}
           </div>
         </a>
         <button class="add-heart-btn" title="Save to shortlist" onclick="addToSaved('${l.id}', this)">
@@ -645,16 +779,16 @@
         </button>
         <div class="card-body">
           <div class="card-top-row">
-            <div class="card-area">${l.area}${l.sub_area ? ' · ' + l.sub_area : ''}</div>
-            <span class="card-cat-pill ${l.category}">${l.category}</span>
+            <div class="card-area">${escHtmlS(l.area)}</div>
+            <span class="card-cat-pill ${l.category}">${escHtmlS(catLabel)}</span>
           </div>
-          <div class="card-title">${l.title}</div>
-          <div class="card-sub">${l.address || l.area || 'Kenya'}</div>
-          <div class="card-price">${formatPrice(l.price, l.price_type)}</div>
+          <div class="card-title">${escHtmlS(l.title)}</div>
+          <div class="card-sub">${escHtmlS(l.address || l.area || nkListingCounty(l))}</div>
+          <div class="card-price">${formatPrice(l.price, l.price_frequency)}</div>
           <div class="card-meta">
-            ${l.bedrooms !== null ? `<div class="card-meta-item"><svg viewBox="0 0 24 24"><path d="M2 4v16M22 4v16M2 12h20M2 8h4a2 2 0 012 2v2H2V8zM16 8h4a2 2 0 012 2v2h-6V8z"/></svg>${l.bedrooms === 0 ? 'Studio' : l.bedrooms + ' bed'}</div>` : ''}
-            ${l.bathrooms ? `<div class="card-meta-item"><svg viewBox="0 0 24 24"><path d="M9 6l1-1a2 2 0 012.83 0l6.17 6.17a1 1 0 010 1.41L17 14M3 20h18M5 20v-4a3 3 0 013-3h1"/></svg>${l.bathrooms} bath</div>` : ''}
-            ${l.size_sqm ? `<div class="card-meta-item"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/></svg>${l.size_sqm}m²</div>` : ''}
+            ${d.bedrooms !== undefined && d.bedrooms !== null && d.bedrooms !== '' ? `<div class="card-meta-item"><svg viewBox="0 0 24 24"><path d="M2 4v16M22 4v16M2 12h20M2 8h4a2 2 0 012 2v2H2V8zM16 8h4a2 2 0 012 2v2h-6V8z"/></svg>${d.bedrooms == 0 ? 'Studio' : d.bedrooms + ' bed'}</div>` : ''}
+            ${d.bathrooms ? `<div class="card-meta-item"><svg viewBox="0 0 24 24"><path d="M9 6l1-1a2 2 0 012.83 0l6.17 6.17a1 1 0 010 1.41L17 14M3 20h18M5 20v-4a3 3 0 013-3h1"/></svg>${d.bathrooms} bath</div>` : ''}
+            ${d.size_sqm ? `<div class="card-meta-item"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/></svg>${d.size_sqm}m²</div>` : ''}
           </div>
           <a class="card-view-btn" href="${nkListingUrl(l)}" style="margin-top:10px">View listing</a>
         </div>
@@ -670,22 +804,20 @@
   }
 
   // ── Boot ──
+  document.getElementById('footer-year').textContent = new Date().getFullYear();
+  nkPopulateFooterCounties();
   init();
 </script>
 
 <!-- ── PAGE VIEW TRACKER ── -->
 <script>
   (function () {
-    const sb = supabase.createClient(
-      'https://vliuuloyfhyxcsuchpss.supabase.co',
-      'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx'
-    );
     let sid = localStorage.getItem('nk_sid');
     if (!sid) {
       sid = (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2));
       localStorage.setItem('nk_sid', sid);
     }
-    sb.from('page_views').insert({ path: location.pathname, referrer: document.referrer || null, user_agent: navigator.userAgent, session_id: sid });
+    db.from('page_views').insert({ path: location.pathname, referrer: document.referrer || null, user_agent: navigator.userAgent, session_id: sid });
   })();
 </script>
 
