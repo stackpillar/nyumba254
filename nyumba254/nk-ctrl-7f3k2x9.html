@@ -4157,11 +4157,17 @@ async function messageSellerInChat(sellerId) {
   const debouncedLoadPremium = debounce(loadPremiumSellers, 400);
 
   async function loadPremiumBadge() {
-    const { count } = await db.from('profiles').select('*',{count:'exact',head:true})
-      .neq('subscription_tier','none')
-      .or('subscription_expires_at.is.null,subscription_expires_at.gt.'+new Date().toISOString());
+    const nowIso = new Date().toISOString();
+    const [{ count: rentalCount }, { count: bnbCount }] = await Promise.all([
+      db.from('profiles').select('*',{count:'exact',head:true})
+        .neq('subscription_tier','none')
+        .or('subscription_expires_at.is.null,subscription_expires_at.gt.'+nowIso),
+      db.from('profiles').select('*',{count:'exact',head:true})
+        .not('bnb_plan','is',null)
+        .or('bnb_expires_at.is.null,bnb_expires_at.gt.'+nowIso),
+    ]);
     const el = document.getElementById('nav-badge-premium');
-    if (el) el.textContent = count || 0;
+    if (el) el.textContent = (rentalCount||0) + (bnbCount||0);
   }
 
   function premiumRowStatus(p) {
@@ -4177,9 +4183,13 @@ async function messageSellerInChat(sellerId) {
   function renderPremiumTable() {
     const now = Date.now(), soon = now + 7*86400000;
     const filtered = _premiumSearchActive ? _premiumSellers : _premiumSellers.filter(p => {
-      const subscribed = p.subscription_tier && p.subscription_tier !== 'none';
-      const exp = p.subscription_expires_at ? new Date(p.subscription_expires_at).getTime() : null;
+      const hasRental = p.subscription_tier && p.subscription_tier !== 'none';
+      const hasBnb = !!p.bnb_plan;
+      const subscribed = hasRental || hasBnb;
       if (!subscribed) return false;
+      const exp = hasRental
+        ? (p.subscription_expires_at ? new Date(p.subscription_expires_at).getTime() : null)
+        : (p.bnb_expires_at ? new Date(p.bnb_expires_at).getTime() : null);
       if (premiumTab==='all') return true;
       if (premiumTab==='expired') return exp && exp < now;
       if (premiumTab==='expiring') return exp && exp >= now && exp < soon;
@@ -4290,18 +4300,20 @@ async function messageSellerInChat(sellerId) {
           <option value="bnb_unlimited">BNB Unlimited</option>
         </select>
       </div>
-      <div class="field"><label>Plan category — what they're allowed to list</label>
-        <select id="grant-plan-category">
-          <option value="rental">Rental (apartment/house/boarding/shop)</option>
-          <option value="bnb">BNB / Airbnb only</option>
-        </select>
+      <div id="grant-rental-extras">
+        <div class="field"><label>Plan category — what they're allowed to list</label>
+          <select id="grant-plan-category">
+            <option value="rental">Rental (apartment/house/boarding/shop)</option>
+            <option value="bnb">BNB / Airbnb only</option>
+          </select>
+        </div>
+        <div class="confirm-warning" style="background:var(--red-light);color:var(--red)">Sellers can only submit listings matching this category. If they're on the wrong one (e.g. subscribed BNB but want to list rentals), change it here — no new payment needed unless the new plan costs more (use the reconciliation field below for that).</div>
+        <div class="field"><label>Amount already paid for this change (KES) — optional</label><input type="number" id="grant-reconcile-paid" placeholder="Leave blank if not reconciling a payment"/></div>
       </div>
-      <div class="confirm-warning" style="background:var(--red-light);color:var(--red)">Sellers can only submit listings matching this category. If they're on the wrong one (e.g. subscribed BNB but want to list rentals), change it here — no new payment needed unless the new plan costs more (use the reconciliation field below for that).</div>
-      <div class="field"><label>Amount already paid for this change (KES) — optional</label><input type="number" id="grant-reconcile-paid" placeholder="Leave blank if not reconciling a payment"/></div>
       <div class="field"><label>Billing period</label>
         <select id="grant-plan"></select>
       </div>
-      <div class="field check-field"><input type="checkbox" id="grant-is-pro" checked/><label for="grant-is-pro">Show the Pro seller badge</label></div>
+      <div class="field check-field" id="grant-pro-badge-row"><input type="checkbox" id="grant-is-pro" checked/><label for="grant-is-pro">Show the Pro seller badge</label></div>
       <div class="confirm-warning">This only marks the subscription active in the database — confirm payment was actually received first, same as a manual listing upgrade.</div>`;
     if (seller?.subscription_plan === 'elite' && document.getElementById('grant-tier')) document.getElementById('grant-tier').value = 'elite';
     updateGrantPlanOptions();
@@ -4312,9 +4324,19 @@ async function messageSellerInChat(sellerId) {
   const BNB_TIERS = ['bnb_basic','bnb_bundle','bnb_unlimited'];
   function updateGrantPlanOptions() {
     const tier = document.getElementById('grant-tier')?.value || 'premium';
+    const isBnbTier = BNB_TIERS.includes(tier);
+    const catSel = document.getElementById('grant-plan-category');
+    const extras = document.getElementById('grant-rental-extras');
+    const proRow = document.getElementById('grant-pro-badge-row');
+    // BNB tiers always imply the BNB plan category — lock the dropdown so
+    // there's no way to grant a BNB plan while leaving category on "rental".
+    // Selecting Premium/Elite flips it back to rental and unlocks it.
+    if (catSel) { catSel.value = isBnbTier ? 'bnb' : 'rental'; catSel.disabled = isBnbTier; }
+    if (extras) extras.style.display = isBnbTier ? 'none' : 'block';
+    if (proRow) proRow.style.display = isBnbTier ? 'none' : 'flex';
     const sel = document.getElementById('grant-plan');
     if (!sel) return;
-    if (BNB_TIERS.includes(tier)) {
+    if (isBnbTier) {
       const monthlyPrice = SETTINGS[tier + '_price'] || 0;
       sel.innerHTML = `<option value="monthly">Monthly — KES ${monthlyPrice.toLocaleString('en-KE')}</option>`;
       return;
