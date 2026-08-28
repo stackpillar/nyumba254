@@ -4130,7 +4130,7 @@ async function messageSellerInChat(sellerId) {
       // subscribers — lets you find a seller and grant them a plan directly.
       q = q.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`).limit(30);
     } else {
-      q = q.neq('subscription_tier','none').order('subscription_expires_at',{ascending:true, nullsFirst:false});
+      q = q.or('subscription_tier.neq.none,bnb_plan.not.is.null').order('subscription_expires_at',{ascending:true, nullsFirst:false});
     }
     const { data, error } = await q;
     if (error) { tbody.innerHTML = `<tr><td colspan="6"><div class="table-loading"><p>Could not load: ${esc(error.message)}</p></div></td></tr>`; return; }
@@ -4138,10 +4138,11 @@ async function messageSellerInChat(sellerId) {
     data.forEach(p => { _users[p.id] = p; });
 
     const now = Date.now(), soon = now + 7*86400000;
-    const subscribed = _premiumSellers.filter(p => p.subscription_tier && p.subscription_tier !== 'none');
+    const subscribed = _premiumSellers.filter(p => (p.subscription_tier && p.subscription_tier !== 'none') || p.bnb_plan);
     const counts = { active:0, expiring:0, expired:0, all:subscribed.length };
     subscribed.forEach(p => {
-      const exp = p.subscription_expires_at ? new Date(p.subscription_expires_at).getTime() : null;
+      const expRaw = (p.subscription_tier && p.subscription_tier !== 'none') ? p.subscription_expires_at : p.bnb_expires_at;
+      const exp = expRaw ? new Date(expRaw).getTime() : null;
       if (exp && exp < now) counts.expired++;
       else if (exp && exp < soon) counts.expiring++;
       else counts.active++;
@@ -4164,8 +4165,10 @@ async function messageSellerInChat(sellerId) {
   }
 
   function premiumRowStatus(p) {
-    if (!p.subscription_expires_at) return { text:'No expiry set', cls:'trial' };
-    const days = Math.ceil((new Date(p.subscription_expires_at)-new Date())/86400000);
+    const isBnbOnly = !(p.subscription_tier && p.subscription_tier !== 'none') && !!p.bnb_plan;
+    const expiresAt = isBnbOnly ? p.bnb_expires_at : p.subscription_expires_at;
+    if (!expiresAt) return { text:'No expiry set', cls:'trial' };
+    const days = Math.ceil((new Date(expiresAt)-new Date())/86400000);
     if (days < 0) return { text:'Expired', cls:'rejected' };
     if (days <= 7) return { text:`${days}d left`, cls:'pending' };
     return { text:`${days}d left`, cls:'active' };
@@ -4191,29 +4194,40 @@ async function messageSellerInChat(sellerId) {
       mobileEl.innerHTML = `<div class="table-loading"><p>${msg}</p></div>`;
       return;
     }
+    const bnbLabel = { bnb_basic:'BNB Basic', bnb_bundle:'BNB Bundle', bnb_unlimited:'BNB Unlimited' };
     tbody.innerHTML = filtered.map(p => {
-      const subscribed = p.subscription_tier && p.subscription_tier !== 'none';
+      const hasRental = p.subscription_tier && p.subscription_tier !== 'none';
+      const hasBnb = !!p.bnb_plan;
+      const subscribed = hasRental || hasBnb;
       const st = subscribed ? premiumRowStatus(p) : { text:'Not subscribed', cls:'standard' };
+      const planCell = hasRental
+        ? `<span class="badge ${p.subscription_plan==='elite'?'multiunit':'featured'}">${p.subscription_plan==='elite'?'Elite':'Premium'}</span>`
+        : (hasBnb ? `<span class="badge multiunit">${esc(bnbLabel[p.bnb_plan]||p.bnb_plan)}</span>` : '<span class="badge standard">—</span>');
+      const tierCell = hasRental
+        ? `<span class="badge ${p.subscription_tier==='yearly'?'featured':'active'}">${p.subscription_tier}</span>`
+        : (hasBnb ? `<span class="badge active">monthly · BNB</span>` : '—');
       const rowActions = subscribed ? `
             ${p.subscription_plan==='elite'?aBtn('external','Open storefront','view',`window.open('/storefront?seller=${p.id}','_blank','noopener,noreferrer')`):''}
             ${aBtn('edit','Change plan / extend','view',`openGrantPremiumModal('${p.id}')`)}
             ${aBtn('message','Message seller','message',`messageSellerInChat('${p.id}')`)}
-            ${aBtn('reject','Revoke Premium','reject',`revokePremiumFlow('${p.id}')`)}` : `
+            ${hasRental?aBtn('reject','Revoke Premium','reject',`revokePremiumFlow('${p.id}')`):''}
+            ${hasBnb?aBtn('reject','Revoke BNB plan','reject',`revokeBnbFlow('${p.id}')`):''}` : `
             ${aBtn('upgrade','Grant Premium','approve',`openGrantPremiumModal('${p.id}')`)}
             ${aBtn('message','Message seller','message',`messageSellerInChat('${p.id}')`)}`;
       const menuActions = subscribed ? [
             ...(p.subscription_plan==='elite'?[{label:'🔗 Open storefront', cls:'', fn:`window.open('/storefront?seller=${p.id}','_blank','noopener,noreferrer')`}]:[]),
             {label:'Change plan / extend', cls:'', fn:`openGrantPremiumModal('${p.id}')`},
             {label:'Message seller', cls:'blue', fn:`messageSellerInChat('${p.id}')`},
-            {label:'Revoke Premium', cls:'danger', fn:`revokePremiumFlow('${p.id}')`},
+            ...(hasRental?[{label:'Revoke Premium', cls:'danger', fn:`revokePremiumFlow('${p.id}')`}]:[]),
+            ...(hasBnb?[{label:'Revoke BNB plan', cls:'danger', fn:`revokeBnbFlow('${p.id}')`}]:[]),
           ] : [
             {label:'Grant Premium', cls:'success', fn:`openGrantPremiumModal('${p.id}')`},
             {label:'Message seller', cls:'blue', fn:`messageSellerInChat('${p.id}')`},
           ];
       return `<tr>
         <td>${esc(p.full_name||'—')}<div class="listing-meta">${esc(p.email||'')}${p.phone?' · '+esc(p.phone):''}</div></td>
-        <td>${subscribed?`<span class="badge ${p.subscription_plan==='elite'?'multiunit':'featured'}">${p.subscription_plan==='elite'?'Elite':'Premium'}</span>`:'<span class="badge standard">—</span>'}</td>
-        <td>${subscribed?`<span class="badge ${p.subscription_tier==='yearly'?'featured':'active'}">${p.subscription_tier}</span>`:'—'}</td>
+        <td>${planCell}</td>
+        <td>${tierCell}</td>
         <td>${p.is_pro?'<span class="badge active">✓ Pro badge</span>':'<span class="badge standard">Off</span>'}</td>
         <td><span class="badge ${st.cls}">${st.text}</span></td>
         <td>
@@ -4223,8 +4237,11 @@ async function messageSellerInChat(sellerId) {
       </tr>`;
     }).join('');
     mobileEl.innerHTML = filtered.map(p => {
-      const subscribed = p.subscription_tier && p.subscription_tier !== 'none';
+      const hasRental = p.subscription_tier && p.subscription_tier !== 'none';
+      const hasBnb = !!p.bnb_plan;
+      const subscribed = hasRental || hasBnb;
       const st = subscribed ? premiumRowStatus(p) : { text:'Not subscribed', cls:'standard' };
+      const planText = hasRental ? (p.subscription_plan==='elite'?'Elite':'Premium') : (hasBnb ? (bnbLabel[p.bnb_plan]||p.bnb_plan) : '—');
       return `<div class="mobile-card">
         <div class="mobile-card-header">
           <div style="flex:1;min-width:0">
@@ -4234,11 +4251,11 @@ async function messageSellerInChat(sellerId) {
           <span class="badge ${st.cls}">${st.text}</span>
         </div>
         <div class="mobile-card-body">
-          <div class="mobile-card-row"><span>Plan</span><span>${subscribed?(p.subscription_plan==='elite'?'Elite':'Premium'):'—'}</span></div>
+          <div class="mobile-card-row"><span>Plan</span><span>${esc(planText)}</span></div>
           <div class="mobile-card-row"><span>Pro badge</span><span>${p.is_pro?'On':'Off'}</span></div>
         </div>
         <div class="mobile-card-actions">
-          ${subscribed?`${p.subscription_plan==='elite'?aBtn('external','Storefront','view',`window.open('/storefront?seller=${p.id}','_blank','noopener,noreferrer')`):''}${aBtn('edit','Edit','view',`openGrantPremiumModal('${p.id}')`)}${aBtn('reject','Revoke','reject',`revokePremiumFlow('${p.id}')`)}`:aBtn('upgrade','Grant Premium','approve',`openGrantPremiumModal('${p.id}')`)}
+          ${subscribed?`${p.subscription_plan==='elite'?aBtn('external','Storefront','view',`window.open('/storefront?seller=${p.id}','_blank','noopener,noreferrer')`):''}${aBtn('edit','Edit','view',`openGrantPremiumModal('${p.id}')`)}${hasRental?aBtn('reject','Revoke','reject',`revokePremiumFlow('${p.id}')`):''}${hasBnb?aBtn('reject','Revoke BNB','reject',`revokeBnbFlow('${p.id}')`):''}`:aBtn('upgrade','Grant Premium','approve',`openGrantPremiumModal('${p.id}')`)}
           ${aBtn('message','Message','message',`messageSellerInChat('${p.id}')`)}
         </div>
       </div>`;
@@ -4410,6 +4427,23 @@ async function messageSellerInChat(sellerId) {
     closeGrantPremiumModal();
     loadPremiumSellers();
     if (currentView==='users') loadUsers();
+  }
+
+  function revokeBnbFlow(sellerId) {
+    const p = _premiumSellers.find(x=>x.id===sellerId) || _users[sellerId];
+    openConfirm({
+      title:'Revoke BNB plan?',
+      message:`${p?.full_name||'This seller'} loses their BNB plan immediately — their Airbnb listings will be disabled until they resubscribe. This does not issue a refund.`,
+      confirmText:'Revoke BNB plan', confirmClass:'reject',
+      onConfirm: async () => {
+        const { error } = await db.from('profiles').update({ bnb_plan:null, bnb_unit_limit:null, bnb_expires_at:null }).eq('id', sellerId);
+        if (error) { toast('Error: '+error.message,'error'); return; }
+        logAction('revoke_bnb','profile',sellerId,'');
+        if (p?.email) notifySeller('premium_revoked', { sellerName: p.full_name, sellerEmail: p.email });
+        toast('BNB plan revoked','success');
+        loadPremiumSellers();
+      }
+    });
   }
 
   function revokePremiumFlow(sellerId) {
