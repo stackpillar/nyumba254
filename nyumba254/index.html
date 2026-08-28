@@ -309,8 +309,13 @@
       height: 34px;
       align-items: center;
       justify-content: center;
-      pointer-events: none;
+      pointer-events: auto;
       z-index: 5;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
     }
     .scroll-hint::before {
       content: '';
@@ -632,7 +637,7 @@
       <div class="cat-count" id="count-commercial">Loading…</div>
     </div>
   </div>
-  <div class="scroll-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+  <button class="scroll-hint" aria-label="Scroll for more categories" onclick="nkScrollWrap(this)"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
   </div>
 </section>
 
@@ -650,7 +655,7 @@
       <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line short"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
     </div>
   </div>
-  <div class="scroll-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+  <button class="scroll-hint" aria-label="Scroll for more featured listings" onclick="nkScrollWrap(this)"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
   </div>
 </section>
 
@@ -672,7 +677,7 @@
       <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line short"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
     </div>
   </div>
-  <div class="scroll-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+  <button class="scroll-hint" aria-label="Scroll for more listings" onclick="nkScrollWrap(this)"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
   </div>
 </section>
 
@@ -684,7 +689,7 @@
   </div>
   <div class="scroll-wrap">
   <div class="areas" id="counties-grid"></div>
-  <div class="scroll-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+  <button class="scroll-hint" aria-label="Scroll for more counties" onclick="nkScrollWrap(this)"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
   </div>
 </section>
 
