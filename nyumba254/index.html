@@ -805,7 +805,7 @@
   const nkSessionPromise = db.auth.getSession();
 
   /* ══════════════════════════════════════════════════════════════
-     PROPERTY TYPES — must mirror post-listing.html / listings.html
+     PROPERTY TYPES — must mirror post-listing.html / listings
      exactly, including the "boarding" (not "boarding_house") value.
      ══════════════════════════════════════════════════════════════ */
   const NK_CATEGORIES = {
@@ -951,7 +951,7 @@
     if (!el) return;
     el.innerHTML = NK_COUNTIES.map(county => {
       const hasAreas = nkAreaCountFor(county) > 0;
-      const href = hasAreas ? `listings.html?county=${encodeURIComponent(county)}` : '#';
+      const href = hasAreas ? `listings?county=${encodeURIComponent(county)}` : '#';
       return `<a href="${href}">${nkCountyLabel(county)}</a>`;
     }).join('');
   }
@@ -995,7 +995,7 @@
   }
 
   function goCounty(county) {
-    window.location.href = `listings.html?county=${encodeURIComponent(county)}`;
+    window.location.href = `listings?county=${encodeURIComponent(county)}`;
   }
 
   function nkPopulateSearchCounties() {
@@ -1029,7 +1029,7 @@
     }
   });
 
-  /* ── Price formatting driven by price_frequency, matching listings.html ── */
+  /* ── Price formatting driven by price_frequency, matching listings ── */
   function formatPrice(listing) {
     const suffix = NK_FREQ_LABEL[listing.price_frequency] || '';
     const p = Number(listing.price || 0).toLocaleString('en-KE');
@@ -1037,7 +1037,7 @@
   }
 
   /* ── Spec chips read from the details jsonb column, only for the
-     "standard" group (apartment/house) — same convention as listings.html. ── */
+     "standard" group (apartment/house) — same convention as listings. ── */
   function buildCardMeta(listing) {
     const meta = NK_CATEGORIES[listing.category] || { group: 'standard' };
     const d = listing.details || {};
@@ -1052,7 +1052,7 @@
   }
 
   /* ── Build listing card — category/price/details all match the
-     post-listing.html / listings.html schema. ── */
+     post-listing.html / listings schema. ── */
   function buildCard(listing) {
     const photos = listing.listing_photos || [];
     const cover = photos.find(p => p.is_cover) || photos[0];
@@ -1151,11 +1151,11 @@
   }
 
   function goArea(area) {
-    window.location.href = `listings.html?area=${encodeURIComponent(area)}`;
+    window.location.href = `listings?area=${encodeURIComponent(area)}`;
   }
 
   function filterCategory(cat) {
-    window.location.href = `listings.html?category=${cat}`;
+    window.location.href = `listings?category=${cat}`;
   }
 
   function nkFormatSearchInput(el) {
@@ -1189,7 +1189,7 @@
     } else if (qEl.value) {
       params.set('q', qEl.value);
     }
-    window.location.href = `listings.html?${params.toString()}`;
+    window.location.href = `listings?${params.toString()}`;
   }
 
   document.getElementById('search-q').addEventListener('keydown', e => {
