@@ -4283,7 +4283,7 @@ const contactHideBtn=l.contact_hidden
       <td><div class="listing-name-cell"><div class="listing-thumb">${img}</div><div>
         <div class="listing-title-text">${escHtml(l.title)}</div>
         <div class="listing-area-text">${l.area}${l.sub_area?' · '+l.sub_area:''}</div>
-        ${l.status!=='occupied'&&d.banner?`<div class="disabled-note">${d.banner}</div>`:''}
+        ${(l.status!=='occupied'&&l.status!=='approved_unpaid'&&l.status!=='approved_unpaid_bnb'&&d.banner)?`<div class="disabled-note">${d.banner}</div>`:''}
         ${occupiedNote}${trialNote}${payDueNote}${bnbNote}${multiUnitNote}
       </div></div></td>
       <td><div class="listing-price-text">${l.is_multi_unit?muPriceRangeText(l):`KES ${Number(l.price).toLocaleString('en-KE')}${l.price_type==='rent'?'/mo':''}`}</div><div class="listing-price-sub">${l.is_multi_unit?(l.total_units?l.total_units+' units total':''):(l.price_type==='rent'?'Monthly rent':'For sale')}</div></td>

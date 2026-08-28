@@ -3370,7 +3370,17 @@ function notifySms(type, payload) {
     const p = _payments[id];
 
     if (listingId) {
-      await db.from('listings').update({payment_status:'paid'}).eq('id',listingId);
+      // Confirming payment must flip the listing live immediately — this
+      // used to only set payment_status:'paid' and leave status stuck on
+      // 'approved_unpaid', so the dashboard kept showing "Awaiting payment"
+      // forever even after confirmation.
+      const { data: listingRow } = await db.from('listings').select('status, publish_at').eq('id', listingId).single();
+      const isFutureScheduled = listingRow?.publish_at && new Date(listingRow.publish_at) > new Date();
+      const listingUpdate = { payment_status: 'paid' };
+      if (listingRow && (listingRow.status === 'approved_unpaid' || listingRow.status === 'approved_unpaid_bnb')) {
+        listingUpdate.status = isFutureScheduled ? 'scheduled' : 'active';
+      }
+      await db.from('listings').update(listingUpdate).eq('id', listingId);
     } else if (p && p.type === 'bnb_subscription' && p.seller_id) {
       const unitLimit = p.plan_key === 'bnb_unlimited' ? null : p.plan_key === 'bnb_bundle' ? 5 : 1;
       const expiresAt = new Date(Date.now() + 30*86400000).toISOString();
@@ -3407,6 +3417,10 @@ function notifySms(type, payload) {
         });
       }
       notifySms('payment_confirmed', { listingId, listingTitle: l?.title, amount: p?.amount });
+      notifyByEmail('payment_confirmed_admin', {
+        listingId, listingTitle: l?.title, amount: p?.amount, reference: p?.reference,
+        sellerName: l?.profiles?.full_name, sellerEmail: l?.profiles?.email,
+      });
     }
 
     toast('Payment confirmed ✓','success');
