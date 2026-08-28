@@ -2142,6 +2142,12 @@ function goToPremiumSettings(e){
   showPage('settings');
   setTimeout(()=>document.getElementById('settings-premium-section')?.scrollIntoView({behavior:'smooth',block:'start'}),80);
 }
+function bnbSubscriptionInfo(){
+  const p = currentProfile;
+  const active = !!(p?.bnb_plan && p?.bnb_expires_at && new Date(p.bnb_expires_at) > new Date());
+  return { active, plan: active ? p.bnb_plan : null };
+}
+
 function updatePremiumNavBadge(sub){
   const link = document.getElementById('nav-premium-upgrade');
   const textEl = document.getElementById('nav-premium-upgrade-text');
@@ -2149,6 +2155,9 @@ function updatePremiumNavBadge(sub){
   link.setAttribute('href','#');
   link.onclick = goToPremiumSettings;
   link.style.cursor = 'pointer';
+
+  const bnb = bnbSubscriptionInfo();
+  const bnbLabelMap = { bnb_basic:'BNB Basic', bnb_bundle:'BNB Bundle', bnb_unlimited:'BNB Unlimited' };
 
   if(sub.active && sub.plan==='elite'){
     const catLabel = currentProfile?.plan_category === 'bnb' ? ' · BNB' : currentProfile?.plan_category === 'rental' ? ' · Rental' : '';
@@ -2158,6 +2167,11 @@ function updatePremiumNavBadge(sub){
     const catLabel = currentProfile?.plan_category === 'bnb' ? ' · BNB' : currentProfile?.plan_category === 'rental' ? ' · Rental' : '';
     textEl.innerHTML = `⭐ Pro${catLabel} · Upgrade to Elite`;
     link.style.opacity = '1';
+  } else if(bnb.active){
+    // BNB-only seller (no Premium/Elite) — reflect the active BNB plan
+    // instead of falling through to the generic "Upgrade to Premium" link.
+    textEl.innerHTML = `🏠 ${bnbLabelMap[bnb.plan]||'BNB'} active`;
+    link.style.opacity = '0.85';
   } else {
     textEl.textContent = 'Upgrade to Premium';
     link.style.opacity = '1';
