@@ -1092,6 +1092,9 @@
             <div class="settings-field"><label>Elite — Yearly price (KES)</label><input type="number" id="set-elite_yearly_price"/></div>
             <div class="settings-field"><label>Elite — AI listing uses (monthly)</label><input type="number" id="set-elite_ai_listing_uses_monthly"/></div>
             <div class="settings-field"><label>Elite — Valuation tool uses (monthly)</label><input type="number" id="set-elite_valuation_uses_monthly"/></div>
+            <div class="settings-field"><label>BNB Basic — Monthly price (KES)</label><input type="number" id="set-bnb_basic_price"/></div>
+            <div class="settings-field"><label>BNB Bundle — Monthly price (KES, up to 5 units)</label><input type="number" id="set-bnb_bundle_price"/></div>
+            <div class="settings-field"><label>BNB Unlimited — Monthly price (KES, 6+ units)</label><input type="number" id="set-bnb_unlimited_price"/></div>
           </div>
           <div id="settings-saved-meta" style="font-size:11px;color:var(--text-3);margin-top:16px"></div>
           <button class="btn-modal approve" style="margin-top:14px" onclick="saveSettings()">Save changes</button>
@@ -1829,13 +1832,13 @@ function notifySms(type, payload) {
   // changes for existing installs until an admin edits a value.
   const SETTINGS = {
     sale_standard_pct: 0.1,
-    sale_featured_pct: 0.2,
+    sale_featured_pct: 0.15,
     rent_standard_pct: 3,
     rent_featured_pct: 6,
-    standard_min_fee: 300,
-    standard_max_fee: 5000,
-    featured_min_fee: 800,
-    featured_max_fee: 10000,
+    standard_min_fee: 500,
+    standard_max_fee: 18000,
+    featured_min_fee: 1200,
+    featured_max_fee: 28000,
     standard_fee_per_unit: 50,
     featured_fee_per_unit: 150,
     trial_days: 14,
@@ -1848,6 +1851,9 @@ function notifySms(type, payload) {
     elite_yearly_price: 30000,
     elite_ai_listing_uses_monthly: 20,
     elite_valuation_uses_monthly: 20,
+    bnb_basic_price: 700,
+    bnb_bundle_price: 2000,
+    bnb_unlimited_price: 4500,
   };
 
   // Shared logic — keep this in sync with the identical function in
@@ -3328,6 +3334,14 @@ function notifySms(type, payload) {
 
     if (listingId) {
       await db.from('listings').update({payment_status:'paid'}).eq('id',listingId);
+    } else if (p && p.type === 'bnb_subscription' && p.seller_id) {
+      const unitLimit = p.plan_key === 'bnb_unlimited' ? null : p.plan_key === 'bnb_bundle' ? 5 : 1;
+      const expiresAt = new Date(Date.now() + 30*86400000).toISOString();
+      const { data: seller } = await db.from('profiles').update({
+        bnb_plan: p.plan_key, bnb_unit_limit: unitLimit, bnb_expires_at: expiresAt,
+      }).eq('id', p.seller_id).select().single();
+      if (seller?.email) notifySeller('premium_granted', { sellerName: seller.full_name, sellerEmail: seller.email, plan: p.plan_key, expiresAt });
+      logAction('activate_bnb_subscription','profile',p.seller_id, p.plan_key);
     } else if (p && (p.type === 'premium_subscription' || p.type === 'elite_subscription') && p.seller_id) {
       // Subscription payment — auto-activates the plan on confirm, no separate
       // "Grant Premium" step needed.
