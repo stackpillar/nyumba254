@@ -678,6 +678,7 @@
     <div class="form-card">
       <h2>Review your listing</h2>
       <p class="hint">Check everything before submitting — you can edit after posting too.</p>
+      <div id="fee-estimate-banner" style="margin-bottom:18px"></div>
       <div id="review-content"></div>
 
       <div class="field" style="margin-top:20px">
@@ -827,6 +828,89 @@ const NK_COUNTY_LABEL = {
   "Tharaka-Nithi": "Tharaka-Nithi (Chuka)", "Kirinyaga": "Kirinyaga (Kerugoya)", "Makueni": "Makueni (Wote)"
 };
 function nkCountyLabel(county) { return NK_COUNTY_LABEL[county] || county; }
+
+/* ══════════════════════════════════════════════════════════════
+   LIVE PRICING — mirrors admin.html's calcListingFee exactly, driven
+   entirely by platform_settings. Nothing here is a hardcoded fee.
+   No payment is collected on this page — this is an estimate only.
+   ══════════════════════════════════════════════════════════════ */
+const PLATFORM_SETTINGS = {
+  sale_standard_pct: 0.1, rent_standard_pct: 3,
+  standard_min_fee: 500, standard_max_fee: 18000,
+  standard_fee_per_unit: 50, trial_days: 14,
+  bnb_basic_price: 700,
+};
+let isFirstListing = false;
+
+async function loadPlatformSettings() {
+  const { data } = await db.from('platform_settings').select('key,value').in('key', Object.keys(PLATFORM_SETTINGS));
+  (data||[]).forEach(r => { PLATFORM_SETTINGS[r.key] = Number(r.value); });
+}
+async function checkFirstListing() {
+  if (!currentUser) { isFirstListing = false; return; }
+  const { count } = await db.from('listings').select('*', { count:'exact', head:true }).eq('seller_id', currentUser.id);
+  isFirstListing = (count || 0) === 0;
+}
+function calcListingFee(price, priceType) {
+  price = Math.max(0, Number(price) || 0);
+  const pct = Number(PLATFORM_SETTINGS[priceType === 'rent' ? 'rent_standard_pct' : 'sale_standard_pct']) || 0;
+  let fee = price * (pct / 100);
+  const min = Number(PLATFORM_SETTINGS.standard_min_fee) || 0;
+  const max = Number(PLATFORM_SETTINGS.standard_max_fee) || Infinity;
+  return Math.round(Math.max(min, Math.min(max, fee)));
+}
+function fmtKESLocal(n){ return 'KES ' + Number(n||0).toLocaleString('en-KE'); }
+
+function updateKickerAndFeeNote() {
+  const kicker = document.getElementById('page-kicker');
+  if (!kicker) return;
+  if (isFirstListing) {
+    kicker.textContent = `🎉 Your first listing is free for ${PLATFORM_SETTINGS.trial_days} days`;
+  } else if (selectedCat === 'airbnb') {
+    kicker.textContent = 'Airbnb listings run on a monthly BNB plan';
+  } else {
+    kicker.textContent = 'Pay only after your listing is approved';
+  }
+}
+
+function renderFeeEstimateBanner() {
+  const el = document.getElementById('fee-estimate-banner');
+  if (!el) return;
+  const meta = NK_CATEGORIES[selectedCat];
+  const price = parseFloat(document.getElementById('price').value) || 0;
+  const freq = document.getElementById('price_frequency')?.value;
+
+  if (isFirstListing) {
+    el.innerHTML = `<div style="background:var(--green-light);border:1px solid var(--green-mid);border-radius:var(--radius);padding:14px 16px;font-size:13px;color:var(--green-dark);line-height:1.6">
+      🎉 <strong>This listing is free</strong> — it's your first on Nyumba254, so it stays live for ${PLATFORM_SETTINGS.trial_days} days at no cost. No payment needed now or during the trial.
+    </div>`;
+    return;
+  }
+  if (selectedCat === 'airbnb') {
+    el.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;font-size:13px;color:var(--text-2);line-height:1.6">
+      Airbnb / holiday rental listings run on a monthly BNB plan rather than a one-time fee. After approval, visit your dashboard to activate a plan (from ${fmtKESLocal(PLATFORM_SETTINGS.bnb_basic_price)}/month) to keep this listing bookable.
+    </div>`;
+    return;
+  }
+
+  let estimate;
+  if (meta.group === 'boarding') {
+    const valid = getValidTiers();
+    const portfolioValue = valid.reduce((s,t)=> s + (parseFloat(t.price)||0) * (parseInt(t.quantity)||0), 0) || price;
+    const unitCount = valid.reduce((s,t)=> s + (parseInt(t.quantity)||0), 0) || 1;
+    estimate = calcListingFee(portfolioValue, 'rent') + unitCount * (Number(PLATFORM_SETTINGS.standard_fee_per_unit)||0);
+  } else if (meta.group === 'commercial') {
+    const leaseType = document.getElementById('comm_lease_type')?.value;
+    estimate = calcListingFee(price, leaseType === 'sale' ? 'sale' : 'rent');
+  } else {
+    estimate = calcListingFee(price, freq === 'once' ? 'sale' : 'rent');
+  }
+
+  el.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;font-size:13px;color:var(--text-2);line-height:1.6">
+    <strong>Estimated listing fee: ${fmtKESLocal(estimate)}</strong><br/>
+    You won't be charged now — this is billed from your dashboard only after our team approves the listing, and it stays live until you mark it sold or occupied.
+  </div>`;
+}
 function nkPopulateCounties() {
   const sel = document.getElementById('county');
   sel.innerHTML = '<option value="">Select county</option>' +
@@ -902,6 +986,10 @@ async function init() {
     document.getElementById('auth-banner').style.display = 'block';
   }
 
+  await loadPlatformSettings();
+  await checkFirstListing();
+  updateKickerAndFeeNote();
+
   await loadAndApplyDraft();
   draftsReady = true;
 
@@ -924,7 +1012,7 @@ function selectCat(el) {
 
 function applyCategoryUI() {
   const meta = NK_CATEGORIES[selectedCat];
-  document.getElementById('page-kicker').textContent = 'Free listing — pricing coming later';
+  updateKickerAndFeeNote();
 
   // Step 3 detail cards
   document.getElementById('details-standard').style.display = meta.group === 'standard' ? 'block' : 'none';
@@ -1319,6 +1407,7 @@ function renderReview() {
     <div class="summary-row"><span>Contact name</span><strong>${document.getElementById('contact_name').value || '—'}</strong></div>
     <div class="summary-row"><span>Phone</span><strong>${document.getElementById('phone').value || '—'}</strong></div>
   `;
+  renderFeeEstimateBanner();
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1561,7 +1650,8 @@ async function submitListing() {
       contact_email:    document.getElementById('contact_email').value.trim(),
       contact_hidden:   document.getElementById('contact_hidden')?.checked || false,
       status:           'pending',
-      payment_status:   'not_required',
+      payment_status:   isFirstListing ? 'trial' : 'unpaid',
+      trial_expires_at: isFirstListing ? new Date(Date.now() + (PLATFORM_SETTINGS.trial_days||14) * 86400000).toISOString() : null,
       seller_id:        currentUser.id,
       views:            0,
     };
@@ -1594,8 +1684,9 @@ async function submitListing() {
 
     await clearDraft();
 
-    document.getElementById('success-message').textContent =
-      'Your listing has been saved and sent to our admin team for review. It will appear publicly once approved — no payment is required at this time.';
+    document.getElementById('success-message').textContent = isFirstListing
+      ? `Your listing has been saved and sent for review. It will appear publicly once approved, and stays free for ${PLATFORM_SETTINGS.trial_days} days as your first listing.`
+      : 'Your listing has been saved and sent for review. It will appear publicly once approved — you'll be able to pay the listing fee from your dashboard at that point.';
     document.getElementById('step-5').style.display = 'none';
     document.getElementById('steps-bar').style.display = 'none';
     document.getElementById('success-screen').style.display = 'block';
