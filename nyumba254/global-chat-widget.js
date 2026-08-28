@@ -364,7 +364,7 @@
     // listing.html's URL param is the zero-padded listing_number, not the UUID
     if (listingRow?.listing_number != null) {
       document.getElementById('gcw-thread-link').href =
-        `listing.html?id=${String(listingRow.listing_number).padStart(6, '0')}`;
+        `listing?id=${String(listingRow.listing_number).padStart(6, '0')}`;
     }
 
     if (!error) {
