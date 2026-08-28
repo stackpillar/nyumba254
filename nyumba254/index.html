@@ -1033,7 +1033,16 @@
       nav.classList.remove('open');
     }
   });
-
+function nkScrollWrap(btn) {
+  const wrap = btn.closest('.scroll-wrap');
+  if (!wrap) return;
+  const scroller = wrap.querySelector('.categories, .listings-grid, .areas');
+  if (!scroller) return;
+  const firstCard = scroller.querySelector(':scope > *');
+  const gap = parseFloat(getComputedStyle(scroller).gap) || 16;
+  const step = firstCard ? firstCard.getBoundingClientRect().width + gap : scroller.clientWidth * 0.8;
+  scroller.scrollBy({ left: step, behavior: 'smooth' });
+}
   /* ── Price formatting driven by price_frequency, matching listings ── */
   function formatPrice(listing) {
     const suffix = NK_FREQ_LABEL[listing.price_frequency] || '';

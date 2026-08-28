@@ -199,8 +199,13 @@
       height: 34px;
       align-items: center;
       justify-content: center;
-      pointer-events: none;
+      pointer-events: auto;
       z-index: 5;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
     }
     .scroll-hint::before {
       content: '';
@@ -657,7 +662,7 @@
         <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line xshort"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
         <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line xshort"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
       </div>
-      <div class="scroll-hint" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+      <button class="scroll-hint" aria-label="Scroll for more listings" onclick="nkScrollWrap(this)"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
       </div>
     </div>
 
@@ -1675,7 +1680,16 @@
     document.body.style.overflow = '';
     ciActiveListingId = null;
   }
-
+function nkScrollWrap(btn) {
+  const wrap = btn.closest('.scroll-wrap');
+  if (!wrap) return;
+  const scroller = wrap.querySelector('.categories, .listings-grid, .areas');
+  if (!scroller) return;
+  const firstCard = scroller.querySelector(':scope > *');
+  const gap = parseFloat(getComputedStyle(scroller).gap) || 16;
+  const step = firstCard ? firstCard.getBoundingClientRect().width + gap : scroller.clientWidth * 0.8;
+  scroller.scrollBy({ left: step, behavior: 'smooth' });
+}
   function nkLSGetC(key) { try { return localStorage.getItem(key); } catch(e) { return null; } }
   function nkLSSetC(key, val) { try { localStorage.setItem(key, val); } catch(e) {} }
 
@@ -1791,16 +1805,7 @@
     const isOpen = nav.classList.toggle('open');
     document.getElementById('mobile-menu-btn')?.setAttribute('aria-expanded', isOpen);
   }
-function nkScrollWrap(btn) {
-  const wrap = btn.closest('.scroll-wrap');
-  if (!wrap) return;
-  const scroller = wrap.querySelector('.categories, .listings-grid, .areas');
-  if (!scroller) return;
-  const firstCard = scroller.querySelector(':scope > *');
-  const gap = parseFloat(getComputedStyle(scroller).gap) || 16;
-  const step = firstCard ? firstCard.getBoundingClientRect().width + gap : scroller.clientWidth * 0.8;
-  scroller.scrollBy({ left: step, behavior: 'smooth' });
-}
+
   function nkMakeClickablesKeyboardAccessible() {
     document.querySelectorAll('.filter-pill[onclick]').forEach(el => {
       if (el.hasAttribute('tabindex')) return;
