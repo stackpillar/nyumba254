@@ -2158,11 +2158,17 @@ function updatePremiumNavBadge(sub){
 
   const bnb = bnbSubscriptionInfo();
   const bnbLabelMap = { bnb_basic:'BNB Basic', bnb_bundle:'BNB Bundle', bnb_unlimited:'BNB Unlimited' };
+  const hasAnyActivePlan = (sub.active && (sub.plan==='elite' || sub.plan==='premium')) || bnb.active;
+  // Matches the same highlighted look .nav-item.active gets when it's the
+  // current page, so an active plan visually reads as "selected" in the
+  // sidebar instead of just being plain dimmed text.
+  link.style.background = hasAnyActivePlan ? 'rgba(255,255,255,0.12)' : 'none';
+  link.style.color = hasAnyActivePlan ? 'white' : '';
 
   if(sub.active && sub.plan==='elite'){
     const catLabel = currentProfile?.plan_category === 'bnb' ? ' · BNB' : currentProfile?.plan_category === 'rental' ? ' · Rental' : '';
     textEl.innerHTML = `👑 Elite member${catLabel}`;
-    link.style.opacity = '0.85';
+    link.style.opacity = '1';
   } else if(sub.active && sub.plan==='premium'){
     const catLabel = currentProfile?.plan_category === 'bnb' ? ' · BNB' : currentProfile?.plan_category === 'rental' ? ' · Rental' : '';
     textEl.innerHTML = `⭐ Pro${catLabel} · Upgrade to Elite`;
@@ -2171,7 +2177,7 @@ function updatePremiumNavBadge(sub){
     // BNB-only seller (no Premium/Elite) — reflect the active BNB plan
     // instead of falling through to the generic "Upgrade to Premium" link.
     textEl.innerHTML = `🏠 ${bnbLabelMap[bnb.plan]||'BNB'} active`;
-    link.style.opacity = '0.85';
+    link.style.opacity = '1';
   } else {
     textEl.textContent = 'Upgrade to Premium';
     link.style.opacity = '1';
