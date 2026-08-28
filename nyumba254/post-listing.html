@@ -1686,7 +1686,7 @@ async function submitListing() {
 
     document.getElementById('success-message').textContent = isFirstListing
       ? `Your listing has been saved and sent for review. It will appear publicly once approved, and stays free for ${PLATFORM_SETTINGS.trial_days} days as your first listing.`
-      : 'Your listing has been saved and sent for review. It will appear publicly once approved — you'll be able to pay the listing fee from your dashboard at that point.';
+      : `Your listing has been saved and sent for review. It will appear publicly once approved — you'll be able to pay the listing fee from your dashboard at that point.`;
     document.getElementById('step-5').style.display = 'none';
     document.getElementById('steps-bar').style.display = 'none';
     document.getElementById('success-screen').style.display = 'block';
