@@ -222,7 +222,7 @@
     Nyumba254
   </a>
   <div class="nav-right">
-    <a href="listings.html" class="nav-link">Browse listings</a>
+    <a href="listings" class="nav-link">Browse listings</a>
   </div>
 </nav>
 
@@ -695,7 +695,7 @@
       <div class="field" style="margin-top:20px">
         <label for="agree-terms" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:400;font-size:13px;color:var(--text-2)">
           <input type="checkbox" id="agree-terms" onchange="document.getElementById('err-agree-terms').classList.remove('show'); this.classList.remove('error')" style="width:18px;height:18px;margin-top:1px;accent-color:var(--green);cursor:pointer;flex-shrink:0"/>
-          <span>I agree to the <a href="terms.html" target="_blank" rel="noopener" style="color:var(--green);font-weight:600;text-decoration:underline">Terms and Conditions</a> and <a href="privacy.html" target="_blank" rel="noopener" style="color:var(--green);font-weight:600;text-decoration:underline">Privacy Policy</a>. I confirm all information is accurate. <span class="req">*</span></span>
+          <span>I agree to the <a href="terms" target="_blank" rel="noopener" style="color:var(--green);font-weight:600;text-decoration:underline">Terms and Conditions</a> and <a href="privacy.html" target="_blank" rel="noopener" style="color:var(--green);font-weight:600;text-decoration:underline">Privacy Policy</a>. I confirm all information is accurate. <span class="req">*</span></span>
         </label>
         <div class="field-error" id="err-agree-terms">You must agree to the Terms and Conditions before submitting</div>
       </div>
@@ -716,7 +716,7 @@
     <h2>Listing submitted!</h2>
     <p id="success-message">Your property has been saved and is pending review. It will appear publicly once our team approves it.</p>
     <div class="success-actions">
-      <a href="dashboard.html" style="padding:11px 22px;background:var(--green);color:white;border-radius:var(--radius);font-size:14px;font-weight:600">View my listings</a>
+      <a href="dashboard" style="padding:11px 22px;background:var(--green);color:white;border-radius:var(--radius);font-size:14px;font-weight:600">View my listings</a>
       <a href="index.html" style="padding:11px 22px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:14px;font-weight:500;color:var(--text-2)">Back to home</a>
     </div>
   </div>
@@ -1636,7 +1636,7 @@ async function submitListing() {
 
   if (!currentUser) {
     showToast('Please sign in first', 'error');
-    setTimeout(() => window.location.href = 'login?next=post-listing.html', 1500);
+    setTimeout(() => window.location.href = 'login?next=post-listing', 1500);
     return;
   }
 
