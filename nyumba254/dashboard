@@ -5018,7 +5018,6 @@ async function saveEdit(){
   };
   const u={title:document.getElementById('edit-title').value.trim(),price:parseFloat(document.getElementById('edit-price').value)||0,price_type:document.getElementById('edit-price-type').value,price_frequency:priceFreqOut,area:document.getElementById('edit-area').value,category:document.getElementById('edit-category').value,address:document.getElementById('edit-address').value.trim(),description:document.getElementById('edit-description').value.trim(),contact_hidden:document.getElementById('edit-contact_hidden').checked,amenities:editAmenities,details:mergedDetails};
   const btn=document.getElementById('btn-save-edit');btn.disabled=true;btn.innerHTML='<span class="spinner-sm"></span> Saving…';
-  const original=allListings.find(l=>l.id===id);
   const oldPrice=original?Number(original.price):null;
   const{error}=await db.from('listings').update(u).eq('id',id);
   btn.disabled=false;btn.innerHTML='Save changes';
