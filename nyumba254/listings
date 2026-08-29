@@ -1656,7 +1656,39 @@
     if (counterEl) counterEl.textContent = `${idx+1}/${photos.length}`;
   }
 
+  /* ── Row-major reorder: the grid uses grid-auto-flow:column (needed for
+     fixed-row-count + horizontal scroll), which fills each column top-to-
+     bottom before starting the next. That reads column-major. To make it
+     *look* row-major (row 1 fills fully left-to-right before row 2 starts),
+     we permute the array so column-major placement lands each card in its
+     row-major visual slot. ── */
+  function nkGetGridRows() { return window.innerWidth <= 768 ? 4 : 5; }
+  function nkReorderRowMajor(items, rows) {
+    const n = items.length;
+    if (n <= rows) return items; // fits in one column already — order is irrelevant
+    const cols = Math.ceil(n / rows);
+    const out = new Array(n);
+    for (let k = 0; k < n; k++) {
+      const row = Math.floor(k / cols);
+      const col = k % cols;
+      const j = col * rows + row;
+      if (j < n) out[j] = items[k];
+    }
+    // Fill any gap slots (last column may be short) with leftovers, preserving order
+    const placed = new Set(out.filter(Boolean));
+    const leftovers = items.filter(it => !placed.has(it));
+    for (let j = 0; j < n; j++) {
+      if (!out[j]) out[j] = leftovers.shift();
+    }
+    return out;
+  }
+
+  let nkLastListings = [];
+
   function renderResults(listings, count) {
+    nkLastListings = listings;
+    nkLastRowsUsed = nkGetGridRows();
+    listings = nkReorderRowMajor(listings, nkLastRowsUsed);
     const grid = document.getElementById('listings-grid');
     const rc = document.getElementById('result-count');
     rc.innerHTML = `<strong>${count.toLocaleString()}</strong> listing${count !== 1 ? 's' : ''} found`;
@@ -1741,6 +1773,17 @@ function nkUpdateScrollHints() {
   rightBtn.classList.toggle('show', hasOverflow);
 }
 window.addEventListener('resize', nkUpdateScrollHints);
+let nkLastRowsUsed = null;
+window.addEventListener('resize', () => {
+  const rows = nkGetGridRows();
+  if (rows === nkLastRowsUsed || !nkLastListings.length) return;
+  nkLastRowsUsed = rows;
+  const grid = document.getElementById('listings-grid');
+  if (!grid || grid.querySelector('.skeleton') || grid.querySelector('.empty-state')) return;
+  const reordered = nkReorderRowMajor(nkLastListings, rows);
+  grid.innerHTML = reordered.map(buildCard).join('');
+  nkUpdateScrollHints();
+});
   function nkLSGetC(key) { try { return localStorage.getItem(key); } catch(e) { return null; } }
   function nkLSSetC(key, val) { try { localStorage.setItem(key, val); } catch(e) {} }
 
