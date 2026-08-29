@@ -193,7 +193,7 @@
       grid-auto-flow: column;
       grid-template-rows: repeat(5, auto);      /* desktop: 5 rows tall */
       grid-auto-columns: calc((100% - 32px) / 3); /* desktop: 3 columns visible */
-      align-items: start;
+      align-items: stretch;   /* cards fill their row's height, no gaps */
       gap: 16px;
       overflow-x: auto;
       overflow-y: hidden;
@@ -486,14 +486,16 @@
       .scroll-hint svg { width: 13px; height: 13px; }
       .main { padding: 16px 16px 90px; } /* clears space above the floating chat bubble */
 
-      /* ── Notify strip: shrink it on mobile, it was eating too much space ── */
-      .notify-strip { padding: 8px 10px; margin-top: 12px; }
-      .notify-strip-icon { font-size: 15px; }
-      .notify-strip-text strong { font-size: 12px; margin-bottom: 0; }
-      .notify-strip-text span { font-size: 11px; }
-      .notify-strip-inner { gap: 6px; }
-      .notify-strip-inner > .btn { padding: 6px 10px; font-size: 12px; }
-      .notify-strip-close { top: 4px; right: 6px; font-size: 12px; padding: 3px; }
+      /* ── Notify strip: switch to block layout on mobile so flex-wrap's
+         default align-content:stretch can never open a gap between lines. ── */
+      .notify-strip { padding: 10px 30px 10px 12px; margin-top: 12px; }
+      .notify-strip-inner { display: block; }
+      .notify-strip-icon { display: inline-block; font-size: 16px; margin-bottom: 2px; }
+      .notify-strip-text { display: block; margin-bottom: 8px; }
+      .notify-strip-text strong { display: block; font-size: 12.5px; line-height: 1.3; margin-bottom: 1px; }
+      .notify-strip-text span { display: block; font-size: 11.5px; line-height: 1.3; }
+      .notify-strip-inner > .btn { display: flex; width: 100%; justify-content: center; padding: 8px 10px; font-size: 12.5px; }
+      .notify-strip-close { top: 6px; right: 8px; font-size: 12px; padding: 3px; }
     }
     @media (max-width: 600px) {
       .nf-row { grid-template-columns: 1fr; }
