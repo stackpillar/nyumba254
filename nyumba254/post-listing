@@ -875,10 +875,10 @@ function checkPlanCategoryMismatch() {
   const needed = categoryGroupOf(selectedCat);
   if (needed === sellerPlanCategory) { el.style.display = 'none'; return true; }
   el.style.display = 'block';
-  el.innerHTML = `<div style="background:var(--red-light);border:1px solid var(--red);border-radius:var(--radius);padding:14px 16px;font-size:13px;color:var(--red);line-height:1.6">
-    ⚠️ <strong>Plan mismatch:</strong> your active subscription is for ${sellerPlanCategory==='bnb'?'Airbnb/BNB listings':'sale & rental listings'}, but you selected a ${sellerPlanCategory==='bnb'?'sale/rental':'Airbnb/holiday'} category. You can't post this under your current plan — either pick a matching category, or switch your plan from your dashboard's Settings before continuing.
+  el.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;font-size:13px;color:var(--text-2);line-height:1.6">
+    ℹ️ <strong>Not covered by your plan:</strong> your active subscription is for ${sellerPlanCategory==='bnb'?'Airbnb/BNB listings':'sale & rental listings'}, so this ${sellerPlanCategory==='bnb'?'sale/rental':'Airbnb/holiday'} listing won't be free under it. You can still post it — you'll just pay for this one separately, same as a seller with no subscription. You can also switch your plan category from your dashboard's Settings if you'd rather have it covered.
   </div>`;
-  return false;
+  return true;
 }
 function calcListingFee(price, priceType) {
   price = Math.max(0, Number(price) || 0);
@@ -1616,10 +1616,7 @@ async function submitListing() {
   }
   agreeErr.classList.remove('show');
 
-  if (!checkPlanCategoryMismatch()) {
-    showToast('Fix the plan mismatch above before submitting', 'error');
-    return;
-  }
+  checkPlanCategoryMismatch();
 
   let ok = true;
   const check = (id, errId, test) => {
