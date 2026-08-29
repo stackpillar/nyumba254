@@ -697,7 +697,7 @@
       </button>
       <button class="nav-item" id="nav-reviews" onclick="showPage('reviews')">
         <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Reviews
-        <span class="badge-count" id="nav-badge-reviews" style="display:none">0</span>
+        <span class="badge-count" id="nav-badge-reviews" style="display:none" title="Reviews awaiting your response">0</span>
       </button>
       <button class="nav-item" id="nav-payments" onclick="showPage('payments')">
         <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Payments
@@ -1028,7 +1028,7 @@
           <div class="settings-section" id="settings-concierge-section">
             <h3><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Managed chat</h3>
             <div class="toggle-row" style="border-bottom:none">
-              <div class="toggle-label"><strong>Let our team handle enquiries</strong><span>We reply to buyer messages on your behalf — you never need to log in for it</span></div>
+              <div class="toggle-label"><strong>Let our team handle enquiries</strong><span>A real person from our team replies to buyer messages on your behalf — not an AI. You never need to log in for it.</span></div>
               <label class="switch"><input type="checkbox" id="concierge-toggle" onchange="toggleConcierge(this.checked)"/><span class="switch-track"></span></label>
             </div>
             <p style="font-size:12px;color:var(--text-3);line-height:1.6;margin-top:8px" id="concierge-note"></p>
@@ -1046,6 +1046,11 @@
           <div class="settings-section" id="settings-premium-section">
             <h3><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Premium</h3>
             <p style="font-size:12.5px;color:var(--text-3);margin-bottom:14px;line-height:1.6">Unlock managed chat, a Pro badge, scheduled publishing, video tours, printable brochures, and more.</p>
+            <div id="plan-category-row" style="display:none;margin-bottom:14px;font-size:12.5px;background:var(--surface);border-radius:8px;padding:10px 12px">
+              <div style="font-weight:700;color:var(--text)">Plan scope: <span id="plan-category-label">—</span></div>
+              <div id="plan-balance-note" style="color:var(--green-dark);margin-top:4px"></div>
+              <button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="requestPlanCategorySwitch()">Switch plan category</button>
+            </div>
             <div id="premium-status-banner" style="display:none;font-size:12.5px;font-weight:700;color:var(--green-dark);background:var(--green-light);border-radius:8px;padding:8px 12px;margin-bottom:14px"></div>
             <div class="toggle-row">
               <div class="toggle-label"><strong>Managed chat</strong><span>We reply to buyer messages for you</span></div>
@@ -1060,7 +1065,7 @@
               <span style="font-size:11px;font-weight:700;color:var(--gold);background:var(--gold-light);padding:3px 9px;border-radius:20px">Premium</span>
             </div>
             <div class="toggle-row">
-              <div class="toggle-label"><strong>Video walkthroughs</strong><span>Add a video or 360° tour to your listing</span></div>
+              <div class="toggle-label"><strong>Video walkthroughs</strong><span>Add a video or 360° tour to your listing — up to 1 (monthly) or 5 (yearly) per listing</span></div>
               <span style="font-size:11px;font-weight:700;color:var(--gold);background:var(--gold-light);padding:3px 9px;border-radius:20px">Premium</span>
             </div>
             <div class="toggle-row">
@@ -1886,22 +1891,6 @@ async function loadProfile(){
   document.getElementById('notif-expiring').checked = data?.notif_expiring !== false;
   document.getElementById('notif-payment').checked = data?.notif_payment !== false;
 
-  const conciergeToggle = document.getElementById('concierge-toggle');
-  if (conciergeToggle) conciergeToggle.checked = !!data?.concierge_enabled;
-  const smsToggle = document.getElementById('sms-alerts-toggle');
-  if (smsToggle) smsToggle.checked = !!data?.sms_alerts_enabled;
-  const conciergeNote = document.getElementById('concierge-note');
-  if (conciergeNote) conciergeNote.textContent = data?.concierge_enabled
-    ? "On — our team can now reply to your buyer messages for you. You'll still see everything in your Messages tab."
-    : 'Off — you handle all your own enquiries.';
-
-  const hideContactToggle = document.getElementById('hide-contact-toggle');
-  if (hideContactToggle) hideContactToggle.checked = !!data?.hide_buyer_contact;
-  const hideContactNote = document.getElementById('hide-contact-note');
-  if (hideContactNote) hideContactNote.textContent = data?.hide_buyer_contact
-    ? 'On — every listing shows "Chat only" to buyers. Call/WhatsApp buttons are hidden platform-wide.'
-    : 'Off — buyers can reveal your number to call or WhatsApp you (rate-limited for your safety).';
-
   loadVerificationUI();
 
   const sidebarBadge = document.getElementById('sidebar-verify-badge');
@@ -1913,6 +1902,26 @@ async function loadProfile(){
   }else{
     ownerProfile=currentProfile;
   }
+
+  // These are account-wide (owner) settings, not per-login — must read
+  // from ownerProfile so a team member sees the OWNER's real settings,
+  // not their own (irrelevant) profile row.
+  const conciergeToggle = document.getElementById('concierge-toggle');
+  if (conciergeToggle) conciergeToggle.checked = !!ownerProfile?.concierge_enabled;
+  const smsToggle = document.getElementById('sms-alerts-toggle');
+  if (smsToggle) smsToggle.checked = !!ownerProfile?.sms_alerts_enabled;
+  const conciergeNote = document.getElementById('concierge-note');
+  if (conciergeNote) conciergeNote.textContent = ownerProfile?.concierge_enabled
+    ? "On — our team can now reply to your buyer messages for you. You'll still see everything in your Messages tab."
+    : 'Off — you handle all your own enquiries.';
+
+  const hideContactToggle = document.getElementById('hide-contact-toggle');
+  if (hideContactToggle) hideContactToggle.checked = !!ownerProfile?.hide_buyer_contact;
+  const hideContactNote = document.getElementById('hide-contact-note');
+  if (hideContactNote) hideContactNote.textContent = ownerProfile?.hide_buyer_contact
+    ? 'On — every listing shows "Chat only" to buyers. Call/WhatsApp buttons are hidden platform-wide.'
+    : 'Off — buyers can reveal your number to call or WhatsApp you (rate-limited for your safety).';
+
   updateVerifyWarningBanner();
   loadSubscriptionUI();
 }
@@ -1942,8 +1951,9 @@ function subscriptionInfo(){
 function fmtSubDate(d){ return new Date(d).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'}); }
 function confirmListingCategoryBeforeLeaving(){
   const sub = subscriptionInfo();
-  if (sub.active && currentProfile?.plan_category) {
-    const label = currentProfile.plan_category === 'bnb' ? 'Airbnb / BNB' : 'sale & rental';
+  const p = ownerProfile || currentProfile;
+  if (sub.active && p?.plan_category) {
+    const label = p.plan_category === 'bnb' ? 'Airbnb / BNB' : 'sale & rental';
     return confirm(`Your active plan only covers ${label} listings — post-listing will block anything else. Continue?`);
   }
   return true;
@@ -1981,8 +1991,9 @@ async function updateStorefrontBanner(sub){
 }
 
 function teamSeatLimit(){
-  if (currentProfile?.subscription_plan==='elite') return 5;
-  return currentProfile?.subscription_tier==='yearly' ? 3 : 1;
+  const p = ownerProfile || currentProfile;
+  if (p?.subscription_plan==='elite') return 5;
+  return p?.subscription_tier==='yearly' ? 3 : 1;
 }
 
 async function loadTeamSeats(sub){
@@ -2035,7 +2046,8 @@ async function loadRelationshipManager(sub){
   const content=document.getElementById('rm-content');
   if(!section||!content)return;
   if(!sub.active){section.style.display='none';return;}
-  if(currentProfile?.subscription_tier!=='yearly'){
+  const ownerP = ownerProfile || currentProfile;
+  if(ownerP?.subscription_tier!=='yearly'){
     section.style.display='block';
     content.textContent="You're in our priority support queue — support chats from monthly-plan sellers are answered ahead of the general queue. Upgrade to yearly for a named manager with a direct line.";
     return;
@@ -2050,15 +2062,13 @@ async function loadRelationshipManager(sub){
 }
 
 async function toggleDemandDigest(enabled){
-  const { error } = await db.from('profiles').update({ demand_digest_enabled: enabled }).eq('id', currentUser.id);
+  const error = await updateOwnerProfile({ demand_digest_enabled: enabled });
   if(error){ showToast('Could not update: '+error.message,'error'); document.getElementById('demand-digest-toggle').checked=!enabled; return; }
-  currentProfile = {...currentProfile, demand_digest_enabled: enabled};
   showToast(enabled?'Weekly digest turned on ✓':'Weekly digest turned off','success');
 }
 async function toggleAiConcierge(enabled){
-  const { error } = await db.from('profiles').update({ ai_concierge_enabled: enabled, ai_concierge_enabled_at: enabled ? new Date().toISOString() : null }).eq('id', currentUser.id);
+  const error = await updateOwnerProfile({ ai_concierge_enabled: enabled, ai_concierge_enabled_at: enabled ? new Date().toISOString() : null });
   if(error){ showToast('Could not update: '+error.message,'error'); document.getElementById('ai-concierge-toggle').checked=!enabled; return; }
-  currentProfile = {...currentProfile, ai_concierge_enabled: enabled};
   showToast(enabled?'AI Chat Concierge turned on ✓ — it will start answering routine buyer questions on your listings':'AI Chat Concierge turned off','success');
 }
 function eliteActive(){
@@ -2085,7 +2095,7 @@ function updateEliteGatedPages(sub){
 }
 
 async function requestPlanCategorySwitch(){
-  const current = currentProfile?.plan_category || 'rental';
+  const current = (ownerProfile || currentProfile)?.plan_category || 'rental';
   const target = current === 'bnb' ? 'rental' : 'bnb';
   if(!confirm(`Switch your plan to cover ${target==='bnb'?'Airbnb/BNB':'sale & rental'} listings instead? This opens a support ticket for our team to confirm any payment difference before it takes effect.`)) return;
   const sessionKey = `seller_${currentUser.id}_plan_switch_${Date.now()}`;
@@ -2101,12 +2111,13 @@ function updatePremiumSectionUI(sub){
   const btn = document.getElementById('premium-upgrade-btn');
   const banner = document.getElementById('premium-status-banner');
   if(!btn || !banner) return;
+  const planP = ownerProfile || currentProfile;
   const catRow = document.getElementById('plan-category-row');
   if (catRow) {
-    if (sub.active && currentProfile?.plan_category) {
+    if (sub.active && planP?.plan_category) {
       catRow.style.display = 'block';
-      document.getElementById('plan-category-label').textContent = currentProfile.plan_category === 'bnb' ? 'Airbnb / BNB listings only' : 'Sale & rental listings only';
-      const carry = Number(currentProfile?.plan_balance_carryover) || 0;
+      document.getElementById('plan-category-label').textContent = planP.plan_category === 'bnb' ? 'Airbnb / BNB listings only' : 'Sale & rental listings only';
+      const carry = Number(planP?.plan_balance_carryover) || 0;
       document.getElementById('plan-balance-note').textContent = carry > 0 ? `KES ${carry.toLocaleString('en-KE')} credit on file — applied to your next renewal.` : '';
     } else {
       catRow.style.display = 'none';
@@ -2143,7 +2154,7 @@ function goToPremiumSettings(e){
   setTimeout(()=>document.getElementById('settings-premium-section')?.scrollIntoView({behavior:'smooth',block:'start'}),80);
 }
 function bnbSubscriptionInfo(){
-  const p = currentProfile;
+  const p = ownerProfile || currentProfile;
   const active = !!(p?.bnb_plan && p?.bnb_expires_at && new Date(p.bnb_expires_at) > new Date());
   return { active, plan: active ? p.bnb_plan : null };
 }
@@ -2165,12 +2176,13 @@ function updatePremiumNavBadge(sub){
   link.style.background = hasAnyActivePlan ? 'rgba(255,255,255,0.12)' : 'none';
   link.style.color = hasAnyActivePlan ? 'white' : '';
 
+  const navP = ownerProfile || currentProfile;
   if(sub.active && sub.plan==='elite'){
-    const catLabel = currentProfile?.plan_category === 'bnb' ? ' · BNB' : currentProfile?.plan_category === 'rental' ? ' · Rental' : '';
+    const catLabel = navP?.plan_category === 'bnb' ? ' · BNB' : navP?.plan_category === 'rental' ? ' · Rental' : '';
     textEl.innerHTML = `👑 Elite member${catLabel}`;
     link.style.opacity = '1';
   } else if(sub.active && sub.plan==='premium'){
-    const catLabel = currentProfile?.plan_category === 'bnb' ? ' · BNB' : currentProfile?.plan_category === 'rental' ? ' · Rental' : '';
+    const catLabel = navP?.plan_category === 'bnb' ? ' · BNB' : navP?.plan_category === 'rental' ? ' · Rental' : '';
     textEl.innerHTML = `⭐ Pro${catLabel} · Upgrade to Elite`;
     link.style.opacity = '1';
   } else if(bnb.active){
@@ -2272,7 +2284,7 @@ async function loadRentalUnits(){
 function rlCollectionRateForMonth(monthKey){
   let roll=0, collected=0;
   rentalUnitsCache.forEach(u=>{
-    const t=rlActiveTenant(u); if(!t) return;
+    const t=rlTenantForMonth(u,monthKey); if(!t) return;
     roll += Number(u.monthly_rent)||0;
     const st = rentStatusForMonth(t, monthKey);
     const amt = rentAmountForMonth(t, monthKey);
@@ -2311,13 +2323,14 @@ function renderRentAnalytics(){
   const overdueList=[];
   let checkedAll=0, onTimeAll=0;
   rentalUnitsCache.forEach(u=>{
-    const t=rlActiveTenant(u); if(!t) return;
     let overdueAmt=0, overdueMonths=0;
     last12Months().filter(m=>m<currentMonthKey()).forEach(m=>{
-      if(rentStatusForMonth(t,m)==='overdue'){ overdueAmt+=overdueAmountForUnit(u,1); overdueMonths++; }
+      const mt=rlTenantForMonth(u,m); if(!mt) return;
+      if(rentStatusForMonth(mt,m)==='overdue'){ overdueAmt+=overdueAmountForUnit(u,1); overdueMonths++; }
     });
-    if(overdueAmt>0) overdueList.push({unit:u,tenant:t,amt:overdueAmt,months:overdueMonths});
-    last12Months().filter(m=>m<=currentMonthKey()).forEach(m=>{
+    const t=rlActiveTenant(u);
+    if(overdueAmt>0 && t) overdueList.push({unit:u,tenant:t,amt:overdueAmt,months:overdueMonths});
+    if(t) last12Months().filter(m=>m<=currentMonthKey()).forEach(m=>{
       const st=rentStatusForMonth(t,m);
       if(st==='paid'||st==='overdue'){checkedAll++; if(st==='paid')onTimeAll++;}
     });
@@ -2473,6 +2486,21 @@ function downloadTenantStatementPDF(unitId,tenantId){
 
 function rlActiveTenant(u){return (u.tenants||[]).find(t=>t.status==='active');}
 
+// Historical views (past months) must NOT assume "whoever is the CURRENT
+// active tenant" was also the tenant during past months — that silently
+// erases a former tenant's real payment history the moment they move out.
+// This picks whichever tenant's [move_in_date, move_out_date] actually
+// covers the given month.
+function rlTenantForMonth(u,monthKey){
+  const monthStart=monthKey+'-01';
+  return (u.tenants||[]).find(t=>{
+    if(!t.move_in_date) return t.status==='active'; // no move-in date on file — best guess
+    const moveIn=t.move_in_date;
+    const moveOut=t.move_out_date||'9999-12-31';
+    return moveIn<=monthStart && monthStart<=moveOut;
+  })||null;
+}
+
 // A past month with no payment record is now auto-flagged "overdue" instead
 // of sitting forever as "due" — this alone is what makes the ledger useful.
 function rentStatusForMonth(tenant,monthKey){
@@ -2522,8 +2550,8 @@ function renderRentLedgerSummary(){
     else if(status==='partial')collected+=amt;
   });
   rentalUnitsCache.forEach(u=>{
-    const t=rlActiveTenant(u);if(!t)return;
     last12Months().filter(m=>m<mKey).forEach(m=>{
+      const t=rlTenantForMonth(u,m);if(!t)return;
       if(rentStatusForMonth(t,m)==='overdue'){overdueAmt+=overdueAmountForUnit(u,1);overdueCount++;}
     });
   });
@@ -2626,13 +2654,14 @@ function renderFullLedgerTable(){
   const months=last12Months();
   const head=months.map(m=>`<th>${new Date(m+'-01').toLocaleDateString('en-KE',{month:'short',year:'2-digit'})}</th>`).join('');
   const rows=rentalUnitsCache.map(u=>{
-    const t=rlActiveTenant(u);
+    const activeT=rlActiveTenant(u);
     const cells=months.map(m=>{
+      const t=rlTenantForMonth(u,m);
       if(!t)return `<td><span class="rl-chip due">—</span></td>`;
       const st=rentStatusForMonth(t,m);
-      return `<td><span class="rl-chip ${st}">${st}</span></td>`;
+      return `<td title="${escAttr(t.full_name)}"><span class="rl-chip ${st}">${st}</span></td>`;
     }).join('');
-    return `<tr><td class="rl-unit-cell">${escHtml(u.unit_label)}${t?`<br><span style="font-weight:400;color:var(--text-3);font-size:11px">${escHtml(t.full_name)}</span>`:''}</td>${cells}</tr>`;
+    return `<tr><td class="rl-unit-cell">${escHtml(u.unit_label)}${activeT?`<br><span style="font-weight:400;color:var(--text-3);font-size:11px">${escHtml(activeT.full_name)}</span>`:''}</td>${cells}</tr>`;
   }).join('');
   el.innerHTML=`<div class="rl-ledger-scroll"><table class="rl-ledger-table"><thead><tr><th>Unit / Tenant</th>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
 }
@@ -2961,8 +2990,8 @@ function rlAgingBuckets(){
   const buckets={b30:0,b60:0,b90:0,b90p:0};
   const now=new Date();
   rentalUnitsCache.forEach(u=>{
-    const t=rlActiveTenant(u);if(!t)return;
     last12Months().filter(m=>m<currentMonthKey()).forEach(m=>{
+      const t=rlTenantForMonth(u,m);if(!t)return;
       if(rentStatusForMonth(t,m)!=='overdue')return;
       const days=Math.floor((now-new Date(m+'-01'))/86400000);
       const amt=overdueAmountForUnit(u,1);
@@ -3063,9 +3092,8 @@ function renderGoalCard(){
 function openRentGoalModal(){document.getElementById('goal-amount').value=currentProfile?.rent_roll_goal||'';openModal('modal-rent-goal');}
 async function saveRentGoal(){
   const val=parseFloat(document.getElementById('goal-amount').value)||0;
-  const{error}=await db.from('profiles').update({rent_roll_goal:val}).eq('id',currentUser.id);
+  const error=await updateOwnerProfile({rent_roll_goal:val});
   if(error){showToast('Could not save: '+error.message,'error');return;}
-  currentProfile={...currentProfile,rent_roll_goal:val};
   closeModal('modal-rent-goal');renderGoalCard();
   showToast('Goal saved ✓','success');
 }
@@ -3236,9 +3264,8 @@ function openReminderSettingsModal(){
 }
 async function saveReminderSettings(){
   const payload={rent_reminder_auto_enabled:document.getElementById('rs-auto-enabled').checked,rent_reminder_days_before:parseInt(document.getElementById('rs-days-before').value)||3};
-  const{error}=await db.from('profiles').update(payload).eq('id',currentUser.id);
+  const error=await updateOwnerProfile(payload);
   if(error){showToast('Could not save: '+error.message,'error');return;}
-  currentProfile={...currentProfile,...payload};
   closeModal('modal-reminder-settings');showToast('Reminder settings saved ✓','success');
 }
 function rlReminderStageFor(tenant,unit){
@@ -3476,11 +3503,13 @@ async function copyStorefrontLink(){
 // and returns min/median/average/max. Usage is capped per calendar month
 // via elite_valuation_uses_monthly in platform_settings, tracked on
 // profiles.valuation_uses_month/_count.
-let eliteValuationLimit = 20;
+let eliteValuationLimit = 20, eliteValuationLimitLoaded = false;
 async function loadValuationLimit(){
+  if(eliteValuationLimitLoaded)return;
   try{
     const{data}=await db.from('platform_settings').select('value').eq('key','elite_valuation_uses_monthly').maybeSingle();
     if(data?.value) eliteValuationLimit = Number(data.value)||eliteValuationLimit;
+    eliteValuationLimitLoaded = true;
   }catch(e){/* fall back to default */}
 }
 
@@ -3576,8 +3605,7 @@ async function runValuation(){
       <div style="font-size:12px;color:var(--text-3)">Based on ${prices.length} active listing${prices.length!==1?'s':''} — ${escHtml(note)}.</div>`;
 
     const newCount = usedThisMonth + 1;
-    const{error:updErr} = await db.from('profiles').update({ valuation_uses_month: monthKey, valuation_uses_count: newCount }).eq('id', currentUser.id);
-    if(!updErr) currentProfile = { ...currentProfile, valuation_uses_month: monthKey, valuation_uses_count: newCount };
+    await updateOwnerProfile({ valuation_uses_month: monthKey, valuation_uses_count: newCount });
     document.getElementById('val-usage-note').textContent = `${Math.max(0,eliteValuationLimit-newCount)} of ${eliteValuationLimit} valuations left this month`;
   }catch(e){
     resultsEl.innerHTML = `<div class="empty-state" style="padding:24px"><p>Could not run the valuation: ${escHtml(e.message||String(e))}</p></div>`;
@@ -3587,13 +3615,15 @@ async function runValuation(){
 }
 
 // ── AI Listing Assistant (Elite) ──────────────────────────────────
-let eliteAiListingLimit = 20;
+let eliteAiListingLimit = 20, eliteAiListingLimitLoaded = false;
 let aiListingLastResult = null;
 
 async function loadAiListingLimit(){
+  if(eliteAiListingLimitLoaded)return;
   try{
     const{data}=await db.from('platform_settings').select('value').eq('key','elite_ai_listing_uses_monthly').maybeSingle();
     if(data?.value) eliteAiListingLimit = Number(data.value)||eliteAiListingLimit;
+    eliteAiListingLimitLoaded = true;
   }catch(e){/* fall back to default */}
 }
 
@@ -3713,9 +3743,8 @@ function updateSmsAlertsGate(sub){
   if(lockNote) lockNote.style.display = sub.active ? 'none' : 'block';
 }
 async function toggleSmsAlerts(enabled) {
-  const { error } = await db.from('profiles').update({ sms_alerts_enabled: enabled }).eq('id', currentUser.id);
+  const error = await updateOwnerProfile({ sms_alerts_enabled: enabled });
   if (error) { showToast('Could not update: '+error.message,'error'); document.getElementById('sms-alerts-toggle').checked = !enabled; return; }
-  currentProfile = { ...currentProfile, sms_alerts_enabled: enabled };
   showToast(enabled ? 'SMS alerts turned on ✓' : 'SMS alerts turned off','success');
 }
 
@@ -3872,9 +3901,8 @@ async function submitExtraVerification() {
 }
 
 async function toggleConcierge(enabled) {
-  const { error } = await db.from('profiles').update({ concierge_enabled: enabled, concierge_enabled_at: enabled ? new Date().toISOString() : null }).eq('id', currentUser.id);
+  const error = await updateOwnerProfile({ concierge_enabled: enabled, concierge_enabled_at: enabled ? new Date().toISOString() : null });
   if (error) { showToast('Could not update: '+error.message,'error'); document.getElementById('concierge-toggle').checked = !enabled; return; }
-  currentProfile = { ...currentProfile, concierge_enabled: enabled };
   document.getElementById('concierge-note').textContent = enabled
     ? "On — our team can now reply to your buyer messages for you. You'll still see everything in your Messages tab."
     : 'Off — you handle all your own enquiries.';
@@ -4248,7 +4276,9 @@ const statusBtn=l.is_disabled
   :(isOccupied||isPaused)
     ?`<div class="icon-btn purple" data-id="${l.id}" onclick="reactivateListing(this.dataset.id)" title="Resume — sends back for a quick admin recheck" role="button" tabindex="0" aria-label="Resume listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg></div>`
     :isActive
-      ?`<div class="icon-btn purple" data-id="${l.id}" data-title="${escAttr(l.title)}" onclick="openOccupiedModal(this.dataset.id,this.dataset.title)" title="${l.price_type==='rent'?'Mark as occupied':'Mark as sold'}" role="button" tabindex="0" aria-label="${l.price_type==='rent'?'Mark as occupied':'Mark as sold'}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg></div>`
+      ?(l.is_multi_unit
+        ?`<div class="icon-btn locked" title="Multi-unit property — use the purple &quot;Manage units&quot; icon to mark individual units occupied instead of the whole listing"><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg></div>`
+        :`<div class="icon-btn purple" data-id="${l.id}" data-title="${escAttr(l.title)}" onclick="openOccupiedModal(this.dataset.id,this.dataset.title)" title="${l.price_type==='rent'?'Mark as occupied':'Mark as sold'}" role="button" tabindex="0" aria-label="${l.price_type==='rent'?'Mark as occupied':'Mark as sold'}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg></div>`)
       :`<div class="icon-btn locked" title="Awaiting admin approval — no status changes allowed"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>`;
 
 const pauseBtn=isActive
@@ -4275,9 +4305,12 @@ const brochureBtn=subscriptionInfo().active
   ?`<div class="icon-btn purple" data-id="${l.id}" onclick="generateBrochure(this.dataset.id)" title="Download printable brochure" role="button" tabindex="0" aria-label="Download brochure" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>`
   :'';
 
-const contactHideBtn=l.contact_hidden
-  ?`<div class="icon-btn" data-id="${l.id}" onclick="toggleListingContactHidden(this.dataset.id)" title="Contact hidden — click to re-enable Call/WhatsApp on this listing" role="button" tabindex="0" aria-label="Show buyer contact for this listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}" style="color:var(--red);border-color:var(--red)"><svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div>`
-  :`<div class="icon-btn" data-id="${l.id}" onclick="toggleListingContactHidden(this.dataset.id)" title="Hide Call/WhatsApp — force chat-only on this listing" role="button" tabindex="0" aria-label="Hide buyer contact for this listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>`;
+const globalContactHidden = !!(ownerProfile||currentProfile)?.hide_buyer_contact;
+const contactHideBtn = globalContactHidden
+  ? `<div class="icon-btn locked" title="Hidden platform-wide via Settings → Buyer contact privacy"><svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div>`
+  : (l.contact_hidden
+    ?`<div class="icon-btn" data-id="${l.id}" onclick="toggleListingContactHidden(this.dataset.id)" title="Contact hidden — click to re-enable Call/WhatsApp on this listing" role="button" tabindex="0" aria-label="Show buyer contact for this listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}" style="color:var(--red);border-color:var(--red)"><svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div>`
+    :`<div class="icon-btn" data-id="${l.id}" onclick="toggleListingContactHidden(this.dataset.id)" title="Hide Call/WhatsApp — force chat-only on this listing" role="button" tabindex="0" aria-label="Hide buyer contact for this listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>`);
 
     return `<tr>
       <td><div class="listing-name-cell"><div class="listing-thumb">${img}</div><div>
@@ -4435,12 +4468,17 @@ async function muConfirmOccupy(unitId){
     if(!unit||(unit.quantity_available??0)<=0)return;
 
     const newAvailable=unit.quantity_available-1;
-    const{error}=await db.from('listing_units').update({quantity_available:newAvailable}).eq('id',unitId);
+    // Optimistic-locking guard: only succeeds if quantity_available still
+    // matches what we last read, so two people clicking at once can't both
+    // "win" and push the count below zero or out of sync.
+    const{data:updRows,error}=await db.from('listing_units').update({quantity_available:newAvailable}).eq('id',unitId).eq('quantity_available',unit.quantity_available).select();
     if(error){showToast('Could not update unit: '+error.message,'error');return;}
+    if(!updRows||!updRows.length){showToast('This unit was just updated elsewhere — refreshing…','error');await openManageUnitsModal(muActiveListingId);return;}
 
     try{
-      await db.from('unit_occupancy_log').insert({listing_unit_id:unitId,listing_id:muActiveListingId,floor,door_number:door,position:pos,action:'occupied'});
-    }catch(e){/* audit table optional — availability update above already succeeded */}
+      const{error:logErr}=await db.from('unit_occupancy_log').insert({listing_unit_id:unitId,listing_id:muActiveListingId,floor,door_number:door,position:pos,action:'occupied'});
+      if(logErr) console.warn('unit_occupancy_log insert failed (availability was still updated):',logErr.message);
+    }catch(e){console.warn('unit_occupancy_log insert failed (availability was still updated):',e.message||e);}
 
     unit.quantity_available=newAvailable;
     muSyncListingCache();
@@ -4463,12 +4501,14 @@ async function muMarkAvailable(unitId){
     if((unit.quantity_available??0)>=total)return;
 
     const newAvailable=unit.quantity_available+1;
-    const{error}=await db.from('listing_units').update({quantity_available:newAvailable}).eq('id',unitId);
+    const{data:updRows,error}=await db.from('listing_units').update({quantity_available:newAvailable}).eq('id',unitId).eq('quantity_available',unit.quantity_available).select();
     if(error){showToast('Could not update unit: '+error.message,'error');return;}
+    if(!updRows||!updRows.length){showToast('This unit was just updated elsewhere — refreshing…','error');await openManageUnitsModal(muActiveListingId);return;}
 
     try{
-      await db.from('unit_occupancy_log').insert({listing_unit_id:unitId,listing_id:muActiveListingId,action:'freed'});
-    }catch(e){/* audit table optional */}
+      const{error:logErr}=await db.from('unit_occupancy_log').insert({listing_unit_id:unitId,listing_id:muActiveListingId,action:'freed'});
+      if(logErr) console.warn('unit_occupancy_log insert failed (availability was still updated):',logErr.message);
+    }catch(e){console.warn('unit_occupancy_log insert failed (availability was still updated):',e.message||e);}
 
     unit.quantity_available=newAvailable;
     muSyncListingCache();
@@ -4513,7 +4553,8 @@ let mvActiveListingId=null,mvVideos=[];
 function videoWalkthroughLimit(){
   const sub=subscriptionInfo();
   if(!sub.active)return 0;
-  const isYearly=currentProfile?.subscription_tier==='yearly';
+  const p = ownerProfile || currentProfile;
+  const isYearly=p?.subscription_tier==='yearly';
   if(sub.plan==='elite')return isYearly?Infinity:3;
   return isYearly?5:1;
 }
@@ -4639,7 +4680,33 @@ function renderThreadList(){
   el.innerHTML=filtered.map(t=>{const lm=t.messages[t.messages.length-1];const prev=lm?(lm.sender==='seller'?'You: ':'')+(lm.content||lm.message||''):'';const ini=t.buyer_name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()||'?';const isA=activeThread&&activeThread.key===t.key;const isU=(t.unread_count||0)>0;return `<div class="thread-item${isA?' active':''}${isU?' unread':''}" onclick="openThread('${t.key}')" role="button" tabindex="0" aria-label="Conversation with ${escAttr(t.buyer_name)}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><div class="thread-avatar">${ini}</div><div class="thread-meta"><div class="thread-name">${escHtml(t.buyer_name)}</div><div class="thread-listing-ref">${escHtml(t.listing_title)}${t.listing_area?' · '+t.listing_area:''}</div><div class="thread-preview">${escHtml(prev)}</div></div><div class="thread-time">${timeAgo(t.last_at)}</div></div>`;}).join('');
 }
 
-function openThread(key){activeThread=threads.find(t=>t.key===key)||null;if(!activeThread)return;renderThreadList();renderChatPane(activeThread);markThreadRead(activeThread).then(()=>renderThreadList());showChatMobile();}
+async function openThread(key){
+  activeThread=threads.find(t=>t.key===key)||null;
+  if(!activeThread)return;
+  renderThreadList();
+  renderChatPane(activeThread);
+  await loadFullThreadHistory(activeThread);
+  renderChatPane(activeThread);
+  markThreadRead(activeThread).then(()=>renderThreadList());
+  showChatMobile();
+}
+
+// The bulk preload only covers the last MSG_HISTORY_DAYS days for speed.
+// A thread that started earlier than that but has recent activity (which
+// is why it's visible at all) would otherwise show a gap between the
+// original enquiry and the newest reply. Backfill it the moment it's opened.
+async function loadFullThreadHistory(t){
+  if(!t)return;
+  let q=db.from('messages').select('*').eq('listing_id',t.listing_id).order('created_at',{ascending:true});
+  q = t.buyer_phone ? q.eq('buyer_phone',t.buyer_phone) : (t.buyer_token ? q.eq('buyer_token',t.buyer_token) : null);
+  if(!q)return;
+  const{data,error}=await q;
+  if(error||!data)return;
+  data.forEach(m=>{ if(!allMessages.some(x=>x.id===m.id)) allMessages.push(m); });
+  buildThreads();
+  const refreshed=threads.find(x=>x.key===t.key);
+  if(refreshed)activeThread=refreshed;
+}
 
 function renderChatPane(t){
   document.getElementById('chat-empty').style.display='none';
