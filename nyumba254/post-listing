@@ -1661,6 +1661,7 @@ async function submitListing() {
       description:      document.getElementById('description').value.trim(),
       price:            price,
       price_frequency:  document.getElementById('price_frequency').value,
+      price_type:       document.getElementById('price_frequency').value === 'once' ? 'sale' : 'rent',
       category:         selectedCat,
       county:           document.getElementById('county').value,
       area:             getEffectiveArea(),
