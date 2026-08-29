@@ -695,7 +695,7 @@
       <div class="field" style="margin-top:20px">
         <label for="agree-terms" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:400;font-size:13px;color:var(--text-2)">
           <input type="checkbox" id="agree-terms" onchange="document.getElementById('err-agree-terms').classList.remove('show'); this.classList.remove('error')" style="width:18px;height:18px;margin-top:1px;accent-color:var(--green);cursor:pointer;flex-shrink:0"/>
-          <span>I agree to the <a href="terms" target="_blank" rel="noopener" style="color:var(--green);font-weight:600;text-decoration:underline">Terms and Conditions</a> and <a href="privacy.html" target="_blank" rel="noopener" style="color:var(--green);font-weight:600;text-decoration:underline">Privacy Policy</a>. I confirm all information is accurate. <span class="req">*</span></span>
+          <span>I agree to the <a href="terms" target="_blank" rel="noopener" style="color:var(--green);font-weight:600;text-decoration:underline">Terms and Conditions</a> and <a href="privacy" target="_blank" rel="noopener" style="color:var(--green);font-weight:600;text-decoration:underline">Privacy Policy</a>. I confirm all information is accurate. <span class="req">*</span></span>
         </label>
         <div class="field-error" id="err-agree-terms">You must agree to the Terms and Conditions before submitting</div>
       </div>
