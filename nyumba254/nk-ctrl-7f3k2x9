@@ -792,7 +792,7 @@
     </button>
     <button class="nav-item" onclick="showView('listings'); setTab('multiunit')">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg>
-      Multi-unit properties
+      Listings with unit types
       <span class="nav-badge" id="nav-badge-multiunit">—</span>
     </button>
     <button class="nav-item" data-view="recycle-bin" onclick="showView('recycle-bin')">
@@ -973,7 +973,7 @@
           <button class="tab-btn"        id="tab-active"   onclick="setTab('active')">Active <span class="count" id="tc-active">—</span></button>
           <button class="tab-btn"        id="tab-trial"    onclick="setTab('trial')">Trial <span class="count" id="tc-trial">—</span></button>
           <button class="tab-btn"        id="tab-featured" onclick="setTab('featured')">Featured <span class="count" id="tc-featured">—</span></button>
-          <button class="tab-btn"        id="tab-multiunit" onclick="setTab('multiunit')">Multi-unit <span class="count" id="tc-multiunit">—</span></button>
+          <button class="tab-btn"        id="tab-multiunit" onclick="setTab('multiunit')">Unit types <span class="count" id="tc-multiunit">—</span></button>
           <button class="tab-btn"        id="tab-inactive" onclick="setTab('inactive')">Inactive <span class="count" id="tc-inactive">—</span></button>
         </div>
         <div class="filters-row">
@@ -2027,7 +2027,7 @@ function notifySms(type, payload) {
   }
 
   function fmtListingPrice(l) {
-    if (!l.is_multi_unit) return fmtPrice(l.price) + (l.price_type==='rent'?'/mo':'');
+    if (!(l.listing_units && l.listing_units.length)) return fmtPrice(l.price) + (l.price_type==='rent'?'/mo':'');
     const units = l.listing_units || [];
     const prices = units.map(u=>Number(u.price)).filter(p=>!isNaN(p));
     const min = prices.length ? Math.min(...prices) : Number(l.price_min)||Number(l.price)||0;
@@ -2322,7 +2322,7 @@ function notifySms(type, payload) {
     const { count: trialCount } = await db.from('listings').select('*',{count:'exact',head:true}).eq('payment_status','trial').eq('recycle_bin',false);
     document.getElementById('nav-badge-trial').textContent = trialCount||0;
 
-    const { count: multiUnitCount } = await db.from('listings').select('*',{count:'exact',head:true}).eq('is_multi_unit',true).eq('recycle_bin',false);
+    const { count: multiUnitCount } = await db.from('listings').select('*, listing_units!inner(id)',{count:'exact',head:true}).eq('recycle_bin',false);
     document.getElementById('nav-badge-multiunit').textContent = multiUnitCount||0;
 
     const { data: pays } = await db.from('payments').select('amount,type').eq('status','confirmed');
@@ -2405,7 +2405,7 @@ function notifySms(type, payload) {
       db.from('listings').select('*',{count:'exact',head:true}).eq('is_featured',true).eq('status','active').eq('is_disabled',false).eq('recycle_bin',false),
       db.from('listings').select('*',{count:'exact',head:true}).eq('recycle_bin',false),
       db.from('listings').select('*',{count:'exact',head:true}).eq('payment_status','trial').eq('recycle_bin',false),
-      db.from('listings').select('*',{count:'exact',head:true}).eq('is_multi_unit',true).eq('recycle_bin',false),
+      db.from('listings').select('*, listing_units!inner(id)',{count:'exact',head:true}).eq('recycle_bin',false),
       db.from('listings').select('*',{count:'exact',head:true}).eq('is_disabled',true).eq('recycle_bin',false),
     ]);
     document.getElementById('tc-all').textContent      = tot||0;
@@ -2452,12 +2452,14 @@ function notifySms(type, payload) {
       loadMoreBtn.textContent = 'Loading…';
     }
 
-    let q = db.from('listings').select('*, profiles(full_name, email, subscription_tier, subscription_expires_at), listing_photos(*), listing_units(*), social_posts(*)',{count:'exact'}).eq('recycle_bin',false);
+    const listingsSelect = currentTab==='multiunit'
+      ? '*, profiles(full_name, email, subscription_tier, subscription_expires_at), listing_photos(*), listing_units!inner(*), social_posts(*)'
+      : '*, profiles(full_name, email, subscription_tier, subscription_expires_at), listing_photos(*), listing_units(*), social_posts(*)';
+    let q = db.from('listings').select(listingsSelect,{count:'exact'}).eq('recycle_bin',false);
     if (currentTab==='pending')       q = q.eq('status','pending');
     else if (currentTab==='active')   q = q.eq('status','active').eq('is_disabled',false);
     else if (currentTab==='featured') q = q.eq('is_featured',true).eq('status','active').eq('is_disabled',false);
     else if (currentTab==='trial')    q = q.eq('payment_status','trial');
-    else if (currentTab==='multiunit') q = q.eq('is_multi_unit',true);
     else if (currentTab==='inactive') q = q.eq('is_disabled',true);
 
     const county = document.getElementById('filter-county').value;
@@ -2771,13 +2773,11 @@ function notifySms(type, payload) {
   function calcUpgradeAmount(l, plan) {
     const priceType = l.price_type === 'rent' ? 'rent' : 'sale';
     const feePlan = plan === 'featured' ? 'featured' : 'standard';
-    if (l.is_multi_unit) {
-      const units = l.listing_units || [];
-      const portfolioValue = units.length
-        ? units.reduce((s,u)=>s + Number(u.price||0) * Number(u.quantity_total ?? u.quantity_available ?? 1), 0)
-        : Number(l.price||0) * (l.total_units||1);
+    const units = l.listing_units || [];
+    if (units.length) {
+      const portfolioValue = units.reduce((s,u)=>s + Number(u.price||0) * Number(u.quantity_total ?? u.quantity_available ?? 1), 0);
       const pctFee = calcListingFee(portfolioValue, priceType, feePlan);
-      const perUnit = (feePlan === 'featured' ? SETTINGS.featured_fee_per_unit : SETTINGS.standard_fee_per_unit) * (l.total_units || units.length || 0);
+      const perUnit = (feePlan === 'featured' ? SETTINGS.featured_fee_per_unit : SETTINGS.standard_fee_per_unit) * units.length;
       return pctFee + perUnit;
     }
     return calcListingFee(l.price, priceType, feePlan);
@@ -2786,8 +2786,9 @@ function notifySms(type, payload) {
     const l = _listings[id]; if(!l) return;
     upgradingListingId = id;
     const trialDaysLeft = l.trial_expires_at ? Math.max(0, Math.ceil((new Date(l.trial_expires_at)-new Date())/86400000)) : null;
-    const perUnitNote = l.is_multi_unit
-      ? `<div class="multiunit-info-box">🏢 Multi-unit property — ${l.total_units||'?'} units. Fee is based on total portfolio value plus KES ${SETTINGS.standard_fee_per_unit} (standard) or KES ${SETTINGS.featured_fee_per_unit} (featured) per unit — adjust the amount manually if recording a specific payment.</div>`
+    const upgradeUnits = l.listing_units || [];
+    const perUnitNote = upgradeUnits.length
+      ? `<div class="multiunit-info-box">🏢 Has ${upgradeUnits.length} unit type(s). Fee is based on total portfolio value plus KES ${SETTINGS.standard_fee_per_unit} (standard) or KES ${SETTINGS.featured_fee_per_unit} (featured) per unit type — adjust the amount manually if recording a specific payment.</div>`
       : '';
     document.getElementById('upgrade-modal-body').innerHTML = `
       ${perUnitNote}
@@ -3065,18 +3066,18 @@ function notifySms(type, payload) {
     document.getElementById('modal-title').textContent = l.title;
 
     let multiUnitSection = '';
-    if (l.is_multi_unit) {
-      const units = l.listing_units || [];
-      const totalAvail = units.reduce((s,u)=>s+(u.quantity_available??0),0);
-      const totalUnits = l.total_units || units.reduce((s,u)=>s+(u.quantity_total??u.quantity_available??0),0);
+    const modalUnits = l.listing_units || [];
+    if (modalUnits.length) {
+      const totalAvail = modalUnits.reduce((s,u)=>s+(u.quantity_available??0),0);
+      const totalUnits = modalUnits.reduce((s,u)=>s+(u.quantity_total??u.quantity_available??0),0);
       multiUnitSection = `
-        <div class="multiunit-info-box">🏢 Multi-unit property${l.num_buildings?` · ${l.num_buildings} building(s)`:''} — ${totalAvail} of ${totalUnits} units currently available</div>
+        <div class="multiunit-info-box">🏢 Has unit types — ${totalAvail} of ${totalUnits} units currently available</div>
         <div class="field"><label>Price range</label><div class="val">${fmtListingPrice(l)}</div></div>
-        ${units.length ? `<div class="field"><label>Unit types</label>
+        <div class="field"><label>Unit types</label>
           <table class="unit-type-mini-table">
             <thead><tr><th>Label</th><th>Bed</th><th>Price</th><th>Available</th></tr></thead>
-            <tbody>${units.map(u=>`<tr><td>${esc(u.unit_label)}</td><td>${u.bedrooms==0?'Studio':u.bedrooms}</td><td>${fmtPrice(u.price)}</td><td>${u.quantity_available??0}/${u.quantity_total??'—'}</td></tr>`).join('')}</tbody>
-          </table></div>` : ''}`;
+            <tbody>${modalUnits.map(u=>`<tr><td>${esc(u.unit_label)}</td><td>${u.bedrooms==0?'Studio':u.bedrooms}</td><td>${fmtPrice(u.price)}</td><td>${u.quantity_available??0}/${u.quantity_total??'—'}</td></tr>`).join('')}</tbody>
+          </table></div>`;
     }
 
     document.getElementById('modal-body').innerHTML = `
@@ -3084,10 +3085,10 @@ function notifySms(type, payload) {
       ${multiUnitSection}
       <div class="field"><label>Status</label><div class="val"><span class="badge ${l.status}">${l.status}</span></div></div>
       <div class="field"><label>Category</label><div class="val">${esc(l.category)}</div></div>
-      ${!l.is_multi_unit?`<div class="field"><label>Price</label><div class="val">${fmtPrice(l.price)}${l.price_type==='rent'?' /month':''}</div></div>`:''}
+      ${!modalUnits.length?`<div class="field"><label>Price</label><div class="val">${fmtPrice(l.price)}${l.price_type==='rent'?' /month':''}</div></div>`:''}
       <div class="field"><label>County</label><div class="val">${esc(l.county||'—')}</div></div>
       <div class="field"><label>Area</label><div class="val">${esc(l.area)}${l.sub_area?' — '+esc(l.sub_area):''}</div></div>
-      ${!l.is_multi_unit?`<div class="field"><label>Bedrooms</label><div class="val">${l.bedrooms==0?'Bedsitter/studio':(l.bedrooms+' bedroom(s)')}</div></div>
+      ${!modalUnits.length?`<div class="field"><label>Bedrooms</label><div class="val">${l.bedrooms==0?'Bedsitter/studio':(l.bedrooms+' bedroom(s)')}</div></div>
       <div class="field"><label>Furnished</label><div class="val">${l.furnished?'Yes':'No'}</div></div>`:''}
       <div class="field"><label>Plan</label><div class="val">${l.payment_status==='trial'?`${TRIAL_DAYS}-day free trial`:(l.is_featured?`Featured (${fmtPrice(calcUpgradeAmount(l,'featured'))})`:`Standard (${fmtPrice(calcUpgradeAmount(l,'basic'))})`)}</div></div>
       <div class="field"><label>Payment</label><div class="val"><span class="badge ${l.payment_status==='paid'?'paid':l.payment_status==='trial'?'trial':'unpaid'}">${l.payment_status==='trial'?'trial':(l.payment_status||'unpaid')}</span></div></div>
@@ -3115,8 +3116,8 @@ function notifySms(type, payload) {
     const l = _listings[id]; if(!l) return;
     editingListingId = l.id;
     const currentCounty = l.county || 'Kisumu';
-    const multiUnitNote = l.is_multi_unit
-      ? `<div class="multiunit-info-box">🏢 This is a multi-unit property. Price, bedrooms, and bathrooms below apply to the property summary only — individual unit types (price, availability) are managed by the seller from their dashboard's "Manage units" panel, not here.</div>`
+    const multiUnitNote = (l.listing_units && l.listing_units.length)
+      ? `<div class="multiunit-info-box">🏢 This listing has unit types. Price, bedrooms, and bathrooms below apply to the property summary only — individual unit types (price, availability) are managed by the seller from their dashboard's "Manage unit types" panel, not here.</div>`
       : '';
     document.getElementById('edit-listing-body').innerHTML = `
       ${multiUnitNote}
@@ -4964,7 +4965,7 @@ async function messageSellerInChat(sellerId) {
           ${mobileMenu(r.id,[
             {label:'View full details', cls:'', fn:`openReportModal('${r.id}')`},
             ...(seller && !seller.is_disabled?[{label:'Suspend seller', cls:'danger', fn:`quickSuspendSeller('${seller.id}')`}]:[]),
-            ...(listing?[{label:'Open listing page', cls:'', fn:`window.open('listing.html?id=${listing.id}','_blank','noopener,noreferrer')`}]:[]),
+            ...(listing?[{label:'Open listing page', cls:'', fn:`window.open('/listing?id=${listing.id}','_blank','noopener,noreferrer')`}]:[]),
           ])}
         </td>
       </tr>`;
@@ -5076,7 +5077,7 @@ async function messageSellerInChat(sellerId) {
     document.getElementById('report-modal-body').innerHTML = html;
 
     document.getElementById('report-modal-footer').innerHTML = `
-      ${listing?`<button class="btn-modal cancel" onclick="window.open('listing.html?id=${listing.id}','_blank','noopener,noreferrer')">View listing</button>`:''}
+      ${listing?`<button class="btn-modal cancel" onclick="window.open('/listing?id=${listing.id}','_blank','noopener,noreferrer')">View listing</button>`:''}
       ${seller?`<button class="btn-modal cancel" onclick="closeReportModal(); openProfileModal('${seller.id}')">View seller profile</button>`:''}
       ${seller && !seller.is_disabled?`<button class="btn-modal reject" onclick="closeReportModal(); disableProfileFlow('${seller.id}')">Suspend seller</button>`:''}
       ${seller?`<button class="btn-modal cancel" onclick="closeReportModal(); requestExtraVerification('${seller.id}')">Request extra documents</button>`:''}
@@ -5589,7 +5590,7 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
     URL.revokeObjectURL(url);
   }
   async function exportListingsCSV() {
-    const {data} = await db.from('listings').select('id,listing_number,title,county,area,category,price,price_min,price_max,is_multi_unit,total_units,status,payment_status,is_featured,created_at');
+    const {data} = await db.from('listings').select('id,listing_number,title,county,area,category,price,price_min,price_max,status,payment_status,is_featured,created_at');
     // Put the human-facing listing_number first, keep the UUID (id) further
     // right for anyone who specifically needs it — e.g. to cross-reference
     // with a Supabase table editor.
@@ -6215,7 +6216,7 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
       backToList();
     }
     function openFullPage() {
-      window.open('admin-chat.html' + (activeId ? `?session=${activeId}` : ''), '_blank', 'noopener,noreferrer');
+      window.open('/admin-chat' + (activeId ? `?session=${activeId}` : ''), '_blank', 'noopener,noreferrer');
     }
 
     function init() {
