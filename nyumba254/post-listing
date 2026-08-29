@@ -1123,6 +1123,13 @@ function toggleStandardUnits(checked) {
 function standardUnitsEnabled() {
   return document.getElementById('std_has_units')?.checked && NK_CATEGORIES[selectedCat].group === 'standard';
 }
+function tierMountId() {
+  return NK_CATEGORIES[selectedCat].group === 'boarding' ? 'tier-rows' : 'tier-rows-standard';
+}
+function renderTierRows() {
+  const mount = document.getElementById(tierMountId());
+  if (!mount) return;
+  mount.innerHTML = tierRows.map((t, i) => `
     <div class="tier-row">
       <div class="tier-row-head">
         <span>Room type ${i + 1}</span>
@@ -1153,9 +1160,6 @@ function standardUnitsEnabled() {
         </div>
       </div>
     </div>`).join('');
-}
-function getValidTiers() {
-  return tierRows.filter(t => t.label.trim() && t.price && parseFloat(t.price) > 0 && t.quantity !== '' && parseInt(t.quantity) >= 0);
 }
 
 /* ══════════════════════════════════════════════════════════════
