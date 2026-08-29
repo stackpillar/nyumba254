@@ -232,6 +232,7 @@
     .card {
       background: white; border-radius: var(--radius-lg); border: 1px solid var(--border);
       overflow: hidden; transition: transform .2s, box-shadow .2s; cursor: pointer;
+      max-width: 100%; box-sizing: border-box;
     }
     .card:hover, .card:focus-visible { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.09); }
     .card:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
@@ -344,15 +345,19 @@
       border: 1.5px dashed var(--green-mid);
       border-radius: var(--radius-lg);
       padding: 18px 22px;
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
     }
     .notify-strip-close {
       position: absolute; top: 8px; right: 10px; background: none; border: none;
       color: var(--text-3); cursor: pointer; font-size: 14px; padding: 4px;
     }
     .notify-strip-close:hover { color: var(--text); }
-    .notify-strip-inner { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .notify-strip-inner { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; max-width: 100%; }
     .notify-strip-icon { font-size: 26px; flex-shrink: 0; }
-    .notify-strip-text { flex: 1; min-width: 220px; }
+    .notify-strip-text { flex: 1 1 220px; min-width: 0; }
+    .notify-strip-inner > .btn { flex-shrink: 0; }
     .notify-strip-text strong { display: block; font-size: 14.5px; color: var(--green-dark); margin-bottom: 2px; }
     .notify-strip-text span { font-size: 13px; color: var(--text-2); }
 
