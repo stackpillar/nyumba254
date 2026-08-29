@@ -455,27 +455,19 @@
       .toolbar > div:first-child { width: 100%; justify-content: space-between; }
       .sort-select { width: 100%; }
 
-      /* ── Listings grid: horizontal scroll, pagination unchanged ── */
+      /* ── Listings grid: single-column stack on mobile. The old
+         horizontal-scroll carousel clipped cards to 78% width and left
+         them hidden behind the floating chat bubble — a plain vertical
+         list is far more compact and legible on a phone. ── */
       .listings-grid {
-        display: flex;
-        grid-template-columns: none;
-        overflow-x: auto;
-        overscroll-behavior-x: contain;
-        scroll-snap-type: x mandatory;
+        grid-template-columns: 1fr;
         gap: 14px;
-        padding-bottom: 6px;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
       }
-      .listings-grid::-webkit-scrollbar { display: none; }
-      .listings-grid .card {
-        flex: 0 0 78%;
-        max-width: 300px;
-        scroll-snap-align: start;
-      }
-      .listings-grid .empty-state {
-        flex: 1 0 100%;
-      }
+      .listings-grid .card { max-width: 100%; }
+      .card-img { height: 140px; }
+      .card-body { padding: 12px 14px; }
+      .scroll-hint { display: none !important; }
+      .main { padding: 16px 16px 90px; } /* clears space above the floating chat bubble */
     }
     @media (max-width: 600px) {
       .nf-row { grid-template-columns: 1fr; }
