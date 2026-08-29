@@ -1775,7 +1775,22 @@ const MSG_POLL_MS=120000, LISTING_STATUS_POLL_MS=30000;
 // ── Multi-unit management state (Manage units modal) ──
 let muActiveListingId=null,muUnits=[],muActionBusy=false;
 
-const AMENITY_KEYS=[{key:'has_parking',label:'Parking'},{key:'has_water',label:'Water supply'},{key:'has_security',label:'Security'},{key:'has_wifi',label:'WiFi ready'},{key:'has_backup_power',label:'Backup power'},{key:'has_gym',label:'Gym'},{key:'has_pool',label:'Swimming pool'},{key:'has_balcony',label:'Balcony'}];
+const AMENITY_KEYS=[
+  { key:'has_water', label:'Water supply' },
+  { key:'has_electricity', label:'Electricity' },
+  { key:'has_security', label:'Security' },
+  { key:'has_solar', label:'Solar power' },
+  { key:'has_wifi', label:'WiFi' },
+  { key:'has_parking', label:'Parking' },
+  { key:'has_balcony', label:'Balcony' },
+  { key:'has_private_bathroom', label:'Private bathroom' },
+  { key:'has_shared_bathroom', label:'Shared bathroom' },
+  { key:'has_study_area', label:'Study area' },
+  { key:'has_gym', label:'Gym' },
+  { key:'has_pool', label:'Swimming pool' },
+  { key:'has_pets_allowed', label:'Pets allowed' },
+  { key:'has_backup_power', label:'Backup power' },
+];
 
 async function init(){
   try{
@@ -4613,12 +4628,14 @@ async function deleteListingVideo(id){
 
 function openEditModal(id){
   const l=allListings.find(l=>l.id===id);if(!l)return;
-  document.getElementById('edit-id').value=l.id;document.getElementById('edit-title').value=l.title||'';document.getElementById('edit-price').value=l.price||'';document.getElementById('edit-price-type').value=l.price_type||'sale';document.getElementById('edit-bedrooms').value=l.bedrooms||'';document.getElementById('edit-bathrooms').value=l.bathrooms||'';document.getElementById('edit-size').value=l.size_sqm||'';document.getElementById('edit-category').value=l.category||'apartment';document.getElementById('edit-address').value=l.address||'';document.getElementById('edit-description').value=l.description||'';document.getElementById('edit-furnished').checked=l.furnished||false;document.getElementById('edit-contact_hidden').checked=l.contact_hidden||false;
+  const ed = l.details || {};
+  document.getElementById('edit-id').value=l.id;document.getElementById('edit-title').value=l.title||'';document.getElementById('edit-price').value=l.price||'';document.getElementById('edit-price-type').value=l.price_type||(l.price_frequency==='once'?'sale':'rent');document.getElementById('edit-bedrooms').value=ed.bedrooms||'';document.getElementById('edit-bathrooms').value=ed.bathrooms||'';document.getElementById('edit-size').value=ed.size_sqm||'';document.getElementById('edit-category').value=l.category||'apartment';document.getElementById('edit-address').value=l.address||'';document.getElementById('edit-description').value=l.description||'';document.getElementById('edit-furnished').checked=ed.furnished==='yes';document.getElementById('edit-contact_hidden').checked=l.contact_hidden||false;
   const currentArea=l.area||'Milimani';
   const currentCounty=NK_AREA_TO_COUNTY[currentArea]||'Kisumu';
   document.getElementById('edit-county').value=currentCounty;
   nkPopulateEditAreas(currentCounty,currentArea);
-  document.getElementById('edit-amenities-grid').innerHTML=AMENITY_KEYS.map(a=>`<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:7px;background:var(--surface);border-radius:6px"><input type="checkbox" id="edit-${a.key}" ${l[a.key]?'checked':''}/>${a.label}</label>`).join('');
+  const editAmenitiesArr = Array.isArray(l.amenities) ? l.amenities : [];
+  document.getElementById('edit-amenities-grid').innerHTML=AMENITY_KEYS.map(a=>`<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:7px;background:var(--surface);border-radius:6px"><input type="checkbox" id="edit-${a.key}" ${editAmenitiesArr.includes(a.key)?'checked':''}/>${a.label}</label>`).join('');
   if(l.is_multi_unit){
     showToast('This is a multi-unit property — price/bedroom fields here apply to the property summary only. Use "Manage units" to edit individual unit types.','');
   }
@@ -4628,8 +4645,16 @@ function openEditModal(id){
 
 async function saveEdit(){
   const id=document.getElementById('edit-id').value;
-  const am={};AMENITY_KEYS.forEach(a=>{am[a.key]=document.getElementById('edit-'+a.key)?.checked||false;});
-  const u={title:document.getElementById('edit-title').value.trim(),price:parseFloat(document.getElementById('edit-price').value)||0,price_type:document.getElementById('edit-price-type').value,bedrooms:parseInt(document.getElementById('edit-bedrooms').value)||null,bathrooms:parseInt(document.getElementById('edit-bathrooms').value)||null,size_sqm:parseFloat(document.getElementById('edit-size').value)||null,area:document.getElementById('edit-area').value,category:document.getElementById('edit-category').value,address:document.getElementById('edit-address').value.trim(),description:document.getElementById('edit-description').value.trim(),furnished:document.getElementById('edit-furnished').checked,contact_hidden:document.getElementById('edit-contact_hidden').checked,...am};
+  const editAmenities=AMENITY_KEYS.filter(a=>document.getElementById('edit-'+a.key)?.checked).map(a=>a.key);
+  const original=allListings.find(l=>l.id===id);
+  const priceFreqOut = document.getElementById('edit-price-type').value === 'sale' ? 'once' : (original?.price_frequency && original.price_frequency !== 'once' ? original.price_frequency : 'month');
+  const mergedDetails = { ...(original?.details||{}),
+    bedrooms: document.getElementById('edit-bedrooms').value || null,
+    bathrooms: document.getElementById('edit-bathrooms').value || null,
+    size_sqm: document.getElementById('edit-size').value || null,
+    furnished: document.getElementById('edit-furnished').checked ? 'yes' : 'no',
+  };
+  const u={title:document.getElementById('edit-title').value.trim(),price:parseFloat(document.getElementById('edit-price').value)||0,price_type:document.getElementById('edit-price-type').value,price_frequency:priceFreqOut,area:document.getElementById('edit-area').value,category:document.getElementById('edit-category').value,address:document.getElementById('edit-address').value.trim(),description:document.getElementById('edit-description').value.trim(),contact_hidden:document.getElementById('edit-contact_hidden').checked,amenities:editAmenities,details:mergedDetails};
   const btn=document.getElementById('btn-save-edit');btn.disabled=true;btn.innerHTML='<span class="spinner-sm"></span> Saving…';
   const original=allListings.find(l=>l.id===id);
   const oldPrice=original?Number(original.price):null;
