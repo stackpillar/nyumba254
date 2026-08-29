@@ -188,22 +188,30 @@
     .filter-tag button { background: none; color: var(--green-dark); font-size: 14px; line-height: 1; padding: 0; margin-left: 2px; opacity: .7; }
     .filter-tag button:hover { opacity: 1; }
 
+    /* ── Listings are paged: each "page" is a normal grid (fills row-major
+       natively — row 1 completes left-to-right before row 2 starts, no
+       JS tricks needed). Pages sit side-by-side in a horizontal strip;
+       the arrows scroll exactly one page at a time. ── */
     .listings-grid {
-      display: grid;
-      grid-auto-flow: column;
-      grid-template-rows: repeat(5, auto);      /* desktop: 5 rows tall */
-      grid-auto-columns: calc((100% - 32px) / 3); /* desktop: 3 columns visible */
-      align-items: stretch;   /* cards fill their row's height, no gaps */
-      gap: 16px;
+      display: flex;
       overflow-x: auto;
       overflow-y: hidden;
       scroll-behavior: smooth;
+      scroll-snap-type: x mandatory;
       scrollbar-width: none;
       -ms-overflow-style: none;
       -webkit-overflow-scrolling: touch;
       padding-bottom: 2px;
     }
     .listings-grid::-webkit-scrollbar { display: none; height: 0; }
+    .listings-page {
+      flex: 0 0 100%;
+      scroll-snap-align: start;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);  /* desktop: 3 columns */
+      align-items: stretch;                    /* cards fill row height, no gaps */
+      gap: 16px;
+    }
 
     #results { overflow: hidden; max-width: 100%; }
 
@@ -472,11 +480,10 @@
       .toolbar > div:first-child { width: 100%; justify-content: space-between; }
       .sort-select { width: 100%; }
 
-      /* ── Listings grid on mobile: 4 rows tall, one column visible;
-         swipe or tap the arrows to reveal the next column of 4. ── */
-      .listings-grid {
-        grid-template-rows: repeat(4, auto);
-        grid-auto-columns: 100%;
+      /* ── Listings pages on mobile: 4 rows tall, one column wide;
+         swipe or tap the arrows to reveal the next page of 4. ── */
+      .listings-page {
+        grid-template-columns: repeat(1, 1fr);
         gap: 14px;
       }
       .listings-grid .card { max-width: 100%; }
@@ -1656,45 +1663,39 @@
     if (counterEl) counterEl.textContent = `${idx+1}/${photos.length}`;
   }
 
-  /* ── Row-major reorder: the grid uses grid-auto-flow:column (needed for
-     fixed-row-count + horizontal scroll), which fills each column top-to-
-     bottom before starting the next. That reads column-major. To make it
-     *look* row-major (row 1 fills fully left-to-right before row 2 starts),
-     we permute the array so column-major placement lands each card in its
-     row-major visual slot. ── */
-  function nkGetGridRows() { return window.innerWidth <= 768 ? 4 : 5; }
-  function nkReorderRowMajor(items, rows) {
-    const n = items.length;
-    if (n <= rows) return items; // fits in one column already — order is irrelevant
-    const cols = Math.ceil(n / rows);
-    const out = new Array(n);
-    for (let k = 0; k < n; k++) {
-      const row = Math.floor(k / cols);
-      const col = k % cols;
-      const j = col * rows + row;
-      if (j < n) out[j] = items[k];
+  /* ── Paging: chunk listings into groups of rows×cols and render each
+     chunk as its own normal grid page. Grid's default row-major flow
+     (fills left-to-right, row by row) handles the ordering correctly —
+     no reordering trick needed, and it works for any item count. ── */
+  function nkGetGridDims() {
+    return window.innerWidth <= 768 ? { rows: 4, cols: 1 } : { rows: 5, cols: 3 };
+  }
+  function nkChunkIntoPages(items, rows, cols) {
+    const pageSize = rows * cols;
+    const pages = [];
+    for (let i = 0; i < items.length; i += pageSize) {
+      pages.push(items.slice(i, i + pageSize));
     }
-    // Fill any gap slots (last column may be short) with leftovers, preserving order
-    const placed = new Set(out.filter(Boolean));
-    const leftovers = items.filter(it => !placed.has(it));
-    for (let j = 0; j < n; j++) {
-      if (!out[j]) out[j] = leftovers.shift();
-    }
-    return out;
+    return pages.length ? pages : [[]];
+  }
+  function nkBuildPagesHtml(listings, dims) {
+    return nkChunkIntoPages(listings, dims.rows, dims.cols)
+      .map(page => `<div class="listings-page">${page.map(buildCard).join('')}</div>`)
+      .join('');
   }
 
   let nkLastListings = [];
+  let nkLastIsMobile = null;
 
   function renderResults(listings, count) {
     nkLastListings = listings;
-    nkLastRowsUsed = nkGetGridRows();
-    listings = nkReorderRowMajor(listings, nkLastRowsUsed);
+    nkLastIsMobile = window.innerWidth <= 768;
     const grid = document.getElementById('listings-grid');
     const rc = document.getElementById('result-count');
     rc.innerHTML = `<strong>${count.toLocaleString()}</strong> listing${count !== 1 ? 's' : ''} found`;
 
     if (!listings.length) {
-      grid.innerHTML = `<div class="empty-state">
+      grid.innerHTML = `<div class="empty-state" style="width:100%">
         <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
         <h3>No listings match your filters</h3>
         <p>Try adjusting your search or <a onclick="resetAllFilters()" style="cursor:pointer">reset all filters</a></p>
@@ -1703,7 +1704,7 @@
       nkUpdateScrollHints();
       return;
     }
-    grid.innerHTML = listings.map(buildCard).join('');
+    grid.innerHTML = nkBuildPagesHtml(listings, nkGetGridDims());
     requestAnimationFrame(nkUpdateScrollHints);
   }
 
@@ -1755,9 +1756,15 @@ function nkScrollWrap(btn, dir) {
   if (!wrap) return;
   const scroller = wrap.querySelector('.categories, .listings-grid, .areas');
   if (!scroller) return;
-  const firstCard = scroller.querySelector(':scope > *');
-  const gap = parseFloat(getComputedStyle(scroller).gap) || 16;
-  const step = firstCard ? firstCard.getBoundingClientRect().width + gap : scroller.clientWidth * 0.8;
+  // Listings are now paged — one arrow click moves exactly one full page
+  // (rows×cols cards), landing cleanly instead of mid-card.
+  const step = scroller.classList.contains('listings-grid')
+    ? scroller.clientWidth
+    : (() => {
+        const firstCard = scroller.querySelector(':scope > *');
+        const gap = parseFloat(getComputedStyle(scroller).gap) || 16;
+        return firstCard ? firstCard.getBoundingClientRect().width + gap : scroller.clientWidth * 0.8;
+      })();
   scroller.scrollBy({ left: step * (dir || 1), behavior: 'smooth' });
 }
 
@@ -1773,15 +1780,13 @@ function nkUpdateScrollHints() {
   rightBtn.classList.toggle('show', hasOverflow);
 }
 window.addEventListener('resize', nkUpdateScrollHints);
-let nkLastRowsUsed = null;
 window.addEventListener('resize', () => {
-  const rows = nkGetGridRows();
-  if (rows === nkLastRowsUsed || !nkLastListings.length) return;
-  nkLastRowsUsed = rows;
+  const isMobile = window.innerWidth <= 768;
+  if (isMobile === nkLastIsMobile || !nkLastListings.length) return;
+  nkLastIsMobile = isMobile;
   const grid = document.getElementById('listings-grid');
   if (!grid || grid.querySelector('.skeleton') || grid.querySelector('.empty-state')) return;
-  const reordered = nkReorderRowMajor(nkLastListings, rows);
-  grid.innerHTML = reordered.map(buildCard).join('');
+  grid.innerHTML = nkBuildPagesHtml(nkLastListings, nkGetGridDims());
   nkUpdateScrollHints();
 });
   function nkLSGetC(key) { try { return localStorage.getItem(key); } catch(e) { return null; } }
