@@ -704,7 +704,7 @@
       </button>
       <div class="nav-section-label" style="margin-top:8px">Elite tools</div>
       <button class="nav-item" id="nav-rent-ledger" onclick="showPage('rent-ledger')">
-        <svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 9h1M9 13h1M9 17h1M14 9h1M14 13h1M14 17h1"/></svg>Rent Ledger
+        <svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 9h1M9 13h1M9 17h1M14 9h1M14 13h1M14 17h1"/></svg><span id="nav-rent-ledger-label">Rent Ledger</span>
         <span class="badge-count red" id="nav-badge-rentledger" style="display:none">0</span>
       </button>
       <button class="nav-item" id="nav-demand-heatmap" onclick="showPage('demand-heatmap')">
@@ -905,7 +905,7 @@
     <!-- RENT LEDGER -->
     <div class="page" id="page-rent-ledger">
       <div class="section-head">
-        <h2>Rent &amp; Tenant Ledger</h2>
+        <h2 id="rl-page-heading">Rent &amp; Tenant Ledger</h2>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           <div class="rl-toolbar-icon-btn" title="Replay Rent Ledger tour" onclick="RLTour.restart()" role="button" tabindex="0" aria-label="Replay Rent Ledger tour" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#7c3aed" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
@@ -917,6 +917,12 @@
           <button class="btn btn-outline" id="btn-export-rl-annual" style="display:none" onclick="exportAnnualReport()">📊 Annual report</button>
           <button class="btn btn-primary" id="btn-add-rental-unit" style="display:none;background:#7c3aed" onclick="openAddRentalUnitModal()">
             <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add rental unit
+          </button>
+          <button class="btn btn-primary" id="btn-add-bnb-property" style="display:none;background:#7c3aed" onclick="openAddBnbPropertyModal()">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add property
+          </button>
+          <button class="btn btn-primary" id="btn-add-bnb-booking" style="display:none;background:#7c3aed" onclick="openAddBnbBookingModal()">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Log booking
           </button>
         </div>
       </div>
@@ -950,6 +956,13 @@
         <div id="rl-pipeline-wrap" style="display:none"></div>
         <div id="rl-finances-wrap" style="display:none"></div>
         <div id="rl-maintenance-wrap" style="display:none"></div>
+      </div>
+
+      <div id="bnb-ledger-content" style="display:none">
+        <div class="rl-summary-grid" id="bnb-summary-grid"></div>
+        <div id="bnb-upcoming-card" class="card" style="padding:18px 20px;margin-bottom:16px"></div>
+        <div class="section-head" style="margin-top:4px"><h3 style="font-size:15px">Your properties</h3></div>
+        <div id="bnb-properties-list"><div style="padding:30px;text-align:center;color:var(--text-3);font-size:13px">Loading…</div></div>
       </div>
     </div>
 
@@ -1246,9 +1259,21 @@
   <div class="modal" style="max-width:620px">
     <div class="modal-head"><h3>Manage units — <span id="mu-listing-title"></span></h3><div class="modal-close" onclick="closeModal('modal-manage-units')" role="button" tabindex="0" aria-label="Close" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeModal('modal-manage-units')}">✕</div></div>
     <div class="modal-body">
-      <p style="font-size:13px;color:var(--text-3);margin-bottom:16px;line-height:1.6">Mark a unit occupied once it's booked — this updates availability for buyers on the live listing immediately. Optionally record the floor, door/unit number, and position so you can track exactly which unit was taken.</p>
+      <p style="font-size:13px;color:var(--text-3);margin-bottom:16px;line-height:1.6">Add unit types, mark them occupied once taken, and edit price or availability any time — this updates the live listing immediately.</p>
       <div class="mu-summary-strip" id="mu-summary-strip"></div>
       <div id="mu-unit-list"><div style="text-align:center;padding:20px;color:var(--text-3);font-size:13px">Loading units…</div></div>
+      <button type="button" class="btn btn-outline" style="width:100%;justify-content:center;margin-top:10px" id="mu-add-toggle-btn" onclick="muToggleAddForm()">+ Add unit type</button>
+      <div class="mu-occupy-form" id="mu-add-form">
+        <div class="mu-occupy-grid" style="grid-template-columns:1fr 1fr 1fr">
+          <div><label>Unit label</label><input type="text" id="mu-new-label" placeholder="e.g. 2-bedroom, Door 4B"/></div>
+          <div><label>Price (KES)</label><input type="number" id="mu-new-price" min="0"/></div>
+          <div><label>How many total</label><input type="number" id="mu-new-total" min="1" value="1"/></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary btn-sm" onclick="muSaveNewUnit()">Add unit type</button>
+          <button class="btn btn-outline btn-sm" onclick="muToggleAddForm()">Cancel</button>
+        </div>
+      </div>
     </div>
     <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-manage-units')">Close</button></div>
   </div>
@@ -1374,6 +1399,53 @@
       <div class="form-group"><label>Notes</label><textarea id="ru-notes" placeholder="Optional — anything worth remembering about this unit"></textarea></div>
     </div>
     <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-add-rental-unit')">Cancel</button><button class="btn btn-primary" id="btn-save-rental-unit" onclick="saveRentalUnit()">Add unit</button></div>
+  </div>
+</div>
+
+<!-- ADD BNB PROPERTY MODAL -->
+<div class="modal-overlay" id="modal-add-bnb-property">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-head"><h3>Add BNB property</h3><div class="modal-close" onclick="closeModal('modal-add-bnb-property')">✕</div></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Property label</label><input type="text" id="bp-label" placeholder="e.g. Milimani 2BR Apartment"/></div>
+      <div class="form-group"><label>Link to an existing listing (optional)</label><select id="bp-listing"></select></div>
+      <div class="form-grid">
+        <div class="form-group"><label>Nightly rate (KES)</label><input type="number" id="bp-nightly" min="0"/></div>
+        <div class="form-group"><label>Weekend rate (optional)</label><input type="number" id="bp-weekend" min="0"/></div>
+      </div>
+      <div class="form-group"><label>Cleaning fee (optional)</label><input type="number" id="bp-cleaning" min="0"/></div>
+      <div class="form-group"><label>Notes</label><textarea id="bp-notes"></textarea></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-add-bnb-property')">Cancel</button><button class="btn btn-primary" id="btn-save-bnb-property" onclick="saveBnbProperty()">Add property</button></div>
+  </div>
+</div>
+
+<!-- ADD BNB BOOKING MODAL -->
+<div class="modal-overlay" id="modal-add-bnb-booking">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-head"><h3>Log a booking</h3><div class="modal-close" onclick="closeModal('modal-add-bnb-booking')">✕</div></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Property</label><select id="bb-property"></select></div>
+      <div class="form-group"><label>Guest name</label><input type="text" id="bb-guest-name"/></div>
+      <div class="form-grid">
+        <div class="form-group"><label>Guest phone</label><input type="text" id="bb-guest-phone"/></div>
+        <div class="form-group"><label>Guest email</label><input type="text" id="bb-guest-email"/></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label>Check-in</label><input type="date" id="bb-checkin"/></div>
+        <div class="form-group"><label>Check-out</label><input type="date" id="bb-checkout"/></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label>Source</label><select id="bb-source"><option value="direct">Direct</option><option value="airbnb">Airbnb</option><option value="booking_com">Booking.com</option><option value="other">Other</option></select></div>
+        <div class="form-group"><label>Total amount (KES)</label><input type="number" id="bb-total" min="0"/></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label>Amount paid so far</label><input type="number" id="bb-paid" min="0" value="0"/></div>
+        <div class="form-group"><label>Payment status</label><select id="bb-payment-status"><option value="due">Due</option><option value="partial">Partial</option><option value="paid">Paid</option><option value="refunded">Refunded</option></select></div>
+      </div>
+      <div class="form-group"><label>Notes</label><textarea id="bb-notes"></textarea></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-add-bnb-booking')">Cancel</button><button class="btn btn-primary" id="btn-save-bnb-booking" onclick="saveBnbBooking()">Save booking</button></div>
   </div>
 </div>
 
@@ -2091,19 +2163,39 @@ function eliteActive(){
   return sub.active && sub.plan==='elite';
 }
 
+function isBnbLedgerMode(){
+  const p = ownerProfile || currentProfile;
+  return p?.plan_category === 'bnb';
+}
 function updateEliteGatedPages(sub){
   const isElite = sub.active && sub.plan==='elite';
+  const bnbMode = isBnbLedgerMode();
   const rlLocked=document.getElementById('rent-ledger-locked'), rlContent=document.getElementById('rent-ledger-content');
-  if(rlLocked && rlContent){ rlLocked.style.display = isElite?'none':'block'; rlContent.style.display = isElite?'block':'none'; }
+  const bnbContent=document.getElementById('bnb-ledger-content');
+  if(rlLocked){ rlLocked.style.display = isElite?'none':'block'; }
+  if(rlContent) rlContent.style.display = (isElite && !bnbMode)?'block':'none';
+  if(bnbContent) bnbContent.style.display = (isElite && bnbMode)?'block':'none';
+  const rlHeadingEl=document.getElementById('rl-page-heading');
+  const rlNavLabelEl=document.getElementById('nav-rent-ledger-label');
+  if(rlHeadingEl) rlHeadingEl.textContent = bnbMode ? 'BNB Booking Ledger' : 'Rent & Tenant Ledger';
+  if(rlNavLabelEl) rlNavLabelEl.textContent = bnbMode ? 'Booking Ledger' : 'Rent Ledger';
   const dhLocked=document.getElementById('demand-locked'), dhContent=document.getElementById('demand-content');
   if(dhLocked && dhContent){ dhLocked.style.display = isElite?'none':'block'; dhContent.style.display = isElite?'block':'none'; }
   const addUnitBtn=document.getElementById('btn-add-rental-unit');
-  if(addUnitBtn) addUnitBtn.style.display = isElite?'inline-flex':'none';
+  if(addUnitBtn) addUnitBtn.style.display = (isElite && !bnbMode)?'inline-flex':'none';
+  const addBnbPropBtn=document.getElementById('btn-add-bnb-property');
+  if(addBnbPropBtn) addBnbPropBtn.style.display = (isElite && bnbMode)?'inline-flex':'none';
+  const addBnbBookingBtn=document.getElementById('btn-add-bnb-booking');
+  if(addBnbBookingBtn) addBnbBookingBtn.style.display = (isElite && bnbMode)?'inline-flex':'none';
   const digestRow=document.getElementById('demand-digest-row');
   if(digestRow){ digestRow.style.display = isElite?'flex':'none'; const dt=document.getElementById('demand-digest-toggle'); if(dt) dt.checked=!!currentProfile?.demand_digest_enabled; }
   const aiConciergeRow=document.getElementById('ai-concierge-row');
   if(aiConciergeRow){ aiConciergeRow.style.display = isElite?'flex':'none'; const act=document.getElementById('ai-concierge-toggle'); if(act) act.checked=!!currentProfile?.ai_concierge_enabled; }
-  ['btn-export-rl-csv','btn-export-rl-pdf','btn-export-rl-annual','btn-remind-overdue','btn-export-di-csv','btn-export-di-pdf'].forEach(id=>{
+  ['btn-export-rl-csv','btn-export-rl-pdf','btn-export-rl-annual','btn-remind-overdue'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display = (isElite && !bnbMode)?'inline-flex':'none';
+  });
+  ['btn-export-di-csv','btn-export-di-pdf'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.style.display = isElite?'inline-flex':'none';
   });
@@ -2265,6 +2357,211 @@ async function ensureStorefrontSlug(){
   const err = await updateOwnerProfile({storefront_slug:candidate});
   if(err){ console.error('Could not save storefront slug:',err); return effectiveSellerId; }
   return candidate;
+}
+
+// ══════════════════════════════════════════════════════════════
+// BNB BOOKING LEDGER (Elite + plan_category='bnb') — manual-entry
+// booking tracker. Tables: bnb_properties, bnb_bookings.
+// ══════════════════════════════════════════════════════════════
+let bnbPropertiesCache=[];
+
+async function loadBnbLedger(){
+  if(!eliteActive())return;
+  const wrap=document.getElementById('bnb-properties-list');
+  wrap.innerHTML='<div style="padding:30px;text-align:center;color:var(--text-3);font-size:13px">Loading…</div>';
+  const{data,error}=await db.from('bnb_properties').select('*, bnb_bookings(*)').eq('seller_id',effectiveSellerId).order('created_at',{ascending:false});
+  if(error){wrap.innerHTML=`<div class="empty-state"><p>Could not load: ${escHtml(error.message)}</p></div>`;return;}
+  bnbPropertiesCache=data||[];
+  renderBnbSummary();
+  renderBnbUpcoming();
+  renderBnbProperties();
+}
+
+function bnbActiveOrFutureBookings(p){
+  const today=new Date().toISOString().slice(0,10);
+  return (p.bnb_bookings||[]).filter(b=>b.status!=='cancelled' && b.check_out>=today).sort((a,b)=>new Date(a.check_in)-new Date(b.check_in));
+}
+function bnbNightsBetween(ci,co){ return Math.max(1,Math.round((new Date(co)-new Date(ci))/86400000)); }
+
+function renderBnbSummary(){
+  const el=document.getElementById('bnb-summary-grid');
+  if(!el)return;
+  const totalProps=bnbPropertiesCache.length;
+  const today=new Date().toISOString().slice(0,10);
+  let occupiedToday=0,upcoming7=0,dueAmount=0,monthRevenue=0,dueBookingsCount=0;
+  const monthKey=currentMonthKey();
+  bnbPropertiesCache.forEach(p=>{
+    (p.bnb_bookings||[]).forEach(b=>{
+      if(b.status==='cancelled')return;
+      if(b.check_in<=today && b.check_out>today) occupiedToday++;
+      const days=Math.ceil((new Date(b.check_in)-new Date())/86400000);
+      if(days>=0 && days<=7) upcoming7++;
+      if(b.payment_status==='due'||b.payment_status==='partial'){
+        dueAmount += (Number(b.total_amount)||0)-(Number(b.amount_paid)||0);
+        dueBookingsCount++;
+      }
+      if(String(b.check_in).slice(0,7)===monthKey) monthRevenue += Number(b.amount_paid)||0;
+    });
+  });
+  const occRate = totalProps>0 ? Math.round((occupiedToday/totalProps)*100) : 0;
+  el.innerHTML=`
+    <div class="rl-stat"><div class="rl-label">Properties</div><div class="rl-val">${totalProps}</div></div>
+    <div class="rl-stat ${occRate>=50?'good':''}"><div class="rl-label">Occupied tonight</div><div class="rl-val">${occupiedToday} of ${totalProps}</div></div>
+    <div class="rl-stat purple"><div class="rl-label">Check-ins next 7 days</div><div class="rl-val">${upcoming7}</div></div>
+    <div class="rl-stat good"><div class="rl-label">Collected this month</div><div class="rl-val">KES ${monthRevenue.toLocaleString('en-KE')}</div></div>
+    <div class="rl-stat ${dueAmount>0?'danger':''}"><div class="rl-label">Outstanding balance</div><div class="rl-val">KES ${dueAmount.toLocaleString('en-KE')}${dueBookingsCount?` <span style="font-size:12px;font-weight:600">(${dueBookingsCount})</span>`:''}</div></div>`;
+  const badge=document.getElementById('nav-badge-rentledger');
+  if(badge){badge.textContent=dueBookingsCount;badge.style.display=dueBookingsCount>0?'inline-block':'none';}
+}
+
+function renderBnbUpcoming(){
+  const el=document.getElementById('bnb-upcoming-card');
+  if(!el)return;
+  const today=new Date().toISOString().slice(0,10);
+  const rows=[];
+  bnbPropertiesCache.forEach(p=>{
+    (p.bnb_bookings||[]).forEach(b=>{
+      if(b.status==='cancelled')return;
+      if(b.check_in>=today || b.check_out>=today) rows.push({p,b});
+    });
+  });
+  rows.sort((a,b)=>new Date(a.b.check_in)-new Date(b.b.check_in));
+  el.innerHTML = `<h3 style="font-size:13.5px;font-weight:700;margin-bottom:10px">📅 Upcoming check-ins &amp; check-outs</h3>` +
+    (rows.length ? rows.slice(0,8).map(r=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:12.5px">
+        <span><strong>${escHtml(r.b.guest_name)}</strong> · ${escHtml(r.p.property_label)}</span>
+        <span>${new Date(r.b.check_in).toLocaleDateString('en-KE',{day:'numeric',month:'short'})} → ${new Date(r.b.check_out).toLocaleDateString('en-KE',{day:'numeric',month:'short'})}</span>
+      </div>`).join('') : '<div style="font-size:12.5px;color:var(--text-3)">No upcoming bookings logged.</div>');
+}
+
+function renderBnbProperties(){
+  const wrap=document.getElementById('bnb-properties-list');
+  if(!bnbPropertiesCache.length){
+    wrap.innerHTML=`<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><h3>No BNB properties yet</h3><p>Add a property you manage bookings for to start tracking guests and payments.</p><button class="btn btn-primary" onclick="openAddBnbPropertyModal()">Add property</button></div>`;
+    return;
+  }
+  wrap.innerHTML=bnbPropertiesCache.map(p=>{
+    const bookings=bnbActiveOrFutureBookings(p);
+    return `<div class="card" style="padding:18px 20px;margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+        <div>
+          <div style="font-weight:700;font-size:14px">${escHtml(p.property_label)}</div>
+          <div style="font-size:12px;color:var(--text-3)">KES ${Number(p.nightly_rate).toLocaleString('en-KE')}/night${p.cleaning_fee?' + KES '+Number(p.cleaning_fee).toLocaleString('en-KE')+' cleaning':''}${p.notes?' · '+escHtml(p.notes):''}</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-outline btn-sm" onclick="openAddBnbBookingModal('${p.id}')">+ Log booking</button>
+          <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteBnbProperty('${p.id}','${escAttr(p.property_label)}')">Delete</button>
+        </div>
+      </div>
+      ${bookings.length ? `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        ${bookings.map(b=>{
+          const nights=bnbNightsBetween(b.check_in,b.check_out);
+          const balance=(Number(b.total_amount)||0)-(Number(b.amount_paid)||0);
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12.5px">
+            <span><strong>${escHtml(b.guest_name)}</strong> · ${nights} night(s) · ${escHtml(b.source)} · ${new Date(b.check_in).toLocaleDateString('en-KE',{day:'numeric',month:'short'})}–${new Date(b.check_out).toLocaleDateString('en-KE',{day:'numeric',month:'short'})}</span>
+            <span style="display:flex;gap:8px;align-items:center">
+              <span class="rl-chip ${b.payment_status==='paid'?'paid':b.payment_status==='partial'?'partial':b.payment_status==='refunded'?'due':'overdue'}">${b.payment_status}${balance>0?' · KES '+balance.toLocaleString('en-KE')+' due':''}</span>
+              <button class="btn btn-outline btn-sm" onclick="openEditBnbBookingModal('${b.id}')">Edit</button>
+            </span>
+          </div>`;
+        }).join('')}
+      </div>` : '<div style="margin-top:10px;font-size:12px;color:var(--text-3)">No upcoming bookings for this property.</div>'}
+    </div>`;
+  }).join('');
+}
+
+function openAddBnbPropertyModal(){
+  const sel=document.getElementById('bp-listing');
+  sel.innerHTML='<option value="">Not linked to a listing</option>'+allListings.filter(l=>l.category==='airbnb').map(l=>`<option value="${l.id}">${escHtml(l.title)}</option>`).join('');
+  document.getElementById('bp-label').value='';document.getElementById('bp-nightly').value='';document.getElementById('bp-weekend').value='';document.getElementById('bp-cleaning').value='';document.getElementById('bp-notes').value='';
+  openModal('modal-add-bnb-property');
+}
+async function saveBnbProperty(){
+  const label=document.getElementById('bp-label').value.trim();
+  if(!label){showToast('Please name the property','error');return;}
+  const payload={
+    seller_id:effectiveSellerId,
+    listing_id:document.getElementById('bp-listing').value||null,
+    property_label:label,
+    nightly_rate:parseFloat(document.getElementById('bp-nightly').value)||0,
+    weekend_rate:document.getElementById('bp-weekend').value?parseFloat(document.getElementById('bp-weekend').value):null,
+    cleaning_fee:parseFloat(document.getElementById('bp-cleaning').value)||0,
+    notes:document.getElementById('bp-notes').value.trim()||null,
+  };
+  const btn=document.getElementById('btn-save-bnb-property');btn.disabled=true;btn.textContent='Saving…';
+  const{error}=await db.from('bnb_properties').insert(payload);
+  btn.disabled=false;btn.textContent='Add property';
+  if(error){showToast('Could not save: '+error.message,'error');return;}
+  closeModal('modal-add-bnb-property');
+  showToast('Property added ✓','success');
+  loadBnbLedger();
+}
+async function deleteBnbProperty(id,label){
+  if(!confirm(`Delete "${label}"? This also removes its booking history.`))return;
+  const{error}=await db.from('bnb_properties').delete().eq('id',id);
+  if(error){showToast('Could not delete: '+error.message,'error');return;}
+  showToast('Property deleted','success');
+  loadBnbLedger();
+}
+
+let bbEditingId=null;
+function openAddBnbBookingModal(preselectPropertyId){
+  bbEditingId=null;
+  const sel=document.getElementById('bb-property');
+  sel.innerHTML=bnbPropertiesCache.map(p=>`<option value="${p.id}">${escHtml(p.property_label)}</option>`).join('');
+  if(preselectPropertyId) sel.value=preselectPropertyId;
+  document.getElementById('bb-guest-name').value='';document.getElementById('bb-guest-phone').value='';document.getElementById('bb-guest-email').value='';
+  document.getElementById('bb-checkin').value='';document.getElementById('bb-checkout').value='';
+  document.getElementById('bb-source').value='direct';document.getElementById('bb-total').value='';document.getElementById('bb-paid').value='0';document.getElementById('bb-payment-status').value='due';document.getElementById('bb-notes').value='';
+  openModal('modal-add-bnb-booking');
+}
+function openEditBnbBookingModal(bookingId){
+  let found=null;
+  bnbPropertiesCache.forEach(p=>{(p.bnb_bookings||[]).forEach(b=>{if(String(b.id)===String(bookingId))found={p,b};});});
+  if(!found){showToast('Booking not found','error');return;}
+  bbEditingId=bookingId;
+  const sel=document.getElementById('bb-property');
+  sel.innerHTML=bnbPropertiesCache.map(p=>`<option value="${p.id}">${escHtml(p.property_label)}</option>`).join('');
+  sel.value=found.p.id;
+  document.getElementById('bb-guest-name').value=found.b.guest_name||'';
+  document.getElementById('bb-guest-phone').value=found.b.guest_phone||'';
+  document.getElementById('bb-guest-email').value=found.b.guest_email||'';
+  document.getElementById('bb-checkin').value=found.b.check_in||'';
+  document.getElementById('bb-checkout').value=found.b.check_out||'';
+  document.getElementById('bb-source').value=found.b.source||'direct';
+  document.getElementById('bb-total').value=found.b.total_amount||'';
+  document.getElementById('bb-paid').value=found.b.amount_paid||0;
+  document.getElementById('bb-payment-status').value=found.b.payment_status||'due';
+  document.getElementById('bb-notes').value=found.b.notes||'';
+  openModal('modal-add-bnb-booking');
+}
+async function saveBnbBooking(){
+  const name=document.getElementById('bb-guest-name').value.trim();
+  const checkin=document.getElementById('bb-checkin').value;
+  const checkout=document.getElementById('bb-checkout').value;
+  if(!name||!checkin||!checkout){showToast('Guest name, check-in and check-out are required','error');return;}
+  if(checkout<=checkin){showToast('Check-out must be after check-in','error');return;}
+  const payload={
+    bnb_property_id:document.getElementById('bb-property').value,
+    guest_name:name,
+    guest_phone:document.getElementById('bb-guest-phone').value.trim()||null,
+    guest_email:document.getElementById('bb-guest-email').value.trim()||null,
+    check_in:checkin,check_out:checkout,
+    source:document.getElementById('bb-source').value,
+    total_amount:parseFloat(document.getElementById('bb-total').value)||0,
+    amount_paid:parseFloat(document.getElementById('bb-paid').value)||0,
+    payment_status:document.getElementById('bb-payment-status').value,
+    notes:document.getElementById('bb-notes').value.trim()||null,
+  };
+  const btn=document.getElementById('btn-save-bnb-booking');btn.disabled=true;btn.textContent='Saving…';
+  let error;
+  if(bbEditingId){ ({error}=await db.from('bnb_bookings').update(payload).eq('id',bbEditingId)); }
+  else { ({error}=await db.from('bnb_bookings').insert(payload)); }
+  btn.disabled=false;btn.textContent='Save booking';
+  if(error){showToast('Could not save: '+error.message,'error');return;}
+  closeModal('modal-add-bnb-booking');
+  showToast('Booking saved ✓','success');
+  loadBnbLedger();
 }
 
 // ── Rent & Tenant Ledger (Elite) — full property-management grade ledger ──
@@ -3447,6 +3744,16 @@ async function loadDemandInsights(){
     mineWrap.innerHTML='<div style="font-size:12.5px;color:var(--text-3)">Post a listing to see how it compares to area demand.</div>';
   }
   renderDemandPortfolioOverlay();
+  renderBnbDemandTip();
+}
+function renderBnbDemandTip(){
+  const wrap=document.getElementById('demand-mine-list');
+  if(!wrap||!eliteActive()||!isBnbLedgerMode())return;
+  const note=document.createElement('div');
+  note.style.cssText='margin-top:14px;padding-top:14px;border-top:1px dashed var(--border);font-size:12.5px;color:#5b21b6';
+  const avgNightly=bnbPropertiesCache.length?Math.round(bnbPropertiesCache.reduce((s,p)=>s+(Number(p.nightly_rate)||0),0)/bnbPropertiesCache.length):0;
+  note.innerHTML=`🏖️ Your average nightly rate across properties is <strong>KES ${avgNightly.toLocaleString('en-KE')}</strong>. Compare that against the demand areas above — high-demand areas with a low nightly rate here may be underpriced.`;
+  wrap.appendChild(note);
 }
 
 function diDownloadBlob(filename,content,mime){
@@ -4273,8 +4580,9 @@ function renderListingsTable(){
       : l.status==='approved_unpaid_bnb'
         ? `<div class="trial-note urgent">📅 Approved — subscribe to a BNB plan to make this listing live. <a href="/plans" class="upgrade-link">Subscribe →</a></div>`
         : '';
-    const availSummary=l.is_multi_unit?muAvailabilitySummary(l):null;
-    const multiUnitNote=l.is_multi_unit?`<div class="multiunit-note">🏢 Multi-unit property${availSummary?' · '+availSummary:''} <span class="manage-link" onclick="openManageUnitsModal('${l.id}')">Manage units</span></div>`:'';
+    const hasUnitTypes=(l.listing_units&&l.listing_units.length>0);
+    const availSummary=hasUnitTypes?muAvailabilitySummary(l):null;
+    const multiUnitNote=hasUnitTypes?`<div class="multiunit-note">🏢 Has unit types${availSummary?' · '+availSummary:''} <span class="manage-link" onclick="openManageUnitsModal('${l.id}')">Manage unit types</span></div>`:'';
 
     // Which actions are permitted per status
     const isActive   = l.status==='active'   && !l.is_disabled;
@@ -4291,8 +4599,8 @@ const statusBtn=l.is_disabled
   :(isOccupied||isPaused)
     ?`<div class="icon-btn purple" data-id="${l.id}" onclick="reactivateListing(this.dataset.id)" title="Resume — sends back for a quick admin recheck" role="button" tabindex="0" aria-label="Resume listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg></div>`
     :isActive
-      ?(l.is_multi_unit
-        ?`<div class="icon-btn locked" title="Multi-unit property — use the purple &quot;Manage units&quot; icon to mark individual units occupied instead of the whole listing"><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg></div>`
+      ?(hasUnitTypes
+        ?`<div class="icon-btn locked" title="Has unit types — use the purple &quot;Manage unit types&quot; icon to mark individual units occupied instead of the whole listing"><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg></div>`
         :`<div class="icon-btn purple" data-id="${l.id}" data-title="${escAttr(l.title)}" onclick="openOccupiedModal(this.dataset.id,this.dataset.title)" title="${l.price_type==='rent'?'Mark as occupied':'Mark as sold'}" role="button" tabindex="0" aria-label="${l.price_type==='rent'?'Mark as occupied':'Mark as sold'}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg></div>`)
       :`<div class="icon-btn locked" title="Awaiting admin approval — no status changes allowed"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>`;
 
@@ -4308,9 +4616,9 @@ const publishNowBtn = (l.status==='scheduled')
   ?`<div class="icon-btn purple" data-id="${l.id}" onclick="publishScheduledNow(this.dataset.id)" title="Publish now instead of waiting" role="button" tabindex="0" aria-label="Publish now" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>`
   :'';
 
-const manageUnitsBtn=l.is_multi_unit
-  ?`<div class="icon-btn purple" data-id="${l.id}" onclick="openManageUnitsModal(this.dataset.id)" title="Manage units — mark occupied/available" role="button" tabindex="0" aria-label="Manage units" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg></div>`
-  :'';
+const manageUnitsBtn=hasUnitTypes
+  ?`<div class="icon-btn purple" data-id="${l.id}" onclick="openManageUnitsModal(this.dataset.id)" title="Manage unit types — mark occupied/available, add/edit/delete types" role="button" tabindex="0" aria-label="Manage unit types" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg></div>`
+  :`<div class="icon-btn" data-id="${l.id}" onclick="openManageUnitsModal(this.dataset.id)" title="Add unit types to track separately" role="button" tabindex="0" aria-label="Add unit types" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg></div>`;
 
 const manageVideosBtn=subscriptionInfo().active
   ?`<div class="icon-btn purple" data-id="${l.id}" onclick="openManageVideosModal(this.dataset.id)" title="Manage video walkthrough" role="button" tabindex="0" aria-label="Manage videos" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>`
@@ -4334,7 +4642,7 @@ const contactHideBtn = globalContactHidden
         ${(l.status!=='occupied'&&l.status!=='approved_unpaid'&&l.status!=='approved_unpaid_bnb'&&d.banner)?`<div class="disabled-note">${d.banner}</div>`:''}
         ${occupiedNote}${trialNote}${payDueNote}${bnbNote}${multiUnitNote}
       </div></div></td>
-      <td><div class="listing-price-text">${l.is_multi_unit?muPriceRangeText(l):`KES ${Number(l.price).toLocaleString('en-KE')}${l.price_type==='rent'?'/mo':''}`}</div><div class="listing-price-sub">${l.is_multi_unit?(l.total_units?l.total_units+' units total':''):(l.price_type==='rent'?'Monthly rent':'For sale')}</div></td>
+      <td><div class="listing-price-text">${hasUnitTypes?muPriceRangeText(l):`KES ${Number(l.price).toLocaleString('en-KE')}${l.price_type==='rent'?'/mo':''}`}</div><div class="listing-price-sub">${hasUnitTypes?(l.listing_units.length+' unit type(s)'):(l.price_type==='rent'?'Monthly rent':'For sale')}</div></td>
       <td><span class="status ${d.cls}">${d.label}</span></td>
       <td><span style="font-size:13px;font-weight:600;color:${mc>0?'var(--green-dark)':'var(--text-3)'}">${mc}${uc>0?` <span style="color:var(--red);font-size:11px">(${uc} new)</span>`:''}</span></td>
       <td style="font-size:13px;color:var(--text-3)">${l.views||0}</td>
@@ -4443,6 +4751,8 @@ function renderManageUnitsModal(){
         <div class="mu-unit-actions">
           <button class="btn btn-primary btn-sm" ${available<=0?'disabled':''} onclick="muToggleOccupyForm(${u.id})">Mark one occupied</button>
           <button class="btn btn-outline btn-sm" ${available>=total?'disabled':''} onclick="muMarkAvailable(${u.id})">Mark one available</button>
+          <button class="btn btn-outline btn-sm" onclick="muOpenEditForm(${u.id})">Edit</button>
+          <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="muDeleteUnit(${u.id},'${escAttr(u.unit_label)}')">Delete</button>
         </div>
         <div class="mu-occupy-form" id="mu-occupy-form-${u.id}">
           <div class="mu-occupy-grid">
@@ -4471,6 +4781,58 @@ function renderManageUnitsModal(){
 }
 
 function muToggleOccupyForm(unitId){document.getElementById(`mu-occupy-form-${unitId}`)?.classList.toggle('open');}
+
+function muToggleAddForm(){document.getElementById('mu-add-form')?.classList.toggle('open');}
+
+async function muSaveNewUnit(){
+  const label=document.getElementById('mu-new-label').value.trim();
+  const price=parseFloat(document.getElementById('mu-new-price').value)||0;
+  const total=parseInt(document.getElementById('mu-new-total').value)||1;
+  if(!label){showToast('Please name the unit type','error');return;}
+  if(muActionBusy)return;
+  muActionBusy=true;
+  try{
+    const{error}=await db.from('listing_units').insert({listing_id:muActiveListingId,unit_label:label,price,quantity_available:total,quantity_total:total});
+    if(error){showToast('Could not add unit type: '+error.message,'error');return;}
+    document.getElementById('mu-new-label').value='';document.getElementById('mu-new-price').value='';document.getElementById('mu-new-total').value='1';
+    muToggleAddForm();
+    showToast('Unit type added ✓','success');
+    await openManageUnitsModal(muActiveListingId);
+    renderListingsTable();renderQuickListings();
+  } finally { muActionBusy=false; }
+}
+
+function muOpenEditForm(unitId){
+  const u=muUnits.find(x=>x.id===unitId);if(!u)return;
+  const newLabel=prompt('Unit label:',u.unit_label);
+  if(newLabel===null)return;
+  const newPrice=prompt('Price (KES):',u.price);
+  if(newPrice===null)return;
+  const newTotal=prompt('Total units of this type:',u.quantity_total??u.quantity_available);
+  if(newTotal===null)return;
+  muSaveEditedUnit(unitId,newLabel.trim(),parseFloat(newPrice)||0,parseInt(newTotal)||1);
+}
+async function muSaveEditedUnit(unitId,label,price,total){
+  if(!label){showToast('Label cannot be empty','error');return;}
+  const u=muUnits.find(x=>x.id===unitId);if(!u)return;
+  const currentAvail=u.quantity_available??0;
+  const currentTotal=u.quantity_total??currentAvail;
+  const occupiedCount=Math.max(0,currentTotal-currentAvail);
+  const newAvail=Math.max(0,total-occupiedCount);
+  const{error}=await db.from('listing_units').update({unit_label:label,price,quantity_total:total,quantity_available:newAvail}).eq('id',unitId);
+  if(error){showToast('Could not update: '+error.message,'error');return;}
+  showToast('Unit type updated ✓','success');
+  await openManageUnitsModal(muActiveListingId);
+  renderListingsTable();renderQuickListings();
+}
+async function muDeleteUnit(unitId,label){
+  if(!confirm(`Delete unit type "${label}"? This cannot be undone.`))return;
+  const{error}=await db.from('listing_units').delete().eq('id',unitId);
+  if(error){showToast('Could not delete: '+error.message,'error');return;}
+  showToast('Unit type deleted','success');
+  await openManageUnitsModal(muActiveListingId);
+  renderListingsTable();renderQuickListings();
+}
 
 async function muConfirmOccupy(unitId){
   if(muActionBusy)return;
@@ -4636,8 +4998,8 @@ function openEditModal(id){
   nkPopulateEditAreas(currentCounty,currentArea);
   const editAmenitiesArr = Array.isArray(l.amenities) ? l.amenities : [];
   document.getElementById('edit-amenities-grid').innerHTML=AMENITY_KEYS.map(a=>`<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:7px;background:var(--surface);border-radius:6px"><input type="checkbox" id="edit-${a.key}" ${editAmenitiesArr.includes(a.key)?'checked':''}/>${a.label}</label>`).join('');
-  if(l.is_multi_unit){
-    showToast('This is a multi-unit property — price/bedroom fields here apply to the property summary only. Use "Manage units" to edit individual unit types.','');
+  if(l.listing_units&&l.listing_units.length>0){
+    showToast('This listing has unit types — price/bedroom fields here apply to the property summary only. Use "Manage unit types" to edit individual unit types.','');
   }
   openModal('modal-edit');
   if(l.is_disabled)setTimeout(()=>showToast("Disabled by admin. Edits won't make it live — contact admin.",'error'),350);
@@ -5027,7 +5389,7 @@ async function generateBrochure(id){
     doc.text(`${l.area}${l.sub_area?', '+l.sub_area:''}`,margin,y);y+=8;
 
     doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(8,80,65);
-    const priceTxt=l.is_multi_unit?muPriceRangeText(l):`KES ${Number(l.price).toLocaleString('en-KE')}${l.price_type==='rent'?'/mo':''}`;
+    const hasUnitTypesQ=(l.listing_units&&l.listing_units.length>0);const priceTxt=hasUnitTypesQ?muPriceRangeText(l):`KES ${Number(l.price).toLocaleString('en-KE')}${l.price_type==='rent'?'/mo':''}`;
     doc.text(priceTxt,margin,y);y+=10;
 
     doc.setDrawColor(224,222,216);doc.line(margin,y,pageW-margin,y);y+=8;
@@ -5069,7 +5431,7 @@ async function generateBrochure(id){
 }
 
 const pageTitles={overview:'Overview',listings:'My listings',messages:'Messages',enquiries:'Enquiries',reviews:'Reviews',payments:'Payments',settings:'Settings','rent-ledger':'Rent & Tenant Ledger','demand-heatmap':'Demand Insights'};
-function showPage(name){sessionStorage.setItem('ny_last_page',name);document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');const navEl=document.getElementById('nav-'+name);if(navEl)navEl.classList.add('active');document.getElementById('topbar-title').textContent=pageTitles[name]||name;if(name==='overview')renderOverview();if(name==='listings')renderListingsTable();if(name==='messages'){showThreadListMobile();renderThreadList();}if(name==='enquiries')renderEnquiries();if(name==='reviews')renderReviews();if(name==='payments')renderPayments();if(name==='rent-ledger')loadRentalUnits();if(name==='demand-heatmap')loadDemandInsights();closeSidebar();
+function showPage(name){sessionStorage.setItem('ny_last_page',name);document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');const navEl=document.getElementById('nav-'+name);if(navEl)navEl.classList.add('active');document.getElementById('topbar-title').textContent=pageTitles[name]||name;if(name==='overview')renderOverview();if(name==='listings')renderListingsTable();if(name==='messages'){showThreadListMobile();renderThreadList();}if(name==='enquiries')renderEnquiries();if(name==='reviews')renderReviews();if(name==='payments')renderPayments();if(name==='rent-ledger'){ if(isBnbLedgerMode()) loadBnbLedger(); else loadRentalUnits(); }if(name==='demand-heatmap')loadDemandInsights();closeSidebar();
   const scwFabEl=document.getElementById('scw-fab');
   if(scwFabEl){
     if(name==='messages'){

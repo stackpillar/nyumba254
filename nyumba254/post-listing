@@ -471,6 +471,16 @@
       <div style="background:var(--surface);border-radius:var(--radius);padding:12px 14px;font-size:12.5px;color:var(--text-3);margin-top:6px">
         Tip: listings with security features and parking get more enquiries.
       </div>
+      <div class="field" style="margin-top:18px;padding-top:18px;border-top:1px solid var(--border)">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:400">
+          <input type="checkbox" id="std_has_units" onchange="toggleStandardUnits(this.checked)" style="width:18px;height:18px;accent-color:var(--green);cursor:pointer"/>
+          This property has multiple similar units to track separately (e.g. an apartment block with several doors)
+        </label>
+      </div>
+      <div id="std-units-wrap" style="display:none;margin-top:14px">
+        <div id="tier-rows-standard"></div>
+        <button type="button" class="btn-add-tier" onclick="addTierRow()">+ Add unit type</button>
+      </div>
     </div>
 
     <!-- Boarding House details -->
@@ -1062,6 +1072,9 @@ function applyCategoryUI() {
     priceLabel.innerHTML = 'Price (KES) <span class="req">*</span>';
     priceHint.textContent = 'Enter digits only — choose the payment frequency alongside it.';
   }
+  const stdUnitsWrap = document.getElementById('std-units-wrap');
+  if (stdUnitsWrap) stdUnitsWrap.style.display = (NK_CATEGORIES[selectedCat].group === 'standard' && document.getElementById('std_has_units')?.checked) ? 'block' : 'none';
+  if (NK_CATEGORIES[selectedCat].group === 'boarding' || standardUnitsEnabled()) renderTierRows();
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1099,8 +1112,17 @@ function updateTierField(id, field, value) {
   if (row) row[field] = value;
   scheduleDraftSave();
 }
-function renderTierRows() {
-  document.getElementById('tier-rows').innerHTML = tierRows.map((t, i) => `
+function getValidTiers() {
+  return tierRows.filter(t => t.label.trim() && t.price && parseFloat(t.price) > 0 && t.quantity !== '' && parseInt(t.quantity) >= 0);
+}
+function toggleStandardUnits(checked) {
+  document.getElementById('std-units-wrap').style.display = checked ? 'block' : 'none';
+  if (checked && !tierRows.length) addTierRow();
+  scheduleDraftSave();
+}
+function standardUnitsEnabled() {
+  return document.getElementById('std_has_units')?.checked && NK_CATEGORIES[selectedCat].group === 'standard';
+}
     <div class="tier-row">
       <div class="tier-row-head">
         <span>Room type ${i + 1}</span>
@@ -1360,6 +1382,9 @@ function validateStep(step) {
     if (meta.group === 'boarding') {
       const valid = getValidTiers();
       if (!valid.length) { showToast('Please add at least one complete room type', 'error'); ok = false; }
+    } else if (standardUnitsEnabled()) {
+      const valid = getValidTiers();
+      if (!valid.length) { showToast('Please add at least one complete unit type, or turn off "multiple units"', 'error'); ok = false; }
     }
   }
 
@@ -1447,6 +1472,7 @@ function collectDraftData() {
       area_custom: val('area_custom'), address: val('address'), price: val('price'), price_frequency: val('price_frequency'),
       std_units: val('std_units'), std_bathrooms: val('std_bathrooms'), std_bedrooms: val('std_bedrooms'),
       std_size: val('std_size'), std_furnished: val('std_furnished'), std_parking: val('std_parking'), std_security: val('std_security'),
+      std_has_units: checked('std_has_units'),
       board_total_beds: val('board_total_beds'), board_gender: val('board_gender'), board_institution: val('board_institution'),
       air_guests: val('air_guests'), air_bedrooms: val('air_bedrooms'), air_bathrooms: val('air_bathrooms'),
       air_min_stay: val('air_min_stay'), air_checkin: val('air_checkin'), air_rules: val('air_rules'),
@@ -1557,6 +1583,7 @@ function applyDraftData(draft) {
     if (el.type === 'checkbox') el.checked = !!value; else el.value = value ?? '';
   });
   handleAreaChange();
+  if (document.getElementById('std_has_units')?.checked) toggleStandardUnits(true);
 
   if (draft.step) goStepRaw(draft.step);
 }
@@ -1616,7 +1643,7 @@ async function submitListing() {
   try {
     const meta = NK_CATEGORIES[selectedCat];
     const price = parseFloat(document.getElementById('price').value) || 0;
-    const validTiers = meta.group === 'boarding' ? getValidTiers() : [];
+    const validTiers = (meta.group === 'boarding' || standardUnitsEnabled()) ? getValidTiers() : [];
 
     const detailsPayload = {};
     if (meta.group === 'standard') {
@@ -1686,7 +1713,7 @@ async function submitListing() {
     const { data: listing, error } = await db.from('listings').insert(listingData).select().single();
     if (error) throw error;
 
-    if (meta.group === 'boarding' && validTiers.length) {
+    if (validTiers.length) {
       const unitRows = validTiers.map(t => ({
         listing_id: listing.id, unit_label: t.label.trim(), bedrooms: 0,
         quantity_available: parseInt(t.quantity), quantity_total: parseInt(t.quantity),
