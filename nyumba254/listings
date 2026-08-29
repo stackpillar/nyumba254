@@ -480,12 +480,9 @@
       .toolbar > div:first-child { width: 100%; justify-content: space-between; }
       .sort-select { width: 100%; }
 
-      /* ── Listings pages on mobile: 4 rows tall, one column wide;
-         swipe or tap the arrows to reveal the next page of 4. ── */
-      .listings-page {
-        grid-template-columns: repeat(1, 1fr);
-        gap: 14px;
-      }
+      /* Column count is now set inline by JS (measured, not guessed from
+         window width) — this block only keeps the mobile gap/card sizing. */
+      .listings-page { gap: 14px; }
       .listings-grid .card { max-width: 100%; }
       .card-img { height: 140px; }
       .card-body { padding: 12px 14px; }
@@ -1665,10 +1662,17 @@
 
   /* ── Paging: chunk listings into groups of rows×cols and render each
      chunk as its own normal grid page. Grid's default row-major flow
-     (fills left-to-right, row by row) handles the ordering correctly —
-     no reordering trick needed, and it works for any item count. ── */
+     (fills left-to-right, row by row) handles the ordering correctly.
+     Column count is MEASURED from the actual rendered container width —
+     never guessed from window.innerWidth — and applied as an inline
+     style, which always wins over any stylesheet/media-query rule. This
+     is the only way to guarantee CSS and JS can never disagree on how
+     many columns are showing. ── */
   function nkGetGridDims() {
-    return window.innerWidth <= 768 ? { rows: 4, cols: 1 } : { rows: 5, cols: 3 };
+    const wrap = document.querySelector('#results .scroll-wrap');
+    const width = wrap ? wrap.clientWidth : document.documentElement.clientWidth;
+    // A card needs roughly 250px to look right; below that, force 1 column.
+    return width < 560 ? { rows: 4, cols: 1 } : { rows: 5, cols: 3 };
   }
   function nkChunkIntoPages(items, rows, cols) {
     const pageSize = rows * cols;
@@ -1680,16 +1684,17 @@
   }
   function nkBuildPagesHtml(listings, dims) {
     return nkChunkIntoPages(listings, dims.rows, dims.cols)
-      .map(page => `<div class="listings-page">${page.map(buildCard).join('')}</div>`)
+      .map(page => `<div class="listings-page" style="grid-template-columns:repeat(${dims.cols},1fr)">${page.map(buildCard).join('')}</div>`)
       .join('');
   }
 
   let nkLastListings = [];
-  let nkLastIsMobile = null;
+  let nkLastDimsKey = null;
 
   function renderResults(listings, count) {
     nkLastListings = listings;
-    nkLastIsMobile = window.innerWidth <= 768;
+    const dims0 = nkGetGridDims();
+    nkLastDimsKey = dims0.cols + 'x' + dims0.rows;
     const grid = document.getElementById('listings-grid');
     const rc = document.getElementById('result-count');
     rc.innerHTML = `<strong>${count.toLocaleString()}</strong> listing${count !== 1 ? 's' : ''} found`;
@@ -1704,7 +1709,7 @@
       nkUpdateScrollHints();
       return;
     }
-    grid.innerHTML = nkBuildPagesHtml(listings, nkGetGridDims());
+    grid.innerHTML = nkBuildPagesHtml(listings, dims0);
     requestAnimationFrame(nkUpdateScrollHints);
   }
 
@@ -1780,15 +1785,29 @@ function nkUpdateScrollHints() {
   rightBtn.classList.toggle('show', hasOverflow);
 }
 window.addEventListener('resize', nkUpdateScrollHints);
-window.addEventListener('resize', () => {
-  const isMobile = window.innerWidth <= 768;
-  if (isMobile === nkLastIsMobile || !nkLastListings.length) return;
-  nkLastIsMobile = isMobile;
+
+function nkRebuildPagesIfDimsChanged() {
+  if (!nkLastListings.length) return;
+  const dims = nkGetGridDims();
+  const key = dims.cols + 'x' + dims.rows;
+  if (key === nkLastDimsKey) return;
+  nkLastDimsKey = key;
   const grid = document.getElementById('listings-grid');
   if (!grid || grid.querySelector('.skeleton') || grid.querySelector('.empty-state')) return;
-  grid.innerHTML = nkBuildPagesHtml(nkLastListings, nkGetGridDims());
+  grid.innerHTML = nkBuildPagesHtml(nkLastListings, dims);
   nkUpdateScrollHints();
-});
+}
+
+// ResizeObserver reacts to the container's REAL rendered width — covers
+// window resize, sidebar toggling, zoom, orientation change, DevTools
+// device emulation — anything that changes available space, without ever
+// relying on window.innerWidth matching a CSS breakpoint.
+const nkResultsWrapEl = document.querySelector('#results .scroll-wrap');
+if (window.ResizeObserver && nkResultsWrapEl) {
+  new ResizeObserver(() => nkRebuildPagesIfDimsChanged()).observe(nkResultsWrapEl);
+} else {
+  window.addEventListener('resize', nkRebuildPagesIfDimsChanged);
+}
   function nkLSGetC(key) { try { return localStorage.getItem(key); } catch(e) { return null; } }
   function nkLSSetC(key, val) { try { localStorage.setItem(key, val); } catch(e) {} }
 
