@@ -232,7 +232,7 @@
 
   <div class="auth-banner" id="auth-banner">
     <p>You need to be signed in to post a listing.</p>
-    <a href="login.html?next=post-listing">Sign in or create a free account →</a>
+    <a href="login?next=post-listing">Sign in or create a free account →</a>
   </div>
 
   <div class="kicker" id="page-kicker">Free listing — pricing coming later</div>
