@@ -960,9 +960,25 @@
 
       <div id="bnb-ledger-content" style="display:none">
         <div class="rl-summary-grid" id="bnb-summary-grid"></div>
-        <div id="bnb-upcoming-card" class="card" style="padding:18px 20px;margin-bottom:16px"></div>
-        <div class="section-head" style="margin-top:4px"><h3 style="font-size:15px">Your properties</h3></div>
-        <div id="bnb-properties-list"><div style="padding:30px;text-align:center;color:var(--text-3);font-size:13px">Loading…</div></div>
+        <div id="bnb-goal-card" class="card" style="padding:16px 20px;margin-bottom:16px"></div>
+        <div class="rl-tabs">
+          <button class="rl-tab active" data-bnbtab="properties" onclick="bnbSetTab('properties')">Properties</button>
+          <button class="rl-tab" data-bnbtab="calendar" onclick="bnbSetTab('calendar')">📅 Calendar</button>
+          <button class="rl-tab" data-bnbtab="analytics" onclick="bnbSetTab('analytics')">📈 Analytics</button>
+          <button class="rl-tab" data-bnbtab="guests" onclick="bnbSetTab('guests')">👥 Guests</button>
+          <button class="rl-tab" data-bnbtab="finances" onclick="bnbSetTab('finances')">💰 Finances</button>
+          <button class="rl-tab" data-bnbtab="maintenance" onclick="bnbSetTab('maintenance')">🔧 Maintenance</button>
+        </div>
+        <div id="bnb-tab-properties">
+          <div id="bnb-upcoming-card" class="card" style="padding:18px 20px;margin-bottom:16px"></div>
+          <div class="section-head" style="margin-top:4px"><h3 style="font-size:15px">Your properties</h3></div>
+          <div id="bnb-properties-list"><div style="padding:30px;text-align:center;color:var(--text-3);font-size:13px">Loading…</div></div>
+        </div>
+        <div id="bnb-tab-calendar" style="display:none"></div>
+        <div id="bnb-tab-analytics" style="display:none"></div>
+        <div id="bnb-tab-guests" style="display:none"></div>
+        <div id="bnb-tab-finances" style="display:none"></div>
+        <div id="bnb-tab-maintenance" style="display:none"></div>
       </div>
     </div>
 
@@ -2190,7 +2206,7 @@ function updateEliteGatedPages(sub){
   if(rlHeadingEl) rlHeadingEl.textContent = bnbMode ? 'BNB Booking Ledger' : 'Rent & Tenant Ledger';
   if(rlNavLabelEl) rlNavLabelEl.textContent = bnbMode ? 'Booking Ledger' : 'Rent Ledger';
   const dhLocked=document.getElementById('demand-locked'), dhContent=document.getElementById('demand-content');
-  if(dhLocked && dhContent){ dhLocked.style.display = isElite?'none':'block'; dhContent.style.display = isElite?'block':'none'; }
+  if(dhLocked && dhContent){ dhLocked.style.display = ledgerUnlocked?'none':'block'; dhContent.style.display = ledgerUnlocked?'block':'none'; }
   const addUnitBtn=document.getElementById('btn-add-rental-unit');
   if(addUnitBtn) addUnitBtn.style.display = (ledgerUnlocked && !bnbMode)?'inline-flex':'none';
   const addBnbPropBtn=document.getElementById('btn-add-bnb-property');
@@ -2209,7 +2225,7 @@ function updateEliteGatedPages(sub){
   });
   ['btn-export-di-csv','btn-export-di-pdf'].forEach(id=>{
     const el=document.getElementById(id);
-    if(el) el.style.display = isElite?'inline-flex':'none';
+    if(el) el.style.display = ledgerUnlocked?'inline-flex':'none';
   });
 }
 
@@ -2384,9 +2400,28 @@ async function loadBnbLedger(){
   const{data,error}=await db.from('bnb_properties').select('*, bnb_bookings(*)').eq('seller_id',effectiveSellerId).order('created_at',{ascending:false});
   if(error){wrap.innerHTML=`<div class="empty-state"><p>Could not load: ${escHtml(error.message)}</p></div>`;return;}
   bnbPropertiesCache=data||[];
+  await rlLoadExtras();
   renderBnbSummary();
+  renderBnbGoalCard();
   renderBnbUpcoming();
+  renderBnbCleaningCard();
   renderBnbProperties();
+  if(bnbActiveTab==='calendar') renderBnbCalendar();
+  if(bnbActiveTab==='analytics') renderBnbAnalytics();
+  if(bnbActiveTab==='guests') renderBnbGuests();
+  if(bnbActiveTab==='finances') renderBnbFinances();
+  if(bnbActiveTab==='maintenance') renderBnbMaintenance();
+}
+function renderBnbCleaningCard(){
+  const queue=bnbCleaningQueue();
+  if(!queue.length)return;
+  const upcomingEl=document.getElementById('bnb-upcoming-card');
+  if(!upcomingEl)return;
+  const note=document.createElement('div');
+  note.style.cssText='margin-top:14px;padding-top:14px;border-top:1px dashed var(--border)';
+  note.innerHTML=`<h4 style="font-size:12.5px;font-weight:700;margin-bottom:8px">🧹 Needs cleaning (${queue.length})</h4>`+
+    queue.map(({p,b})=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:12.5px"><span>${escHtml(p.property_label)} — checked out ${new Date(b.check_out).toLocaleDateString('en-KE',{day:'numeric',month:'short'})}</span><button class="btn btn-outline btn-sm" onclick="markBnbCleaningDone('${b.id}')">Mark cleaned</button></div>`).join('');
+  upcomingEl.appendChild(note);
 }
 
 function bnbActiveOrFutureBookings(p){
@@ -2471,8 +2506,10 @@ function renderBnbProperties(){
           const balance=(Number(b.total_amount)||0)-(Number(b.amount_paid)||0);
           return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12.5px">
             <span><strong>${escHtml(b.guest_name)}</strong> · ${nights} night(s) · ${escHtml(b.source)} · ${new Date(b.check_in).toLocaleDateString('en-KE',{day:'numeric',month:'short'})}–${new Date(b.check_out).toLocaleDateString('en-KE',{day:'numeric',month:'short'})}</span>
-            <span style="display:flex;gap:8px;align-items:center">
+            <span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
               <span class="rl-chip ${b.payment_status==='paid'?'paid':b.payment_status==='partial'?'partial':b.payment_status==='refunded'?'due':'overdue'}">${b.payment_status}${balance>0?' · KES '+balance.toLocaleString('en-KE')+' due':''}</span>
+              ${b.guest_email?`<button class="btn btn-outline btn-sm" onclick="sendBnbCheckinReminder('${b.id}')" title="Send check-in instructions">✉️ Check-in</button>`:''}
+              ${(b.guest_email && b.check_out<=new Date().toISOString().slice(0,10))?`<button class="btn btn-outline btn-sm" onclick="sendBnbReviewRequest('${b.id}')" title="Ask for a review">⭐ Review</button>`:''}
               <button class="btn btn-outline btn-sm" onclick="openEditBnbBookingModal('${b.id}')">Edit</button>
             </span>
           </div>`;
@@ -2480,6 +2517,249 @@ function renderBnbProperties(){
       </div>` : '<div style="margin-top:10px;font-size:12px;color:var(--text-3)">No upcoming bookings for this property.</div>'}
     </div>`;
   }).join('');
+}
+
+let bnbActiveTab='properties';
+function bnbSetTab(tab){
+  bnbActiveTab=tab;
+  document.querySelectorAll('#bnb-ledger-content .rl-tab').forEach(b=>b.classList.toggle('active',b.dataset.bnbtab===tab));
+  ['properties','calendar','analytics','guests','finances','maintenance'].forEach(t=>{
+    const el=document.getElementById('bnb-tab-'+t);
+    if(el) el.style.display = t===tab?'block':'none';
+  });
+  if(tab==='calendar') renderBnbCalendar();
+  if(tab==='analytics') renderBnbAnalytics();
+  if(tab==='guests') renderBnbGuests();
+  if(tab==='finances') renderBnbFinances();
+  if(tab==='maintenance') renderBnbMaintenance();
+}
+
+// ── Goal tracker (mirrors rent-roll goal) ──
+function renderBnbGoalCard(){
+  const el=document.getElementById('bnb-goal-card');
+  if(!el)return;
+  const goal=Number(currentProfile?.bnb_revenue_goal)||0;
+  const monthKey=currentMonthKey();
+  const current=bnbPropertiesCache.reduce((s,p)=>s+(p.bnb_bookings||[]).filter(b=>b.status!=='cancelled'&&String(b.check_in).slice(0,7)===monthKey).reduce((s2,b)=>s2+(Number(b.amount_paid)||0),0),0);
+  if(!goal){el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px"><div><strong style="font-size:13.5px">Set a monthly revenue goal</strong><div style="font-size:12px;color:var(--text-3)">Track progress toward a target across all properties</div></div><button class="btn btn-outline btn-sm" onclick="openBnbGoalModal()">Set goal</button></div>`;return;}
+  const pct=Math.min(100,Math.round((current/goal)*100));
+  el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px"><strong style="font-size:13.5px">🎯 Monthly revenue goal</strong><span style="font-size:12px;color:var(--text-3)">KES ${current.toLocaleString('en-KE')} of ${goal.toLocaleString('en-KE')}</span></div>
+    <div class="rl-goal-bar"><div class="rl-goal-fill" style="width:${pct}%"><span>${pct}%</span></div></div>
+    <div style="text-align:right"><button class="btn btn-outline btn-sm" onclick="openBnbGoalModal()">Edit goal</button></div>`;
+}
+function openBnbGoalModal(){document.getElementById('goal-amount').value=currentProfile?.bnb_revenue_goal||'';document.getElementById('modal-rent-goal').querySelector('h3').textContent='Set a monthly revenue goal';document.getElementById('modal-rent-goal').dataset.mode='bnb';openModal('modal-rent-goal');}
+
+// ── Calendar: 90-day occupancy heatmap across all properties ──
+function renderBnbCalendar(){
+  const wrap=document.getElementById('bnb-tab-calendar');
+  if(!wrap)return;
+  if(!bnbPropertiesCache.length){wrap.innerHTML='<div class="empty-state"><p>Add a property first to see its calendar.</p></div>';return;}
+  const days=[];const start=new Date();start.setHours(0,0,0,0);
+  for(let i=0;i<90;i++){const d=new Date(start);d.setDate(d.getDate()+i);days.push(d);}
+  const rows=bnbPropertiesCache.map(p=>{
+    const cells=days.map(d=>{
+      const iso=d.toISOString().slice(0,10);
+      const booking=(p.bnb_bookings||[]).find(b=>b.status!=='cancelled'&&b.check_in<=iso&&iso<b.check_out);
+      const color=booking?(booking.payment_status==='paid'?'#16a34a':booking.payment_status==='partial'?'var(--amber)':'var(--red)'):'var(--border)';
+      const title=booking?`${escAttr(booking.guest_name)} (${booking.payment_status})`:'Available';
+      return `<div style="flex:1;min-width:8px;height:22px;background:${color};border-radius:2px" title="${d.toLocaleDateString('en-KE',{day:'numeric',month:'short'})}: ${title}"></div>`;
+    }).join('');
+    return `<div style="margin-bottom:14px">
+      <div style="font-size:12.5px;font-weight:700;margin-bottom:5px">${escHtml(p.property_label)}</div>
+      <div style="display:flex;gap:1px;overflow-x:auto;padding-bottom:4px">${cells}</div>
+    </div>`;
+  }).join('');
+  wrap.innerHTML=`<div class="card" style="padding:18px 20px">
+    <h3 style="font-size:13.5px;font-weight:700;margin-bottom:4px">Next 90 days — all properties</h3>
+    <p style="font-size:11.5px;color:var(--text-3);margin-bottom:14px">🟩 Paid booking · 🟧 Partial payment · 🟥 Payment due · Grey = available</p>
+    ${rows}
+  </div>`;
+}
+
+// ── Analytics: revenue trend, ADR, occupancy rate, channel mix ──
+function bnbLast6Months(){const out=[];const d=new Date();d.setDate(1);for(let i=5;i>=0;i--){const m=new Date(d.getFullYear(),d.getMonth()-i,1);out.push(m.toISOString().slice(0,7));}return out;}
+function renderBnbAnalytics(){
+  const wrap=document.getElementById('bnb-tab-analytics');
+  if(!wrap)return;
+  const months=bnbLast6Months();
+  const allBookings=bnbPropertiesCache.flatMap(p=>(p.bnb_bookings||[]).filter(b=>b.status!=='cancelled').map(b=>({...b,_property:p})));
+  const revByMonth=months.map(m=>allBookings.filter(b=>String(b.check_in).slice(0,7)===m).reduce((s,b)=>s+(Number(b.amount_paid)||0),0));
+  const maxRev=Math.max(...revByMonth,1);
+  const bars=months.map((m,i)=>{
+    const h=Math.max(4,Math.round((revByMonth[i]/maxRev)*90));
+    const label=new Date(m+'-01').toLocaleDateString('en-KE',{month:'short'});
+    return `<div style="flex:1;text-align:center"><div style="height:90px;display:flex;align-items:flex-end;justify-content:center"><div style="width:70%;height:${h}px;background:#7c3aed;border-radius:4px 4px 0 0" title="KES ${revByMonth[i].toLocaleString('en-KE')}"></div></div><div style="font-size:10.5px;color:var(--text-3);margin-top:4px">${label}</div></div>`;
+  }).join('');
+
+  const totalNights=allBookings.reduce((s,b)=>s+bnbNightsBetween(b.check_in,b.check_out),0);
+  const totalRevenue=allBookings.reduce((s,b)=>s+(Number(b.amount_paid)||0),0);
+  const adr=totalNights>0?Math.round(totalRevenue/totalNights):0;
+
+  const today=new Date().toISOString().slice(0,10);
+  const last30Start=new Date(Date.now()-30*86400000).toISOString().slice(0,10);
+  let bookedNightsLast30=0;
+  bnbPropertiesCache.forEach(p=>{
+    (p.bnb_bookings||[]).filter(b=>b.status!=='cancelled').forEach(b=>{
+      const ci=b.check_in<last30Start?last30Start:b.check_in;
+      const co=b.check_out>today?today:b.check_out;
+      if(co>ci) bookedNightsLast30+=bnbNightsBetween(ci,co);
+    });
+  });
+  const availableNights=bnbPropertiesCache.length*30;
+  const occRate=availableNights>0?Math.round((bookedNightsLast30/availableNights)*100):0;
+
+  const channelCounts={};
+  allBookings.forEach(b=>{channelCounts[b.source]=(channelCounts[b.source]||0)+(Number(b.amount_paid)||0);});
+  const channelTotal=Object.values(channelCounts).reduce((s,v)=>s+v,0)||1;
+  const channelLabels={direct:'Direct',airbnb:'Airbnb',booking_com:'Booking.com',other:'Other'};
+
+  wrap.innerHTML=`
+    <div class="rl-summary-grid" style="margin-bottom:16px">
+      <div class="rl-stat purple"><div class="rl-label">Average daily rate</div><div class="rl-val">KES ${adr.toLocaleString('en-KE')}</div></div>
+      <div class="rl-stat ${occRate>=60?'good':occRate>=30?'warn':'danger'}"><div class="rl-label">Occupancy (last 30d)</div><div class="rl-val">${occRate}%</div></div>
+      <div class="rl-stat good"><div class="rl-label">Revenue (6mo)</div><div class="rl-val">KES ${revByMonth.reduce((a,b)=>a+b,0).toLocaleString('en-KE')}</div></div>
+    </div>
+    <div class="card" style="padding:18px 20px;margin-bottom:16px">
+      <h3 style="font-size:13.5px;font-weight:700;margin-bottom:14px">Revenue — last 6 months</h3>
+      <div style="display:flex;gap:6px">${bars}</div>
+    </div>
+    <div class="card" style="padding:18px 20px">
+      <h3 style="font-size:13.5px;font-weight:700;margin-bottom:12px">Revenue by channel</h3>
+      ${Object.keys(channelCounts).length?Object.entries(channelCounts).map(([k,v])=>`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>${channelLabels[k]||k}</span><span style="color:var(--text-3)">KES ${v.toLocaleString('en-KE')} (${Math.round(v/channelTotal*100)}%)</span></div><div style="background:var(--surface);border-radius:6px;height:6px;overflow:hidden"><div style="background:#7c3aed;height:100%;width:${Math.round(v/channelTotal*100)}%"></div></div></div>`).join(''):'<div style="font-size:12.5px;color:var(--text-3)">No bookings logged yet.</div>'}
+    </div>`;
+}
+
+// ── Guests CRM: aggregated across all properties, flags repeat guests ──
+function renderBnbGuests(){
+  const wrap=document.getElementById('bnb-tab-guests');
+  if(!wrap)return;
+  const allBookings=bnbPropertiesCache.flatMap(p=>(p.bnb_bookings||[]).filter(b=>b.status!=='cancelled').map(b=>({...b,_propertyLabel:p.property_label})));
+  const byGuest={};
+  allBookings.forEach(b=>{
+    const key=(b.guest_phone||b.guest_email||b.guest_name||'').toLowerCase().trim();
+    if(!key)return;
+    if(!byGuest[key])byGuest[key]={name:b.guest_name,phone:b.guest_phone,email:b.guest_email,stays:0,totalSpent:0,lastStay:b.check_out,properties:new Set()};
+    byGuest[key].stays++;
+    byGuest[key].totalSpent+=Number(b.amount_paid)||0;
+    byGuest[key].properties.add(b._propertyLabel);
+    if(b.check_out>byGuest[key].lastStay)byGuest[key].lastStay=b.check_out;
+  });
+  const guests=Object.values(byGuest).sort((a,b)=>b.totalSpent-a.totalSpent);
+  if(!guests.length){wrap.innerHTML='<div class="empty-state"><p>No guests logged yet — they\'ll appear here once you log bookings.</p></div>';return;}
+  wrap.innerHTML=`<div class="card" style="padding:18px 20px">
+    <h3 style="font-size:13.5px;font-weight:700;margin-bottom:12px">All guests (${guests.length})</h3>
+    ${guests.map(g=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <div><strong>${escHtml(g.name)}</strong>${g.stays>1?' <span class="rl-badge-pill escalation">🔁 Repeat guest — '+g.stays+' stays</span>':''}<div style="font-size:11.5px;color:var(--text-3)">${escHtml(g.phone||g.email||'')} · Last stay ${new Date(g.lastStay).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'})}</div></div>
+      <div style="font-weight:700;color:var(--green-dark)">KES ${g.totalSpent.toLocaleString('en-KE')}</div>
+    </div>`).join('')}
+  </div>`;
+}
+
+// ── Finances tab — reuses unit_expenses via bnb_property_id ──
+function renderBnbFinances(){
+  const wrap=document.getElementById('bnb-tab-finances');
+  if(!wrap)return;
+  const allBookings=bnbPropertiesCache.flatMap(p=>(p.bnb_bookings||[]).filter(b=>b.status!=='cancelled'));
+  const revenue=allBookings.reduce((s,b)=>s+(Number(b.amount_paid)||0),0);
+  const bnbExpenses=unitExpensesCache.filter(e=>e.bnb_property_id);
+  const totalExpenses=bnbExpenses.reduce((s,e)=>s+(Number(e.amount)||0),0);
+  const net=revenue-totalExpenses;
+  const byCategory={};
+  bnbExpenses.forEach(e=>{byCategory[e.category]=(byCategory[e.category]||0)+Number(e.amount||0);});
+  const catMax=Math.max(...Object.values(byCategory),1);
+  wrap.innerHTML=`
+    <div class="rl-summary-grid" style="margin-bottom:16px">
+      <div class="rl-stat good"><div class="rl-label">Total revenue collected</div><div class="rl-val">KES ${revenue.toLocaleString('en-KE')}</div></div>
+      <div class="rl-stat danger"><div class="rl-label">Total expenses</div><div class="rl-val">KES ${totalExpenses.toLocaleString('en-KE')}</div></div>
+      <div class="rl-stat ${net>=0?'good':'danger'}"><div class="rl-label">Net income</div><div class="rl-val">KES ${net.toLocaleString('en-KE')}</div></div>
+    </div>
+    <div class="card" style="padding:18px 20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="font-size:13.5px;font-weight:700">Expenses by category</h3><button class="btn btn-primary btn-sm" style="background:#7c3aed" onclick="openBnbExpenseModal()">+ Log expense</button></div>
+      ${Object.keys(byCategory).length?Object.entries(byCategory).map(([k,v])=>`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span style="text-transform:capitalize">${k.replace('_',' ')}</span><span style="color:var(--text-3)">KES ${v.toLocaleString('en-KE')}</span></div><div style="background:var(--surface);border-radius:6px;height:6px;overflow:hidden"><div style="background:#7c3aed;height:100%;width:${Math.round((v/catMax)*100)}%"></div></div></div>`).join(''):'<div style="font-size:12.5px;color:var(--text-3)">No expenses logged yet.</div>'}
+      <div style="max-height:220px;overflow-y:auto;margin-top:10px">
+        ${bnbExpenses.slice(0,20).map(e=>{const p=bnbPropertiesCache.find(x=>x.id===e.bnb_property_id);return`<div style="display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--border);font-size:12px"><span>${new Date(e.expense_date).toLocaleDateString('en-KE',{day:'numeric',month:'short'})} · ${escHtml(p?.property_label||'—')} · ${escHtml(e.description||e.category)}</span><span style="font-weight:600">KES ${Number(e.amount).toLocaleString('en-KE')}</span></div>`;}).join('')}
+      </div>
+    </div>`;
+}
+function openBnbExpenseModal(){
+  const sel=document.getElementById('exp-unit');
+  sel.innerHTML=bnbPropertiesCache.map(p=>`<option value="${p.id}">${escHtml(p.property_label)}</option>`).join('');
+  sel.dataset.mode='bnb';
+  document.getElementById('exp-amount').value='';document.getElementById('exp-desc').value='';
+  document.getElementById('exp-date').value=new Date().toISOString().slice(0,10);
+  openModal('modal-add-expense');
+}
+
+// ── Maintenance tab — reuses maintenance_requests via bnb_property_id ──
+function renderBnbMaintenance(){
+  const wrap=document.getElementById('bnb-tab-maintenance');
+  if(!wrap)return;
+  const bnbMaint=maintenanceCache.filter(m=>m.bnb_property_id);
+  const open=bnbMaint.filter(m=>m.status!=='done');
+  const done=bnbMaint.filter(m=>m.status==='done');
+  const row=(m)=>{const p=bnbPropertiesCache.find(x=>x.id===m.bnb_property_id);return`<div class="card" style="padding:14px 16px;margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <div><strong style="font-size:13px">${escHtml(m.title)}</strong><div style="font-size:11.5px;color:var(--text-3)">${escHtml(p?.property_label||'—')} · Reported ${new Date(m.reported_date).toLocaleDateString('en-KE',{day:'numeric',month:'short'})}</div></div>
+      <span class="rl-chip ${m.status==='done'?'paid':m.status==='in_progress'?'partial':'due'}">${m.status.replace('_',' ')}</span>
+    </div>
+    ${m.notes?`<div style="font-size:12.5px;color:var(--text-2);margin-top:6px">${escHtml(m.notes)}</div>`:''}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+      <span style="font-size:12px;font-weight:700;color:var(--text)">${m.cost?'KES '+Number(m.cost).toLocaleString('en-KE'):'No cost logged'}</span>
+      ${m.status!=='done'?`<button class="btn btn-outline btn-sm" onclick="markMaintenanceDone(${m.id})">Mark done</button>`:''}
+    </div></div>`;};
+  wrap.innerHTML=`<div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="btn btn-primary btn-sm" style="background:#7c3aed" onclick="openBnbMaintenanceModal()">+ Log request</button></div>
+    <h3 style="font-size:13px;font-weight:700;margin-bottom:8px">Open (${open.length})</h3>
+    ${open.length?open.map(row).join(''):'<div style="font-size:12.5px;color:var(--text-3);margin-bottom:16px">Nothing open — nice! 🎉</div>'}
+    ${done.length?`<h3 style="font-size:13px;font-weight:700;margin:16px 0 8px">Completed (${done.length})</h3>${done.slice(0,10).map(row).join('')}`:''}`;
+}
+function openBnbMaintenanceModal(){
+  const sel=document.getElementById('mt-unit');
+  sel.innerHTML=bnbPropertiesCache.map(p=>`<option value="${p.id}">${escHtml(p.property_label)}</option>`).join('');
+  sel.dataset.mode='bnb';
+  document.getElementById('mt-title').value='';document.getElementById('mt-notes').value='';document.getElementById('mt-cost').value='';document.getElementById('mt-status').value='open';
+  openModal('modal-add-maintenance');
+}
+
+// ── Cleaning / turnover — auto-derived from checkouts, tracked via cleaning_status ──
+function bnbCleaningQueue(){
+  const today=new Date().toISOString().slice(0,10);
+  const out=[];
+  bnbPropertiesCache.forEach(p=>{
+    (p.bnb_bookings||[]).forEach(b=>{
+      if(b.status==='cancelled')return;
+      if(b.check_out<=today && (b.cleaning_status||'pending')==='pending') out.push({p,b});
+    });
+  });
+  return out.sort((a,b)=>new Date(b.b.check_out)-new Date(a.b.check_out));
+}
+async function markBnbCleaningDone(bookingId){
+  const{error}=await db.from('bnb_bookings').update({cleaning_status:'done'}).eq('id',bookingId);
+  if(error){showToast('Could not update: '+error.message,'error');return;}
+  showToast('Marked cleaned ✓','success');
+  loadBnbLedger();
+}
+
+// ── Automated guest emails ──
+async function sendBnbCheckinReminder(bookingId){
+  let found=null;
+  bnbPropertiesCache.forEach(p=>{(p.bnb_bookings||[]).forEach(b=>{if(String(b.id)===String(bookingId))found={p,b};});});
+  if(!found||!found.b.guest_email){showToast('This guest has no email on file','error');return;}
+  await notifyByEmail('bnb_checkin_instructions',{
+    guestName:found.b.guest_name, guestEmail:found.b.guest_email,
+    propertyLabel:found.p.property_label, checkIn:found.b.check_in, checkOut:found.b.check_out,
+    sellerName:currentProfile?.full_name, sellerEmail:currentUser?.email, sellerPhone:currentProfile?.phone,
+  });
+  showToast('Check-in instructions sent ✓','success');
+}
+async function sendBnbReviewRequest(bookingId){
+  let found=null;
+  bnbPropertiesCache.forEach(p=>{(p.bnb_bookings||[]).forEach(b=>{if(String(b.id)===String(bookingId))found={p,b};});});
+  if(!found||!found.b.guest_email){showToast('This guest has no email on file','error');return;}
+  await notifyByEmail('bnb_review_request',{
+    guestName:found.b.guest_name, guestEmail:found.b.guest_email,
+    propertyLabel:found.p.property_label, sellerName:currentProfile?.full_name, sellerEmail:currentUser?.email,
+  });
+  showToast('Review request sent ✓','success');
 }
 
 function openAddBnbPropertyModal(){
@@ -3416,9 +3696,12 @@ function renderGoalCard(){
 function openRentGoalModal(){document.getElementById('goal-amount').value=currentProfile?.rent_roll_goal||'';openModal('modal-rent-goal');}
 async function saveRentGoal(){
   const val=parseFloat(document.getElementById('goal-amount').value)||0;
-  const error=await updateOwnerProfile({rent_roll_goal:val});
+  const isBnbGoal=document.getElementById('modal-rent-goal').dataset.mode==='bnb';
+  const error=await updateOwnerProfile(isBnbGoal?{bnb_revenue_goal:val}:{rent_roll_goal:val});
   if(error){showToast('Could not save: '+error.message,'error');return;}
-  closeModal('modal-rent-goal');renderGoalCard();
+  closeModal('modal-rent-goal');
+  if(isBnbGoal){ renderBnbGoalCard(); delete document.getElementById('modal-rent-goal').dataset.mode; document.getElementById('modal-rent-goal').querySelector('h3').textContent='Set a rent-roll goal'; }
+  else renderGoalCard();
   showToast('Goal saved ✓','success');
 }
 
@@ -3496,11 +3779,15 @@ function openAddExpenseModal(){
   openModal('modal-add-expense');
 }
 async function saveExpense(){
-  const payload={rental_unit_id:document.getElementById('exp-unit').value,seller_id:effectiveSellerId,category:document.getElementById('exp-category').value,amount:parseFloat(document.getElementById('exp-amount').value)||0,expense_date:document.getElementById('exp-date').value||new Date().toISOString().slice(0,10),description:document.getElementById('exp-desc').value.trim()||null};
+  const selEl=document.getElementById('exp-unit');
+  const isBnbExp=selEl.dataset.mode==='bnb';
+  const payload={seller_id:effectiveSellerId,category:document.getElementById('exp-category').value,amount:parseFloat(document.getElementById('exp-amount').value)||0,expense_date:document.getElementById('exp-date').value||new Date().toISOString().slice(0,10),description:document.getElementById('exp-desc').value.trim()||null,rental_unit_id:isBnbExp?null:selEl.value,bnb_property_id:isBnbExp?selEl.value:null};
   const{error}=await db.from('unit_expenses').insert(payload);
   if(error){showToast('Could not save: '+error.message,'error');return;}
   closeModal('modal-add-expense');showToast('Expense logged ✓','success');
-  await rlLoadExtras();renderFinancesTab();
+  delete selEl.dataset.mode;
+  await rlLoadExtras();
+  if(isBnbExp) renderBnbFinances(); else renderFinancesTab();
 }
 
 // ── Maintenance tab ──
@@ -3531,12 +3818,16 @@ function openAddMaintenanceModal(){
   openModal('modal-add-maintenance');
 }
 async function saveMaintenance(){
-  const payload={rental_unit_id:document.getElementById('mt-unit').value,seller_id:effectiveSellerId,title:document.getElementById('mt-title').value.trim(),notes:document.getElementById('mt-notes').value.trim()||null,status:document.getElementById('mt-status').value,cost:parseFloat(document.getElementById('mt-cost').value)||0};
+  const selEl=document.getElementById('mt-unit');
+  const isBnbMaint=selEl.dataset.mode==='bnb';
+  const payload={seller_id:effectiveSellerId,title:document.getElementById('mt-title').value.trim(),notes:document.getElementById('mt-notes').value.trim()||null,status:document.getElementById('mt-status').value,cost:parseFloat(document.getElementById('mt-cost').value)||0,rental_unit_id:isBnbMaint?null:selEl.value,bnb_property_id:isBnbMaint?selEl.value:null};
   if(!payload.title){showToast('Please give the request a title','error');return;}
   const{error}=await db.from('maintenance_requests').insert(payload);
   if(error){showToast('Could not save: '+error.message,'error');return;}
   closeModal('modal-add-maintenance');showToast('Maintenance request logged ✓','success');
-  await rlLoadExtras();renderMaintenanceTab();
+  delete selEl.dataset.mode;
+  await rlLoadExtras();
+  if(isBnbMaint) renderBnbMaintenance(); else renderMaintenanceTab();
 }
 async function markMaintenanceDone(id){
   const{error}=await db.from('maintenance_requests').update({status:'done',resolved_date:new Date().toISOString().slice(0,10)}).eq('id',id);
@@ -3636,7 +3927,7 @@ function rlVacancyInfo(u){
 // ── Demand Insights — portfolio-aware "where to expand" ──
 function renderDemandPortfolioOverlay(){
   const wrap=document.getElementById('demand-mine-list');
-  if(!wrap||!eliteActive())return;
+  if(!wrap||!ledgerAccessActive()||isBnbLedgerMode())return;
   if(!rentalUnitsCache.length)return; // only adds value once they have rental units tracked
   const occupied=rentalUnitsCache.filter(u=>rlActiveTenant(u)).length;
   const myOccRate=rentalUnitsCache.length?Math.round((occupied/rentalUnitsCache.length)*100):0;
@@ -3660,7 +3951,7 @@ function diSetRange(days,el){
 }
 
 async function loadDemandInsights(){
-  if(!eliteActive())return;
+  if(!ledgerAccessActive())return;
   const wrap=document.getElementById('demand-area-bars');
   const catWrap=document.getElementById('demand-category-bars');
   const typeWrap=document.getElementById('demand-type-bars');
@@ -3760,7 +4051,7 @@ async function loadDemandInsights(){
 }
 function renderBnbDemandTip(){
   const wrap=document.getElementById('demand-mine-list');
-  if(!wrap||!eliteActive()||!isBnbLedgerMode())return;
+  if(!wrap||!ledgerAccessActive()||!isBnbLedgerMode())return;
   const note=document.createElement('div');
   note.style.cssText='margin-top:14px;padding-top:14px;border-top:1px dashed var(--border);font-size:12.5px;color:#5b21b6';
   const avgNightly=bnbPropertiesCache.length?Math.round(bnbPropertiesCache.reduce((s,p)=>s+(Number(p.nightly_rate)||0),0)/bnbPropertiesCache.length):0;
