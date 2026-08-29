@@ -41,8 +41,8 @@
       --radius:      10px;
       --radius-lg:   16px;
     }
-    html { scroll-behavior: smooth; }
-    body { font-family: 'Inter', sans-serif; color: var(--text); background: var(--surface); font-size: 15px; line-height: 1.6; }
+    html { scroll-behavior: smooth; overflow-x: hidden; }
+    body { font-family: 'Inter', sans-serif; color: var(--text); background: var(--surface); font-size: 15px; line-height: 1.6; overflow-x: hidden; width: 100%; }
     a { text-decoration: none; color: inherit; }
     button { font-family: inherit; cursor: pointer; border: none; }
     input, select { font-family: inherit; }
@@ -207,6 +207,8 @@
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
     }
+    .scroll-hint.left { left: 2px; right: auto; }
+    .scroll-hint.show { display: flex; }
     .scroll-hint::before {
       content: '';
       position: absolute;
@@ -459,8 +461,6 @@
       .listings-grid .empty-state {
         flex: 1 0 100%;
       }
-
-      .scroll-hint { display: flex; }
     }
     @media (max-width: 600px) {
       .nf-row { grid-template-columns: 1fr; }
@@ -662,7 +662,8 @@
         <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line xshort"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
         <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line xshort"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
       </div>
-      <button class="scroll-hint" aria-label="Scroll for more listings" onclick="nkScrollWrap(this)"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
+      <button class="scroll-hint left" aria-label="Scroll to previous listings" onclick="nkScrollWrap(this,-1)"><svg viewBox="0 0 24 24"><polyline points="15 6 9 12 15 18"/></svg></button>
+      <button class="scroll-hint right" aria-label="Scroll for more listings" onclick="nkScrollWrap(this,1)"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
       </div>
     </div>
 
@@ -1632,9 +1633,11 @@
         <p>Try adjusting your search or <a onclick="resetAllFilters()" style="cursor:pointer">reset all filters</a></p>
         <button class="btn btn-primary" style="margin-top:14px" onclick="openNotifyModal()">🔔 Notify me when a match is posted</button>
       </div>`;
+      nkUpdateScrollHints();
       return;
     }
     grid.innerHTML = listings.map(buildCard).join('');
+    requestAnimationFrame(nkUpdateScrollHints);
   }
 
   /* ════════════════════════════════════════════════════
@@ -1680,7 +1683,7 @@
     document.body.style.overflow = '';
     ciActiveListingId = null;
   }
-function nkScrollWrap(btn) {
+function nkScrollWrap(btn, dir) {
   const wrap = btn.closest('.scroll-wrap');
   if (!wrap) return;
   const scroller = wrap.querySelector('.categories, .listings-grid, .areas');
@@ -1688,8 +1691,21 @@ function nkScrollWrap(btn) {
   const firstCard = scroller.querySelector(':scope > *');
   const gap = parseFloat(getComputedStyle(scroller).gap) || 16;
   const step = firstCard ? firstCard.getBoundingClientRect().width + gap : scroller.clientWidth * 0.8;
-  scroller.scrollBy({ left: step, behavior: 'smooth' });
+  scroller.scrollBy({ left: step * (dir || 1), behavior: 'smooth' });
 }
+
+function nkUpdateScrollHints() {
+  const wrap = document.querySelector('#results .scroll-wrap');
+  if (!wrap) return;
+  const scroller = wrap.querySelector('.listings-grid');
+  const leftBtn = wrap.querySelector('.scroll-hint.left');
+  const rightBtn = wrap.querySelector('.scroll-hint.right');
+  if (!scroller || !leftBtn || !rightBtn) return;
+  const hasOverflow = scroller.scrollWidth > scroller.clientWidth + 4;
+  leftBtn.classList.toggle('show', hasOverflow);
+  rightBtn.classList.toggle('show', hasOverflow);
+}
+window.addEventListener('resize', nkUpdateScrollHints);
   function nkLSGetC(key) { try { return localStorage.getItem(key); } catch(e) { return null; } }
   function nkLSSetC(key, val) { try { localStorage.setItem(key, val); } catch(e) {} }
 
