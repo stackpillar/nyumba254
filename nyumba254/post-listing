@@ -1636,7 +1636,7 @@ async function submitListing() {
 
   if (!currentUser) {
     showToast('Please sign in first', 'error');
-    setTimeout(() => window.location.href = 'login.html?next=post-listing.html', 1500);
+    setTimeout(() => window.location.href = 'login?next=post-listing.html', 1500);
     return;
   }
 
