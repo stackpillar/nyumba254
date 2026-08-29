@@ -41,8 +41,8 @@
       --radius:      10px;
       --radius-lg:   16px;
     }
-    html { scroll-behavior: smooth; overflow-x: hidden; }
-    body { font-family: 'Inter', sans-serif; color: var(--text); background: var(--surface); font-size: 15px; line-height: 1.6; overflow-x: hidden; width: 100%; }
+    html { scroll-behavior: smooth; overflow-x: hidden; overscroll-behavior-x: none; }
+    body { font-family: 'Inter', sans-serif; color: var(--text); background: var(--surface); font-size: 15px; line-height: 1.6; overflow-x: hidden; overscroll-behavior-x: none; width: 100%; }
     a { text-decoration: none; color: inherit; }
     button { font-family: inherit; cursor: pointer; border: none; }
     input, select { font-family: inherit; }
@@ -187,8 +187,10 @@
 
     .listings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
 
+    #results { overflow: hidden; max-width: 100%; }
+
     /* ── Horizontal scroll hint (mobile only) ── */
-    .scroll-wrap { position: relative; }
+    .scroll-wrap { position: relative; overflow: hidden; max-width: 100%; }
     .scroll-hint {
       display: none;
       position: absolute;
@@ -340,11 +342,11 @@
 
     .notify-strip {
       position: relative;
-      margin-top: 28px;
+      margin-top: 20px;
       background: linear-gradient(135deg, var(--green-light), #eef8f2);
       border: 1.5px dashed var(--green-mid);
-      border-radius: var(--radius-lg);
-      padding: 18px 22px;
+      border-radius: var(--radius);
+      padding: 12px 16px;
       max-width: 100%;
       box-sizing: border-box;
       overflow: hidden;
@@ -354,12 +356,12 @@
       color: var(--text-3); cursor: pointer; font-size: 14px; padding: 4px;
     }
     .notify-strip-close:hover { color: var(--text); }
-    .notify-strip-inner { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; max-width: 100%; }
-    .notify-strip-icon { font-size: 26px; flex-shrink: 0; }
+    .notify-strip-inner { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; max-width: 100%; }
+    .notify-strip-icon { font-size: 20px; flex-shrink: 0; }
     .notify-strip-text { flex: 1 1 220px; min-width: 0; }
-    .notify-strip-inner > .btn { flex-shrink: 0; }
-    .notify-strip-text strong { display: block; font-size: 14.5px; color: var(--green-dark); margin-bottom: 2px; }
-    .notify-strip-text span { font-size: 13px; color: var(--text-2); }
+    .notify-strip-inner > .btn { flex-shrink: 0; padding: 8px 14px; }
+    .notify-strip-text strong { display: block; font-size: 13.5px; color: var(--green-dark); margin-bottom: 1px; }
+    .notify-strip-text span { font-size: 12px; color: var(--text-2); }
 
     .notify-modal-overlay {
       display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);
@@ -451,6 +453,7 @@
         display: flex;
         grid-template-columns: none;
         overflow-x: auto;
+        overscroll-behavior-x: contain;
         scroll-snap-type: x mandatory;
         gap: 14px;
         padding-bottom: 6px;
@@ -476,6 +479,9 @@
       .notify-strip-inner { flex-direction: column; align-items: flex-start; }
       .notify-strip-inner .btn { width: 100%; justify-content: center; }
       .footer-top { grid-template-columns: 1fr; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .toolbar > div:first-child { width: 100%; justify-content: space-between; }
+      .sort-select { width: 100%; }
     }
   </style>
 </head>
