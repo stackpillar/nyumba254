@@ -4942,12 +4942,13 @@ function openPayListingModal(id){
   const l=allListings.find(x=>x.id===id);if(!l)return;
   payListingTargetId=id;
   const isBnbListing = l.category==='airbnb';
+  const dueAmount = isBnbListing ? (Number(l.payment_due_amount)||Number(platformPrices.bnb_basic_price)||0) : Number(l.payment_due_amount||0);
   document.getElementById('pay-listing-intro').textContent = isBnbListing
     ? `Your listing "${l.title}" is approved. Pay a one-time fee to make it live now — no BNB subscription needed.`
     : `Your listing "${l.title}" is approved. Choose a plan and pay to make it live.`;
-  document.getElementById('pay-standard-amount').textContent='KES '+Number(l.payment_due_amount||0).toLocaleString('en-KE');
+  document.getElementById('pay-standard-amount').textContent='KES '+dueAmount.toLocaleString('en-KE');
   document.getElementById('pay-plan-featured-row').style.display = isBnbListing ? 'none' : 'flex';
-  const featuredEstimate=Math.round((l.payment_due_amount||0)*1.6);
+  const featuredEstimate=Math.round(dueAmount*1.6);
   document.getElementById('pay-featured-amount').textContent='KES '+featuredEstimate.toLocaleString('en-KE')+' · top placement, more photos';
   document.querySelector('input[name="pay-plan"][value="basic"]').checked=true;
   document.getElementById('pay-listing-ref').value='';
@@ -5038,12 +5039,13 @@ function renderListingsTable(){
     const trialDays=getTrialDaysLeft(l);
     const trialNote=trialDays!==null?`<div class="trial-note${trialDays<=2?' urgent':''}">🕐 Free trial — ${trialDays} day${trialDays!==1?'s':''} left <span class="upgrade-link" onclick="requestTrialUpgrade('${escAttr(l.title)}')">Upgrade now</span></div>`:'';
     const bnbDays=getBnbDaysLeft(l);
-    const bnbNote=bnbDays!==null?`<div class="trial-note${bnbDays<=3?' urgent':''}">📅 BNB plan — ${bnbDays} day${bnbDays!==1?'s':''} left <a href="/plans" class="upgrade-link">Renew plan</a></div>`:(l.category==='airbnb'?`<div class="trial-note urgent">⚠️ No active BNB plan <a href="/plans" class="upgrade-link">Subscribe</a></div>`:'');
+    const bnbNote=bnbDays!==null?`<div class="trial-note${bnbDays<=3?' urgent':''}">📅 BNB plan — ${bnbDays} day${bnbDays!==1?'s':''} left <a href="/plans" class="upgrade-link">Renew plan</a></div>`:(l.category==='airbnb'&&l.status!=='approved_unpaid_bnb'?`<div class="trial-note urgent">⚠️ No active BNB plan <a href="/plans" class="upgrade-link">Subscribe</a></div>`:'');
     const occupiedNote=(l.status==='occupied'&&d.banner)?`<div class="occupied-note">${d.banner}</div>`:'';
+    const bnbListingFee = Number(l.payment_due_amount)||Number(platformPrices.bnb_basic_price)||0;
     const payDueNote = l.status==='approved_unpaid'
       ? `<div class="trial-note urgent">💳 Approved — pay <strong>KES ${Number(l.payment_due_amount||0).toLocaleString('en-KE')}</strong> to make this listing live. <span class="upgrade-link" onclick="openPayListingModal('${l.id}')">Pay now →</span></div>`
       : l.status==='approved_unpaid_bnb'
-        ? `<div class="trial-note urgent">📅 Approved — <span class="upgrade-link" onclick="openPayListingModal('${l.id}')">pay KES ${Number(l.payment_due_amount||0).toLocaleString('en-KE')} for just this listing →</span><br/>or <a href="/plans" class="upgrade-link">subscribe to a BNB plan →</a></div>`
+        ? `<div class="trial-note urgent">📅 Approved — <span class="upgrade-link" onclick="openPayListingModal('${l.id}')">pay KES ${bnbListingFee.toLocaleString('en-KE')} for just this listing →</span><br/>or <a href="/plans" class="upgrade-link">subscribe to a BNB plan →</a></div>`
         : '';
     const hasUnitTypes=(l.listing_units&&l.listing_units.length>0);
     const availSummary=hasUnitTypes?muAvailabilitySummary(l):null;
