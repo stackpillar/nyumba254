@@ -394,7 +394,7 @@
 <script>
   function doSearch() {
     const q = document.getElementById('search-input').value.trim();
-    if (q) window.location.href = `listings.html?q=${encodeURIComponent(q)}`;
+    if (q) window.location.href = `/listings?q=${encodeURIComponent(q)}`;
   }
 
   // ── Mobile menu ──
