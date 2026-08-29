@@ -907,7 +907,7 @@
       <div class="section-head">
         <h2 id="rl-page-heading">Rent &amp; Tenant Ledger</h2>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <div class="rl-toolbar-icon-btn" title="Replay Rent Ledger tour" onclick="RLTour.restart()" role="button" tabindex="0" aria-label="Replay Rent Ledger tour" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
+          <div class="rl-toolbar-icon-btn" id="rl-tour-replay-btn" title="Replay Rent Ledger tour" onclick="RLTour.restart()" role="button" tabindex="0" aria-label="Replay Rent Ledger tour" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#7c3aed" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
           </div>
           <button class="btn btn-outline" id="btn-reminder-settings" style="display:none" onclick="openReminderSettingsModal()">🔔 Reminder settings</button>
@@ -2163,6 +2163,15 @@ function eliteActive(){
   return sub.active && sub.plan==='elite';
 }
 
+// Elite unlocks the full ledger suite (Rent Ledger, BNB Booking Ledger,
+// Demand Insights, AI tools) regardless of plan_category. But a seller who
+// has ONLY paid for a BNB plan (Basic/Bundle/Unlimited) — no Elite — should
+// still get the Booking Ledger, since that's the entire point of the BNB
+// plan. Demand Insights and the AI tools stay Elite-exclusive either way.
+function ledgerAccessActive(){
+  return eliteActive() || (isBnbLedgerMode() && bnbSubscriptionInfo().active);
+}
+
 function isBnbLedgerMode(){
   const p = ownerProfile || currentProfile;
   return p?.plan_category === 'bnb';
@@ -2170,11 +2179,12 @@ function isBnbLedgerMode(){
 function updateEliteGatedPages(sub){
   const isElite = sub.active && sub.plan==='elite';
   const bnbMode = isBnbLedgerMode();
+  const ledgerUnlocked = isElite || (bnbMode && bnbSubscriptionInfo().active);
   const rlLocked=document.getElementById('rent-ledger-locked'), rlContent=document.getElementById('rent-ledger-content');
   const bnbContent=document.getElementById('bnb-ledger-content');
-  if(rlLocked){ rlLocked.style.display = isElite?'none':'block'; }
-  if(rlContent) rlContent.style.display = (isElite && !bnbMode)?'block':'none';
-  if(bnbContent) bnbContent.style.display = (isElite && bnbMode)?'block':'none';
+  if(rlLocked){ rlLocked.style.display = ledgerUnlocked?'none':'block'; }
+  if(rlContent) rlContent.style.display = (ledgerUnlocked && !bnbMode)?'block':'none';
+  if(bnbContent) bnbContent.style.display = (ledgerUnlocked && bnbMode)?'block':'none';
   const rlHeadingEl=document.getElementById('rl-page-heading');
   const rlNavLabelEl=document.getElementById('nav-rent-ledger-label');
   if(rlHeadingEl) rlHeadingEl.textContent = bnbMode ? 'BNB Booking Ledger' : 'Rent & Tenant Ledger';
@@ -2182,18 +2192,20 @@ function updateEliteGatedPages(sub){
   const dhLocked=document.getElementById('demand-locked'), dhContent=document.getElementById('demand-content');
   if(dhLocked && dhContent){ dhLocked.style.display = isElite?'none':'block'; dhContent.style.display = isElite?'block':'none'; }
   const addUnitBtn=document.getElementById('btn-add-rental-unit');
-  if(addUnitBtn) addUnitBtn.style.display = (isElite && !bnbMode)?'inline-flex':'none';
+  if(addUnitBtn) addUnitBtn.style.display = (ledgerUnlocked && !bnbMode)?'inline-flex':'none';
   const addBnbPropBtn=document.getElementById('btn-add-bnb-property');
-  if(addBnbPropBtn) addBnbPropBtn.style.display = (isElite && bnbMode)?'inline-flex':'none';
+  if(addBnbPropBtn) addBnbPropBtn.style.display = (ledgerUnlocked && bnbMode)?'inline-flex':'none';
   const addBnbBookingBtn=document.getElementById('btn-add-bnb-booking');
-  if(addBnbBookingBtn) addBnbBookingBtn.style.display = (isElite && bnbMode)?'inline-flex':'none';
+  if(addBnbBookingBtn) addBnbBookingBtn.style.display = (ledgerUnlocked && bnbMode)?'inline-flex':'none';
+  const rlTourReplayBtn=document.getElementById('rl-tour-replay-btn');
+  if(rlTourReplayBtn) rlTourReplayBtn.style.display = (ledgerUnlocked && !bnbMode)?'flex':'none';
   const digestRow=document.getElementById('demand-digest-row');
   if(digestRow){ digestRow.style.display = isElite?'flex':'none'; const dt=document.getElementById('demand-digest-toggle'); if(dt) dt.checked=!!currentProfile?.demand_digest_enabled; }
   const aiConciergeRow=document.getElementById('ai-concierge-row');
   if(aiConciergeRow){ aiConciergeRow.style.display = isElite?'flex':'none'; const act=document.getElementById('ai-concierge-toggle'); if(act) act.checked=!!currentProfile?.ai_concierge_enabled; }
-  ['btn-export-rl-csv','btn-export-rl-pdf','btn-export-rl-annual','btn-remind-overdue'].forEach(id=>{
+  ['btn-export-rl-csv','btn-export-rl-pdf','btn-export-rl-annual','btn-remind-overdue','btn-reminder-settings'].forEach(id=>{
     const el=document.getElementById(id);
-    if(el) el.style.display = (isElite && !bnbMode)?'inline-flex':'none';
+    if(el) el.style.display = (ledgerUnlocked && !bnbMode)?'inline-flex':'none';
   });
   ['btn-export-di-csv','btn-export-di-pdf'].forEach(id=>{
     const el=document.getElementById(id);
@@ -2366,7 +2378,7 @@ async function ensureStorefrontSlug(){
 let bnbPropertiesCache=[];
 
 async function loadBnbLedger(){
-  if(!eliteActive())return;
+  if(!ledgerAccessActive())return;
   const wrap=document.getElementById('bnb-properties-list');
   wrap.innerHTML='<div style="padding:30px;text-align:center;color:var(--text-3);font-size:13px">Loading…</div>';
   const{data,error}=await db.from('bnb_properties').select('*, bnb_bookings(*)').eq('seller_id',effectiveSellerId).order('created_at',{ascending:false});
