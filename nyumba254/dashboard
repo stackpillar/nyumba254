@@ -2058,12 +2058,6 @@ function subscriptionInfo(){
 }
 function fmtSubDate(d){ return new Date(d).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'}); }
 function confirmListingCategoryBeforeLeaving(){
-  const sub = subscriptionInfo();
-  const p = ownerProfile || currentProfile;
-  if (sub.active && p?.plan_category) {
-    const label = p.plan_category === 'bnb' ? 'Airbnb / BNB' : 'sale & rental';
-    return confirm(`Your active plan only covers ${label} listings — post-listing will block anything else. Continue?`);
-  }
   return true;
 }
 

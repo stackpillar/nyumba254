@@ -2650,11 +2650,46 @@ function notifySms(type, payload) {
     });
   }
 
-  function approveListing(id) {
+  // ── Plan coverage check — does the seller's ACTIVE subscription cover
+  // this listing's category? Airbnb needs an active BNB plan; every other
+  // category needs an active rental Premium/Elite plan with plan_category
+  // set to 'rental'. Used both for the pre-approval warning and inside
+  // doApprove itself.
+  async function sellerPlanCoversListing(l) {
+    if (!l?.seller_id) return false;
+    const { data: prof } = await db.from('profiles')
+      .select('plan_category,bnb_expires_at,subscription_tier,subscription_expires_at')
+      .eq('id', l.seller_id).single();
+    const bnbActive = prof?.plan_category === 'bnb' && prof?.bnb_expires_at && new Date(prof.bnb_expires_at) > new Date();
+    const rentalActive = prof?.plan_category === 'rental' && prof?.subscription_tier && prof.subscription_tier !== 'none'
+      && (!prof?.subscription_expires_at || new Date(prof.subscription_expires_at) > new Date());
+    return l.category === 'airbnb' ? bnbActive : rentalActive;
+  }
+
+  // ── Reactivation on plan grant/renewal — instant, no re-review. ──
+  async function reactivateAirbnbListingsForSeller(sellerId) {
+    await db.from('listings').update({ is_disabled:false, disabled_reason:null, disabled_at:null, disabled_by_subscription:false })
+      .eq('seller_id', sellerId).eq('category','airbnb').eq('disabled_by_subscription', true);
+    await db.from('listings').update({ status:'active', payment_status:'paid' })
+      .eq('seller_id', sellerId).eq('category','airbnb').eq('status','approved_unpaid_bnb');
+    if (currentView==='listings') loadAllListings();
+    if (currentView==='overview') loadOverview();
+  }
+  async function reactivateRentalListingsForSeller(sellerId) {
+    await db.from('listings').update({ is_disabled:false, disabled_reason:null, disabled_at:null, disabled_by_subscription:false })
+      .eq('seller_id', sellerId).neq('category','airbnb').eq('disabled_by_subscription', true);
+    await db.from('listings').update({ status:'active', payment_status:'paid' })
+      .eq('seller_id', sellerId).neq('category','airbnb').eq('status','approved_unpaid');
+    if (currentView==='listings') loadAllListings();
+    if (currentView==='overview') loadOverview();
+  }
+
+  async function approveListing(id) {
     const l = _listings[id]; if(!l) return;
-    if (l.payment_status!=='paid' && l.payment_status!=='trial') {
-      openConfirm({title:'Approve unpaid listing?', message:`"${l.title}" hasn't been confirmed as paid (${l.payment_status||'unpaid'}). You can approve anyway.`, warningText:'⚠ This listing will go live without a confirmed payment.', confirmText:'Approve anyway', confirmClass:'approve', onConfirm:()=>doApprove(id,l.title)});
-    } else { doApprove(id,l.title); }
+    if (l.payment_status==='paid' || l.payment_status==='trial') { doApprove(id,l.title); return; }
+    const covered = await sellerPlanCoversListing(l);
+    if (covered) { doApprove(id,l.title); return; }
+    openConfirm({title:'Approve unpaid listing?', message:`"${l.title}" hasn't been paid for and isn't covered by an active plan. You can approve it anyway — the seller will be asked to pay for this listing separately.`, warningText:'⚠ This listing will go live without a confirmed payment.', confirmText:'Approve anyway', confirmClass:'approve', onConfirm:()=>doApprove(id,l.title)});
   }
   async function doApprove(id,title) {
     const l = _listings[id];
@@ -2664,22 +2699,17 @@ function notifySms(type, payload) {
     const isPaid  = l?.payment_status === 'paid';
     const isAirbnb = l?.category === 'airbnb';
 
-    // Airbnb runs on a monthly BNB subscription, not a one-time listing fee.
-    // Go live only if the seller already has an active BNB plan; otherwise
-    // hold it and ask them to subscribe (never route them to the per-listing
-    // pay flow below — that's for rental/sale categories only).
-    let bnbActive = false;
-    if (isAirbnb && !isTrial) {
-      const { data: prof } = await db.from('profiles').select('plan_category,bnb_expires_at').eq('id', l.seller_id).single();
-      bnbActive = prof?.plan_category === 'bnb' && prof?.bnb_expires_at && new Date(prof.bnb_expires_at) > new Date();
-    }
+    // Covers BOTH cases now: an active BNB plan for airbnb listings, and an
+    // active rental Premium/Elite plan for every other category. Either way,
+    // a covered listing goes straight to active — no per-listing payment.
+    const planCoversThis = (!isTrial && l?.seller_id) ? await sellerPlanCoversListing(l) : false;
 
     const newStatus = isFutureScheduled ? 'scheduled'
-      : (isTrial || isPaid || (isAirbnb && bnbActive)) ? 'active'
+      : (isTrial || isPaid || planCoversThis) ? 'active'
       : isAirbnb ? 'approved_unpaid_bnb'
       : 'approved_unpaid';
 
-    const {data,error} = await db.from('listings').update({status:newStatus}).eq('id',id).select();
+    const {data,error} = await db.from('listings').update({status:newStatus, payment_status: planCoversThis ? 'paid' : l.payment_status}).eq('id',id).select();
     if (error)       { toast('Error approving: '+error.message,'error'); return; }
     if (!data?.length){ toast('Blocked by RLS — check Supabase policy','error'); return; }
     logAction(isFutureScheduled ? 'approve_listing_scheduled' : 'approve_listing','listing',id,title||'');
@@ -2689,9 +2719,11 @@ function notifySms(type, payload) {
         notifySeller('listing_approved', { listingId: id, listingTitle: title, sellerName: l.profiles.full_name, sellerEmail: l.profiles.email });
       } else if (isFutureScheduled) {
         notifySeller('listing_scheduled', { listingId: id, listingTitle: title, publishAt: l.publish_at, sellerName: l.profiles.full_name, sellerEmail: l.profiles.email });
-      } else if (isAirbnb && !bnbActive) {
+      } else if (planCoversThis) {
+        notifySeller('listing_approved', { listingId: id, listingTitle: title, sellerName: l.profiles.full_name, sellerEmail: l.profiles.email });
+      } else if (isAirbnb) {
         notifySeller('listing_approved_subscribe_bnb', { listingId: id, listingTitle: title, sellerName: l.profiles.full_name, sellerEmail: l.profiles.email });
-      } else if (!isPaid && !(isAirbnb && bnbActive)) {
+      } else if (!isPaid) {
         const standardAmount = calcUpgradeAmount(l,'basic');
         const featuredAmount = calcUpgradeAmount(l,'featured');
         await db.from('listings').update({ payment_due_amount: standardAmount }).eq('id', id);
@@ -2706,7 +2738,7 @@ function notifySms(type, payload) {
     notifySms('listing_status', { listingId: id, listingTitle: title, status: newStatus });
     toast(
       isFutureScheduled ? `Listing approved — will go live ${new Date(l.publish_at).toLocaleString('en-KE')} ✓` :
-      newStatus==='active' ? 'Listing approved and live ✓' :
+      newStatus==='active' ? (planCoversThis ? 'Approved — live now, covered by seller\'s plan ✓' : 'Listing approved and live ✓') :
       newStatus==='approved_unpaid_bnb' ? 'Approved — seller notified to subscribe to a BNB plan' :
       'Listing approved — seller notified to pay before it goes live',
       'success'
@@ -3388,6 +3420,7 @@ function notifySms(type, payload) {
       const { data: seller } = await db.from('profiles').update({
         bnb_plan: p.plan_key, bnb_unit_limit: unitLimit, bnb_expires_at: expiresAt,
       }).eq('id', p.seller_id).select().single();
+      await reactivateAirbnbListingsForSeller(p.seller_id);
       if (seller?.email) notifySeller('premium_granted', { sellerName: seller.full_name, sellerEmail: seller.email, plan: p.plan_key, expiresAt });
       logAction('activate_bnb_subscription','profile',p.seller_id, p.plan_key);
     } else if (p && (p.type === 'premium_subscription' || p.type === 'elite_subscription') && p.seller_id) {
@@ -3402,6 +3435,7 @@ function notifySms(type, payload) {
       const { data: seller } = await db.from('profiles').update({
         subscription_tier: tier, subscription_plan: planName, subscription_expires_at: expiresAt, is_pro: true,
       }).eq('id', p.seller_id).select().single();
+      await reactivateRentalListingsForSeller(p.seller_id);
       if (seller?.email) notifySeller('premium_granted', { sellerName: seller.full_name, sellerEmail: seller.email, plan: tier, expiresAt });
       logAction('activate_subscription_from_payment','profile',p.seller_id,`${planName} ${tier}`);
     }
@@ -4457,6 +4491,9 @@ async function messageSellerInChat(sellerId) {
       status:'confirmed',
     });
 
+    if (isBnb) await reactivateAirbnbListingsForSeller(grantingSellerId);
+    else await reactivateRentalListingsForSeller(grantingSellerId);
+
     logAction('grant_premium','profile',grantingSellerId,`${tier} ${isBnb?'monthly':plan} plan`);
     const seller = data[0];
     if (seller?.email) notifySeller('premium_granted', { sellerName: seller.full_name, sellerEmail: seller.email, plan: isBnb ? 'monthly' : plan, expiresAt });
@@ -4965,7 +5002,7 @@ async function messageSellerInChat(sellerId) {
           ${mobileMenu(r.id,[
             {label:'View full details', cls:'', fn:`openReportModal('${r.id}')`},
             ...(seller && !seller.is_disabled?[{label:'Suspend seller', cls:'danger', fn:`quickSuspendSeller('${seller.id}')`}]:[]),
-            ...(listing?[{label:'Open listing page', cls:'', fn:`window.open('/listing?id=${listing.id}','_blank','noopener,noreferrer')`}]:[]),
+            ...(listing?[{label:'Open listing page', cls:'', fn:`window.open('/listing?id=${String(listing.listing_number).padStart(6,'0')}','_blank','noopener,noreferrer')`}]:[]),
           ])}
         </td>
       </tr>`;
@@ -5077,7 +5114,7 @@ async function messageSellerInChat(sellerId) {
     document.getElementById('report-modal-body').innerHTML = html;
 
     document.getElementById('report-modal-footer').innerHTML = `
-      ${listing?`<button class="btn-modal cancel" onclick="window.open('/listing?id=${listing.id}','_blank','noopener,noreferrer')">View listing</button>`:''}
+      ${listing?`<button class="btn-modal cancel" onclick="window.open('/listing?id=${String(listing.listing_number).padStart(6,'0')}','_blank','noopener,noreferrer')">View listing</button>`:''}
       ${seller?`<button class="btn-modal cancel" onclick="closeReportModal(); openProfileModal('${seller.id}')">View seller profile</button>`:''}
       ${seller && !seller.is_disabled?`<button class="btn-modal reject" onclick="closeReportModal(); disableProfileFlow('${seller.id}')">Suspend seller</button>`:''}
       ${seller?`<button class="btn-modal cancel" onclick="closeReportModal(); requestExtraVerification('${seller.id}')">Request extra documents</button>`:''}
