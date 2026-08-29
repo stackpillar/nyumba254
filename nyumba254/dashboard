@@ -4941,8 +4941,12 @@ let payListingTargetId=null;
 function openPayListingModal(id){
   const l=allListings.find(x=>x.id===id);if(!l)return;
   payListingTargetId=id;
-  document.getElementById('pay-listing-intro').textContent=`Your listing "${l.title}" is approved. Choose a plan and pay to make it live.`;
+  const isBnbListing = l.category==='airbnb';
+  document.getElementById('pay-listing-intro').textContent = isBnbListing
+    ? `Your listing "${l.title}" is approved. Pay a one-time fee to make it live now — no BNB subscription needed.`
+    : `Your listing "${l.title}" is approved. Choose a plan and pay to make it live.`;
   document.getElementById('pay-standard-amount').textContent='KES '+Number(l.payment_due_amount||0).toLocaleString('en-KE');
+  document.getElementById('pay-plan-featured-row').style.display = isBnbListing ? 'none' : 'flex';
   const featuredEstimate=Math.round((l.payment_due_amount||0)*1.6);
   document.getElementById('pay-featured-amount').textContent='KES '+featuredEstimate.toLocaleString('en-KE')+' · top placement, more photos';
   document.querySelector('input[name="pay-plan"][value="basic"]').checked=true;
@@ -5039,7 +5043,7 @@ function renderListingsTable(){
     const payDueNote = l.status==='approved_unpaid'
       ? `<div class="trial-note urgent">💳 Approved — pay <strong>KES ${Number(l.payment_due_amount||0).toLocaleString('en-KE')}</strong> to make this listing live. <span class="upgrade-link" onclick="openPayListingModal('${l.id}')">Pay now →</span></div>`
       : l.status==='approved_unpaid_bnb'
-        ? `<div class="trial-note urgent">📅 Approved — subscribe to a BNB plan to make this listing live. <a href="/plans" class="upgrade-link">Subscribe →</a></div>`
+        ? `<div class="trial-note urgent">📅 Approved — <span class="upgrade-link" onclick="openPayListingModal('${l.id}')">pay KES ${Number(l.payment_due_amount||0).toLocaleString('en-KE')} for just this listing →</span><br/>or <a href="/plans" class="upgrade-link">subscribe to a BNB plan →</a></div>`
         : '';
     const hasUnitTypes=(l.listing_units&&l.listing_units.length>0);
     const availSummary=hasUnitTypes?muAvailabilitySummary(l):null;
