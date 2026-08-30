@@ -32,6 +32,8 @@
       --green-faint: #F0FAF6;
       --gold:        #BA7517;
       --gold-light:  #FAEEDA;
+      --purple:      #7c3aed;
+      --purple-light:#EDE9FE;
       --text:        #1a1a18;
       --text-2:      #4a4a46;
       --text-3:      #888780;
@@ -60,11 +62,11 @@
     .nav-link { font-size: 14px; color: var(--text-2); padding: 8px 14px; border-radius: var(--radius); transition: background .15s; }
     .nav-link:hover { background: var(--surface); }
     .nav-link.active { color: var(--green); font-weight: 500; }
-.nav-count { background: var(--green); color: white; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; min-width: 16px; text-align: center; }
+    .nav-count { background: var(--green); color: white; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; min-width: 16px; text-align: center; }
     .btn-primary { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; padding: 9px 20px; border-radius: var(--radius); background: var(--green); color: white; transition: background .15s; }
     .btn-primary:hover { background: var(--green-dark); }
 
-    /* ── Hero — now photographic instead of plain white ── */
+    /* ── Hero ── */
     .hero {
       padding: 96px 40px 88px; text-align: center;
       position: relative; overflow: hidden;
@@ -78,11 +80,7 @@
     }
     .hero-content { position: relative; z-index: 2; width: 100%; }
 
-    /* Mobile menu */
-    .mobile-menu-btn {
-      display: none; background: none; border: none; cursor: pointer;
-      padding: 6px; border-radius: 6px;
-    }
+    .mobile-menu-btn { display: none; background: none; border: none; cursor: pointer; padding: 6px; border-radius: 6px; }
     .mobile-menu-btn svg { width: 22px; height: 22px; stroke: var(--text); fill: none; stroke-width: 2; display: block; }
     .mobile-nav {
       display: none; position: fixed; top: 64px; left: 0; right: 0;
@@ -113,7 +111,7 @@
     }
     .hero h1 em { font-style: italic; color: #6FE0B8; }
     .hero-sub {
-      font-size: 17px; color: rgba(255,255,255,0.92); max-width: 520px;
+      font-size: 17px; color: rgba(255,255,255,0.92); max-width: 540px;
       margin: 0 auto 40px; line-height: 1.7;
       text-shadow: 0 1px 10px rgba(0,0,0,0.35);
     }
@@ -134,7 +132,7 @@
     .section-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--green); margin-bottom: 12px; }
     .section-title { font-family: 'Playfair Display', serif; font-size: clamp(26px, 3.5vw, 38px); color: var(--text); line-height: 1.2; margin-bottom: 14px; }
     .section-title em { font-style: italic; color: var(--green); }
-    .section-sub { font-size: 16px; color: var(--text-2); max-width: 540px; }
+    .section-sub { font-size: 16px; color: var(--text-2); max-width: 560px; }
 
     /* ── Tab panels ── */
     .tab-panel { display: none; }
@@ -170,6 +168,13 @@
     .step h3 { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
     .step p { font-size: 13px; color: var(--text-2); line-height: 1.6; }
 
+    /* Small note chips under the buyer steps */
+    .note-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 14px; margin-top: 48px; }
+    .note-chip { display: flex; gap: 12px; align-items: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; }
+    .note-chip svg { width: 18px; height: 18px; stroke: var(--green-dark); fill: none; stroke-width: 2; flex-shrink: 0; margin-top: 2px; }
+    .note-chip strong { display: block; font-size: 13.5px; color: var(--text); margin-bottom: 3px; }
+    .note-chip span { font-size: 12.5px; color: var(--text-2); line-height: 1.55; }
+
     /* ── SELLER steps — alternating layout ── */
     .seller-steps { margin-top: 56px; display: flex; flex-direction: column; gap: 0; }
     .seller-step {
@@ -200,10 +205,7 @@
     }
     .seller-step-content.right .detail { flex-direction: row-reverse; }
     .detail svg { width: 12px; height: 12px; stroke: var(--green); fill: none; stroke-width: 2.5; }
-    .seller-step-mid {
-      display: flex; align-items: center; justify-content: center;
-      position: relative; z-index: 1;
-    }
+    .seller-step-mid { display: flex; align-items: center; justify-content: center; position: relative; z-index: 1; }
     .seller-step-circle {
       width: 48px; height: 48px; border-radius: 50%;
       background: var(--green); color: white;
@@ -214,16 +216,21 @@
     .seller-step .empty { background: transparent; border: none; box-shadow: none; }
     .seller-step .empty:hover { box-shadow: none; }
 
+    /* Category chips reused inside a step */
+    .mini-cat-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .seller-step-content.right .mini-cat-row { justify-content: flex-end; }
+    .mini-cat { font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: var(--surface); border: 1px solid var(--border); color: var(--text-2); }
+
     /* ── Pricing strip ── */
     .pricing-strip {
       background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
       padding: 72px 40px;
     }
     .pricing-inner { max-width: 1080px; margin: 0 auto; }
-    .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 48px; }
+    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 48px; align-items: stretch; }
     .pricing-card {
       background: var(--white); border: 2px solid var(--border); border-radius: var(--radius-lg);
-      padding: 32px; position: relative; transition: box-shadow .2s;
+      padding: 28px 26px; position: relative; transition: box-shadow .2s; display: flex; flex-direction: column;
     }
     .pricing-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.08); }
     .pricing-card.featured { border-color: var(--green); }
@@ -234,13 +241,13 @@
     }
     .pricing-card h3 { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
     .pricing-amount {
-      font-family: 'Playfair Display', serif; font-size: 40px; font-weight: 700;
-      color: var(--green-dark); line-height: 1; margin-bottom: 4px;
+      font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700;
+      color: var(--green-dark); line-height: 1.15; margin-bottom: 4px;
     }
-    .pricing-amount .unit { font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 400; color: var(--text-3); }
-    .pricing-duration { font-size: 13px; color: var(--text-3); margin-bottom: 24px; }
-    .pricing-features { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
-    .pricing-features li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--text-2); }
+    .pricing-amount .unit { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 400; color: var(--text-3); }
+    .pricing-duration { font-size: 12.5px; color: var(--text-3); margin-bottom: 20px; line-height: 1.6; }
+    .pricing-features { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; flex: 1; }
+    .pricing-features li { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; color: var(--text-2); }
     .pricing-features li::before { content: ''; width: 18px; height: 18px; background: var(--green-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%230F6E56' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: center; }
     .pricing-cta {
       display: block; width: 100%; padding: 12px; text-align: center;
@@ -250,6 +257,14 @@
     .pricing-cta.outline:hover { background: var(--green-light); }
     .pricing-cta.solid { background: var(--green); color: white; }
     .pricing-cta.solid:hover { background: var(--green-dark); }
+    .pricing-note {
+      margin-top: 28px; background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg);
+      padding: 20px 24px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; justify-content: space-between;
+    }
+    .pricing-note-text { font-size: 13.5px; color: var(--text-2); max-width: 560px; line-height: 1.6; }
+    .pricing-note-text strong { color: var(--text); }
+    .pricing-note .badge-elite { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: white; background: var(--purple); padding: 2px 10px; border-radius: 20px; margin-right: 6px; }
+    .pricing-fineprint { font-size: 12px; color: var(--text-3); margin-top: 18px; line-height: 1.7; max-width: 720px; }
 
     /* ── Trust section ── */
     .trust-section { padding: 72px 40px; max-width: 1080px; margin: 0 auto; }
@@ -320,6 +335,7 @@
       .footer-top { grid-template-columns: 2fr 1fr 1fr; }
       .footer-top > *:nth-child(4),
       .footer-top > *:nth-child(5) { display: none; }
+      .pricing-grid { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 860px) {
       nav { padding: 0 16px; }
@@ -338,6 +354,7 @@
       .seller-step-content { margin-bottom: 12px; }
       .seller-step-content.right { text-align: left; }
       .seller-step-content.right .detail { flex-direction: row; }
+      .seller-step-content.right .mini-cat-row { justify-content: flex-start; }
       .seller-step .empty { display: none; }
       .pricing-grid { grid-template-columns: 1fr; }
       .trust-grid { grid-template-columns: 1fr; }
@@ -351,6 +368,7 @@
       .hero-tabs { flex-direction: column; border-radius: var(--radius); }
       .hero-tab { border-radius: 8px; }
       .footer-bottom { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .pricing-note { flex-direction: column; align-items: flex-start; }
     }
   </style>
 </head>
@@ -406,7 +424,7 @@
   <div class="hero-content">
     <div class="hero-eyebrow">No agents · No commission · No confusion</div>
     <h1>Finding a home should be<br><em>this simple</em></h1>
-    <p class="hero-sub">Nyumba254 connects people who have properties with people who need them — anywhere in Kenya. No middlemen.</p>
+    <p class="hero-sub">Nyumba254 connects people who have properties with people who need them — anywhere in Kenya. Every listing is reviewed by our team, and every conversation stays safely on the platform.</p>
 
     <div class="hero-tabs" role="tablist" aria-label="Choose your path">
       <button class="hero-tab active" id="tab-btn-buyer" role="tab" aria-selected="true" aria-controls="panel-buyer" onclick="switchTab('buyer')">I'm looking to rent or buy</button>
@@ -423,8 +441,8 @@
   <!-- Steps -->
   <div class="section">
     <div class="section-eyebrow">For buyers & renters</div>
-    <h2 class="section-title">Find your apartment in <em>four steps</em></h2>
-    <p class="section-sub">From searching to moving in — the whole process is straightforward and agent-free.</p>
+    <h2 class="section-title">Find your next place in <em>four steps</em></h2>
+    <p class="section-sub">From searching to moving in — the whole process is straightforward, safe, and agent-free.</p>
 
     <div class="steps-wrap">
       <div class="steps-row">
@@ -435,7 +453,7 @@
             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </div>
           <h3>Search your area</h3>
-          <p>Browse listings by county and area — Kisumu, Nairobi, Mombasa, and more. Filter by category, price, and details specific to each property type.</p>
+          <p>Browse by county and area, or search by keyword and price. Filter by property type — apartment, house, boarding room, Airbnb, or a shop/office.</p>
         </div>
 
         <div class="step green">
@@ -443,17 +461,17 @@
           <div class="step-icon-wrap">
             <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
           </div>
-          <h3>View the listing</h3>
-          <p>See all photos, full specs — bedrooms, bathrooms, size, furnished or not — plus the exact area and contact details.</p>
+          <h3>Open a listing you like</h3>
+          <p>See every photo, the full specs, amenities, and price. Boarding houses show live room availability. Save any listing to your account with one tap to compare later.</p>
         </div>
 
         <div class="step green">
           <div class="step-num"><span>3</span></div>
           <div class="step-icon-wrap">
-            <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.12 1.2 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
           </div>
-          <h3>Contact the seller</h3>
-          <p>Send an enquiry directly from the listing page. The seller's phone number is shown — call or WhatsApp them immediately.</p>
+          <h3>Message the seller</h3>
+          <p>Send an enquiry straight from the listing — no account required. The seller replies right there in the same conversation, or you can call or WhatsApp them directly once you reveal their number.</p>
         </div>
 
         <div class="step green">
@@ -461,10 +479,25 @@
           <div class="step-icon-wrap">
             <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           </div>
-          <h3>Move in</h3>
-          <p>Arrange a viewing, agree terms directly with the owner, and move in. No agent cuts. No delays. The deal is purely between you and the seller.</p>
+          <h3>Arrange a viewing & move in</h3>
+          <p>Agree terms directly with the owner — no agent cuts, no delays. Once you're settled, leave the seller a review to help the next buyer.</p>
         </div>
 
+      </div>
+
+      <div class="note-strip">
+        <div class="note-chip">
+          <svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>
+          <div><strong>Privacy by default</strong><span>The exact address is only shared with a buyer once they've sent an enquiry — general area and map location are shown up front.</span></div>
+        </div>
+        <div class="note-chip">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+          <div><strong>Save your favourites</strong><span>Heart any listing while you browse and find it again later from your Saved page — no need to keep re-searching.</span></div>
+        </div>
+        <div class="note-chip">
+          <svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+          <div><strong>Report anything suspicious</strong><span>Every listing has a "Report" button — fake listings, upfront payment requests, or anything that feels off get reviewed by our team.</span></div>
+        </div>
       </div>
     </div>
   </div>
@@ -479,7 +512,7 @@
         <div style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px;">
           <div style="font-size:28px; margin-bottom:12px;">🏢</div>
           <h3 style="font-size:15px; font-weight:600; margin-bottom:6px;">Apartment</h3>
-          <p style="font-size:13px; color:var(--text-2); line-height:1.6;">Flats, units, and compounds across every area we cover — from cozy studios to spacious family units.</p>
+          <p style="font-size:13px; color:var(--text-2); line-height:1.6;">Flats, units, and compounds — from studios to multi-bedroom homes, with details like parking, security, and furnishing shown up front.</p>
         </div>
 
         <div style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px;">
@@ -491,19 +524,19 @@
         <div style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px;">
           <div style="font-size:28px; margin-bottom:12px;">🎓</div>
           <h3 style="font-size:15px; font-weight:600; margin-bottom:6px;">Boarding House</h3>
-          <p style="font-size:13px; color:var(--text-2); line-height:1.6;">Student rooms and bed spaces near universities and colleges across Kenya.</p>
+          <p style="font-size:13px; color:var(--text-2); line-height:1.6;">Student rooms and bed spaces near institutions, with each room type priced separately and live availability shown per room.</p>
         </div>
 
         <div style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px;">
           <div style="font-size:28px; margin-bottom:12px;">🏖️</div>
           <h3 style="font-size:15px; font-weight:600; margin-bottom:6px;">Airbnb / Holiday Rental</h3>
-          <p style="font-size:13px; color:var(--text-2); line-height:1.6;">Short stays and furnished rentals, ready to book by the night, week, or month.</p>
+          <p style="font-size:13px; color:var(--text-2); line-height:1.6;">Short stays and furnished rentals — guest count, minimum stay, and house rules are all listed up front.</p>
         </div>
 
         <div style="background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px;">
           <div style="font-size:28px; margin-bottom:12px;">🏬</div>
           <h3 style="font-size:15px; font-weight:600; margin-bottom:6px;">Shops & offices</h3>
-          <p style="font-size:13px; color:var(--text-2); line-height:1.6;">Retail shops, offices, and business spaces in CBDs and commercial areas — for sale or to let.</p>
+          <p style="font-size:13px; color:var(--text-2); line-height:1.6;">Retail shops, offices, showrooms, and warehouse space — for lease or for sale — in CBDs and commercial areas.</p>
         </div>
 
       </div>
@@ -522,94 +555,102 @@
 
   <div class="section">
     <div class="section-eyebrow">For property owners</div>
-    <h2 class="section-title">Your listing live in <em>under 10 minutes</em></h2>
-    <p class="section-sub">Fill in the details, upload photos, pay once via M-Pesa — that's it. Buyers come to you directly.</p>
+    <h2 class="section-title">Get your listing <em>live and working for you</em></h2>
+    <p class="section-sub">Fill in the details, upload photos, and submit — our team reviews it, then it's live for buyers to find and message you directly.</p>
 
     <div class="seller-steps">
 
-      <!-- Step 1 — left content, right empty -->
+      <!-- Step 1 -->
       <div class="seller-step">
         <div class="seller-step-content">
           <div class="seller-step-label">Step 1</div>
-          <h3>Create a free account</h3>
-          <p>Sign up with your email and M-Pesa number. Takes under a minute. Your account lets you manage all your listings, track views, and receive enquiries from buyers.</p>
+          <h3>Create a free seller account</h3>
+          <p>Sign up with your email. Your account is where you post listings, chat with buyers, track views and enquiries, and manage payments — all in one dashboard.</p>
           <div class="detail">
             <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-            Free forever — no subscription
+            Free to create — no card needed
           </div>
         </div>
-        <div class="seller-step-mid">
-          <div class="seller-step-circle">1</div>
-        </div>
+        <div class="seller-step-mid"><div class="seller-step-circle">1</div></div>
         <div class="seller-step-content empty"></div>
       </div>
 
-      <!-- Step 2 — left empty, right content -->
+      <!-- Step 2 -->
       <div class="seller-step">
         <div class="seller-step-content empty"></div>
-        <div class="seller-step-mid">
-          <div class="seller-step-circle">2</div>
-        </div>
+        <div class="seller-step-mid"><div class="seller-step-circle">2</div></div>
         <div class="seller-step-content right">
           <div class="seller-step-label">Step 2</div>
-          <h3>Fill in your property details</h3>
-          <p>Title, description, price, location — and pick your category: Apartment, House, Boarding House, Airbnb, or Shops & offices. Each category asks for the details relevant to it. The whole form takes about 5 minutes.</p>
-          <div class="detail">
-            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-            Available anywhere in Kenya — pick your county and area
+          <h3>Choose your property type</h3>
+          <p>Pick the category that matches your property — each one then asks for the details that actually matter for it, so the form stays quick and relevant.</p>
+          <div class="mini-cat-row">
+            <span class="mini-cat">Apartment</span>
+            <span class="mini-cat">House</span>
+            <span class="mini-cat">Boarding House</span>
+            <span class="mini-cat">Airbnb</span>
+            <span class="mini-cat">Shops & Offices</span>
           </div>
         </div>
       </div>
 
-      <!-- Step 3 — left content, right empty -->
+      <!-- Step 3 -->
       <div class="seller-step">
         <div class="seller-step-content">
           <div class="seller-step-label">Step 3</div>
-          <h3>Upload your photos</h3>
-          <p>Listings with photos get far more enquiries than those without. Upload from your phone or computer — we handle storage. Choose which photo appears as the cover image buyers see first.</p>
+          <h3>Add the basics & pin your location</h3>
+          <p>Title, description, price and how it's billed (monthly, nightly, per term, or a one-time sale), plus your county and area. Drag a pin on the map to your exact spot — buyers see the general area, and the exact address is only shared once someone enquires.</p>
           <div class="detail">
             <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-            Up to 6 photos (Standard) or 15 (Featured)
+            Available in every county across Kenya
           </div>
         </div>
-        <div class="seller-step-mid">
-          <div class="seller-step-circle">3</div>
-        </div>
+        <div class="seller-step-mid"><div class="seller-step-circle">3</div></div>
         <div class="seller-step-content empty"></div>
       </div>
 
-      <!-- Step 4 — left empty, right content -->
+      <!-- Step 4 -->
       <div class="seller-step">
         <div class="seller-step-content empty"></div>
-        <div class="seller-step-mid">
-          <div class="seller-step-circle">4</div>
-        </div>
+        <div class="seller-step-mid"><div class="seller-step-circle">4</div></div>
         <div class="seller-step-content right">
           <div class="seller-step-label">Step 4</div>
-          <h3>Choose a plan & pay via M-Pesa</h3>
-          <p>Pick Standard (<span id="hiw-step-std-price">KES 500</span>) or Featured (<span id="hiw-step-feat-price">KES 1,500</span>). You'll get an M-Pesa STK Push straight to your phone. Once payment goes through, your listing is live for <span id="hiw-step-duration">30</span> days.</p>
+          <h3>Fill in the details, amenities & photos</h3>
+          <p>Add category-specific details — bedrooms and parking for a home, room types and pricing for a boarding house, guest count for an Airbnb, floor area and lease terms for a commercial space — then tick off amenities and upload clear photos. A multi-unit property (like an apartment block or a boarding house) can list several unit types with their own price and availability.</p>
           <div class="detail">
             <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-            Usually live within 3 minutes of payment
+            Up to 10 photos — at least one is required
           </div>
         </div>
       </div>
 
-      <!-- Step 5 — left content, right empty -->
+      <!-- Step 5 -->
       <div class="seller-step">
         <div class="seller-step-content">
           <div class="seller-step-label">Step 5</div>
-          <h3>Buyers contact you directly</h3>
-          <p>Interested buyers send enquiries or call your number. You handle the viewing, negotiation, and deal entirely — no platform fee on the sale, no commission, nothing extra.</p>
+          <h3>Submit for review</h3>
+          <p>Add your contact details, agree to the terms, and submit. Every listing is checked by our team before it goes public — usually within 24 hours — to keep the platform trustworthy for buyers.</p>
+          <div class="detail">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Your draft auto-saves as you go
+          </div>
+        </div>
+        <div class="seller-step-mid"><div class="seller-step-circle">5</div></div>
+        <div class="seller-step-content empty"></div>
+      </div>
+
+      <!-- Step 6 -->
+      <div class="seller-step">
+        <div class="seller-step-content empty"></div>
+        <div class="seller-step-mid"><div class="seller-step-circle">6</div></div>
+        <div class="seller-step-content right">
+          <div class="seller-step-label">Step 6</div>
+          <h3>Go live & handle enquiries yourself</h3>
+          <p>Your first listing is free for a trial period. After that (or once you're ready to keep a listing live), you pay via M-Pesa straight from your dashboard — no card, no subscription needed for a single sale or rental listing. From there, buyers message you directly and you manage everything — messages, viewings, and marking it sold or occupied — with zero commission on the deal itself.</p>
           <div class="detail">
             <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
             0% commission on your sale or rental
           </div>
         </div>
-        <div class="seller-step-mid">
-          <div class="seller-step-circle">5</div>
-        </div>
-        <div class="seller-step-content empty"></div>
       </div>
 
     </div>
@@ -622,42 +663,65 @@
 <!-- ════════════════════════════════════════ -->
 <div class="pricing-strip">
   <div class="pricing-inner">
-    <div class="section-eyebrow">Listing plans</div>
-    <h2 class="section-title">One-time fee. No commission.</h2>
-    <p class="section-sub">Pay once via M-Pesa and your listing runs for the full duration. Renew any time from your dashboard.</p>
+    <div class="section-eyebrow">Listing costs</div>
+    <h2 class="section-title">Try it free. Pay only once you're ready to go live.</h2>
+    <p class="section-sub">There's never a fee to browse or to post — you only pay when a listing is approved and about to be published, and only for that listing.</p>
 
     <div class="pricing-grid">
 
-      <div class="pricing-card">
-        <h3>Standard listing</h3>
-        <div class="pricing-amount"><span id="hiw-std-price">KES 500</span> <span class="unit">one-time</span></div>
-        <div class="pricing-duration">Active for <span id="hiw-std-duration">30</span> days</div>
+      <div class="pricing-card featured">
+        <div class="pricing-badge">Start here</div>
+        <h3>Your first listing</h3>
+        <div class="pricing-amount">Free<span class="unit"> to try</span></div>
+        <div class="pricing-duration">Stays live for <span id="hiw-trial-days">14</span> days at no cost — no payment needed to post your very first listing.</div>
         <ul class="pricing-features">
           <li>Full listing with all details</li>
-          <li>Up to 6 photos</li>
-          <li>Appears in search results</li>
-          <li>Buyer enquiry form</li>
-          <li>Manage from seller dashboard</li>
+          <li>Up to 10 photos</li>
+          <li>Reviewed by our team before going live</li>
+          <li>Buyer messaging & enquiries included</li>
+          <li>Manage it all from your dashboard</li>
         </ul>
-        <a href="/post-listing?plan=basic" class="pricing-cta outline">Post a standard listing</a>
+        <a href="/post-listing" class="pricing-cta solid">Post your first listing free</a>
       </div>
 
-      <div class="pricing-card featured">
-        <div class="pricing-badge">Most enquiries</div>
-        <h3>Featured listing</h3>
-        <div class="pricing-amount"><span id="hiw-feat-price">KES 1,500</span> <span class="unit">one-time</span></div>
-        <div class="pricing-duration">Active for <span id="hiw-feat-duration">30</span> days</div>
+      <div class="pricing-card">
+        <h3>Sales & rentals</h3>
+        <div class="pricing-amount" id="hiw-standard-amount">A small % of price</div>
+        <div class="pricing-duration" id="hiw-standard-duration">Billed from your dashboard only after your listing is approved — not upfront. Multi-unit properties (like an apartment block) add a small fee per extra unit type.</div>
         <ul class="pricing-features">
-          <li>Everything in Standard</li>
-          <li>Up to 15 photos</li>
-          <li>Featured badge on your card</li>
-          <li>Top placement in search results</li>
-          <li>Highlighted on the homepage</li>
+          <li>Applies to Apartments, Houses, Boarding Houses, and Shops & Offices</li>
+          <li>Fee shown as an estimate before you submit</li>
+          <li>Pay via M-Pesa Paybill once approved</li>
+          <li>Stays live until you mark it sold or occupied</li>
+          <li>Optional Featured upgrade for top placement</li>
         </ul>
-        <a href="/post-listing?plan=featured" class="pricing-cta solid">Post a featured listing</a>
+        <a href="/post-listing" class="pricing-cta outline">Post a rental or sale</a>
+      </div>
+
+      <div class="pricing-card">
+        <h3>Airbnb / holiday rentals</h3>
+        <div class="pricing-amount" id="hiw-bnb-amount">From KES 700<span class="unit">/mo</span></div>
+        <div class="pricing-duration">Runs on a monthly plan instead of a one-time fee, since a short-stay listing needs to stay bookable. Plans scale up if you manage more than one property.</div>
+        <ul class="pricing-features">
+          <li>Keeps your listing live and bookable</li>
+          <li>Upgrade any time to cover more properties</li>
+          <li>Independent of any other plan on your account</li>
+          <li>Cancel or change your plan whenever you like</li>
+        </ul>
+        <a href="/post-listing" class="pricing-cta outline">List an Airbnb / holiday rental</a>
       </div>
 
     </div>
+
+    <div class="pricing-note">
+      <div class="pricing-note-text">
+        <span class="badge-elite">Optional</span>
+        <strong>Want more tools once you're listing regularly?</strong> Premium and Elite are optional add-ons — not required to post or sell — that add things like a verified badge, priority replies, video walkthroughs, printable brochures, and rent or booking tracking for owners managing several units.
+      </div>
+      <a href="/login" class="pricing-cta outline" style="width:auto;padding:10px 20px;white-space:nowrap;">See plans in your dashboard</a>
+    </div>
+
+    <p class="pricing-fineprint">Nyumba254 never charges buyers to browse, message a seller, or view a listing. Sellers only ever pay for the listing itself — there's no commission taken from the sale price or rent you agree with a buyer. Exact fees and plan prices are always shown before you're asked to pay, both when you post and again in your dashboard.</p>
   </div>
 </div>
 
@@ -672,26 +736,26 @@
 
     <div class="trust-card">
       <div class="trust-icon g">
-        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>
       </div>
-      <h3>Growing nationwide coverage</h3>
-      <p>We're fully live in Kisumu, Nairobi, and Mombasa, and expanding county by county. Every listing is relevant to the area it's in — no clutter from properties that don't match what you're looking for.</p>
+      <h3>Every listing is reviewed</h3>
+      <p>Nothing goes live without a photo and a check from our team first. Verified sellers who've confirmed their identity and ownership carry a trust badge on their listings.</p>
     </div>
 
     <div class="trust-card">
       <div class="trust-icon gold">
-        <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
       </div>
-      <h3>M-Pesa native</h3>
-      <p>Payments are handled entirely via M-Pesa STK Push — no cards, no bank transfers, no foreign payment platforms. Built for how people in Kenya actually pay.</p>
+      <h3>Conversations stay safe</h3>
+      <p>Messages go through Nyumba254 first. A seller's number is only shared when a buyer chooses to reveal it, and sellers can opt to keep every conversation chat-only for extra privacy.</p>
     </div>
 
     <div class="trust-card">
       <div class="trust-icon blue">
-        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
       </div>
-      <h3>No hidden costs</h3>
-      <p>Buyers browse completely free. Sellers pay a single small listing fee. No commission when your property sells or rents. What you see is what you pay.</p>
+      <h3>M-Pesa native, no commission</h3>
+      <p>Sellers pay listing fees via M-Pesa — no cards, no foreign platforms. Once your property sells or rents, that deal is entirely between you and the buyer, commission-free.</p>
     </div>
 
   </div>
@@ -700,7 +764,7 @@
 <!-- ── FINAL CTA ── -->
 <section class="final-cta">
   <h2>Ready to get started?</h2>
-  <p>Whether you're looking for a home or listing one — it takes less than 10 minutes.</p>
+  <p>Whether you're looking for a home or listing one — it starts free and takes just a few minutes.</p>
   <div class="cta-btns">
     <a href="/listings" class="btn-white">Browse listings</a>
     <a href="/post-listing" class="btn-ghost">List your property →</a>
@@ -931,44 +995,48 @@
   if (!sid) { sid = (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2)); localStorage.setItem('nk_sid', sid); }
   db.from('page_views').insert({ path: location.pathname, referrer: document.referrer || null, user_agent: navigator.userAgent, session_id: sid });
 
-  // ── Live pricing/duration: pulled from the same `platform_settings` table
-  // the admin dashboard's Settings page writes to, so a price change there
-  // shows up here without editing this file. Defaults below only apply
-  // before the fetch resolves / if it fails.
+  // ── Live pricing: pulled from the same `platform_settings` table the
+  // seller-facing posting flow and dashboard read from, so a price change
+  // there shows up here automatically. Defaults below only apply before
+  // the fetch resolves, or if it fails.
   window.NK_SETTINGS = {
-    standard_fee: 500,
-    featured_fee: 1500,
-    standard_fee_per_unit: 50,
-    featured_fee_per_unit: 150,
     trial_days: 14,
-    standard_duration_days: 30,
-    featured_duration_days: 30,
-    recycle_bin_days: 30,
+    sale_standard_pct: 0.1,
+    rent_standard_pct: 3,
+    standard_min_fee: 500,
+    standard_max_fee: 18000,
+    standard_fee_per_unit: 50,
+    bnb_basic_price: 700,
   };
 
   function fmtKES(n) { return 'KES ' + Number(n).toLocaleString('en-KE'); }
 
   function applyHiwPricing() {
     const s = window.NK_SETTINGS;
-    const stdPrice = fmtKES(s.standard_fee);
-    const featPrice = fmtKES(s.featured_fee);
     const el = id => document.getElementById(id);
-    if (el('hiw-std-price'))       el('hiw-std-price').textContent = stdPrice;
-    if (el('hiw-feat-price'))      el('hiw-feat-price').textContent = featPrice;
-    if (el('hiw-std-duration'))    el('hiw-std-duration').textContent = s.standard_duration_days;
-    if (el('hiw-feat-duration'))   el('hiw-feat-duration').textContent = s.featured_duration_days;
-    if (el('hiw-step-std-price'))  el('hiw-step-std-price').textContent = stdPrice;
-    if (el('hiw-step-feat-price')) el('hiw-step-feat-price').textContent = featPrice;
-    if (el('hiw-step-duration'))   el('hiw-step-duration').textContent = s.standard_duration_days;
+
+    if (el('hiw-trial-days')) el('hiw-trial-days').textContent = s.trial_days;
+
+    if (el('hiw-standard-amount')) {
+      el('hiw-standard-amount').innerHTML = `${s.rent_standard_pct}%<span class="unit"> of rent, or ${s.sale_standard_pct}% of sale price</span>`;
+    }
+    if (el('hiw-standard-duration')) {
+      el('hiw-standard-duration').innerHTML =
+        `Capped between ${fmtKES(s.standard_min_fee)} and ${fmtKES(s.standard_max_fee)}, plus ${fmtKES(s.standard_fee_per_unit)} per extra unit type on multi-unit properties. Billed from your dashboard only after your listing is approved — not upfront.`;
+    }
+    if (el('hiw-bnb-amount')) {
+      el('hiw-bnb-amount').innerHTML = `${fmtKES(s.bnb_basic_price)}<span class="unit">/mo</span>`;
+    }
   }
 
   (async function loadHiwSettings() {
     try {
       const { data, error } = await db.from('platform_settings').select('key,value');
-      if (error) { console.error('loadHiwSettings error:', error); applyHiwPricing(); return; }
-      (data || []).forEach(row => {
-        if (row.key in window.NK_SETTINGS) window.NK_SETTINGS[row.key] = Number(row.value);
-      });
+      if (!error && data) {
+        data.forEach(row => {
+          if (row.key in window.NK_SETTINGS) window.NK_SETTINGS[row.key] = Number(row.value);
+        });
+      }
     } catch (e) {
       console.error('loadHiwSettings exception:', e);
     }
