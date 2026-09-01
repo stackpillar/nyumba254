@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>KYC Verification Center — Nyumba254</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --green:#0F6E56;--green-light:#E1F5EE;--green-mid:#1D9E75;--green-dark:#085041;
+    --gold:#BA7517;--gold-light:#FAEEDA;--text:#1a1a18;--text-2:#4a4a46;--text-3:#888780;
+    --border:#e0ded8;--surface:#f7f6f2;--white:#ffffff;--red:#c0392b;--red-light:#fdecea;
+    --amber:#d97706;--amber-light:#fef3c7;
+    --radius:10px;--radius-lg:16px;--shadow-lg:0 8px 32px rgba(0,0,0,0.12);
+  }
+  html{height:100%}
+  body{font-family:'Inter',sans-serif;color:var(--text);background:var(--surface);font-size:14px;line-height:1.6;min-height:100vh}
+  a{text-decoration:none;color:inherit}
+  button{font-family:inherit;cursor:pointer;border:none;background:none}
+  input,select,textarea{font-family:inherit}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+  .topbar-brand{display:flex;align-items:center;gap:10px}
+  .topbar-brand-icon{width:32px;height:32px;background:var(--green);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .topbar-brand-icon svg{width:16px;height:16px;stroke:white;fill:none;stroke-width:2}
+  .topbar-brand-text{font-family:'Playfair Display',serif;font-size:16px;color:var(--green-dark)}
+  .topbar-back{font-size:13px;font-weight:600;color:var(--text-2);display:flex;align-items:center;gap:6px}
+  .topbar-back:hover{color:var(--green-dark)}
+  .topbar-back svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+
+  .page-wrap{max-width:720px;margin:0 auto;padding:28px 20px 80px}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;border-radius:var(--radius);font-size:13.5px;font-weight:600;white-space:nowrap;line-height:1.2;transition:all .15s ease}
+  .btn-primary{background:var(--green);color:white}
+  .btn-primary:hover{background:var(--green-dark)}
+  .btn-outline{background:transparent;color:var(--text-2);border:1.5px solid var(--border)}
+  .btn-outline:hover{border-color:var(--green);color:var(--green)}
+  .btn:disabled{opacity:.55;cursor:not-allowed}
+  .btn-lg{padding:12px 22px;font-size:14px;width:100%;justify-content:center}
+  .spinner-sm{width:13px;height:13px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .toast{position:fixed;bottom:28px;right:28px;left:28px;z-index:9999;background:var(--text);color:white;padding:12px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;box-shadow:0 12px 32px rgba(0,0,0,0.28);display:flex;align-items:center;gap:10px;transform:translateY(80px) scale(.95);opacity:0;transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .25s;max-width:420px;margin-left:auto}
+  .toast.show{transform:translateY(0) scale(1);opacity:1}
+  .toast.success{background:var(--green-dark)}
+  .toast.error{background:var(--red)}
+
+  #loading-screen{position:fixed;inset:0;background:linear-gradient(135deg,var(--green-dark),#0a3d31);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;color:white;gap:16px}
+  #loading-screen .spin{width:36px;height:36px;border:3px solid rgba(255,255,255,0.2);border-top-color:white;border-radius:50%;animation:spin .8s linear infinite}
+  #loading-screen p{font-size:14px;color:rgba(255,255,255,0.6)}
+
+  /* ===== KYC Verification Center (full-page variant) ===== */
+  .kyc-page{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow-lg)}
+  .kyc-header{position:relative;padding:34px 32px 26px;background:radial-gradient(120% 160% at 0% 0%,#0F6E56 0%,#085041 55%,#062f27 100%);color:#fff;overflow:hidden}
+  .kyc-header::after{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cpath d='M0 0h60v60H0z' fill='none'/%3E%3Cpath d='M0 30h60M30 0v60' stroke='%23ffffff' stroke-opacity='.05'/%3E%3C/svg%3E");pointer-events:none}
+  .kyc-brandmark{display:flex;align-items:center;gap:12px;position:relative}
+  .kyc-brandmark-icon{width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.22);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .kyc-brandmark-icon svg{width:22px;height:22px;stroke:#fff;stroke-width:2;fill:none}
+  .kyc-eyebrow{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,0.6)}
+  .kyc-h1{font-family:'Playfair Display',serif;font-size:25px;color:#fff;line-height:1.2;margin-top:2px}
+  .kyc-header-status{margin-top:20px;display:flex;align-items:center;gap:10px;position:relative}
+  .kyc-seal{width:30px;height:30px;flex-shrink:0}
+  .kyc-status-text{font-size:13.5px;color:rgba(255,255,255,0.92);line-height:1.55}
+  .kyc-status-text strong{color:#fff}
+
+  .kyc-stepper{display:flex;align-items:center;padding:22px 32px 4px;gap:0}
+  .kyc-step{display:flex;align-items:center;gap:8px;flex:1}
+  .kyc-step:last-child{flex:0}
+  .kyc-step-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;background:var(--surface);color:var(--text-3);border:1.5px solid var(--border);flex-shrink:0;transition:all .2s}
+  .kyc-step.done .kyc-step-dot{background:var(--green);color:#fff;border-color:var(--green)}
+  .kyc-step.current .kyc-step-dot{background:var(--white);color:var(--green-dark);border-color:var(--green);box-shadow:0 0 0 3px var(--green-light)}
+  .kyc-step-label{font-size:12.5px;font-weight:600;color:var(--text-3);white-space:nowrap}
+  .kyc-step.done .kyc-step-label,.kyc-step.current .kyc-step-label{color:var(--text)}
+  .kyc-step-line{flex:1;height:2px;background:var(--border);margin:0 8px;border-radius:2px}
+  .kyc-step.done + .kyc-step-line{background:var(--green)}
+
+  .kyc-body{padding:26px 32px 8px}
+  .kyc-section-title{font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);margin:20px 0 10px}
+  .kyc-section-title:first-child{margin-top:0}
+  .kyc-checklist{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:6px}
+  .kyc-checklist-item{display:flex;align-items:flex-start;gap:10px;padding:6px 0;font-size:13px;color:var(--text-2);line-height:1.55}
+  .kyc-checklist-item svg{width:16px;height:16px;stroke:var(--green);stroke-width:2.4;flex-shrink:0;margin-top:1px}
+  .kyc-upload-card{border:1.5px dashed var(--border);border-radius:var(--radius-lg);padding:18px;margin-bottom:12px;transition:border-color .15s,background .15s;position:relative}
+  .kyc-upload-card:hover{border-color:var(--green)}
+  .kyc-upload-card.has-file{border-style:solid;border-color:var(--green);background:var(--green-light)}
+  .kyc-upload-top{display:flex;align-items:center;gap:12px}
+  .kyc-upload-icon{width:40px;height:40px;border-radius:10px;background:var(--white);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .kyc-upload-card.has-file .kyc-upload-icon{background:var(--green);border-color:var(--green)}
+  .kyc-upload-icon svg{width:19px;height:19px;stroke:var(--text-3);stroke-width:1.8;fill:none}
+  .kyc-upload-card.has-file .kyc-upload-icon svg{stroke:#fff}
+  .kyc-upload-title{font-size:13.5px;font-weight:700;color:var(--text)}
+  .kyc-upload-sub{font-size:12px;color:var(--text-3);margin-top:1px}
+  .kyc-upload-input{margin-top:12px}
+  .kyc-upload-input input[type=file]{width:100%;font-size:12.5px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--white)}
+  .kyc-required-tag{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--red);background:var(--red-light);padding:2px 8px;border-radius:20px;margin-left:auto;flex-shrink:0}
+  .kyc-trust-row{display:flex;gap:20px;flex-wrap:wrap;padding:16px 0 4px;border-top:1px solid var(--border);margin-top:18px}
+  .kyc-trust-item{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--text-3)}
+  .kyc-trust-item svg{width:15px;height:15px;stroke:var(--green-dark);stroke-width:2;flex-shrink:0}
+  .kyc-footer{padding:18px 32px 28px;display:flex;align-items:center;justify-content:space-between;gap:14px;border-top:1px solid var(--border);flex-wrap:wrap}
+  .kyc-footer-note{font-size:11.5px;color:var(--text-3);line-height:1.55;max-width:320px}
+  .form-group{margin-bottom:0}
+  .form-group select{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13.5px;color:var(--text);background:var(--white);outline:none;transition:border-color .15s}
+  .form-group select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(15,110,86,0.08)}
+
+  @media(max-width:600px){
+    .kyc-header{padding:24px 20px 20px}
+    .kyc-stepper{padding:18px 20px 4px}
+    .kyc-body{padding:20px 20px 4px}
+    .kyc-footer{padding:16px 20px 22px;flex-direction:column;align-items:stretch}
+    .kyc-step-label{display:none}
+    .page-wrap{padding:0}
+    .kyc-page{border-radius:0;border:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="loading-screen">
+  <div class="spin"></div>
+  <p>Loading KYC Verification Center…</p>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <span id="toast-msg"></span>
+</div>
+
+<div id="app" style="display:none">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-brand-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+      <span class="topbar-brand-text">Nyumba254</span>
+    </div>
+    <a href="/dashboard.html" class="topbar-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Back to dashboard</a>
+  </div>
+
+  <div class="page-wrap">
+    <div class="kyc-page">
+      <div class="kyc-header">
+        <div class="kyc-brandmark">
+          <div class="kyc-brandmark-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+          <div><div class="kyc-eyebrow">Nyumba254 · Trust &amp; Safety</div><div class="kyc-h1">KYC Verification Center</div></div>
+        </div>
+        <div class="kyc-header-status">
+          <svg class="kyc-seal" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>
+          <div class="kyc-status-text" id="kyc-header-status-text">Verifying your identity keeps buyers safe and unlocks <strong>unlimited listings</strong> plus a visible trust badge.</div>
+        </div>
+      </div>
+
+      <div class="kyc-stepper" id="kyc-stepper"></div>
+
+      <div class="kyc-body">
+        <div id="kyc-body-content"></div>
+      </div>
+
+      <div class="kyc-footer">
+        <div class="kyc-footer-note">🔒 Documents are encrypted in transit and only visible to Nyumba254's verification team.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap" id="kyc-footer-actions"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
+const { createClient } = supabase;
+
+const authStorage = {
+  getItem: (key) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).getItem(key),
+  setItem: (key, value) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).setItem(key, value),
+  removeItem: (key) => { localStorage.removeItem(key); sessionStorage.removeItem(key); }
+};
+
+const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { storage: authStorage, persistSession: true, autoRefreshToken: true }
+});
+
+let currentUser = null, currentProfile = null;
+const VERIFY_BUCKET = 'verification-docs';
+
+let toastTimer;
+function showToast(msg, type='success'){
+  const t=document.getElementById('toast'), m=document.getElementById('toast-msg');
+  clearTimeout(toastTimer);
+  t.className='toast '+type;
+  m.textContent=msg;
+  t.classList.add('show');
+  toastTimer=setTimeout(()=>t.classList.remove('show'),3500);
+}
+function escHtml(s){ if(!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+async function init(){
+  try{
+    const{data:{session}}=await db.auth.getSession();
+    if(!session){ window.location.href='/login?next=/kyc.html'; return; }
+    currentUser=session.user;
+
+    const{data,error}=await db.from('profiles').select('*').eq('id',currentUser.id).single();
+    if(error || !data){ await db.auth.signOut(); window.location.href='/login'; return; }
+    currentProfile=data;
+
+    document.getElementById('loading-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+
+    loadVerificationUI();
+  }catch(err){
+    console.error('Init error:',err);
+    document.getElementById('loading-screen').innerHTML =
+      '<p style="color:white;max-width:320px;text-align:center">Something went wrong loading this page. Please refresh.<br><span style="opacity:.6;font-size:11px">'+escHtml(err.message||String(err))+'</span></p>';
+  }
+}
+
+function kycStatusMeta(status){
+  return {
+    unverified: {pill:'unverified',pillLabel:'Not started',dotIdx:0},
+    pending:    {pill:'pending',pillLabel:'Under review',dotIdx:1},
+    verified:   {pill:'verified',pillLabel:'Verified ✓',dotIdx:2},
+    rejected:   {pill:'rejected',pillLabel:'Needs changes',dotIdx:0},
+  }[status] || {pill:'unverified',pillLabel:'Not started',dotIdx:0};
+}
+
+function loadVerificationUI() {
+  const v = currentProfile || {};
+  const status = v.verification_status || 'unverified';
+  const meta = kycStatusMeta(status);
+
+  const steps=['Identity','Ownership','Review'];
+  const stepperEl=document.getElementById('kyc-stepper');
+  if(stepperEl){
+    stepperEl.innerHTML = steps.map((label,i)=>{
+      const cls = i<meta.dotIdx ? 'done' : (i===meta.dotIdx ? 'current' : '');
+      const dot = i<meta.dotIdx ? '✓' : (i+1);
+      const line = i<steps.length-1 ? '<div class="kyc-step-line"></div>' : '';
+      return `<div class="kyc-step ${cls}"><div class="kyc-step-dot">${dot}</div><div class="kyc-step-label">${label}</div></div>${line}`;
+    }).join('');
+  }
+
+  const bodyEl=document.getElementById('kyc-body-content');
+  const footEl=document.getElementById('kyc-footer-actions');
+  const headStatusEl=document.getElementById('kyc-header-status-text');
+  if(!bodyEl||!footEl)return;
+
+  if (status === 'verified') {
+    if(headStatusEl) headStatusEl.innerHTML = "<strong>You're fully verified.</strong> Buyers see a trust badge on every listing, and your listing space is unlimited.";
+    bodyEl.innerHTML = `
+      <div class="kyc-checklist">
+        <div class="kyc-checklist-item"><svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>Identity document verified</div>
+        <div class="kyc-checklist-item"><svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>Ownership / authority document verified</div>
+        <div class="kyc-checklist-item"><svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>Trust badge active on all listings</div>
+      </div>`;
+    footEl.innerHTML = `<a href="/dashboard.html" class="btn btn-outline">Back to dashboard</a>`;
+    return;
+  }
+
+  if (status === 'pending') {
+    if(headStatusEl) headStatusEl.innerHTML = "<strong>Your documents are under review.</strong> Our team typically completes this within 24 hours.";
+    bodyEl.innerHTML = `
+      <div class="kyc-section-title">Submitted for review</div>
+      <div class="kyc-checklist">
+        <div class="kyc-checklist-item"><svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>National ID (front &amp; back) received</div>
+        <div class="kyc-checklist-item"><svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>${v.verification_is_owner===false?'Authority letter':'Proof of ownership'} received</div>
+      </div>
+      ${v.extra_verification_status==='requested' ? `
+      <div class="kyc-section-title">⚠️ Additional document requested</div>
+      <div class="kyc-upload-card">
+        <p style="font-size:13px;color:var(--text-2);margin-bottom:10px">${escHtml(v.extra_verification_reason||'')}</p>
+        <div class="kyc-upload-input"><input type="file" id="kyc-extra-doc-file" accept="image/*,.pdf"/></div>
+        <button class="btn btn-primary" style="margin-top:10px" onclick="submitExtraVerification()">Upload document</button>
+      </div>` : ''}
+      <div class="kyc-trust-row">
+        <div class="kyc-trust-item"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>Encrypted upload</div>
+        <div class="kyc-trust-item"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>~24hr review</div>
+      </div>`;
+    footEl.innerHTML = `<a href="/dashboard.html" class="btn btn-outline">Back to dashboard</a>`;
+    return;
+  }
+
+  if(headStatusEl){
+    headStatusEl.innerHTML = status==='rejected'
+      ? `<strong>Your last submission needs changes.</strong> ${v.verification_rejection_reason?escHtml(v.verification_rejection_reason):'Please review and resubmit below.'}`
+      : `Verifying your identity keeps buyers safe and unlocks <strong>unlimited listings</strong> plus a visible trust badge.`;
+  }
+  bodyEl.innerHTML = `
+    <div class="kyc-section-title">Before you start</div>
+    <div class="kyc-checklist">
+      <div class="kyc-checklist-item"><svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>A valid, unexpired national ID (front and back)</div>
+      <div class="kyc-checklist-item"><svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>Proof of ownership (title deed / lease) or an authority letter if listing on someone's behalf</div>
+      <div class="kyc-checklist-item"><svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>Clear, uncropped photos or scans — takes about 2 minutes</div>
+    </div>
+
+    <div class="kyc-section-title">Ownership status</div>
+    <div class="form-group" style="margin-bottom:18px">
+      <select id="kyc-is-owner" onchange="updateVerifyProofLabel()">
+        <option value="yes">Yes, I own this property</option>
+        <option value="no">No — I'm listing on someone's behalf</option>
+      </select>
+    </div>
+
+    <div class="kyc-section-title">Step 1 · Identity document</div>
+    <div class="kyc-upload-card">
+      <div class="kyc-upload-top">
+        <div class="kyc-upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="8" cy="11" r="2.4"/><path d="M4 18c1-2.2 2.8-3.4 4-3.4s3 1.2 4 3.4M15 9h5M15 13h5"/></svg></div>
+        <div><div class="kyc-upload-title">National ID — front side</div><div class="kyc-upload-sub">Clear photo or scan, all corners visible</div></div>
+        <span class="kyc-required-tag">Required</span>
+      </div>
+      <div class="kyc-upload-input"><input type="file" id="kyc-id-front-file" accept="image/*,.pdf"/></div>
+    </div>
+    <div class="kyc-upload-card">
+      <div class="kyc-upload-top">
+        <div class="kyc-upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="9" x2="18" y2="9"/><line x1="6" y1="13" x2="18" y2="13"/><line x1="6" y1="17" x2="12" y2="17"/></svg></div>
+        <div><div class="kyc-upload-title">National ID — back side</div><div class="kyc-upload-sub">Both sides are required to verify authenticity</div></div>
+        <span class="kyc-required-tag">Required</span>
+      </div>
+      <div class="kyc-upload-input"><input type="file" id="kyc-id-back-file" accept="image/*,.pdf"/></div>
+    </div>
+
+    <div class="kyc-section-title">Step 2 · <span id="kyc-proof-label-text">Proof of ownership</span></div>
+    <div class="kyc-upload-card">
+      <div class="kyc-upload-top">
+        <div class="kyc-upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <div><div class="kyc-upload-title" id="kyc-proof-title">Title deed or lease copy</div><div class="kyc-upload-sub" id="kyc-proof-sub">Confirms your right to list this property</div></div>
+        <span class="kyc-required-tag">Required</span>
+      </div>
+      <div class="kyc-upload-input"><input type="file" id="kyc-proof-file" accept="image/*,.pdf"/></div>
+    </div>
+
+    <div class="kyc-trust-row">
+      <div class="kyc-trust-item"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>Encrypted upload</div>
+      <div class="kyc-trust-item"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>~24hr review</div>
+      <div class="kyc-trust-item"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg>Team-reviewed, never automated</div>
+    </div>
+  `;
+  footEl.innerHTML = `<a href="/dashboard.html" class="btn btn-outline">Not now</a><button class="btn btn-primary" id="kyc-submit-btn" onclick="submitVerification()">Submit for review</button>`;
+  updateVerifyProofLabel();
+
+  ['kyc-id-front-file','kyc-id-back-file','kyc-proof-file'].forEach(id=>{
+    const inp=document.getElementById(id);
+    if(inp) inp.addEventListener('change',()=>{ inp.closest('.kyc-upload-card')?.classList.toggle('has-file', inp.files.length>0); });
+  });
+}
+
+function updateVerifyProofLabel() {
+  const sel=document.getElementById('kyc-is-owner');
+  if(!sel)return;
+  const isOwner = sel.value === 'yes';
+  const labelText=document.getElementById('kyc-proof-label-text');
+  const title=document.getElementById('kyc-proof-title');
+  const sub=document.getElementById('kyc-proof-sub');
+  if(labelText) labelText.textContent = isOwner ? 'Proof of ownership' : 'Authority to list';
+  if(title) title.textContent = isOwner ? 'Title deed or lease copy' : "Authority letter, or the owner's ID + written consent";
+  if(sub) sub.textContent = isOwner ? 'Confirms your right to list this property' : 'Confirms the owner has authorized you to list on their behalf';
+}
+
+async function uploadVerifyFile(file, kind) {
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  const path = `${currentUser.id}/${kind}-${Date.now()}.${ext}`;
+  const { error } = await db.storage.from(VERIFY_BUCKET).upload(path, file, { upsert:false });
+  if (error) throw error;
+  return path;
+}
+
+async function submitVerification() {
+  const idFile = document.getElementById('kyc-id-front-file').files[0];
+  const idFile2 = document.getElementById('kyc-id-back-file').files[0];
+  const proofFile = document.getElementById('kyc-proof-file').files[0];
+  const isOwner = document.getElementById('kyc-is-owner').value === 'yes';
+  if (!idFile || !idFile2) { showToast('Please upload both the front and back of your ID','error'); return; }
+  if (!proofFile) { showToast('Please attach your proof of ownership document','error'); return; }
+  const btn = document.getElementById('kyc-submit-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner-sm"></span> Uploading…';
+  try {
+    const idPath = await uploadVerifyFile(idFile, 'id-front');
+    const idPath2 = await uploadVerifyFile(idFile2, 'id-back');
+    const proofPath = await uploadVerifyFile(proofFile, isOwner ? 'ownership' : 'authority');
+    const { error } = await db.from('profiles').update({
+      verification_status: 'pending', verification_is_owner: isOwner,
+      verification_id_url: idPath, verification_id_url_2: idPath2, verification_proof_url: proofPath,
+      verification_proof_type: isOwner ? 'title_deed_or_lease' : 'authority_letter',
+      verification_submitted_at: new Date().toISOString(), verification_rejection_reason: null,
+    }).eq('id', currentUser.id);
+    if (error) throw error;
+    await db.from('verification_activity_log').insert({ seller_id: currentUser.id, action:'submitted' });
+    currentProfile = { ...currentProfile, verification_status:'pending', verification_is_owner:isOwner };
+    loadVerificationUI();
+    showToast('Submitted for review ✓','success');
+    fetch(`${SUPABASE_URL}/functions/v1/send-notification-email`, { method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}, body: JSON.stringify({
+      type:'verification_submitted', sellerName: currentProfile?.full_name, sellerEmail: currentUser.email, isOwner, proofType: isOwner?'Title deed / lease':'Authority letter',
+    })}).catch(()=>{});
+  } catch(e) {
+    showToast('Upload failed: '+e.message,'error');
+  } finally {
+    const b=document.getElementById('kyc-submit-btn');
+    if(b){ b.disabled = false; b.textContent = 'Submit for review'; }
+  }
+}
+
+async function submitExtraVerification() {
+  const file = document.getElementById('kyc-extra-doc-file')?.files[0];
+  if (!file) { showToast('Please attach a file','error'); return; }
+  try {
+    const path = await uploadVerifyFile(file, 'extra');
+    const docs = Array.isArray(currentProfile?.extra_verification_docs) ? [...currentProfile.extra_verification_docs] : [];
+    docs.push({ url: path, uploaded_at: new Date().toISOString() });
+    const { error } = await db.from('profiles').update({ extra_verification_docs: docs, extra_verification_status: 'submitted' }).eq('id', currentUser.id);
+    if (error) throw error;
+    await db.from('verification_activity_log').insert({ seller_id: currentUser.id, action:'extra_submitted' });
+    currentProfile = { ...currentProfile, extra_verification_docs: docs, extra_verification_status:'submitted' };
+    loadVerificationUI();
+    showToast('Uploaded ✓ — our team will review it shortly','success');
+    fetch(`${SUPABASE_URL}/functions/v1/send-notification-email`, { method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}, body: JSON.stringify({
+      type:'extra_verification_submitted', sellerName: currentProfile?.full_name, sellerEmail: currentUser.email,
+    })}).catch(()=>{});
+  } catch(e) { showToast('Upload failed: '+e.message,'error'); }
+}
+
+init();
+</script>
+</body>
+</html>
