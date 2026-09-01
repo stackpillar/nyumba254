@@ -1137,6 +1137,7 @@
               </div>
             </div>
             <button class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:14px" onclick="openKycModal()">Open KYC Center →</button>
+            <button class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:8px" onclick="openKycFullPage()">Open in new tab ↗</button>
           </div>
           <div class="settings-section" id="settings-concierge-section">
             <h3><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Managed chat</h3>
@@ -1443,7 +1444,10 @@
           <div class="kyc-brandmark-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg></div>
           <div><div class="kyc-eyebrow">Nyumba254 · Trust &amp; Safety</div><div class="kyc-h1">KYC Verification Center</div></div>
         </div>
-        <button class="kyc-header-close" onclick="closeModal('modal-kyc')" aria-label="Close">✕</button>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+          <button class="kyc-header-close" onclick="openKycFullPage()" aria-label="Open in new tab" title="Open in new tab">↗</button>
+          <button class="kyc-header-close" onclick="closeModal('modal-kyc')" aria-label="Close">✕</button>
+        </div>
       </div>
       <div class="kyc-header-status">
         <svg class="kyc-seal" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>
@@ -2154,6 +2158,7 @@ function goToVerification(){
 }
 function openKycModal(){ openModal('modal-kyc'); }
 function closeKycModal(){ closeModal('modal-kyc'); }
+function openKycFullPage(){ window.open('/kyc.html','_blank','noopener,noreferrer'); }
 
 // ── Subscription status — reads what the admin panel's Grant Premium
 // modal writes (subscription_tier: 'monthly'/'yearly'/'none',
