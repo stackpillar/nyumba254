@@ -979,6 +979,10 @@
     <div class="page" id="page-rent-ledger">
       <div class="section-head">
         <h2 id="rl-page-heading">Rent &amp; Tenant Ledger</h2>
+        <div id="rl-capacity-switcher" style="display:none;gap:6px;margin-right:8px">
+          <button class="filter-pill" id="rl-switch-rental" onclick="setLedgerView('rental')">Rentals</button>
+          <button class="filter-pill" id="rl-switch-bnb" onclick="setLedgerView('bnb')">BNB</button>
+        </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           <div class="rl-toolbar-icon-btn" id="rl-tour-replay-btn" title="Replay Rent Ledger tour" onclick="RLTour.restart()" role="button" tabindex="0" aria-label="Replay Rent Ledger tour" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#7c3aed" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
@@ -1146,7 +1150,7 @@
               <label class="switch"><input type="checkbox" id="concierge-toggle" onchange="toggleConcierge(this.checked)"/><span class="switch-track"></span></label>
             </div>
             <p style="font-size:12px;color:var(--text-3);line-height:1.6;margin-top:8px" id="concierge-note"></p>
-            <p style="font-size:12px;color:var(--gold);background:var(--gold-light);border-radius:6px;padding:8px 10px;line-height:1.6;margin-top:8px;display:none" id="concierge-lock-note">🔒 Managed chat is a Premium feature. <a href="/plans" style="color:var(--gold);font-weight:700;text-decoration:underline">Upgrade to unlock</a>.</p>
+            <p style="font-size:12px;color:var(--gold);background:var(--gold-light);border-radius:6px;padding:8px 10px;line-height:1.6;margin-top:8px;display:none" id="concierge-lock-note">🔒 Managed chat requires Premium, Elite, or any active BNB plan. <a href="/plans" style="color:var(--gold);font-weight:700;text-decoration:underline">Upgrade to unlock</a>.</p>
           </div>
           <div class="settings-section" id="settings-sms-section">
             <h3><svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>SMS enquiry alerts</h3>
@@ -2302,12 +2306,26 @@ function ledgerAccessActive(){
   return eliteActive() || (isBnbLedgerMode() && bnbSubscriptionInfo().active);
 }
 
+function rentalCapacityActive(){ const p = ownerProfile || currentProfile; return !!p?.has_rental_capacity; }
+function bnbCapacityActive(){ const p = ownerProfile || currentProfile; return !!p?.has_bnb_capacity; }
 function isBnbLedgerMode(){
-  const p = ownerProfile || currentProfile;
-  return p?.plan_category === 'bnb';
+  // Default view when a seller has both: rental first, unless they only have BNB.
+  if (rentalCapacityActive()) return ledgerViewOverride === 'bnb';
+  return bnbCapacityActive();
 }
+let ledgerViewOverride = null;
+function setLedgerView(v){ ledgerViewOverride = v; updateEliteGatedPages(subscriptionInfo()); }
 function updateEliteGatedPages(sub){
   const isElite = sub.active && sub.plan==='elite';
+  const switcher = document.getElementById('rl-capacity-switcher');
+  if (switcher) {
+    const both = rentalCapacityActive() && bnbCapacityActive();
+    switcher.style.display = both ? 'flex' : 'none';
+    if (both) {
+      document.getElementById('rl-switch-rental')?.classList.toggle('active', !isBnbLedgerMode());
+      document.getElementById('rl-switch-bnb')?.classList.toggle('active', isBnbLedgerMode());
+    }
+  }
   const bnbMode = isBnbLedgerMode();
   const ledgerUnlocked = isElite || (bnbMode && bnbSubscriptionInfo().active);
   const rlLocked=document.getElementById('rent-ledger-locked'), rlContent=document.getElementById('rent-ledger-content');
@@ -2348,9 +2366,9 @@ function updateEliteGatedPages(sub){
 }
 
 async function requestPlanCategorySwitch(){
-  const current = (ownerProfile || currentProfile)?.plan_category || 'rental';
-  const target = current === 'bnb' ? 'rental' : 'bnb';
-  if(!confirm(`Switch your plan to cover ${target==='bnb'?'Airbnb/BNB':'sale & rental'} listings instead? This opens a support ticket for our team to confirm any payment difference before it takes effect.`)) return;
+  const p = ownerProfile || currentProfile;
+  const target = p?.has_bnb_capacity ? 'rental' : 'bnb';
+  if(!confirm(`Request ${target==='bnb'?'Airbnb/BNB':'rental'} listing capacity in addition to what you already have? This opens a support ticket for our team to confirm pricing before it's activated.`)) return;
   const sessionKey = `seller_${currentUser.id}_plan_switch_${Date.now()}`;
   const { data, error } = await db.from('chat_sessions').insert({
     session_key: sessionKey, session_type:'seller', seller_id: currentUser.id, visitor_name: scwSellerName,
@@ -2367,11 +2385,13 @@ function updatePremiumSectionUI(sub){
   const planP = ownerProfile || currentProfile;
   const catRow = document.getElementById('plan-category-row');
   if (catRow) {
-    if (sub.active && planP?.plan_category) {
+    const caps = [];
+    if (planP?.has_rental_capacity) caps.push('Sale & rental');
+    if (planP?.has_bnb_capacity) caps.push('Airbnb / BNB');
+    if (caps.length) {
       catRow.style.display = 'block';
-      document.getElementById('plan-category-label').textContent = planP.plan_category === 'bnb' ? 'Airbnb / BNB listings only' : 'Sale & rental listings only';
-      const carry = Number(planP?.plan_balance_carryover) || 0;
-      document.getElementById('plan-balance-note').textContent = carry > 0 ? `KES ${carry.toLocaleString('en-KE')} credit on file — applied to your next renewal.` : '';
+      document.getElementById('plan-category-label').textContent = caps.join(' + ') + ' listings';
+      document.getElementById('plan-balance-note').textContent = '';
     } else {
       catRow.style.display = 'none';
     }
@@ -2430,13 +2450,12 @@ function updatePremiumNavBadge(sub){
   link.style.color = hasAnyActivePlan ? 'white' : '';
 
   const navP = ownerProfile || currentProfile;
+  const capSuffix = (navP?.has_rental_capacity && navP?.has_bnb_capacity) ? ' · Rental+BNB' : navP?.has_bnb_capacity ? ' · BNB' : navP?.has_rental_capacity ? ' · Rental' : '';
   if(sub.active && sub.plan==='elite'){
-    const catLabel = navP?.plan_category === 'bnb' ? ' · BNB' : navP?.plan_category === 'rental' ? ' · Rental' : '';
-    textEl.innerHTML = `👑 Elite member${catLabel}`;
+    textEl.innerHTML = `👑 Elite member${capSuffix}`;
     link.style.opacity = '1';
   } else if(sub.active && sub.plan==='premium'){
-    const catLabel = navP?.plan_category === 'bnb' ? ' · BNB' : navP?.plan_category === 'rental' ? ' · Rental' : '';
-    textEl.innerHTML = `⭐ Pro${catLabel} · Upgrade to Elite`;
+    textEl.innerHTML = `⭐ Pro${capSuffix} · Upgrade to Elite`;
     link.style.opacity = '1';
   } else if(bnb.active){
     // BNB-only seller (no Premium/Elite) — reflect the active BNB plan
@@ -4630,8 +4649,9 @@ function updateConciergeGate(sub){
   const toggle = document.getElementById('concierge-toggle');
   const lockNote = document.getElementById('concierge-lock-note');
   if(!toggle) return;
-  toggle.disabled = !sub.active;
-  if(lockNote) lockNote.style.display = sub.active ? 'none' : 'block';
+  const conciergeEligible = sub.active || bnbSubscriptionInfo().active;
+  toggle.disabled = !conciergeEligible;
+  if(lockNote) lockNote.style.display = conciergeEligible ? 'none' : 'block';
 }
 function updateSmsAlertsGate(sub){
   const toggle = document.getElementById('sms-alerts-toggle');

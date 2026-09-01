@@ -1095,6 +1095,7 @@
             <div class="settings-field"><label>BNB Basic — Monthly price (KES)</label><input type="number" id="set-bnb_basic_price"/></div>
             <div class="settings-field"><label>BNB Bundle — Monthly price (KES, up to 5 units)</label><input type="number" id="set-bnb_bundle_price"/></div>
             <div class="settings-field"><label>BNB Unlimited — Monthly price (KES, 6+ units)</label><input type="number" id="set-bnb_unlimited_price"/></div>
+            <div class="settings-field"><label>Elite + BNB Unlimited bundle — Monthly price (KES)</label><input type="number" id="set-elite_bnb_bundle_price"/></div>
           </div>
           <div id="settings-saved-meta" style="font-size:11px;color:var(--text-3);margin-top:16px"></div>
           <button class="btn-modal approve" style="margin-top:14px" onclick="saveSettings()">Save changes</button>
@@ -1854,6 +1855,7 @@ function notifySms(type, payload) {
     bnb_basic_price: 700,
     bnb_bundle_price: 2000,
     bnb_unlimited_price: 4500,
+    elite_bnb_bundle_price: 5000,
   };
 
   // Shared logic — keep this in sync with the identical function in
@@ -2658,10 +2660,10 @@ function notifySms(type, payload) {
   async function sellerPlanCoversListing(l) {
     if (!l?.seller_id) return false;
     const { data: prof } = await db.from('profiles')
-      .select('plan_category,bnb_expires_at,subscription_tier,subscription_expires_at')
+      .select('has_bnb_capacity,bnb_expires_at,has_rental_capacity,subscription_tier,subscription_expires_at')
       .eq('id', l.seller_id).single();
-    const bnbActive = prof?.plan_category === 'bnb' && prof?.bnb_expires_at && new Date(prof.bnb_expires_at) > new Date();
-    const rentalActive = prof?.plan_category === 'rental' && prof?.subscription_tier && prof.subscription_tier !== 'none'
+    const bnbActive = !!prof?.has_bnb_capacity && prof?.bnb_expires_at && new Date(prof.bnb_expires_at) > new Date();
+    const rentalActive = !!prof?.has_rental_capacity && prof?.subscription_tier && prof.subscription_tier !== 'none'
       && (!prof?.subscription_expires_at || new Date(prof.subscription_expires_at) > new Date());
     return l.category === 'airbnb' ? bnbActive : rentalActive;
   }
@@ -4340,29 +4342,27 @@ async function messageSellerInChat(sellerId) {
     document.getElementById('grant-premium-body').innerHTML = `
       ${pickerHtml}
       ${seller?`<div class="field"><label>Seller</label><div class="val">${esc(seller.full_name||'—')} · ${esc(seller.email||'')}</div></div>`:''}
-      <div class="field"><label>Tier</label>
+      <div class="field"><label>Feature tier</label>
         <select id="grant-tier" onchange="updateGrantPlanOptions()">
+          <option value="none">None (BNB capacity only)</option>
           <option value="premium">Premium</option>
           <option value="elite">Elite</option>
-          <option value="bnb_basic">BNB Basic</option>
-          <option value="bnb_bundle">BNB Bundle</option>
-          <option value="bnb_unlimited">BNB Unlimited</option>
         </select>
       </div>
-      <div id="grant-rental-extras">
-        <div class="field"><label>Plan category — what they're allowed to list</label>
-          <select id="grant-plan-category">
-            <option value="rental">Rental (apartment/house/boarding/shop)</option>
-            <option value="bnb">BNB / Airbnb only</option>
-          </select>
-        </div>
-        <div class="confirm-warning" style="background:var(--red-light);color:var(--red)">Sellers can only submit listings matching this category. If they're on the wrong one (e.g. subscribed BNB but want to list rentals), change it here — no new payment needed unless the new plan costs more (use the reconciliation field below for that).</div>
-        <div class="field"><label>Amount already paid for this change (KES) — optional</label><input type="number" id="grant-reconcile-paid" placeholder="Leave blank if not reconciling a payment"/></div>
+      <div class="field"><label>BNB capacity — optional add-on, independent of tier</label>
+        <select id="grant-bnb-tier" onchange="updateGrantPlanOptions()">
+          <option value="none">None</option>
+          <option value="bnb_basic">BNB Basic — 1 active Airbnb listing</option>
+          <option value="bnb_bundle">BNB Bundle — up to 5 active Airbnb listings</option>
+          <option value="bnb_unlimited">BNB Unlimited — unlimited Airbnb listings</option>
+        </select>
       </div>
-      <div class="field"><label>Billing period</label>
-        <select id="grant-plan"></select>
+      <div class="field"><label>Billing period (feature tier)</label>
+        <select id="grant-plan" onchange="updateGrantPlanOptions()"></select>
       </div>
+      <div id="grant-bundle-note" class="confirm-warning" style="display:none;background:var(--green-light);color:var(--green-dark)"></div>
       <div class="field check-field" id="grant-pro-badge-row"><input type="checkbox" id="grant-is-pro" checked/><label for="grant-is-pro">Show the Pro seller badge</label></div>
+      <div class="field"><label>Amount already paid for this change (KES) — optional</label><input type="number" id="grant-reconcile-paid" placeholder="Leave blank to use the calculated amount"/></div>
       <div class="confirm-warning">This only marks the subscription active in the database — confirm payment was actually received first, same as a manual listing upgrade.</div>`;
     if (seller?.subscription_plan === 'elite' && document.getElementById('grant-tier')) document.getElementById('grant-tier').value = 'elite';
     updateGrantPlanOptions();
@@ -4372,29 +4372,38 @@ async function messageSellerInChat(sellerId) {
 
   const BNB_TIERS = ['bnb_basic','bnb_bundle','bnb_unlimited'];
   function updateGrantPlanOptions() {
-    const tier = document.getElementById('grant-tier')?.value || 'premium';
-    const isBnbTier = BNB_TIERS.includes(tier);
-    const catSel = document.getElementById('grant-plan-category');
-    const extras = document.getElementById('grant-rental-extras');
+    const tier = document.getElementById('grant-tier')?.value || 'none';
+    const bnbTier = document.getElementById('grant-bnb-tier')?.value || 'none';
     const proRow = document.getElementById('grant-pro-badge-row');
-    // BNB tiers always imply the BNB plan category — lock the dropdown so
-    // there's no way to grant a BNB plan while leaving category on "rental".
-    // Selecting Premium/Elite flips it back to rental and unlocks it.
-    if (catSel) { catSel.value = isBnbTier ? 'bnb' : 'rental'; catSel.disabled = isBnbTier; }
-    if (extras) extras.style.display = isBnbTier ? 'none' : 'block';
-    if (proRow) proRow.style.display = isBnbTier ? 'none' : 'flex';
     const sel = document.getElementById('grant-plan');
-    if (!sel) return;
-    if (isBnbTier) {
-      const monthlyPrice = SETTINGS[tier + '_price'] || 0;
-      sel.innerHTML = `<option value="monthly">Monthly — KES ${monthlyPrice.toLocaleString('en-KE')}</option>`;
-      return;
+    const billingWrap = sel?.closest('.field');
+    if (proRow) proRow.style.display = (tier === 'none') ? 'none' : 'flex';
+
+    if (sel) {
+      if (tier === 'none') {
+        sel.innerHTML = '';
+        if (billingWrap) billingWrap.style.display = 'none';
+      } else {
+        if (billingWrap) billingWrap.style.display = 'block';
+        const monthlyPrice = tier === 'elite' ? (SETTINGS.elite_monthly_price||3000) : (SETTINGS.premium_monthly_price||1200);
+        const yearlyPrice  = tier === 'elite' ? (SETTINGS.elite_yearly_price||30000) : (SETTINGS.premium_yearly_price||12000);
+        sel.innerHTML = `
+          <option value="monthly">Monthly — KES ${monthlyPrice.toLocaleString('en-KE')}</option>
+          <option value="yearly">Yearly — KES ${yearlyPrice.toLocaleString('en-KE')}</option>`;
+      }
     }
-    const monthlyPrice = tier === 'elite' ? (SETTINGS.elite_monthly_price||3000) : (SETTINGS.premium_monthly_price||1200);
-    const yearlyPrice  = tier === 'elite' ? (SETTINGS.elite_yearly_price||30000) : (SETTINGS.premium_yearly_price||12000);
-    sel.innerHTML = `
-      <option value="monthly">Monthly — KES ${monthlyPrice.toLocaleString('en-KE')}</option>
-      <option value="yearly">Yearly — KES ${yearlyPrice.toLocaleString('en-KE')}</option>`;
+
+    const billing = sel?.value || 'monthly';
+    const isBundle = tier === 'elite' && bnbTier === 'bnb_unlimited' && billing === 'monthly';
+    const bundleNote = document.getElementById('grant-bundle-note');
+    if (bundleNote) {
+      if (isBundle) {
+        bundleNote.style.display = 'block';
+        bundleNote.textContent = `✓ Elite + BNB Unlimited bundle applies — KES ${(SETTINGS.elite_bnb_bundle_price||5000).toLocaleString('en-KE')}/mo instead of paying for both separately.`;
+      } else {
+        bundleNote.style.display = 'none';
+      }
+    }
   }
 
   let grantSellerSearchTimer = null;
@@ -4426,78 +4435,71 @@ async function messageSellerInChat(sellerId) {
   async function confirmGrantPremium() {
     if (grantPremiumBusy) return;
     if (!grantingSellerId) { toast('Pick a seller first','error'); return; }
-    const plan = document.getElementById('grant-plan').value;
-    const tier = document.getElementById('grant-tier')?.value || 'premium';
+    const tier = document.getElementById('grant-tier')?.value || 'none';
+    const bnbTier = document.getElementById('grant-bnb-tier')?.value || 'none';
+    const billing = document.getElementById('grant-plan')?.value || 'monthly';
     const isPro = document.getElementById('grant-is-pro').checked;
-    const isBnb = BNB_TIERS.includes(tier);
-    const days = isBnb ? 30 : (plan === 'yearly' ? 365 : 30);
-    const expiresAt = new Date(Date.now() + days*86400000).toISOString();
+    const reconciledPaid = parseFloat(document.getElementById('grant-reconcile-paid')?.value) || null;
+
+    if (tier === 'none' && bnbTier === 'none') { toast('Pick a feature tier, a BNB tier, or both','error'); return; }
+
+    const isBundle = tier === 'elite' && bnbTier === 'bnb_unlimited' && billing === 'monthly';
 
     grantPremiumBusy = true;
     const btn = document.getElementById('btn-confirm-grant-premium');
     if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
 
-    let data, error, amount;
+    const update = {};
+    let totalAmount = 0;
+    const days = billing === 'yearly' ? 365 : 30;
+    const tierExpiresAt = new Date(Date.now() + days*86400000).toISOString();
+    const bnbExpiresAt = new Date(Date.now() + 30*86400000).toISOString();
 
-    if (isBnb) {
-      // BNB tiers don't use the rental plan_category/reconciliation flow —
-      // they're a flat monthly fee tracked on separate bnb_* profile columns.
-      amount = SETTINGS[tier + '_price'] || 0;
-      ({ data, error } = await db.from('profiles').update({
-        bnb_plan: tier,
-        bnb_unit_limit: tier === 'bnb_unlimited' ? null : (tier === 'bnb_bundle' ? 5 : 1),
-        bnb_expires_at: expiresAt,
-        plan_category: 'bnb',
-      }).eq('id', grantingSellerId).select());
-    } else {
-      const planCategory = document.getElementById('grant-plan-category')?.value || 'rental';
-      const reconciledPaid = parseFloat(document.getElementById('grant-reconcile-paid')?.value) || 0;
-      const requiredAmount = tier === 'elite'
-        ? (plan === 'yearly' ? SETTINGS.elite_yearly_price : SETTINGS.elite_monthly_price)
-        : (plan === 'yearly' ? SETTINGS.premium_yearly_price : SETTINGS.premium_monthly_price);
-      const { data: prevProfile } = await db.from('profiles').select('plan_balance_carryover').eq('id', grantingSellerId).single();
-      let newCarryover = Number(prevProfile?.plan_balance_carryover) || 0;
-      let shortfallNote = '';
-      if (reconciledPaid > 0) {
-        const totalAvailable = reconciledPaid + newCarryover;
-        if (totalAvailable < requiredAmount) {
-          const shortfall = requiredAmount - totalAvailable;
-          shortfallNote = `Shortfall of KES ${shortfall.toLocaleString('en-KE')} — seller must pay this to activate.`;
-          newCarryover = 0;
-        } else {
-          newCarryover = totalAvailable - requiredAmount; // excess rolls to next month
-        }
-      }
-      amount = requiredAmount;
-
-      ({ data, error } = await db.from('profiles').update({
-        subscription_tier: plan, subscription_plan: tier, subscription_expires_at: expiresAt, is_pro: isPro,
-        plan_category: planCategory, subscription_started_at: new Date().toISOString(),
-        plan_balance_carryover: newCarryover,
-      }).eq('id', grantingSellerId).select());
-      if (shortfallNote) toast(shortfallNote, 'error');
+    if (tier !== 'none') {
+      Object.assign(update, {
+        subscription_tier: billing, subscription_plan: tier, subscription_expires_at: tierExpiresAt,
+        is_pro: isPro, has_rental_capacity: true, subscription_started_at: new Date().toISOString(),
+      });
+      totalAmount += tier === 'elite'
+        ? (billing === 'yearly' ? SETTINGS.elite_yearly_price : SETTINGS.elite_monthly_price)
+        : (billing === 'yearly' ? SETTINGS.premium_yearly_price : SETTINGS.premium_monthly_price);
     }
+    if (bnbTier !== 'none') {
+      Object.assign(update, {
+        bnb_plan: bnbTier,
+        bnb_unit_limit: bnbTier === 'bnb_unlimited' ? null : (bnbTier === 'bnb_bundle' ? 5 : 1),
+        bnb_expires_at: bnbExpiresAt,
+        has_bnb_capacity: true,
+      });
+      totalAmount += SETTINGS[bnbTier + '_price'] || 0;
+    }
+    if (isBundle) totalAmount = SETTINGS.elite_bnb_bundle_price || 5000;
+
+    const amount = reconciledPaid != null ? reconciledPaid : totalAmount;
+
+    const { data, error } = await db.from('profiles').update(update).eq('id', grantingSellerId).select();
 
     grantPremiumBusy = false;
     if (btn) { btn.disabled = false; btn.textContent = 'Grant Premium'; }
     if (error) { toast('Error: '+error.message,'error'); return; }
     if (!data?.length) { toast('Blocked by RLS — check Supabase policy','error'); return; }
 
+    const label = isBundle ? 'elite_bnb_bundle' : [tier!=='none'?tier:null, bnbTier!=='none'?bnbTier:null].filter(Boolean).join('+');
     await db.from('payments').insert({
       seller_id: grantingSellerId, amount, method:'manual',
-      reference:`Admin-granted ${tier}`,
-      type: isBnb ? 'bnb_subscription' : (tier === 'elite' ? 'elite_subscription' : 'premium_subscription'),
-      plan_key: isBnb ? tier : null,
+      reference:`Admin-granted ${label}`,
+      type: isBundle ? 'elite_bnb_bundle' : (tier === 'elite' ? 'elite_subscription' : tier === 'premium' ? 'premium_subscription' : 'bnb_subscription'),
+      plan_key: bnbTier !== 'none' ? bnbTier : null,
       status:'confirmed',
     });
 
-    if (isBnb) await reactivateAirbnbListingsForSeller(grantingSellerId);
-    else await reactivateRentalListingsForSeller(grantingSellerId);
+    if (tier !== 'none') await reactivateRentalListingsForSeller(grantingSellerId);
+    if (bnbTier !== 'none') await reactivateAirbnbListingsForSeller(grantingSellerId);
 
-    logAction('grant_premium','profile',grantingSellerId,`${tier} ${isBnb?'monthly':plan} plan`);
+    logAction('grant_premium','profile',grantingSellerId, label);
     const seller = data[0];
-    if (seller?.email) notifySeller('premium_granted', { sellerName: seller.full_name, sellerEmail: seller.email, plan: isBnb ? 'monthly' : plan, expiresAt });
-    toast(isBnb ? 'BNB plan granted ✓' : 'Premium granted ✓','success');
+    if (seller?.email) notifySeller('premium_granted', { sellerName: seller.full_name, sellerEmail: seller.email, plan: billing, expiresAt: tierExpiresAt });
+    toast('Plan granted ✓','success');
     closeGrantPremiumModal();
     loadPremiumSellers();
     if (currentView==='users') loadUsers();
