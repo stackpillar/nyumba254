@@ -701,31 +701,68 @@
       .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.sidebar-overlay.open{display:block}
       .topbar{left:0}.main{margin-left:0}.hamburger{display:flex}
       .listings-table thead{display:none}
-      .listings-table{table-layout:auto}
-      .listings-table th:nth-child(1),.listings-table td:nth-child(1),
-      .listings-table th:nth-child(2),.listings-table td:nth-child(2),
-      .listings-table th:nth-child(3),.listings-table td:nth-child(3),
-      .listings-table th:nth-child(4),.listings-table td:nth-child(4),
-      .listings-table th:nth-child(5),.listings-table td:nth-child(5),
-      .listings-table th:nth-child(6),.listings-table td:nth-child(6),
-      .listings-table th:nth-child(7),.listings-table td:nth-child(7){width:100% !important}
-      .listings-table tr{display:block;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:12px;overflow:hidden}
-      .listings-table td{display:block;width:100%;padding:6px 16px}
-      .listings-table td:first-child{padding-top:14px}
-      .listings-table td:last-child{padding:0}
-      .listings-table .actions-cell{
+      .listings-table{table-layout:auto;border-collapse:separate;border-spacing:0}
+      .listings-table th,.listings-table td{width:auto !important}
+
+      .listings-table tr{
         display:flex;
         flex-wrap:wrap;
-        justify-content:center;
-        align-items:center;
+        background:var(--white);
+        border:1px solid var(--border);
+        border-radius:var(--radius-lg);
+        margin-bottom:14px;
+        overflow:hidden;
+        box-shadow:0 1px 4px rgba(0,0,0,0.04);
+      }
+      .listings-table td{display:block;padding:0;border:none;vertical-align:top}
+
+      /* Property header: thumb + title + notes, always full width */
+      .listings-table td:nth-child(1){width:100%;padding:14px 16px 12px}
+      .listings-table td:nth-child(1) .listing-price-text{word-break:break-word}
+
+      /* Price / Status / Messages / Views / Posted → labeled stat strip */
+      .listings-table td:nth-child(2),
+      .listings-table td:nth-child(3),
+      .listings-table td:nth-child(4),
+      .listings-table td:nth-child(5),
+      .listings-table td:nth-child(6){
+        flex:1 1 33.333%;
+        min-width:100px;
+        padding:10px 12px;
+        border-top:1px solid var(--border);
+      }
+      .listings-table td:nth-child(3),
+      .listings-table td:nth-child(5){border-left:1px solid var(--border)}
+      .listings-table td:nth-child(2)::before{content:"Price"}
+      .listings-table td:nth-child(3)::before{content:"Status"}
+      .listings-table td:nth-child(4)::before{content:"Messages"}
+      .listings-table td:nth-child(5)::before{content:"Views"}
+      .listings-table td:nth-child(6)::before{content:"Posted"}
+      .listings-table td:nth-child(2)::before,
+      .listings-table td:nth-child(3)::before,
+      .listings-table td:nth-child(4)::before,
+      .listings-table td:nth-child(5)::before,
+      .listings-table td:nth-child(6)::before{
+        display:block;font-size:9.5px;font-weight:700;text-transform:uppercase;
+        letter-spacing:.05em;color:var(--text-3);margin-bottom:4px;
+      }
+      .listings-table td:nth-child(2) .listing-price-text,
+      .listings-table td:nth-child(2) .listing-price-sub{font-size:12.5px}
+
+      /* Sixth stat cell wraps to its own full row so 5 items sit 3+2 cleanly */
+      .listings-table td:nth-child(6){flex-basis:100%;border-left:none}
+
+      /* Actions: even grid, wraps into rows, never scrolls, never clipped */
+      .listings-table .actions-cell{
+        width:100%;
+        display:grid;
+        grid-template-columns:repeat(auto-fill,minmax(36px,1fr));
         gap:8px;
-        padding:10px 16px;
-        margin-top:8px;
+        padding:12px 14px;
         background:var(--surface);
         border-top:1px solid var(--border);
       }
-      .listings-table .actions-cell>*{flex:0 0 auto}
-      .listings-table .actions-cell>.icon-btn{width:32px;height:32px}
+      .listings-table .actions-cell>*{width:100%;height:36px;flex:none}
       .messages-layout{grid-template-columns:1fr;position:relative}
       .messages-layout .thread-list{display:flex}
       .messages-layout .chat-pane{display:none}
