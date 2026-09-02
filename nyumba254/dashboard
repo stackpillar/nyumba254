@@ -121,8 +121,8 @@
     .status-expired{background:#f3f4f6;color:#6b7280}
     .status-disabled{background:var(--red-light);color:var(--red)}
     .status-occupied{background:#EDE9FE;color:#5b21b6}
-    .disabled-note{font-size:11px;color:var(--red);background:var(--red-light);border-radius:6px;padding:6px 9px;margin-top:6px;line-height:1.5;max-width:300px}
-    .occupied-note{font-size:11px;color:#5b21b6;background:#EDE9FE;border-radius:6px;padding:6px 9px;margin-top:6px;line-height:1.5;max-width:300px}
+    .disabled-note{font-size:11px;color:var(--red);background:var(--red-light);border-radius:6px;padding:6px 9px;margin-top:6px;line-height:1.5;max-width:100%}
+    .occupied-note{font-size:11px;color:#5b21b6;background:#EDE9FE;border-radius:6px;padding:6px 9px;margin-top:6px;line-height:1.5;max-width:100%}
     .trial-note{font-size:11px;color:var(--blue,#185FA5);background:#E6F1FB;border-radius:6px;padding:6px 9px;margin-top:6px;line-height:1.5;max-width:320px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
     .trial-note .upgrade-link{color:var(--green-dark);font-weight:700;text-decoration:underline;cursor:pointer}
     .trial-note.urgent{color:var(--red);background:var(--red-light)}
