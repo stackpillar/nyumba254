@@ -1067,6 +1067,8 @@ async function uploadSelectedVideo(listingId) {
   } catch (e) {
     statusEl.textContent = 'Video upload failed — your listing was still submitted.';
   }
+
+  
 }
 let currentUser        = null;
 let currentUserName    = '';
