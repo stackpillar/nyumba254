@@ -262,6 +262,13 @@
         </ul>
       </div>
     </div>
+    <div style="margin-top:18px;background:var(--gold-light);border:1px solid #f2d29b;border-radius:var(--radius-lg);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:13.5px;font-weight:700;color:#8a5a12;margin-bottom:3px">Also want Elite's tools — AI listing assistant, storefront, ledger?</div>
+        <div style="font-size:12.5px;color:var(--text-2);line-height:1.6">BNB capacity and Elite's tools are sold separately, but hosts running BNB Unlimited get a discount on Elite: <strong id="bundle-price-inline">KES —</strong>/month for both, instead of paying for each on its own.</div>
+      </div>
+      <a href="#" class="bnb-cta" style="margin:0;white-space:nowrap;background:var(--gold);color:white;border-color:var(--gold)" onclick="startSubscriptionCheckout('elite_bnb_bundle');return false">Get the bundle</a>
+    </div>
   </div>
 
   <!-- ═══ SELLER TOOL PLANS (Free / Premium / Elite) ═══ -->
@@ -290,6 +297,7 @@
         <ul class="feat-list">
           <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span>Post listings across all 47 counties</span></li>
           <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span>Buyers message you directly — chat &amp; WhatsApp</span></li>
+          <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>Managed chat</strong> included free with any active BNB plan</span></li>
           <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span>Buyer contact privacy toggle</span></li>
           <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span>0% commission — no cut of your rent or sale</span></li>
         </ul>
@@ -336,7 +344,7 @@
   </div>
 
   <div class="compare-note">
-    <strong>Featuring a single listing</strong> (top placement, extra photos) is a separate one-time upgrade you can buy per listing from your dashboard — it isn't bundled into any plan above. <strong>Free plan stays free</strong> — posting a listing, receiving enquiries, WhatsApp replies, and the buyer-contact privacy toggle are never gated.
+    <strong>Two things you can mix and match:</strong> the plans above (Free / Premium / Elite) control your <em>tools</em> — managed chat, badges, AI features. BNB plans control your <em>Airbnb capacity</em> — how many short-stay listings can be live at once. Buy either on its own, or both together — a landlord with a rental portfolio <em>and</em> a few Airbnbs can hold Elite and a BNB plan at the same time. <strong>Featuring a single listing</strong> is a separate one-time upgrade per listing. <strong>Free stays free</strong> — posting, chat, WhatsApp, and buyer-contact privacy are never gated.
   </div>
 
 </div>
@@ -389,6 +397,7 @@
     'premium_monthly_price','premium_yearly_price',
     'elite_monthly_price','elite_yearly_price',
     'bnb_basic_price','bnb_bundle_price','bnb_unlimited_price',
+    'elite_bnb_bundle_price',
   ];
   let SETTINGS = {};
 
@@ -426,6 +435,8 @@
     document.getElementById('bnb-basic-price').textContent = fmtKES(SETTINGS.bnb_basic_price);
     document.getElementById('bnb-bundle-price').textContent = fmtKES(SETTINGS.bnb_bundle_price);
     document.getElementById('bnb-unlimited-price').textContent = fmtKES(SETTINGS.bnb_unlimited_price);
+    const bundleEl = document.getElementById('bundle-price-inline');
+    if (bundleEl) bundleEl.textContent = fmtKES(SETTINGS.elite_bnb_bundle_price || 5000);
   }
 
   function applySellerPlanPrice(planClass, monthlyKey, yearlyKey){
@@ -502,8 +513,10 @@
   const PLAN_LABELS = {
     premium: 'Premium', elite: 'Elite',
     bnb_basic: 'BNB Basic', bnb_bundle: 'BNB Bundle', bnb_unlimited: 'BNB Unlimited',
+    elite_bnb_bundle: 'Elite + BNB Unlimited bundle',
   };
   const BNB_PLANS = new Set(['bnb_basic','bnb_bundle','bnb_unlimited']);
+  const FLAT_MONTHLY_PLANS = new Set(['bnb_basic','bnb_bundle','bnb_unlimited','elite_bnb_bundle']);
 
   async function startSubscriptionCheckout(plan) {
     const { data: { session } } = await db.auth.getSession();
@@ -511,16 +524,16 @@
     currentUser = session.user;
     checkoutPlan = plan;
 
-    if (BNB_PLANS.has(plan)) {
-      // BNB plans are flat monthly fees — no yearly toggle, no percentage math.
+    if (FLAT_MONTHLY_PLANS.has(plan)) {
+      // BNB plans and the Elite+BNB bundle are flat monthly fees — no yearly toggle, no percentage math.
       checkoutTier = 'monthly';
-      checkoutAmount = SETTINGS[`${plan}_price`] || 0;
+      checkoutAmount = plan === 'elite_bnb_bundle' ? (SETTINGS.elite_bnb_bundle_price || 5000) : (SETTINGS[`${plan}_price`] || 0);
     } else {
       checkoutTier = yearly ? 'yearly' : 'monthly';
       checkoutAmount = SETTINGS[`${plan}_${checkoutTier}_price`] || 0;
     }
 
-    document.getElementById('sub-pay-title').textContent = `Pay for ${PLAN_LABELS[plan]}${BNB_PLANS.has(plan)?'':` (${checkoutTier})`}`;
+    document.getElementById('sub-pay-title').textContent = `Pay for ${PLAN_LABELS[plan]}${FLAT_MONTHLY_PLANS.has(plan)?'':` (${checkoutTier})`}`;
     document.getElementById('sub-pay-amount-display').textContent = fmtKES(checkoutAmount);
     document.getElementById('sub-pay-amount-label').textContent = fmtKES(checkoutAmount);
     document.getElementById('sub-pay-ref').value = '';
@@ -543,7 +556,7 @@
     // payment 'type' tells admin.confirmPayment() which profile fields to
     // activate: premium_subscription / elite_subscription toggle
     // subscription_tier+plan; bnb_subscription toggles bnb_plan+bnb_expires_at.
-    const paymentType = BNB_PLANS.has(checkoutPlan) ? 'bnb_subscription' : `${checkoutPlan}_subscription`;
+    const paymentType = checkoutPlan === 'elite_bnb_bundle' ? 'elite_bnb_bundle' : (BNB_PLANS.has(checkoutPlan) ? 'bnb_subscription' : `${checkoutPlan}_subscription`);
 
     const { error } = await db.from('payments').insert({
       seller_id: currentUser.id,
