@@ -201,7 +201,7 @@
       .page-wrap { padding:24px 16px 60px; }
       .form-card { padding:20px 16px; }
       .grid-2,.grid-3 { grid-template-columns:1fr; }
-      .cat-grid { grid-template-columns:1fr 1fr; }
+      .cat-grid { grid-template-columns:1fr; }
       .steps-bar { padding:16px 10px 12px; }
       .step-label { display:none; }
       .modal-box { padding:22px 18px; }
