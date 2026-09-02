@@ -232,7 +232,8 @@
     .listing-thumb img{width:100%;height:100%;object-fit:cover}
     .listing-thumb svg{width:18px;height:18px;stroke:var(--text-3);fill:none;stroke-width:1.5}
     .listing-name-cell{display:flex;align-items:center;gap:12px}
-    .listing-title-text{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+    .listing-name-cell > div{min-width:0;flex:1}
+    .listing-title-text{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .listing-area-text{font-size:11px;color:var(--text-3)}
     .listing-price-text{font-size:13px;font-weight:700;color:var(--green-dark)}
     .listing-price-sub{font-size:11px;color:var(--text-3)}
@@ -950,6 +951,7 @@
           </div>
           <div class="card" id="overview-quicklistings-card" style="padding:20px 22px">
             <div class="section-head"><h2>Your listings</h2><button class="btn btn-outline btn-sm" onclick="showPage('listings')">Manage</button></div>
+            <div id="quick-listing-top" style="margin-bottom:12px"></div>
             <div id="quick-listings"><div style="padding:10px 0;color:var(--text-3);font-size:13px">Loading…</div></div>
           </div>
         </div>
@@ -5179,6 +5181,7 @@ function getListingStatusDisplay(l){
   if(l.is_disabled)return{label:l.disabled_by_subscription?'Plan expired':'Disabled by admin',cls:'status-disabled',banner:l.disabled_by_subscription?'Your BNB plan expired — subscribe again from Settings to bring this listing back.':`Disabled by admin${l.disabled_reason?': '+escHtml(l.disabled_reason):''}. Contact admin for more information.`};
   if(l.status==='occupied'){const word=l.price_type==='rent'?'occupied':'sold';return{label:l.price_type==='rent'?'Occupied':'Sold',cls:'status-occupied',banner:`Marked as ${word} — hidden from public search and listing pages.`};}
   if(l.status==='scheduled')return{label:'Scheduled',cls:'status-pending',banner:l.publish_at?`Approved — goes live automatically on ${new Date(l.publish_at).toLocaleString('en-KE')}.`:null};
+  if(l.status==='approved_unpaid'&&l.payment_status==='pending_verification')return{label:'Verifying payment',cls:'status-pending',banner:'Your M-Pesa payment is being verified — this usually takes a few minutes.'};
   if(l.status==='approved_unpaid')return{label:'Awaiting payment',cls:'status-pending',banner:'Approved — pay the listing fee to make it live.'};
   if(l.status==='approved_unpaid_bnb')return{label:'Awaiting BNB plan',cls:'status-pending',banner:'Approved — subscribe to a BNB plan to make it live.'};
   return{label:statusLabel(l.status),cls:'status-'+l.status,banner:null};
@@ -5216,13 +5219,20 @@ function renderOverview(){
   document.getElementById('stat-active-delta').textContent=`of ${allListings.length} total listing${allListings.length!==1?'s':''}`;
   const buyerThreadCount=threads.filter(t=>t.messages.some(m=>m.sender==='buyer')).length;
   document.getElementById('stat-enquiries').textContent=buyerThreadCount;
-  document.getElementById('stat-enquiries-delta').textContent=`${buyerThreadCount} buyer${buyerThreadCount!==1?'s':''} reached out`;
+  const now7=Date.now(), d7=7*86400000;
+  const enqThis7=allEnquiries.filter(e=>Date.now()-new Date(e.created_at)<d7).length;
+  const enqPrev7=allEnquiries.filter(e=>{const age=Date.now()-new Date(e.created_at);return age>=d7&&age<2*d7;}).length;
+  const enqTrendPct=enqPrev7>0?Math.round(((enqThis7-enqPrev7)/enqPrev7)*100):(enqThis7>0?100:0);
+  const enqTrendHtml=(enqThis7||enqPrev7)?` <span style="font-weight:700;color:${enqTrendPct>=0?'#065f46':'var(--red)'}">${enqTrendPct>=0?'▲':'▼'} ${Math.abs(enqTrendPct)}% vs last week</span>`:'';
+  document.getElementById('stat-enquiries-delta').innerHTML=`${buyerThreadCount} buyer${buyerThreadCount!==1?'s':''} reached out${enqTrendHtml}`;
   document.getElementById('stat-new-enq').textContent=unread;
   document.getElementById('stat-new-enq-delta').textContent=unread>0?`${unread} unread — check messages`:'All caught up ✓';
   document.getElementById('stat-paid').textContent=`KES ${totalPaid.toLocaleString('en-KE')}`;
   document.getElementById('stat-paid-delta').textContent=`${confirmed.length} payment${confirmed.length!==1?'s':''}`;
   document.getElementById('stat-views').textContent=views.toLocaleString('en-KE');
-  renderActivityFeed();renderChart();renderQuickListings();loadDemandMatches();
+  const avgViewsPerListing=allListings.length?Math.round(views/allListings.length):0;
+  document.getElementById('stat-views-delta').textContent=`~${avgViewsPerListing} views per listing`;
+  renderActivityFeed();renderChart();renderQuickListings();loadDemandMatches();renderPerformanceSummary();
 }
 
 function renderActivityFeed(){
@@ -5249,6 +5259,18 @@ function renderChart(){
   document.getElementById('chart-labels').innerHTML=labels.map(l=>`<div class="chart-label">${l}</div>`).join('');
 }
 
+function renderPerformanceSummary(){
+  const el=document.getElementById('quick-listing-top');
+  if(!el)return;
+  if(!allListings.length){el.innerHTML='';return;}
+  const withThreads=allListings.map(l=>({l,count:threads.filter(t=>t.listing_id===l.id).reduce((s,t)=>s+t.messages.length,0)}));
+  const top=withThreads.sort((a,b)=>b.count-a.count)[0];
+  if(!top||top.count===0){el.innerHTML='';return;}
+  el.innerHTML=`<div style="background:var(--green-light);border-radius:10px;padding:10px 14px;font-size:12.5px;color:var(--green-dark);display:flex;align-items:center;gap:8px">
+    <span style="font-size:15px">🏆</span>
+    <span><strong>${escHtml(top.l.title)}</strong> is your top performer — ${top.count} message${top.count!==1?'s':''} so far.</span>
+  </div>`;
+}
 function renderQuickListings(){
   const el=document.getElementById('quick-listings');
   if(!allListings.length){el.innerHTML=`<div style="text-align:center;padding:20px 0;color:var(--text-3);font-size:13px">No listings yet. <a href="/post-listing" style="color:var(--green);font-weight:500">Post one →</a></div>`;return;}
@@ -5336,9 +5358,13 @@ async function submitPayListing(){
   const{error}=await db.from('payments').insert({listing_id:payListingTargetId,seller_id:effectiveSellerId,amount,method:'paybill',reference:code,type:plan==='featured'?'featured_upgrade':'listing_fee',status:'pending_verification'});
   btn.disabled=false;btn.textContent='Submit for verification';
   if(error){showToast('Could not submit: '+error.message,'error');return;}
-  if(plan==='featured'&&l)await db.from('listings').update({is_featured:true}).eq('id',payListingTargetId);
+  const listingUpdate={payment_status:'pending_verification'};
+  if(plan==='featured')listingUpdate.is_featured=true;
+  await db.from('listings').update(listingUpdate).eq('id',payListingTargetId);
+  if(l)l.payment_status='pending_verification';
   closeModal('modal-pay-listing');
-  showToast('Payment submitted — we\'ll confirm and activate it shortly ✓','success');
+  renderListingsTable();
+  showToast('Payment submitted — verification in progress ✓','success');
   notifyAdmin('listing_payment_submitted',{listingId:payListingTargetId,listingTitle:l?.title,plan,amount,reference:code,sellerName:currentProfile?.full_name,sellerEmail:currentUser?.email});
 }
 
@@ -5407,7 +5433,9 @@ function renderListingsTable(){
     const bnbNote=bnbDays!==null?`<div class="trial-note${bnbDays<=3?' urgent':''}">📅 BNB plan — ${bnbDays} day${bnbDays!==1?'s':''} left <a href="/plans" class="upgrade-link">Renew plan</a></div>`:(l.category==='airbnb'&&l.status!=='approved_unpaid_bnb'?`<div class="trial-note urgent">⚠️ No active BNB plan <a href="/plans" class="upgrade-link">Subscribe</a></div>`:'');
     const occupiedNote=(l.status==='occupied'&&d.banner)?`<div class="occupied-note">${d.banner}</div>`:'';
     const bnbListingFee = Number(l.payment_due_amount)||Number(platformPrices.bnb_basic_price)||0;
-    const payDueNote = l.status==='approved_unpaid'
+    const payDueNote = (l.status==='approved_unpaid'&&l.payment_status==='pending_verification')
+      ? `<div class="trial-note">⏳ Payment submitted — verification in progress, usually done within a few minutes.</div>`
+      : l.status==='approved_unpaid'
       ? `<div class="trial-note urgent">💳 Approved — pay <strong>KES ${Number(l.payment_due_amount||0).toLocaleString('en-KE')}</strong> to make this listing live. <span class="upgrade-link" onclick="openPayListingModal('${l.id}')">Pay now →</span></div>`
       : l.status==='approved_unpaid_bnb'
         ? `<div class="trial-note urgent">📅 Approved — <span class="upgrade-link" onclick="openPayListingModal('${l.id}')">pay KES ${bnbListingFee.toLocaleString('en-KE')} for just this listing →</span><br/>or <a href="/plans" class="upgrade-link">subscribe to a BNB plan →</a></div>`
@@ -5926,12 +5954,18 @@ function openConversationFromThread(key){threadListingFilter=null;showPage('mess
 function showThreadListMobile(){document.getElementById('messages-layout')?.classList.remove('mobile-chat-active');}
 function showChatMobile(){document.getElementById('messages-layout')?.classList.add('mobile-chat-active');}
 const QUICK_REPLIES=[
-  {label:'👋 Greeting',text:"Hi, thanks for reaching out! I'd be happy to help — is this property still what you're looking for?"},
-  {label:'✅ Still available',text:'Yes, this property is still available. Would you like to schedule a viewing?'},
-  {label:'📅 Book viewing',text:"Great — what day and time works best for you? I'll confirm and send you the exact location."},
-  {label:'💰 Price/terms',text:'The price and terms are as listed. Deposit and first month\'s rent are required to secure the unit.'},
-  {label:'📍 Location',text:"I'll send you the exact pin location once we've confirmed a viewing time."},
-  {label:'🙏 Follow-up',text:"Just following up — are you still interested in this property? Happy to answer any questions."},
+  {label:'👋 Welcome',text:"Hello, thank you for your interest in this property. I'd be glad to help — is there anything specific you'd like to know before we arrange a viewing?"},
+  {label:'✅ Available',text:"Yes, this property is currently available. I'd be happy to arrange a viewing at a time that suits you."},
+  {label:'❌ No longer available',text:"Thank you for your interest — this unit has just been taken. I'll gladly let you know when a similar unit becomes available."},
+  {label:'📅 Confirm viewing',text:"Noted — I'll confirm the time and send you the exact location shortly before we meet."},
+  {label:'📍 Share location',text:"For security, I'll share the exact pin location once we've confirmed a viewing time."},
+  {label:'💰 Pricing & terms',text:"The price shown is as listed. To secure the unit, we typically require a deposit plus the first month's rent — happy to walk you through the full breakdown."},
+  {label:'📄 What you\'ll need',text:"To proceed, we'll need a copy of your ID and your intended move-in date. I can send the full checklist whenever you're ready."},
+  {label:'🔑 Move-in process',text:"Once the deposit is confirmed, we'll schedule a walkthrough together and hand over the keys."},
+  {label:'🛠 House rules & maintenance',text:"Happy to share the house rules and how maintenance requests are handled — just let me know if you'd like the details."},
+  {label:'🕒 Apologies for the delay',text:"Apologies for the delayed reply — following up on your enquiry now. Thank you for your patience."},
+  {label:'🙏 Checking in',text:"Just checking in — are you still considering this property? Happy to answer any remaining questions."},
+  {label:'🤝 Thank you',text:"Thank you for reaching out and for your interest in this property — it was a pleasure assisting you."},
 ];
 
 function toggleQuickReplyBar(){
@@ -6067,8 +6101,10 @@ async function markThreadRead(t){
   const eIds=t.messages.filter(m=>m.sender==='buyer'&&!m.read_at&&String(m.id).startsWith('enq-')).map(m=>Number(String(m.id).slice(4))).filter(n=>!isNaN(n));
   const uIds=t.messages.filter(m=>m.sender==='buyer'&&!m.read_at&&!String(m.id).startsWith('enq-')).map(m=>m.id);
 
-  if(eIds.length){const{error:eErr}=await db.from('enquiries').update({read_at:new Date().toISOString()}).in('id',eIds);if(eErr){console.error('markThreadRead enquiries update failed:',eErr);}else{eIds.forEach(id=>{const e=allEnquiries.find(e=>e.id===id);if(e)e.read_at=new Date().toISOString();});}}
-  if(uIds.length){const{error:mErr}=await db.from('messages').update({read_at:new Date().toISOString()}).in('id',uIds);if(mErr){console.error('markThreadRead messages update failed:',mErr);}else{uIds.forEach(id=>{const m=allMessages.find(m=>m.id===id);if(m)m.read_at=new Date().toISOString();});}}
+  let markReadFailed=false;
+  if(eIds.length){const{error:eErr}=await db.from('enquiries').update({read_at:new Date().toISOString()}).in('id',eIds);if(eErr){console.error('markThreadRead enquiries update failed:',eErr);markReadFailed=true;}else{eIds.forEach(id=>{const e=allEnquiries.find(e=>e.id===id);if(e)e.read_at=new Date().toISOString();});}}
+  if(uIds.length){const{error:mErr}=await db.from('messages').update({read_at:new Date().toISOString()}).in('id',uIds);if(mErr){console.error('markThreadRead messages update failed:',mErr);markReadFailed=true;}else{uIds.forEach(id=>{const m=allMessages.find(m=>m.id===id);if(m)m.read_at=new Date().toISOString();});}}
+  if(markReadFailed){showToast('Could not mark as read — check database permissions','error');t.unread_count=eIds.length+uIds.length;}
   buildThreads();
   if(activeThread&&activeThread.key===t.key){activeThread=threads.find(x=>x.key===t.key)||activeThread;}
   updateNavBadges();renderThreadList();
@@ -7313,6 +7349,7 @@ const Tour = (() => {
   // The Continue button still works too ("Click it for me").
   const STEPS = [
     { selector:'#nav-overview', page:'overview', title:'Welcome to your dashboard', desc:"Let's take a quick tour of everything you can do here. This is your Overview — your home base every time you sign in." },
+    { selector:'#theme-switch', page:'overview', title:'Choose your theme', desc:'Switch between Emerald, Sandstone, and Midnight — your choice is saved for next time.' },
     { selector:'#verify-warning-banner', page:'overview', title:'Get verified', desc:'Verify your account here to unlock unlimited listings and a trust badge buyers can see. It only takes about 2 minutes.' },
     { selector:'.stat-grid', page:'overview', title:'Your key numbers', desc:'Active listings, total enquiries, unread messages, payments and views — all at a glance.' },
     { selector:'#overview-activity-card', page:'overview', title:'Recent activity', desc:'A live feed of new enquiries, messages, listings and payments. Tap any item to jump straight to it.' },
@@ -7323,9 +7360,10 @@ const Tour = (() => {
     { selector:'#listings-filter-bar', page:'listings', title:'Filter your listings', desc:'Filter by status — active, pending, paused, occupied/sold — or search by name.' },
     { selector:'#listings-table-card', page:'listings', title:'Manage each listing', desc:'Edit, view messages, share, mark occupied/sold, pause, or delete — from the icons on each row.' },
     { selector:'#listings-table-card', page:'listings', title:'Share to social media — free', desc:'Tap the Facebook, Instagram, or TikTok icon on any listing to share it to your own page or profile — free for every seller, no upgrade needed.' },
+    { selector:'#listings-table-card', page:'listings', title:'More per-listing tools', desc:'Purple icons handle the rest: manage unit types, add a video walkthrough, download a printable brochure, and hide/show your Call & WhatsApp buttons — right from this row.' },
     { selector:'#nav-messages', page:'listings', title:'Messages', desc:'Tap "Messages" to see every conversation with buyers in one place.', click:true },
     { selector:'#thread-list', page:'messages', title:'Your inbox', desc:'All your buyer conversations live here, newest first. A green dot marks unread ones.' },
-    { selector:'#chat-pane', page:'messages', title:'Chat with buyers', desc:'Open a conversation to reply directly — or via WhatsApp if the buyer shared their number.' },
+    { selector:'#chat-pane', page:'messages', title:'Chat with buyers', desc:'Open a conversation to reply directly, or via WhatsApp if the buyer shared their number. Tap the message icon by the input box any time for ready-made professional replies.' },
     { selector:'#nav-enquiries', page:'messages', title:'Enquiries', desc:'Tap "Enquiries" for a simple feed of every buyer enquiry — handy for a quick daily check.', click:true },
     { selector:'#enquiry-list', page:'enquiries', title:'Enquiry feed', desc:'See every enquiry at a glance and jump into the full conversation with one tap.' },
     { selector:'#nav-reviews', page:'enquiries', title:'Reviews', desc:'Tap "Reviews" to see what buyers are saying about you.', click:true },
@@ -7336,6 +7374,7 @@ const Tour = (() => {
     { selector:['#rent-ledger-content','#rent-ledger-locked'], page:'rent-ledger', title:'Your rent roll', desc:'Add rental units, log payments, and get automatic overdue and lease-expiry alerts.' },
     { selector:'#nav-demand-heatmap', page:'rent-ledger', title:'Demand Insights (Elite)', desc:'Tap "Demand Insights" to see where buyers are searching most right now.', click:true },
     { selector:['#demand-content','#demand-locked'], page:'demand-heatmap', title:'Platform-wide demand', desc:'See top areas, categories, and rent-vs-sale demand — and how your listings compare to the area average.' },
+    { selector:'#rl-capacity-switcher', page:'rent-ledger', title:'Switch ledger view', desc:'If you manage both long-term rentals and Airbnb/BNB, switch between the two ledgers here.' },
     { selector:'#nav-settings', page:'demand-heatmap', title:'Settings', desc:'Tap "Settings" to manage your profile, notifications, and plan.', click:true },
     { selector:'#verification-settings-section', page:'settings', title:'Account verification', desc:'Submit your ID and proof of ownership here to get verified and unlock unlimited listings.' },
     { selector:'#settings-notifications-section', page:'settings', title:'Notifications', desc:'Choose exactly which alerts you want — messages, approvals, expiring listings, payments.' },
@@ -7343,6 +7382,10 @@ const Tour = (() => {
     { selector:'#settings-contact-privacy-section', page:'settings', title:'Contact privacy', desc:'Hide your Call/WhatsApp buttons platform-wide so buyers can only reach you through chat.' },
     { selector:'#settings-premium-section', page:'settings', title:'Premium', desc:'Unlock managed chat, a Pro badge, scheduled publishing, video tours, brochures, and SMS alerts.' },
     { selector:'#settings-elite-section', page:'settings', title:'Elite', desc:'AI Listing Assistant, Instant Valuation, a Storefront page, Rent Ledger, and Demand Insights.' },
+    { selector:'#elite-ai-listing-btn', page:'settings', title:'AI Listing Assistant', desc:'Jot a few bullet points and let AI draft a polished title, description, and suggested price for you.' },
+    { selector:'#elite-valuation-btn', page:'settings', title:'Instant Valuation', desc:'Check your price against similar active listings on the platform before you publish.' },
+    { selector:'#storefront-banner-card', page:'overview', title:'Your storefront', desc:'A branded page listing all your active properties — share one link with buyers.' },
+    { selector:'#settings-team-section', page:'settings', title:'Team seats', desc:'Invite someone to help manage your account — they get their own login with the same access.' },
     { selector:'#nav-premium-upgrade', page:'settings', title:'Upgrade any time', desc:'Your plan status always shows here in the sidebar — tap it any time to upgrade.' },
     { selector:'#sidebar-user-block', page:'settings', title:"That's it!", desc:'Your account and sign-out are always one tap away from here. Enjoy Nyumba254! 🎉' },
   ];
