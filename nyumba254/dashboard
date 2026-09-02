@@ -728,18 +728,25 @@
       .listings-table td:first-child .listing-price-text{word-break:break-word}
 
       /* Lock the property thumbnail to a compact fixed size on mobile —
-         layout/order/action-buttons untouched */
+         layout/order/action-buttons untouched. Sized closer to desktop's
+         proportions (wider than tall) so the photo actually reads, instead
+         of a tiny square crop. */
       .listings-table .listing-name-cell{align-items:flex-start}
       .listings-table .listing-thumb{
-        width:56px !important;
-        height:56px !important;
+        width:88px !important;
+        height:66px !important;
         flex-shrink:0 !important;
         flex-grow:0 !important;
+        border-radius:8px;
       }
       .listings-table .listing-thumb img{
         width:100% !important;
         height:100% !important;
         object-fit:cover;
+      }
+      .listings-table .listing-thumb svg{
+        width:26px !important;
+        height:26px !important;
       }
 
       /* Actions: simple wrapping row of fixed-size buttons — never collapses, never scrolls */
