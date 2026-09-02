@@ -717,15 +717,6 @@
           </div>
         </div>
 
-        <!-- Similar listings -->
-        <div class="similar-section">
-          <h3>Similar listings in this area</h3>
-          <div class="similar-grid" id="similar-grid">
-            <div class="skel-block" style="height:200px"></div>
-            <div class="skel-block" style="height:200px"></div>
-            <div class="skel-block" style="height:200px"></div>
-          </div>
-        </div>
       </div>
 
       <!-- RIGHT -->
@@ -870,6 +861,16 @@
             <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Enquiries go through Nyumba254 messaging</li>
             <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Scam and fraud reports are actively monitored</li>
           </ul>
+        </div>
+      </div>
+
+      <!-- Similar listings -->
+      <div class="similar-section">
+        <h3>Similar listings in this area</h3>
+        <div class="similar-grid" id="similar-grid">
+          <div class="skel-block" style="height:200px"></div>
+          <div class="skel-block" style="height:200px"></div>
+          <div class="skel-block" style="height:200px"></div>
         </div>
       </div>
 
@@ -1835,7 +1836,13 @@ function nkLiteEmbed(thumbUrl, embedSrc, sourceLabel) {
   }, 0);
   return `<div id="${wrapId}" style="position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;cursor:pointer;${bg}">
     <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.25)">
-      <span style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.95);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.35);transition:transform .15s" onmouseover="this.style.transform='scale(1.08)'"
+      <span style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.95);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.35);transition:transform .15s" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="var(--green-dark)" style="margin-left:3px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </span>
+    </div>
+    <span style="position:absolute;bottom:10px;right:12px;background:rgba(0,0,0,0.6);color:white;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px">${sourceLabel}</span>
+  </div>`;
+}
 
 function nkGetDeviceId() {
   let sid = nkLSGet('nk_sid');
