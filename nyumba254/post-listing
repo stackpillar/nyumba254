@@ -1009,9 +1009,21 @@ function getVideoDuration(file) {
   return new Promise((resolve, reject) => {
     const v = document.createElement('video');
     v.preload = 'metadata';
-    v.onloadedmetadata = () => { URL.revokeObjectURL(v.src); resolve(v.duration); };
-    v.onerror = () => reject(new Error('Could not read video'));
+    v.muted = true;
     v.src = URL.createObjectURL(file);
+    const timer = setTimeout(() => {
+      URL.revokeObjectURL(v.src);
+      reject(new Error('Timed out reading video metadata'));
+    }, 8000);
+    v.onloadedmetadata = () => {
+      clearTimeout(timer);
+      URL.revokeObjectURL(v.src);
+      resolve(v.duration);
+    };
+    v.onerror = () => {
+      clearTimeout(timer);
+      reject(new Error('Could not read video file'));
+    };
   });
 }
 
@@ -1037,6 +1049,7 @@ async function handleVideoFileSelect(file) {
     selectedVideoFile = file;
     statusEl.textContent = `✓ ${file.name} (${Math.round(duration)}s) ready to upload`;
   } catch (e) {
+    console.error('Video duration check failed:', e);
     statusEl.textContent = 'Could not read that video — try a different file.';
     selectedVideoFile = null;
   }
