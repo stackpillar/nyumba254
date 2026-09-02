@@ -1047,12 +1047,20 @@ async function uploadSelectedVideo(listingId) {
   const statusEl = document.getElementById('video-file-status');
   statusEl.textContent = 'Uploading video… this can take a minute';
   try {
+    const { data: { session } } = await db.auth.getSession();
     const fd = new FormData();
     fd.append('video', selectedVideoFile);
     fd.append('listingId', listingId);
     fd.append('sellerId', currentUser.id);
     fd.append('title', document.getElementById('title').value || 'Nyumba254 listing video');
-    const res = await fetch(`${EDGE_URL}/upload-listing-video`, { method: 'POST', headers: { 'apikey': SUPABASE_KEY }, body: fd });
+    const res = await fetch(`${EDGE_URL}/upload-listing-video`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: fd
+    });
     const data = await res.json();
     if (!res.ok || data.error) { statusEl.textContent = 'Video upload failed — your listing was still submitted.'; return; }
     statusEl.textContent = '✓ Video received — pending review';
