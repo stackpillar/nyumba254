@@ -211,72 +211,103 @@
     .empty-state svg{width:48px;height:48px;stroke:var(--border);fill:none;stroke-width:1.2;margin:0 auto 16px}
     .empty-state h3{font-size:16px;font-weight:600;color:var(--text-2);margin-bottom:6px}
     .empty-state p{font-size:13px;margin-bottom:20px}
-    .enquiry-list{display:flex;flex-direction:column;gap:12px}
-    .enquiry-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;display:flex;gap:16px;align-items:flex-start;transition:box-shadow .15s}
-    .enquiry-card:hover{box-shadow:var(--shadow)}
-    .enquiry-card.unread{border-left:3px solid var(--green)}
-    .enquiry-avatar{width:40px;height:40px;border-radius:50%;flex-shrink:0;background:var(--green-light);color:var(--green-dark);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+  /* ===== ENQUIRIES — professional redesign ===== */
+    .enquiries-stat-strip{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+    .enquiries-stat-strip .es-item{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px 18px;min-width:130px}
+    .enquiries-stat-strip .es-label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);margin-bottom:4px}
+    .enquiries-stat-strip .es-val{font-size:19px;font-weight:800;color:var(--text)}
+
+    .enquiry-list{display:flex;flex-direction:column;gap:10px}
+    .enquiry-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:18px 20px;display:flex;gap:16px;align-items:flex-start;transition:box-shadow .18s ease,transform .18s ease;position:relative}
+    .enquiry-card:hover{box-shadow:0 6px 20px rgba(0,0,0,0.06);transform:translateY(-1px)}
+    .enquiry-card.unread{border-left:3px solid var(--green);background:linear-gradient(90deg,var(--green-light) 0%,var(--white) 6%)}
+    .enquiry-avatar{width:44px;height:44px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--green-mid),var(--green-dark));color:white;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;box-shadow:0 2px 6px rgba(15,110,86,0.22)}
     .enquiry-body{flex:1;min-width:0}
-    .enquiry-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:4px}
-    .enquiry-name{font-size:14px;font-weight:600;color:var(--text)}
-    .enquiry-phone{font-size:12px;color:var(--text-3)}
-    .enquiry-time{font-size:11px;color:var(--text-3);margin-left:auto;white-space:nowrap}
-    .enquiry-listing-ref{font-size:11px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
-    .enquiry-msg{font-size:13px;color:var(--text-2);line-height:1.6}
-    .enquiry-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
-    .messages-layout{display:grid;grid-template-columns:320px 1fr;height:calc(100vh - var(--topbar-h));overflow:hidden}
+    .enquiry-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px}
+    .enquiry-name{font-size:14.5px;font-weight:700;color:var(--text);letter-spacing:-.01em}
+    .enquiry-phone{font-size:11.5px;color:var(--text-3);font-weight:500}
+    .enquiry-new-badge{font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;background:var(--green);color:white;padding:2px 8px;border-radius:20px}
+    .enquiry-time{font-size:11px;color:var(--text-3);margin-left:auto;white-space:nowrap;font-weight:500}
+    .enquiry-listing-ref{font-size:11.5px;font-weight:700;color:var(--green-dark);margin-bottom:8px;display:flex;align-items:center;gap:5px}
+    .enquiry-listing-ref::before{content:'🏠'}
+    .enquiry-msg{font-size:13.5px;color:var(--text-2);line-height:1.65;background:var(--surface);border-radius:10px;padding:10px 13px;border:1px solid var(--border)}
+    .enquiry-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+    .enquiry-actions .btn{font-weight:600}
+   /* ===== MESSAGES — professional redesign ===== */
+    .messages-layout{display:grid;grid-template-columns:340px 1fr;height:calc(100vh - var(--topbar-h));overflow:hidden;background:var(--surface)}
+
     .thread-list{border-right:1px solid var(--border);background:var(--white);overflow-y:auto;display:flex;flex-direction:column}
-    .thread-list-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-    .thread-list-head h3{font-size:15px;font-weight:600;color:var(--text)}
-    .thread-search{padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
-    .thread-search input{width:100%;padding:7px 12px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;outline:none;background:var(--surface);color:var(--text);transition:border-color .15s}
-    .thread-search input:focus{border-color:var(--green);background:white}
+    .thread-list-head{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:linear-gradient(180deg,#fff,var(--surface))}
+    .thread-list-head h3{font-size:16px;font-weight:700;color:var(--text);letter-spacing:-.01em}
+    .thread-list-head .btn-outline{font-weight:600}
+
+    .thread-search{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+    .thread-search input{width:100%;padding:9px 14px 9px 34px;border:1.5px solid var(--border);border-radius:20px;font-size:13px;outline:none;background:var(--surface);color:var(--text);transition:all .18s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888780' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:11px center;background-size:14px}
+    .thread-search input:focus{border-color:var(--green);background-color:white;box-shadow:0 0 0 3px rgba(15,110,86,0.08)}
+
     .thread-item{display:flex;gap:12px;padding:14px 18px;cursor:pointer;transition:background .15s;border-bottom:1px solid var(--border);position:relative}
     .thread-item:hover{background:var(--surface)}
-    .thread-item.active{background:var(--green-light)}
+    .thread-item.active{background:var(--green-light);box-shadow:inset 3px 0 0 var(--green)}
     .thread-item.unread .thread-preview{font-weight:600;color:var(--text)}
-    .thread-item.unread::after{content:'';position:absolute;top:50%;right:16px;transform:translateY(-50%);width:8px;height:8px;border-radius:50%;background:var(--green)}
-    .thread-avatar{width:40px;height:40px;border-radius:50%;background:var(--green-light);color:var(--green-dark);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .thread-item.unread .thread-name{font-weight:800}
+    .thread-item.unread::after{content:'';position:absolute;top:16px;right:16px;width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--green-light)}
+
+    .thread-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--green-mid),var(--green-dark));color:white;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(15,110,86,0.25)}
     .thread-meta{flex:1;min-width:0}
-    .thread-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .thread-listing-ref{font-size:11px;color:var(--green);font-weight:500;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .thread-preview{font-size:12px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:20px}
-    .thread-time{font-size:10px;color:var(--text-3);white-space:nowrap;position:absolute;top:14px;right:16px}
-    .chat-pane{display:flex;flex-direction:column;background:var(--surface);overflow:hidden}
+    .thread-name{font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .thread-listing-ref{font-size:11px;color:var(--green-dark);font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px}
+    .thread-listing-ref::before{content:'🏠';font-size:10px}
+    .thread-preview{font-size:12.5px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:20px}
+    .thread-time{font-size:10.5px;color:var(--text-3);font-weight:500;white-space:nowrap;position:absolute;top:16px;right:16px}
+
+    .chat-pane{display:flex;flex-direction:column;background:#f2f3f0;overflow:hidden;background-image:radial-gradient(rgba(0,0,0,0.015) 1px,transparent 1px);background-size:18px 18px}
     .chat-pane-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;color:var(--text-3)}
-    .chat-pane-empty svg{width:48px;height:48px;stroke:var(--border);fill:none;stroke-width:1.2;margin-bottom:16px}
-    .chat-pane-empty p{font-size:14px}
-    .chat-header{background:var(--white);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:14px;flex-shrink:0}
-    .chat-header-avatar{width:36px;height:36px;border-radius:50%;background:var(--green-light);color:var(--green-dark);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .chat-header-name{font-size:14px;font-weight:600;color:var(--text)}
-    .chat-header-sub{font-size:12px;color:var(--text-3)}
+    .chat-pane-empty svg{width:56px;height:56px;stroke:var(--border);fill:none;stroke-width:1.1;margin-bottom:18px}
+    .chat-pane-empty p{font-size:14.5px;font-weight:500}
+
+    .chat-header{background:var(--white);border-bottom:1px solid var(--border);padding:14px 22px;display:flex;align-items:center;gap:14px;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,0.03)}
+    .chat-header-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--green-mid),var(--green-dark));color:white;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(15,110,86,0.25)}
+    .chat-header-name{font-size:14.5px;font-weight:700;color:var(--text);letter-spacing:-.01em}
+    .chat-header-sub{font-size:11.5px;color:var(--text-3);display:flex;align-items:center;gap:6px}
     .chat-header-actions{margin-left:auto;display:flex;gap:8px}
     .mobile-back-btn{display:none;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:white;color:var(--text-2);flex-shrink:0;cursor:pointer}
     .mobile-back-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
-    .chat-messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:10px}
-    .chat-messages::-webkit-scrollbar{width:4px}
-    .chat-messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-    .chat-bubble-row{display:flex;gap:8px;align-items:flex-end}
+
+    .chat-messages{flex:1;overflow-y:auto;padding:22px 26px;display:flex;flex-direction:column;gap:4px}
+    .chat-messages::-webkit-scrollbar{width:5px}
+    .chat-messages::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.12);border-radius:3px}
+
+    .chat-bubble-row{display:flex;gap:8px;align-items:flex-end;margin:5px 0}
     .chat-bubble-row.seller{flex-direction:row-reverse}
-    .bubble-avatar{width:28px;height:28px;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-bottom:2px}
-    .bubble-avatar.buyer{background:var(--green-light);color:var(--green-dark)}
-    .bubble-avatar.seller-av{background:var(--green);color:white}
-    .chat-bubble{max-width:68%;padding:10px 14px;border-radius:18px;font-size:13px;line-height:1.55;position:relative}
-    .chat-bubble.buyer{background:var(--white);color:var(--text);border:1px solid var(--border);border-bottom-left-radius:4px}
-    .chat-bubble.seller-b{background:var(--green);color:white;border-bottom-right-radius:4px}
-    .bubble-time{font-size:10px;margin-top:4px;color:var(--text-3)}
-    .chat-bubble-row.seller .bubble-time{text-align:right}
-    .chat-date-divider{text-align:center;font-size:11px;color:var(--text-3);padding:6px 0;position:relative}
-    .chat-date-divider::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:var(--border)}
-    .chat-date-divider span{background:var(--surface);padding:0 12px;position:relative}
+    .bubble-avatar{width:26px;height:26px;border-radius:50%;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-bottom:2px}
+    .bubble-avatar.buyer{background:var(--white);color:var(--green-dark);border:1.5px solid var(--green-light)}
+    .bubble-avatar.seller-av{background:linear-gradient(135deg,var(--green-mid),var(--green-dark));color:white}
+    .chat-bubble{max-width:66%;padding:11px 15px;border-radius:16px;font-size:13.5px;line-height:1.6;position:relative;box-shadow:0 1px 2px rgba(0,0,0,0.05)}
+    .chat-bubble.buyer{background:var(--white);color:var(--text);border-bottom-left-radius:4px}
+    .chat-bubble.seller-b{background:linear-gradient(135deg,var(--green),var(--green-dark));color:white;border-bottom-right-radius:4px}
+    .bubble-time{font-size:10px;margin-top:5px;color:var(--text-3);display:flex;align-items:center;gap:4px}
+    .chat-bubble-row.seller .bubble-time{text-align:right;justify-content:flex-end}
+    .bubble-time .tick{width:13px;height:13px;stroke:var(--green-mid)}
+
+    .chat-date-divider{text-align:center;font-size:11px;color:var(--text-3);font-weight:600;padding:14px 0 8px;position:relative}
+    .chat-date-divider span{background:#e9ebe6;padding:4px 12px;border-radius:20px;position:relative;z-index:1}
+
+    .chat-quickreply-bar{background:var(--white);border-top:1px solid var(--border);padding:8px 20px;display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0}
+    .qr-chip{font-size:11.5px;font-weight:600;padding:6px 12px;border-radius:20px;border:1.5px solid var(--green-light);background:var(--green-light);color:var(--green-dark);cursor:pointer;white-space:nowrap;transition:all .15s}
+    .qr-chip:hover{background:var(--green);color:white;border-color:var(--green)}
+
     .chat-input-bar{background:var(--white);border-top:1px solid var(--border);padding:14px 20px;display:flex;gap:10px;align-items:flex-end;flex-shrink:0}
-    .chat-input-bar textarea{flex:1;resize:none;border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:10px 14px;font-size:13px;color:var(--text);outline:none;transition:border-color .15s;min-height:42px;max-height:140px;line-height:1.5;background:var(--surface)}
-    .chat-input-bar textarea:focus{border-color:var(--green);background:white}
-    .chat-send-btn{width:40px;height:40px;border-radius:50%;background:var(--green);color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;flex-shrink:0;border:none}
-    .chat-send-btn:hover{background:var(--green-dark)}
-    .chat-send-btn:disabled{opacity:.5;cursor:not-allowed}
-    .chat-send-btn svg{width:16px;height:16px;stroke:white;fill:none;stroke-width:2}
-    .chat-wa-hint{font-size:11px;color:var(--text-3);padding:4px 20px 10px;background:var(--white);display:flex;align-items:center;gap:6px;border-top:1px solid var(--surface);flex-shrink:0}
+    .chat-quick-btn{width:40px;height:40px;border-radius:50%;background:var(--surface);border:1.5px solid var(--border);color:var(--text-2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .15s}
+    .chat-quick-btn:hover{border-color:var(--green);color:var(--green);background:var(--green-light)}
+    .chat-quick-btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2}
+    .chat-input-bar textarea{flex:1;resize:none;border:1.5px solid var(--border);border-radius:22px;padding:11px 16px;font-size:13.5px;color:var(--text);outline:none;transition:border-color .15s;min-height:44px;max-height:140px;line-height:1.5;background:var(--surface)}
+    .chat-input-bar textarea:focus{border-color:var(--green);background:white;box-shadow:0 0 0 3px rgba(15,110,86,0.08)}
+    .chat-send-btn{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--green-dark));color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;flex-shrink:0;border:none;box-shadow:0 2px 8px rgba(15,110,86,0.3)}
+    .chat-send-btn:hover{transform:translateY(-1px) scale(1.04);box-shadow:0 4px 12px rgba(15,110,86,0.4)}
+    .chat-send-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+    .chat-send-btn svg{width:17px;height:17px;stroke:white;fill:none;stroke-width:2}
+    .chat-wa-hint{font-size:11px;color:var(--text-3);padding:6px 20px 10px;background:var(--white);display:flex;align-items:center;gap:6px;border-top:1px solid var(--surface);flex-shrink:0}
+    .chat-wa-hint::before{content:'🔒';font-size:11px}
     .payments-table{width:100%;border-collapse:collapse}
     .payments-table th{text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface);white-space:nowrap}
     .payments-table td{padding:14px 16px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
@@ -907,7 +938,7 @@
           <div class="thread-list-head">
             <h3>Messages</h3>
             <div style="display:flex;align-items:center;gap:10px">
-              <span id="msg-thread-count" style="font-size:12px;color:var(--text-3)"></span>
+              <span id="msg-thread-count" style="font-size:12px;color:var(--text-3);font-weight:600"></span>
               <button class="btn btn-outline btn-sm" id="btn-mark-all-read" onclick="markAllThreadsRead()">Mark all read</button>
             </div>
           </div>
@@ -921,7 +952,9 @@
             <div class="chat-header" id="chat-header"></div>
             <div class="chat-messages" id="chat-messages"></div>
             <div class="chat-wa-hint" id="chat-wa-hint"></div>
+            <div class="chat-quickreply-bar" id="chat-quickreply-bar" style="display:none"></div>
             <div class="chat-input-bar">
+              <div class="chat-quick-btn" id="chat-quickreply-toggle" onclick="toggleQuickReplyBar()" title="Quick replies" role="button" tabindex="0" aria-label="Quick replies"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="13" y2="13"/></svg></div>
               <textarea id="chat-reply-input" placeholder="Type your reply…" rows="1" onkeydown="handleChatKeydown(event)" oninput="autoResizeTextarea(this)"></textarea>
               <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatReply()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
             </div>
@@ -943,6 +976,7 @@
           </div>
         </div>
       </div>
+      <div class="enquiries-stat-strip" id="enquiries-stat-strip"></div>
       <div class="enquiry-list" id="enquiry-list"><div style="text-align:center;padding:40px;color:var(--text-3);font-size:13px">Loading enquiries…</div></div>
     </div>
 
@@ -5759,7 +5793,33 @@ function openMessagesForListing(listingId){threadListingFilter=listingId;activeT
 function openConversationFromThread(key){threadListingFilter=null;showPage('messages');openThread(key);}
 function showThreadListMobile(){document.getElementById('messages-layout')?.classList.remove('mobile-chat-active');}
 function showChatMobile(){document.getElementById('messages-layout')?.classList.add('mobile-chat-active');}
+const QUICK_REPLIES=[
+  {label:'👋 Greeting',text:"Hi, thanks for reaching out! I'd be happy to help — is this property still what you're looking for?"},
+  {label:'✅ Still available',text:'Yes, this property is still available. Would you like to schedule a viewing?'},
+  {label:'📅 Book viewing',text:"Great — what day and time works best for you? I'll confirm and send you the exact location."},
+  {label:'💰 Price/terms',text:'The price and terms are as listed. Deposit and first month\'s rent are required to secure the unit.'},
+  {label:'📍 Location',text:"I'll send you the exact pin location once we've confirmed a viewing time."},
+  {label:'🙏 Follow-up',text:"Just following up — are you still interested in this property? Happy to answer any questions."},
+];
 
+function toggleQuickReplyBar(){
+  const bar=document.getElementById('chat-quickreply-bar');
+  if(!bar)return;
+  const show=bar.style.display==='none';
+  if(show){
+    bar.innerHTML=QUICK_REPLIES.map((q,i)=>`<div class="qr-chip" onclick="insertQuickReply(${i})">${escHtml(q.label)}</div>`).join('');
+  }
+  bar.style.display=show?'flex':'none';
+}
+function insertQuickReply(i){
+  const q=QUICK_REPLIES[i];if(!q)return;
+  const input=document.getElementById('chat-reply-input');
+  if(!input)return;
+  input.value=q.text;
+  autoResizeTextarea(input);
+  input.focus();
+  document.getElementById('chat-quickreply-bar').style.display='none';
+}
 function renderThreadList(){
   const q=(document.getElementById('thread-search-input')?.value||'').toLowerCase();
   let filtered=threads;
@@ -5804,6 +5864,7 @@ async function loadFullThreadHistory(t){
 function renderChatPane(t){
   document.getElementById('chat-empty').style.display='none';
   const av=document.getElementById('chat-active');av.style.display='flex';
+  const qrBar=document.getElementById('chat-quickreply-bar');if(qrBar)qrBar.style.display='none';
   const ini=t.buyer_name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()||'?';
   const waLink=t.buyer_phone?`<a href="https://wa.me/${formatWaPhone(t.buyer_phone)}" target="_blank" class="btn btn-sm" style="background:#25D366;color:white;text-decoration:none">WhatsApp</a>`:'';
   const listing=allListings.find(l=>l.id===t.listing_id);
@@ -5821,7 +5882,7 @@ function renderChatMessages(t){
   const sn=currentProfile?.full_name||currentUser?.email?.split('@')[0]||'You';
   const si=sn.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()||'S';
   const bi=t.buyer_name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()||'?';
-  mc.innerHTML=t.messages.map(m=>{const md=new Date(m.created_at).toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long'});const dd=md!==lastDate?`<div class="chat-date-divider"><span>${md}</span></div>`:'';lastDate=md;const isSeller=m.sender==='seller';const time=new Date(m.created_at).toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'});return `${dd}<div class="chat-bubble-row ${isSeller?'seller':''}"><div class="bubble-avatar ${isSeller?'seller-av':'buyer'}">${isSeller?si:bi}</div><div><div class="chat-bubble ${isSeller?'seller-b':'buyer'}">${escHtml(m.content||m.message||'')}</div><div class="bubble-time">${time}${isSeller?' · Sent':''}</div></div></div>`;}).join('');
+  mc.innerHTML=t.messages.map(m=>{const md=new Date(m.created_at).toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long'});const dd=md!==lastDate?`<div class="chat-date-divider"><span>${md}</span></div>`:'';lastDate=md;const isSeller=m.sender==='seller';const time=new Date(m.created_at).toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'});const tick=isSeller?'<svg class="tick" viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="1 13 6 18 15 7"/><polyline points="8 13 13 18 22 7"/></svg>':'';return `${dd}<div class="chat-bubble-row ${isSeller?'seller':''}"><div class="bubble-avatar ${isSeller?'seller-av':'buyer'}">${isSeller?si:bi}</div><div><div class="chat-bubble ${isSeller?'seller-b':'buyer'}">${escHtml(m.content||m.message||'')}</div><div class="bubble-time">${time}${tick}</div></div></div>`;}).join('');
 }
 
 async function sendChatReply(){
@@ -5916,14 +5977,65 @@ function buildEnquiryFeed(){
   return threads.map(t=>{const buyerMsgs=t.messages.filter(m=>m.sender==='buyer');if(!buyerMsgs.length)return null;const last=buyerMsgs[buyerMsgs.length-1];return{key:t.key,buyer_name:t.buyer_name,buyer_phone:t.buyer_phone,listing_title:t.listing_title,listing_area:t.listing_area,message:last.content||last.message||'',created_at:last.created_at,unread:buyerMsgs.some(m=>!m.read_at)};}).filter(Boolean).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
 }
 
+function computeEnquiryStats(){
+  const total=threads.filter(t=>t.messages.some(m=>m.sender==='buyer')).length;
+  const unread=threads.reduce((s,t)=>s+(t.unread_count||0),0);
+  const replied=threads.filter(t=>t.messages.some(m=>m.sender==='seller')).length;
+  const responseRate=total?Math.round((replied/total)*100):0;
+  let totalGapMs=0,gapCount=0;
+  threads.forEach(t=>{
+    const msgs=t.messages;
+    for(let i=0;i<msgs.length;i++){
+      if(msgs[i].sender==='buyer'){
+        const next=msgs.slice(i+1).find(m=>m.sender==='seller');
+        if(next){totalGapMs+=(new Date(next.created_at)-new Date(msgs[i].created_at));gapCount++;break;}
+      }
+    }
+  });
+  const avgMins=gapCount?Math.round(totalGapMs/gapCount/60000):null;
+  const avgLabel=avgMins===null?'—':avgMins<60?`${avgMins}m`:avgMins<1440?`${Math.round(avgMins/60)}h`:`${Math.round(avgMins/1440)}d`;
+  return{total,unread,responseRate,avgLabel};
+}
+function renderEnquiryStats(){
+  const el=document.getElementById('enquiries-stat-strip');
+  if(!el)return;
+  const s=computeEnquiryStats();
+  el.innerHTML=`
+    <div class="es-item"><div class="es-label">Total enquiries</div><div class="es-val">${s.total}</div></div>
+    <div class="es-item"><div class="es-label">Unread</div><div class="es-val" style="color:${s.unread>0?'var(--red)':'var(--text)'}">${s.unread}</div></div>
+    <div class="es-item"><div class="es-label">Response rate</div><div class="es-val" style="color:${s.responseRate>=70?'#065f46':s.responseRate>=40?'var(--amber)':'var(--red)'}">${s.responseRate}%</div></div>
+    <div class="es-item"><div class="es-label">Avg. response time</div><div class="es-val">${s.avgLabel}</div></div>`;
+}
+
 function renderEnquiries(){
+  renderEnquiryStats();
   let items=buildEnquiryFeed();
   if(enquiryFilter==='unread')items=items.filter(i=>i.unread);
   const q=(document.getElementById('enquiry-search')?.value||'').toLowerCase();
   if(q)items=items.filter(i=>(i.buyer_name||'').toLowerCase().includes(q)||(i.listing_title||'').toLowerCase().includes(q)||(i.listing_area||'').toLowerCase().includes(q));
   const el=document.getElementById('enquiry-list');
   if(!items.length){el.innerHTML=`<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/></svg><h3>${enquiryFilter==='unread'?'All caught up!':'No enquiries yet'}</h3><p>${enquiryFilter==='unread'?'No unread messages.':"When buyers message you, they'll appear here."}</p></div>`;return;}
-  el.innerHTML=items.map(i=>{const ini=(i.buyer_name||'B').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();return `<div class="enquiry-card${i.unread?' unread':''}"><div class="enquiry-avatar">${ini}</div><div class="enquiry-body"><div class="enquiry-head"><span class="enquiry-name">${escHtml(i.buyer_name||'Unknown buyer')}</span><span class="enquiry-phone">${i.buyer_phone||''}</span><span class="enquiry-time">${timeAgo(i.created_at)}</span></div><div class="enquiry-listing-ref">Re: ${escHtml(i.listing_title||'Listing')} · ${i.listing_area||''}</div><div class="enquiry-msg">${escHtml(i.message||'')}</div><div class="enquiry-actions"><button class="btn btn-primary btn-sm" onclick="openConversationFromThread('${i.key}')"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Open conversation</button>${i.buyer_phone?`<a class="btn btn-sm" style="background:#25D366;color:white" href="https://wa.me/${formatWaPhone(i.buyer_phone)}" target="_blank">WhatsApp</a>`:''}${i.unread?`<button class="btn btn-outline btn-sm" data-key="${i.key}" onclick="markEnqThreadRead(this.dataset.key)">Mark read</button>`:''}</div></div></div>`;}).join('');
+  el.innerHTML=items.map(i=>{
+    const ini=(i.buyer_name||'B').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+    return `<div class="enquiry-card${i.unread?' unread':''}">
+      <div class="enquiry-avatar">${ini}</div>
+      <div class="enquiry-body">
+        <div class="enquiry-head">
+          <span class="enquiry-name">${escHtml(i.buyer_name||'Unknown buyer')}</span>
+          ${i.unread?'<span class="enquiry-new-badge">New</span>':''}
+          <span class="enquiry-phone">${i.buyer_phone||''}</span>
+          <span class="enquiry-time">${timeAgo(i.created_at)}</span>
+        </div>
+        <div class="enquiry-listing-ref">${escHtml(i.listing_title||'Listing')}${i.listing_area?' · '+escHtml(i.listing_area):''}</div>
+        <div class="enquiry-msg">${escHtml(i.message||'')}</div>
+        <div class="enquiry-actions">
+          <button class="btn btn-primary btn-sm" onclick="openConversationFromThread('${i.key}')"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Open conversation</button>
+          ${i.buyer_phone?`<a class="btn btn-sm" style="background:#25D366;color:white" href="https://wa.me/${formatWaPhone(i.buyer_phone)}" target="_blank">WhatsApp</a>`:''}
+          ${i.unread?`<button class="btn btn-outline btn-sm" data-key="${i.key}" onclick="markEnqThreadRead(this.dataset.key)">Mark read</button>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function formatWaPhone(p){
