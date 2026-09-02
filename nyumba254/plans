@@ -221,7 +221,7 @@
     <div class="section-head">
       <div class="kicker">Airbnb &amp; short-stay hosts</div>
       <h2>BNB plans — one flat monthly fee</h2>
-      <p>Unlike a sale or a rental, your BNB is a business you run continuously — so instead of a one-time fee, it's a small monthly subscription that keeps your listing(s) live and bookable.</p>
+      <p>Unlike a sale or a rental, your BNB is a business you run continuously — so instead of a one-time fee, it's a small monthly subscription that keeps your listing(s) live and bookable. Running 6 or more? Elite includes unlimited BNB listings at no extra cost — see below.</p>
     </div>
     <div class="bnb-plans" id="bnb-plans-grid">
       <div class="bnb-card">
@@ -249,25 +249,13 @@
           <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Cancel any time</li>
         </ul>
       </div>
-      <div class="bnb-card">
-        <h3>BNB Unlimited</h3>
-        <p class="bnb-desc">For agencies and hosts managing 6+ units.</p>
-        <div class="bnb-price"><span id="bnb-unlimited-price">KES —</span><span>/month</span></div>
-        <div class="bnb-price-note">Unlimited active listings</div>
-        <a href="#" class="bnb-cta" onclick="startSubscriptionCheckout('bnb_unlimited');return false">Get Unlimited</a>
-        <ul class="bnb-feats">
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>No cap on how many BNB listings you run</li>
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Best value once you pass 6 units</li>
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Cancel any time</li>
-        </ul>
-      </div>
     </div>
     <div style="margin-top:18px;background:var(--gold-light);border:1px solid #f2d29b;border-radius:var(--radius-lg);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
       <div>
-        <div style="font-size:13.5px;font-weight:700;color:#8a5a12;margin-bottom:3px">Also want Elite's tools — AI listing assistant, storefront, ledger?</div>
-        <div style="font-size:12.5px;color:var(--text-2);line-height:1.6">BNB capacity and Elite's tools are sold separately, but hosts running BNB Unlimited get a discount on Elite: <strong id="bundle-price-inline">KES —</strong>/month for both, instead of paying for each on its own.</div>
+        <div style="font-size:13.5px;font-weight:700;color:#8a5a12;margin-bottom:3px">Running 6+ units, or want the AI tools too?</div>
+        <div style="font-size:12.5px;color:var(--text-2);line-height:1.6">Elite includes <strong>unlimited BNB listings</strong> — no separate BNB plan needed — plus the AI listing assistant, storefront, and rent ledger, all in one subscription.</div>
       </div>
-      <a href="#" class="bnb-cta" style="margin:0;white-space:nowrap;background:var(--gold);color:white;border-color:var(--gold)" onclick="startSubscriptionCheckout('elite_bnb_bundle');return false">Get the bundle</a>
+      <a href="#plans-grid" class="bnb-cta" style="margin:0;white-space:nowrap;background:var(--gold);color:white;border-color:var(--gold)">See Elite →</a>
     </div>
   </div>
 
@@ -331,7 +319,7 @@
         <a href="#" class="plan-cta" onclick="startSubscriptionCheckout('elite');return false">Get Elite</a>
         <ul class="feat-list">
           <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span>Everything in <strong>Premium</strong></span></li>
-          <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>Unlimited active rental listings</strong> — no per-listing fee while subscribed</span></li>
+          <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>Unlimited active listings</strong> — rental and BNB both, no per-listing fee or separate BNB plan while subscribed</span></li>
           <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>Rent Ledger</strong> — deposits, reminders, expenses, rent roll</span></li>
           <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>AI listing assistant</strong> — auto-write titles, descriptions, suggested price</span></li>
           <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>Dedicated relationship manager</strong> — direct phone/WhatsApp line</span></li>
@@ -344,7 +332,7 @@
   </div>
 
   <div class="compare-note">
-    <strong>Two things you can mix and match:</strong> the plans above (Free / Premium / Elite) control your <em>tools</em> — managed chat, badges, AI features. BNB plans control your <em>Airbnb capacity</em> — how many short-stay listings can be live at once. Buy either on its own, or both together — a landlord with a rental portfolio <em>and</em> a few Airbnbs can hold Elite and a BNB plan at the same time. <strong>Featuring a single listing</strong> is a separate one-time upgrade per listing. <strong>Free stays free</strong> — posting, chat, WhatsApp, and buyer-contact privacy are never gated.
+    <strong>Two things you can mix and match:</strong> the plans above (Free / Premium / Elite) control your <em>tools</em> — managed chat, badges, AI features. BNB plans control your <em>Airbnb capacity</em> for sellers who don't need Elite's tools yet. <strong>Elite already includes unlimited BNB listings</strong>, so there's no need to buy a BNB plan on top of it. <strong>Featuring a single listing</strong> is a separate one-time upgrade per listing. <strong>Free stays free</strong> — posting, chat, WhatsApp, and buyer-contact privacy are never gated.
   </div>
 
 </div>
@@ -396,8 +384,7 @@
     'standard_fee_per_unit',
     'premium_monthly_price','premium_yearly_price',
     'elite_monthly_price','elite_yearly_price',
-    'bnb_basic_price','bnb_bundle_price','bnb_unlimited_price',
-    'elite_bnb_bundle_price',
+    'bnb_basic_price','bnb_bundle_price',
   ];
   let SETTINGS = {};
 
@@ -434,9 +421,6 @@
   function renderBnbPrices(){
     document.getElementById('bnb-basic-price').textContent = fmtKES(SETTINGS.bnb_basic_price);
     document.getElementById('bnb-bundle-price').textContent = fmtKES(SETTINGS.bnb_bundle_price);
-    document.getElementById('bnb-unlimited-price').textContent = fmtKES(SETTINGS.bnb_unlimited_price);
-    const bundleEl = document.getElementById('bundle-price-inline');
-    if (bundleEl) bundleEl.textContent = fmtKES(SETTINGS.elite_bnb_bundle_price || 5000);
   }
 
   function applySellerPlanPrice(planClass, monthlyKey, yearlyKey){
@@ -512,11 +496,10 @@
   /* plan is one of: 'premium' | 'elite' | 'bnb_basic' | 'bnb_bundle' | 'bnb_unlimited' */
   const PLAN_LABELS = {
     premium: 'Premium', elite: 'Elite',
-    bnb_basic: 'BNB Basic', bnb_bundle: 'BNB Bundle', bnb_unlimited: 'BNB Unlimited',
-    elite_bnb_bundle: 'Elite + BNB Unlimited bundle',
+    bnb_basic: 'BNB Basic', bnb_bundle: 'BNB Bundle',
   };
-  const BNB_PLANS = new Set(['bnb_basic','bnb_bundle','bnb_unlimited']);
-  const FLAT_MONTHLY_PLANS = new Set(['bnb_basic','bnb_bundle','bnb_unlimited','elite_bnb_bundle']);
+  const BNB_PLANS = new Set(['bnb_basic','bnb_bundle']);
+  const FLAT_MONTHLY_PLANS = new Set(['bnb_basic','bnb_bundle']);
 
   async function startSubscriptionCheckout(plan) {
     const { data: { session } } = await db.auth.getSession();
@@ -525,9 +508,9 @@
     checkoutPlan = plan;
 
     if (FLAT_MONTHLY_PLANS.has(plan)) {
-      // BNB plans and the Elite+BNB bundle are flat monthly fees — no yearly toggle, no percentage math.
+      // BNB plans are a flat monthly fee — no yearly toggle, no percentage math.
       checkoutTier = 'monthly';
-      checkoutAmount = plan === 'elite_bnb_bundle' ? (SETTINGS.elite_bnb_bundle_price || 5000) : (SETTINGS[`${plan}_price`] || 0);
+      checkoutAmount = SETTINGS[`${plan}_price`] || 0;
     } else {
       checkoutTier = yearly ? 'yearly' : 'monthly';
       checkoutAmount = SETTINGS[`${plan}_${checkoutTier}_price`] || 0;
@@ -556,7 +539,7 @@
     // payment 'type' tells admin.confirmPayment() which profile fields to
     // activate: premium_subscription / elite_subscription toggle
     // subscription_tier+plan; bnb_subscription toggles bnb_plan+bnb_expires_at.
-    const paymentType = checkoutPlan === 'elite_bnb_bundle' ? 'elite_bnb_bundle' : (BNB_PLANS.has(checkoutPlan) ? 'bnb_subscription' : `${checkoutPlan}_subscription`);
+    const paymentType = BNB_PLANS.has(checkoutPlan) ? 'bnb_subscription' : `${checkoutPlan}_subscription`;
 
     const { error } = await db.from('payments').insert({
       seller_id: currentUser.id,
