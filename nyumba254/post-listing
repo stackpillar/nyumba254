@@ -857,26 +857,32 @@ async function loadPlatformSettings() {
   const { data } = await db.from('platform_settings').select('key,value').in('key', Object.keys(PLATFORM_SETTINGS));
   (data||[]).forEach(r => { PLATFORM_SETTINGS[r.key] = Number(r.value); });
 }
-let sellerPlanCategory = null; // 'rental' | 'bnb' | null
+let sellerCoverage = { rental:false, bnb:false }; // replaces sellerPlanCategory
 async function checkFirstListing() {
   if (!currentUser) { isFirstListing = false; return; }
   const { count } = await db.from('listings').select('*', { count:'exact', head:true }).eq('seller_id', currentUser.id);
   isFirstListing = (count || 0) === 0;
-  const { data: prof } = await db.from('profiles').select('plan_category,bnb_expires_at,subscription_expires_at').eq('id', currentUser.id).single();
-  const bnbActive = prof?.plan_category === 'bnb' && prof?.bnb_expires_at && new Date(prof.bnb_expires_at) > new Date();
-  const rentalActive = prof?.plan_category === 'rental' && prof?.subscription_expires_at && new Date(prof.subscription_expires_at) > new Date();
-  sellerPlanCategory = bnbActive ? 'bnb' : rentalActive ? 'rental' : null;
+  const { data: prof } = await db.from('profiles').select('has_bnb_capacity,has_rental_capacity,bnb_expires_at,subscription_expires_at,subscription_plan,subscription_tier').eq('id', currentUser.id).single();
+  const eliteActive = !!prof?.subscription_tier && prof.subscription_tier !== 'none' && prof?.subscription_plan === 'elite'
+    && (!prof?.subscription_expires_at || new Date(prof.subscription_expires_at) > new Date());
+  const bnbActive = !!prof?.has_bnb_capacity && prof?.bnb_expires_at && new Date(prof.bnb_expires_at) > new Date();
+  const rentalActive = !!prof?.has_rental_capacity && !!prof?.subscription_tier && prof.subscription_tier !== 'none'
+    && (!prof?.subscription_expires_at || new Date(prof.subscription_expires_at) > new Date());
+  // Elite covers unlimited BNB too, on top of rental capacity — a listing in
+  // either category is "covered" if the matching flag OR Elite is active.
+  sellerCoverage = { rental: rentalActive || eliteActive, bnb: bnbActive || eliteActive };
 }
 function categoryGroupOf(cat) { return cat === 'airbnb' ? 'bnb' : 'rental'; }
 function checkPlanCategoryMismatch() {
   const el = document.getElementById('plan-mismatch-banner');
   if (!el) return true;
-  if (!sellerPlanCategory) { el.style.display = 'none'; return true; }
   const needed = categoryGroupOf(selectedCat);
-  if (needed === sellerPlanCategory) { el.style.display = 'none'; return true; }
+  if (sellerCoverage[needed]) { el.style.display = 'none'; return true; }
+  if (!sellerCoverage.rental && !sellerCoverage.bnb) { el.style.display = 'none'; return true; }
   el.style.display = 'block';
+  const haveLabel = sellerCoverage.bnb && sellerCoverage.rental ? 'sale, rental, and Airbnb/BNB listings' : sellerCoverage.bnb ? 'Airbnb/BNB listings' : 'sale & rental listings';
   el.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;font-size:13px;color:var(--text-2);line-height:1.6">
-    ℹ️ <strong>Not covered by your plan:</strong> your active subscription is for ${sellerPlanCategory==='bnb'?'Airbnb/BNB listings':'sale & rental listings'}, so this ${sellerPlanCategory==='bnb'?'sale/rental':'Airbnb/holiday'} listing won't be free under it. You can still post it — you'll just pay for this one separately, same as a seller with no subscription. You can also switch your plan category from your dashboard's Settings if you'd rather have it covered.
+    ℹ️ <strong>Not covered by your plan:</strong> your active subscription covers ${haveLabel}, so this ${needed==='bnb'?'Airbnb/holiday':'sale/rental'} listing won't be free under it. You can still post it — you'll just pay for this one separately, same as a seller with no subscription. Elite covers unlimited BNB listings too, if you'd rather upgrade than pay per listing.
   </div>`;
   return true;
 }
