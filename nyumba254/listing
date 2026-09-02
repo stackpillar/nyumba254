@@ -1791,11 +1791,25 @@ function escAttr(str) { if (!str) return ''; return String(str).replace(/"/g,'&q
 
 function nkRenderVideoEmbed(url) {
   if (!url) return '';
+
+  // YouTube — lite-embed: thumbnail + play button first, real iframe loads only on click
   const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{6,})/i);
-  if (yt) return `<div style="position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden"><iframe src="https://www.youtube.com/embed/${yt[1]}" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`;
+  if (yt) return nkLiteEmbed(`https://img.youtube.com/vi/${yt[1]}/hqdefault.jpg`, `https://www.youtube.com/embed/${yt[1]}?autoplay=1`, 'YouTube');
+
+  // Vimeo — same lite pattern, generic thumbnail (no public thumbnail API without a key)
   const vimeo = url.match(/vimeo\.com\/(\d+)/i);
-  if (vimeo) return `<div style="position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden"><iframe src="https://player.vimeo.com/video/${vimeo[1]}" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`;
+  if (vimeo) return nkLiteEmbed(null, `https://player.vimeo.com/video/${vimeo[1]}?autoplay=1`, 'Vimeo');
+
+  // Facebook video — public embed plugin, no login/SDK required
+  if (/facebook\.com\/.*\/videos\/|fb\.watch\//i.test(url)) {
+    const src = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&autoplay=false`;
+    return `<div style="position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;background:#000"><iframe src="${src}" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="autoplay; encrypted-media; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe></div>`;
+  }
+
+  // Direct file link — plays natively
   if (/\.(mp4|webm|mov)(\?.*)?$/i.test(url)) return `<video controls preload="metadata" style="width:100%;border-radius:12px;background:#000"><source src="${escAttr(url)}"></video>`;
+
+  // TikTok / Instagram — no plain-iframe embed available, so click out to the app/site
   const isTikTok = /tiktok\.com/i.test(url);
   const isInsta = /instagram\.com/i.test(url);
   const label = isTikTok ? 'Watch on TikTok' : isInsta ? 'Watch on Instagram' : 'Watch video';
@@ -1804,6 +1818,24 @@ function nkRenderVideoEmbed(url) {
     <span><strong style="display:block;font-size:14px">${label}</strong><span style="font-size:12px;color:var(--text-3)">Opens in a new tab</span></span>
   </a>`;
 }
+
+// Renders a thumbnail + centered play button. On click, swaps itself for the
+// real iframe (autoplay=1 in embedSrc) so the heavy player only loads when
+// the buyer actually wants to watch — faster initial page load.
+function nkLiteEmbed(thumbUrl, embedSrc, sourceLabel) {
+  const wrapId = 'nk-video-lite-' + Math.random().toString(36).slice(2, 9);
+  const bg = thumbUrl ? `background-image:url('${escAttr(thumbUrl)}');background-size:cover;background-position:center;` : `background:linear-gradient(135deg,#111,#222);`;
+  setTimeout(() => {
+    const el = document.getElementById(wrapId);
+    if (!el) return;
+    el.onclick = () => {
+      el.innerHTML = `<iframe src="${escAttr(embedSrc)}" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+      el.style.cursor = 'default';
+    };
+  }, 0);
+  return `<div id="${wrapId}" style="position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;cursor:pointer;${bg}">
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.25)">
+      <span style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.95);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.35);transition:transform .15s" onmouseover="this.style.transform='scale(1.08)'"
 
 function nkGetDeviceId() {
   let sid = nkLSGet('nk_sid');
