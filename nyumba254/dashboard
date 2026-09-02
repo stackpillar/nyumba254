@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>window.__scwEarlyErrors=[];window.addEventListener('error',function(e){window.__scwEarlyErrors.push((e&&e.message)?e.message:'Unknown error at '+(e&&e.filename||'?')+':'+(e&&e.lineno||'?'));});
-  (function(){try{var t=localStorage.getItem('ny_theme');if(t&&t!=='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
-  </script>
+  <script>window.__scwEarlyErrors=[];window.addEventListener('error',function(e){window.__scwEarlyErrors.push((e&&e.message)?e.message:'Unknown error at '+(e&&e.filename||'?')+':'+(e&&e.lineno||'?'));});</script>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard — Nyumba254</title>
@@ -24,36 +22,8 @@
       --radius:10px;--radius-lg:16px;--shadow:0 1px 3px rgba(0,0,0,0.07),0 4px 12px rgba(0,0,0,0.05);
       --shadow-lg:0 8px 32px rgba(0,0,0,0.12);
     }
-        [data-theme="dark"] {
-      --green:#22c58f;--green-light:#0f2a22;--green-mid:#2ee6a8;--green-dark:#0a4636;
-      --gold:#e0a638;--gold-light:#2b2214;--text:#eef1ee;--text-2:#c3c8c3;--text-3:#8b928c;
-      --border:#2c332f;--surface:#121613;--white:#191f1b;--red:#ef6455;--red-light:#3a1a17;
-      --amber:#f2b23c;--amber-light:#332911;--purple:#a78bfa;
-      --shadow:0 1px 3px rgba(0,0,0,0.35),0 4px 12px rgba(0,0,0,0.25);
-      --shadow-lg:0 8px 32px rgba(0,0,0,0.5);
-    }
-    [data-theme="sandstone"] {
-      --green:#8a5a2c;--green-light:#f4e9da;--green-mid:#b17a3f;--green-dark:#5f3c17;
-      --gold:#b8860b;--gold-light:#faf1de;--text:#2b241c;--text-2:#5c5142;--text-3:#948a76;
-      --border:#e6d9c2;--surface:#faf5ea;--white:#fffdf8;--red:#b5432f;--red-light:#f7e3dc;
-      --amber:#c2790f;--amber-light:#f7ecd6;--purple:#7c5cb0;
-      --shadow:0 1px 3px rgba(90,60,20,0.09),0 4px 12px rgba(90,60,20,0.07);
-      --shadow-lg:0 8px 32px rgba(90,60,20,0.16);
-    }
-    .theme-switch{position:relative}
-    .theme-switch-btn{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);background:var(--white);color:var(--text-2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
-    .theme-switch-btn:hover{border-color:var(--green);color:var(--green)}
-    .theme-menu{display:none;position:absolute;top:44px;right:0;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:8px;min-width:170px;z-index:200}
-    .theme-menu.open{display:block}
-    .theme-option{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border-radius:8px;font-size:13px;font-weight:500;color:var(--text-2);cursor:pointer;text-align:left}
-    .theme-option:hover{background:var(--surface)}
-    .theme-option.active{background:var(--green-light);color:var(--green-dark);font-weight:700}
-    .theme-swatch{width:18px;height:18px;border-radius:50%;flex-shrink:0;border:1.5px solid rgba(0,0,0,0.08)}
-    .swatch-light{background:linear-gradient(135deg,#0F6E56,#E1F5EE)}
-    .swatch-sandstone{background:linear-gradient(135deg,#8a5a2c,#faf5ea)}
-    .swatch-dark{background:linear-gradient(135deg,#22c58f,#121613)}
     html{height:100%}
-    body{font-family:'Inter',sans-serif;color:var(--text);background:var(--surface);font-size:14px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+    body{font-family:'Inter',sans-serif;color:var(--text);background:var(--surface);font-size:14px;line-height:1.6;min-height:100vh}
     a{text-decoration:none;color:inherit}img{display:block;max-width:100%}
     button{font-family:inherit;cursor:pointer;border:none;background:none}
     input,textarea,select{font-family:inherit}
@@ -121,14 +91,14 @@
     .status-expired{background:#f3f4f6;color:#6b7280}
     .status-disabled{background:var(--red-light);color:var(--red)}
     .status-occupied{background:#EDE9FE;color:#5b21b6}
-    .disabled-note{font-size:11px;color:var(--red);background:var(--red-light);border-radius:6px;padding:6px 9px;margin-top:6px;line-height:1.5;max-width:100%}
-    .occupied-note{font-size:11px;color:#5b21b6;background:#EDE9FE;border-radius:6px;padding:6px 9px;margin-top:6px;line-height:1.5;max-width:100%}
+    .disabled-note{font-size:11px;color:var(--red);background:var(--red-light);border-radius:6px;padding:6px 9px;margin-top:6px;line-height:1.5;max-width:300px}
+    .occupied-note{font-size:11px;color:#5b21b6;background:#EDE9FE;border-radius:6px;padding:6px 9px;margin-top:6px;line-height:1.5;max-width:300px}
     .trial-note{font-size:11px;color:var(--blue,#185FA5);background:#E6F1FB;border-radius:6px;padding:6px 9px;margin-top:6px;line-height:1.5;max-width:320px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
     .trial-note .upgrade-link{color:var(--green-dark);font-weight:700;text-decoration:underline;cursor:pointer}
     .trial-note.urgent{color:var(--red);background:var(--red-light)}
     .multiunit-note{font-size:11px;color:#5B3E96;background:#EDE7F6;border-radius:6px;padding:6px 9px;margin-top:6px;line-height:1.5;max-width:320px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
     .multiunit-note .manage-link{color:#5B3E96;font-weight:700;text-decoration:underline;cursor:pointer}
-    .icon-btn{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;border:1px solid var(--border);background:white;color:var(--text-2);flex-shrink:0}
+    .icon-btn{width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;border:1px solid var(--border);background:white;color:var(--text-2)}
     .icon-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
     .icon-btn:hover{border-color:var(--green);color:var(--green);background:var(--green-light)}
     .icon-btn.danger:hover{border-color:var(--red);color:var(--red);background:var(--red-light)}
@@ -220,14 +190,7 @@
     .filter-search{margin-left:auto;display:flex;align-items:center;border:1.5px solid var(--border);border-radius:var(--radius);background:white;overflow:hidden}
     .filter-search svg{width:14px;height:14px;stroke:var(--text-3);fill:none;stroke-width:2;margin:0 10px;flex-shrink:0}
     .filter-search input{border:none;outline:none;font-size:13px;padding:7px 10px 7px 0;width:180px;color:var(--text);background:transparent}
-    .listings-table{width:100%;border-collapse:collapse;table-layout:fixed}
-    .listings-table th:nth-child(1),.listings-table td:nth-child(1){width:32%}
-    .listings-table th:nth-child(2),.listings-table td:nth-child(2){width:14%}
-    .listings-table th:nth-child(3),.listings-table td:nth-child(3){width:10%}
-    .listings-table th:nth-child(4),.listings-table td:nth-child(4){width:9%}
-    .listings-table th:nth-child(5),.listings-table td:nth-child(5){width:7%}
-    .listings-table th:nth-child(6),.listings-table td:nth-child(6){width:10%}
-    .listings-table th:nth-child(7),.listings-table td:nth-child(7){width:18%}
+    .listings-table{width:100%;border-collapse:collapse}
     .listings-table th{text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface);white-space:nowrap}
     .listings-table td{padding:14px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
     .listings-table tr:last-child td{border-bottom:none}
@@ -239,123 +202,81 @@
     .listing-thumb img{width:100%;height:100%;object-fit:cover}
     .listing-thumb svg{width:18px;height:18px;stroke:var(--text-3);fill:none;stroke-width:1.5}
     .listing-name-cell{display:flex;align-items:center;gap:12px}
-    .listing-name-cell > div{min-width:0;flex:1}
-    .listing-title-text{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .listing-title-text{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
     .listing-area-text{font-size:11px;color:var(--text-3)}
-    .listing-price-text{font-size:13px;font-weight:700;color:var(--green-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+    .listing-price-text{font-size:13px;font-weight:700;color:var(--green-dark)}
     .listing-price-sub{font-size:11px;color:var(--text-3)}
-    .actions-cell{display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:flex-start}
+    .actions-cell{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
     .empty-state{text-align:center;padding:60px 20px;color:var(--text-3)}
     .empty-state svg{width:48px;height:48px;stroke:var(--border);fill:none;stroke-width:1.2;margin:0 auto 16px}
     .empty-state h3{font-size:16px;font-weight:600;color:var(--text-2);margin-bottom:6px}
     .empty-state p{font-size:13px;margin-bottom:20px}
-  /* ===== ENQUIRIES — professional redesign ===== */
-    .enquiries-stat-strip{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px}
-    .enquiries-stat-strip .es-item{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px 18px;min-width:130px}
-    .enquiries-stat-strip .es-label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);margin-bottom:4px}
-    .enquiries-stat-strip .es-val{font-size:19px;font-weight:800;color:var(--text)}
-
-    .enquiry-list{display:flex;flex-direction:column;gap:10px}
-    .enquiry-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:18px 20px;display:flex;gap:16px;align-items:flex-start;transition:box-shadow .18s ease,transform .18s ease;position:relative}
-    .enquiry-card:hover{box-shadow:0 6px 20px rgba(0,0,0,0.06);transform:translateY(-1px)}
-    .enquiry-card.unread{border-left:3px solid var(--green);background:linear-gradient(90deg,var(--green-light) 0%,var(--white) 6%)}
-    .enquiry-avatar{width:44px;height:44px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--green-mid),var(--green-dark));color:white;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;box-shadow:0 2px 6px rgba(15,110,86,0.22)}
+    .enquiry-list{display:flex;flex-direction:column;gap:12px}
+    .enquiry-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;display:flex;gap:16px;align-items:flex-start;transition:box-shadow .15s}
+    .enquiry-card:hover{box-shadow:var(--shadow)}
+    .enquiry-card.unread{border-left:3px solid var(--green)}
+    .enquiry-avatar{width:40px;height:40px;border-radius:50%;flex-shrink:0;background:var(--green-light);color:var(--green-dark);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
     .enquiry-body{flex:1;min-width:0}
-    .enquiry-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px}
-    .enquiry-name{font-size:14.5px;font-weight:700;color:var(--text);letter-spacing:-.01em}
-    .enquiry-phone{font-size:11.5px;color:var(--text-3);font-weight:500}
-    .enquiry-new-badge{font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;background:var(--green);color:white;padding:2px 8px;border-radius:20px}
-    .enquiry-time{font-size:11px;color:var(--text-3);margin-left:auto;white-space:nowrap;font-weight:500}
-    .enquiry-listing-ref{font-size:11.5px;font-weight:700;color:var(--green-dark);margin-bottom:8px;display:flex;align-items:center;gap:5px}
-    .enquiry-listing-ref::before{content:'🏠'}
-    .enquiry-msg{font-size:13.5px;color:var(--text-2);line-height:1.65;background:var(--surface);border-radius:10px;padding:10px 13px;border:1px solid var(--border)}
-    .enquiry-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
-    .enquiry-actions .btn{font-weight:600}
-   /* ===== MESSAGES — professional redesign ===== */
-    .messages-layout{display:grid;grid-template-columns:340px 1fr;height:calc(100vh - var(--topbar-h));overflow:hidden;background:var(--surface)}
-
+    .enquiry-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+    .enquiry-name{font-size:14px;font-weight:600;color:var(--text)}
+    .enquiry-phone{font-size:12px;color:var(--text-3)}
+    .enquiry-time{font-size:11px;color:var(--text-3);margin-left:auto;white-space:nowrap}
+    .enquiry-listing-ref{font-size:11px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+    .enquiry-msg{font-size:13px;color:var(--text-2);line-height:1.6}
+    .enquiry-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+    .messages-layout{display:grid;grid-template-columns:320px 1fr;height:calc(100vh - var(--topbar-h));overflow:hidden}
     .thread-list{border-right:1px solid var(--border);background:var(--white);overflow-y:auto;display:flex;flex-direction:column}
-    .thread-list-head{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:linear-gradient(180deg,#fff,var(--surface))}
-    .thread-list-head h3{font-size:16px;font-weight:700;color:var(--text);letter-spacing:-.01em}
-    .thread-list-head .btn-outline{font-weight:600}
-
-    .thread-search{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
-    .thread-search input{width:100%;padding:9px 14px 9px 34px;border:1.5px solid var(--border);border-radius:20px;font-size:13px;outline:none;background:var(--surface);color:var(--text);transition:all .18s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888780' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:11px center;background-size:14px}
-    .thread-search input:focus{border-color:var(--green);background-color:white;box-shadow:0 0 0 3px rgba(15,110,86,0.08)}
-
+    .thread-list-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+    .thread-list-head h3{font-size:15px;font-weight:600;color:var(--text)}
+    .thread-search{padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+    .thread-search input{width:100%;padding:7px 12px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;outline:none;background:var(--surface);color:var(--text);transition:border-color .15s}
+    .thread-search input:focus{border-color:var(--green);background:white}
     .thread-item{display:flex;gap:12px;padding:14px 18px;cursor:pointer;transition:background .15s;border-bottom:1px solid var(--border);position:relative}
     .thread-item:hover{background:var(--surface)}
-    .thread-item.active{background:var(--green-light);box-shadow:inset 3px 0 0 var(--green)}
+    .thread-item.active{background:var(--green-light)}
     .thread-item.unread .thread-preview{font-weight:600;color:var(--text)}
-    .thread-item.unread .thread-name{font-weight:800}
-    .thread-item.unread::after{content:'';position:absolute;top:16px;right:16px;width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px var(--green-light)}
-
-    .thread-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--green-mid),var(--green-dark));color:white;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(15,110,86,0.25)}
+    .thread-item.unread::after{content:'';position:absolute;top:50%;right:16px;transform:translateY(-50%);width:8px;height:8px;border-radius:50%;background:var(--green)}
+    .thread-avatar{width:40px;height:40px;border-radius:50%;background:var(--green-light);color:var(--green-dark);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
     .thread-meta{flex:1;min-width:0}
-    .thread-name{font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .thread-listing-ref{font-size:11px;color:var(--green-dark);font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px}
-    .thread-listing-ref::before{content:'🏠';font-size:10px}
-    .thread-preview{font-size:12.5px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:20px}
-    .thread-time{font-size:10.5px;color:var(--text-3);font-weight:500;white-space:nowrap;position:absolute;top:16px;right:16px}
-
-    .chat-pane{display:flex;flex-direction:column;background:#f2f3f0;overflow:hidden;background-image:radial-gradient(rgba(0,0,0,0.015) 1px,transparent 1px);background-size:18px 18px}
+    .thread-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .thread-listing-ref{font-size:11px;color:var(--green);font-weight:500;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .thread-preview{font-size:12px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:20px}
+    .thread-time{font-size:10px;color:var(--text-3);white-space:nowrap;position:absolute;top:14px;right:16px}
+    .chat-pane{display:flex;flex-direction:column;background:var(--surface);overflow:hidden}
     .chat-pane-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;color:var(--text-3)}
-    .chat-pane-empty svg{width:56px;height:56px;stroke:var(--border);fill:none;stroke-width:1.1;margin-bottom:18px}
-    .chat-pane-empty p{font-size:14.5px;font-weight:500}
-
-    .chat-header{background:var(--white);border-bottom:1px solid var(--border);padding:14px 22px;display:flex;align-items:center;gap:14px;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,0.03)}
-    .chat-header-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--green-mid),var(--green-dark));color:white;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(15,110,86,0.25)}
-    .chat-header-name{font-size:14.5px;font-weight:700;color:var(--text);letter-spacing:-.01em}
-    .chat-header-sub{font-size:11.5px;color:var(--text-3);display:flex;align-items:center;gap:6px}
+    .chat-pane-empty svg{width:48px;height:48px;stroke:var(--border);fill:none;stroke-width:1.2;margin-bottom:16px}
+    .chat-pane-empty p{font-size:14px}
+    .chat-header{background:var(--white);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:14px;flex-shrink:0}
+    .chat-header-avatar{width:36px;height:36px;border-radius:50%;background:var(--green-light);color:var(--green-dark);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .chat-header-name{font-size:14px;font-weight:600;color:var(--text)}
+    .chat-header-sub{font-size:12px;color:var(--text-3)}
     .chat-header-actions{margin-left:auto;display:flex;gap:8px}
     .mobile-back-btn{display:none;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:white;color:var(--text-2);flex-shrink:0;cursor:pointer}
     .mobile-back-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
-
-    #chat-active{position:relative}
-    .chat-messages{flex:1;overflow-y:auto;padding:22px 26px;display:flex;flex-direction:column;gap:4px}
-    .chat-messages::-webkit-scrollbar{width:5px}
-    .chat-messages::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.12);border-radius:3px}
-
-    .chat-bubble-row{display:flex;gap:8px;align-items:flex-end;margin:2px 0;min-width:0}
+    .chat-messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:10px}
+    .chat-messages::-webkit-scrollbar{width:4px}
+    .chat-messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+    .chat-bubble-row{display:flex;gap:8px;align-items:flex-end}
     .chat-bubble-row.seller{flex-direction:row-reverse}
-    .chat-bubble-row.grouped{margin-top:-2px}
-    .chat-bubble-row.grouped .bubble-avatar{visibility:hidden}
-    .chat-bubble-row.group-start{margin-top:14px}
-    .bubble-avatar{width:26px;height:26px;border-radius:50%;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-bottom:2px}
-    .bubble-avatar.buyer{background:var(--white);color:var(--green-dark);border:1.5px solid var(--green-light)}
-    .bubble-avatar.seller-av{background:linear-gradient(135deg,var(--green-mid),var(--green-dark));color:white}
-    .bubble-wrap{display:flex;flex-direction:column;max-width:66%;min-width:0}
-    .chat-bubble-row.seller .bubble-wrap{align-items:flex-end}
-    .chat-bubble-row:not(.seller) .bubble-wrap{align-items:flex-start}
-    .chat-bubble{width:fit-content;max-width:100%;padding:10px 14px;border-radius:18px;font-size:13.5px;line-height:1.55;position:relative;box-shadow:0 1px 2px rgba(0,0,0,0.06);word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap;hyphens:none}
-    .chat-bubble.buyer{background:var(--white);color:var(--text);border-bottom-left-radius:4px}
-    .chat-bubble.seller-b{background:linear-gradient(135deg,var(--green),var(--green-dark));color:white;border-bottom-right-radius:4px}
-    .bubble-time{font-size:10px;margin-top:5px;color:var(--text-3);display:flex;align-items:center;gap:4px}
-    .chat-bubble-row.seller .bubble-time{text-align:right;justify-content:flex-end}
-    .bubble-time .tick{width:13px;height:13px;stroke:var(--text-3);transition:stroke .15s}
-    .bubble-time .tick.read{stroke:#4FC3F7}
-    .chat-bubble{cursor:pointer}
-    .chat-bubble:hover{filter:brightness(0.97)}
-
-    .chat-date-divider{text-align:center;font-size:11px;color:var(--text-3);font-weight:600;padding:14px 0 8px;position:relative}
-    .chat-date-divider span{background:#e9ebe6;padding:4px 12px;border-radius:20px;position:relative;z-index:1}
-
-    .chat-quickreply-bar{background:var(--white);border-top:1px solid var(--border);padding:8px 20px;display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0}
-    .qr-chip{font-size:11.5px;font-weight:600;padding:6px 12px;border-radius:20px;border:1.5px solid var(--green-light);background:var(--green-light);color:var(--green-dark);cursor:pointer;white-space:nowrap;transition:all .15s}
-    .qr-chip:hover{background:var(--green);color:white;border-color:var(--green)}
-
+    .bubble-avatar{width:28px;height:28px;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-bottom:2px}
+    .bubble-avatar.buyer{background:var(--green-light);color:var(--green-dark)}
+    .bubble-avatar.seller-av{background:var(--green);color:white}
+    .chat-bubble{max-width:68%;padding:10px 14px;border-radius:18px;font-size:13px;line-height:1.55;position:relative}
+    .chat-bubble.buyer{background:var(--white);color:var(--text);border:1px solid var(--border);border-bottom-left-radius:4px}
+    .chat-bubble.seller-b{background:var(--green);color:white;border-bottom-right-radius:4px}
+    .bubble-time{font-size:10px;margin-top:4px;color:var(--text-3)}
+    .chat-bubble-row.seller .bubble-time{text-align:right}
+    .chat-date-divider{text-align:center;font-size:11px;color:var(--text-3);padding:6px 0;position:relative}
+    .chat-date-divider::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:var(--border)}
+    .chat-date-divider span{background:var(--surface);padding:0 12px;position:relative}
     .chat-input-bar{background:var(--white);border-top:1px solid var(--border);padding:14px 20px;display:flex;gap:10px;align-items:flex-end;flex-shrink:0}
-    .chat-quick-btn{width:40px;height:40px;border-radius:50%;background:var(--surface);border:1.5px solid var(--border);color:var(--text-2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .15s}
-    .chat-quick-btn:hover{border-color:var(--green);color:var(--green);background:var(--green-light)}
-    .chat-quick-btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2}
-    .chat-input-bar textarea{flex:1;resize:none;border:1.5px solid var(--border);border-radius:22px;padding:11px 16px;font-size:13.5px;color:var(--text);outline:none;transition:border-color .15s;min-height:44px;max-height:140px;line-height:1.5;background:var(--surface)}
-    .chat-input-bar textarea:focus{border-color:var(--green);background:white;box-shadow:0 0 0 3px rgba(15,110,86,0.08)}
-    .chat-send-btn{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--green-dark));color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;flex-shrink:0;border:none;box-shadow:0 2px 8px rgba(15,110,86,0.3)}
-    .chat-send-btn:hover{transform:translateY(-1px) scale(1.04);box-shadow:0 4px 12px rgba(15,110,86,0.4)}
-    .chat-send-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
-    .chat-send-btn svg{width:17px;height:17px;stroke:white;fill:none;stroke-width:2}
-    .chat-wa-hint{font-size:11px;color:var(--text-3);padding:6px 20px 10px;background:var(--white);display:flex;align-items:center;gap:6px;border-top:1px solid var(--surface);flex-shrink:0}
-    .chat-wa-hint::before{content:'🔒';font-size:11px}
+    .chat-input-bar textarea{flex:1;resize:none;border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:10px 14px;font-size:13px;color:var(--text);outline:none;transition:border-color .15s;min-height:42px;max-height:140px;line-height:1.5;background:var(--surface)}
+    .chat-input-bar textarea:focus{border-color:var(--green);background:white}
+    .chat-send-btn{width:40px;height:40px;border-radius:50%;background:var(--green);color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;flex-shrink:0;border:none}
+    .chat-send-btn:hover{background:var(--green-dark)}
+    .chat-send-btn:disabled{opacity:.5;cursor:not-allowed}
+    .chat-send-btn svg{width:16px;height:16px;stroke:white;fill:none;stroke-width:2}
+    .chat-wa-hint{font-size:11px;color:var(--text-3);padding:4px 20px 10px;background:var(--white);display:flex;align-items:center;gap:6px;border-top:1px solid var(--surface);flex-shrink:0}
     .payments-table{width:100%;border-collapse:collapse}
     .payments-table th{text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface);white-space:nowrap}
     .payments-table td{padding:14px 16px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
@@ -700,76 +621,9 @@
     @media(max-width:900px){
       .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.sidebar-overlay.open{display:block}
       .topbar{left:0}.main{margin-left:0}.hamburger{display:flex}
-      .listings-table thead{display:none}
-      .listings-table{table-layout:auto;border-collapse:separate;border-spacing:0}
-      .listings-table th,.listings-table td{width:auto !important}
-
-      .listings-table tr{
-        display:block;
-        background:var(--white);
-        border:1px solid var(--border);
-        border-radius:var(--radius-lg);
-        margin-bottom:14px;
-        overflow:hidden;
-        box-shadow:0 1px 4px rgba(0,0,0,0.04);
-      }
-      .listings-table td{display:block;width:100%;padding:0;border:none;vertical-align:top}
-
-      /* Property header: thumb + title + notes */
-      .listings-table td:nth-child(1){padding:14px 16px 12px}
-      .listings-table td:nth-child(1) .listing-price-text{word-break:break-word}
-
-      /* Price / Status / Messages / Views / Posted → one labeled row each */
-      .listings-table td:nth-child(2),
-      .listings-table td:nth-child(3),
-      .listings-table td:nth-child(4),
-      .listings-table td:nth-child(5),
-      .listings-table td:nth-child(6){
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        gap:12px;
-        padding:9px 16px;
-        border-top:1px solid var(--border);
-        font-size:12.5px;
-      }
-      .listings-table td:nth-child(2)::before{content:"Price"}
-      .listings-table td:nth-child(3)::before{content:"Status"}
-      .listings-table td:nth-child(4)::before{content:"Messages"}
-      .listings-table td:nth-child(5)::before{content:"Views"}
-      .listings-table td:nth-child(6)::before{content:"Posted"}
-      .listings-table td:nth-child(2)::before,
-      .listings-table td:nth-child(3)::before,
-      .listings-table td:nth-child(4)::before,
-      .listings-table td:nth-child(5)::before,
-      .listings-table td:nth-child(6)::before{
-        font-size:10.5px;font-weight:700;text-transform:uppercase;
-        letter-spacing:.05em;color:var(--text-3);flex-shrink:0;
-      }
-      .listings-table td:nth-child(2),
-      .listings-table td:nth-child(3),
-      .listings-table td:nth-child(4),
-      .listings-table td:nth-child(5),
-      .listings-table td:nth-child(6){min-width:0}
-      .listings-table td:nth-child(2) > div{display:flex;flex-direction:column;align-items:flex-end;text-align:right;min-width:0;overflow:hidden}
-      .listings-table td:nth-child(2) .listing-price-text,
-      .listings-table td:nth-child(2) .listing-price-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-
-      /* Actions: simple wrapping row of fixed-size buttons — never collapses, never scrolls */
-      .listings-table .actions-cell{
-        display:flex;
-        flex-wrap:wrap;
-        gap:8px;
-        padding:12px 16px;
-        background:var(--surface);
-        border-top:1px solid var(--border);
-      }
-      .listings-table .actions-cell>*{
-        flex:0 0 auto;
-        width:34px;
-        height:34px;
-        
-      }
+      .listings-table thead{display:none}.listings-table td{display:block;padding:6px 16px}
+      .listings-table td:first-child{padding-top:14px}.listings-table td:last-child{padding-bottom:14px}
+      .listings-table tr{display:block;border-bottom:1px solid var(--border)}
       .messages-layout{grid-template-columns:1fr;position:relative}
       .messages-layout .thread-list{display:flex}
       .messages-layout .chat-pane{display:none}
@@ -966,16 +820,6 @@
         </div>
       </div>
       <div class="topbar-right">
-        <div class="theme-switch" id="theme-switch">
-          <button class="theme-switch-btn" onclick="toggleThemeMenu()" title="Change theme" aria-label="Change theme">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-          </button>
-          <div class="theme-menu" id="theme-menu">
-            <button class="theme-option" data-theme="light" onclick="setTheme('light')"><span class="theme-swatch swatch-light"></span>Emerald</button>
-            <button class="theme-option" data-theme="sandstone" onclick="setTheme('sandstone')"><span class="theme-swatch swatch-sandstone"></span>Sandstone</button>
-            <button class="theme-option" data-theme="dark" onclick="setTheme('dark')"><span class="theme-swatch swatch-dark"></span>Midnight</button>
-          </div>
-        </div>
         <a href="/post-listing" class="btn btn-primary" id="btn-new-listing-tour" onclick="return confirmListingCategoryBeforeLeaving()">
           <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New listing
         </a>
@@ -1025,7 +869,6 @@
           </div>
           <div class="card" id="overview-quicklistings-card" style="padding:20px 22px">
             <div class="section-head"><h2>Your listings</h2><button class="btn btn-outline btn-sm" onclick="showPage('listings')">Manage</button></div>
-            <div id="quick-listing-top" style="margin-bottom:12px"></div>
             <div id="quick-listings"><div style="padding:10px 0;color:var(--text-3);font-size:13px">Loading…</div></div>
           </div>
         </div>
@@ -1050,12 +893,10 @@
         </div>
       </div>
       <div class="card" id="listings-table-card" style="overflow:hidden">
-        <div style="overflow-x:auto;max-width:100%">
         <table class="listings-table">
           <thead><tr><th>Property</th><th>Price</th><th>Status</th><th>Messages</th><th>Views</th><th>Posted</th><th>Actions</th></tr></thead>
           <tbody id="listings-tbody"><tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-3)">Loading listings…</td></tr></tbody>
         </table>
-        </div>
       </div>
     </div>
 
@@ -1066,7 +907,7 @@
           <div class="thread-list-head">
             <h3>Messages</h3>
             <div style="display:flex;align-items:center;gap:10px">
-              <span id="msg-thread-count" style="font-size:12px;color:var(--text-3);font-weight:600"></span>
+              <span id="msg-thread-count" style="font-size:12px;color:var(--text-3)"></span>
               <button class="btn btn-outline btn-sm" id="btn-mark-all-read" onclick="markAllThreadsRead()">Mark all read</button>
             </div>
           </div>
@@ -1078,12 +919,9 @@
           <div class="chat-pane-empty" id="chat-empty"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><p>Select a conversation to view messages</p></div>
           <div id="chat-active" style="display:none;flex-direction:column;flex:1;overflow:hidden">
             <div class="chat-header" id="chat-header"></div>
-            <div class="chat-messages" id="chat-messages" onscroll="handleChatScroll()"></div>
-<button id="chat-scroll-btn" onclick="scrollChatToBottom(true)" style="display:none;position:absolute;bottom:90px;right:26px;width:38px;height:38px;border-radius:50%;background:var(--white);border:1px solid var(--border);box-shadow:var(--shadow);z-index:5;align-items:center;justify-content:center;cursor:pointer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--text-2)" stroke-width="2"><polyline points="19 12 12 19 5 12"/><line x1="12" y1="19" x2="12" y2="5"/></svg></button>
+            <div class="chat-messages" id="chat-messages"></div>
             <div class="chat-wa-hint" id="chat-wa-hint"></div>
-            <div class="chat-quickreply-bar" id="chat-quickreply-bar" style="display:none"></div>
             <div class="chat-input-bar">
-              <div class="chat-quick-btn" id="chat-quickreply-toggle" onclick="toggleQuickReplyBar()" title="Quick replies" role="button" tabindex="0" aria-label="Quick replies"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="13" y2="13"/></svg></div>
               <textarea id="chat-reply-input" placeholder="Type your reply…" rows="1" onkeydown="handleChatKeydown(event)" oninput="autoResizeTextarea(this)"></textarea>
               <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatReply()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
             </div>
@@ -1105,7 +943,6 @@
           </div>
         </div>
       </div>
-      <div class="enquiries-stat-strip" id="enquiries-stat-strip"></div>
       <div class="enquiry-list" id="enquiry-list"><div style="text-align:center;padding:40px;color:var(--text-3);font-size:13px">Loading enquiries…</div></div>
     </div>
 
@@ -1558,12 +1395,6 @@
       <p style="font-size:12.5px;color:var(--text-3);margin-bottom:14px;line-height:1.6">Add a YouTube, Vimeo, or direct video link (e.g. a 360° tour) — buyers see it embedded on your listing page. <span id="mv-limit-note"></span></p>
       <div class="form-group"><label>Video URL</label><input type="text" id="mv-url-input" placeholder="https://youtube.com/watch?v=…"/></div>
       <button class="btn btn-primary btn-sm" id="mv-add-btn" onclick="addListingVideo()">+ Add video</button>
-      <div style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--border)">
-        <label style="display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Or record / upload directly <span style="font-weight:400;text-transform:none">max 60s</span></label>
-        <input type="file" id="mv-file-input" accept="video/*" capture="environment" onchange="handleMvFileSelect(this.files[0])"/>
-        <div id="mv-file-status" style="font-size:11.5px;color:var(--text-3);margin-top:6px"></div>
-        <div style="font-size:11px;color:var(--text-3);margin-top:4px">Goes to a quick review queue — it won't appear on the listing until approved.</div>
-      </div>
       <div id="mv-video-list" style="margin-top:16px"></div>
     </div>
     <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-manage-videos')">Close</button></div>
@@ -2112,25 +1943,6 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
     "Makueni": "Makueni (Wote)"
   };
 
-  function applyStoredTheme(){
-  const saved=localStorage.getItem('ny_theme')||'light';
-  document.documentElement.setAttribute('data-theme',saved==='light'?'':saved);
-  updateThemeMenuActive(saved);
-}
-function setTheme(name){
-  localStorage.setItem('ny_theme',name);
-  document.documentElement.setAttribute('data-theme',name==='light'?'':name);
-  updateThemeMenuActive(name);
-  closeThemeMenu();
-}
-function updateThemeMenuActive(name){
-  document.querySelectorAll('.theme-option').forEach(b=>b.classList.toggle('active',b.dataset.theme===name));
-}
-function toggleThemeMenu(){document.getElementById('theme-menu')?.classList.toggle('open');}
-function closeThemeMenu(){document.getElementById('theme-menu')?.classList.remove('open');}
-document.addEventListener('click',e=>{const sw=document.getElementById('theme-switch');if(sw&&!sw.contains(e.target))closeThemeMenu();});
-applyStoredTheme();
-
   function nkCountyLabel(county) { return NK_COUNTY_LABEL[county] || county; }
 
   const NK_AREA_TO_COUNTY = {};
@@ -2161,11 +1973,6 @@ applyStoredTheme();
     const county = document.getElementById('edit-county').value;
     nkPopulateEditAreas(county);
   }
-
-  function copyBubbleText(el){
-  const text=el.textContent;
-  navigator.clipboard.writeText(text).then(()=>showToast('Message copied ✓','success')).catch(()=>{});
-}
 
 
 let currentUser=null,currentProfile=null,ownerProfile=null,effectiveSellerId=null,isTeamMember=false,allListings=[],allEnquiries=[],allPayments=[],allMessages=[],allReviews=[],threads=[],activeThread=null,listingFilter='all',enquiryFilter='all',deleteTargetId=null,occupiedTargetId=null,replyTargetEnquiry=null,msgPollTimer=null,threadListingFilter=null,messagesChannel=null,listingActionBusy=new Set();
@@ -2627,18 +2434,6 @@ function bnbSubscriptionInfo(){
   const bnbPlanActive = !!(p?.bnb_plan && p?.bnb_expires_at && new Date(p.bnb_expires_at) > new Date());
   const active = bnbPlanActive || eliteActive();
   return { active, plan: bnbPlanActive ? p.bnb_plan : (eliteActive() ? 'elite_included' : null) };
-}
-function isNearChatBottom(){
-  const mc=document.getElementById('chat-messages');if(!mc)return true;
-  return mc.scrollHeight-mc.scrollTop-mc.clientHeight<120;
-}
-function handleChatScroll(){
-  const btn=document.getElementById('chat-scroll-btn');
-  if(btn)btn.style.display=isNearChatBottom()?'none':'flex';
-}
-function scrollChatToBottom(force){
-  const mc=document.getElementById('chat-messages');if(!mc)return;
-  if(force||isNearChatBottom())mc.scrollTop=mc.scrollHeight;
 }
 
 function updatePremiumNavBadge(sub){
@@ -5257,7 +5052,6 @@ function getListingStatusDisplay(l){
   if(l.is_disabled)return{label:l.disabled_by_subscription?'Plan expired':'Disabled by admin',cls:'status-disabled',banner:l.disabled_by_subscription?'Your BNB plan expired — subscribe again from Settings to bring this listing back.':`Disabled by admin${l.disabled_reason?': '+escHtml(l.disabled_reason):''}. Contact admin for more information.`};
   if(l.status==='occupied'){const word=l.price_type==='rent'?'occupied':'sold';return{label:l.price_type==='rent'?'Occupied':'Sold',cls:'status-occupied',banner:`Marked as ${word} — hidden from public search and listing pages.`};}
   if(l.status==='scheduled')return{label:'Scheduled',cls:'status-pending',banner:l.publish_at?`Approved — goes live automatically on ${new Date(l.publish_at).toLocaleString('en-KE')}.`:null};
-  if(l.status==='approved_unpaid'&&l.payment_status==='pending_verification')return{label:'Verifying payment',cls:'status-pending',banner:'Your M-Pesa payment is being verified — this usually takes a few minutes.'};
   if(l.status==='approved_unpaid')return{label:'Awaiting payment',cls:'status-pending',banner:'Approved — pay the listing fee to make it live.'};
   if(l.status==='approved_unpaid_bnb')return{label:'Awaiting BNB plan',cls:'status-pending',banner:'Approved — subscribe to a BNB plan to make it live.'};
   return{label:statusLabel(l.status),cls:'status-'+l.status,banner:null};
@@ -5295,20 +5089,13 @@ function renderOverview(){
   document.getElementById('stat-active-delta').textContent=`of ${allListings.length} total listing${allListings.length!==1?'s':''}`;
   const buyerThreadCount=threads.filter(t=>t.messages.some(m=>m.sender==='buyer')).length;
   document.getElementById('stat-enquiries').textContent=buyerThreadCount;
-  const now7=Date.now(), d7=7*86400000;
-  const enqThis7=allEnquiries.filter(e=>Date.now()-new Date(e.created_at)<d7).length;
-  const enqPrev7=allEnquiries.filter(e=>{const age=Date.now()-new Date(e.created_at);return age>=d7&&age<2*d7;}).length;
-  const enqTrendPct=enqPrev7>0?Math.round(((enqThis7-enqPrev7)/enqPrev7)*100):(enqThis7>0?100:0);
-  const enqTrendHtml=(enqThis7||enqPrev7)?` <span style="font-weight:700;color:${enqTrendPct>=0?'#065f46':'var(--red)'}">${enqTrendPct>=0?'▲':'▼'} ${Math.abs(enqTrendPct)}% vs last week</span>`:'';
-  document.getElementById('stat-enquiries-delta').innerHTML=`${buyerThreadCount} buyer${buyerThreadCount!==1?'s':''} reached out${enqTrendHtml}`;
+  document.getElementById('stat-enquiries-delta').textContent=`${buyerThreadCount} buyer${buyerThreadCount!==1?'s':''} reached out`;
   document.getElementById('stat-new-enq').textContent=unread;
   document.getElementById('stat-new-enq-delta').textContent=unread>0?`${unread} unread — check messages`:'All caught up ✓';
   document.getElementById('stat-paid').textContent=`KES ${totalPaid.toLocaleString('en-KE')}`;
   document.getElementById('stat-paid-delta').textContent=`${confirmed.length} payment${confirmed.length!==1?'s':''}`;
   document.getElementById('stat-views').textContent=views.toLocaleString('en-KE');
-  const avgViewsPerListing=allListings.length?Math.round(views/allListings.length):0;
-  document.getElementById('stat-views-delta').textContent=`~${avgViewsPerListing} views per listing`;
-  renderActivityFeed();renderChart();renderQuickListings();loadDemandMatches();renderPerformanceSummary();
+  renderActivityFeed();renderChart();renderQuickListings();loadDemandMatches();
 }
 
 function renderActivityFeed(){
@@ -5335,18 +5122,6 @@ function renderChart(){
   document.getElementById('chart-labels').innerHTML=labels.map(l=>`<div class="chart-label">${l}</div>`).join('');
 }
 
-function renderPerformanceSummary(){
-  const el=document.getElementById('quick-listing-top');
-  if(!el)return;
-  if(!allListings.length){el.innerHTML='';return;}
-  const withThreads=allListings.map(l=>({l,count:threads.filter(t=>t.listing_id===l.id).reduce((s,t)=>s+t.messages.length,0)}));
-  const top=withThreads.sort((a,b)=>b.count-a.count)[0];
-  if(!top||top.count===0){el.innerHTML='';return;}
-  el.innerHTML=`<div style="background:var(--green-light);border-radius:10px;padding:10px 14px;font-size:12.5px;color:var(--green-dark);display:flex;align-items:center;gap:8px">
-    <span style="font-size:15px">🏆</span>
-    <span><strong>${escHtml(top.l.title)}</strong> is your top performer — ${top.count} message${top.count!==1?'s':''} so far.</span>
-  </div>`;
-}
 function renderQuickListings(){
   const el=document.getElementById('quick-listings');
   if(!allListings.length){el.innerHTML=`<div style="text-align:center;padding:20px 0;color:var(--text-3);font-size:13px">No listings yet. <a href="/post-listing" style="color:var(--green);font-weight:500">Post one →</a></div>`;return;}
@@ -5434,13 +5209,9 @@ async function submitPayListing(){
   const{error}=await db.from('payments').insert({listing_id:payListingTargetId,seller_id:effectiveSellerId,amount,method:'paybill',reference:code,type:plan==='featured'?'featured_upgrade':'listing_fee',status:'pending_verification'});
   btn.disabled=false;btn.textContent='Submit for verification';
   if(error){showToast('Could not submit: '+error.message,'error');return;}
-  const listingUpdate={payment_status:'pending_verification'};
-  if(plan==='featured')listingUpdate.is_featured=true;
-  await db.from('listings').update(listingUpdate).eq('id',payListingTargetId);
-  if(l)l.payment_status='pending_verification';
+  if(plan==='featured'&&l)await db.from('listings').update({is_featured:true}).eq('id',payListingTargetId);
   closeModal('modal-pay-listing');
-  renderListingsTable();
-  showToast('Payment submitted — verification in progress ✓','success');
+  showToast('Payment submitted — we\'ll confirm and activate it shortly ✓','success');
   notifyAdmin('listing_payment_submitted',{listingId:payListingTargetId,listingTitle:l?.title,plan,amount,reference:code,sellerName:currentProfile?.full_name,sellerEmail:currentUser?.email});
 }
 
@@ -5509,9 +5280,7 @@ function renderListingsTable(){
     const bnbNote=bnbDays!==null?`<div class="trial-note${bnbDays<=3?' urgent':''}">📅 BNB plan — ${bnbDays} day${bnbDays!==1?'s':''} left <a href="/plans" class="upgrade-link">Renew plan</a></div>`:(l.category==='airbnb'&&l.status!=='approved_unpaid_bnb'?`<div class="trial-note urgent">⚠️ No active BNB plan <a href="/plans" class="upgrade-link">Subscribe</a></div>`:'');
     const occupiedNote=(l.status==='occupied'&&d.banner)?`<div class="occupied-note">${d.banner}</div>`:'';
     const bnbListingFee = Number(l.payment_due_amount)||Number(platformPrices.bnb_basic_price)||0;
-    const payDueNote = (l.status==='approved_unpaid'&&l.payment_status==='pending_verification')
-      ? `<div class="trial-note">⏳ Payment submitted — verification in progress, usually done within a few minutes.</div>`
-      : l.status==='approved_unpaid'
+    const payDueNote = l.status==='approved_unpaid'
       ? `<div class="trial-note urgent">💳 Approved — pay <strong>KES ${Number(l.payment_due_amount||0).toLocaleString('en-KE')}</strong> to make this listing live. <span class="upgrade-link" onclick="openPayListingModal('${l.id}')">Pay now →</span></div>`
       : l.status==='approved_unpaid_bnb'
         ? `<div class="trial-note urgent">📅 Approved — <span class="upgrade-link" onclick="openPayListingModal('${l.id}')">pay KES ${bnbListingFee.toLocaleString('en-KE')} for just this listing →</span><br/>or <a href="/plans" class="upgrade-link">subscribe to a BNB plan →</a></div>`
@@ -5860,46 +5629,7 @@ async function muLoadOccupancyLog(unitId){
    caps at 1 video; yearly (any tier) is unlimited.
 ══════════════════════════════════════ */
 let mvActiveListingId=null,mvVideos=[];
-let mvSelectedFile = null;
 
-async function handleMvFileSelect(file) {
-  const statusEl = document.getElementById('mv-file-status');
-  if (!file) { mvSelectedFile = null; statusEl.textContent = ''; return; }
-  statusEl.textContent = 'Checking video…';
-  try {
-    const duration = await getVideoDuration(file);
-    if (duration > 60) { statusEl.textContent = `That's ${Math.round(duration)}s — trim to under 60s.`; document.getElementById('mv-file-input').value=''; mvSelectedFile=null; return; }
-    if (file.size > 100*1024*1024) { statusEl.textContent = 'File too large.'; document.getElementById('mv-file-input').value=''; mvSelectedFile=null; return; }
-    mvSelectedFile = file;
-    statusEl.textContent = `✓ ${file.name} (${Math.round(duration)}s) — click below to upload`;
-    const btn = document.createElement('button');
-    btn.className = 'btn btn-primary btn-sm'; btn.textContent = 'Upload video for review'; btn.style.marginTop = '8px';
-    btn.onclick = () => uploadMvFile();
-    statusEl.parentElement.appendChild(btn);
-  } catch (e) { statusEl.textContent = 'Could not read that video.'; }
-}
-function getVideoDuration(file) {
-  return new Promise((resolve, reject) => {
-    const v = document.createElement('video'); v.preload = 'metadata';
-    v.onloadedmetadata = () => { URL.revokeObjectURL(v.src); resolve(v.duration); };
-    v.onerror = () => reject(new Error('bad video'));
-    v.src = URL.createObjectURL(file);
-  });
-}
-async function uploadMvFile() {
-  if (!mvSelectedFile) return;
-  const statusEl = document.getElementById('mv-file-status');
-  statusEl.textContent = 'Uploading…';
-  const fd = new FormData();
-  fd.append('video', mvSelectedFile);
-  fd.append('listingId', mvActiveListingId);
-  fd.append('sellerId', currentUser.id);
-  const res = await fetch(`${EDGE_URL}/upload-listing-video`, { method:'POST', headers:{'apikey':SUPABASE_KEY}, body: fd });
-  const data = await res.json();
-  if (!res.ok || data.error) { statusEl.textContent = 'Upload failed: ' + (data.error||''); return; }
-  statusEl.textContent = '✓ Sent for review';
-  mvSelectedFile = null;
-}
 function videoWalkthroughLimit(){
   const sub=subscriptionInfo();
   if(!sub.active)return 1; // every seller gets one free video slot; paid plans unlock more
@@ -6029,39 +5759,7 @@ function openMessagesForListing(listingId){threadListingFilter=listingId;activeT
 function openConversationFromThread(key){threadListingFilter=null;showPage('messages');openThread(key);}
 function showThreadListMobile(){document.getElementById('messages-layout')?.classList.remove('mobile-chat-active');}
 function showChatMobile(){document.getElementById('messages-layout')?.classList.add('mobile-chat-active');}
-const QUICK_REPLIES=[
-  {label:'👋 Welcome',text:"Hello, thank you for your interest in this property. I'd be glad to help — is there anything specific you'd like to know before we arrange a viewing?"},
-  {label:'✅ Available',text:"Yes, this property is currently available. I'd be happy to arrange a viewing at a time that suits you."},
-  {label:'❌ No longer available',text:"Thank you for your interest — this unit has just been taken. I'll gladly let you know when a similar unit becomes available."},
-  {label:'📅 Confirm viewing',text:"Noted — I'll confirm the time and send you the exact location shortly before we meet."},
-  {label:'📍 Share location',text:"For security, I'll share the exact pin location once we've confirmed a viewing time."},
-  {label:'💰 Pricing & terms',text:"The price shown is as listed. To secure the unit, we typically require a deposit plus the first month's rent — happy to walk you through the full breakdown."},
-  {label:'📄 What you\'ll need',text:"To proceed, we'll need a copy of your ID and your intended move-in date. I can send the full checklist whenever you're ready."},
-  {label:'🔑 Move-in process',text:"Once the deposit is confirmed, we'll schedule a walkthrough together and hand over the keys."},
-  {label:'🛠 House rules & maintenance',text:"Happy to share the house rules and how maintenance requests are handled — just let me know if you'd like the details."},
-  {label:'🕒 Apologies for the delay',text:"Apologies for the delayed reply — following up on your enquiry now. Thank you for your patience."},
-  {label:'🙏 Checking in',text:"Just checking in — are you still considering this property? Happy to answer any remaining questions."},
-  {label:'🤝 Thank you',text:"Thank you for reaching out and for your interest in this property — it was a pleasure assisting you."},
-];
 
-function toggleQuickReplyBar(){
-  const bar=document.getElementById('chat-quickreply-bar');
-  if(!bar)return;
-  const show=bar.style.display==='none';
-  if(show){
-    bar.innerHTML=QUICK_REPLIES.map((q,i)=>`<div class="qr-chip" onclick="insertQuickReply(${i})">${escHtml(q.label)}</div>`).join('');
-  }
-  bar.style.display=show?'flex':'none';
-}
-function insertQuickReply(i){
-  const q=QUICK_REPLIES[i];if(!q)return;
-  const input=document.getElementById('chat-reply-input');
-  if(!input)return;
-  input.value=q.text;
-  autoResizeTextarea(input);
-  input.focus();
-  document.getElementById('chat-quickreply-bar').style.display='none';
-}
 function renderThreadList(){
   const q=(document.getElementById('thread-search-input')?.value||'').toLowerCase();
   let filtered=threads;
@@ -6106,7 +5804,6 @@ async function loadFullThreadHistory(t){
 function renderChatPane(t){
   document.getElementById('chat-empty').style.display='none';
   const av=document.getElementById('chat-active');av.style.display='flex';
-  const qrBar=document.getElementById('chat-quickreply-bar');if(qrBar)qrBar.style.display='none';
   const ini=t.buyer_name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()||'?';
   const waLink=t.buyer_phone?`<a href="https://wa.me/${formatWaPhone(t.buyer_phone)}" target="_blank" class="btn btn-sm" style="background:#25D366;color:white;text-decoration:none">WhatsApp</a>`:'';
   const listing=allListings.find(l=>l.id===t.listing_id);
@@ -6124,21 +5821,7 @@ function renderChatMessages(t){
   const sn=currentProfile?.full_name||currentUser?.email?.split('@')[0]||'You';
   const si=sn.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()||'S';
   const bi=t.buyer_name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()||'?';
-  let lastSender=null,lastTime=0;
-mc.innerHTML=t.messages.map(m=>{
-  const md=new Date(m.created_at).toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long'});
-  const dd=md!==lastDate?`<div class="chat-date-divider"><span>${md}</span></div>`:'';
-  if(md!==lastDate)lastSender=null;
-  lastDate=md;
-  const isSeller=m.sender==='seller';
-  const ts=new Date(m.created_at).getTime();
-  const grouped = isSeller===lastSender && (ts-lastTime) < 120000; // same sender, <2min apart
-  lastSender=isSeller;lastTime=ts;
-  const time=new Date(m.created_at).toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'});
-  const isRead=!!m.read_at;
-  const tick=isSeller?`<svg class="tick ${isRead?'read':''}" viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="1 13 6 18 15 7"/><polyline points="8 13 13 18 22 7"/></svg>`:'';
-  return `${dd}<div class="chat-bubble-row ${isSeller?'seller':''} ${grouped?'grouped':'group-start'}"><div class="bubble-avatar ${isSeller?'seller-av':'buyer'}">${isSeller?si:bi}</div><div class="bubble-wrap"><div class="chat-bubble ${isSeller?'seller-b':'buyer'}" onclick="copyBubbleText(this)" title="Click to copy">${escHtml(m.content||m.message||'')}</div><div class="bubble-time">${time}${tick}</div></div></div>`;
-}).join('');
+  mc.innerHTML=t.messages.map(m=>{const md=new Date(m.created_at).toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long'});const dd=md!==lastDate?`<div class="chat-date-divider"><span>${md}</span></div>`:'';lastDate=md;const isSeller=m.sender==='seller';const time=new Date(m.created_at).toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'});return `${dd}<div class="chat-bubble-row ${isSeller?'seller':''}"><div class="bubble-avatar ${isSeller?'seller-av':'buyer'}">${isSeller?si:bi}</div><div><div class="chat-bubble ${isSeller?'seller-b':'buyer'}">${escHtml(m.content||m.message||'')}</div><div class="bubble-time">${time}${isSeller?' · Sent':''}</div></div></div>`;}).join('');
 }
 
 async function sendChatReply(){
@@ -6148,12 +5831,7 @@ async function sendChatReply(){
   const nm={listing_id:activeThread.listing_id,buyer_token:activeThread.buyer_token||null,buyer_name:activeThread.buyer_name,buyer_phone:activeThread.buyer_phone||null,sender:'seller',content:text};
   const{data,error}=await db.from('messages').insert(nm).select().single();
   btn.disabled=false;
-  if(error){
-    showToast('Message failed to send — tap to retry','error');
-    input.value=text; // restore so nothing is lost
-    autoResizeTextarea(input);
-    return;
-  }
+  if(error){showToast('Could not send: '+error.message,'error');return;}
   allMessages.push(data||{...nm,id:Date.now(),created_at:new Date().toISOString()});
   buildThreads();activeThread=threads.find(t=>t.key===activeThread.key)||activeThread;
   input.value='';input.style.height='auto';renderChatMessages(activeThread);renderThreadList();
@@ -6165,22 +5843,10 @@ function autoResizeTextarea(el){el.style.height='auto';el.style.height=Math.min(
 
 async function markThreadRead(t){
   if(!t.unread_count)return;
-  // Optimistic: clear the badge locally right away so it never "hangs" on
-  // screen even if the network write is slow — we reconcile below regardless.
-  t.unread_count=0;
-  updateNavBadges();renderThreadList();
-
-  // Pull ids straight from THIS thread's own message list — the exact same
-  // list that produced the unread count — instead of re-filtering allEnquiries
-  // by buyer_phone/buyer_token, which silently misses rows whenever a phone
-  // number is formatted differently anywhere (spaces, +254 vs 0, etc).
-  const eIds=t.messages.filter(m=>m.sender==='buyer'&&!m.read_at&&String(m.id).startsWith('enq-')).map(m=>Number(String(m.id).slice(4))).filter(n=>!isNaN(n));
+  const eIds=allEnquiries.filter(e=>e.listing_id===t.listing_id&&!e.read_at&&(t.buyer_phone?e.buyer_phone===t.buyer_phone:e.buyer_token===t.buyer_token)).map(e=>e.id);
+  if(eIds.length){const{error:eErr}=await db.from('enquiries').update({read_at:new Date().toISOString()}).in('id',eIds);if(eErr){console.error('markThreadRead enquiries update failed:',eErr);}else{eIds.forEach(id=>{const e=allEnquiries.find(e=>e.id===id);if(e)e.read_at=new Date().toISOString();});}}
   const uIds=t.messages.filter(m=>m.sender==='buyer'&&!m.read_at&&!String(m.id).startsWith('enq-')).map(m=>m.id);
-
-  let markReadFailed=false;
-  if(eIds.length){const{error:eErr}=await db.from('enquiries').update({read_at:new Date().toISOString()}).in('id',eIds);if(eErr){console.error('markThreadRead enquiries update failed:',eErr);markReadFailed=true;}else{eIds.forEach(id=>{const e=allEnquiries.find(e=>e.id===id);if(e)e.read_at=new Date().toISOString();});}}
-  if(uIds.length){const{error:mErr}=await db.from('messages').update({read_at:new Date().toISOString()}).in('id',uIds);if(mErr){console.error('markThreadRead messages update failed:',mErr);markReadFailed=true;}else{uIds.forEach(id=>{const m=allMessages.find(m=>m.id===id);if(m)m.read_at=new Date().toISOString();});}}
-  if(markReadFailed){showToast('Could not mark as read — check database permissions','error');t.unread_count=eIds.length+uIds.length;}
+  if(uIds.length){const{error:mErr}=await db.from('messages').update({read_at:new Date().toISOString()}).in('id',uIds);if(mErr){console.error('markThreadRead messages update failed:',mErr);}else{uIds.forEach(id=>{const m=allMessages.find(m=>m.id===id);if(m)m.read_at=new Date().toISOString();});}}
   buildThreads();
   if(activeThread&&activeThread.key===t.key){activeThread=threads.find(x=>x.key===t.key)||activeThread;}
   updateNavBadges();renderThreadList();
@@ -6193,12 +5859,10 @@ async function markAllThreadsRead(){
   if(!unreadThreads.length){showToast('No unread messages','success');return;}
   const btn=document.getElementById('btn-mark-all-read');
   if(btn){btn.disabled=true;btn.textContent='Marking…';}
-  unreadThreads.forEach(t=>t.unread_count=0); // optimistic clear
-  updateNavBadges();renderThreadList();
 
   const eIds=[],mIds=[];
   unreadThreads.forEach(t=>{
-    t.messages.filter(m=>m.sender==='buyer'&&!m.read_at&&String(m.id).startsWith('enq-')).forEach(m=>{const n=Number(String(m.id).slice(4));if(!isNaN(n))eIds.push(n);});
+    allEnquiries.filter(e=>e.listing_id===t.listing_id&&!e.read_at&&(t.buyer_phone?e.buyer_phone===t.buyer_phone:e.buyer_token===t.buyer_token)).forEach(e=>eIds.push(e.id));
     t.messages.filter(m=>m.sender==='buyer'&&!m.read_at&&!String(m.id).startsWith('enq-')).forEach(m=>mIds.push(m.id));
   });
 
@@ -6252,65 +5916,14 @@ function buildEnquiryFeed(){
   return threads.map(t=>{const buyerMsgs=t.messages.filter(m=>m.sender==='buyer');if(!buyerMsgs.length)return null;const last=buyerMsgs[buyerMsgs.length-1];return{key:t.key,buyer_name:t.buyer_name,buyer_phone:t.buyer_phone,listing_title:t.listing_title,listing_area:t.listing_area,message:last.content||last.message||'',created_at:last.created_at,unread:buyerMsgs.some(m=>!m.read_at)};}).filter(Boolean).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
 }
 
-function computeEnquiryStats(){
-  const total=threads.filter(t=>t.messages.some(m=>m.sender==='buyer')).length;
-  const unread=threads.reduce((s,t)=>s+(t.unread_count||0),0);
-  const replied=threads.filter(t=>t.messages.some(m=>m.sender==='seller')).length;
-  const responseRate=total?Math.round((replied/total)*100):0;
-  let totalGapMs=0,gapCount=0;
-  threads.forEach(t=>{
-    const msgs=t.messages;
-    for(let i=0;i<msgs.length;i++){
-      if(msgs[i].sender==='buyer'){
-        const next=msgs.slice(i+1).find(m=>m.sender==='seller');
-        if(next){totalGapMs+=(new Date(next.created_at)-new Date(msgs[i].created_at));gapCount++;break;}
-      }
-    }
-  });
-  const avgMins=gapCount?Math.round(totalGapMs/gapCount/60000):null;
-  const avgLabel=avgMins===null?'—':avgMins<60?`${avgMins}m`:avgMins<1440?`${Math.round(avgMins/60)}h`:`${Math.round(avgMins/1440)}d`;
-  return{total,unread,responseRate,avgLabel};
-}
-function renderEnquiryStats(){
-  const el=document.getElementById('enquiries-stat-strip');
-  if(!el)return;
-  const s=computeEnquiryStats();
-  el.innerHTML=`
-    <div class="es-item"><div class="es-label">Total enquiries</div><div class="es-val">${s.total}</div></div>
-    <div class="es-item"><div class="es-label">Unread</div><div class="es-val" style="color:${s.unread>0?'var(--red)':'var(--text)'}">${s.unread}</div></div>
-    <div class="es-item"><div class="es-label">Response rate</div><div class="es-val" style="color:${s.responseRate>=70?'#065f46':s.responseRate>=40?'var(--amber)':'var(--red)'}">${s.responseRate}%</div></div>
-    <div class="es-item"><div class="es-label">Avg. response time</div><div class="es-val">${s.avgLabel}</div></div>`;
-}
-
 function renderEnquiries(){
-  renderEnquiryStats();
   let items=buildEnquiryFeed();
   if(enquiryFilter==='unread')items=items.filter(i=>i.unread);
   const q=(document.getElementById('enquiry-search')?.value||'').toLowerCase();
   if(q)items=items.filter(i=>(i.buyer_name||'').toLowerCase().includes(q)||(i.listing_title||'').toLowerCase().includes(q)||(i.listing_area||'').toLowerCase().includes(q));
   const el=document.getElementById('enquiry-list');
   if(!items.length){el.innerHTML=`<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/></svg><h3>${enquiryFilter==='unread'?'All caught up!':'No enquiries yet'}</h3><p>${enquiryFilter==='unread'?'No unread messages.':"When buyers message you, they'll appear here."}</p></div>`;return;}
-  el.innerHTML=items.map(i=>{
-    const ini=(i.buyer_name||'B').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
-    return `<div class="enquiry-card${i.unread?' unread':''}">
-      <div class="enquiry-avatar">${ini}</div>
-      <div class="enquiry-body">
-        <div class="enquiry-head">
-          <span class="enquiry-name">${escHtml(i.buyer_name||'Unknown buyer')}</span>
-          ${i.unread?'<span class="enquiry-new-badge">New</span>':''}
-          <span class="enquiry-phone">${i.buyer_phone||''}</span>
-          <span class="enquiry-time">${timeAgo(i.created_at)}</span>
-        </div>
-        <div class="enquiry-listing-ref">${escHtml(i.listing_title||'Listing')}${i.listing_area?' · '+escHtml(i.listing_area):''}</div>
-        <div class="enquiry-msg">${escHtml(i.message||'')}</div>
-        <div class="enquiry-actions">
-          <button class="btn btn-primary btn-sm" onclick="openConversationFromThread('${i.key}')"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Open conversation</button>
-          ${i.buyer_phone?`<a class="btn btn-sm" style="background:#25D366;color:white" href="https://wa.me/${formatWaPhone(i.buyer_phone)}" target="_blank">WhatsApp</a>`:''}
-          ${i.unread?`<button class="btn btn-outline btn-sm" data-key="${i.key}" onclick="markEnqThreadRead(this.dataset.key)">Mark read</button>`:''}
-        </div>
-      </div>
-    </div>`;
-  }).join('');
+  el.innerHTML=items.map(i=>{const ini=(i.buyer_name||'B').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();return `<div class="enquiry-card${i.unread?' unread':''}"><div class="enquiry-avatar">${ini}</div><div class="enquiry-body"><div class="enquiry-head"><span class="enquiry-name">${escHtml(i.buyer_name||'Unknown buyer')}</span><span class="enquiry-phone">${i.buyer_phone||''}</span><span class="enquiry-time">${timeAgo(i.created_at)}</span></div><div class="enquiry-listing-ref">Re: ${escHtml(i.listing_title||'Listing')} · ${i.listing_area||''}</div><div class="enquiry-msg">${escHtml(i.message||'')}</div><div class="enquiry-actions"><button class="btn btn-primary btn-sm" onclick="openConversationFromThread('${i.key}')"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Open conversation</button>${i.buyer_phone?`<a class="btn btn-sm" style="background:#25D366;color:white" href="https://wa.me/${formatWaPhone(i.buyer_phone)}" target="_blank">WhatsApp</a>`:''}${i.unread?`<button class="btn btn-outline btn-sm" data-key="${i.key}" onclick="markEnqThreadRead(this.dataset.key)">Mark read</button>`:''}</div></div></div>`;}).join('');
 }
 
 function formatWaPhone(p){
@@ -7425,7 +7038,6 @@ const Tour = (() => {
   // The Continue button still works too ("Click it for me").
   const STEPS = [
     { selector:'#nav-overview', page:'overview', title:'Welcome to your dashboard', desc:"Let's take a quick tour of everything you can do here. This is your Overview — your home base every time you sign in." },
-    { selector:'#theme-switch', page:'overview', title:'Choose your theme', desc:'Switch between Emerald, Sandstone, and Midnight — your choice is saved for next time.' },
     { selector:'#verify-warning-banner', page:'overview', title:'Get verified', desc:'Verify your account here to unlock unlimited listings and a trust badge buyers can see. It only takes about 2 minutes.' },
     { selector:'.stat-grid', page:'overview', title:'Your key numbers', desc:'Active listings, total enquiries, unread messages, payments and views — all at a glance.' },
     { selector:'#overview-activity-card', page:'overview', title:'Recent activity', desc:'A live feed of new enquiries, messages, listings and payments. Tap any item to jump straight to it.' },
@@ -7436,10 +7048,9 @@ const Tour = (() => {
     { selector:'#listings-filter-bar', page:'listings', title:'Filter your listings', desc:'Filter by status — active, pending, paused, occupied/sold — or search by name.' },
     { selector:'#listings-table-card', page:'listings', title:'Manage each listing', desc:'Edit, view messages, share, mark occupied/sold, pause, or delete — from the icons on each row.' },
     { selector:'#listings-table-card', page:'listings', title:'Share to social media — free', desc:'Tap the Facebook, Instagram, or TikTok icon on any listing to share it to your own page or profile — free for every seller, no upgrade needed.' },
-    { selector:'#listings-table-card', page:'listings', title:'More per-listing tools', desc:'Purple icons handle the rest: manage unit types, add a video walkthrough, download a printable brochure, and hide/show your Call & WhatsApp buttons — right from this row.' },
     { selector:'#nav-messages', page:'listings', title:'Messages', desc:'Tap "Messages" to see every conversation with buyers in one place.', click:true },
     { selector:'#thread-list', page:'messages', title:'Your inbox', desc:'All your buyer conversations live here, newest first. A green dot marks unread ones.' },
-    { selector:'#chat-pane', page:'messages', title:'Chat with buyers', desc:'Open a conversation to reply directly, or via WhatsApp if the buyer shared their number. Tap the message icon by the input box any time for ready-made professional replies.' },
+    { selector:'#chat-pane', page:'messages', title:'Chat with buyers', desc:'Open a conversation to reply directly — or via WhatsApp if the buyer shared their number.' },
     { selector:'#nav-enquiries', page:'messages', title:'Enquiries', desc:'Tap "Enquiries" for a simple feed of every buyer enquiry — handy for a quick daily check.', click:true },
     { selector:'#enquiry-list', page:'enquiries', title:'Enquiry feed', desc:'See every enquiry at a glance and jump into the full conversation with one tap.' },
     { selector:'#nav-reviews', page:'enquiries', title:'Reviews', desc:'Tap "Reviews" to see what buyers are saying about you.', click:true },
@@ -7450,7 +7061,6 @@ const Tour = (() => {
     { selector:['#rent-ledger-content','#rent-ledger-locked'], page:'rent-ledger', title:'Your rent roll', desc:'Add rental units, log payments, and get automatic overdue and lease-expiry alerts.' },
     { selector:'#nav-demand-heatmap', page:'rent-ledger', title:'Demand Insights (Elite)', desc:'Tap "Demand Insights" to see where buyers are searching most right now.', click:true },
     { selector:['#demand-content','#demand-locked'], page:'demand-heatmap', title:'Platform-wide demand', desc:'See top areas, categories, and rent-vs-sale demand — and how your listings compare to the area average.' },
-    { selector:'#rl-capacity-switcher', page:'rent-ledger', title:'Switch ledger view', desc:'If you manage both long-term rentals and Airbnb/BNB, switch between the two ledgers here.' },
     { selector:'#nav-settings', page:'demand-heatmap', title:'Settings', desc:'Tap "Settings" to manage your profile, notifications, and plan.', click:true },
     { selector:'#verification-settings-section', page:'settings', title:'Account verification', desc:'Submit your ID and proof of ownership here to get verified and unlock unlimited listings.' },
     { selector:'#settings-notifications-section', page:'settings', title:'Notifications', desc:'Choose exactly which alerts you want — messages, approvals, expiring listings, payments.' },
@@ -7458,10 +7068,6 @@ const Tour = (() => {
     { selector:'#settings-contact-privacy-section', page:'settings', title:'Contact privacy', desc:'Hide your Call/WhatsApp buttons platform-wide so buyers can only reach you through chat.' },
     { selector:'#settings-premium-section', page:'settings', title:'Premium', desc:'Unlock managed chat, a Pro badge, scheduled publishing, video tours, brochures, and SMS alerts.' },
     { selector:'#settings-elite-section', page:'settings', title:'Elite', desc:'AI Listing Assistant, Instant Valuation, a Storefront page, Rent Ledger, and Demand Insights.' },
-    { selector:'#elite-ai-listing-btn', page:'settings', title:'AI Listing Assistant', desc:'Jot a few bullet points and let AI draft a polished title, description, and suggested price for you.' },
-    { selector:'#elite-valuation-btn', page:'settings', title:'Instant Valuation', desc:'Check your price against similar active listings on the platform before you publish.' },
-    { selector:'#storefront-banner-card', page:'overview', title:'Your storefront', desc:'A branded page listing all your active properties — share one link with buyers.' },
-    { selector:'#settings-team-section', page:'settings', title:'Team seats', desc:'Invite someone to help manage your account — they get their own login with the same access.' },
     { selector:'#nav-premium-upgrade', page:'settings', title:'Upgrade any time', desc:'Your plan status always shows here in the sidebar — tap it any time to upgrade.' },
     { selector:'#sidebar-user-block', page:'settings', title:"That's it!", desc:'Your account and sign-out are always one tap away from here. Enjoy Nyumba254! 🎉' },
   ];
