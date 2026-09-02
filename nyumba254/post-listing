@@ -653,6 +653,12 @@
         <input type="url" id="video_url" placeholder="e.g. https://www.tiktok.com/@you/video/xxxxxxxxxxxx"/>
         <div class="field-hint">Works with TikTok, Instagram, YouTube, Vimeo, or a direct video file link.</div>
       </div>
+      <div class="field" style="margin-top:16px;padding-top:16px;border-top:1px dashed var(--border)">
+        <label>Or record / upload a short video <span class="opt">optional, max 60 seconds</span></label>
+        <input type="file" id="video_file_input" accept="video/*" capture="environment" onchange="handleVideoFileSelect(this.files[0])"/>
+        <div class="field-hint">Sent for a quick review before it appears on your listing — doesn't affect your submission either way.</div>
+        <div id="video-file-status" style="font-size:12px;color:var(--text-3);margin-top:6px"></div>
+      </div>
     </div>
 
     <div class="form-actions">
@@ -996,6 +1002,64 @@ let selectedCat       = 'apartment';
 let selectedAmenities = new Set();
 let photos            = [];
 let coverIndex        = 0;
+let selectedVideoFile = null;
+const MAX_VIDEO_SECONDS = 60;
+
+function getVideoDuration(file) {
+  return new Promise((resolve, reject) => {
+    const v = document.createElement('video');
+    v.preload = 'metadata';
+    v.onloadedmetadata = () => { URL.revokeObjectURL(v.src); resolve(v.duration); };
+    v.onerror = () => reject(new Error('Could not read video'));
+    v.src = URL.createObjectURL(file);
+  });
+}
+
+async function handleVideoFileSelect(file) {
+  const statusEl = document.getElementById('video-file-status');
+  if (!file) { selectedVideoFile = null; statusEl.textContent = ''; return; }
+  statusEl.textContent = 'Checking video…';
+  try {
+    const duration = await getVideoDuration(file);
+    if (duration > MAX_VIDEO_SECONDS) {
+      statusEl.textContent = `That's ${Math.round(duration)}s — please trim it to under ${MAX_VIDEO_SECONDS}s.`;
+      showToast('Video is too long — max 60 seconds', 'error');
+      document.getElementById('video_file_input').value = '';
+      selectedVideoFile = null;
+      return;
+    }
+    if (file.size > 100 * 1024 * 1024) {
+      statusEl.textContent = 'File is too large — please pick a shorter or lower-quality clip.';
+      document.getElementById('video_file_input').value = '';
+      selectedVideoFile = null;
+      return;
+    }
+    selectedVideoFile = file;
+    statusEl.textContent = `✓ ${file.name} (${Math.round(duration)}s) ready to upload`;
+  } catch (e) {
+    statusEl.textContent = 'Could not read that video — try a different file.';
+    selectedVideoFile = null;
+  }
+}
+
+async function uploadSelectedVideo(listingId) {
+  if (!selectedVideoFile) return;
+  const statusEl = document.getElementById('video-file-status');
+  statusEl.textContent = 'Uploading video… this can take a minute';
+  try {
+    const fd = new FormData();
+    fd.append('video', selectedVideoFile);
+    fd.append('listingId', listingId);
+    fd.append('sellerId', currentUser.id);
+    fd.append('title', document.getElementById('title').value || 'Nyumba254 listing video');
+    const res = await fetch(`${EDGE_URL}/upload-listing-video`, { method: 'POST', headers: { 'apikey': SUPABASE_KEY }, body: fd });
+    const data = await res.json();
+    if (!res.ok || data.error) { statusEl.textContent = 'Video upload failed — your listing was still submitted.'; return; }
+    statusEl.textContent = '✓ Video received — pending review';
+  } catch (e) {
+    statusEl.textContent = 'Video upload failed — your listing was still submitted.';
+  }
+}
 let currentUser        = null;
 let currentUserName    = '';
 let tierRows           = [];
@@ -1755,6 +1819,9 @@ async function submitListing() {
         console.error('listing_videos insert error:', videoErr);
         showToast(videoErr.message?.includes('row-level security') ? 'Your video link could not be saved — video walkthroughs may be disabled for your account.' : 'Could not save your video link, but the listing was submitted.', 'error');
       }
+    }
+    if (selectedVideoFile) {
+      await uploadSelectedVideo(listing.id);
     }
 
     fetch(`${EDGE_URL}/send-listing-email`, {

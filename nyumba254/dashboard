@@ -1480,6 +1480,12 @@
       <p style="font-size:12.5px;color:var(--text-3);margin-bottom:14px;line-height:1.6">Add a YouTube, Vimeo, or direct video link (e.g. a 360° tour) — buyers see it embedded on your listing page. <span id="mv-limit-note"></span></p>
       <div class="form-group"><label>Video URL</label><input type="text" id="mv-url-input" placeholder="https://youtube.com/watch?v=…"/></div>
       <button class="btn btn-primary btn-sm" id="mv-add-btn" onclick="addListingVideo()">+ Add video</button>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--border)">
+        <label style="display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Or record / upload directly <span style="font-weight:400;text-transform:none">max 60s</span></label>
+        <input type="file" id="mv-file-input" accept="video/*" capture="environment" onchange="handleMvFileSelect(this.files[0])"/>
+        <div id="mv-file-status" style="font-size:11.5px;color:var(--text-3);margin-top:6px"></div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:4px">Goes to a quick review queue — it won't appear on the listing until approved.</div>
+      </div>
       <div id="mv-video-list" style="margin-top:16px"></div>
     </div>
     <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-manage-videos')">Close</button></div>
@@ -5750,7 +5756,46 @@ async function muLoadOccupancyLog(unitId){
    caps at 1 video; yearly (any tier) is unlimited.
 ══════════════════════════════════════ */
 let mvActiveListingId=null,mvVideos=[];
+let mvSelectedFile = null;
 
+async function handleMvFileSelect(file) {
+  const statusEl = document.getElementById('mv-file-status');
+  if (!file) { mvSelectedFile = null; statusEl.textContent = ''; return; }
+  statusEl.textContent = 'Checking video…';
+  try {
+    const duration = await getVideoDuration(file);
+    if (duration > 60) { statusEl.textContent = `That's ${Math.round(duration)}s — trim to under 60s.`; document.getElementById('mv-file-input').value=''; mvSelectedFile=null; return; }
+    if (file.size > 100*1024*1024) { statusEl.textContent = 'File too large.'; document.getElementById('mv-file-input').value=''; mvSelectedFile=null; return; }
+    mvSelectedFile = file;
+    statusEl.textContent = `✓ ${file.name} (${Math.round(duration)}s) — click below to upload`;
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-primary btn-sm'; btn.textContent = 'Upload video for review'; btn.style.marginTop = '8px';
+    btn.onclick = () => uploadMvFile();
+    statusEl.parentElement.appendChild(btn);
+  } catch (e) { statusEl.textContent = 'Could not read that video.'; }
+}
+function getVideoDuration(file) {
+  return new Promise((resolve, reject) => {
+    const v = document.createElement('video'); v.preload = 'metadata';
+    v.onloadedmetadata = () => { URL.revokeObjectURL(v.src); resolve(v.duration); };
+    v.onerror = () => reject(new Error('bad video'));
+    v.src = URL.createObjectURL(file);
+  });
+}
+async function uploadMvFile() {
+  if (!mvSelectedFile) return;
+  const statusEl = document.getElementById('mv-file-status');
+  statusEl.textContent = 'Uploading…';
+  const fd = new FormData();
+  fd.append('video', mvSelectedFile);
+  fd.append('listingId', mvActiveListingId);
+  fd.append('sellerId', currentUser.id);
+  const res = await fetch(`${EDGE_URL}/upload-listing-video`, { method:'POST', headers:{'apikey':SUPABASE_KEY}, body: fd });
+  const data = await res.json();
+  if (!res.ok || data.error) { statusEl.textContent = 'Upload failed: ' + (data.error||''); return; }
+  statusEl.textContent = '✓ Sent for review';
+  mvSelectedFile = null;
+}
 function videoWalkthroughLimit(){
   const sub=subscriptionInfo();
   if(!sub.active)return 1; // every seller gets one free video slot; paid plans unlock more

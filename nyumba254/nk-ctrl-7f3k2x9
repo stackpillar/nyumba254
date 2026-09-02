@@ -3169,20 +3169,35 @@ function notifySms(type, payload) {
     document.getElementById('admin-video-footer').innerHTML = '';
     document.getElementById('admin-video-modal').classList.add('open');
 
-    const [{ data: videos, error: vErr }, { data: seller, error: sErr }] = await Promise.all([
+    const [{ data: videos, error: vErr }, { data: seller, error: sErr }, { data: pendingVids }] = await Promise.all([
       db.from('listing_videos').select('*').eq('listing_id', listingId).order('position', { ascending: true }),
       l.seller_id ? db.from('profiles').select('id,full_name,video_walkthrough_blocked,video_walkthrough_block_reason').eq('id', l.seller_id).single() : Promise.resolve({ data: null }),
+      db.from('pending_seller_videos').select('*').eq('listing_id', listingId).eq('status', 'pending_review').order('created_at', { ascending: false }),
     ]);
     if (vErr) { document.getElementById('admin-video-body').innerHTML = `<div class="table-loading"><p>Could not load: ${esc(vErr.message)}</p></div>`; return; }
     if (seller) _users[seller.id] = { ..._users[seller.id], ...seller };
 
-    renderAdminVideoModal(videos || [], seller || null);
+    renderAdminVideoModal(videos || [], seller || null, pendingVids || []);
   }
 
-  function renderAdminVideoModal(videos, seller) {
+  function renderAdminVideoModal(videos, seller, pending) {
     const current = videos[0] || null;
     const blocked = !!seller?.video_walkthrough_blocked;
+    const pendingHtml = (pending && pending.length) ? `
+      <div class="confirm-warning" style="background:var(--gold-light);color:var(--gold)">
+        ${pending.length} video(s) uploaded by the seller, awaiting your review:
+      </div>
+      ${pending.map(p => `
+        <div class="field" style="border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+          <a href="${esc(p.youtube_url)}" target="_blank" rel="noopener">${esc(p.youtube_url)} ↗</a>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="action-btn approve" onclick="adminApproveSellerVideo('${p.id}')">Approve → publish</button>
+            <button class="action-btn reject" onclick="adminRejectSellerVideo('${p.id}')">Reject</button>
+          </div>
+        </div>`).join('')}
+    ` : '';
     document.getElementById('admin-video-body').innerHTML = `
+      ${pendingHtml}
       ${current ? `
         <div class="field"><label>Current video link</label>
           <div class="val" style="word-break:break-all">${esc(current.url)}</div>
@@ -3246,6 +3261,23 @@ function notifySms(type, payload) {
     toast(nextBlocked ? 'Seller blocked from adding videos ✓' : 'Seller unblocked ✓', 'success');
     _users[sellerId] = { ..._users[sellerId], video_walkthrough_blocked: nextBlocked, video_walkthrough_block_reason: reason };
     openAdminVideoModal(adminVideoListingId);
+  }
+
+  async function adminApproveSellerVideo(pendingId) {
+    const { data: p } = await db.from('pending_seller_videos').select('*').eq('id', pendingId).single();
+    if (!p) return;
+    await db.from('listing_videos').delete().eq('listing_id', p.listing_id);
+    await db.from('listing_videos').insert({ listing_id: p.listing_id, url: p.youtube_url, position: 0 });
+    await db.from('pending_seller_videos').update({ status: 'approved', reviewed_at: new Date().toISOString(), reviewed_by: currentUser.id }).eq('id', pendingId);
+    logAction('approve_seller_video', 'listing', p.listing_id, p.youtube_url);
+    toast('Video approved and published ✓', 'success');
+    openAdminVideoModal(p.listing_id);
+  }
+  async function adminRejectSellerVideo(pendingId) {
+    const { data: p } = await db.from('pending_seller_videos').select('*').eq('id', pendingId).single();
+    await db.from('pending_seller_videos').update({ status: 'rejected', reviewed_at: new Date().toISOString(), reviewed_by: currentUser.id }).eq('id', pendingId);
+    toast('Video rejected', 'success');
+    if (p) openAdminVideoModal(p.listing_id);
   }
 
   // ─── EDIT LISTING MODAL ───
