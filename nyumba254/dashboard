@@ -277,17 +277,23 @@
     .chat-messages::-webkit-scrollbar{width:5px}
     .chat-messages::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.12);border-radius:3px}
 
-    .chat-bubble-row{display:flex;gap:8px;align-items:flex-end;margin:5px 0}
+    .chat-bubble-row{display:flex;gap:8px;align-items:flex-end;margin:2px 0}
     .chat-bubble-row.seller{flex-direction:row-reverse}
+    .chat-bubble-row.grouped{margin-top:-2px}
+    .chat-bubble-row.grouped .bubble-avatar{visibility:hidden}
+    .chat-bubble-row.group-start{margin-top:14px}
     .bubble-avatar{width:26px;height:26px;border-radius:50%;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-bottom:2px}
     .bubble-avatar.buyer{background:var(--white);color:var(--green-dark);border:1.5px solid var(--green-light)}
     .bubble-avatar.seller-av{background:linear-gradient(135deg,var(--green-mid),var(--green-dark));color:white}
-    .chat-bubble{max-width:66%;padding:11px 15px;border-radius:16px;font-size:13.5px;line-height:1.6;position:relative;box-shadow:0 1px 2px rgba(0,0,0,0.05)}
+    .chat-bubble{width:fit-content;max-width:66%;padding:10px 14px;border-radius:18px;font-size:13.5px;line-height:1.55;position:relative;box-shadow:0 1px 2px rgba(0,0,0,0.06);word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap;hyphens:none}
     .chat-bubble.buyer{background:var(--white);color:var(--text);border-bottom-left-radius:4px}
     .chat-bubble.seller-b{background:linear-gradient(135deg,var(--green),var(--green-dark));color:white;border-bottom-right-radius:4px}
     .bubble-time{font-size:10px;margin-top:5px;color:var(--text-3);display:flex;align-items:center;gap:4px}
     .chat-bubble-row.seller .bubble-time{text-align:right;justify-content:flex-end}
-    .bubble-time .tick{width:13px;height:13px;stroke:var(--green-mid)}
+    .bubble-time .tick{width:13px;height:13px;stroke:var(--text-3);transition:stroke .15s}
+.bubble-time .tick.read{stroke:#4FC3F7}
+.chat-bubble{cursor:pointer}
+.chat-bubble:hover{filter:brightness(0.97)}
 
     .chat-date-divider{text-align:center;font-size:11px;color:var(--text-3);font-weight:600;padding:14px 0 8px;position:relative}
     .chat-date-divider span{background:#e9ebe6;padding:4px 12px;border-radius:20px;position:relative;z-index:1}
@@ -950,7 +956,8 @@
           <div class="chat-pane-empty" id="chat-empty"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><p>Select a conversation to view messages</p></div>
           <div id="chat-active" style="display:none;flex-direction:column;flex:1;overflow:hidden">
             <div class="chat-header" id="chat-header"></div>
-            <div class="chat-messages" id="chat-messages"></div>
+            <div class="chat-messages" id="chat-messages" onscroll="handleChatScroll()"></div>
+<button id="chat-scroll-btn" onclick="scrollChatToBottom(true)" style="display:none;position:absolute;bottom:90px;right:26px;width:38px;height:38px;border-radius:50%;background:var(--white);border:1px solid var(--border);box-shadow:var(--shadow);z-index:5;align-items:center;justify-content:center;cursor:pointer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--text-2)" stroke-width="2"><polyline points="19 12 12 19 5 12"/><line x1="12" y1="19" x2="12" y2="5"/></svg></button>
             <div class="chat-wa-hint" id="chat-wa-hint"></div>
             <div class="chat-quickreply-bar" id="chat-quickreply-bar" style="display:none"></div>
             <div class="chat-input-bar">
@@ -2008,6 +2015,11 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
     nkPopulateEditAreas(county);
   }
 
+  function copyBubbleText(el){
+  const text=el.textContent;
+  navigator.clipboard.writeText(text).then(()=>showToast('Message copied ✓','success')).catch(()=>{});
+}
+
 
 let currentUser=null,currentProfile=null,ownerProfile=null,effectiveSellerId=null,isTeamMember=false,allListings=[],allEnquiries=[],allPayments=[],allMessages=[],allReviews=[],threads=[],activeThread=null,listingFilter='all',enquiryFilter='all',deleteTargetId=null,occupiedTargetId=null,replyTargetEnquiry=null,msgPollTimer=null,threadListingFilter=null,messagesChannel=null,listingActionBusy=new Set();
 
@@ -2468,6 +2480,18 @@ function bnbSubscriptionInfo(){
   const bnbPlanActive = !!(p?.bnb_plan && p?.bnb_expires_at && new Date(p.bnb_expires_at) > new Date());
   const active = bnbPlanActive || eliteActive();
   return { active, plan: bnbPlanActive ? p.bnb_plan : (eliteActive() ? 'elite_included' : null) };
+}
+function isNearChatBottom(){
+  const mc=document.getElementById('chat-messages');if(!mc)return true;
+  return mc.scrollHeight-mc.scrollTop-mc.clientHeight<120;
+}
+function handleChatScroll(){
+  const btn=document.getElementById('chat-scroll-btn');
+  if(btn)btn.style.display=isNearChatBottom()?'none':'flex';
+}
+function scrollChatToBottom(force){
+  const mc=document.getElementById('chat-messages');if(!mc)return;
+  if(force||isNearChatBottom())mc.scrollTop=mc.scrollHeight;
 }
 
 function updatePremiumNavBadge(sub){
@@ -5882,7 +5906,21 @@ function renderChatMessages(t){
   const sn=currentProfile?.full_name||currentUser?.email?.split('@')[0]||'You';
   const si=sn.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()||'S';
   const bi=t.buyer_name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()||'?';
-  mc.innerHTML=t.messages.map(m=>{const md=new Date(m.created_at).toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long'});const dd=md!==lastDate?`<div class="chat-date-divider"><span>${md}</span></div>`:'';lastDate=md;const isSeller=m.sender==='seller';const time=new Date(m.created_at).toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'});const tick=isSeller?'<svg class="tick" viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="1 13 6 18 15 7"/><polyline points="8 13 13 18 22 7"/></svg>':'';return `${dd}<div class="chat-bubble-row ${isSeller?'seller':''}"><div class="bubble-avatar ${isSeller?'seller-av':'buyer'}">${isSeller?si:bi}</div><div><div class="chat-bubble ${isSeller?'seller-b':'buyer'}">${escHtml(m.content||m.message||'')}</div><div class="bubble-time">${time}${tick}</div></div></div>`;}).join('');
+  let lastSender=null,lastTime=0;
+mc.innerHTML=t.messages.map(m=>{
+  const md=new Date(m.created_at).toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long'});
+  const dd=md!==lastDate?`<div class="chat-date-divider"><span>${md}</span></div>`:'';
+  if(md!==lastDate)lastSender=null;
+  lastDate=md;
+  const isSeller=m.sender==='seller';
+  const ts=new Date(m.created_at).getTime();
+  const grouped = isSeller===lastSender && (ts-lastTime) < 120000; // same sender, <2min apart
+  lastSender=isSeller;lastTime=ts;
+  const time=new Date(m.created_at).toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'});
+  const isRead=!!m.read_at;
+  const tick=isSeller?`<svg class="tick ${isRead?'read':''}" viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="1 13 6 18 15 7"/><polyline points="8 13 13 18 22 7"/></svg>`:'';
+  return `${dd}<div class="chat-bubble-row ${isSeller?'seller':''} ${grouped?'grouped':'group-start'}"><div class="bubble-avatar ${isSeller?'seller-av':'buyer'}">${isSeller?si:bi}</div><div class="bubble-wrap"><div class="chat-bubble ${isSeller?'seller-b':'buyer'}" onclick="copyBubbleText(this)" title="Click to copy">${escHtml(m.content||m.message||'')}</div><div class="bubble-time">${time}${tick}</div></div></div>`;
+}).join('');
 }
 
 async function sendChatReply(){
@@ -5892,7 +5930,12 @@ async function sendChatReply(){
   const nm={listing_id:activeThread.listing_id,buyer_token:activeThread.buyer_token||null,buyer_name:activeThread.buyer_name,buyer_phone:activeThread.buyer_phone||null,sender:'seller',content:text};
   const{data,error}=await db.from('messages').insert(nm).select().single();
   btn.disabled=false;
-  if(error){showToast('Could not send: '+error.message,'error');return;}
+  if(error){
+    showToast('Message failed to send — tap to retry','error');
+    input.value=text; // restore so nothing is lost
+    autoResizeTextarea(input);
+    return;
+  }
   allMessages.push(data||{...nm,id:Date.now(),created_at:new Date().toISOString()});
   buildThreads();activeThread=threads.find(t=>t.key===activeThread.key)||activeThread;
   input.value='';input.style.height='auto';renderChatMessages(activeThread);renderThreadList();
