@@ -1414,6 +1414,15 @@
   </div>
 </div>
 
+<!-- ADMIN VIDEO MODAL -->
+<div class="modal-overlay" id="admin-video-modal" onclick="handleOverlayClick(event,'admin-video-modal')">
+  <div class="modal" style="max-width:480px" role="dialog" aria-modal="true" aria-labelledby="admin-video-title">
+    <div class="modal-header"><h3 id="admin-video-title">Manage video walkthrough</h3><button class="modal-close" onclick="closeAdminVideoModal()" aria-label="Close">×</button></div>
+    <div class="modal-body" id="admin-video-body"></div>
+    <div class="modal-footer" id="admin-video-footer"></div>
+  </div>
+</div>
+
 <!-- EDIT LISTING MODAL -->
 <div class="modal-overlay" id="edit-listing-modal" onclick="handleOverlayClick(event,'edit-listing-modal')">
   <div class="modal" style="max-width:560px" role="dialog" aria-modal="true" aria-labelledby="edit-listing-title">
@@ -2186,6 +2195,7 @@ function notifySms(type, payload) {
   const ICONS = {
     view:     '<circle cx="12" cy="12" r="3"/><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>',
     edit:     '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>',
+    video:    '<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>',
     approve:  '<polyline points="20 6 9 17 4 12"/>',
     reject:   '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
     feature:  '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
@@ -2502,6 +2512,7 @@ function notifySms(type, payload) {
         ...(l.is_featured?[{label:'☆ Unfeature', cls:'', fn:`unfeatureListing('${l.id}')`, disabled: locked}]:[]),
         {label:'View details', cls:'', fn:`openListingModal('${l.id}')`},
         {label:'Edit listing',  cls:'', fn:`openEditListingModal('${l.id}')`},
+        {label:'Manage video walkthrough', cls:'', fn:`openAdminVideoModal('${l.id}')`},
         l.is_disabled
           ? {label:'Activate',   cls:'success', fn:`activateListing('${l.id}')`}
           : {label:'Deactivate', cls:'danger',  fn:`deactivateListing('${l.id}')`},
@@ -2533,6 +2544,7 @@ function notifySms(type, payload) {
             ${l.is_featured?aBtn('unfeature','Unfeature listing','view',`unfeatureListing('${l.id}')`, locked, LOCKED_ACTION_TIP):''}
             ${aBtn('view','View details','view',`openListingModal('${l.id}')`)}
             ${aBtn('edit','Edit listing','view',`openEditListingModal('${l.id}')`)}
+            ${aBtn('video','Manage video walkthrough','view',`openAdminVideoModal('${l.id}')`)}
             ${l.is_disabled
               ? aBtn('activate','Activate listing','approve',`activateListing('${l.id}')`)
               : aBtn('deactivate','Deactivate listing','reject',`deactivateListing('${l.id}')`)}
@@ -2576,6 +2588,7 @@ function notifySms(type, payload) {
           ${renderSocialButtons(l, locked)}
           ${aBtn('view','View','view',`openListingModal('${l.id}')`)}
           ${aBtn('edit','Edit','view',`openEditListingModal('${l.id}')`)}
+          ${aBtn('video','Video','view',`openAdminVideoModal('${l.id}')`)}
           ${l.is_disabled
             ? aBtn('activate','Activate','approve',`activateListing('${l.id}')`)
             : aBtn('deactivate','Deactivate','reject',`deactivateListing('${l.id}')`)}
@@ -3143,6 +3156,96 @@ function notifySms(type, payload) {
       <button class="btn-modal reject" onclick="closeModal();deleteListingPermanently('${l.id}')">Delete permanently</button>
       <button class="btn-modal cancel" onclick="closeModal()">Close</button>`;
     openModal();
+  }
+
+  // ─── ADMIN VIDEO MODAL — insert/replace/delete a listing's video link, and
+  // block/unblock the seller from adding new ones going forward ───
+  let adminVideoListingId = null;
+  async function openAdminVideoModal(listingId) {
+    const l = _listings[listingId]; if (!l) return;
+    adminVideoListingId = listingId;
+    document.getElementById('admin-video-title').textContent = `Video walkthrough — ${l.title}`;
+    document.getElementById('admin-video-body').innerHTML = `<div class="table-loading"><p>Loading…</p></div>`;
+    document.getElementById('admin-video-footer').innerHTML = '';
+    document.getElementById('admin-video-modal').classList.add('open');
+
+    const [{ data: videos, error: vErr }, { data: seller, error: sErr }] = await Promise.all([
+      db.from('listing_videos').select('*').eq('listing_id', listingId).order('position', { ascending: true }),
+      l.seller_id ? db.from('profiles').select('id,full_name,video_walkthrough_blocked,video_walkthrough_block_reason').eq('id', l.seller_id).single() : Promise.resolve({ data: null }),
+    ]);
+    if (vErr) { document.getElementById('admin-video-body').innerHTML = `<div class="table-loading"><p>Could not load: ${esc(vErr.message)}</p></div>`; return; }
+    if (seller) _users[seller.id] = { ..._users[seller.id], ...seller };
+
+    renderAdminVideoModal(videos || [], seller || null);
+  }
+
+  function renderAdminVideoModal(videos, seller) {
+    const current = videos[0] || null;
+    const blocked = !!seller?.video_walkthrough_blocked;
+    document.getElementById('admin-video-body').innerHTML = `
+      ${current ? `
+        <div class="field"><label>Current video link</label>
+          <div class="val" style="word-break:break-all">${esc(current.url)}</div>
+        </div>
+        <div class="field"><a href="${esc(current.url)}" target="_blank" rel="noopener" class="action-btn view" style="display:inline-block">Open link ↗</a></div>
+      ` : `<div class="field"><label>Current video link</label><div class="val" style="color:var(--text-3)">No video on this listing</div></div>`}
+      <div class="field"><label>${current ? 'Replace with a new link' : 'Add a video link'}</label>
+        <input type="text" id="admin-video-url" placeholder="https://youtube.com/watch?v=… or TikTok/Instagram/Vimeo/direct file link"/>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:16px 0"/>
+      <div class="field"><label>Seller</label><div class="val">${esc(seller?.full_name || '—')}</div></div>
+      <div class="field check-field"><input type="checkbox" id="admin-video-block" ${blocked?'checked':''}/><label for="admin-video-block">Block this seller from adding video walkthroughs</label></div>
+      ${blocked && seller?.video_walkthrough_block_reason ? `<div class="confirm-warning">Currently blocked: ${esc(seller.video_walkthrough_block_reason)}</div>` : ''}
+      <div class="field" id="admin-video-block-reason-wrap" style="display:${blocked?'block':'none'};margin-top:10px">
+        <label>Reason (internal)</label>
+        <textarea id="admin-video-block-reason" rows="2" placeholder="e.g. Video did not match the property, inappropriate content…">${esc(seller?.video_walkthrough_block_reason||'')}</textarea>
+      </div>`;
+    document.getElementById('admin-video-block')?.addEventListener('change', function () {
+      document.getElementById('admin-video-block-reason-wrap').style.display = this.checked ? 'block' : 'none';
+    });
+    document.getElementById('admin-video-footer').innerHTML = `
+      <button class="btn-modal cancel" onclick="closeAdminVideoModal()">Close</button>
+      ${current ? `<button class="btn-modal reject" onclick="adminDeleteVideo(${current.id})">Delete video</button>` : ''}
+      <button class="btn-modal approve" onclick="adminSaveVideo()">${current ? 'Replace video' : 'Add video'}</button>
+      ${seller ? `<button class="btn-modal ${blocked ? 'approve' : 'reject'}" onclick="adminToggleVideoBlock('${seller.id}', ${!blocked})">${blocked ? 'Unblock seller' : 'Save block'}</button>` : ''}`;
+  }
+
+  function closeAdminVideoModal() { document.getElementById('admin-video-modal').classList.remove('open'); adminVideoListingId = null; }
+
+  async function adminSaveVideo() {
+    const url = document.getElementById('admin-video-url').value.trim();
+    if (!url) { toast('Enter a video link first', 'error'); return; }
+    if (!/^https?:\/\//i.test(url)) { toast('Enter a valid URL starting with http:// or https://', 'error'); return; }
+    // Admin insert/update bypasses the seller block flag (RLS policy
+    // "admins manage all listing videos" — separate from the seller policy).
+    await db.from('listing_videos').delete().eq('listing_id', adminVideoListingId);
+    const { error } = await db.from('listing_videos').insert({ listing_id: adminVideoListingId, url, position: 0 });
+    if (error) { toast('Error saving video: ' + error.message, 'error'); return; }
+    logAction('admin_set_listing_video', 'listing', adminVideoListingId, url);
+    toast('Video saved ✓', 'success');
+    openAdminVideoModal(adminVideoListingId);
+  }
+
+  async function adminDeleteVideo(videoId) {
+    const { error } = await db.from('listing_videos').delete().eq('id', videoId);
+    if (error) { toast('Error deleting: ' + error.message, 'error'); return; }
+    logAction('admin_delete_listing_video', 'listing', adminVideoListingId, '');
+    toast('Video deleted', 'success');
+    openAdminVideoModal(adminVideoListingId);
+  }
+
+  async function adminToggleVideoBlock(sellerId, nextBlocked) {
+    const reason = nextBlocked ? (document.getElementById('admin-video-block-reason')?.value.trim() || null) : null;
+    const { data, error } = await db.from('profiles').update({
+      video_walkthrough_blocked: nextBlocked,
+      video_walkthrough_block_reason: reason,
+    }).eq('id', sellerId).select();
+    if (error) { toast('Error: ' + error.message, 'error'); return; }
+    if (!data?.length) { toast('Blocked by RLS — check Supabase policy', 'error'); return; }
+    logAction(nextBlocked ? 'block_seller_videos' : 'unblock_seller_videos', 'profile', sellerId, reason || '');
+    toast(nextBlocked ? 'Seller blocked from adding videos ✓' : 'Seller unblocked ✓', 'success');
+    _users[sellerId] = { ..._users[sellerId], video_walkthrough_blocked: nextBlocked, video_walkthrough_block_reason: reason };
+    openAdminVideoModal(adminVideoListingId);
   }
 
   // ─── EDIT LISTING MODAL ───

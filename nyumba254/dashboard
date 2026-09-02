@@ -5666,6 +5666,10 @@ function renderManageVideosModal(){
 }
 
 async function addListingVideo(){
+  if(currentProfile?.video_walkthrough_blocked){
+    showToast('Video walkthroughs are disabled for your account'+(currentProfile.video_walkthrough_block_reason?': '+currentProfile.video_walkthrough_block_reason:'')+'. Contact support if you think this is a mistake.','error');
+    return;
+  }
   const limit=videoWalkthroughLimit();
   if(!limit){showToast('Video walkthroughs are a Premium feature — upgrade to add one.','error');return;}
   if(mvVideos.length>=limit){showToast('Video limit reached for your plan.','error');return;}

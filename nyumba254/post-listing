@@ -1751,7 +1751,10 @@ async function submitListing() {
     const videoUrl = document.getElementById('video_url').value.trim();
     if (videoUrl) {
       const { error: videoErr } = await db.from('listing_videos').insert({ listing_id: listing.id, url: videoUrl, position: 0 });
-      if (videoErr) console.error('listing_videos insert error:', videoErr);
+      if (videoErr) {
+        console.error('listing_videos insert error:', videoErr);
+        showToast(videoErr.message?.includes('row-level security') ? 'Your video link could not be saved — video walkthroughs may be disabled for your account.' : 'Could not save your video link, but the listing was submitted.', 'error');
+      }
     }
 
     fetch(`${EDGE_URL}/send-listing-email`, {
