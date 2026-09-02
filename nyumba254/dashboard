@@ -701,15 +701,22 @@
       .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.sidebar-overlay.open{display:block}
       .topbar{left:0}.main{margin-left:0}.hamburger{display:flex}
       .listings-table thead{display:none}
+      .listings-table{table-layout:auto}
+      .listings-table th:nth-child(1),.listings-table td:nth-child(1),
+      .listings-table th:nth-child(2),.listings-table td:nth-child(2),
+      .listings-table th:nth-child(3),.listings-table td:nth-child(3),
+      .listings-table th:nth-child(4),.listings-table td:nth-child(4),
+      .listings-table th:nth-child(5),.listings-table td:nth-child(5),
+      .listings-table th:nth-child(6),.listings-table td:nth-child(6),
+      .listings-table th:nth-child(7),.listings-table td:nth-child(7){width:100% !important}
       .listings-table tr{display:block;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:12px;overflow:hidden}
-      .listings-table td{display:block;padding:6px 16px}
+      .listings-table td{display:block;width:100%;padding:6px 16px}
       .listings-table td:first-child{padding-top:14px}
       .listings-table td:last-child{padding:0}
       .listings-table .actions-cell{
         display:flex;
-        flex-wrap:nowrap;
-        overflow-x:auto;
-        -webkit-overflow-scrolling:touch;
+        flex-wrap:wrap;
+        justify-content:center;
         align-items:center;
         gap:8px;
         padding:10px 16px;
@@ -717,10 +724,8 @@
         background:var(--surface);
         border-top:1px solid var(--border);
       }
-      .listings-table .actions-cell::-webkit-scrollbar{height:4px}
-      .listings-table .actions-cell::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
       .listings-table .actions-cell>*{flex:0 0 auto}
-      .listings-table .actions-cell>.icon-btn{width:30px;height:30px}
+      .listings-table .actions-cell>.icon-btn{width:32px;height:32px}
       .messages-layout{grid-template-columns:1fr;position:relative}
       .messages-layout .thread-list{display:flex}
       .messages-layout .chat-pane{display:none}
