@@ -717,22 +717,44 @@
       .listings-table td{display:block;padding:0;border:none;vertical-align:top}
 
       /* Property header: thumb + title + notes, always full width */
-      .listings-table td:nth-child(1){width:100%;padding:14px 16px 12px}
+      .listings-table thead{display:none}
+      .listings-table{table-layout:auto;border-collapse:separate;border-spacing:0}
+      .listings-table th,.listings-table td{width:auto !important}
+
+      .listings-table tr{
+        display:block;
+        background:var(--white);
+        border:1px solid var(--border);
+        border-radius:var(--radius-lg);
+        margin-bottom:14px;
+        overflow:hidden;
+        box-shadow:0 1px 4px rgba(0,0,0,0.04);
+      }
+      .listings-table td{
+        display:block;
+        width:100%;
+        padding:0;
+        border:none;
+      }
+
+      /* Property header cell */
+      .listings-table td:nth-child(1){padding:14px 16px 12px}
       .listings-table td:nth-child(1) .listing-price-text{word-break:break-word}
 
-      /* Price / Status / Messages / Views / Posted → labeled stat strip */
+      /* Price / Status / Messages / Views / Posted → each its own labeled row */
       .listings-table td:nth-child(2),
       .listings-table td:nth-child(3),
       .listings-table td:nth-child(4),
       .listings-table td:nth-child(5),
       .listings-table td:nth-child(6){
-        flex:1 1 33.333%;
-        min-width:100px;
-        padding:10px 12px;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        padding:9px 16px;
         border-top:1px solid var(--border);
+        font-size:12.5px;
       }
-      .listings-table td:nth-child(3),
-      .listings-table td:nth-child(5){border-left:1px solid var(--border)}
       .listings-table td:nth-child(2)::before{content:"Price"}
       .listings-table td:nth-child(3)::before{content:"Status"}
       .listings-table td:nth-child(4)::before{content:"Messages"}
@@ -743,33 +765,25 @@
       .listings-table td:nth-child(4)::before,
       .listings-table td:nth-child(5)::before,
       .listings-table td:nth-child(6)::before{
-        display:block;font-size:9.5px;font-weight:700;text-transform:uppercase;
-        letter-spacing:.05em;color:var(--text-3);margin-bottom:4px;
+        font-size:10.5px;font-weight:700;text-transform:uppercase;
+        letter-spacing:.05em;color:var(--text-3);flex-shrink:0;
       }
-      .listings-table td:nth-child(2) .listing-price-text,
-      .listings-table td:nth-child(2) .listing-price-sub{font-size:12.5px}
+      .listings-table td:nth-child(2) > div{display:flex;flex-direction:column;align-items:flex-end}
 
-      /* Sixth stat cell wraps to its own full row so 5 items sit 3+2 cleanly */
-      .listings-table td:nth-child(6){flex-basis:100%;border-left:none}
-
-      /* Actions: even grid, wraps into rows, never scrolls, never clipped */
+      /* Actions: simple wrapping flex row, fixed-size buttons — no grid, no width surprises */
       .listings-table .actions-cell{
-        width:100%;
-        display:grid;
-        grid-template-columns:repeat(auto-fill,minmax(36px,1fr));
+        display:flex;
+        flex-wrap:wrap;
         gap:8px;
-        padding:12px 14px;
+        padding:12px 16px;
         background:var(--surface);
         border-top:1px solid var(--border);
       }
-      .listings-table .actions-cell>*{width:100%;height:36px;flex:none}
-      .messages-layout{grid-template-columns:1fr;position:relative}
-      .messages-layout .thread-list{display:flex}
-      .messages-layout .chat-pane{display:none}
-      .messages-layout.mobile-chat-active .thread-list{display:none}
-      .messages-layout.mobile-chat-active .chat-pane{display:flex}
-      .mobile-back-btn{display:flex !important}
-    }
+      .listings-table .actions-cell>*{
+        flex:0 0 auto;
+        width:34px;
+        height:34px;
+      }
     @media(max-width:600px){.stat-grid{grid-template-columns:1fr 1fr}.page{padding:16px}.form-grid{grid-template-columns:1fr}.topbar{padding:0 16px}}
     @media(max-width:400px){.stat-grid{grid-template-columns:1fr}}
     @keyframes scwBadgeBlink { 0%,100%{opacity:1} 50%{opacity:.35} }
