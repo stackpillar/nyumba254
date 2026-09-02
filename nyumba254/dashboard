@@ -128,7 +128,7 @@
     .trial-note.urgent{color:var(--red);background:var(--red-light)}
     .multiunit-note{font-size:11px;color:#5B3E96;background:#EDE7F6;border-radius:6px;padding:6px 9px;margin-top:6px;line-height:1.5;max-width:320px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
     .multiunit-note .manage-link{color:#5B3E96;font-weight:700;text-decoration:underline;cursor:pointer}
-    .icon-btn{width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;border:1px solid var(--border);background:white;color:var(--text-2)}
+    .icon-btn{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;border:1px solid var(--border);background:white;color:var(--text-2);flex-shrink:0}
     .icon-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
     .icon-btn:hover{border-color:var(--green);color:var(--green);background:var(--green-light)}
     .icon-btn.danger:hover{border-color:var(--red);color:var(--red);background:var(--red-light)}
@@ -220,7 +220,14 @@
     .filter-search{margin-left:auto;display:flex;align-items:center;border:1.5px solid var(--border);border-radius:var(--radius);background:white;overflow:hidden}
     .filter-search svg{width:14px;height:14px;stroke:var(--text-3);fill:none;stroke-width:2;margin:0 10px;flex-shrink:0}
     .filter-search input{border:none;outline:none;font-size:13px;padding:7px 10px 7px 0;width:180px;color:var(--text);background:transparent}
-    .listings-table{width:100%;border-collapse:collapse}
+    .listings-table{width:100%;border-collapse:collapse;table-layout:fixed}
+.listings-table th:nth-child(1),.listings-table td:nth-child(1){width:32%}
+.listings-table th:nth-child(2),.listings-table td:nth-child(2){width:14%}
+.listings-table th:nth-child(3),.listings-table td:nth-child(3){width:10%}
+.listings-table th:nth-child(4),.listings-table td:nth-child(4){width:9%}
+.listings-table th:nth-child(5),.listings-table td:nth-child(5){width:7%}
+.listings-table th:nth-child(6),.listings-table td:nth-child(6){width:10%}
+.listings-table th:nth-child(7),.listings-table td:nth-child(7){width:18%}
     .listings-table th{text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface);white-space:nowrap}
     .listings-table td{padding:14px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
     .listings-table tr:last-child td{border-bottom:none}
@@ -235,9 +242,9 @@
     .listing-name-cell > div{min-width:0;flex:1}
     .listing-title-text{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .listing-area-text{font-size:11px;color:var(--text-3)}
-    .listing-price-text{font-size:13px;font-weight:700;color:var(--green-dark);word-break:break-all;overflow-wrap:break-word;max-width:150px}
+    .listing-price-text{font-size:13px;font-weight:700;color:var(--green-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
     .listing-price-sub{font-size:11px;color:var(--text-3)}
-    .actions-cell{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+    .actions-cell{display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:flex-start}
     .empty-state{text-align:center;padding:60px 20px;color:var(--text-3)}
     .empty-state svg{width:48px;height:48px;stroke:var(--border);fill:none;stroke-width:1.2;margin:0 auto 16px}
     .empty-state h3{font-size:16px;font-weight:600;color:var(--text-2);margin-bottom:6px}
