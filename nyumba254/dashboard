@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>window.__scwEarlyErrors=[];window.addEventListener('error',function(e){window.__scwEarlyErrors.push((e&&e.message)?e.message:'Unknown error at '+(e&&e.filename||'?')+':'+(e&&e.lineno||'?'));});</script>
+  <script>window.__scwEarlyErrors=[];window.addEventListener('error',function(e){window.__scwEarlyErrors.push((e&&e.message)?e.message:'Unknown error at '+(e&&e.filename||'?')+':'+(e&&e.lineno||'?'));});
+  (function(){try{var t=localStorage.getItem('ny_theme');if(t&&t!=='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+  </script>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard — Nyumba254</title>
@@ -22,6 +24,34 @@
       --radius:10px;--radius-lg:16px;--shadow:0 1px 3px rgba(0,0,0,0.07),0 4px 12px rgba(0,0,0,0.05);
       --shadow-lg:0 8px 32px rgba(0,0,0,0.12);
     }
+        [data-theme="dark"] {
+      --green:#22c58f;--green-light:#0f2a22;--green-mid:#2ee6a8;--green-dark:#0a4636;
+      --gold:#e0a638;--gold-light:#2b2214;--text:#eef1ee;--text-2:#c3c8c3;--text-3:#8b928c;
+      --border:#2c332f;--surface:#121613;--white:#191f1b;--red:#ef6455;--red-light:#3a1a17;
+      --amber:#f2b23c;--amber-light:#332911;--purple:#a78bfa;
+      --shadow:0 1px 3px rgba(0,0,0,0.35),0 4px 12px rgba(0,0,0,0.25);
+      --shadow-lg:0 8px 32px rgba(0,0,0,0.5);
+    }
+    [data-theme="sandstone"] {
+      --green:#8a5a2c;--green-light:#f4e9da;--green-mid:#b17a3f;--green-dark:#5f3c17;
+      --gold:#b8860b;--gold-light:#faf1de;--text:#2b241c;--text-2:#5c5142;--text-3:#948a76;
+      --border:#e6d9c2;--surface:#faf5ea;--white:#fffdf8;--red:#b5432f;--red-light:#f7e3dc;
+      --amber:#c2790f;--amber-light:#f7ecd6;--purple:#7c5cb0;
+      --shadow:0 1px 3px rgba(90,60,20,0.09),0 4px 12px rgba(90,60,20,0.07);
+      --shadow-lg:0 8px 32px rgba(90,60,20,0.16);
+    }
+    .theme-switch{position:relative}
+    .theme-switch-btn{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);background:var(--white);color:var(--text-2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+    .theme-switch-btn:hover{border-color:var(--green);color:var(--green)}
+    .theme-menu{display:none;position:absolute;top:44px;right:0;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:8px;min-width:170px;z-index:200}
+    .theme-menu.open{display:block}
+    .theme-option{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border-radius:8px;font-size:13px;font-weight:500;color:var(--text-2);cursor:pointer;text-align:left}
+    .theme-option:hover{background:var(--surface)}
+    .theme-option.active{background:var(--green-light);color:var(--green-dark);font-weight:700}
+    .theme-swatch{width:18px;height:18px;border-radius:50%;flex-shrink:0;border:1.5px solid rgba(0,0,0,0.08)}
+    .swatch-light{background:linear-gradient(135deg,#0F6E56,#E1F5EE)}
+    .swatch-sandstone{background:linear-gradient(135deg,#8a5a2c,#faf5ea)}
+    .swatch-dark{background:linear-gradient(135deg,#22c58f,#121613)}
     html{height:100%}
     body{font-family:'Inter',sans-serif;color:var(--text);background:var(--surface);font-size:14px;line-height:1.6;min-height:100vh}
     a{text-decoration:none;color:inherit}img{display:block;max-width:100%}
@@ -273,6 +303,7 @@
     .mobile-back-btn{display:none;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:white;color:var(--text-2);flex-shrink:0;cursor:pointer}
     .mobile-back-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
 
+    #chat-active{position:relative}
     .chat-messages{flex:1;overflow-y:auto;padding:22px 26px;display:flex;flex-direction:column;gap:4px}
     .chat-messages::-webkit-scrollbar{width:5px}
     .chat-messages::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.12);border-radius:3px}
@@ -291,9 +322,9 @@
     .bubble-time{font-size:10px;margin-top:5px;color:var(--text-3);display:flex;align-items:center;gap:4px}
     .chat-bubble-row.seller .bubble-time{text-align:right;justify-content:flex-end}
     .bubble-time .tick{width:13px;height:13px;stroke:var(--text-3);transition:stroke .15s}
-.bubble-time .tick.read{stroke:#4FC3F7}
-.chat-bubble{cursor:pointer}
-.chat-bubble:hover{filter:brightness(0.97)}
+    .bubble-time .tick.read{stroke:#4FC3F7}
+    .chat-bubble{cursor:pointer}
+    .chat-bubble:hover{filter:brightness(0.97)}
 
     .chat-date-divider{text-align:center;font-size:11px;color:var(--text-3);font-weight:600;padding:14px 0 8px;position:relative}
     .chat-date-divider span{background:#e9ebe6;padding:4px 12px;border-radius:20px;position:relative;z-index:1}
@@ -857,6 +888,16 @@
         </div>
       </div>
       <div class="topbar-right">
+        <div class="theme-switch" id="theme-switch">
+          <button class="theme-switch-btn" onclick="toggleThemeMenu()" title="Change theme" aria-label="Change theme">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          </button>
+          <div class="theme-menu" id="theme-menu">
+            <button class="theme-option" data-theme="light" onclick="setTheme('light')"><span class="theme-swatch swatch-light"></span>Emerald</button>
+            <button class="theme-option" data-theme="sandstone" onclick="setTheme('sandstone')"><span class="theme-swatch swatch-sandstone"></span>Sandstone</button>
+            <button class="theme-option" data-theme="dark" onclick="setTheme('dark')"><span class="theme-swatch swatch-dark"></span>Midnight</button>
+          </div>
+        </div>
         <a href="/post-listing" class="btn btn-primary" id="btn-new-listing-tour" onclick="return confirmListingCategoryBeforeLeaving()">
           <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New listing
         </a>
@@ -1983,6 +2024,25 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
     "Kirinyaga": "Kirinyaga (Kerugoya)",
     "Makueni": "Makueni (Wote)"
   };
+
+  function applyStoredTheme(){
+  const saved=localStorage.getItem('ny_theme')||'light';
+  document.documentElement.setAttribute('data-theme',saved==='light'?'':saved);
+  updateThemeMenuActive(saved);
+}
+function setTheme(name){
+  localStorage.setItem('ny_theme',name);
+  document.documentElement.setAttribute('data-theme',name==='light'?'':name);
+  updateThemeMenuActive(name);
+  closeThemeMenu();
+}
+function updateThemeMenuActive(name){
+  document.querySelectorAll('.theme-option').forEach(b=>b.classList.toggle('active',b.dataset.theme===name));
+}
+function toggleThemeMenu(){document.getElementById('theme-menu')?.classList.toggle('open');}
+function closeThemeMenu(){document.getElementById('theme-menu')?.classList.remove('open');}
+document.addEventListener('click',e=>{const sw=document.getElementById('theme-switch');if(sw&&!sw.contains(e.target))closeThemeMenu();});
+applyStoredTheme();
 
   function nkCountyLabel(county) { return NK_COUNTY_LABEL[county] || county; }
 
@@ -5947,9 +6007,19 @@ function autoResizeTextarea(el){el.style.height='auto';el.style.height=Math.min(
 
 async function markThreadRead(t){
   if(!t.unread_count)return;
-  const eIds=allEnquiries.filter(e=>e.listing_id===t.listing_id&&!e.read_at&&(t.buyer_phone?e.buyer_phone===t.buyer_phone:e.buyer_token===t.buyer_token)).map(e=>e.id);
-  if(eIds.length){const{error:eErr}=await db.from('enquiries').update({read_at:new Date().toISOString()}).in('id',eIds);if(eErr){console.error('markThreadRead enquiries update failed:',eErr);}else{eIds.forEach(id=>{const e=allEnquiries.find(e=>e.id===id);if(e)e.read_at=new Date().toISOString();});}}
+  // Optimistic: clear the badge locally right away so it never "hangs" on
+  // screen even if the network write is slow — we reconcile below regardless.
+  t.unread_count=0;
+  updateNavBadges();renderThreadList();
+
+  // Pull ids straight from THIS thread's own message list — the exact same
+  // list that produced the unread count — instead of re-filtering allEnquiries
+  // by buyer_phone/buyer_token, which silently misses rows whenever a phone
+  // number is formatted differently anywhere (spaces, +254 vs 0, etc).
+  const eIds=t.messages.filter(m=>m.sender==='buyer'&&!m.read_at&&String(m.id).startsWith('enq-')).map(m=>Number(String(m.id).slice(4))).filter(n=>!isNaN(n));
   const uIds=t.messages.filter(m=>m.sender==='buyer'&&!m.read_at&&!String(m.id).startsWith('enq-')).map(m=>m.id);
+
+  if(eIds.length){const{error:eErr}=await db.from('enquiries').update({read_at:new Date().toISOString()}).in('id',eIds);if(eErr){console.error('markThreadRead enquiries update failed:',eErr);}else{eIds.forEach(id=>{const e=allEnquiries.find(e=>e.id===id);if(e)e.read_at=new Date().toISOString();});}}
   if(uIds.length){const{error:mErr}=await db.from('messages').update({read_at:new Date().toISOString()}).in('id',uIds);if(mErr){console.error('markThreadRead messages update failed:',mErr);}else{uIds.forEach(id=>{const m=allMessages.find(m=>m.id===id);if(m)m.read_at=new Date().toISOString();});}}
   buildThreads();
   if(activeThread&&activeThread.key===t.key){activeThread=threads.find(x=>x.key===t.key)||activeThread;}
@@ -5963,10 +6033,12 @@ async function markAllThreadsRead(){
   if(!unreadThreads.length){showToast('No unread messages','success');return;}
   const btn=document.getElementById('btn-mark-all-read');
   if(btn){btn.disabled=true;btn.textContent='Marking…';}
+  unreadThreads.forEach(t=>t.unread_count=0); // optimistic clear
+  updateNavBadges();renderThreadList();
 
   const eIds=[],mIds=[];
   unreadThreads.forEach(t=>{
-    allEnquiries.filter(e=>e.listing_id===t.listing_id&&!e.read_at&&(t.buyer_phone?e.buyer_phone===t.buyer_phone:e.buyer_token===t.buyer_token)).forEach(e=>eIds.push(e.id));
+    t.messages.filter(m=>m.sender==='buyer'&&!m.read_at&&String(m.id).startsWith('enq-')).forEach(m=>{const n=Number(String(m.id).slice(4));if(!isNaN(n))eIds.push(n);});
     t.messages.filter(m=>m.sender==='buyer'&&!m.read_at&&!String(m.id).startsWith('enq-')).forEach(m=>mIds.push(m.id));
   });
 
