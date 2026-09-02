@@ -676,6 +676,15 @@
           <span class="read-more" id="read-more" onclick="toggleDesc()">Read more ↓</span>
         </div>
 
+        <!-- Video walkthrough -->
+        <div class="lcard" id="video-card" style="display:none">
+          <div class="lcard-head">
+            <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+            <h3>Video Walkthrough</h3>
+          </div>
+          <div id="video-embed-wrap"></div>
+        </div>
+
         <!-- Where you'll be -->
         <div class="lcard">
           <div class="lcard-head">
@@ -1149,7 +1158,7 @@ async function loadListing() {
   if (!listingNumber || !/^\d+$/.test(listingNumber)) { showNotFound(); return; }
   try {
     const { data, error } = await db.from('listings')
-      .select('*, profiles(full_name, created_at, verification_status), listing_photos(*), listing_units(*)')
+      .select('*, profiles(full_name, created_at, verification_status), listing_photos(*), listing_units(*), listing_videos(*)')
       .eq('listing_number', parseInt(listingNumber, 10)).single();
 
     if (error) { if (error.code === 'PGRST116') showNotFound(); else showLoadError(); return; }
@@ -1342,6 +1351,12 @@ function renderListing(l) {
   }
 
   if (l.description) { document.getElementById('desc-card').style.display = 'block'; document.getElementById('desc-text').textContent = l.description; }
+
+  const videos = l.listing_videos || [];
+  if (videos.length) {
+    document.getElementById('video-card').style.display = 'block';
+    document.getElementById('video-embed-wrap').innerHTML = nkRenderVideoEmbed(videos[0].url);
+  }
 
   /* Boarding room options + occupancy donut */
   if (meta.group === 'boarding') { renderUnitAvailability(); renderOccupancyOverview(); }
@@ -1773,6 +1788,22 @@ function copyLink(evt) {
 
 function escHtml(str) { if (!str) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function escAttr(str) { if (!str) return ''; return String(str).replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+function nkRenderVideoEmbed(url) {
+  if (!url) return '';
+  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{6,})/i);
+  if (yt) return `<div style="position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden"><iframe src="https://www.youtube.com/embed/${yt[1]}" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`;
+  const vimeo = url.match(/vimeo\.com\/(\d+)/i);
+  if (vimeo) return `<div style="position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden"><iframe src="https://player.vimeo.com/video/${vimeo[1]}" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`;
+  if (/\.(mp4|webm|mov)(\?.*)?$/i.test(url)) return `<video controls preload="metadata" style="width:100%;border-radius:12px;background:#000"><source src="${escAttr(url)}"></video>`;
+  const isTikTok = /tiktok\.com/i.test(url);
+  const isInsta = /instagram\.com/i.test(url);
+  const label = isTikTok ? 'Watch on TikTok' : isInsta ? 'Watch on Instagram' : 'Watch video';
+  return `<a href="${escAttr(url)}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;padding:16px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;color:var(--text)">
+    <span style="width:44px;height:44px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="18" height="18" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
+    <span><strong style="display:block;font-size:14px">${label}</strong><span style="font-size:12px;color:var(--text-3)">Opens in a new tab</span></span>
+  </a>`;
+}
 
 function nkGetDeviceId() {
   let sid = nkLSGet('nk_sid');

@@ -5325,9 +5325,7 @@ const manageUnitsBtn=hasUnitTypes
   ?`<div class="icon-btn purple" data-id="${l.id}" onclick="openManageUnitsModal(this.dataset.id)" title="Manage unit types — mark occupied/available, add/edit/delete types" role="button" tabindex="0" aria-label="Manage unit types" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg></div>`
   :`<div class="icon-btn" data-id="${l.id}" onclick="openManageUnitsModal(this.dataset.id)" title="Add unit types to track separately" role="button" tabindex="0" aria-label="Add unit types" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg></div>`;
 
-const manageVideosBtn=subscriptionInfo().active
-  ?`<div class="icon-btn purple" data-id="${l.id}" onclick="openManageVideosModal(this.dataset.id)" title="Manage video walkthrough" role="button" tabindex="0" aria-label="Manage videos" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>`
-  :'';
+const manageVideosBtn=`<div class="icon-btn purple" data-id="${l.id}" onclick="openManageVideosModal(this.dataset.id)" title="Manage video walkthrough" role="button" tabindex="0" aria-label="Manage videos" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>`;
 
 const brochureBtn=subscriptionInfo().active
   ?`<div class="icon-btn purple" data-id="${l.id}" onclick="generateBrochure(this.dataset.id)" title="Download printable brochure" role="button" tabindex="0" aria-label="Download brochure" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>`
@@ -5634,7 +5632,7 @@ let mvActiveListingId=null,mvVideos=[];
 
 function videoWalkthroughLimit(){
   const sub=subscriptionInfo();
-  if(!sub.active)return 0;
+  if(!sub.active)return 1; // every seller gets one free video slot; paid plans unlock more
   const p = ownerProfile || currentProfile;
   const isYearly=p?.subscription_tier==='yearly';
   if(sub.plan==='elite')return isYearly?Infinity:3;

@@ -644,6 +644,17 @@
 
       <div class="photo-notice" id="photo-notice">📷 Add at least one photo to continue and increase trust.</div>
     </div>
+
+    <div class="form-card">
+      <h2>Video Walkthrough <span class="opt">optional</span></h2>
+      <p class="hint">Got a TikTok, Instagram Reel, YouTube, or Vimeo clip of the place? Paste the link — a quick video builds trust faster than photos alone. You can add, swap, or remove this any time later from your dashboard's "Manage videos" button on this listing.</p>
+      <div class="field">
+        <label>Video link <span class="opt">optional</span></label>
+        <input type="url" id="video_url" placeholder="e.g. https://www.tiktok.com/@you/video/xxxxxxxxxxxx"/>
+        <div class="field-hint">Works with TikTok, Instagram, YouTube, Vimeo, or a direct video file link.</div>
+      </div>
+    </div>
+
     <div class="form-actions">
       <button class="btn-back" onclick="goStep(3)">← Back</button>
       <div style="display:flex;align-items:center;gap:12px">
@@ -1487,7 +1498,7 @@ function collectDraftData() {
       air_guests: val('air_guests'), air_bedrooms: val('air_bedrooms'), air_bathrooms: val('air_bathrooms'),
       air_min_stay: val('air_min_stay'), air_checkin: val('air_checkin'), air_rules: val('air_rules'),
       contact_name: val('contact_name'), phone: val('phone'), whatsapp: val('whatsapp'), contact_email: val('contact_email'),
-      contact_hidden: checked('contact_hidden'),
+      contact_hidden: checked('contact_hidden'), video_url: val('video_url'),
     },
     savedAt: Date.now(),
   };
@@ -1735,6 +1746,12 @@ async function submitListing() {
       if (uploaded.length) {
         await db.from('listing_photos').insert(uploaded.map(u => ({ ...u, listing_id: listing.id })));
       }
+    }
+
+    const videoUrl = document.getElementById('video_url').value.trim();
+    if (videoUrl) {
+      const { error: videoErr } = await db.from('listing_videos').insert({ listing_id: listing.id, url: videoUrl, position: 0 });
+      if (videoErr) console.error('listing_videos insert error:', videoErr);
     }
 
     fetch(`${EDGE_URL}/send-listing-email`, {
