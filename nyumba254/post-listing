@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1868,4 +1869,1876 @@ applyCategoryUI();
 init();
 </script>
 </body>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Post a Listing — Nyumba254</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green:#0F6E56; --green-light:#E1F5EE; --green-mid:#1D9E75; --green-dark:#085041;
+      --gold:var(--green); --gold-light:var(--green-light);
+      --red:#C53030; --red-light:#FFF5F5;
+      --text:#1a1a18; --text-2:#4a4a46; --text-3:#888780;
+      --border:#e0ded8; --surface:#f7f6f2; --white:#ffffff;
+      --radius:10px; --radius-lg:16px;
+    }
+    html { scroll-behavior:smooth; }
+    body { font-family:'Inter',sans-serif; color:var(--text); background:var(--surface); font-size:15px; line-height:1.6; }
+    a { text-decoration:none; color:inherit; }
+    button { font-family:inherit; cursor:pointer; border:none; }
+    input,select,textarea { font-family:inherit; }
+
+    nav { position:sticky; top:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:0 32px; height:64px; background:var(--white); border-bottom:1px solid var(--border); }
+    .logo { display:flex; align-items:center; gap:10px; font-family:'Playfair Display',serif; font-size:20px; color:var(--green-dark); }
+    .logo-icon { width:34px; height:34px; background:var(--green); border-radius:8px; display:flex; align-items:center; justify-content:center; }
+    .logo-icon svg { width:18px; height:18px; fill:none; stroke:white; stroke-width:2; stroke-linecap:round; }
+    .nav-right { display:flex; align-items:center; gap:12px; }
+    .nav-link { font-size:14px; color:var(--text-2); padding:8px 14px; border-radius:var(--radius); transition:background .15s; }
+    .nav-link:hover { background:var(--surface); }
+
+    .page-wrap { max-width:860px; margin:0 auto; padding:40px 24px 80px; }
+
+    /* ── Steps bar — icon-topped, matches the screenshots ── */
+    .steps-bar { display:flex; align-items:flex-start; margin-bottom:12px; background:var(--white); border:1px solid var(--border); border-radius:var(--radius-lg); padding:22px 24px 16px; }
+    .step-item { display:flex; flex-direction:column; align-items:center; gap:8px; flex:1; position:relative; }
+    .step-dot { width:44px; height:44px; border-radius:50%; background:var(--surface); display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .25s; }
+    .step-dot svg { width:19px; height:19px; stroke:var(--text-3); fill:none; stroke-width:2; }
+    .step-dot.active { background:var(--green-dark); }
+    .step-dot.active svg { stroke:white; }
+    .step-dot.done { background:var(--green-light); }
+    .step-dot.done svg { stroke:var(--green); }
+    .step-label { font-size:12.5px; color:var(--text-3); font-weight:500; text-align:center; }
+    .step-label.active { color:var(--green-dark); font-weight:700; }
+    .step-label.done { color:var(--green); font-weight:600; }
+    .steps-progress-track { height:4px; background:var(--border); border-radius:3px; margin-top:14px; overflow:hidden; }
+    .steps-progress-fill { height:100%; background:var(--green); border-radius:3px; transition:width .3s ease; width:20%; }
+
+    .form-card { background:white; border-radius:var(--radius-lg); border:1px solid var(--border); padding:32px; margin-bottom:20px; }
+    .form-card h2 { font-size:18px; font-weight:600; color:var(--text); margin-bottom:6px; }
+    .form-card p.hint { font-size:13px; color:var(--text-3); margin-bottom:24px; }
+
+    .field { margin-bottom:20px; }
+    .field:last-child { margin-bottom:0; }
+    .field label { display:block; font-size:13px; font-weight:600; color:var(--text-2); margin-bottom:6px; }
+    .field label .req { color:var(--red); margin-left:2px; }
+    .field label .opt { font-size:11px; font-weight:400; color:var(--text-3); margin-left:4px; }
+    .field input,.field select,.field textarea { width:100%; padding:10px 14px; border:1.5px solid var(--border); border-radius:var(--radius); font-size:14px; color:var(--text); background:var(--surface); outline:none; transition:border-color .15s, background .15s; }
+    .field input:focus,.field select:focus,.field textarea:focus { border-color:var(--green); background:white; }
+    .field input.error,.field select.error,.field textarea.error { border-color:var(--red); background:var(--red-light); }
+    .field textarea { resize:vertical; min-height:100px; line-height:1.6; }
+    .field-hint { font-size:12px; color:var(--text-3); margin-top:5px; }
+    .field-error { font-size:12px; color:var(--red); margin-top:5px; display:none; }
+    .field-error.show { display:block; }
+
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+
+    /* ── Property type cards (Step 1) ── */
+    .cat-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
+    .cat-option { border:2px solid var(--border); border-radius:var(--radius-lg); padding:20px 16px; cursor:pointer; transition:all .2s; text-align:left; background:white; position:relative; }
+    .cat-option:hover { border-color:var(--green-mid); }
+    .cat-option.selected { border-color:var(--green); background:var(--green-light); }
+    .cat-option-check { position:absolute; top:12px; right:12px; width:22px; height:22px; border-radius:50%; background:var(--green); color:white; display:none; align-items:center; justify-content:center; font-size:12px; }
+    .cat-option.selected .cat-option-check { display:flex; }
+    .cat-option-icon { width:38px; height:38px; border-radius:9px; background:var(--surface); display:flex; align-items:center; justify-content:center; margin-bottom:12px; }
+    .cat-option.selected .cat-option-icon { background:rgba(186,117,23,0.16); }
+    .cat-option-icon svg { width:18px; height:18px; stroke:var(--text-2); fill:none; stroke-width:1.8; }
+    .cat-option.selected .cat-option-icon svg { stroke:var(--green); }
+    .cat-option-title { font-size:14.5px; font-weight:700; color:var(--text); margin-bottom:3px; }
+    .cat-option-desc { font-size:12px; color:var(--text-3); line-height:1.4; }
+
+    .toggle-group { display:flex; border:1.5px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+    .toggle-opt { flex:1; padding:10px; text-align:center; font-size:14px; font-weight:500; color:var(--text-3); cursor:pointer; transition:all .15s; background:white; user-select:none; }
+    .toggle-opt:hover { background:var(--surface); }
+    .toggle-opt.active { background:var(--green); color:white; }
+
+    /* ── Map (Step 2 — Basics/Location) ── */
+    .map-frame { border-radius:var(--radius-lg); overflow:hidden; border:1.5px solid var(--border); margin-top:10px; }
+    #location-map { height:280px; width:100%; background:var(--surface); }
+    .gps-btn {
+      width:100%; padding:12px; border-radius:var(--radius); background:var(--green-dark); color:white;
+      font-size:14px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:8px;
+      transition:background .15s; margin-bottom:10px;
+    }
+    .gps-btn:hover { background:var(--green); }
+    .gps-btn svg { width:16px; height:16px; stroke:white; fill:none; stroke-width:2; }
+    .map-help { font-size:12px; color:var(--text-3); margin-top:8px; line-height:1.6; }
+
+    /* ── Photo upload (Step 4) ── */
+    .photo-drop { border:2px dashed var(--border); border-radius:var(--radius-lg); padding:36px 24px; text-align:center; cursor:pointer; transition:all .2s; background:var(--surface); }
+    .photo-drop:hover,.photo-drop.drag-over { border-color:var(--green); background:var(--green-light); }
+    .photo-drop svg { width:40px; height:40px; stroke:var(--text-3); fill:none; stroke-width:1.5; margin:0 auto 12px; display:block; }
+    .photo-drop p { font-size:14px; color:var(--text-2); margin-bottom:4px; }
+    .photo-drop span { font-size:12px; color:var(--text-3); }
+    .photo-drop input[type="file"] { display:none; }
+    .photo-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:10px; margin-top:16px; }
+    .photo-thumb { position:relative; aspect-ratio:1; border-radius:8px; overflow:hidden; border:1.5px solid var(--border); }
+    .photo-thumb img { width:100%; height:100%; object-fit:cover; }
+    .photo-thumb .remove-btn { position:absolute; top:4px; right:4px; width:22px; height:22px; background:rgba(0,0,0,0.6); color:white; border-radius:50%; font-size:14px; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+    .photo-thumb .remove-btn:hover { background:var(--red); }
+    .photo-thumb .cover-badge { position:absolute; bottom:4px; left:4px; background:var(--green); color:white; font-size:10px; font-weight:600; padding:2px 6px; border-radius:4px; }
+    .photo-thumb .set-cover { position:absolute; bottom:4px; left:4px; background:rgba(0,0,0,0.5); color:white; font-size:10px; padding:2px 6px; border-radius:4px; cursor:pointer; display:none; }
+    .photo-thumb:hover .set-cover { display:block; }
+    .upload-progress { margin-top:8px; height:4px; background:var(--border); border-radius:2px; overflow:hidden; display:none; }
+    .upload-progress-bar { height:100%; background:var(--green); border-radius:2px; transition:width .3s; width:0%; }
+    .photo-notice { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px; font-size:12.5px; color:var(--text-2); line-height:1.6; margin-top:16px; }
+    .camera-btn {
+      width:100%; padding:12px; margin-top:10px; border-radius:var(--radius);
+      background:white; border:1.5px solid var(--border); color:var(--text-2);
+      font-size:14px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:8px;
+      transition:all .15s;
+    }
+    .camera-btn:hover { border-color:var(--green); color:var(--green-dark); background:var(--green-light); }
+    .camera-btn svg { width:17px; height:17px; stroke:currentColor; fill:none; stroke-width:2; }
+
+    /* ── Amenities checklist (Step 3 — Details) ── */
+    .amenity-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; }
+    .amenity-chip { display:flex; align-items:center; gap:8px; padding:11px 12px; border:1.5px solid var(--border); border-radius:var(--radius); cursor:pointer; font-size:13.5px; color:var(--text-2); transition:all .15s; background:var(--surface); }
+    .amenity-chip:hover { border-color:var(--green-mid); }
+    .amenity-chip.checked { border-color:var(--green); background:var(--green-light); color:var(--green-dark); font-weight:600; }
+    .amenity-chip input { width:16px; height:16px; accent-color:var(--green); cursor:pointer; flex-shrink:0; }
+
+    /* ── Room-tier pricing rows (Boarding House detail step) ── */
+    .tier-row {
+      border:1.5px solid var(--border); border-radius:var(--radius-lg); padding:16px;
+      margin-bottom:12px; background:var(--surface); position:relative;
+    }
+    .tier-row-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+    .tier-row-head span { font-size:13px; font-weight:700; color:var(--green-dark); }
+    .tier-remove-btn { width:26px; height:26px; border-radius:50%; background:white; border:1.5px solid var(--border); color:var(--text-2); font-size:15px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+    .tier-remove-btn:hover { border-color:var(--red); color:var(--red); background:var(--red-light); }
+    .tier-grid { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:10px; }
+    .tier-row label { display:block; font-size:11.5px; font-weight:600; color:var(--text-2); margin-bottom:5px; }
+    .tier-row input, .tier-row select { width:100%; padding:9px 11px; border:1.5px solid var(--border); border-radius:var(--radius); font-size:13px; color:var(--text); background:white; outline:none; }
+    .tier-row input:focus, .tier-row select:focus { border-color:var(--green); }
+    .btn-add-tier { width:100%; padding:12px; border-radius:var(--radius); border:1.5px dashed var(--green); background:var(--green-light); color:var(--green-dark); font-size:14px; font-weight:600; cursor:pointer; transition:background .15s; }
+    .btn-add-tier:hover { background:#cdeee2; }
+
+    .form-actions { display:flex; gap:12px; justify-content:space-between; align-items:center; margin-top:24px; }
+    .btn-back { padding:11px 22px; border-radius:var(--radius); border:1.5px solid var(--border); background:white; font-size:14px; font-weight:500; color:var(--text-2); transition:all .15s; cursor:pointer; }
+    .btn-back:hover { border-color:var(--text-2); color:var(--text); }
+    .btn-next { padding:11px 28px; border-radius:var(--radius); background:var(--green); color:white; font-size:14px; font-weight:600; transition:background .15s; display:flex; align-items:center; gap:8px; cursor:pointer; border:none; }
+    .btn-next:hover { background:var(--green-dark); }
+    .btn-submit { padding:13px 32px; border-radius:var(--radius); background:var(--green); color:white; font-size:15px; font-weight:600; transition:background .15s; display:flex; align-items:center; gap:8px; cursor:pointer; border:none; }
+    .btn-submit:hover { background:var(--green-dark); }
+    .btn-submit:disabled,.btn-next:disabled { opacity:.6; cursor:not-allowed; }
+
+    .badge-strip { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:22px; }
+    .badge-pill { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--text-2); background:white; border:1px solid var(--border); padding:6px 13px; border-radius:20px; }
+    .badge-pill svg { width:13px; height:13px; stroke:var(--green); fill:none; stroke-width:2; }
+    .kicker { text-align:center; font-size:11.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--green-dark); margin-bottom:8px; }
+    .page-title { text-align:center; font-family:'Playfair Display',serif; font-size:30px; color:var(--text); margin-bottom:6px; }
+    .page-sub { text-align:center; font-size:13.5px; color:var(--text-3); margin-bottom:28px; }
+    .save-status { text-align:center; font-size:11.5px; color:var(--text-3); margin-top:8px; }
+
+    .success-screen { text-align:center; padding:60px 24px; display:none; }
+    .success-icon { width:72px; height:72px; background:var(--green-light); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 24px; }
+    .success-icon svg { width:36px; height:36px; stroke:var(--green); fill:none; stroke-width:2.5; }
+    .success-screen h2 { font-family:'Playfair Display',serif; font-size:28px; color:var(--text); margin-bottom:10px; }
+    .success-screen p { font-size:15px; color:var(--text-2); max-width:440px; margin:0 auto 28px; line-height:1.7; }
+    .success-actions { display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
+
+    .toast { position:fixed; bottom:24px; right:24px; z-index:9999; background:var(--text); color:white; padding:12px 20px; border-radius:var(--radius); font-size:14px; transform:translateY(80px); opacity:0; transition:all .3s; max-width:340px; line-height:1.5; }
+    .toast.show { transform:translateY(0); opacity:1; }
+    .toast.error { background:var(--red); }
+    .toast.success { background:var(--green-dark); }
+
+    .modal-overlay { position:fixed; inset:0; background:rgba(15,15,12,0.6); display:none; align-items:center; justify-content:center; z-index:1000; padding:20px; }
+    .modal-overlay.show { display:flex; }
+    .modal-box { background:white; border-radius:var(--radius-lg); max-width:420px; width:100%; padding:28px; max-height:92vh; overflow-y:auto; position:relative; box-shadow:0 20px 60px rgba(0,0,0,0.25); text-align:center; }
+
+    .auth-banner { background:var(--green-light); border:1px solid var(--green); border-radius:var(--radius-lg); padding:20px 24px; text-align:center; margin-bottom:24px; display:none; }
+    .auth-banner p { font-size:14px; color:var(--green-dark); margin-bottom:12px; }
+    .auth-banner a { background:var(--green); color:white; padding:9px 20px; border-radius:var(--radius); font-size:14px; font-weight:600; display:inline-block; }
+
+    .summary-row { display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--border); font-size:14px; gap:12px; }
+    .summary-row:last-child { border-bottom:none; }
+    .summary-row span:first-child { color:var(--text-2); flex-shrink:0; }
+    .summary-row strong { text-align:right; }
+
+    .review-block-title { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--green-dark); margin:18px 0 6px; }
+    .review-block-title:first-child { margin-top:0; }
+
+    @media(max-width:640px) {
+      nav { padding:0 16px; }
+      .page-wrap { padding:24px 16px 60px; }
+      .form-card { padding:20px 16px; }
+      .grid-2,.grid-3 { grid-template-columns:1fr; }
+      .cat-grid { grid-template-columns:1fr 1fr; }
+      .steps-bar { padding:16px 10px 12px; }
+      .step-label { display:none; }
+      .modal-box { padding:22px 18px; }
+      .tier-grid { grid-template-columns:1fr 1fr; }
+    }
+    @media(max-width:820px) and (min-width:641px) {
+      .cat-grid { grid-template-columns:repeat(2,1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </div>
+    Nyumba254
+  </a>
+  <div class="nav-right">
+    <a href="listings" class="nav-link">Browse listings</a>
+  </div>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<div class="page-wrap">
+
+  <div class="auth-banner" id="auth-banner">
+    <p>You need to be signed in to post a listing.</p>
+    <a href="login?next=post-listing">Sign in or create a free account →</a>
+  </div>
+
+  <div class="kicker" id="page-kicker">Free listing — pricing coming later</div>
+  <h1 class="page-title">List Your Property</h1>
+  <p class="page-sub">Reviewed by our team before going live, with buyer enquiries handled right here on Nyumba254.</p>
+  <div class="badge-strip">
+    <span class="badge-pill"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg> Reviewed before going live</span>
+    <span class="badge-pill"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Photos required</span>
+    <span class="badge-pill"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Draft auto-saves</span>
+  </div>
+  <div class="save-status" id="save-status"></div>
+
+  <!-- STEPS BAR -->
+  <div class="steps-bar" id="steps-bar">
+    <div class="step-item">
+      <div class="step-dot active" id="dot-1"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>
+      <div class="step-label active" id="lbl-1">Type</div>
+    </div>
+    <div class="step-item">
+      <div class="step-dot" id="dot-2"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+      <div class="step-label" id="lbl-2">Basics</div>
+    </div>
+    <div class="step-item">
+      <div class="step-dot" id="dot-3"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+      <div class="step-label" id="lbl-3">Details</div>
+    </div>
+    <div class="step-item">
+      <div class="step-dot" id="dot-4"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+      <div class="step-label" id="lbl-4">Photos</div>
+    </div>
+    <div class="step-item">
+      <div class="step-dot" id="dot-5"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg></div>
+      <div class="step-label" id="lbl-5">Contact</div>
+    </div>
+  </div>
+  <div class="steps-progress-track"><div class="steps-progress-fill" id="steps-progress-fill"></div></div>
+  <div id="plan-mismatch-banner" style="display:none;margin-top:16px"></div>
+  <div style="height:20px"></div>
+
+  <!-- STEP 1 — TYPE -->
+  <div id="step-1">
+    <div class="form-card">
+      <h2>What type of property are you listing?</h2>
+      <p class="hint">Choose the closest match so the next steps ask for the right details.</p>
+      <div class="cat-grid">
+        <div class="cat-option selected" data-cat="apartment" onclick="selectCat(this)">
+          <div class="cat-option-check">✓</div>
+          <div class="cat-option-icon"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1"/><line x1="9" y1="7" x2="9" y2="7.01"/><line x1="15" y1="7" x2="15" y2="7.01"/><line x1="9" y1="12" x2="9" y2="12.01"/><line x1="15" y1="12" x2="15" y2="12.01"/><line x1="9" y1="17" x2="15" y2="17"/></svg></div>
+          <div class="cat-option-title">Apartment</div>
+          <div class="cat-option-desc">Flats, units, and compounds</div>
+        </div>
+        <div class="cat-option" data-cat="house" onclick="selectCat(this)">
+          <div class="cat-option-check">✓</div>
+          <div class="cat-option-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+          <div class="cat-option-title">House</div>
+          <div class="cat-option-desc">Standalone homes and yards</div>
+        </div>
+        <div class="cat-option" data-cat="boarding" onclick="selectCat(this)">
+          <div class="cat-option-check">✓</div>
+          <div class="cat-option-icon"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="13" rx="1"/><path d="M2 11h20"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>
+          <div class="cat-option-title">Boarding House</div>
+          <div class="cat-option-desc">Student rooms and bed spaces</div>
+        </div>
+        <div class="cat-option" data-cat="airbnb" onclick="selectCat(this)">
+          <div class="cat-option-check">✓</div>
+          <div class="cat-option-icon"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+          <div class="cat-option-title">Airbnb / Holiday Rental</div>
+          <div class="cat-option-desc">Short stays and furnished rentals</div>
+        </div>
+        <div class="cat-option" data-cat="commercial" onclick="selectCat(this)">
+          <div class="cat-option-check">✓</div>
+          <div class="cat-option-icon"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6M9 11h.01M15 11h.01M9 7h.01M15 7h.01"/></svg></div>
+          <div class="cat-option-title">Shops & Offices</div>
+          <div class="cat-option-desc">Retail shops, offices, and business spaces</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <span style="font-size:13px;color:var(--text-3)">Step 1 of 5</span>
+      <button class="btn-next" onclick="goStep(2)">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2 — BASICS -->
+  <div id="step-2" style="display:none">
+    <div class="form-card">
+      <h2>General information</h2>
+      <p class="hint">Provide the core details buyers use to decide whether the property fits.</p>
+
+      <div class="field">
+        <label>Property title <span class="req">*</span></label>
+        <input type="text" id="title" placeholder="e.g. Green Valley Boarding House" maxlength="120"/>
+        <div class="field-hint">Be specific — good titles get more enquiries</div>
+        <div class="field-error" id="err-title">Please enter a title (at least 6 characters)</div>
+      </div>
+
+      <div class="field">
+        <label>Description <span class="req">*</span></label>
+        <textarea id="description" placeholder="Describe the space — room sizes, security setup, water and power arrangements, house rules, and nearby landmarks…" rows="5"></textarea>
+        <div class="field-hint">Use clear tenant-facing details. Avoid phone numbers here — contact details are collected later.</div>
+        <div class="field-error" id="err-desc">Please add a description</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label>County <span class="req">*</span></label>
+          <select id="county" onchange="handleCountyChange()">
+            <option value="">Select county</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Area <span class="req">*</span></label>
+          <select id="area" onchange="handleAreaChange()">
+            <option value="">Select county first</option>
+          </select>
+          <div class="field-error" id="err-area">Please select an area</div>
+        </div>
+      </div>
+      <div class="field" id="area_custom-field" style="display:none">
+        <label>Type your area <span class="req">*</span></label>
+        <input type="text" id="area_custom" placeholder="e.g. Nyahera"/>
+        <div class="field-error" id="err-area-custom">Please type in your area</div>
+      </div>
+
+      <div class="field">
+        <label>Address / Location <span class="req">*</span></label>
+        <input type="text" id="address" placeholder="e.g. Ngong Road, off Argwings Kodhek Road" oninput="scheduleAddressGeocode()"/>
+        <div class="field-error" id="err-address">Please enter a street address or landmark</div>
+      </div>
+
+      <div class="field">
+        <button type="button" class="gps-btn" onclick="pinExactLocation()">
+          <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Pin Exact Location Using My GPS
+        </button>
+        <div class="map-frame"><div id="location-map"></div></div>
+        <div class="map-help">Drag the pin to fine-tune. Tap anywhere on the map to move it. Use a recognizable area, road, or nearby landmark so buyers can judge the commute quickly. Your exact pin is only shared with a buyer once they enquire.</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label id="price-label">Price (KES) <span class="req">*</span></label>
+          <input type="number" id="price" placeholder="e.g. 2500" min="0"/>
+          <div class="field-hint" id="price-hint">Enter digits only. Room-tier pricing can be added in the boarding-house details step.</div>
+          <div class="field-error" id="err-price">Please enter a price</div>
+        </div>
+        <div class="field">
+          <label>Payment frequency <span class="req">*</span></label>
+          <select id="price_frequency">
+            <option value="month">Per month</option>
+            <option value="once">One-time (for sale)</option>
+            <option value="night">Per night</option>
+            <option value="term">Per term</option>
+            <option value="week">Per week</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn-back" onclick="goStep(1)">← Back</button>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:13px;color:var(--text-3)">Step 2 of 5</span>
+        <button class="btn-next" onclick="goStep(3)">Continue →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3 — DETAILS (property-type-specific) -->
+  <div id="step-3" style="display:none">
+
+    <!-- Apartment / House details -->
+    <div class="form-card" id="details-standard">
+      <h2 id="details-standard-title">Apartment Details</h2>
+      <p class="hint">Add the structured details that make the listing easier to review and match.</p>
+      <div class="grid-2">
+        <div class="field" id="units-field">
+          <label>Number of Units <span class="req">*</span></label>
+          <input type="number" id="std_units" placeholder="e.g. 10" min="1"/>
+        </div>
+        <div class="field">
+          <label>Number of Bathrooms <span class="req">*</span></label>
+          <input type="number" id="std_bathrooms" placeholder="e.g. 2" min="0"/>
+        </div>
+      </div>
+      <div class="grid-2" id="bedrooms-row">
+        <div class="field">
+          <label>Bedrooms <span class="req">*</span></label>
+          <select id="std_bedrooms">
+            <option value="">Select</option>
+            <option value="0">Bedsitter / studio</option>
+            <option value="1">1 bedroom</option>
+            <option value="2">2 bedrooms</option>
+            <option value="3">3 bedrooms</option>
+            <option value="4">4 bedrooms</option>
+            <option value="5">5+ bedrooms</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Floor area <span class="opt">optional, m²</span></label>
+          <input type="number" id="std_size" placeholder="e.g. 85" min="0"/>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Furnished <span class="req">*</span></label>
+          <select id="std_furnished">
+            <option value="">Select…</option>
+            <option value="yes">Yes — fully furnished</option>
+            <option value="partial">Partially furnished</option>
+            <option value="no">No — unfurnished</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Parking Availability <span class="req">*</span></label>
+          <select id="std_parking">
+            <option value="">Select…</option>
+            <option value="private">Private parking</option>
+            <option value="shared">Shared compound parking</option>
+            <option value="street">Street parking only</option>
+            <option value="none">No parking</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Security <span class="req">*</span></label>
+        <select id="std_security">
+          <option value="">Select…</option>
+          <option value="gated_guard">Gated compound with guard</option>
+          <option value="gated">Gated compound, no guard</option>
+          <option value="cctv">CCTV coverage</option>
+          <option value="none">No dedicated security</option>
+        </select>
+      </div>
+      <div style="background:var(--surface);border-radius:var(--radius);padding:12px 14px;font-size:12.5px;color:var(--text-3);margin-top:6px">
+        Tip: listings with security features and parking get more enquiries.
+      </div>
+      <div class="field" style="margin-top:18px;padding-top:18px;border-top:1px solid var(--border)">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:400">
+          <input type="checkbox" id="std_has_units" onchange="toggleStandardUnits(this.checked)" style="width:18px;height:18px;accent-color:var(--green);cursor:pointer"/>
+          This property has multiple similar units to track separately (e.g. an apartment block with several doors)
+        </label>
+      </div>
+      <div id="std-units-wrap" style="display:none;margin-top:14px">
+        <div id="tier-rows-standard"></div>
+        <button type="button" class="btn-add-tier" onclick="addTierRow()">+ Add unit type</button>
+      </div>
+    </div>
+
+    <!-- Boarding House details -->
+    <div class="form-card" id="details-boarding" style="display:none">
+      <h2>Boarding House Details</h2>
+      <p class="hint">Add each room type you offer with its own price and availability — buyers pick the tier that suits them.</p>
+      <div class="grid-2">
+        <div class="field">
+          <label>Total bed spaces <span class="req">*</span></label>
+          <input type="number" id="board_total_beds" placeholder="e.g. 24" min="1"/>
+        </div>
+        <div class="field">
+          <label>Residents allowed <span class="req">*</span></label>
+          <select id="board_gender">
+            <option value="mixed">Mixed</option>
+            <option value="male">Male only</option>
+            <option value="female">Female only</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Nearest institution / walk time <span class="opt">optional</span></label>
+        <input type="text" id="board_institution" placeholder="e.g. UNILUS Silverest Campus — 15 min walk"/>
+      </div>
+      <div id="tier-rows"></div>
+      <button type="button" class="btn-add-tier" onclick="addTierRow()">+ Add room type</button>
+    </div>
+
+    <!-- Airbnb / Holiday Rental details -->
+    <div class="form-card" id="details-airbnb" style="display:none">
+      <h2>Airbnb / Holiday Rental Details</h2>
+      <p class="hint">Short-stay guests care about capacity, house rules, and check-in details most.</p>
+      <div class="grid-3">
+        <div class="field">
+          <label>Guests <span class="req">*</span></label>
+          <input type="number" id="air_guests" placeholder="e.g. 4" min="1"/>
+        </div>
+        <div class="field">
+          <label>Bedrooms <span class="req">*</span></label>
+          <input type="number" id="air_bedrooms" placeholder="e.g. 2" min="0"/>
+        </div>
+        <div class="field">
+          <label>Bathrooms <span class="req">*</span></label>
+          <input type="number" id="air_bathrooms" placeholder="e.g. 1" min="0"/>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Minimum stay <span class="req">*</span></label>
+          <select id="air_min_stay">
+            <option value="1">1 night</option>
+            <option value="2">2 nights</option>
+            <option value="3">3 nights</option>
+            <option value="7">1 week</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Check-in / check-out <span class="opt">optional</span></label>
+          <input type="text" id="air_checkin" placeholder="e.g. Check-in 2PM, check-out 10AM"/>
+        </div>
+      </div>
+      <div class="field">
+        <label>House rules <span class="opt">optional</span></label>
+        <textarea id="air_rules" rows="3" placeholder="e.g. No parties, no smoking indoors, quiet after 10PM"/></textarea>
+      </div>
+    </div>
+
+    <!-- Shops & Offices details -->
+    <div class="form-card" id="details-commercial" style="display:none">
+      <h2>Shop / Office Details</h2>
+      <p class="hint">Business tenants care about space, access, and lease terms most.</p>
+      <div class="grid-2">
+        <div class="field">
+          <label>Property type <span class="req">*</span></label>
+          <select id="comm_type">
+            <option value="">Select…</option>
+            <option value="shop">Retail shop</option>
+            <option value="office">Office space</option>
+            <option value="warehouse">Warehouse / godown</option>
+            <option value="showroom">Showroom</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Floor area (m²) <span class="req">*</span></label>
+          <input type="number" id="comm_size" placeholder="e.g. 120" min="0"/>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Lease/Sale type <span class="req">*</span></label>
+          <select id="comm_lease_type">
+            <option value="lease">Lease (rent)</option>
+            <option value="sale">For sale</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Parking <span class="req">*</span></label>
+          <select id="comm_parking">
+            <option value="">Select…</option>
+            <option value="private">Private/dedicated parking</option>
+            <option value="shared">Shared compound parking</option>
+            <option value="street">Street parking only</option>
+            <option value="none">No parking</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Frontage / visibility <span class="opt">optional</span></label>
+        <input type="text" id="comm_frontage" placeholder="e.g. Main road frontage, high foot traffic"/>
+      </div>
+      <div class="field">
+        <label>Fit-out condition <span class="req">*</span></label>
+        <select id="comm_condition">
+          <option value="">Select…</option>
+          <option value="shell">Shell / bare — tenant fits out</option>
+          <option value="fitted">Fitted / ready to use</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Shared amenities — every property type -->
+    <div class="form-card">
+      <h2>Amenities</h2>
+      <p class="hint">Select everything that applies — this list adapts to what buyers filter by.</p>
+      <div class="amenity-grid" id="amenity-grid"></div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn-back" onclick="goStep(2)">← Back</button>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:13px;color:var(--text-3)">Step 3 of 5</span>
+        <button class="btn-next" onclick="goStep(4)">Continue →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4 — PHOTOS -->
+  <div id="step-4" style="display:none">
+    <div class="form-card">
+      <h2>Photos</h2>
+      <p class="hint">Upload clear, current photos so review can move quickly.</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:13px;font-weight:600;color:var(--text)">Property Photos</span>
+        <span id="photo-count-tag" style="font-size:12px;color:var(--text-3)">(0/10)</span>
+      </div>
+      <p style="font-size:12px;color:var(--text-3);margin-bottom:14px">Upload from your phone or computer. The first photo is the cover. JPG, PNG, or WebP — max 5MB each.</p>
+
+      <div class="photo-drop" id="photo-drop" onclick="document.getElementById('file-input').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFiles(event)">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <p><strong>+ Add Photo</strong></p>
+        <span>Tap, browse, or drag and drop · JPG, PNG, WebP<br/>Max 5MB each · Up to 10 photos</span>
+        <input type="file" id="file-input" accept="image/*" multiple onchange="handleFiles(this.files)"/>
+      </div>
+      <button type="button" class="camera-btn" onclick="document.getElementById('camera-input').click()">
+        <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Take Photo
+      </button>
+      <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none" onchange="handleFiles(this.files); this.value='';"/>
+      <div class="upload-progress" id="upload-progress"><div class="upload-progress-bar" id="upload-bar"></div></div>
+      <div class="photo-grid" id="photo-grid"></div>
+
+      <div class="photo-notice" id="photo-notice">📷 Add at least one photo to continue and increase trust.</div>
+    </div>
+
+    <div class="form-card">
+      <h2>Video Walkthrough <span class="opt">optional</span></h2>
+      <p class="hint">Got a TikTok, Instagram Reel, YouTube, or Vimeo clip of the place? Paste the link — a quick video builds trust faster than photos alone. You can add, swap, or remove this any time later from your dashboard's "Manage videos" button on this listing.</p>
+      <div class="field">
+        <label>Video link <span class="opt">optional</span></label>
+        <input type="url" id="video_url" placeholder="e.g. https://www.tiktok.com/@you/video/xxxxxxxxxxxx"/>
+        <div class="field-hint">Works with TikTok, Instagram, YouTube, Vimeo, or a direct video file link.</div>
+      </div>
+      <div class="field" style="margin-top:16px;padding-top:16px;border-top:1px dashed var(--border)">
+        <label>Or record / upload a short video <span class="opt">optional, max 60 seconds</span></label>
+        <input type="file" id="video_file_input" accept="video/*" capture="environment" onchange="handleVideoFileSelect(this.files[0])"/>
+        <div class="field-hint">Sent for a quick review before it appears on your listing — doesn't affect your submission either way.</div>
+        <div id="video-file-status" style="font-size:12px;color:var(--text-3);margin-top:6px"></div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn-back" onclick="goStep(3)">← Back</button>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:13px;color:var(--text-3)">Step 4 of 5</span>
+        <button class="btn-next" onclick="goStep(5)">Continue →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 5 — CONTACT + REVIEW + SUBMIT -->
+  <div id="step-5" style="display:none">
+    <div class="form-card">
+      <h2>Contact Information</h2>
+      <p class="hint">Nyumba254 uses this to verify the listing and manage buyer enquiries.</p>
+
+      <div class="field">
+        <label>Full legal name <span class="req">*</span></label>
+        <input type="text" id="contact_name" placeholder="Enter your full name"/>
+        <div class="field-error" id="err-contact-name">Please enter your full name</div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Phone number <span class="req">*</span></label>
+          <input type="tel" id="phone" placeholder="e.g. 0971234567"/>
+          <div class="field-error" id="err-phone">Please enter a valid phone number</div>
+        </div>
+        <div class="field">
+          <label>WhatsApp number <span class="opt">same as phone is OK</span></label>
+          <input type="tel" id="whatsapp" placeholder="Same as phone is OK"/>
+        </div>
+      </div>
+      <div class="field">
+        <label>Email <span class="req">*</span></label>
+        <input type="email" id="contact_email" placeholder="name@example.com"/>
+        <div class="field-error" id="err-contact-email">Please enter a valid email</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-top:4px">
+        <input type="checkbox" id="contact_hidden" style="width:18px;height:18px;accent-color:var(--green);cursor:pointer"/>
+        <label for="contact_hidden" style="font-size:13px;color:var(--text-2);cursor:pointer">Keep buyer contact on Nyumba254 chat only (hide Call/WhatsApp) — helps prevent scams</label>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <h2>Review your listing</h2>
+      <p class="hint">Check everything before submitting — you can edit after posting too.</p>
+      <div id="fee-estimate-banner" style="margin-bottom:18px"></div>
+      <div id="review-content"></div>
+
+      <div class="field" style="margin-top:20px">
+        <label for="agree-terms" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:400;font-size:13px;color:var(--text-2)">
+          <input type="checkbox" id="agree-terms" onchange="document.getElementById('err-agree-terms').classList.remove('show'); this.classList.remove('error')" style="width:18px;height:18px;margin-top:1px;accent-color:var(--green);cursor:pointer;flex-shrink:0"/>
+          <span>I agree to the <a href="terms" target="_blank" rel="noopener" style="color:var(--green);font-weight:600;text-decoration:underline">Terms and Conditions</a> and <a href="privacy" target="_blank" rel="noopener" style="color:var(--green);font-weight:600;text-decoration:underline">Privacy Policy</a>. I confirm all information is accurate. <span class="req">*</span></span>
+        </label>
+        <div class="field-error" id="err-agree-terms">You must agree to the Terms and Conditions before submitting</div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn-back" onclick="goStep(4)">← Back</button>
+      <button class="btn-submit" id="submit-btn" onclick="submitListing()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg>
+        Submit for Review
+      </button>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="success-screen" id="success-screen">
+    <div class="success-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+    <h2>Listing submitted!</h2>
+    <p id="success-message">Your property has been saved and is pending review. It will appear publicly once our team approves it.</p>
+    <div class="success-actions">
+      <a href="dashboard" style="padding:11px 22px;background:var(--green);color:white;border-radius:var(--radius);font-size:14px;font-weight:600">View my listings</a>
+      <a href="index.html" style="padding:11px 22px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:14px;font-weight:500;color:var(--text-2)">Back to home</a>
+    </div>
+  </div>
+</div>
+
+<!-- RESUME DRAFT MODAL -->
+<div class="modal-overlay" id="resume-draft-modal">
+  <div class="modal-box" style="max-width:420px">
+    <div class="success-icon" style="margin:0 auto 18px">
+      <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-4-4L3 13.9"/></svg>
+    </div>
+    <h2 style="padding-right:0">Welcome back!</h2>
+    <p style="font-size:13px;color:var(--text-3);margin-bottom:18px;line-height:1.6" id="resume-draft-text">We saved your progress from earlier. Would you like to continue where you left off?</p>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn-back" style="flex:1" onclick="discardDraftAndStartFresh()">Start fresh</button>
+      <button class="btn-next" style="flex:1;justify-content:center" onclick="resumeDraft()">Continue draft →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
+const EDGE_URL     = `${SUPABASE_URL}/functions/v1`;
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ══════════════════════════════════════════════════════════════
+   PROPERTY TYPES — each drives which Step-3 detail card shows and
+   what "group" its structured fields belong to when saved.
+   ══════════════════════════════════════════════════════════════ */
+const NK_CATEGORIES = {
+  apartment:  { label: 'Apartment', group: 'standard', detailsTitle: 'Apartment Details' },
+  house:      { label: 'House',     group: 'standard', detailsTitle: 'House Details' },
+  boarding:   { label: 'Boarding House', group: 'boarding', detailsTitle: 'Boarding House Details' },
+  airbnb:     { label: 'Airbnb / Holiday Rental', group: 'airbnb', detailsTitle: 'Airbnb / Holiday Rental Details' },
+  commercial: { label: 'Shops & Offices', group: 'commercial', detailsTitle: 'Shop / Office Details' },
+};
+
+const NK_AMENITIES = [
+  { key:'has_water', label:'Water supply' },
+  { key:'has_electricity', label:'Electricity' },
+  { key:'has_security', label:'Security' },
+  { key:'has_solar', label:'Solar power' },
+  { key:'has_wifi', label:'WiFi' },
+  { key:'has_parking', label:'Parking' },
+  { key:'has_balcony', label:'Balcony' },
+  { key:'has_private_bathroom', label:'Private bathroom' },
+  { key:'has_shared_bathroom', label:'Shared bathroom' },
+  { key:'has_study_area', label:'Study area' },
+  { key:'has_gym', label:'Gym' },
+  { key:'has_pool', label:'Swimming pool' },
+  { key:'has_pets_allowed', label:'Pets allowed' },
+  { key:'has_backup_power', label:'Backup power' },
+];
+
+const NK_COUNTIES = [
+  "Mombasa","Kwale","Kilifi","Tana River","Lamu","Taita-Taveta","Garissa","Wajir","Mandera",
+  "Marsabit","Isiolo","Meru","Tharaka-Nithi","Embu","Kitui","Machakos","Makueni","Nyandarua",
+  "Nyeri","Kirinyaga","Murang'a","Kiambu","Turkana","West Pokot","Samburu","Trans Nzoia",
+  "Uasin Gishu","Elgeyo-Marakwet","Nandi","Baringo","Laikipia","Nakuru","Narok","Kajiado",
+  "Kericho","Bomet","Kakamega","Vihiga","Bungoma","Busia","Siaya","Kisumu","Homa Bay",
+  "Migori","Kisii","Nyamira","Nairobi"
+].sort();
+const NK_AREAS_BY_COUNTY = {
+  "Kisumu": ["Ahero","Car Wash","Dunga","Elgon View","Kanyakwar","Kibos","Kibuye","Kisumu CBD","Kombewa","Kondele","Luanda","Mamboleo","Manyatta","Maseno","Matibabu","Migosi","Milimani","Nyalenda","Nyamasaria","Obunga","Otonglo","Riat Hills","Sega"],
+  "Nairobi": ["Nairobi CBD","Westlands","Parklands","Highridge","Kangemi","Kitisuru","Runda","Loresho","Muthaiga","Gigiri","Spring Valley","Nyari","Rosslyn","Thome","Garden Estate","Ridgeways","Kilimani","Kileleshwa","Lavington","Kawangware","Hurlingham","Upper Hill","Adams Arcade","Karen","Langata","South B","South C","Nairobi West","Madaraka","Otiende","Kibera","Woodley","Roysambu","Zimmerman","Kahawa West","Githurai","Mirema","Kasarani","Mwiki","Njiru","Ruaraka","Baba Dogo","Mathare","Huruma","Pipeline","Imara Daima","Nyayo Estate","Dandora","Kariobangi","Kayole","Komarock","Utawala","Tassia","Umoja","Buruburu","Donholm","Makadara","Eastleigh","Ngara","Pangani"],
+  "Mombasa": ["Mombasa CBD (Old Town)","Nyali","Bamburi","Kizingo","Tudor","Likoni","Changamwe","Kisauni","Shanzu","Mkomani","Bombolulu","Kiembeni","Port Reitz","Miritini","Chaani","Migadini","Kongowea","Junda","Mwakirunge","Mtopanga","Jomvu","Magongo"],
+  "Nakuru": ["Nakuru CBD","Milimani","Section 58","Langalanga","Pangani","Shabab","Bangladesh","Lanet","Free Area","Freehold","Ngata","Bahati","London","Afraha","Naka","Kiamunyi","White House","Pipeline","Kaptembwa","Rhoda","Menengai","Naivasha"],
+  "Uasin Gishu": ["Eldoret CBD","Kapsoya","Langas","Kimumu","Huruma","Elgon View","Pioneer","Annex","Rupa Village","Hazina","Kamukunji","Munyaka","West Indies"],
+  "Kiambu": ["Thika CBD","Landless","Makongeni","Section 9","Blue Post","Thika Greens","Kiganjo","Tora","Ngoingwa","Bahati Ridge","Kisii Estate","Ruiru","Membley","Kamakis","Juja","Kiambu Town","Kikuyu","Limuru"],
+  "Kilifi": ["Kilifi Town","Malindi CBD","Kisumu Ndogo","Majengo (Malindi)","Silversands","Watamu","Mtwapa","Mariakani","Kaloleni","Mazeras","Magarini"],
+  "Machakos": ["Machakos CBD","Mua Hills","Kalama","Mitaboni","Athi River","Mlolongo","Syokimau","Katani","Kangundo Road","Kola"],
+  "Kakamega": ["Kakamega CBD","Amalemba","Milimani","Shirere","Lurambi","Mahiakalo","Sudi","Mumias","Butere","Malava","Lugari"],
+  "Meru": ["Meru CBD","Makutano","Kinoru","Ntharene","Nkubu","Maua","Timau","Laare","Mikinduri","Kianjai"],
+  "Nyeri": ["Nyeri CBD","Ring Road","Mountain View Estate","Garden Estate","Kamakwa","Ruring'u","Majengo","Karatina","Othaya Town","Mukurweini Town","Naromoru"],
+  "Kericho": ["Kericho CBD","Kapsoit","Ainamoi","Litein","Kipkelion","Fort Ternan","Sosiot","Chepseon","Kedowa","Cheborge"],
+  "Trans Nzoia": ["Kitale CBD","Milimani","Mitume","Matisi","Tuwan","Endebess","Kiminini","Kwanza","Saboti","Cherangany"],
+  "Kwale": ["Kwale Town","Diani","Ukunda","Tiwi","Msambweni","Lunga Lunga","Matuga","Kinango","Waa","Shimoni","Mackinon Road","Vanga"],
+  "Tana River": ["Hola","Garsen","Bura","Galole","Wenje","Kipini","Madogo","Chewele","Bangale","Wayu"],
+  "Lamu": ["Lamu Town","Mokowe","Faza","Matondoni","Mpeketoni","Witu","Hindi","Kizingitini","Shela","Kiunga"],
+  "Taita-Taveta": ["Voi","Taveta","Wundanyi","Mwatate","Mgange","Wesu","Bura (Taita)","Mbale (Taveta)","Tausa","Werugha"],
+  "Garissa": ["Garissa Town","Dadaab","Balambala","Fafi","Ijara","Lagdera","Modogashe","Bura (Garissa)","Sankuri","Hulugho"],
+  "Wajir": ["Wajir Town","Habaswein","Griftu","Eldas","Tarbaj","Bute","Buna","Diif","Elnur","Khorof Harar"],
+  "Mandera": ["Mandera Town","Rhamu","Banissa","Lafey","Takaba","El Wak","Kotulo","Fino","Arabia","Warankara"],
+  "Marsabit": ["Marsabit Town","Moyale","Loiyangalani","North Horr","Laisamis","Sololo","Turbi","Maikona","Illeret","Dukana"],
+  "Isiolo": ["Isiolo Town","Garbatulla","Merti","Kinna","Oldonyiro","Burat","Bulapesa","Wabera","Chari","Cherab"],
+  "Tharaka-Nithi": ["Chuka","Marimanti","Kathwana","Chogoria","Gatunga","Nkondi","Igambang'ombe","Muthambi","Mitheru","Tunyai"],
+  "Embu": ["Embu Town","Runyenjes","Manyatta","Siakago","Ishiara","Kiritiri","Kyeni","Karurumo","Kirimari","Gaturi"],
+  "Kitui": ["Kitui Town","Mwingi","Mutomo","Mutitu","Migwani","Zombe","Kabati","Ikutha","Mutha","Kanyangi"],
+  "Makueni": ["Wote","Emali","Sultan Hamud","Kibwezi","Kilome","Mbooni","Kaiti","Nunguni","Makindu","Tawa"],
+  "Nyandarua": ["Ol Kalou","Engineer","Njabini","Nyahururu","Ndaragwa","Ol Joro Orok","North Kinangop","South Kinangop","Kipipiri","Shamata"],
+  "Kirinyaga": ["Kerugoya","Kutus","Sagana","Kagio","Wang'uru","Baricho","Kianyaga","Kimbimbi","Mwea","Kutus Town"],
+  "Murang'a": ["Murang'a Town","Kenol","Kangema","Maragua","Kandara","Kigumo","Gatanga","Kiria-ini","Kabati","Makuyu"],
+  "Turkana": ["Lodwar","Kakuma","Lokichogio","Lokitaung","Kalokol","Lokichar","Kainuk","Todonyang","Kibish","Katilu"],
+  "West Pokot": ["Kapenguria","Makutano (Pokot)","Chepareria","Kacheliba","Sigor","Alale","Chepnyal","Lomut","Ortum","Kongelai"],
+  "Samburu": ["Maralal","Baragoi","Wamba","Archer's Post","Suguta Marmar","Kirisia","South Horr","Poro","Loosuk","Kisima"],
+  "Elgeyo-Marakwet": ["Iten","Tambach","Kapsowar","Chepkorio","Kapyego","Kapsait","Chesoi","Kaptarakwa","Kamogoi","Kabiemit"],
+  "Nandi": ["Kapsabet","Nandi Hills","Mosoriot","Kabiyet","Kaptumo","Kobujoi","Kapsisiywa","Kapsabet Town","Chepterit","Kilibwoni"],
+  "Baringo": ["Kabarnet","Eldama Ravine","Marigat","Kabartonjo","Mogotio","Kimalel","Kabernet Town","Loruk","Kampi ya Samaki","Mochongoi"],
+  "Laikipia": ["Nanyuki","Nyahururu","Rumuruti","Dol Dol","Kinamba","Ngobit","Sipili","Marmanet","Mukogodo","Salama"],
+  "Narok": ["Narok Town","Kilgoris","Ololulunga","Suswa","Ewaso Ngiro","Nairagie Enkare","Naikarra","Ntulele","Melili","Lolgorian"],
+  "Kajiado": ["Kajiado Town","Ngong","Kitengela","Ongata Rongai","Kiserian","Loitokitok","Namanga","Isinya","Bissil","Mashuuru"],
+  "Bomet": ["Bomet Town","Sotik","Longisa","Mulot","Chepalungu","Silibwet","Sigor (Bomet)","Chebunyo","Kaplong","Mogogosiek"],
+  "Vihiga": ["Mbale","Luanda (Vihiga)","Chavakali","Majengo (Vihiga)","Emuhaya","Sabatia","Hamisi","Wodanga","Bunyore","Gisambai"],
+  "Bungoma": ["Bungoma CBD","Kanduyi","Sikata","Webuye","Kimilili","Chwele","Bumula","Sirisia","Naitiri","Malakisi"],
+  "Busia": ["Busia Town","Malaba","Nambale","Funyula","Budalangi","Amagoro","Port Victoria","Matayos","Alupe","Angurai"],
+  "Siaya": ["Siaya Town","Bondo","Ugunja","Yala","Ukwala","Usenge","Sega (Siaya)","Nyang'oma Kogelo","Uranga","Yenga"],
+  "Homa Bay": ["Homa Bay Central","Asego","Arujo","Kalanya","Kanyabala","Katuma","Posta/Bonde","Oyugis","Kendu Bay","Rangwe","Ndhiwa","Mbita","Sindo","Kabondo","Kasipul","Karachuonyo"],
+  "Migori": ["Migori Town","Rongo","Awendo","Isebania","Kehancha","Macalder","Muhuru Bay","Uriri","Ntimaru","Suna"],
+  "Kisii": ["Kisii CBD","Milimani","Nyanchwa","Nyamataro","Daraja Mbili","Mwembe","Jogoo","Nyamage","Nyakoe","Nyangena","Gesonso"],
+  "Nyamira": ["Nyamira Town","Keroka","Ekerenyo","Nyansiongo","Manga","Ikonge","Magwagwa","Nyamaiya","Bomwagamo","Ainapngetuny"]
+};
+const NK_COUNTY_LABEL = {
+  "Uasin Gishu": "Uasin Gishu (Eldoret)", "Trans Nzoia": "Trans Nzoia (Kitale)", "Kiambu": "Kiambu (Thika)",
+  "Kilifi": "Kilifi (Malindi)", "Kwale": "Kwale (Diani)", "Taita-Taveta": "Taita-Taveta (Voi)",
+  "West Pokot": "West Pokot (Kapenguria)", "Vihiga": "Vihiga (Mbale)", "Nyandarua": "Nyandarua (Ol Kalou)",
+  "Turkana": "Turkana (Lodwar)", "Samburu": "Samburu (Maralal)", "Elgeyo-Marakwet": "Elgeyo-Marakwet (Iten)",
+  "Nandi": "Nandi (Kapsabet)", "Baringo": "Baringo (Kabarnet)", "Laikipia": "Laikipia (Nanyuki)",
+  "Tharaka-Nithi": "Tharaka-Nithi (Chuka)", "Kirinyaga": "Kirinyaga (Kerugoya)", "Makueni": "Makueni (Wote)"
+};
+function nkCountyLabel(county) { return NK_COUNTY_LABEL[county] || county; }
+
+/* ══════════════════════════════════════════════════════════════
+   LIVE PRICING — mirrors admin.html's calcListingFee exactly, driven
+   entirely by platform_settings. Nothing here is a hardcoded fee.
+   No payment is collected on this page — this is an estimate only.
+   ══════════════════════════════════════════════════════════════ */
+const PLATFORM_SETTINGS = {
+  sale_standard_pct: 0.1, rent_standard_pct: 3,
+  standard_min_fee: 500, standard_max_fee: 18000,
+  standard_fee_per_unit: 50, trial_days: 14,
+  bnb_basic_price: 700,
+};
+let isFirstListing = false;
+
+async function loadPlatformSettings() {
+  const { data } = await db.from('platform_settings').select('key,value').in('key', Object.keys(PLATFORM_SETTINGS));
+  (data||[]).forEach(r => { PLATFORM_SETTINGS[r.key] = Number(r.value); });
+}
+let sellerCoverage = { rental:false, bnb:false }; // replaces sellerPlanCategory
+async function checkFirstListing() {
+  if (!currentUser) { isFirstListing = false; return; }
+  const { count } = await db.from('listings').select('*', { count:'exact', head:true }).eq('seller_id', currentUser.id);
+  isFirstListing = (count || 0) === 0;
+  const { data: prof } = await db.from('profiles').select('has_bnb_capacity,has_rental_capacity,bnb_expires_at,subscription_expires_at,subscription_plan,subscription_tier').eq('id', currentUser.id).single();
+  const eliteActive = !!prof?.subscription_tier && prof.subscription_tier !== 'none' && prof?.subscription_plan === 'elite'
+    && (!prof?.subscription_expires_at || new Date(prof.subscription_expires_at) > new Date());
+  const bnbActive = !!prof?.has_bnb_capacity && prof?.bnb_expires_at && new Date(prof.bnb_expires_at) > new Date();
+  const rentalActive = !!prof?.has_rental_capacity && !!prof?.subscription_tier && prof.subscription_tier !== 'none'
+    && (!prof?.subscription_expires_at || new Date(prof.subscription_expires_at) > new Date());
+  // Elite covers unlimited BNB too, on top of rental capacity — a listing in
+  // either category is "covered" if the matching flag OR Elite is active.
+  sellerCoverage = { rental: rentalActive || eliteActive, bnb: bnbActive || eliteActive };
+}
+function categoryGroupOf(cat) { return cat === 'airbnb' ? 'bnb' : 'rental'; }
+function checkPlanCategoryMismatch() {
+  const el = document.getElementById('plan-mismatch-banner');
+  if (!el) return true;
+  const needed = categoryGroupOf(selectedCat);
+  if (sellerCoverage[needed]) { el.style.display = 'none'; return true; }
+  if (!sellerCoverage.rental && !sellerCoverage.bnb) { el.style.display = 'none'; return true; }
+  el.style.display = 'block';
+  const haveLabel = sellerCoverage.bnb && sellerCoverage.rental ? 'sale, rental, and Airbnb/BNB listings' : sellerCoverage.bnb ? 'Airbnb/BNB listings' : 'sale & rental listings';
+  el.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;font-size:13px;color:var(--text-2);line-height:1.6">
+    ℹ️ <strong>Not covered by your plan:</strong> your active subscription covers ${haveLabel}, so this ${needed==='bnb'?'Airbnb/holiday':'sale/rental'} listing won't be free under it. You can still post it — you'll just pay for this one separately, same as a seller with no subscription. Elite covers unlimited BNB listings too, if you'd rather upgrade than pay per listing.
+  </div>`;
+  return true;
+}
+function calcListingFee(price, priceType) {
+  price = Math.max(0, Number(price) || 0);
+  const pct = Number(PLATFORM_SETTINGS[priceType === 'rent' ? 'rent_standard_pct' : 'sale_standard_pct']) || 0;
+  let fee = price * (pct / 100);
+  const min = Number(PLATFORM_SETTINGS.standard_min_fee) || 0;
+  const max = Number(PLATFORM_SETTINGS.standard_max_fee) || Infinity;
+  return Math.round(Math.max(min, Math.min(max, fee)));
+}
+function fmtKESLocal(n){ return 'KES ' + Number(n||0).toLocaleString('en-KE'); }
+
+function updateKickerAndFeeNote() {
+  const kicker = document.getElementById('page-kicker');
+  if (!kicker) return;
+  if (isFirstListing) {
+    kicker.textContent = `🎉 Your first listing is free for ${PLATFORM_SETTINGS.trial_days} days`;
+  } else if (selectedCat === 'airbnb') {
+    kicker.textContent = 'Airbnb listings run on a monthly BNB plan';
+  } else {
+    kicker.textContent = 'Pay only after your listing is approved';
+  }
+}
+
+function renderFeeEstimateBanner() {
+  const el = document.getElementById('fee-estimate-banner');
+  if (!el) return;
+  const meta = NK_CATEGORIES[selectedCat];
+  const price = parseFloat(document.getElementById('price').value) || 0;
+  const freq = document.getElementById('price_frequency')?.value;
+
+  if (isFirstListing) {
+    el.innerHTML = `<div style="background:var(--green-light);border:1px solid var(--green-mid);border-radius:var(--radius);padding:14px 16px;font-size:13px;color:var(--green-dark);line-height:1.6">
+      🎉 <strong>This listing is free</strong> — it's your first on Nyumba254, so it stays live for ${PLATFORM_SETTINGS.trial_days} days at no cost. No payment needed now or during the trial.
+    </div>`;
+    return;
+  }
+  if (selectedCat === 'airbnb') {
+    el.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;font-size:13px;color:var(--text-2);line-height:1.6">
+      Airbnb / holiday rental listings run on a monthly BNB plan rather than a one-time fee. After approval, visit your dashboard to activate a plan (from ${fmtKESLocal(PLATFORM_SETTINGS.bnb_basic_price)}/month) to keep this listing bookable.
+    </div>`;
+    return;
+  }
+
+  let estimate;
+  if (meta.group === 'boarding') {
+    const valid = getValidTiers();
+    const portfolioValue = valid.reduce((s,t)=> s + (parseFloat(t.price)||0) * (parseInt(t.quantity)||0), 0) || price;
+    const unitCount = valid.reduce((s,t)=> s + (parseInt(t.quantity)||0), 0) || 1;
+    estimate = calcListingFee(portfolioValue, 'rent') + unitCount * (Number(PLATFORM_SETTINGS.standard_fee_per_unit)||0);
+  } else if (meta.group === 'commercial') {
+    const leaseType = document.getElementById('comm_lease_type')?.value;
+    estimate = calcListingFee(price, leaseType === 'sale' ? 'sale' : 'rent');
+  } else {
+    estimate = calcListingFee(price, freq === 'once' ? 'sale' : 'rent');
+  }
+
+  el.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;font-size:13px;color:var(--text-2);line-height:1.6">
+    <strong>Estimated listing fee: ${fmtKESLocal(estimate)}</strong><br/>
+    You won't be charged now — this is billed from your dashboard only after our team approves the listing, and it stays live until you mark it sold or occupied.
+  </div>`;
+}
+function nkPopulateCounties() {
+  const sel = document.getElementById('county');
+  sel.innerHTML = '<option value="">Select county</option>' +
+    NK_COUNTIES.map(c => `<option value="${c}" ${c==='Kisumu'?'selected':''}>${nkCountyLabel(c)}</option>`).join('');
+}
+function nkPopulateAreas(county) {
+  const sel = document.getElementById('area');
+  const areas = NK_AREAS_BY_COUNTY[county] || [];
+  sel.innerHTML = '<option value="">Select area</option>' +
+    areas.map(a => `<option value="${a}">${a}</option>`).join('') +
+    '<option value="__other__">Other — my area isn\'t listed</option>';
+  handleAreaChange();
+}
+function handleCountyChange() {
+  nkPopulateAreas(document.getElementById('county').value);
+  recenterMapOnArea();
+  scheduleDraftSave();
+}
+function handleAreaChange() {
+  const val = document.getElementById('area').value;
+  const isOther = val === '__other__';
+  document.getElementById('area_custom-field').style.display = isOther ? 'block' : 'none';
+  if (!isOther) document.getElementById('area_custom').value = '';
+  recenterMapOnArea();
+}
+function getEffectiveArea() {
+  const val = document.getElementById('area').value;
+  if (val === '__other__') return document.getElementById('area_custom').value.trim();
+  return val;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   STATE
+   ══════════════════════════════════════════════════════════════ */
+let currentStep      = 1;
+let selectedCat       = 'apartment';
+let selectedAmenities = new Set();
+let photos            = [];
+let coverIndex        = 0;
+let selectedVideoFile = null;
+const MAX_VIDEO_SECONDS = 60;
+
+function getVideoDuration(file) {
+  return new Promise((resolve, reject) => {
+    const v = document.createElement('video');
+    v.preload = 'metadata';
+    v.onloadedmetadata = () => { URL.revokeObjectURL(v.src); resolve(v.duration); };
+    v.onerror = () => reject(new Error('Could not read video'));
+    v.src = URL.createObjectURL(file);
+  });
+}
+
+async function handleVideoFileSelect(file) {
+  const statusEl = document.getElementById('video-file-status');
+  if (!file) { selectedVideoFile = null; statusEl.textContent = ''; return; }
+  statusEl.textContent = 'Checking video…';
+  try {
+    const duration = await getVideoDuration(file);
+    if (duration > MAX_VIDEO_SECONDS) {
+      statusEl.textContent = `That's ${Math.round(duration)}s — please trim it to under ${MAX_VIDEO_SECONDS}s.`;
+      showToast('Video is too long — max 60 seconds', 'error');
+      document.getElementById('video_file_input').value = '';
+      selectedVideoFile = null;
+      return;
+    }
+    if (file.size > 100 * 1024 * 1024) {
+      statusEl.textContent = 'File is too large — please pick a shorter or lower-quality clip.';
+      document.getElementById('video_file_input').value = '';
+      selectedVideoFile = null;
+      return;
+    }
+    selectedVideoFile = file;
+    statusEl.textContent = `✓ ${file.name} (${Math.round(duration)}s) ready to upload`;
+  } catch (e) {
+    statusEl.textContent = 'Could not read that video — try a different file.';
+    selectedVideoFile = null;
+  }
+}
+
+async function uploadSelectedVideo(listingId) {
+  if (!selectedVideoFile) return;
+  const statusEl = document.getElementById('video-file-status');
+  statusEl.textContent = 'Uploading video… this can take a minute';
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    const fd = new FormData();
+    fd.append('video', selectedVideoFile);
+    fd.append('listingId', listingId);
+    fd.append('sellerId', currentUser.id);
+    fd.append('title', document.getElementById('title').value || 'Nyumba254 listing video');
+    const res = await fetch(`${EDGE_URL}/upload-listing-video`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: fd
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) { statusEl.textContent = 'Video upload failed — your listing was still submitted.'; return; }
+    statusEl.textContent = '✓ Video received — pending review';
+  } catch (e) {
+    statusEl.textContent = 'Video upload failed — your listing was still submitted.';
+  }
+
+  
+}
+let currentUser        = null;
+let currentUserName    = '';
+let tierRows           = [];
+let tierSeq             = 0;
+let mapObj = null, mapMarker = null;
+let mapLat = -1.286389, mapLng = 36.817223; // default Nairobi center until geocoded/GPS'd
+let draftsReady = false; // blocks autosave until any existing draft has been loaded, so init-time calls (like the first addTierRow) can't overwrite it with blank data
+
+const STEP_LABELS = { 1:'Type', 2:'Basics', 3:'Details', 4:'Photos', 5:'Contact' };
+
+/* ══════════════════════════════════════════════════════════════
+   INIT
+   ══════════════════════════════════════════════════════════════ */
+async function init() {
+  nkPopulateCounties();
+  nkPopulateAreas('Kisumu');
+  renderAmenityGrid();
+  addTierRow();
+  initMap();
+
+  const { data: { session } } = await db.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    document.getElementById('auth-banner').style.display = 'none';
+    const { data: profile } = await db.from('profiles').select('phone, full_name, email').eq('id', currentUser.id).single();
+    if (profile?.phone) {
+      const p = profile.phone.startsWith('254') ? '0' + profile.phone.slice(3) : profile.phone;
+      document.getElementById('phone').value = p;
+    }
+    if (profile?.full_name) document.getElementById('contact_name').value = profile.full_name;
+    document.getElementById('contact_email').value = currentUser.email || '';
+    currentUserName = profile?.full_name || '';
+  } else {
+    document.getElementById('auth-banner').style.display = 'block';
+  }
+
+  await loadPlatformSettings();
+  await checkFirstListing();
+  updateKickerAndFeeNote();
+
+  await loadAndApplyDraft();
+  draftsReady = true;
+
+  document.querySelector('.page-wrap').addEventListener('input', scheduleDraftSave);
+  document.querySelector('.page-wrap').addEventListener('change', scheduleDraftSave);
+
+  setTimeout(() => { if (mapObj) mapObj.invalidateSize(); }, 300);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PROPERTY TYPE SELECTION
+   ══════════════════════════════════════════════════════════════ */
+function selectCat(el) {
+  document.querySelectorAll('.cat-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedCat = el.dataset.cat;
+  applyCategoryUI();
+  checkPlanCategoryMismatch();
+  scheduleDraftSave();
+}
+
+function applyCategoryUI() {
+  const meta = NK_CATEGORIES[selectedCat];
+  updateKickerAndFeeNote();
+
+  // Step 3 detail cards
+  document.getElementById('details-standard').style.display = meta.group === 'standard' ? 'block' : 'none';
+  document.getElementById('details-boarding').style.display = meta.group === 'boarding' ? 'block' : 'none';
+  document.getElementById('details-airbnb').style.display   = meta.group === 'airbnb'   ? 'block' : 'none';
+  document.getElementById('details-commercial').style.display = meta.group === 'commercial' ? 'block' : 'none';
+  document.getElementById('details-standard-title').textContent = meta.detailsTitle;
+  document.getElementById('units-field').style.display = selectedCat === 'apartment' ? 'block' : 'none';
+  document.getElementById('bedrooms-row').style.display = selectedCat === 'house' || selectedCat === 'apartment' ? 'grid' : 'none';
+
+  // Step 2 price label/frequency defaults
+  const priceLabel = document.getElementById('price-label');
+  const priceHint = document.getElementById('price-hint');
+  const freqSel = document.getElementById('price_frequency');
+  if (meta.group === 'boarding') {
+    priceLabel.innerHTML = 'Starting price (KES) <span class="req">*</span>';
+    priceHint.textContent = 'This is the lowest room-tier price — set exact prices per room type in the next step.';
+    freqSel.value = 'month';
+  } else if (meta.group === 'airbnb') {
+    priceLabel.innerHTML = 'Price per night (KES) <span class="req">*</span>';
+    priceHint.textContent = 'Nightly rate shown to guests browsing short stays.';
+    freqSel.value = 'night';
+  } else if (meta.group === 'commercial') {
+    priceLabel.innerHTML = 'Price (KES) <span class="req">*</span>';
+    priceHint.textContent = 'Monthly lease rate, or asking price if for sale.';
+  } else {
+    priceLabel.innerHTML = 'Price (KES) <span class="req">*</span>';
+    priceHint.textContent = 'Enter digits only — choose the payment frequency alongside it.';
+  }
+  const stdUnitsWrap = document.getElementById('std-units-wrap');
+  if (stdUnitsWrap) stdUnitsWrap.style.display = (NK_CATEGORIES[selectedCat].group === 'standard' && document.getElementById('std_has_units')?.checked) ? 'block' : 'none';
+  if (NK_CATEGORIES[selectedCat].group === 'boarding' || standardUnitsEnabled()) renderTierRows();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   AMENITIES
+   ══════════════════════════════════════════════════════════════ */
+function renderAmenityGrid() {
+  document.getElementById('amenity-grid').innerHTML = NK_AMENITIES.map(a => `
+    <label class="amenity-chip" id="chip-${a.key}">
+      <input type="checkbox" onchange="toggleAmenity('${a.key}', this.checked)"/>
+      ${a.label}
+    </label>`).join('');
+}
+function toggleAmenity(key, checked) {
+  if (checked) selectedAmenities.add(key); else selectedAmenities.delete(key);
+  document.getElementById(`chip-${key}`).classList.toggle('checked', checked);
+  scheduleDraftSave();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BOARDING HOUSE ROOM TIERS
+   ══════════════════════════════════════════════════════════════ */
+function addTierRow() {
+  tierRows.push({ id: ++tierSeq, label: '', capacity: '', price: '', quantity: '' });
+  renderTierRows();
+  scheduleDraftSave();
+}
+function removeTierRow(id) {
+  if (tierRows.length <= 1) { showToast('At least one room type is required', 'error'); return; }
+  tierRows = tierRows.filter(t => t.id !== id);
+  renderTierRows();
+  scheduleDraftSave();
+}
+function updateTierField(id, field, value) {
+  const row = tierRows.find(t => t.id === id);
+  if (row) row[field] = value;
+  scheduleDraftSave();
+}
+function getValidTiers() {
+  return tierRows.filter(t => t.label.trim() && t.price && parseFloat(t.price) > 0 && t.quantity !== '' && parseInt(t.quantity) >= 0);
+}
+function toggleStandardUnits(checked) {
+  document.getElementById('std-units-wrap').style.display = checked ? 'block' : 'none';
+  if (checked && !tierRows.length) addTierRow();
+  scheduleDraftSave();
+}
+function standardUnitsEnabled() {
+  return document.getElementById('std_has_units')?.checked && NK_CATEGORIES[selectedCat].group === 'standard';
+}
+function tierMountId() {
+  return NK_CATEGORIES[selectedCat].group === 'boarding' ? 'tier-rows' : 'tier-rows-standard';
+}
+function renderTierRows() {
+  const mount = document.getElementById(tierMountId());
+  if (!mount) return;
+  mount.innerHTML = tierRows.map((t, i) => `
+    <div class="tier-row">
+      <div class="tier-row-head">
+        <span>Room type ${i + 1}</span>
+        ${tierRows.length > 1 ? `<button type="button" class="tier-remove-btn" onclick="removeTierRow(${t.id})">×</button>` : ''}
+      </div>
+      <div class="tier-grid">
+        <div>
+          <label>Room type name</label>
+          <input type="text" placeholder="e.g. Single room" value="${t.label}" oninput="updateTierField(${t.id},'label',this.value)"/>
+        </div>
+        <div>
+          <label>Persons</label>
+          <select onchange="updateTierField(${t.id},'capacity',this.value)">
+            <option value="" ${t.capacity===''?'selected':''}>Select</option>
+            <option value="1" ${t.capacity==='1'?'selected':''}>1</option>
+            <option value="2" ${t.capacity==='2'?'selected':''}>2</option>
+            <option value="3" ${t.capacity==='3'?'selected':''}>3</option>
+            <option value="4" ${t.capacity==='4'?'selected':''}>4</option>
+          </select>
+        </div>
+        <div>
+          <label>Price (KES/mo)</label>
+          <input type="number" min="0" placeholder="e.g. 1800" value="${t.price}" oninput="updateTierField(${t.id},'price',this.value)"/>
+        </div>
+        <div>
+          <label>Spaces open</label>
+          <input type="number" min="0" placeholder="e.g. 5" value="${t.quantity}" oninput="updateTierField(${t.id},'quantity',this.value)"/>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LEAFLET MAP — GPS pin + drag + tap-to-move, address geocoding
+   ══════════════════════════════════════════════════════════════ */
+function initMap() {
+  mapObj = L.map('location-map', { zoomControl: true }).setView([mapLat, mapLng], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 19,
+  }).addTo(mapObj);
+
+  mapMarker = L.marker([mapLat, mapLng], { draggable: true }).addTo(mapObj);
+  mapMarker.on('dragend', () => {
+    const pos = mapMarker.getLatLng();
+    mapLat = pos.lat; mapLng = pos.lng;
+    scheduleDraftSave();
+  });
+  mapObj.on('click', (e) => {
+    mapLat = e.latlng.lat; mapLng = e.latlng.lng;
+    mapMarker.setLatLng(e.latlng);
+    scheduleDraftSave();
+  });
+}
+
+function pinExactLocation() {
+  if (!navigator.geolocation) { showToast('GPS is not available on this device/browser', 'error'); return; }
+  showToast('Requesting your location…', '');
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      mapLat = pos.coords.latitude; mapLng = pos.coords.longitude;
+      mapObj.setView([mapLat, mapLng], 16);
+      mapMarker.setLatLng([mapLat, mapLng]);
+      showToast('Location pinned ✓', 'success');
+      scheduleDraftSave();
+    },
+    () => showToast('Could not get your location — please allow location access, or drag the pin manually', 'error'),
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+let addressGeocodeTimer = null;
+function scheduleAddressGeocode() {
+  clearTimeout(addressGeocodeTimer);
+  addressGeocodeTimer = setTimeout(geocodeAddress, 900);
+}
+async function geocodeAddress() {
+  const address = document.getElementById('address').value.trim();
+  const area = getEffectiveArea();
+  const county = document.getElementById('county').value;
+  if (!address && !area) return;
+  const query = [address, area, nkCountyLabel(county), 'Kenya'].filter(Boolean).join(', ');
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`);
+    const results = await res.json();
+    if (results && results[0]) {
+      mapLat = parseFloat(results[0].lat); mapLng = parseFloat(results[0].lon);
+      mapObj.setView([mapLat, mapLng], 15);
+      mapMarker.setLatLng([mapLat, mapLng]);
+    }
+  } catch (e) { /* geocoding is a convenience — silently ignore failures */ }
+}
+function recenterMapOnArea() {
+  const area = getEffectiveArea();
+  if (!area) return;
+  geocodeAddress();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PHOTOS
+   ══════════════════════════════════════════════════════════════ */
+function dragOver(e)  { e.preventDefault(); document.getElementById('photo-drop').classList.add('drag-over'); }
+function dragLeave()  { document.getElementById('photo-drop').classList.remove('drag-over'); }
+function dropFiles(e) { e.preventDefault(); dragLeave(); handleFiles(e.dataTransfer.files); }
+
+async function handleFiles(files) {
+  const remaining = 10 - photos.length;
+  if (remaining <= 0) { showToast('Maximum 10 photos allowed', 'error'); return; }
+  const toAdd = Array.from(files).slice(0, remaining);
+  for (const file of toAdd) {
+    if (!file.type.startsWith('image/')) continue;
+    if (file.size > 30 * 1024 * 1024) { showToast(`${file.name} is too large (max 30MB)`, 'error'); continue; }
+    showToast('Processing photo…', '');
+    const watermarked = await watermarkImage(await standardizeImage(file));
+    photos.push({ file: watermarked, previewUrl: URL.createObjectURL(watermarked) });
+  }
+  renderPhotoGrid();
+}
+
+async function standardizeImage(file) {
+  if (file.size <= 2 * 1024 * 1024) return file;
+  const MAX_DIM = 2400, JPEG_QUALITY = 0.95;
+  try {
+    const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    let { width, height } = bitmap;
+    if (width > MAX_DIM || height > MAX_DIM) {
+      const ratio = Math.min(MAX_DIM / width, MAX_DIM / height);
+      width = Math.round(width * ratio); height = Math.round(height * ratio);
+    }
+    let src = bitmap, curW = bitmap.width, curH = bitmap.height;
+    while (curW / 2 > width && curH / 2 > height) {
+      curW = Math.round(curW / 2); curH = Math.round(curH / 2);
+      const step = document.createElement('canvas');
+      step.width = curW; step.height = curH;
+      const sctx = step.getContext('2d');
+      sctx.imageSmoothingEnabled = true; sctx.imageSmoothingQuality = 'high';
+      sctx.drawImage(src, 0, 0, curW, curH);
+      src = step;
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = width; canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(src, 0, 0, width, height);
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', JPEG_QUALITY));
+    return new File([blob], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' });
+  } catch (e) { return file; }
+}
+
+const WATERMARK_TEXT = 'Nyumba254';
+async function watermarkImage(file) {
+  try {
+    const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width; canvas.height = bitmap.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(bitmap, 0, 0);
+    const fontSize = Math.max(16, Math.round(canvas.width * 0.028));
+    ctx.font = `italic 500 ${fontSize}px 'Playfair Display', Georgia, serif`;
+    ctx.textBaseline = 'bottom'; ctx.textAlign = 'right';
+    const paddingX = fontSize * 0.9, paddingY = fontSize * 0.9;
+    ctx.shadowColor = 'rgba(0,0,0,0.45)'; ctx.shadowBlur = fontSize * 0.6;
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.fillText(WATERMARK_TEXT, canvas.width - paddingX, canvas.height - paddingY);
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.95));
+    return new File([blob], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' });
+  } catch (e) { return file; }
+}
+
+function renderPhotoGrid() {
+  document.getElementById('photo-count-tag').textContent = `(${photos.length}/10)`;
+  document.getElementById('photo-notice').style.display = photos.length ? 'none' : 'block';
+  document.getElementById('photo-grid').innerHTML = photos.map((p, i) => `
+    <div class="photo-thumb">
+      <img src="${p.previewUrl}" alt="Photo ${i+1}"/>
+      <button class="remove-btn" onclick="removePhoto(${i})">×</button>
+      ${i === coverIndex ? '<span class="cover-badge">Cover</span>' : `<span class="set-cover" onclick="setCover(${i})">Set cover</span>`}
+    </div>`).join('');
+}
+function removePhoto(i) { URL.revokeObjectURL(photos[i].previewUrl); photos.splice(i, 1); if (coverIndex >= photos.length) coverIndex = 0; renderPhotoGrid(); }
+function setCover(i) { coverIndex = i; renderPhotoGrid(); }
+
+async function uploadPhotos(listingId) {
+  const uploaded = [];
+  if (!photos.length) return uploaded;
+  const prog = document.getElementById('upload-progress'), bar = document.getElementById('upload-bar');
+  prog.style.display = 'block';
+  for (let i = 0; i < photos.length; i++) {
+    const path = `${listingId}/${Date.now()}-${i}.jpg`;
+    const { error } = await db.storage.from('listing-photos').upload(path, photos[i].file, { cacheControl:'3600', upsert:false });
+    if (error) { console.error('Upload error:', error); continue; }
+    const { data: urlData } = db.storage.from('listing-photos').getPublicUrl(path);
+    uploaded.push({ url: urlData.publicUrl, is_cover: i === coverIndex, position: i });
+    bar.style.width = `${Math.round(((i+1)/photos.length)*100)}%`;
+  }
+  prog.style.display = 'none';
+  return uploaded;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   STEP NAVIGATION
+   ══════════════════════════════════════════════════════════════ */
+function goStep(n) {
+  if (n > currentStep && !validateStep(currentStep)) return;
+  document.getElementById(`step-${currentStep}`).style.display = 'none';
+  currentStep = n;
+  document.getElementById(`step-${n}`).style.display = 'block';
+  updateStepUI();
+  if (n === 5) renderReview();
+  if (mapObj) setTimeout(() => mapObj.invalidateSize(), 100);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function goStepRaw(n) {
+  for (let i = 1; i <= 5; i++) {
+    const el = document.getElementById(`step-${i}`);
+    if (el) el.style.display = (i === n) ? 'block' : 'none';
+  }
+  currentStep = n;
+  updateStepUI();
+  if (n === 5) renderReview();
+}
+function updateStepUI() {
+  for (let i = 1; i <= 5; i++) {
+    const dot = document.getElementById(`dot-${i}`), lbl = document.getElementById(`lbl-${i}`);
+    dot.className = 'step-dot' + (i < currentStep ? ' done' : i === currentStep ? ' active' : '');
+    lbl.className = 'step-label' + (i < currentStep ? ' done' : i === currentStep ? ' active' : '');
+  }
+  document.getElementById('steps-progress-fill').style.width = `${(currentStep / 5) * 100}%`;
+}
+
+function validateStep(step) {
+  let ok = true;
+  const check = (id, errId, test) => {
+    const el = document.getElementById(id), err = document.getElementById(errId);
+    const valid = test(el.value);
+    el.classList.toggle('error', !valid);
+    if (err) err.classList.toggle('show', !valid);
+    if (!valid) ok = false;
+  };
+
+  if (step === 2) {
+    check('title', 'err-title', v => v.trim().length > 5);
+    check('description', 'err-desc', v => v.trim().length > 10);
+    check('area', 'err-area', () => getEffectiveArea() !== '');
+    check('address', 'err-address', v => v.trim().length > 2);
+    check('price', 'err-price', v => v && parseFloat(v) > 0);
+    if (document.getElementById('area').value === '__other__') {
+      check('area_custom', 'err-area-custom', v => v.trim().length > 0);
+    }
+  }
+
+  if (step === 3) {
+    const meta = NK_CATEGORIES[selectedCat];
+    if (meta.group === 'boarding') {
+      const valid = getValidTiers();
+      if (!valid.length) { showToast('Please add at least one complete room type', 'error'); ok = false; }
+    } else if (standardUnitsEnabled()) {
+      const valid = getValidTiers();
+      if (!valid.length) { showToast('Please add at least one complete unit type, or turn off "multiple units"', 'error'); ok = false; }
+    }
+  }
+
+  if (step === 4) {
+    if (!photos.length) { showToast('Please add at least one photo to continue', 'error'); ok = false; }
+  }
+
+  if (!ok && step !== 4 && step !== 3) showToast('Please fill in all required fields', 'error');
+  return ok;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   REVIEW (step 5)
+   ══════════════════════════════════════════════════════════════ */
+function renderReview() {
+  const meta = NK_CATEGORIES[selectedCat];
+  const freqLabelMap = { month:'/month', once:' (one-time)', night:'/night', term:'/term', week:'/week' };
+  const freq = document.getElementById('price_frequency').value;
+  const price = document.getElementById('price').value;
+
+  let detailRows = '';
+  if (meta.group === 'standard') {
+    detailRows = `
+      <div class="summary-row"><span>${selectedCat === 'apartment' ? 'Units' : 'Bedrooms'}</span><strong>${selectedCat === 'apartment' ? (document.getElementById('std_units').value || '—') : (document.getElementById('std_bedrooms').value || '—')}</strong></div>
+      <div class="summary-row"><span>Bathrooms</span><strong>${document.getElementById('std_bathrooms').value || '—'}</strong></div>
+      <div class="summary-row"><span>Furnished</span><strong>${document.getElementById('std_furnished').value || '—'}</strong></div>
+      <div class="summary-row"><span>Parking</span><strong>${document.getElementById('std_parking').value || '—'}</strong></div>
+      <div class="summary-row"><span>Security</span><strong>${document.getElementById('std_security').value || '—'}</strong></div>`;
+  } else if (meta.group === 'boarding') {
+    const valid = getValidTiers();
+    detailRows = `
+      <div class="summary-row"><span>Total bed spaces</span><strong>${document.getElementById('board_total_beds').value || '—'}</strong></div>
+      <div class="summary-row"><span>Residents</span><strong>${document.getElementById('board_gender').value}</strong></div>
+      <div class="review-block-title">Room types</div>` +
+      valid.map(t => `<div class="summary-row"><span>${t.label} (${t.capacity} person${t.capacity==='1'?'':'s'})</span><strong>KES ${Number(t.price).toLocaleString('en-KE')}/mo — ${t.quantity} open</strong></div>`).join('');
+  } else if (meta.group === 'airbnb') {
+    detailRows = `
+      <div class="summary-row"><span>Guests</span><strong>${document.getElementById('air_guests').value || '—'}</strong></div>
+      <div class="summary-row"><span>Bedrooms / Bathrooms</span><strong>${document.getElementById('air_bedrooms').value || '—'} / ${document.getElementById('air_bathrooms').value || '—'}</strong></div>
+      <div class="summary-row"><span>Minimum stay</span><strong>${document.getElementById('air_min_stay').value} night(s)</strong></div>`;
+  } else if (meta.group === 'commercial') {
+    detailRows = `
+      <div class="summary-row"><span>Property type</span><strong>${document.getElementById('comm_type').value || '—'}</strong></div>
+      <div class="summary-row"><span>Floor area</span><strong>${document.getElementById('comm_size').value || '—'} m²</strong></div>
+      <div class="summary-row"><span>Lease/Sale</span><strong>${document.getElementById('comm_lease_type').value}</strong></div>
+      <div class="summary-row"><span>Parking</span><strong>${document.getElementById('comm_parking').value || '—'}</strong></div>
+      <div class="summary-row"><span>Condition</span><strong>${document.getElementById('comm_condition').value || '—'}</strong></div>`;
+  }
+
+  const amenityLabels = NK_AMENITIES.filter(a => selectedAmenities.has(a.key)).map(a => a.label).join(', ') || 'None selected';
+
+  document.getElementById('review-content').innerHTML = `
+    <div class="review-block-title">Property</div>
+    <div class="summary-row"><span>Type</span><strong>${meta.label}</strong></div>
+    <div class="summary-row"><span>Title</span><strong>${document.getElementById('title').value}</strong></div>
+    <div class="summary-row"><span>Price</span><strong>KES ${price ? Number(price).toLocaleString('en-KE') : '—'}${freqLabelMap[freq]||''}</strong></div>
+    <div class="summary-row"><span>Location</span><strong>${getEffectiveArea()}, ${nkCountyLabel(document.getElementById('county').value)}</strong></div>
+    <div class="summary-row"><span>Address</span><strong>${document.getElementById('address').value}</strong></div>
+    <div class="summary-row"><span>Map pin</span><strong>${mapLat.toFixed(5)}, ${mapLng.toFixed(5)}</strong></div>
+    <div class="review-block-title">Details</div>
+    ${detailRows}
+    <div class="summary-row"><span>Amenities</span><strong>${amenityLabels}</strong></div>
+    <div class="review-block-title">Photos & contact</div>
+    <div class="summary-row"><span>Photos</span><strong>${photos.length} photo(s) added</strong></div>
+    <div class="summary-row"><span>Contact name</span><strong>${document.getElementById('contact_name').value || '—'}</strong></div>
+    <div class="summary-row"><span>Phone</span><strong>${document.getElementById('phone').value || '—'}</strong></div>
+  `;
+  renderFeeEstimateBanner();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DRAFT AUTOSAVE
+   ══════════════════════════════════════════════════════════════ */
+const DRAFT_LS_KEY = 'nk_post_listing_draft_v2';
+let draftLocalTimer = null, draftServerTimer = null;
+
+function collectDraftData() {
+  const val = id => document.getElementById(id)?.value ?? '';
+  const checked = id => document.getElementById(id)?.checked ?? false;
+  return {
+    step: currentStep, selectedCat, amenities: [...selectedAmenities], tierRows: JSON.parse(JSON.stringify(tierRows)),
+    mapLat, mapLng,
+    fields: {
+      title: val('title'), description: val('description'), county: val('county'), area: val('area'),
+      area_custom: val('area_custom'), address: val('address'), price: val('price'), price_frequency: val('price_frequency'),
+      std_units: val('std_units'), std_bathrooms: val('std_bathrooms'), std_bedrooms: val('std_bedrooms'),
+      std_size: val('std_size'), std_furnished: val('std_furnished'), std_parking: val('std_parking'), std_security: val('std_security'),
+      std_has_units: checked('std_has_units'),
+      board_total_beds: val('board_total_beds'), board_gender: val('board_gender'), board_institution: val('board_institution'),
+      air_guests: val('air_guests'), air_bedrooms: val('air_bedrooms'), air_bathrooms: val('air_bathrooms'),
+      air_min_stay: val('air_min_stay'), air_checkin: val('air_checkin'), air_rules: val('air_rules'),
+      contact_name: val('contact_name'), phone: val('phone'), whatsapp: val('whatsapp'), contact_email: val('contact_email'),
+      contact_hidden: checked('contact_hidden'), video_url: val('video_url'),
+    },
+    savedAt: Date.now(),
+  };
+}
+function scheduleDraftSave() {
+  if (!draftsReady) return;
+  clearTimeout(draftLocalTimer);
+  draftLocalTimer = setTimeout(() => {
+    document.getElementById('save-status').textContent = '✓ Draft saved';
+    try { localStorage.setItem(DRAFT_LS_KEY, JSON.stringify(collectDraftData())); } catch(e) {}
+  }, 500);
+  if (currentUser) {
+    clearTimeout(draftServerTimer);
+    draftServerTimer = setTimeout(() => saveDraftToServer(collectDraftData()), 4000);
+  }
+}
+async function saveDraftToServer(data) {
+  try {
+    await db.from('listing_drafts').upsert({ seller_id: currentUser.id, draft_data: data, updated_at: new Date().toISOString() }, { onConflict: 'seller_id' });
+  } catch(e) {}
+}
+async function clearDraft() {
+  clearTimeout(draftLocalTimer); clearTimeout(draftServerTimer);
+  try { localStorage.removeItem(DRAFT_LS_KEY); } catch(e) {}
+  if (currentUser) { try { await db.from('listing_drafts').delete().eq('seller_id', currentUser.id); } catch(e) {} }
+}
+let pendingDraft = null;
+async function loadAndApplyDraft() {
+  let local = null;
+  try { const raw = localStorage.getItem(DRAFT_LS_KEY); if (raw) local = JSON.parse(raw); } catch(e) {}
+  let server = null;
+  if (currentUser) {
+    try {
+      const { data } = await db.from('listing_drafts').select('draft_data, updated_at').eq('seller_id', currentUser.id).single();
+      if (data?.draft_data) server = { ...data.draft_data, savedAt: new Date(data.updated_at).getTime() };
+    } catch(e) {}
+  }
+  let draft = (local && server) ? (server.savedAt >= local.savedAt ? server : local) : (local || server);
+  if (!draft || !draftHasContent(draft)) return;
+  pendingDraft = draft;
+  showResumeDraftPrompt(draft);
+}
+function draftHasContent(draft) {
+  const f = draft.fields || {};
+  return !!(f.title?.trim() || f.description?.trim() || f.price);
+}
+function timeAgoLabel(ts) {
+  const mins = Math.floor((Date.now() - ts) / 60000);
+  if (mins < 1) return 'a moment ago';
+  if (mins < 60) return `${mins} minute${mins===1?'':'s'} ago`;
+  const hrs = Math.floor(mins/60);
+  if (hrs < 24) return `${hrs} hour${hrs===1?'':'s'} ago`;
+  return `${Math.floor(hrs/24)} day(s) ago`;
+}
+function showResumeDraftPrompt(draft) {
+  const savedAgo = timeAgoLabel(draft.savedAt);
+  const titleBit = draft.fields?.title ? ` — "${draft.fields.title}"` : '';
+  document.getElementById('resume-draft-text').textContent = `We saved your progress from ${savedAgo}${titleBit}. Would you like to continue where you left off?`;
+  document.getElementById('resume-draft-modal').classList.add('show');
+}
+function resumeDraft() {
+  document.getElementById('resume-draft-modal').classList.remove('show');
+  if (pendingDraft) {
+    applyDraftData(pendingDraft);
+    try { localStorage.setItem(DRAFT_LS_KEY, JSON.stringify(pendingDraft)); } catch(e) {}
+    if (currentUser) saveDraftToServer(pendingDraft);
+  }
+  pendingDraft = null;
+}
+function discardDraftAndStartFresh() {
+  document.getElementById('resume-draft-modal').classList.remove('show');
+  pendingDraft = null; clearDraft();
+}
+function applyDraftData(draft) {
+  selectedCat = draft.selectedCat || selectedCat;
+  const catEl = document.querySelector(`.cat-option[data-cat="${selectedCat}"]`);
+  if (catEl) { document.querySelectorAll('.cat-option').forEach(o => o.classList.remove('selected')); catEl.classList.add('selected'); }
+  applyCategoryUI();
+
+  selectedAmenities = new Set(draft.amenities || []);
+  NK_AMENITIES.forEach(a => {
+    const checked = selectedAmenities.has(a.key);
+    const chip = document.getElementById(`chip-${a.key}`);
+    if (chip) { chip.classList.toggle('checked', checked); chip.querySelector('input').checked = checked; }
+  });
+
+  if (Array.isArray(draft.tierRows) && draft.tierRows.length) {
+    tierRows = draft.tierRows; tierSeq = Math.max(0, ...tierRows.map(t => t.id || 0));
+    renderTierRows();
+  }
+
+  if (draft.mapLat && draft.mapLng) {
+    mapLat = draft.mapLat; mapLng = draft.mapLng;
+    if (mapObj && mapMarker) { mapObj.setView([mapLat, mapLng], 15); mapMarker.setLatLng([mapLat, mapLng]); }
+  }
+
+  const f = draft.fields || {};
+  if (f.county) { document.getElementById('county').value = f.county; nkPopulateAreas(f.county); }
+  Object.entries(f).forEach(([id, value]) => {
+    if (id === 'county') return;
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.type === 'checkbox') el.checked = !!value; else el.value = value ?? '';
+  });
+  handleAreaChange();
+  if (document.getElementById('std_has_units')?.checked) toggleStandardUnits(true);
+
+  if (draft.step) goStepRaw(draft.step);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TOAST
+   ══════════════════════════════════════════════════════════════ */
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.className = 'toast', 4000);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SUBMIT
+   ══════════════════════════════════════════════════════════════ */
+async function submitListing() {
+  const agreeEl = document.getElementById('agree-terms');
+  const agreeErr = document.getElementById('err-agree-terms');
+  if (!agreeEl.checked) {
+    agreeErr.classList.add('show');
+    agreeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    showToast('Please agree to the Terms and Conditions to continue', 'error');
+    return;
+  }
+  agreeErr.classList.remove('show');
+
+  checkPlanCategoryMismatch();
+
+  let ok = true;
+  const check = (id, errId, test) => {
+    const el = document.getElementById(id), err = document.getElementById(errId);
+    const valid = test(el.value);
+    el.classList.toggle('error', !valid);
+    err.classList.toggle('show', !valid);
+    if (!valid) ok = false;
+  };
+  check('contact_name', 'err-contact-name', v => v.trim().length > 1);
+  check('phone', 'err-phone', v => v.replace(/\s/g,'').length >= 9);
+  check('contact_email', 'err-contact-email', v => /\S+@\S+\.\S+/.test(v));
+  if (!ok) { showToast('Please complete your contact details', 'error'); return; }
+
+  if (!currentUser) {
+    showToast('Please sign in first', 'error');
+    setTimeout(() => window.location.href = 'login?next=post-listing', 1500);
+    return;
+  }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Submitting…`;
+
+  try {
+    const meta = NK_CATEGORIES[selectedCat];
+    const price = parseFloat(document.getElementById('price').value) || 0;
+    const validTiers = (meta.group === 'boarding' || standardUnitsEnabled()) ? getValidTiers() : [];
+
+    const detailsPayload = {};
+    if (meta.group === 'standard') {
+      Object.assign(detailsPayload, {
+        units: document.getElementById('std_units').value || null,
+        bathrooms: document.getElementById('std_bathrooms').value || null,
+        bedrooms: document.getElementById('std_bedrooms').value || null,
+        size_sqm: document.getElementById('std_size').value || null,
+        furnished: document.getElementById('std_furnished').value || null,
+        parking: document.getElementById('std_parking').value || null,
+        security: document.getElementById('std_security').value || null,
+      });
+    } else if (meta.group === 'boarding') {
+      Object.assign(detailsPayload, {
+        total_beds: document.getElementById('board_total_beds').value || null,
+        gender: document.getElementById('board_gender').value,
+        institution: document.getElementById('board_institution').value || null,
+        room_types: validTiers,
+      });
+    } else if (meta.group === 'airbnb') {
+      Object.assign(detailsPayload, {
+        guests: document.getElementById('air_guests').value || null,
+        bedrooms: document.getElementById('air_bedrooms').value || null,
+        bathrooms: document.getElementById('air_bathrooms').value || null,
+        min_stay: document.getElementById('air_min_stay').value,
+        checkin: document.getElementById('air_checkin').value || null,
+        house_rules: document.getElementById('air_rules').value || null,
+      });
+    } else if (meta.group === 'commercial') {
+      Object.assign(detailsPayload, {
+        property_type: document.getElementById('comm_type').value || null,
+        size_sqm: document.getElementById('comm_size').value || null,
+        lease_type: document.getElementById('comm_lease_type').value,
+        parking: document.getElementById('comm_parking').value || null,
+        frontage: document.getElementById('comm_frontage').value || null,
+        condition: document.getElementById('comm_condition').value || null,
+      });
+    }
+
+    const listingData = {
+      title:            document.getElementById('title').value.trim(),
+      description:      document.getElementById('description').value.trim(),
+      price:            price,
+      price_frequency:  document.getElementById('price_frequency').value,
+      price_type:       document.getElementById('price_frequency').value === 'once' ? 'sale' : 'rent',
+      category:         selectedCat,
+      county:           document.getElementById('county').value,
+      area:             getEffectiveArea(),
+      address:          document.getElementById('address').value.trim(),
+      latitude:         mapLat,
+      longitude:        mapLng,
+      amenities:        [...selectedAmenities],
+      details:          detailsPayload,
+      contact_name:     document.getElementById('contact_name').value.trim(),
+      phone:            document.getElementById('phone').value.trim(),
+      whatsapp:         document.getElementById('whatsapp').value.trim() || document.getElementById('phone').value.trim(),
+      contact_email:    document.getElementById('contact_email').value.trim(),
+      contact_hidden:   document.getElementById('contact_hidden')?.checked || false,
+      status:           'pending',
+      payment_status:   isFirstListing ? 'trial' : 'unpaid',
+      trial_expires_at: isFirstListing ? new Date(Date.now() + (PLATFORM_SETTINGS.trial_days||14) * 86400000).toISOString() : null,
+      seller_id:        currentUser.id,
+      views:            0,
+      is_live:          false, // never goes live on submit — admin approval + payment/trial gate flips this
+    };
+
+    const { data: listing, error } = await db.from('listings').insert(listingData).select().single();
+    if (error) throw error;
+
+    if (validTiers.length) {
+      const unitRows = validTiers.map(t => ({
+        listing_id: listing.id, unit_label: t.label.trim(), bedrooms: 0,
+        quantity_available: parseInt(t.quantity), quantity_total: parseInt(t.quantity),
+        price: parseFloat(t.price),
+      }));
+      const { error: unitErr } = await db.from('listing_units').insert(unitRows);
+      if (unitErr) console.error('listing_units insert error:', unitErr);
+    }
+
+    if (photos.length) {
+      const uploaded = await uploadPhotos(listing.id);
+      if (uploaded.length) {
+        await db.from('listing_photos').insert(uploaded.map(u => ({ ...u, listing_id: listing.id })));
+      }
+    }
+
+    const videoUrl = document.getElementById('video_url').value.trim();
+    if (videoUrl) {
+      const { error: videoErr } = await db.from('listing_videos').insert({ listing_id: listing.id, url: videoUrl, position: 0 });
+      if (videoErr) {
+        console.error('listing_videos insert error:', videoErr);
+        showToast(videoErr.message?.includes('row-level security') ? 'Your video link could not be saved — video walkthroughs may be disabled for your account.' : 'Could not save your video link, but the listing was submitted.', 'error');
+      }
+    }
+    if (selectedVideoFile) {
+      await uploadSelectedVideo(listing.id);
+    }
+
+    fetch(`${EDGE_URL}/send-listing-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({ sellerEmail: currentUser.email, sellerName: currentUserName, listingTitle: listingData.title, listingId: listing.id }),
+    }).catch(e => console.error('Email notify failed:', e));
+
+    await clearDraft();
+
+    document.getElementById('success-message').textContent = isFirstListing
+      ? `Your listing has been saved and sent for review. It will appear publicly once approved, and stays free for ${PLATFORM_SETTINGS.trial_days} days as your first listing.`
+      : `Your listing has been saved and sent for review. It will appear publicly once approved — you'll be able to pay the listing fee from your dashboard at that point.`;
+    document.getElementById('step-5').style.display = 'none';
+    document.getElementById('steps-bar').style.display = 'none';
+    document.getElementById('success-screen').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  } catch(err) {
+    console.error('Submit error:', err);
+    showToast(`Error: ${err.message || 'Something went wrong. Please try again.'}`, 'error');
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg> Submit for Review`;
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && currentStep < 5) {
+    goStep(currentStep + 1);
+  }
+});
+
+applyCategoryUI();
+init();
+</script>
+</body>
+>>>>>>> 85cfb5cc8bf25627de2caa851dcf18689777adf3
 </html>
