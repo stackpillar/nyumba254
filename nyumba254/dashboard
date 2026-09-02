@@ -2557,6 +2557,7 @@ function updateEliteGatedPages(sub){
 
 async function requestPlanCategorySwitch(){
   const p = ownerProfile || currentProfile;
+  const current = p?.has_bnb_capacity ? 'bnb' : 'rental';
   const target = p?.has_bnb_capacity ? 'rental' : 'bnb';
   if(!confirm(`Request ${target==='bnb'?'Airbnb/BNB':'rental'} listing capacity in addition to what you already have? This opens a support ticket for our team to confirm pricing before it's activated.`)) return;
   const sessionKey = `seller_${currentUser.id}_plan_switch_${Date.now()}`;
@@ -7780,6 +7781,6 @@ init();
   },1200);
 })();
 </script>
-<audio id="scw-notify-sound" preload="auto" src="assetsnotify.mp3"></audio>
+<audio id="scw-notify-sound" preload="auto" src="assets/notify.mp3"></audio>
 </body>
 </html>
