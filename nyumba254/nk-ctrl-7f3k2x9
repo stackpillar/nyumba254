@@ -2230,8 +2230,8 @@ function notifySms(type, payload) {
   // Rejected or deactivated ("postponed") listings shouldn't have their
   // expiry/feature/social actions triggered by accident — grey those out
   // instead of hiding them, so it's clear *why* they can't be clicked.
-  function listingActionsLocked(l) { return l.status === 'rejected' || !!l.is_disabled; }
-  const LOCKED_ACTION_TIP = 'Unavailable — listing is rejected or deactivated';
+  function listingActionsLocked(l) { return l.status === 'rejected' || l.status === 'paused' || l.status === 'occupied' || !!l.is_disabled; }
+  const LOCKED_ACTION_TIP = 'Unavailable — listing is rejected, deactivated, paused, or occupied/sold';
 
   function debounce(fn, ms) {
     let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
@@ -2512,7 +2512,7 @@ function notifySms(type, payload) {
         ...(l.is_featured?[{label:'☆ Unfeature', cls:'', fn:`unfeatureListing('${l.id}')`, disabled: locked}]:[]),
         {label:'View details', cls:'', fn:`openListingModal('${l.id}')`},
         {label:'Edit listing',  cls:'', fn:`openEditListingModal('${l.id}')`},
-        {label:'Manage video walkthrough', cls:'', fn:`openAdminVideoModal('${l.id}')`},
+        {label:'Manage video walkthrough', cls:'', fn:`openAdminVideoModal('${l.id}')`, disabled: locked},
         l.is_disabled
           ? {label:'Activate',   cls:'success', fn:`activateListing('${l.id}')`}
           : {label:'Deactivate', cls:'danger',  fn:`deactivateListing('${l.id}')`},
@@ -2544,7 +2544,7 @@ function notifySms(type, payload) {
             ${l.is_featured?aBtn('unfeature','Unfeature listing','view',`unfeatureListing('${l.id}')`, locked, LOCKED_ACTION_TIP):''}
             ${aBtn('view','View details','view',`openListingModal('${l.id}')`)}
             ${aBtn('edit','Edit listing','view',`openEditListingModal('${l.id}')`)}
-            ${aBtn('video','Manage video walkthrough','view',`openAdminVideoModal('${l.id}')`)}
+            ${aBtn('video','Manage video walkthrough','view',`openAdminVideoModal('${l.id}')`, locked, LOCKED_ACTION_TIP)}
             ${l.is_disabled
               ? aBtn('activate','Activate listing','approve',`activateListing('${l.id}')`)
               : aBtn('deactivate','Deactivate listing','reject',`deactivateListing('${l.id}')`)}
@@ -2588,7 +2588,7 @@ function notifySms(type, payload) {
           ${renderSocialButtons(l, locked)}
           ${aBtn('view','View','view',`openListingModal('${l.id}')`)}
           ${aBtn('edit','Edit','view',`openEditListingModal('${l.id}')`)}
-          ${aBtn('video','Video','view',`openAdminVideoModal('${l.id}')`)}
+          ${aBtn('video','Video','view',`openAdminVideoModal('${l.id}')`, locked, LOCKED_ACTION_TIP)}
           ${l.is_disabled
             ? aBtn('activate','Activate','approve',`activateListing('${l.id}')`)
             : aBtn('deactivate','Deactivate','reject',`deactivateListing('${l.id}')`)}

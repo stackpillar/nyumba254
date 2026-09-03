@@ -1448,6 +1448,13 @@
       <input type="hidden" id="edit-id"/>
       <div class="form-grid">
         <div class="form-group" style="grid-column:1/-1"><label>Title</label><input type="text" id="edit-title"/></div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Photos</label>
+          <div id="edit-photos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-bottom:10px"></div>
+          <input type="file" id="edit-photo-upload" accept="image/*" multiple style="display:none" onchange="handleEditPhotoUpload(this.files)"/>
+          <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('edit-photo-upload').click()">+ Add photos</button>
+          <div id="edit-photo-upload-status" style="font-size:11px;color:var(--text-3);margin-top:6px"></div>
+        </div>
         <div class="form-group"><label>Price (KES)</label><input type="number" id="edit-price"/></div>
         <div class="form-group"><label>Price type</label><select id="edit-price-type"><option value="sale">For sale</option><option value="rent">To let (monthly)</option></select></div>
         <div class="form-group"><label>Bedrooms</label><input type="number" id="edit-bedrooms" min="0" max="20"/></div>
@@ -5396,6 +5403,81 @@ function openOccupiedModal(id,title){
 }
 
 let payListingTargetId=null;
+let editPhotosListingId=null;
+const LISTING_PHOTOS_BUCKET = 'listing-photos'; // ← must match the bucket admin's dashboard uses
+function storagePathFromPublicUrl(url) {
+  const marker = `/storage/v1/object/public/${LISTING_PHOTOS_BUCKET}/`;
+  const i = (url||'').indexOf(marker);
+  return i === -1 ? null : url.slice(i + marker.length);
+}
+function renderEditPhotosGrid(l) {
+  const photos = l.listing_photos || [];
+  if (!photos.length) return `<div style="font-size:12px;color:var(--text-3)">No photos yet</div>`;
+  return photos.map(p => `
+    <div style="position:relative;border-radius:8px;overflow:hidden;border:2px solid ${p.is_cover?'var(--green)':'var(--border)'};aspect-ratio:1">
+      <img src="${escAttr(p.url)}" style="width:100%;height:100%;object-fit:cover;display:block"/>
+      ${p.is_cover?`<span style="position:absolute;top:3px;left:3px;background:var(--green);color:white;font-size:9px;font-weight:700;padding:1px 5px;border-radius:6px">COVER</span>`:''}
+      <div style="position:absolute;bottom:0;left:0;right:0;display:flex;gap:2px;padding:3px;background:rgba(0,0,0,0.55)">
+        ${!p.is_cover?`<button type="button" title="Set as cover" onclick="setEditCoverPhoto('${p.id}')" style="flex:1;background:none;border:none;color:white;font-size:13px;cursor:pointer;padding:2px">★</button>`:''}
+        <button type="button" title="Delete photo" onclick="deleteEditPhoto('${p.id}')" style="flex:1;background:none;border:none;color:white;font-size:13px;cursor:pointer;padding:2px">🗑</button>
+      </div>
+    </div>`).join('');
+}
+async function handleEditPhotoUpload(fileList) {
+  const files = Array.from(fileList || []);
+  if (!files.length || !editPhotosListingId) return;
+  const statusEl = document.getElementById('edit-photo-upload-status');
+  const l = allListings.find(x=>x.id===editPhotosListingId);
+  if (!l) return;
+  l.listing_photos = l.listing_photos || [];
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    statusEl.textContent = `Uploading ${i+1}/${files.length}…`;
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const path = `${editPhotosListingId}/${Date.now()}_${i}.${ext}`;
+    const { error: upErr } = await db.storage.from(LISTING_PHOTOS_BUCKET).upload(path, file);
+    if (upErr) { statusEl.textContent = 'Upload failed: ' + upErr.message; continue; }
+    const { data: pub } = db.storage.from(LISTING_PHOTOS_BUCKET).getPublicUrl(path);
+    const isCover = l.listing_photos.length === 0;
+    const { data: row, error: insErr } = await db.from('listing_photos').insert({
+      listing_id: editPhotosListingId, url: pub.publicUrl, is_cover: isCover,
+    }).select().single();
+    if (insErr) { statusEl.textContent = 'Save failed: ' + insErr.message; continue; }
+    l.listing_photos.push(row);
+  }
+  statusEl.textContent = 'Done ✓';
+  document.getElementById('edit-photos-grid').innerHTML = renderEditPhotosGrid(l);
+  document.getElementById('edit-photo-upload').value = '';
+  renderListingsTable();renderQuickListings();
+}
+async function deleteEditPhoto(photoId) {
+  const l = allListings.find(x=>x.id===editPhotosListingId); if (!l) return;
+  const photo = (l.listing_photos||[]).find(p=>p.id===photoId); if (!photo) return;
+  if (!confirm('Delete this photo?')) return;
+  const path = storagePathFromPublicUrl(photo.url);
+  if (path) await db.storage.from(LISTING_PHOTOS_BUCKET).remove([path]);
+  const { error } = await db.from('listing_photos').delete().eq('id', photoId);
+  if (error) { showToast('Error deleting photo: '+error.message,'error'); return; }
+  l.listing_photos = (l.listing_photos||[]).filter(p=>p.id!==photoId);
+  if (photo.is_cover && l.listing_photos.length) {
+    const newCover = l.listing_photos[0];
+    await db.from('listing_photos').update({is_cover:true}).eq('id', newCover.id);
+    newCover.is_cover = true;
+  }
+  document.getElementById('edit-photos-grid').innerHTML = renderEditPhotosGrid(l);
+  showToast('Photo deleted','success');
+  renderListingsTable();renderQuickListings();
+}
+async function setEditCoverPhoto(photoId) {
+  const l = allListings.find(x=>x.id===editPhotosListingId); if (!l) return;
+  await db.from('listing_photos').update({is_cover:false}).eq('listing_id', editPhotosListingId);
+  const { error } = await db.from('listing_photos').update({is_cover:true}).eq('id', photoId);
+  if (error) { showToast('Error: '+error.message,'error'); return; }
+  (l.listing_photos||[]).forEach(p => p.is_cover = (p.id === photoId));
+  document.getElementById('edit-photos-grid').innerHTML = renderEditPhotosGrid(l);
+  showToast('Cover photo updated ✓','success');
+  renderListingsTable();renderQuickListings();
+}
 function openPayListingModal(id){
   const l=allListings.find(x=>x.id===id);if(!l)return;
   payListingTargetId=id;
@@ -5514,6 +5596,8 @@ function renderListingsTable(){
     const hasUnitTypes=(l.listing_units&&l.listing_units.length>0);
     const availSummary=hasUnitTypes?muAvailabilitySummary(l):null;
     const multiUnitNote=hasUnitTypes?`<div class="multiunit-note">🏢 Has unit types${availSummary?' · '+availSummary:''} <span class="manage-link" onclick="openManageUnitsModal('${l.id}')">Manage unit types</span></div>`:'';
+    const isActive_lock=l.status==='active'&&!l.is_disabled;
+    const socialLocked=!isActive_lock;
 
     // Which actions are permitted per status
     const isActive   = l.status==='active'   && !l.is_disabled;
@@ -5579,11 +5663,11 @@ const contactHideBtn = globalContactHidden
       <td><div class="actions-cell">
         <a href="/listing?id=${String(l.listing_number).padStart(6,'0')}" target="_blank" class="icon-btn" title="View live listing"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
         <div class="icon-btn" onclick="openMessagesForListing('${l.id}')" title="Messages" role="button" tabindex="0" aria-label="Open messages for this listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
-        <div class="icon-btn" onclick="shareListing('${l.id}')" title="Share" role="button" tabindex="0" aria-label="Share listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
-        <div class="icon-btn" data-id="${l.id}" onclick="shareListingToFacebook(this.dataset.id)" title="Share to Facebook — free" role="button" tabindex="0" aria-label="Share to Facebook" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></div>
-        <div class="icon-btn" data-id="${l.id}" onclick="shareListingToInstagram(this.dataset.id)" title="Copy caption for Instagram — free (Instagram has no direct share link, so this copies the text for you to paste)" role="button" tabindex="0" aria-label="Copy caption for Instagram" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></div>
-        <div class="icon-btn" data-id="${l.id}" onclick="shareListingToTiktok(this.dataset.id)" title="Copy caption for TikTok — free (TikTok has no direct share link, so this copies the text for you to paste)" role="button" tabindex="0" aria-label="Copy caption for TikTok" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M9 12a4 4 0 104 4V4c1 2 3 3 5 3"/></svg></div>
-        ${editBtn}${statusBtn}${pauseBtn}${publishNowBtn}${payNowBtn}${manageUnitsBtn}${manageVideosBtn}${brochureBtn}${contactHideBtn}
+        ${socialLocked?`<div class="icon-btn" title="Only available while the listing is active" style="opacity:.4;pointer-events:none"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>`:`<div class="icon-btn" onclick="shareListing('${l.id}')" title="Share" role="button" tabindex="0" aria-label="Share listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>`}
+        ${socialLocked?`<div class="icon-btn" title="Only available while the listing is active" style="opacity:.4;pointer-events:none"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></div>`:`<div class="icon-btn" data-id="${l.id}" onclick="shareListingToFacebook(this.dataset.id)" title="Share to Facebook — free" role="button" tabindex="0" aria-label="Share to Facebook" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></div>`}
+        ${socialLocked?`<div class="icon-btn" title="Only available while the listing is active" style="opacity:.4;pointer-events:none"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></div>`:`<div class="icon-btn" data-id="${l.id}" onclick="shareListingToInstagram(this.dataset.id)" title="Copy caption for Instagram — free (Instagram has no direct share link, so this copies the text for you to paste)" role="button" tabindex="0" aria-label="Copy caption for Instagram" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></div>`}
+        ${socialLocked?`<div class="icon-btn" title="Only available while the listing is active" style="opacity:.4;pointer-events:none"><svg viewBox="0 0 24 24"><path d="M9 12a4 4 0 104 4V4c1 2 3 3 5 3"/></svg></div>`:`<div class="icon-btn" data-id="${l.id}" onclick="shareListingToTiktok(this.dataset.id)" title="Copy caption for TikTok — free (TikTok has no direct share link, so this copies the text for you to paste)" role="button" tabindex="0" aria-label="Copy caption for TikTok" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M9 12a4 4 0 104 4V4c1 2 3 3 5 3"/></svg></div>`}
+        ${editBtn}${statusBtn}${pauseBtn}${publishNowBtn}${payNowBtn}${manageUnitsBtn}${socialLocked?`<div class="icon-btn purple" title="Only available while the listing is active" style="opacity:.4;pointer-events:none"><svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>`:manageVideosBtn}${socialLocked?'':brochureBtn}${contactHideBtn}
         <div class="icon-btn danger" data-id="${l.id}" data-title="${escAttr(l.title)}" onclick="openDeleteModal(this.dataset.id,this.dataset.title)" title="Delete listing" role="button" tabindex="0" aria-label="Delete listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></div>
       </div></td>
     </tr>`;
@@ -5962,6 +6046,7 @@ async function deleteListingVideo(id){
 
 function openEditModal(id){
   const l=allListings.find(l=>l.id===id);if(!l)return;
+  editPhotosListingId=id;
   const ed = l.details || {};
   document.getElementById('edit-id').value=l.id;document.getElementById('edit-title').value=l.title||'';document.getElementById('edit-price').value=l.price||'';document.getElementById('edit-price-type').value=l.price_type||(l.price_frequency==='once'?'sale':'rent');document.getElementById('edit-bedrooms').value=ed.bedrooms||'';document.getElementById('edit-bathrooms').value=ed.bathrooms||'';document.getElementById('edit-size').value=ed.size_sqm||'';document.getElementById('edit-category').value=l.category||'apartment';document.getElementById('edit-address').value=l.address||'';document.getElementById('edit-description').value=l.description||'';document.getElementById('edit-furnished').checked=ed.furnished==='yes';document.getElementById('edit-contact_hidden').checked=l.contact_hidden||false;
   const currentArea=l.area||'Milimani';
@@ -5970,6 +6055,8 @@ function openEditModal(id){
   nkPopulateEditAreas(currentCounty,currentArea);
   const editAmenitiesArr = Array.isArray(l.amenities) ? l.amenities : [];
   document.getElementById('edit-amenities-grid').innerHTML=AMENITY_KEYS.map(a=>`<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:7px;background:var(--surface);border-radius:6px"><input type="checkbox" id="edit-${a.key}" ${editAmenitiesArr.includes(a.key)?'checked':''}/>${a.label}</label>`).join('');
+  document.getElementById('edit-photos-grid').innerHTML=renderEditPhotosGrid(l);
+  document.getElementById('edit-photo-upload-status').textContent='';
   if(l.listing_units&&l.listing_units.length>0){
     showToast('This listing has unit types — price/bedroom fields here apply to the property summary only. Use "Manage unit types" to edit individual unit types.','');
   }
