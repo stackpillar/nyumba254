@@ -681,7 +681,7 @@
       <div class="grid-2">
         <div class="field">
           <label>Phone number <span class="req">*</span></label>
-          <input type="tel" id="phone" placeholder="e.g. 0971234567"/>
+          <input type="tel" id="phone" placeholder="e.g. 0712345678"/>
           <div class="field-error" id="err-phone">Please enter a valid phone number</div>
         </div>
         <div class="field">
