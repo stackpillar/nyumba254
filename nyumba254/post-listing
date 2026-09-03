@@ -727,10 +727,10 @@
 
   <!-- SUCCESS -->
   <div class="success-screen" id="success-screen">
-    <div class="success-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-    <h2>Listing submitted!</h2>
+    <div class="success-icon" id="success-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+    <h2 id="success-heading">Listing submitted!</h2>
     <p id="success-message">Your property has been saved and is pending review. It will appear publicly once our team approves it.</p>
-    <div class="success-actions">
+    <div class="success-actions" id="success-actions">
       <a href="dashboard" style="padding:11px 22px;background:var(--green);color:white;border-radius:var(--radius);font-size:14px;font-weight:600">View my listings</a>
       <a href="index.html" style="padding:11px 22px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:14px;font-weight:500;color:var(--text-2)">Back to home</a>
     </div>
@@ -1897,11 +1897,26 @@ async function submitListing() {
 
     await clearDraft();
 
-    document.getElementById('success-message').textContent = !currentUser
-      ? `Your listing has been submitted for review. We've also created your free Nyumba254 account — check your email for a link to set your password so you can track this listing and manage it going forward.`
+    const guestSignup = !currentUser; // true only when this submission just created a new account
+
+    document.getElementById('success-message').textContent = guestSignup
+      ? `We've saved your listing and created your free Nyumba254 account using the details you provided. Check your email for a link to set your password — your listing will be sent for review as soon as that's done.`
       : (isFirstListing
         ? `Your listing has been saved and sent for review. It will appear publicly once approved, and stays free for ${PLATFORM_SETTINGS.trial_days} days as your first listing.`
         : `Your listing has been saved and sent for review. It will appear publicly once approved — you'll be able to pay the listing fee from your dashboard at that point.`);
+
+    document.getElementById('success-heading').textContent = guestSignup ? 'Check your email to finish setup' : 'Listing submitted!';
+
+    document.getElementById('success-icon').innerHTML = guestSignup
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg>'
+      : '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+
+    document.getElementById('success-actions').innerHTML = guestSignup
+      ? `<a href="https://mail.google.com/mail/u/0/#search/nyumba254" target="_blank" rel="noopener" style="padding:11px 22px;background:var(--green);color:white;border-radius:var(--radius);font-size:14px;font-weight:600">Open my email</a>
+         <a href="index.html" style="padding:11px 22px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:14px;font-weight:500;color:var(--text-2)">Back to home</a>`
+      : `<a href="dashboard" style="padding:11px 22px;background:var(--green);color:white;border-radius:var(--radius);font-size:14px;font-weight:600">View my listings</a>
+         <a href="index.html" style="padding:11px 22px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:14px;font-weight:500;color:var(--text-2)">Back to home</a>`;
+
     document.getElementById('step-5').style.display = 'none';
     document.getElementById('steps-bar').style.display = 'none';
     document.getElementById('success-screen').style.display = 'block';
