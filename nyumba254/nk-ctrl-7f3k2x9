@@ -1939,6 +1939,25 @@ function notifySms(type, payload) {
     "Migori","Kisii","Nyamira","Nairobi"
   ].sort();
 
+  // Mirrors NK_AMENITIES in post-listing.html so admin edits store/display
+  // the exact same amenity keys sellers pick from when creating a listing.
+  const NK_AMENITIES = [
+    { key:'has_water', label:'Water supply' },
+    { key:'has_electricity', label:'Electricity' },
+    { key:'has_security', label:'Security' },
+    { key:'has_solar', label:'Solar power' },
+    { key:'has_wifi', label:'WiFi' },
+    { key:'has_parking', label:'Parking' },
+    { key:'has_balcony', label:'Balcony' },
+    { key:'has_private_bathroom', label:'Private bathroom' },
+    { key:'has_shared_bathroom', label:'Shared bathroom' },
+    { key:'has_study_area', label:'Study area' },
+    { key:'has_gym', label:'Gym' },
+    { key:'has_pool', label:'Swimming pool' },
+    { key:'has_pets_allowed', label:'Pets allowed' },
+    { key:'has_backup_power', label:'Backup power' },
+  ];
+
   const NK_AREAS_BY_COUNTY = {
     "Kisumu": ["Ahero","Car Wash","Dunga","Elgon View","Kanyakwar","Kibos","Kibuye","Kisumu CBD","Kombewa","Kondele","Luanda","Mamboleo","Manyatta","Maseno","Matibabu","Migosi","Milimani","Nyalenda","Nyamasaria","Obunga","Otonglo","Riat Hills","Sega"],
     "Nairobi": ["Nairobi CBD","Westlands","Parklands","Highridge","Kangemi","Kitisuru","Runda","Loresho","Muthaiga","Gigiri","Spring Valley","Nyari","Rosslyn","Thome","Garden Estate","Ridgeways","Kilimani","Kileleshwa","Lavington","Kawangware","Hurlingham","Upper Hill","Adams Arcade","Karen","Langata","South B","South C","Nairobi West","Madaraka","Otiende","Kibera","Woodley","Roysambu","Zimmerman","Kahawa West","Githurai","Mirema","Kasarani","Mwiki","Njiru","Ruaraka","Baba Dogo","Mathare","Huruma","Pipeline","Imara Daima","Nyayo Estate","Dandora","Kariobangi","Kayole","Komarock","Utawala","Tassia","Umoja","Buruburu","Donholm","Makadara","Eastleigh","Ngara","Pangani"],
@@ -3320,6 +3339,15 @@ function notifySms(type, payload) {
       <div class="field"><label>Sub-area</label><input type="text" id="el-sub_area" value="${esc(l.sub_area||'')}"/></div>
       <div class="field"><label>Address</label><input type="text" id="el-address" value="${esc(l.address||'')}"/></div>
       <div class="field check-field"><input type="checkbox" id="el-furnished" ${l.furnished?'checked':''}/><label for="el-furnished">Furnished</label></div>
+      <div class="field check-field"><input type="checkbox" id="el-contact_hidden" ${l.contact_hidden?'checked':''}/><label for="el-contact_hidden">Keep buyer contact on chat only (hide Call/WhatsApp)</label></div>
+      <div class="field">
+        <label>Amenities</label>
+        <div id="el-amenities-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px">
+          ${NK_AMENITIES.map(a=>`<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:8px 10px;background:var(--surface);border:1.5px solid var(--border);border-radius:8px">
+            <input type="checkbox" id="el-amenity-${a.key}" ${(l.amenities||[]).includes(a.key)?'checked':''} style="width:16px;height:16px;accent-color:var(--green)"/>${a.label}
+          </label>`).join('')}
+        </div>
+      </div>
       <div class="field check-field"><input type="checkbox" id="el-is_featured" ${l.is_featured?'checked':''}/><label for="el-is_featured">Featured</label></div>`;
     document.getElementById('edit-listing-modal').classList.add('open');
     focusModalField('edit-listing-modal','#el-title');
@@ -3436,6 +3464,8 @@ function notifySms(type, payload) {
       address:     document.getElementById('el-address').value.trim()||null,
       category:    document.getElementById('el-category').value,
       furnished:   document.getElementById('el-furnished').checked,
+      contact_hidden: document.getElementById('el-contact_hidden').checked,
+      amenities:   NK_AMENITIES.map(a=>a.key).filter(k=>document.getElementById(`el-amenity-${k}`)?.checked),
       is_featured: document.getElementById('el-is_featured').checked,
     };
     const {error} = await db.from('listings').update(updates).eq('id',editingListingId);
