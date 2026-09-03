@@ -235,7 +235,7 @@
     .listings-table tr:hover td{background:#fafaf8}
     .icon-btn{transition:all .15s ease,transform .15s ease}
     .icon-btn:hover:not(.locked){transform:translateY(-1px)}
-    .listing-thumb{width:52px;height:40px;border-radius:6px;background:var(--surface);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .listing-thumb{width:52px;height:40px;border-radius:6px;background:var(--surface);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
     .listing-thumb img{width:100%;height:100%;object-fit:cover}
     .listing-thumb svg{width:18px;height:18px;stroke:var(--text-3);fill:none;stroke-width:1.5}
     .listing-name-cell{display:flex;align-items:center;gap:12px}
@@ -244,7 +244,7 @@
     .listing-area-text{font-size:11px;color:var(--text-3)}
     .listing-price-text{font-size:13px;font-weight:700;color:var(--green-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
     .listing-price-sub{font-size:11px;color:var(--text-3)}
-    .actions-cell{display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:flex-start}
+    .actions-cell{display:grid;grid-template-columns:repeat(auto-fill,26px);gap:6px;align-items:center;justify-content:flex-start}
     .empty-state{text-align:center;padding:60px 20px;color:var(--text-3)}
     .empty-state svg{width:48px;height:48px;stroke:var(--border);fill:none;stroke-width:1.2;margin:0 auto 16px}
     .empty-state h3{font-size:16px;font-weight:600;color:var(--text-2);margin-bottom:6px}
@@ -738,6 +738,8 @@
         flex-shrink:0 !important;
         flex-grow:0 !important;
         border-radius:8px;
+        border:1px solid var(--border);
+      }
       }
       .listings-table .listing-thumb img{
         width:100% !important;
@@ -750,20 +752,19 @@
       }
 
       /* Actions: simple wrapping row of fixed-size buttons — never collapses, never scrolls */
-      .listings-table .actions-cell{
-        display:flex;
-        flex-wrap:wrap;
-        gap:8px;
-        padding:12px 16px;
-        background:var(--surface);
-        border-top:1px solid var(--border);
-      }
-      .listings-table .actions-cell>*{
-        flex:0 0 auto;
-        width:34px;
-        height:34px;
+        .listings-table .actions-cell{
+          display:grid;
+          grid-template-columns:repeat(auto-fill,34px);
+          gap:8px;
+          padding:12px 16px;
+          background:var(--surface);
+          border-top:1px solid var(--border);
+        }
+        .listings-table .actions-cell>*{
+          width:34px;
+          height:34px;
+        }
         
-      }
       .messages-layout{grid-template-columns:1fr;position:relative}
       .messages-layout .thread-list{display:flex}
       .messages-layout .chat-pane{display:none}
