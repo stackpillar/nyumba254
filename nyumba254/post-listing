@@ -921,7 +921,7 @@ function updateKickerAndFeeNote() {
   } else if (selectedCat === 'airbnb') {
     kicker.textContent = 'Airbnb listings run on a monthly BNB plan';
   } else {
-    kicker.textContent = 'Pay only after your listing is approved';
+    kicker.textContent = 'Getting started takes just a few minutes';
   }
 }
 
