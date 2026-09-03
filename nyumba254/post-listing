@@ -229,13 +229,7 @@
 <div class="toast" id="toast"></div>
 
 <div class="page-wrap">
-
-  <div class="auth-banner" id="auth-banner">
-    <p>You need to be signed in to post a listing.</p>
-    <a href="login?next=post-listing">Sign in or create a free account →</a>
-  </div>
-
-  <div class="kicker" id="page-kicker">Free listing — pricing coming later</div>
+  <div class="kicker" id="page-kicker">Getting started takes just a few minutes</div>
   <h1 class="page-title">List Your Property</h1>
   <p class="page-sub">Reviewed by our team before going live, with buyer enquiries handled right here on Nyumba254.</p>
   <div class="badge-strip">
@@ -676,6 +670,9 @@
       <h2>Contact Information</h2>
       <p class="hint">Nyumba254 uses this to verify the listing and manage buyer enquiries.</p>
 
+      <p class="hint" id="guest-account-notice" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;color:var(--text-2);margin-bottom:18px">
+        🔑 We'll use these details to create your free Nyumba254 seller account — after you submit, we'll email you a link to set a password so you can track this listing, reply to buyers, and manage everything from your dashboard.
+      </p>
       <div class="field">
         <label>Full legal name <span class="req">*</span></label>
         <input type="text" id="contact_name" placeholder="Enter your full name"/>
@@ -694,8 +691,9 @@
       </div>
       <div class="field">
         <label>Email <span class="req">*</span></label>
-        <input type="email" id="contact_email" placeholder="name@example.com"/>
+        <input type="email" id="contact_email" placeholder="name@example.com" onblur="checkGuestEmailExists()"/>
         <div class="field-error" id="err-contact-email">Please enter a valid email</div>
+        <div class="field-error" id="err-email-exists" style="color:var(--green-dark)">You already have a Nyumba254 account with this email — <a href="/login?next=post-listing" style="color:var(--green-dark);font-weight:700;text-decoration:underline">sign in</a> to continue, or use a different email.</div>
       </div>
       <div style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-top:4px">
         <input type="checkbox" id="contact_hidden" style="width:18px;height:18px;accent-color:var(--green);cursor:pointer"/>
@@ -876,7 +874,7 @@ async function loadPlatformSettings() {
 }
 let sellerCoverage = { rental:false, bnb:false }; // replaces sellerPlanCategory
 async function checkFirstListing() {
-  if (!currentUser) { isFirstListing = false; return; }
+  if (!currentUser) { isFirstListing = true; sellerCoverage = { rental: false, bnb: false }; return; }
   const { count } = await db.from('listings').select('*', { count:'exact', head:true }).eq('seller_id', currentUser.id);
   isFirstListing = (count || 0) === 0;
   const { data: prof } = await db.from('profiles').select('has_bnb_capacity,has_rental_capacity,bnb_expires_at,subscription_expires_at,subscription_plan,subscription_tier').eq('id', currentUser.id).single();
@@ -1084,6 +1082,25 @@ async function uploadSelectedVideo(listingId) {
   
 }
 let currentUser        = null;
+let guestEmailBlocked  = false;
+async function checkGuestEmailExists() {
+  if (currentUser) return; // logged-in sellers skip this check
+  const email = document.getElementById('contact_email').value.trim();
+  const warnEl = document.getElementById('err-email-exists');
+  if (!email || !/\S+@\S+\.\S+/.test(email)) { warnEl.classList.remove('show'); guestEmailBlocked = false; return; }
+  try {
+    const res = await fetch(`${EDGE_URL}/guest-listing-submit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({ action: 'check_email', email }),
+    });
+    const data = await res.json();
+    guestEmailBlocked = !!data.registered;
+    warnEl.classList.toggle('show', guestEmailBlocked);
+  } catch (e) {
+    guestEmailBlocked = false; // fail open — never block submission on a network hiccup
+  }
+}
 let currentUserName    = '';
 let tierRows           = [];
 let tierSeq             = 0;
@@ -1106,7 +1123,6 @@ async function init() {
   const { data: { session } } = await db.auth.getSession();
   if (session) {
     currentUser = session.user;
-    document.getElementById('auth-banner').style.display = 'none';
     const { data: profile } = await db.from('profiles').select('phone, full_name, email').eq('id', currentUser.id).single();
     if (profile?.phone) {
       const p = profile.phone.startsWith('254') ? '0' + profile.phone.slice(3) : profile.phone;
@@ -1116,7 +1132,7 @@ async function init() {
     document.getElementById('contact_email').value = currentUser.email || '';
     currentUserName = profile?.full_name || '';
   } else {
-    document.getElementById('auth-banner').style.display = 'block';
+    document.getElementById('guest-account-notice').style.display = 'block';
   }
 
   await loadPlatformSettings();
@@ -1735,9 +1751,8 @@ async function submitListing() {
   check('contact_email', 'err-contact-email', v => /\S+@\S+\.\S+/.test(v));
   if (!ok) { showToast('Please complete your contact details', 'error'); return; }
 
-  if (!currentUser) {
-    showToast('Please sign in first', 'error');
-    setTimeout(() => window.location.href = 'login?next=post-listing', 1500);
+  if (!currentUser && guestEmailBlocked) {
+    showToast('This email already has an account — please sign in to continue', 'error');
     return;
   }
 
@@ -1810,54 +1825,83 @@ async function submitListing() {
       status:           'pending',
       payment_status:   isFirstListing ? 'trial' : 'unpaid',
       trial_expires_at: isFirstListing ? new Date(Date.now() + (PLATFORM_SETTINGS.trial_days||14) * 86400000).toISOString() : null,
-      seller_id:        currentUser.id,
+      seller_id:        currentUser ? currentUser.id : null,
       views:            0,
       is_live:          false, // never goes live on submit — admin approval + payment/trial gate flips this
     };
 
-    const { data: listing, error } = await db.from('listings').insert(listingData).select().single();
-    if (error) throw error;
+    let listingId;
+    const videoUrlToLink = document.getElementById('video_url').value.trim();
 
-    if (validTiers.length) {
-      const unitRows = validTiers.map(t => ({
-        listing_id: listing.id, unit_label: t.label.trim(), bedrooms: 0,
-        quantity_available: parseInt(t.quantity), quantity_total: parseInt(t.quantity),
-        price: parseFloat(t.price),
+    if (currentUser) {
+      const { data: listing, error } = await db.from('listings').insert(listingData).select().single();
+      if (error) throw error;
+      listingId = listing.id;
+
+      if (validTiers.length) {
+        const unitRows = validTiers.map(t => ({
+          listing_id: listingId, unit_label: t.label.trim(), bedrooms: 0,
+          quantity_available: parseInt(t.quantity), quantity_total: parseInt(t.quantity),
+          price: parseFloat(t.price),
+        }));
+        const { error: unitErr } = await db.from('listing_units').insert(unitRows);
+        if (unitErr) console.error('listing_units insert error:', unitErr);
+      }
+
+      if (photos.length) {
+        const uploaded = await uploadPhotos(listingId);
+        if (uploaded.length) {
+          await db.from('listing_photos').insert(uploaded.map(u => ({ ...u, listing_id: listingId })));
+        }
+      }
+
+      if (videoUrlToLink) {
+        const { error: videoErr } = await db.from('listing_videos').insert({ listing_id: listingId, url: videoUrlToLink, position: 0 });
+        if (videoErr) {
+          console.error('listing_videos insert error:', videoErr);
+          showToast(videoErr.message?.includes('row-level security') ? 'Your video link could not be saved — video walkthroughs may be disabled for your account.' : 'Could not save your video link, but the listing was submitted.', 'error');
+        }
+      }
+
+      fetch(`${EDGE_URL}/send-listing-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+        body: JSON.stringify({ sellerEmail: currentUser.email, sellerName: currentUserName, listingTitle: listingData.title, listingId }),
+      }).catch(e => console.error('Email notify failed:', e));
+
+    } else {
+      // ── Guest submission: the edge function creates the account, the
+      // listing, and uploads photos, all under service-role privileges. ──
+      const fd = new FormData();
+      fd.append('payload', JSON.stringify({
+        ...listingData,
+        listing_units: validTiers,
+        video_url: videoUrlToLink || null,
+        cover_index: coverIndex,
       }));
-      const { error: unitErr } = await db.from('listing_units').insert(unitRows);
-      if (unitErr) console.error('listing_units insert error:', unitErr);
+      photos.forEach(p => fd.append('photos', p.file, p.file.name));
+
+      const res = await fetch(`${EDGE_URL}/guest-listing-submit`, {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_KEY },
+        body: fd,
+      });
+      const result = await res.json();
+      if (!res.ok || result.error) throw new Error(result.error || 'Could not submit listing');
+      listingId = result.listingId;
     }
 
-    if (photos.length) {
-      const uploaded = await uploadPhotos(listing.id);
-      if (uploaded.length) {
-        await db.from('listing_photos').insert(uploaded.map(u => ({ ...u, listing_id: listing.id })));
-      }
-    }
-
-    const videoUrl = document.getElementById('video_url').value.trim();
-    if (videoUrl) {
-      const { error: videoErr } = await db.from('listing_videos').insert({ listing_id: listing.id, url: videoUrl, position: 0 });
-      if (videoErr) {
-        console.error('listing_videos insert error:', videoErr);
-        showToast(videoErr.message?.includes('row-level security') ? 'Your video link could not be saved — video walkthroughs may be disabled for your account.' : 'Could not save your video link, but the listing was submitted.', 'error');
-      }
-    }
     if (selectedVideoFile) {
-      await uploadSelectedVideo(listing.id);
+      await uploadSelectedVideo(listingId);
     }
-
-    fetch(`${EDGE_URL}/send-listing-email`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
-      body: JSON.stringify({ sellerEmail: currentUser.email, sellerName: currentUserName, listingTitle: listingData.title, listingId: listing.id }),
-    }).catch(e => console.error('Email notify failed:', e));
 
     await clearDraft();
 
-    document.getElementById('success-message').textContent = isFirstListing
-      ? `Your listing has been saved and sent for review. It will appear publicly once approved, and stays free for ${PLATFORM_SETTINGS.trial_days} days as your first listing.`
-      : `Your listing has been saved and sent for review. It will appear publicly once approved — you'll be able to pay the listing fee from your dashboard at that point.`;
+    document.getElementById('success-message').textContent = !currentUser
+      ? `Your listing has been submitted for review. We've also created your free Nyumba254 account — check your email for a link to set your password so you can track this listing and manage it going forward.`
+      : (isFirstListing
+        ? `Your listing has been saved and sent for review. It will appear publicly once approved, and stays free for ${PLATFORM_SETTINGS.trial_days} days as your first listing.`
+        : `Your listing has been saved and sent for review. It will appear publicly once approved — you'll be able to pay the listing fee from your dashboard at that point.`);
     document.getElementById('step-5').style.display = 'none';
     document.getElementById('steps-bar').style.display = 'none';
     document.getElementById('success-screen').style.display = 'block';
