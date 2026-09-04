@@ -798,6 +798,15 @@
 
   .card{overflow:visible}
   .overview-grid,.overview-grid>div{min-width:0}
+
+  #notif-bell-panel{
+    position:fixed !important;
+    top:calc(var(--topbar-h) + 8px) !important;
+    left:12px !important;
+    right:12px !important;
+    width:auto !important;
+    max-width:none !important;
+  }
 }
     @media(max-width:400px){.stat-grid{grid-template-columns:1fr}}
     @keyframes scwBadgeBlink { 0%,100%{opacity:1} 50%{opacity:.35} }
