@@ -1189,12 +1189,13 @@
     btn.textContent = 'Deleting…';
 
     // Fire before deleting anything — keepalive lets the request complete
-    // even though we navigate away right after.
+    // even though we navigate away right after. Also notifies admin (see
+    // the account_deleted handler in the send-notification-email edge fn).
     fetch(`${EDGE_URL}/send-notification-email`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
       keepalive: true,
-      body: JSON.stringify({ type: 'account_deleted', sellerEmail: email, sellerName: name }),
+      body: JSON.stringify({ type: 'account_deleted', sellerEmail: email, sellerName: name, sellerPhone: profileData?.phone }),
     }).catch(e => console.error('notifyAccountDeleted failed:', e));
 
     // Get the current session token to authenticate the Edge Function call —
