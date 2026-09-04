@@ -1407,39 +1407,68 @@
       </div>
     </div>
 
-  </div>
-</div>
     <!-- PLATFORM UPDATES -->
     <div class="view" id="view-platform-updates">
       <div class="card">
         <div class="card-header"><span class="card-title">Send a platform update</span></div>
         <p style="padding:14px 22px 4px;font-size:12px;color:var(--text-3);line-height:1.6">Sends an in-app notification (bell icon) and/or an email to every matching seller. Use "Policy update" whenever you edit Terms or Privacy — it labels the notice accordingly and nudges recipients to review it.</p>
         <div style="padding:8px 22px 24px;max-width:640px">
-          <div class="settings-field" style="margin-bottom:14px"><label>Category</label>
-            <select id="pu-category" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px">
-              <option value="general">General update</option>
-              <option value="feature">New feature</option>
-              <option value="maintenance">Maintenance / downtime</option>
-              <option value="policy_update">Terms / Privacy Policy update</option>
+          <div class="settings-field" style="margin-bottom:14px"><label>Quick template <span style="text-transform:none;font-weight:400;color:var(--text-3)">(optional — fills the fields below, edit freely after)</span></label>
+            <select id="pu-template" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px" onchange="applyPlatformTemplate()">
+              <option value="">— Start from scratch —</option>
+              <option value="policy_terms">Terms of Service updated</option>
+              <option value="policy_privacy">Privacy Policy updated</option>
+              <option value="feature_launch">New feature announcement</option>
+              <option value="maintenance_scheduled">Scheduled maintenance</option>
+              <option value="maintenance_complete">Maintenance complete</option>
+              <option value="security_password">Security — password reset recommended</option>
+              <option value="billing_price_change">Pricing change notice</option>
+              <option value="promotion_seasonal">Seasonal promotion</option>
+              <option value="milestone_growth">Platform milestone / thank you</option>
+              <option value="welcome_reminder">Getting-started reminder</option>
             </select>
           </div>
-          <div class="settings-field" style="margin-bottom:14px"><label>Title</label><input type="text" id="pu-title" placeholder="e.g. We've updated our Terms of Service"/></div>
-          <div class="settings-field" style="margin-bottom:14px"><label>Message</label><textarea id="pu-message" rows="5" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit" placeholder="Write the update in plain language..."></textarea></div>
-          <div class="settings-field" style="margin-bottom:14px"><label>Link (optional)</label><input type="text" id="pu-link" placeholder="/terms.html"/></div>
+          <div class="settings-field" style="margin-bottom:14px"><label>Category</label>
+            <select id="pu-category" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px">
+              <option value="general">📣 General update</option>
+              <option value="feature">✨ New feature</option>
+              <option value="maintenance">🛠️ Maintenance / downtime</option>
+              <option value="policy_update">📜 Terms / Privacy Policy update</option>
+              <option value="security_alert">🔒 Security alert</option>
+              <option value="billing">💳 Billing / pricing notice</option>
+              <option value="promotion">🎁 Promotion / special offer</option>
+              <option value="milestone">🎉 Platform news / milestone</option>
+            </select>
+          </div>
+          <div class="settings-field" style="margin-bottom:14px"><label>Title</label><input type="text" id="pu-title" maxlength="120" placeholder="e.g. We've updated our Terms of Service" oninput="updatePuCounters()"/></div>
+          <div class="settings-field" style="margin-bottom:14px">
+            <label style="display:flex;justify-content:space-between"><span>Message</span><span id="pu-message-count" style="text-transform:none;font-weight:400;color:var(--text-3)">0 / 2000</span></label>
+            <textarea id="pu-message" rows="6" maxlength="2000" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit" placeholder="Write the update in plain language..." oninput="updatePuCounters()"></textarea>
+          </div>
+          <div class="settings-field" style="margin-bottom:14px"><label>Link (optional)</label><input type="text" id="pu-link" placeholder="/terms.html or https://…"/></div>
           <div class="settings-field" style="margin-bottom:14px"><label>Audience</label>
-            <select id="pu-audience" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px">
+            <select id="pu-audience" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px" onchange="updatePuAudienceCount()">
               <option value="all">All sellers</option>
               <option value="verified">Verified sellers only</option>
               <option value="premium">Premium/Elite subscribers only</option>
               <option value="active_listings">Sellers with an active listing</option>
             </select>
+            <div id="pu-audience-count" style="font-size:11.5px;color:var(--text-3);margin-top:6px">Checking recipient count…</div>
           </div>
           <div style="display:flex;gap:18px;margin-bottom:16px">
             <label style="display:flex;align-items:center;gap:8px;font-size:13px"><input type="checkbox" id="pu-send-notif" checked/> Send in-app notification</label>
             <label style="display:flex;align-items:center;gap:8px;font-size:13px"><input type="checkbox" id="pu-send-email" checked/> Send email</label>
           </div>
-          <button class="btn-modal approve" id="btn-send-platform-update" onclick="sendPlatformUpdate()">Send to sellers</button>
-          <span id="pu-status" style="margin-left:12px;font-size:12px;color:var(--text-3)"></span>
+          <div id="pu-preview-box" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:16px">
+            <div style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Preview — what sellers will see</div>
+            <div id="pu-preview-title" style="font-weight:600;font-size:14px;margin-bottom:4px"></div>
+            <div id="pu-preview-message" style="font-size:13px;color:var(--text-2);white-space:pre-wrap;line-height:1.6"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <button class="action-btn view" type="button" onclick="togglePlatformPreview()">👁 Preview</button>
+            <button class="btn-modal approve" id="btn-send-platform-update" onclick="sendPlatformUpdate()">Send to sellers</button>
+            <span id="pu-status" style="font-size:12px;color:var(--text-3)"></span>
+          </div>
         </div>
       </div>
       <div class="card">
@@ -1452,6 +1481,9 @@
         </div>
       </div>
     </div>
+
+  </div>
+</div>
 <!-- LISTING DETAIL MODAL -->
 <div class="modal-overlay" id="listing-modal" onclick="handleOverlayClick(event,'listing-modal')">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -1990,10 +2022,99 @@ function notifySms(type, payload) {
     "Kericho","Bomet","Kakamega","Vihiga","Bungoma","Busia","Siaya","Kisumu","Homa Bay",
     "Migori","Kisii","Nyamira","Nairobi"
   ].sort();
-    async function sendPlatformUpdate() {
+  const PLATFORM_TEMPLATES = {
+    policy_terms: { category:'policy_update', title:"We've updated our Terms of Service",
+      message:"We've made updates to our Terms of Service to keep things clear and up to date. The key changes are around [summarize changes here]. Please take a moment to review the updated terms — continuing to use Nyumba254 after this date means you accept them.",
+      link:'/terms.html' },
+    policy_privacy: { category:'policy_update', title:"We've updated our Privacy Policy",
+      message:"We've updated our Privacy Policy to better explain how we collect, use, and protect your information. Nothing changes about how you use Nyumba254 day to day — we just want to be fully transparent.",
+      link:'/privacy.html' },
+    feature_launch: { category:'feature', title:'New: [feature name] is here',
+      message:"We've just launched [feature name] — [one or two sentences on what it does and why it helps]. Check it out from your dashboard.",
+      link:'/dashboard.html' },
+    maintenance_scheduled: { category:'maintenance', title:'Scheduled maintenance notice',
+      message:"We'll be performing scheduled maintenance on [date] between [start time] and [end time] (EAT). The site may be briefly unavailable during this window. We apologize for any inconvenience.",
+      link:'' },
+    maintenance_complete: { category:'maintenance', title:'Maintenance complete — everything is back to normal',
+      message:"Our scheduled maintenance is complete and everything is running normally again. Thank you for your patience.",
+      link:'' },
+    security_password: { category:'security_alert', title:'Security recommendation: update your password',
+      message:"As a precaution, we recommend updating your Nyumba254 password. You can do this any time from your account settings. If you notice anything unusual on your account, please contact us right away.",
+      link:'/dashboard.html' },
+    billing_price_change: { category:'billing', title:'Upcoming pricing changes',
+      message:"We're writing to let you know about upcoming changes to our pricing, effective [date]. [Summarize what's changing]. Your current listings and plans are not affected until [date].",
+      link:'/pricing.html' },
+    promotion_seasonal: { category:'promotion', title:'Limited-time offer for sellers',
+      message:"For a limited time, [describe the offer]. Offer valid until [date] — don't miss out!",
+      link:'/pricing.html' },
+    milestone_growth: { category:'milestone', title:"Thank you — we've hit a milestone! 🎉",
+      message:"Thanks to sellers like you, Nyumba254 has just [describe the milestone]. We couldn't have done it without you.",
+      link:'' },
+    welcome_reminder: { category:'general', title:'A few tips to get more from Nyumba254',
+      message:"Just a friendly reminder: listings with complete photos, accurate pricing, and quick replies to buyers get noticed faster. Take a moment to review your active listings today.",
+      link:'/dashboard.html' },
+  };
+
+  function applyPlatformTemplate() {
+    const t = PLATFORM_TEMPLATES[document.getElementById('pu-template').value];
+    if (!t) return;
+    document.getElementById('pu-category').value = t.category;
+    document.getElementById('pu-title').value = t.title;
+    document.getElementById('pu-message').value = t.message;
+    document.getElementById('pu-link').value = t.link || '';
+    updatePuCounters();
+  }
+
+  function updatePuCounters() {
+    const msg = document.getElementById('pu-message');
+    const counter = document.getElementById('pu-message-count');
+    if (msg && counter) counter.textContent = `${msg.value.length} / 2000`;
+  }
+
+  let puAudienceCountTimer = null;
+  async function updatePuAudienceCount() {
+    clearTimeout(puAudienceCountTimer);
+    const el = document.getElementById('pu-audience-count');
+    if (!el) return;
+    el.textContent = 'Checking recipient count…';
+    puAudienceCountTimer = setTimeout(async () => {
+      const audience = document.getElementById('pu-audience').value;
+      try {
+        let count = 0;
+        if (audience === 'all') {
+          const { count: c } = await db.from('profiles').select('*',{count:'exact',head:true}).neq('role','admin');
+          count = c || 0;
+        } else if (audience === 'verified') {
+          const { count: c } = await db.from('profiles').select('*',{count:'exact',head:true}).neq('role','admin').eq('verification_status','verified');
+          count = c || 0;
+        } else if (audience === 'premium') {
+          const { count: c } = await db.from('profiles').select('*',{count:'exact',head:true}).neq('role','admin').neq('subscription_tier','none');
+          count = c || 0;
+        } else if (audience === 'active_listings') {
+          const { data } = await db.from('listings').select('seller_id').eq('status','active');
+          count = new Set((data||[]).map(r=>r.seller_id)).size;
+        }
+        el.textContent = `≈ ${count} seller(s) will receive this`;
+      } catch (e) {
+        el.textContent = 'Could not estimate recipient count';
+      }
+    }, 300);
+  }
+
+  function togglePlatformPreview() {
+    const box = document.getElementById('pu-preview-box');
+    if (box.style.display === 'block') { box.style.display = 'none'; return; }
+    document.getElementById('pu-preview-title').textContent = document.getElementById('pu-title').value.trim() || '(no title yet)';
+    document.getElementById('pu-preview-message').textContent = document.getElementById('pu-message').value.trim() || '(no message yet)';
+    box.style.display = 'block';
+  }
+
+  async function sendPlatformUpdate() {
     const title = document.getElementById('pu-title').value.trim();
     const message = document.getElementById('pu-message').value.trim();
     if (!title || !message) { toast('Title and message are required', 'error'); return; }
+    const category = document.getElementById('pu-category').value;
+    if (category === 'policy_update' && !confirm('Sending a policy update — make sure the Link field points to the updated Terms/Privacy page. Continue?')) return;
     const btn = document.getElementById('btn-send-platform-update');
     const statusEl = document.getElementById('pu-status');
     btn.disabled = true; btn.textContent = 'Sending…'; statusEl.textContent = '';
@@ -2005,7 +2126,7 @@ function notifySms(type, payload) {
         body: JSON.stringify({
           title, message,
           link: document.getElementById('pu-link').value.trim() || null,
-          category: document.getElementById('pu-category').value,
+          category,
           sendNotification: document.getElementById('pu-send-notif').checked,
           sendEmail: document.getElementById('pu-send-email').checked,
           audience: document.getElementById('pu-audience').value,
@@ -2014,10 +2135,13 @@ function notifySms(type, payload) {
       });
       const body = await res.json();
       if (!res.ok || body.error) throw new Error(body.error || 'Failed to send');
-      toast(`Sent to ${body.recipients} seller(s) ✓`, 'success');
+      toast(`Sent to ${body.recipients} seller(s) — ${body.emailsSent||0} email(s) delivered ✓`, 'success');
       document.getElementById('pu-title').value = '';
       document.getElementById('pu-message').value = '';
       document.getElementById('pu-link').value = '';
+      document.getElementById('pu-template').value = '';
+      document.getElementById('pu-preview-box').style.display = 'none';
+      updatePuCounters();
       logAction('send_platform_update', 'announcement', body.announcementId, title);
       loadPlatformUpdatesHistory();
     } catch (e) {
@@ -2027,14 +2151,18 @@ function notifySms(type, payload) {
     }
   }
 
+  const PU_CATEGORY_BADGE = {
+    policy_update:'rejected', security_alert:'rejected', maintenance:'pending',
+    feature:'active', billing:'pending', promotion:'featured', milestone:'featured', general:'active',
+  };
   async function loadPlatformUpdatesHistory() {
     const tbody = document.getElementById('pu-history-body');
     const { data, error } = await db.from('platform_announcements').select('*').order('created_at', { ascending: false }).limit(50);
     if (error || !data?.length) { tbody.innerHTML = `<tr><td colspan="5"><div class="table-loading"><p>No broadcasts sent yet</p></div></td></tr>`; return; }
     tbody.innerHTML = data.map(a => `<tr>
       <td>${esc(a.title)}</td>
-      <td><span class="badge ${a.category === 'policy_update' ? 'rejected' : 'active'}">${esc(a.category)}</span></td>
-      <td>${esc(a.audience)}</td>
+      <td><span class="badge ${PU_CATEGORY_BADGE[a.category]||'active'}">${esc((a.category||'').replace(/_/g,' '))}</span></td>
+      <td>${esc((a.audience||'').replace(/_/g,' '))}</td>
       <td>${a.recipient_count}</td>
       <td>${fmtDate(a.created_at)}</td>
     </tr>`).join('');
@@ -5975,7 +6103,7 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
     if(v==='contact-reveals') loadContactReveals();
     if(v==='analytics')    loadAnalytics();
     if(v==='activity-log') loadActivityLog();
-    if(v==='platform-updates') loadPlatformUpdatesHistory();
+    if(v==='platform-updates') { loadPlatformUpdatesHistory(); updatePuAudienceCount(); updatePuCounters(); }
   }
   function setTab(tab) {
     currentTab = tab;
