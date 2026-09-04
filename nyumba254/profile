@@ -848,6 +848,10 @@
         changes,
       }),
     }).catch(e => console.error('notifyProfileUpdated failed:', e));
+    db.from('notifications').insert({
+      seller_id: currentUser.id, type: 'profile', title: 'Profile updated',
+      body: `${changes} was updated on your profile.`,
+    }).then(({error})=>{ if(error) console.error('notifyProfileUpdated in-app insert failed:', error); });
   }
   function notifyNotificationPrefsUpdated() {
     fetch(`${EDGE_URL}/send-notification-email`, {
@@ -859,6 +863,10 @@
         sellerName: profileData?.full_name || currentUser.email,
       }),
     }).catch(e => console.error('notifyNotificationPrefsUpdated failed:', e));
+    db.from('notifications').insert({
+      seller_id: currentUser.id, type: 'profile', title: 'Notification preferences updated',
+      body: 'Your notification preferences were changed.',
+    }).then(({error})=>{ if(error) console.error('notifyNotificationPrefsUpdated in-app insert failed:', error); });
   }
 
   // ─────────────────────────────────────────
@@ -1046,6 +1054,10 @@
         sellerName: profileData?.full_name || currentUser.email,
       }),
     }).catch(e => console.error('notifyPasswordChanged failed:', e));
+    db.from('notifications').insert({
+      seller_id: currentUser.id, type: 'profile', title: 'Password changed',
+      body: "Your password was changed. If this wasn't you, contact support immediately.",
+    }).then(({error})=>{ if(error) console.error('notifyPasswordChanged in-app insert failed:', error); });
   }
 
   // ─────────────────────────────────────────
@@ -1084,6 +1096,10 @@
         sellerName: profileData?.full_name || currentUser.email,
       }),
     }).catch(e => console.error('notifyListingsPaused failed:', e));
+    db.from('notifications').insert({
+      seller_id: currentUser.id, type: 'listing_rejected', title: 'Listings paused',
+      body: 'All your active listings were paused and hidden from search.',
+    }).then(({error})=>{ if(error) console.error('notifyListingsPaused in-app insert failed:', error); });
   }
 
   function checkDeleteConfirm() {

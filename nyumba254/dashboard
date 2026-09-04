@@ -801,7 +801,7 @@
 }
     @media(max-width:400px){.stat-grid{grid-template-columns:1fr}}
     @keyframes scwBadgeBlink { 0%,100%{opacity:1} 50%{opacity:.35} }
-      .scw-fab-badge.show, .scw-tab-badge.show { animation: scwBadgeBlink 1.1s ease-in-out infinite; }
+      .scw-fab-badge.show, .scw-tab-badge.show, #notif-bell-badge.show { animation: scwBadgeBlink 1.1s ease-in-out infinite; }
       .scw-ticket-dot { width:8px; height:8px; border-radius:50%; background:#ff5a5a; display:inline-block; flex-shrink:0; margin-left:2px; animation: scwBadgeBlink 1.1s ease-in-out infinite; }
 
     /* ══════════════════════════════════════════════════════════════
@@ -2210,7 +2210,7 @@ applyStoredTheme();
 }
 
 
-let currentUser=null,currentProfile=null,ownerProfile=null,effectiveSellerId=null,isTeamMember=false,allListings=[],allEnquiries=[],allPayments=[],allMessages=[],allReviews=[],threads=[],activeThread=null,listingFilter='all',enquiryFilter='all',deleteTargetId=null,occupiedTargetId=null,replyTargetEnquiry=null,msgPollTimer=null,threadListingFilter=null,messagesChannel=null,listingActionBusy=new Set();
+let currentUser=null,currentProfile=null,ownerProfile=null,effectiveSellerId=null,isTeamMember=false,allListings=[],allEnquiries=[],allPayments=[],allMessages=[],allReviews=[],threads=[],activeThread=null,listingFilter='all',enquiryFilter='all',deleteTargetId=null,occupiedTargetId=null,replyTargetEnquiry=null,msgPollTimer=null,threadListingFilter=null,messagesChannel=null,listingActionBusy=new Set(),notifPollTimer=null;
 
 // Message history window: only pulls the last N days of messages on load,
 // so this query and buildThreads() stay fast as conversations pile up over
@@ -2266,6 +2266,7 @@ async function init(){
     }
     await loadAllData();
     loadPlatformPrices();
+    loadNotifBell();
     renderOverview();
     document.getElementById('loading-screen').style.display='none';
     document.getElementById('app-shell').style.display='flex';
@@ -2273,6 +2274,7 @@ async function init(){
     if(lastPage&&lastPage!=='overview'&&document.getElementById('page-'+lastPage)){showPage(lastPage);}
     msgPollTimer=setInterval(pollNewMessages,MSG_POLL_MS);
     listingStatusPollTimer=setInterval(pollListingStatusChanges,LISTING_STATUS_POLL_MS);
+    notifPollTimer=setInterval(loadNotifBell,60000);
     document.addEventListener('visibilitychange',handleVisibilityChange);
 
     scwLoaded=true;
@@ -2313,7 +2315,11 @@ async function init(){
   function renderNotifBell() {
     const unread = notifItems.filter(n => !n.is_read).length;
     const badge = document.getElementById('notif-bell-badge');
-    if (badge) { badge.textContent = unread > 9 ? '9+' : String(unread); badge.style.display = unread > 0 ? 'flex' : 'none'; }
+    if (badge) {
+      badge.textContent = unread > 9 ? '9+' : String(unread);
+      badge.style.display = unread > 0 ? 'flex' : 'none';
+      badge.classList.toggle('show', unread > 0);
+    }
     const list = document.getElementById('notif-bell-list');
     if (!list) return;
     if (!notifItems.length) { list.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text-3);font-size:12.5px">No notifications yet</div>`; return; }
@@ -2337,9 +2343,13 @@ async function init(){
     if (link) { if (link.startsWith('http')) window.open(link, '_blank'); else window.location.href = link; }
   }
   async function markAllNotifsRead() {
-    await db.rpc('mark_all_notifications_read', { p_seller_id: effectiveSellerId });
+    const unreadIds = notifItems.filter(n => !n.is_read).map(n => n.id);
+    if (!unreadIds.length) { showToast('No unread notifications','success'); return; }
+    const { error } = await db.from('notifications').update({ is_read: true }).eq('seller_id', effectiveSellerId).in('id', unreadIds);
+    if (error) { showToast('Could not mark all read: '+error.message,'error'); console.error('markAllNotifsRead error:', error); return; }
     notifItems.forEach(n => n.is_read = true);
     renderNotifBell();
+    showToast('All notifications marked read ✓','success');
   }
   let notifBellChannel = null;
   function subscribeNotifBellRealtime() {
@@ -6775,7 +6785,7 @@ function closeModal(id){document.getElementById(id).classList.remove('open');doc
 })();
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal-overlay.open').forEach(m=>{m.classList.remove('open');document.body.style.overflow='';});scwSyncOverlayVisibility();}});
 document.querySelectorAll('.modal-overlay').forEach(ov=>ov.addEventListener('click',e=>{if(e.target===ov)closeModal(ov.id);}));
-async function doSignOut(){clearInterval(msgPollTimer);clearInterval(listingStatusPollTimer);document.removeEventListener('visibilitychange',handleVisibilityChange);if(messagesChannel){messagesChannel.unsubscribe();messagesChannel=null;}scwCleanup();await db.auth.signOut();window.location.href='/login';}
+async function doSignOut(){clearInterval(msgPollTimer);clearInterval(listingStatusPollTimer);clearInterval(notifPollTimer);document.removeEventListener('visibilitychange',handleVisibilityChange);if(messagesChannel){messagesChannel.unsubscribe();messagesChannel=null;}if(notifBellChannel){notifBellChannel.unsubscribe();notifBellChannel=null;}scwCleanup();await db.auth.signOut();window.location.href='/login';}
 let toastTimer;
 function showToast(msg,type='success'){const t=document.getElementById('toast'),m=document.getElementById('toast-msg');clearTimeout(toastTimer);t.className='toast '+type;m.textContent=msg;t.classList.add('show');toastTimer=setTimeout(()=>t.classList.remove('show'),3500);}
 function timeAgo(iso){if(!iso)return'';const d=(Date.now()-new Date(iso))/1000;if(d<60)return'just now';if(d<3600)return`${Math.floor(d/60)}m ago`;if(d<86400)return`${Math.floor(d/3600)}h ago`;if(d<604800)return`${Math.floor(d/86400)}d ago`;return new Date(iso).toLocaleDateString('en-KE',{day:'numeric',month:'short'});}
@@ -6877,11 +6887,14 @@ function handleVisibilityChange(){
   if(document.hidden){
     clearInterval(msgPollTimer);msgPollTimer=null;
     clearInterval(listingStatusPollTimer);listingStatusPollTimer=null;
+    clearInterval(notifPollTimer);notifPollTimer=null;
   }else{
     pollNewMessages();
     pollListingStatusChanges();
+    loadNotifBell();
     if(!msgPollTimer)msgPollTimer=setInterval(pollNewMessages,MSG_POLL_MS);
     if(!listingStatusPollTimer)listingStatusPollTimer=setInterval(pollListingStatusChanges,LISTING_STATUS_POLL_MS);
+    if(!notifPollTimer)notifPollTimer=setInterval(loadNotifBell,60000);
   }
 }
 

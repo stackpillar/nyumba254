@@ -3173,6 +3173,16 @@ function notifySms(type, payload) {
       } else {
         notifySeller('listing_approved', { listingId: id, listingTitle: title, sellerName: l.profiles.full_name, sellerEmail: l.profiles.email });
       }
+      notifyInApp(sellerId, 'listing_approved'|'listing_rejected'|'payment'|'profile', 'Title here', 'Body text here', '/dashboard.html'|null);
+    }
+    if (l?.seller_id) {
+      const inAppTitle = isFutureScheduled ? 'Listing scheduled' : newStatus==='active' ? 'Listing approved' : 'Listing approved — action needed';
+      const inAppBody = isFutureScheduled
+        ? `"${title}" will go live on ${new Date(l.publish_at).toLocaleString('en-KE')}.`
+        : newStatus==='active'
+          ? `"${title}" has been approved and is now live.`
+          : `"${title}" was approved but needs a payment or plan to go live.`;
+      notifyInApp(l.seller_id, 'listing_approved', inAppTitle, inAppBody, '/dashboard.html');
     }
     notifySms('listing_status', { listingId: id, listingTitle: title, status: newStatus });
     toast(
@@ -3218,6 +3228,7 @@ function notifySms(type, payload) {
         sellerName: l.profiles.full_name, sellerEmail: l.profiles.email,
       });
     }
+    if (l?.seller_id) notifyInApp(l.seller_id, 'listing_rejected', 'Listing rejected', `"${title}" was rejected${reason?': '+reason:''}.`, '/dashboard.html');
     toast('Listing rejected','success');
     loadOverview(); if(currentView==='listings') loadAllListings();
   }
@@ -3368,6 +3379,7 @@ function notifySms(type, payload) {
         sellerName: l.profiles.full_name, sellerEmail: l.profiles.email,
       });
     }
+    if (l?.seller_id) notifyInApp(l.seller_id, 'listing_rejected', 'Listing deactivated', `"${title}" was deactivated${reason?': '+reason:''}.`, '/dashboard.html');
     toast('Listing deactivated','success');
     loadOverview(); if(currentView==='listings') loadAllListings();
   }
@@ -3994,6 +4006,7 @@ function notifySms(type, payload) {
       }).eq('id', p.seller_id).select().single();
       await reactivateAirbnbListingsForSeller(p.seller_id);
       if (seller?.email) notifySeller('premium_granted', { sellerName: seller.full_name, sellerEmail: seller.email, plan: p.plan_key, expiresAt });
+      notifyInApp(p.seller_id, 'payment', 'BNB plan activated', `Your ${p.plan_key.replace('_',' ')} plan is now active.`, '/dashboard.html');
       logAction('activate_bnb_subscription','profile',p.seller_id, p.plan_key);
     } else if (p && (p.type === 'premium_subscription' || p.type === 'elite_subscription') && p.seller_id) {
       // Subscription payment — auto-activates the plan on confirm, no separate
@@ -4015,6 +4028,7 @@ function notifySms(type, payload) {
       await reactivateRentalListingsForSeller(p.seller_id);
       if (planName === 'elite') await reactivateAirbnbListingsForSeller(p.seller_id);
       if (seller?.email) notifySeller('premium_granted', { sellerName: seller.full_name, sellerEmail: seller.email, plan: tier, expiresAt });
+      notifyInApp(p.seller_id, 'payment', 'Plan activated', `Your ${planName} (${tier}) plan is now active.`, '/dashboard.html');
       logAction('activate_subscription_from_payment','profile',p.seller_id,`${planName} ${tier}`);
     }
 
@@ -4022,13 +4036,14 @@ function notifySms(type, payload) {
     logAction('confirm_payment','payment',id,listingId||'');
 
     if (listingId) {
-      const { data: l } = await db.from('listings').select('title, profiles(full_name, email)').eq('id', listingId).single();
+      const { data: l } = await db.from('listings').select('title, seller_id, profiles(full_name, email)').eq('id', listingId).single();
       if (l?.profiles?.email) {
         notifySeller('payment_confirmed', {
           listingId, listingTitle: l.title, amount: p?.amount,
           sellerName: l.profiles.full_name, sellerEmail: l.profiles.email,
         });
       }
+      if (l?.seller_id) notifyInApp(l.seller_id, 'payment', 'Payment confirmed', `Payment of ${fmtPrice(p?.amount)} for "${l.title}" has been confirmed.`, '/dashboard.html');
       notifySms('payment_confirmed', { listingId, listingTitle: l?.title, amount: p?.amount });
       notifyByEmail('payment_confirmed_admin', {
         listingId, listingTitle: l?.title, amount: p?.amount, reference: p?.reference,
@@ -4305,6 +4320,7 @@ async function messageSellerInChat(sellerId) {
     if (u?.email) {
       notifySeller('account_suspended', { sellerName: u.full_name, sellerEmail: u.email });
     }
+    notifyInApp(id, 'profile', 'Account suspended', 'Your account has been placed under review.', null);
     toast('Account suspended','success');
     if(u){ u.is_disabled=true; u.disabled_reason=reason; }
     if (currentView==='users') loadUsers();
@@ -4320,6 +4336,7 @@ async function messageSellerInChat(sellerId) {
     if (u?.email) {
       notifySeller('account_reinstated', { sellerName: u.full_name, sellerEmail: u.email });
     }
+    notifyInApp(id, 'profile', 'Account reinstated', 'Your account has been reinstated — welcome back!', null);
     toast('Account reinstated ✓','success');
     if(u){ u.is_disabled=false; u.disabled_reason=null; }
     closeProfileModal(); if (currentView==='users') loadUsers();
