@@ -600,6 +600,11 @@
       <h2>Amenities</h2>
       <p class="hint">Select everything that applies — this list adapts to what buyers filter by.</p>
       <div class="amenity-grid" id="amenity-grid"></div>
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <input type="text" id="custom-amenity-input" placeholder="Don't see it? Type your own, e.g. 'Borehole water'" maxlength="40" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomAmenity();}"/>
+        <button type="button" class="btn-add-tier" style="width:auto;white-space:nowrap;padding:10px 18px" onclick="addCustomAmenity()">+ Add</button>
+      </div>
+      <div class="amenity-grid" id="custom-amenity-grid" style="margin-top:10px"></div>
     </div>
 
     <div class="form-actions">
@@ -649,8 +654,19 @@
       </div>
       <div class="field" style="margin-top:16px;padding-top:16px;border-top:1px dashed var(--border)">
         <label>Or record / upload a short video <span class="opt">optional, max 60 seconds</span></label>
-        <input type="file" id="video_file_input" accept="video/*" capture="environment" onchange="handleVideoFileSelect(this.files[0])"/>
-        <div class="field-hint">Sent for a quick review before it appears on your listing — doesn't affect your submission either way.</div>
+        <div class="grid-2" style="gap:10px">
+          <button type="button" class="camera-btn" style="margin-top:0" onclick="document.getElementById('video_upload_input').click()">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Upload video file
+          </button>
+          <button type="button" class="camera-btn" style="margin-top:0" onclick="document.getElementById('video_record_input').click()">
+            <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Record video
+          </button>
+        </div>
+        <input type="file" id="video_upload_input" accept="video/*" style="display:none" onchange="handleVideoFileSelect(this.files[0]); this.value='';"/>
+        <input type="file" id="video_record_input" accept="video/*" capture="environment" style="display:none" onchange="handleVideoFileSelect(this.files[0]); this.value='';"/>
+        <div class="field-hint">"Upload video file" opens your gallery/files; "Record video" opens your camera directly. Sent for a quick review before it appears on your listing — doesn't affect your submission either way.</div>
         <div id="video-file-status" style="font-size:12px;color:var(--text-3);margin-top:6px"></div>
       </div>
     </div>
@@ -998,6 +1014,7 @@ function getEffectiveArea() {
 let currentStep      = 1;
 let selectedCat       = 'apartment';
 let selectedAmenities = new Set();
+let customAmenities   = []; // free-typed amenities not in NK_AMENITIES, stored as plain label strings
 let photos            = [];
 let coverIndex        = 0;
 let selectedVideoFile = null;
@@ -1025,6 +1042,10 @@ function getVideoDuration(file) {
   });
 }
 
+function clearVideoFileInputs() {
+  const u = document.getElementById('video_upload_input'), r = document.getElementById('video_record_input');
+  if (u) u.value = ''; if (r) r.value = '';
+}
 async function handleVideoFileSelect(file) {
   const statusEl = document.getElementById('video-file-status');
   if (!file) { selectedVideoFile = null; statusEl.textContent = ''; return; }
@@ -1034,13 +1055,13 @@ async function handleVideoFileSelect(file) {
     if (duration > MAX_VIDEO_SECONDS) {
       statusEl.textContent = `That's ${Math.round(duration)}s — please trim it to under ${MAX_VIDEO_SECONDS}s.`;
       showToast('Video is too long — max 60 seconds', 'error');
-      document.getElementById('video_file_input').value = '';
+      clearVideoFileInputs();
       selectedVideoFile = null;
       return;
     }
     if (file.size > 100 * 1024 * 1024) {
       statusEl.textContent = 'File is too large — please pick a shorter or lower-quality clip.';
-      document.getElementById('video_file_input').value = '';
+      clearVideoFileInputs();
       selectedVideoFile = null;
       return;
     }
@@ -1211,6 +1232,33 @@ function toggleAmenity(key, checked) {
   if (checked) selectedAmenities.add(key); else selectedAmenities.delete(key);
   document.getElementById(`chip-${key}`).classList.toggle('checked', checked);
   scheduleDraftSave();
+}
+
+function addCustomAmenity() {
+  const input = document.getElementById('custom-amenity-input');
+  const label = input.value.trim();
+  if (!label) return;
+  const exists = customAmenities.some(a => a.toLowerCase() === label.toLowerCase())
+    || NK_AMENITIES.some(a => a.label.toLowerCase() === label.toLowerCase());
+  if (exists) { showToast('That amenity is already added', 'error'); return; }
+  customAmenities.push(label);
+  selectedAmenities.add(label);
+  input.value = '';
+  renderCustomAmenityChips();
+  scheduleDraftSave();
+}
+function removeCustomAmenity(label) {
+  customAmenities = customAmenities.filter(a => a !== label);
+  selectedAmenities.delete(label);
+  renderCustomAmenityChips();
+  scheduleDraftSave();
+}
+function renderCustomAmenityChips() {
+  document.getElementById('custom-amenity-grid').innerHTML = customAmenities.map(label => `
+    <label class="amenity-chip checked">
+      ${label}
+      <span onclick="removeCustomAmenity('${label.replace(/'/g,"\\'")}')" style="margin-left:auto;cursor:pointer;color:var(--text-3);font-weight:700">×</span>
+    </label>`).join('');
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1461,6 +1509,7 @@ function goStep(n) {
   if (n === 5) renderReview();
   if (mapObj) setTimeout(() => mapObj.invalidateSize(), 100);
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  forceSaveDraftNow(); // flush immediately so switching devices mid-flow picks up the latest step
 }
 function goStepRaw(n) {
   for (let i = 1; i <= 5; i++) {
@@ -1558,7 +1607,10 @@ function renderReview() {
       <div class="summary-row"><span>Condition</span><strong>${document.getElementById('comm_condition').value || '—'}</strong></div>`;
   }
 
-  const amenityLabels = NK_AMENITIES.filter(a => selectedAmenities.has(a.key)).map(a => a.label).join(', ') || 'None selected';
+  const amenityLabels = [
+    ...NK_AMENITIES.filter(a => selectedAmenities.has(a.key)).map(a => a.label),
+    ...customAmenities,
+  ].join(', ') || 'None selected';
 
   document.getElementById('review-content').innerHTML = `
     <div class="review-block-title">Property</div>
@@ -1589,7 +1641,7 @@ function collectDraftData() {
   const val = id => document.getElementById(id)?.value ?? '';
   const checked = id => document.getElementById(id)?.checked ?? false;
   return {
-    step: currentStep, selectedCat, amenities: [...selectedAmenities], tierRows: JSON.parse(JSON.stringify(tierRows)),
+    step: currentStep, selectedCat, amenities: [...selectedAmenities], customAmenities: [...customAmenities], tierRows: JSON.parse(JSON.stringify(tierRows)),
     mapLat, mapLng,
     fields: {
       title: val('title'), description: val('description'), county: val('county'), area: val('area'),
@@ -1618,6 +1670,17 @@ function scheduleDraftSave() {
     draftServerTimer = setTimeout(() => saveDraftToServer(collectDraftData()), 4000);
   }
 }
+function forceSaveDraftNow() {
+  if (!draftsReady) return;
+  clearTimeout(draftLocalTimer);
+  clearTimeout(draftServerTimer);
+  const data = collectDraftData();
+  try { localStorage.setItem(DRAFT_LS_KEY, JSON.stringify(data)); } catch(e) {}
+  document.getElementById('save-status').textContent = '✓ Draft saved';
+  if (currentUser) saveDraftToServer(data);
+}
+window.addEventListener('beforeunload', () => { if (draftsReady) forceSaveDraftNow(); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && draftsReady) forceSaveDraftNow(); });
 async function saveDraftToServer(data) {
   try {
     await db.from('listing_drafts').upsert({ seller_id: currentUser.id, draft_data: data, updated_at: new Date().toISOString() }, { onConflict: 'seller_id' });
@@ -1687,6 +1750,9 @@ function applyDraftData(draft) {
     const chip = document.getElementById(`chip-${a.key}`);
     if (chip) { chip.classList.toggle('checked', checked); chip.querySelector('input').checked = checked; }
   });
+  customAmenities = Array.isArray(draft.customAmenities) ? draft.customAmenities : [];
+  customAmenities.forEach(label => selectedAmenities.add(label));
+  renderCustomAmenityChips();
 
   if (Array.isArray(draft.tierRows) && draft.tierRows.length) {
     tierRows = draft.tierRows; tierSeq = Math.max(0, ...tierRows.map(t => t.id || 0));
