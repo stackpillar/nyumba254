@@ -742,6 +742,39 @@
             </div>
             <div class="notif-item">
               <div class="notif-text">
+                <strong>Listing updates</strong>
+                <span>When one of your listings changes — price, details, unit availability.</span>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="notif-listing-updated" checked onchange="saveNotifPref()"/>
+                <div class="toggle-track"></div>
+                <div class="toggle-thumb"></div>
+              </label>
+            </div>
+            <div class="notif-item">
+              <div class="notif-text">
+                <strong>Rent Ledger & tenant activity</strong>
+                <span>Payments logged, tenants moved in/out, rent escalations.</span>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="notif-rent-ledger" checked onchange="saveNotifPref()"/>
+                <div class="toggle-track"></div>
+                <div class="toggle-thumb"></div>
+              </label>
+            </div>
+            <div class="notif-item">
+              <div class="notif-text">
+                <strong>Plan & feature changes</strong>
+                <span>Premium, Elite, BNB, AI Concierge, and other feature toggles.</span>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="notif-plan-feature" checked onchange="saveNotifPref()"/>
+                <div class="toggle-track"></div>
+                <div class="toggle-thumb"></div>
+              </label>
+            </div>
+            <div class="notif-item">
+              <div class="notif-text">
                 <strong>Platform updates</strong>
                 <span>Occasional product news and feature announcements.</span>
               </div>
@@ -954,10 +987,13 @@
 
     // Notification prefs
     const prefs = profileData.notification_prefs || {};
-    document.getElementById('notif-enquiry').checked  = prefs.enquiry  !== false;
-    document.getElementById('notif-approved').checked = prefs.approved !== false;
-    document.getElementById('notif-expiry').checked   = prefs.expiry   !== false;
-    document.getElementById('notif-marketing').checked= prefs.marketing === true;
+    document.getElementById('notif-enquiry').checked        = prefs.enquiry        !== false;
+    document.getElementById('notif-approved').checked       = prefs.approved       !== false;
+    document.getElementById('notif-expiry').checked         = prefs.expiry         !== false;
+    document.getElementById('notif-listing-updated').checked= prefs.listing_updated!== false;
+    document.getElementById('notif-rent-ledger').checked    = prefs.rent_ledger    !== false;
+    document.getElementById('notif-plan-feature').checked   = prefs.plan_feature   !== false;
+    document.getElementById('notif-marketing').checked      = prefs.marketing      === true;
   }
 
   async function loadStats() {
@@ -1100,10 +1136,13 @@
   // ─────────────────────────────────────────
   async function saveNotifPref() {
     const prefs = {
-      enquiry:   document.getElementById('notif-enquiry').checked,
-      approved:  document.getElementById('notif-approved').checked,
-      expiry:    document.getElementById('notif-expiry').checked,
-      marketing: document.getElementById('notif-marketing').checked,
+      enquiry:         document.getElementById('notif-enquiry').checked,
+      approved:        document.getElementById('notif-approved').checked,
+      expiry:          document.getElementById('notif-expiry').checked,
+      listing_updated: document.getElementById('notif-listing-updated').checked,
+      rent_ledger:     document.getElementById('notif-rent-ledger').checked,
+      plan_feature:    document.getElementById('notif-plan-feature').checked,
+      marketing:       document.getElementById('notif-marketing').checked,
     };
     await db.from('profiles').upsert({ id: currentUser.id, notification_prefs: prefs });
     showBanner('notif-banner','notif-banner-msg','success','Preferences saved.');
