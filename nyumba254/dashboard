@@ -779,6 +779,25 @@
   .topbar-right{gap:6px}
   .topbar-subtitle{display:none}
   #btn-new-listing-tour{padding:9px 10px;font-size:0}
+
+  /* Recent activity / chart / quick listings — stop aggressive ellipsis
+     truncation on narrow screens and let rows wrap instead of clipping */
+  .activity-item{flex-wrap:wrap;gap:6px 12px}
+  .activity-text{white-space:normal;overflow:visible;text-overflow:clip;min-width:0;flex-basis:100%}
+  .activity-time{flex-basis:auto}
+
+  .quick-listing{flex-wrap:wrap}
+  .quick-listing .quick-name{white-space:normal !important;overflow:visible !important;text-overflow:clip !important;word-break:break-word}
+  .quick-listing .quick-meta{white-space:normal}
+  .quick-price{margin-left:0;flex-basis:100%;text-align:left}
+
+  .listing-title-text{white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word}
+  .thread-name,.thread-preview,.thread-listing-ref{white-space:normal;overflow:visible;text-overflow:clip}
+  .thread-time{position:static;margin-left:auto}
+  .thread-item{flex-wrap:wrap}
+
+  .card{overflow:visible}
+  .overview-grid,.overview-grid>div{min-width:0}
 }
     @media(max-width:400px){.stat-grid{grid-template-columns:1fr}}
     @keyframes scwBadgeBlink { 0%,100%{opacity:1} 50%{opacity:.35} }
