@@ -899,6 +899,19 @@
       });
     }
 
+    // Notify admin of the new seller registration
+    fetch(`${SUPABASE_URL}/functions/v1/send-notification-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+      body: JSON.stringify({
+        type: 'new_seller_registered',
+        audience: 'admin',
+        sellerName: `${first} ${last}`,
+        sellerEmail: email,
+        sellerPhone: phone,
+      }),
+    }).catch(()=>{});
+
     // Remember email so the "resend" link on the success screen works
     window.lastRegEmail = email;
 

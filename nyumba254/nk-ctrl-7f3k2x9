@@ -3173,7 +3173,6 @@ function notifySms(type, payload) {
       } else {
         notifySeller('listing_approved', { listingId: id, listingTitle: title, sellerName: l.profiles.full_name, sellerEmail: l.profiles.email });
       }
-      notifyInApp(sellerId, 'listing_approved'|'listing_rejected'|'payment'|'profile', 'Title here', 'Body text here', '/dashboard.html'|null);
     }
     if (l?.seller_id) {
       const inAppTitle = isFutureScheduled ? 'Listing scheduled' : newStatus==='active' ? 'Listing approved' : 'Listing approved — action needed';
@@ -3530,6 +3529,7 @@ function notifySms(type, payload) {
         sellerName: l.profiles.full_name, sellerEmail: l.profiles.email,
       });
     }
+    if (l?.seller_id) notifyInApp(l.seller_id, 'listing_approved', 'Listing restored', `"${l.title}" has been restored and is visible in your dashboard again.`, '/dashboard.html');
     toast('Listing restored ✓','success');
     loadRecycleBin(); loadOverview();
   }
@@ -4687,6 +4687,7 @@ async function messageSellerInChat(sellerId) {
     if (error) { toast('Error: '+error.message,'error'); return; }
     await db.from('verification_activity_log').insert({ seller_id: sellerId, action:'approved', admin_id: currentUser.id });
     notifySeller('verification_approved', { sellerName: p.full_name, sellerEmail: p.email });
+    notifyInApp(sellerId, 'profile', 'You are verified ✓', 'Buyers now see a trust badge on your listings, and your listing space is unlimited.', '/dashboard.html');
     toast('Seller verified ✓','success');
     loadVerification();
   }
@@ -4698,6 +4699,7 @@ async function messageSellerInChat(sellerId) {
       if (error) { toast('Error: '+error.message,'error'); return; }
       await db.from('verification_activity_log').insert({ seller_id: sellerId, action:'rejected', detail: reason, admin_id: currentUser.id });
       notifySeller('verification_rejected', { sellerName: p.full_name, sellerEmail: p.email, reason });
+      notifyInApp(sellerId, 'profile', 'Verification needs changes', reason || 'Please review and resubmit your documents.', '/dashboard.html');
       toast('Verification rejected','success');
       loadVerification();
     }});
@@ -5089,6 +5091,8 @@ async function messageSellerInChat(sellerId) {
     logAction('grant_premium','profile',grantingSellerId, label);
     const seller = data[0];
     if (seller?.email) notifySeller('premium_granted', { sellerName: seller.full_name, sellerEmail: seller.email, plan: billing, expiresAt: tierExpiresAt });
+    const grantedLabel = [tier!=='none'?(tier==='elite'?'Elite':'Premium'):null, bnbTier!=='none'?bnbTier.replace('bnb_','BNB ').replace(/^\w/,c=>c.toUpperCase()):null].filter(Boolean).join(' + ');
+    notifyInApp(grantingSellerId, 'plan_feature', `${grantedLabel} activated`, `Your plan is now active${tierExpiresAt?' — renews/expires '+fmtSubDate(tierExpiresAt):''}.`, '/dashboard.html');
     toast('Plan granted ✓','success');
     closeGrantPremiumModal();
     loadPremiumSellers();
@@ -5106,6 +5110,7 @@ async function messageSellerInChat(sellerId) {
         if (error) { toast('Error: '+error.message,'error'); return; }
         logAction('revoke_bnb','profile',sellerId,'');
         if (p?.email) notifySeller('premium_revoked', { sellerName: p.full_name, sellerEmail: p.email });
+        notifyInApp(sellerId, 'plan_feature', 'BNB plan revoked', 'Your Airbnb listings are disabled until you resubscribe.', '/plans');
         toast('BNB plan revoked','success');
         loadPremiumSellers();
       }
@@ -5123,6 +5128,7 @@ async function messageSellerInChat(sellerId) {
         if (error) { toast('Error: '+error.message,'error'); return; }
         logAction('revoke_premium','profile',sellerId,'');
         if (p?.email) notifySeller('premium_revoked', { sellerName: p.full_name, sellerEmail: p.email });
+        notifyInApp(sellerId, 'plan_feature', 'Premium revoked', 'Your Premium/Elite features have been turned off.', '/plans');
         toast('Premium revoked','success');
         loadPremiumSellers();
       }

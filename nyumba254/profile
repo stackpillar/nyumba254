@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
+  <script>
+  (function(){try{var t=localStorage.getItem('ny_theme');if(t&&t!=='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>My Profile — Nyumba254</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -36,6 +39,28 @@
       --radius-xl:    20px;
       --shadow:       0 1px 3px rgba(0,0,0,0.07), 0 4px 14px rgba(0,0,0,0.05);
       --shadow-lg:    0 8px 32px rgba(0,0,0,0.10);
+    }
+    [data-theme="dark"] {
+      --green:#22c58f; --green-light:#0f2a22; --green-mid:#2ee6a8; --green-dark:#0a4636;
+      --gold:#e0a638; --gold-light:#2b2214;
+      --text:#eef1ee; --text-2:#c3c8c3; --text-3:#8b928c;
+      --border:#2c332f; --border-focus:#22c58f;
+      --surface:#121613; --surface-2:#191f1b; --white:#191f1b;
+      --red:#ef6455; --red-light:#3a1a17;
+      --amber:#f2b23c; --amber-light:#332911;
+      --shadow:0 1px 3px rgba(0,0,0,0.35),0 4px 14px rgba(0,0,0,0.25);
+      --shadow-lg:0 8px 32px rgba(0,0,0,0.5);
+    }
+    [data-theme="sandstone"] {
+      --green:#8a5a2c; --green-light:#f4e9da; --green-mid:#b17a3f; --green-dark:#5f3c17;
+      --gold:#b8860b; --gold-light:#faf1de;
+      --text:#2b241c; --text-2:#5c5142; --text-3:#948a76;
+      --border:#e6d9c2; --border-focus:#8a5a2c;
+      --surface:#faf5ea; --surface-2:#f4ecdc; --white:#fffdf8;
+      --red:#b5432f; --red-light:#f7e3dc;
+      --amber:#c2790f; --amber-light:#f7ecd6;
+      --shadow:0 1px 3px rgba(90,60,20,0.09),0 4px 14px rgba(90,60,20,0.07);
+      --shadow-lg:0 8px 32px rgba(90,60,20,0.16);
     }
     html { scroll-behavior: smooth; }
     body { font-family: 'Inter', sans-serif; color: var(--text); background: var(--surface); font-size: 15px; line-height: 1.6; min-height: 100vh; }
@@ -833,6 +858,16 @@
 
   let currentUser = null;
   let profileData = null;
+
+  // Mirrors dashboard.html's theme — 'ny_theme' is the same localStorage
+  // key the dashboard's setTheme() writes, so whatever theme is active
+  // there is reflected here too, including live cross-tab changes.
+  function applyStoredTheme(){
+    const saved=localStorage.getItem('ny_theme')||'light';
+    document.documentElement.setAttribute('data-theme',saved==='light'?'':saved);
+  }
+  applyStoredTheme();
+  window.addEventListener('storage',e=>{ if(e.key==='ny_theme') applyStoredTheme(); });
 
   // ── Email notifications on profile changes ──────────────────────
   // Both fire-and-forget (don't block the save flow on email delivery)

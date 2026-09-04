@@ -2369,8 +2369,9 @@ async function init(){
   });
 
   const NOTIF_ICON = {
-    message: '💬', listing_approved: '✅', listing_rejected: '⚠️', payment: '💳',
+    message: '💬', listing_approved: '✅', listing_rejected: '⚠️', listing_updated: '✏️', payment: '💳',
     platform_update: '📣', policy_update: '📜', profile: '👤',
+    rent_ledger: '📊', demand_insights: '📈', plan_feature: '⭐',
   };
 
   async function loadNotifBell() {
@@ -2438,16 +2439,21 @@ async function init(){
 
   // ── Notification Center — full categorized history, linked from the bell ──
   const NOTIF_CATEGORY_MAP = {
-    message: 'messages', listing_approved: 'listings', listing_rejected: 'listings',
-    payment: 'payments', profile: 'account', platform_update: 'platform', policy_update: 'platform',
+    message: 'messages', listing_approved: 'listings', listing_rejected: 'listings', listing_updated: 'listings',
+    payment: 'payments', profile: 'account',
+    rent_ledger: 'rent_ledger', demand_insights: 'rent_ledger',
+    plan_feature: 'plan',
+    platform_update: 'platform', policy_update: 'platform',
   };
   const NOTIF_CATEGORY_META = {
-    messages: { label: 'Messages & Enquiries', icon: '💬' },
-    listings: { label: 'Listings', icon: '🏠' },
-    payments: { label: 'Payments', icon: '💳' },
-    account:  { label: 'Account', icon: '👤' },
-    platform: { label: 'Platform & Updates', icon: '📣' },
-    other:    { label: 'Other', icon: '🔔' },
+    messages:    { label: 'Messages & Enquiries', icon: '💬' },
+    listings:    { label: 'Listings', icon: '🏠' },
+    payments:    { label: 'Payments', icon: '💳' },
+    account:     { label: 'Account', icon: '👤' },
+    rent_ledger: { label: 'Rent Ledger & Insights', icon: '📊' },
+    plan:        { label: 'Plan & Features', icon: '⭐' },
+    platform:    { label: 'Platform & Updates', icon: '📣' },
+    other:       { label: 'Other', icon: '🔔' },
   };
   function notifCategoryFor(type) { return NOTIF_CATEGORY_MAP[type] || 'other'; }
   let notifPageFilter = 'all';
@@ -2772,11 +2778,13 @@ async function toggleDemandDigest(enabled){
   const error = await updateOwnerProfile({ demand_digest_enabled: enabled });
   if(error){ showToast('Could not update: '+error.message,'error'); document.getElementById('demand-digest-toggle').checked=!enabled; return; }
   showToast(enabled?'Weekly digest turned on ✓':'Weekly digest turned off','success');
+  notifyInApp('demand_insights', enabled?'Weekly demand digest turned on':'Weekly demand digest turned off', enabled?"You'll get the top opportunity areas every Monday.":'You will no longer receive the weekly digest.');
 }
 async function toggleAiConcierge(enabled){
   const error = await updateOwnerProfile({ ai_concierge_enabled: enabled, ai_concierge_enabled_at: enabled ? new Date().toISOString() : null });
   if(error){ showToast('Could not update: '+error.message,'error'); document.getElementById('ai-concierge-toggle').checked=!enabled; return; }
   showToast(enabled?'AI Chat Concierge turned on ✓ — it will start answering routine buyer questions on your listings':'AI Chat Concierge turned off','success');
+  notifyInApp('plan_feature', enabled?'24/7 AI Chat Concierge turned on':'AI Chat Concierge turned off', enabled?'It will now answer routine buyer questions on your listings automatically.':'Buyers will no longer get automatic AI answers.');
 }
 function eliteActive(){
   const sub = subscriptionInfo();
@@ -4103,6 +4111,10 @@ async function saveTenant(){
   if(error){showToast('Could not save: '+error.message,'error');return;}
   closeModal('modal-add-tenant');
   showToast('Tenant added ✓','success');
+  {
+    const unit=rentalUnitsCache.find(u=>String(u.id)===String(ruAddTenantUnitId));
+    notifyInApp('rent_ledger',`New tenant added: ${name}`,unit?`Moved into ${unit.unit_label}`:'Tenant added to your Rent Ledger.');
+  }
   loadRentalUnits();
 }
 
@@ -4131,6 +4143,12 @@ async function saveRentPayment(){
   if(error){showToast('Could not save: '+error.message,'error');return;}
   closeModal('modal-log-rent-payment');
   showToast('Rent payment recorded ✓','success');
+  {
+    const u=rentalUnitsCache.find(u=>String(u.id)===String(rpUnitId));
+    const t=u?.tenants?.find(t=>String(t.id)===String(rpTenantId));
+    const monthLabel=new Date(periodMonth).toLocaleDateString('en-KE',{month:'long',year:'numeric'});
+    notifyInApp('rent_ledger',`Rent payment logged — ${monthLabel}`,`${t?t.full_name+' · ':''}${u?u.unit_label+' · ':''}KES ${(payload.amount||0).toLocaleString('en-KE')} (${payload.status})`);
+  }
   loadRentalUnits();
 }
 
@@ -4238,6 +4256,11 @@ async function moveOutTenant(){
   if(error){showToast('Could not update: '+error.message,'error');return;}
   closeModal('modal-tenant-detail');
   showToast('Tenant marked as moved out ✓','success');
+  {
+    const u=rentalUnitsCache.find(x=>String(x.id)===String(tdActiveUnitId));
+    const t=u?.tenants?.find(x=>String(x.id)===String(tdActiveTenantId));
+    notifyInApp('rent_ledger',`Tenant moved out${t?': '+t.full_name:''}`,u?`${u.unit_label} is now vacant.`:'A unit is now vacant.');
+  }
   loadRentalUnits();
 }
 
@@ -4659,6 +4682,7 @@ async function applyEscalationNow(unitId){
   const{error}=await db.from('rental_units').update({monthly_rent:info.newRent,last_escalation_date:new Date().toISOString().slice(0,10)}).eq('id',unitId);
   if(error){showToast('Could not update: '+error.message,'error');return;}
   showToast('Rent escalation applied ✓','success');
+  notifyInApp('rent_ledger',`Rent escalation applied — ${u.unit_label}`,`New rent: KES ${info.newRent.toLocaleString('en-KE')} (was KES ${Number(u.monthly_rent).toLocaleString('en-KE')})`);
   loadRentalUnits();
 }
 
@@ -5164,6 +5188,7 @@ async function toggleSmsAlerts(enabled) {
   const error = await updateOwnerProfile({ sms_alerts_enabled: enabled });
   if (error) { showToast('Could not update: '+error.message,'error'); document.getElementById('sms-alerts-toggle').checked = !enabled; return; }
   showToast(enabled ? 'SMS alerts turned on ✓' : 'SMS alerts turned off','success');
+  notifyInApp('plan_feature', enabled?'SMS enquiry alerts turned on':'SMS enquiry alerts turned off', enabled?"You'll now get a text the moment a buyer enquires.":'SMS alerts have been disabled.');
 }
 
 const VERIFY_BUCKET = 'verification-docs';
@@ -5427,6 +5452,7 @@ async function toggleConcierge(enabled) {
   fetch(`${EDGE_URL}/send-notification-email`, { method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}, body: JSON.stringify({
     type: enabled ? 'concierge_enabled' : 'concierge_disabled', sellerName: currentProfile?.full_name, sellerEmail: currentUser.email,
   })}).catch(()=>{});
+  notifyInApp('plan_feature', enabled?'Managed chat turned on':'Managed chat turned off', enabled?'Our team can now reply to buyer messages on your behalf.':'You are handling all enquiries yourself again.');
 }
 async function toggleContactPrivacy(enabled) {
   const error = await updateOwnerProfile({ hide_buyer_contact: enabled });
@@ -6165,6 +6191,10 @@ async function muConfirmOccupy(unitId){
     renderManageUnitsModal();
     renderListingsTable();renderQuickListings();
     showToast('Unit marked as occupied — live listing updated ✓','success');
+    {
+      const l=allListings.find(x=>String(x.id)===String(muActiveListingId));
+      if(l)notifyInApp('listing_updated',`Unit occupied — "${l.title}"`,`${unit.unit_label}: ${newAvailable} of ${unit.quantity_total??unit.quantity_available} now available`,`/listing?id=${String(l.listing_number).padStart(6,'0')}`);
+    }
   } finally {
     muActionBusy=false;
   }
@@ -6194,6 +6224,10 @@ async function muMarkAvailable(unitId){
     renderManageUnitsModal();
     renderListingsTable();renderQuickListings();
     showToast('Unit marked as available again ✓','success');
+    {
+      const l=allListings.find(x=>String(x.id)===String(muActiveListingId));
+      if(l)notifyInApp('listing_updated',`Unit freed up — "${l.title}"`,`${unit.unit_label}: ${newAvailable} of ${unit.quantity_total??unit.quantity_available} now available`,`/listing?id=${String(l.listing_number).padStart(6,'0')}`);
+    }
   } finally {
     muActionBusy=false;
   }
@@ -6323,6 +6357,7 @@ async function addListingVideo(){
   showToast('Video added ✓','success');
   const l=allListings.find(x=>String(x.id)===String(mvActiveListingId));
   notifyAdmin('listing_video_added',{listingId:mvActiveListingId,listingTitle:l?.title||'',videoUrl:url,sellerName:currentProfile?.full_name||currentUser?.email,sellerEmail:currentUser?.email});
+  if(l)notifyInApp('plan_feature',`Video added — "${l.title}"`,'Your video walkthrough was added and is pending display on the listing.',`/listing?id=${String(l.listing_number).padStart(6,'0')}`);
 }
 
 async function deleteListingVideo(id){
@@ -6367,6 +6402,26 @@ async function saveEdit(){
   const u={title:document.getElementById('edit-title').value.trim(),price:parseFloat(document.getElementById('edit-price').value)||0,price_type:document.getElementById('edit-price-type').value,price_frequency:priceFreqOut,area:document.getElementById('edit-area').value,category:document.getElementById('edit-category').value,address:document.getElementById('edit-address').value.trim(),description:document.getElementById('edit-description').value.trim(),contact_hidden:document.getElementById('edit-contact_hidden').checked,amenities:editAmenities,details:mergedDetails};
   const btn=document.getElementById('btn-save-edit');btn.disabled=true;btn.innerHTML='<span class="spinner-sm"></span> Saving…';
   const oldPrice=original?Number(original.price):null;
+
+  // Build a human-readable diff BEFORE anything is overwritten, so the
+  // "what changed" notification can say exactly what was edited.
+  const changeLines=[];
+  if(original){
+    if(original.title!==u.title)changeLines.push(`Title: "${original.title}" → "${u.title}"`);
+    if(Number(original.price)!==Number(u.price))changeLines.push(`Price: KES ${Number(original.price).toLocaleString('en-KE')} → KES ${Number(u.price).toLocaleString('en-KE')}`);
+    if(original.area!==u.area)changeLines.push(`Area: ${original.area} → ${u.area}`);
+    if(original.address!==u.address)changeLines.push('Address updated');
+    if((original.description||'')!==u.description)changeLines.push('Description updated');
+    if((original.details?.bedrooms||'')!=(mergedDetails.bedrooms||''))changeLines.push(`Bedrooms: ${original.details?.bedrooms||'—'} → ${mergedDetails.bedrooms||'—'}`);
+    if((original.details?.bathrooms||'')!=(mergedDetails.bathrooms||''))changeLines.push(`Bathrooms: ${original.details?.bathrooms||'—'} → ${mergedDetails.bathrooms||'—'}`);
+    if((original.details?.size_sqm||'')!=(mergedDetails.size_sqm||''))changeLines.push(`Size: ${original.details?.size_sqm||'—'}m² → ${mergedDetails.size_sqm||'—'}m²`);
+    if((original.details?.furnished||'')!==mergedDetails.furnished)changeLines.push(`Furnished: ${mergedDetails.furnished==='yes'?'Yes':'No'}`);
+    if(original.contact_hidden!==u.contact_hidden)changeLines.push(`Contact visibility: ${u.contact_hidden?'Hidden (chat only)':'Visible'}`);
+    const oldAm=(original.amenities||[]).slice().sort().join(',');
+    const newAm=editAmenities.slice().sort().join(',');
+    if(oldAm!==newAm)changeLines.push('Amenities updated');
+  }
+
   const{error}=await db.from('listings').update(u).eq('id',id);
   btn.disabled=false;btn.innerHTML='Save changes';
   if(error){showToast('Could not save: '+error.message,'error');return;}
@@ -6374,6 +6429,10 @@ async function saveEdit(){
   closeModal('modal-edit');renderListingsTable();renderQuickListings();showToast('Listing updated ✓','success');
   if(oldPrice!==null&&oldPrice!==Number(u.price)){
     notifyAdmin('price_change',{listingId:id,listingTitle:u.title,oldPrice,newPrice:Number(u.price),priceType:u.price_type,sellerName:currentProfile?.full_name||currentUser?.email,sellerEmail:currentUser?.email});
+  }
+  if(changeLines.length&&original){
+    const listingLink=`/listing?id=${String(original.listing_number).padStart(6,'0')}`;
+    notifyInApp('listing_updated',`"${u.title}" was updated`,changeLines.join(' · '),listingLink);
   }
 }
 
@@ -6991,6 +7050,19 @@ async function notifyByEmail(type,payload){
 }
 function notifyAdmin(type,payload){return notifyByEmail(type,{...payload,audience:'admin'});}
 function notifySeller(type,payload){return notifyByEmail(type,{...payload,audience:'seller'});}
+
+// ── In-app notification helper — writes straight into the `notifications`
+// table so it shows in the bell + Notification Center instantly, no email.
+// `link` can be an internal page (e.g. '/listing?id=000123') or a full
+// https:// URL — openNotifItem/openNotifItemFromPage already handle both.
+async function notifyInApp(type,title,body,link){
+  try{
+    const{error}=await db.from('notifications').insert({seller_id:effectiveSellerId,type,title,body,link:link||null});
+    if(error){console.error('notifyInApp failed:',error);return;}
+    loadNotifBell();
+    if(document.getElementById('page-notifications')?.classList.contains('active'))renderNotificationsPage();
+  }catch(e){console.error('notifyInApp failed:',e);}
+}
 
 // ── Sound alert system ──────────────────────────────────
 // Reuses the existing #scw-notify-sound <audio> tag. Plays on:
