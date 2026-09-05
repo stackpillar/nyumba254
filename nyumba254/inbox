@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Chats — Nyumba254</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --green:#0F6E56; --green-dark:#085041; --tint:#E1F5EE; --tint-border:#bfe6d8;
+    --surface:#fff; --app-bg:#f7f6f2; --border:#e0ded8;
+    --ink:#1a1a18; --muted:#888780; --alert:#C53030;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{font-family:'Inter',sans-serif;color:var(--ink);background:var(--app-bg)}
+  button,input,textarea{font-family:inherit}
+  :focus-visible{outline:2px solid var(--green);outline-offset:2px}
+  a{color:inherit}
+
+  #ni-app{display:flex;flex-direction:column;height:100vh}
+
+  /* ── Header ── */
+  #ni-header{flex-shrink:0;background:var(--green);color:#fff;display:flex;align-items:center;gap:16px;padding:14px 20px}
+  #ni-back{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;text-decoration:none;color:rgba(255,255,255,.9);flex-shrink:0;white-space:nowrap}
+  #ni-back:hover{color:#fff}
+  #ni-title-wrap{flex:1;min-width:0}
+  #ni-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;line-height:1.2}
+  #ni-subtitle{font-size:12px;opacity:.85;margin-top:1px}
+  #ni-sync-btn{flex-shrink:0;background:rgba(255,255,255,.16);border:none;color:#fff;cursor:pointer;padding:8px 14px;border-radius:20px;display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600}
+  #ni-sync-btn:hover{background:rgba(255,255,255,.28)}
+  @media(max-width:640px){#ni-sync-btn span{display:none}#ni-sync-btn{padding:8px;border-radius:50%}}
+
+  /* ── Body: two-pane on desktop, single pane on mobile ── */
+  #ni-body{flex:1;display:flex;min-height:0}
+
+  #ni-sidebar{width:360px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid var(--border);background:var(--surface)}
+  #ni-search-row{padding:12px;border-bottom:1px solid var(--border);flex-shrink:0}
+  #ni-search{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;background:var(--app-bg);outline:none}
+  #ni-search:focus{border-color:var(--green);background:#fff}
+  #ni-list{flex:1;overflow-y:auto}
+  #ni-empty,#ni-list-loading{padding:40px 20px;text-align:center;color:var(--muted);font-size:13.5px;line-height:1.5}
+
+  .ni-convo{display:flex;gap:11px;padding:13px 15px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+  .ni-convo:hover,.ni-convo.active{background:var(--app-bg)}
+  .ni-convo-img{width:46px;height:46px;border-radius:9px;background:var(--border);object-fit:cover;flex-shrink:0}
+  .ni-convo-body{flex:1;min-width:0}
+  .ni-convo-title{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ni-convo-last{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
+  .ni-convo-badge{background:var(--alert);color:#fff;font-size:10.5px;font-weight:700;border-radius:10px;min-width:19px;height:19px;padding:0 5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;align-self:center}
+
+  #ni-thread-pane{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--app-bg)}
+  #ni-thread-empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;padding:20px;text-align:center}
+  #ni-thread{display:none;flex-direction:column;flex:1;min-height:0}
+  #ni-thread.open{display:flex}
+
+  #ni-thread-head{background:var(--green);color:#fff;padding:14px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+  .ni-back-btn{display:none;background:none;border:none;color:#fff;cursor:pointer;padding:2px;flex-shrink:0}
+  #ni-thread-info{flex:1;min-width:0}
+  #ni-thread-name{font-size:15px;font-weight:600;display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ni-verified{display:inline-flex;flex-shrink:0;color:#7CE0C0}
+  #ni-thread-link{font-size:12px;color:rgba(255,255,255,.85);text-decoration:underline}
+
+  .ni-thread-subbar{padding:10px 18px;background:var(--tint);border-bottom:1px solid var(--border);flex-shrink:0;display:flex;gap:8px}
+  .ni-subbar-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 8px;background:#fff;color:var(--green-dark);border:1.5px solid var(--green);border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+  .ni-subbar-btn:hover{background:var(--tint)}
+  .ni-subbar-btn.ghost{color:#4a4a46;border-color:var(--border)}
+  .ni-subbar-btn.ghost:hover{background:var(--app-bg)}
+
+  #ni-messages{flex:1;min-height:0;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:8px}
+  .ni-row{display:flex;gap:7px;align-items:flex-end;width:100%}
+  .ni-row>div:last-child{max-width:60%;width:max-content;display:flex;flex-direction:column}
+  .ni-row.mine{flex-direction:row-reverse}
+  .ni-av{width:26px;height:26px;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--tint);color:var(--green-dark)}
+  .ni-row.mine .ni-av{background:var(--green);color:#fff}
+  .ni-bubble{width:fit-content;max-width:100%;padding:9px 13px;border-radius:14px;font-size:13.5px;line-height:1.5;background:#fff;border:1px solid var(--border);border-bottom-left-radius:4px;overflow-wrap:break-word;white-space:pre-wrap}
+  .ni-row.mine .ni-bubble{background:var(--green);color:#fff;border:none;border-bottom-right-radius:4px}
+  .ni-time{font-size:10.5px;color:var(--muted);margin-top:2px;display:inline-flex;align-items:center}
+  .ni-row.mine .ni-time{align-self:flex-end}
+  .ni-tick{stroke:#9a9a94;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;margin-left:3px;vertical-align:-1px}
+  .ni-tick.read{stroke:#34B7F1}
+  .ni-date-sep{text-align:center;font-size:11px;color:var(--muted);padding:6px 0;font-weight:600}
+  @media(min-width:861px){.ni-row>div:last-child{max-width:66%}}
+
+  #ni-quick-replies{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:10px 18px;background:#fff;border-top:1px solid var(--border);mask-image:linear-gradient(to right,#000 94%,transparent 100%);-webkit-mask-image:linear-gradient(to right,#000 94%,transparent 100%)}
+  #ni-quick-replies::-webkit-scrollbar{display:none}
+  #ni-quick-replies:empty{display:none;padding:0;border:none;mask-image:none;-webkit-mask-image:none}
+  .ni-chip{flex-shrink:0;background:var(--tint);color:var(--green-dark);border:1px solid var(--tint-border);border-radius:16px;padding:7px 13px;font-size:12.5px;font-weight:600;white-space:nowrap;cursor:pointer}
+  .ni-chip:hover{background:#c9ecdd}
+
+  #ni-input-row{display:flex;gap:10px;padding:14px 18px;background:#fff;border-top:1px solid var(--border);flex-shrink:0}
+  #ni-input{flex:1;resize:none;border:1.5px solid var(--border);border-radius:11px;padding:10px 14px;font-size:14px;outline:none;min-height:44px;max-height:120px;line-height:1.5;background:var(--app-bg)}
+  #ni-input:focus{border-color:var(--green);background:#fff}
+  #ni-send{width:42px;height:42px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;flex-shrink:0}
+  #ni-send:disabled{opacity:.5;cursor:not-allowed}
+
+  /* ── Mobile: single pane, sidebar/thread swap ── */
+  @media(max-width:860px){
+    #ni-sidebar{width:100%;border-right:none}
+    #ni-title{font-size:19px}
+    body.ni-thread-open #ni-sidebar{display:none}
+    body:not(.ni-thread-open) #ni-thread-pane{display:none}
+    .ni-back-btn{display:flex}
+    #ni-thread-empty{display:none}
+    .ni-thread-subbar{flex-wrap:wrap}
+  }
+
+  /* ── Booking modal ── */
+  .ni-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;padding:20px}
+  .ni-overlay.open{display:flex}
+  .ni-modal{background:#fff;border-radius:16px;max-width:440px;width:100%;padding:26px 24px;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+  .ni-modal h3{font-size:18px;font-weight:700;margin:0 0 4px}
+  .ni-modal p.ni-sub{font-size:12.5px;color:var(--muted);margin:0 0 18px;line-height:1.5}
+  .ni-field{margin-bottom:14px}
+  .ni-field label{display:block;font-size:11.5px;font-weight:700;color:#4a4a46;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+  .ni-field input,.ni-field textarea,.ni-field select{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:10px;font-size:13.5px;background:var(--app-bg);outline:none}
+  .ni-field input:focus,.ni-field textarea:focus,.ni-field select:focus{border-color:var(--green);background:#fff}
+  .ni-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .ni-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
+  .ni-cancel{background:var(--app-bg);color:#4a4a46;padding:10px 18px;border-radius:8px;font-size:13px;border:none;cursor:pointer}
+  .ni-submit{background:var(--green);color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;border:none;cursor:pointer}
+  .ni-submit:hover{background:var(--green-dark)}
+  .ni-submit:disabled{opacity:.6;cursor:not-allowed}
+
+  /* ── Sync modal ── */
+  .ni-link-row{display:flex;gap:8px;margin-bottom:14px}
+  #ni-sync-link{flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:12.5px;color:#4a4a46;background:var(--app-bg)}
+  .ni-copy-btn{background:var(--green);color:#fff;border:none;border-radius:8px;padding:0 16px;font-size:13px;font-weight:600;cursor:pointer}
+  .ni-copy-btn:hover{background:var(--green-dark)}
+</style>
+</head>
+<body>
+  <div id="ni-app">
+    <header id="ni-header">
+      <a id="ni-back" href="/listings"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg> Browse listings</a>
+      <div id="ni-title-wrap">
+        <div id="ni-title">Nyumba254</div>
+        <div id="ni-subtitle">Your conversations with sellers</div>
+      </div>
+      <button id="ni-sync-btn" type="button" title="Continue on another device">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        <span>Sync device</span>
+      </button>
+    </header>
+
+    <div id="ni-body">
+      <aside id="ni-sidebar">
+        <div id="ni-search-row"><input id="ni-search" placeholder="Search conversations…"/></div>
+        <div id="ni-list"><div id="ni-list-loading">Loading your conversations…</div></div>
+      </aside>
+
+      <main id="ni-thread-pane">
+        <div id="ni-thread-empty">Select a conversation from the list to view messages.</div>
+        <div id="ni-thread">
+          <div id="ni-thread-head">
+            <button class="ni-back-btn" id="ni-thread-back" aria-label="Back to list"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+            <div id="ni-thread-info">
+              <div id="ni-thread-name">Seller</div>
+              <a id="ni-thread-link" href="#">View listing →</a>
+            </div>
+          </div>
+          <div class="ni-thread-subbar">
+            <button id="ni-book-btn" class="ni-subbar-btn" type="button">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Book a viewing
+            </button>
+            <button id="ni-invite-btn" class="ni-subbar-btn ghost" type="button">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              Invite a friend
+            </button>
+          </div>
+          <div id="ni-messages"></div>
+          <div id="ni-quick-replies"></div>
+          <div id="ni-input-row">
+            <textarea id="ni-input" placeholder="Type a message…" rows="1"></textarea>
+            <button id="ni-send"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Booking modal -->
+  <div id="ni-viewing-overlay" class="ni-overlay">
+    <div class="ni-modal" role="dialog" aria-modal="true" aria-labelledby="ni-viewing-title">
+      <h3 id="ni-viewing-title">Book a viewing</h3>
+      <p class="ni-sub">Request a time to view this property — the seller will confirm.</p>
+      <div class="ni-row2">
+        <div class="ni-field"><label>Date <span style="color:var(--alert)">*</span></label><input type="date" id="ni-v-date"/></div>
+        <div class="ni-field">
+          <label>Time <span style="color:var(--alert)">*</span></label>
+          <select id="ni-v-time">
+            <option value="">Select time</option>
+            <option value="Morning (8am–11am)">Morning (8am–11am)</option>
+            <option value="Midday (11am–2pm)">Midday (11am–2pm)</option>
+            <option value="Afternoon (2pm–5pm)">Afternoon (2pm–5pm)</option>
+            <option value="Evening (5pm–7pm)">Evening (5pm–7pm)</option>
+          </select>
+        </div>
+      </div>
+      <div class="ni-field"><label>Full name <span style="color:var(--alert)">*</span></label><input type="text" id="ni-v-name" placeholder="Your full name"/></div>
+      <div class="ni-field"><label>Phone <span style="color:var(--alert)">*</span></label><input type="tel" id="ni-v-phone" placeholder="07XX XXX XXX"/></div>
+      <div class="ni-field"><label>Notes <span style="text-transform:none;font-weight:400;color:var(--muted)">optional</span></label><textarea id="ni-v-notes" rows="2" placeholder="Anything the seller should know…"></textarea></div>
+      <div class="ni-actions">
+        <button class="ni-cancel" type="button" id="ni-v-cancel">Cancel</button>
+        <button class="ni-submit" type="button" id="ni-v-submit">Request viewing</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sync modal -->
+  <div id="ni-sync-overlay" class="ni-overlay">
+    <div class="ni-modal" role="dialog" aria-modal="true" aria-labelledby="ni-sync-title">
+      <h3 id="ni-sync-title">Continue on another device</h3>
+      <p class="ni-sub">This link opens all of your Nyumba254 conversations on any phone or computer — nothing is lost, nothing is shared publicly.</p>
+      <div class="ni-link-row">
+        <input type="text" id="ni-sync-link" readonly placeholder="Send a message first to get your link"/>
+        <button class="ni-copy-btn" id="ni-sync-copy" type="button">Copy</button>
+      </div>
+      <div class="ni-actions"><button class="ni-cancel" id="ni-sync-close" type="button">Done</button></div>
+    </div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function () {
+  const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
+  const EDGE_URL = `${SUPABASE_URL}/functions/v1`;
+  const gdb = window.db || supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  window.db = window.db || gdb;
+
+  let conversations = [], activeListingId = null, activeBuyerToken = null, activeMessages = [];
+  let channels = {}, loadPromise = null, lastKnownBooked = false, searchTerm = '';
+
+  const $ = (id) => document.getElementById(id);
+  function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function escAttr(s){ return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+  /* ── Quick replies ── */
+  const QUICK_REPLIES_GENERAL = ['Is this still available?','Can you share more photos?','Is the price negotiable?',"What's included in the rent?",'Is a deposit required?','How far is it from town?'];
+  function renderQuickReplies() {
+    const box = $('ni-quick-replies');
+    if (!box || !activeListingId) { if (box) box.innerHTML = ''; return; }
+    const bookingChip = lastKnownBooked ? 'Can we reschedule the viewing?' : "I'd like to book a viewing";
+    const chips = [...QUICK_REPLIES_GENERAL, bookingChip];
+    box.innerHTML = chips.map(c => `<button type="button" class="ni-chip" data-txt="${escAttr(c)}">${escHtml(c)}</button>`).join('');
+    box.querySelectorAll('.ni-chip').forEach(btn => btn.addEventListener('click', () => onQuickReplyClick(btn.dataset.txt)));
+  }
+  function onQuickReplyClick(text) {
+    if (/book a viewing/i.test(text) && !/reschedule/i.test(text) && activeListingId) { openBookViewing(activeListingId, activeBuyerToken); return; }
+    sendMessage(text);
+  }
+
+  /* ── Booking modal ── */
+  let viewingContext = { listingId: null, buyerToken: null };
+  let viewingSubmitting = false;
+  function openBookViewing(listingId, buyerToken) {
+    listingId = String(listingId);
+    buyerToken = buyerToken || localStorage.getItem('nk_buyer_' + listingId) || null;
+    viewingContext = { listingId, buyerToken };
+    $('ni-v-date').value = ''; $('ni-v-date').min = new Date().toISOString().split('T')[0];
+    $('ni-v-time').value = '';
+    $('ni-v-name').value = localStorage.getItem('nk_buyer_name_' + listingId) || '';
+    $('ni-v-phone').value = localStorage.getItem('nk_buyer_phone_' + listingId) || '';
+    $('ni-v-notes').value = '';
+    $('ni-viewing-overlay').classList.add('open');
+  }
+  function closeBookViewing() { $('ni-viewing-overlay').classList.remove('open'); }
+
+  async function submitBookViewing() {
+    if (viewingSubmitting) return;
+    const { listingId } = viewingContext;
+    if (!listingId) return;
+    const date = $('ni-v-date').value, time = $('ni-v-time').value;
+    const name = $('ni-v-name').value.trim(), phone = $('ni-v-phone').value.trim(), notes = $('ni-v-notes').value.trim();
+    if (!date || !time || !name || !phone) { alert('Please fill in date, time, name and phone.'); return; }
+
+    viewingSubmitting = true;
+    const submitBtn = $('ni-v-submit');
+    submitBtn.disabled = true; submitBtn.textContent = 'Sending…';
+
+    let buyerToken = viewingContext.buyerToken || localStorage.getItem('nk_buyer_' + listingId);
+    if (!buyerToken) {
+      buyerToken = (crypto.randomUUID ? crypto.randomUUID() : Date.now()+'-'+Math.random().toString(36).slice(2));
+      localStorage.setItem('nk_buyer_' + listingId, buyerToken);
+    }
+    localStorage.setItem('nk_buyer_name_' + listingId, name);
+    localStorage.setItem('nk_buyer_phone_' + listingId, phone);
+
+    const vId = (crypto.randomUUID ? crypto.randomUUID() : Date.now()+'-'+Math.random().toString(36).slice(2));
+    const { error: vErr } = await gdb.from('viewing_requests').insert({
+      id: vId, listing_id: listingId, buyer_token: buyerToken, buyer_name: name, buyer_phone: phone,
+      requested_date: date, requested_time: time, notes: notes || null,
+    });
+    if (vErr) {
+      viewingSubmitting = false;
+      submitBtn.disabled = false; submitBtn.textContent = 'Request viewing';
+      alert('Could not send your viewing request: ' + (vErr.message || 'unknown error') + ' — please try again.');
+      return;
+    }
+    const summary = `📅 Viewing requested\nDate: ${date}\nTime: ${time}${notes ? `\nNotes: ${notes}` : ''}`;
+    await gdb.from('messages').insert({ listing_id: listingId, buyer_token: buyerToken, buyer_name: name, buyer_phone: phone, sender: 'buyer', content: summary });
+    fetch(`${EDGE_URL}/send-notification-email`, { method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`},
+      body: JSON.stringify({ type:'viewing_request', listingId, buyerName:name, buyerPhone:phone, date, time, notes }) }).catch(()=>{});
+
+    viewingSubmitting = false;
+    submitBtn.disabled = false; submitBtn.textContent = 'Request viewing';
+    closeBookViewing();
+    updateBookButtonLabel(listingId, buyerToken);
+    loadConversations().then(() => openConversation(listingId, buyerToken));
+  }
+
+  async function updateBookButtonLabel(listingId, buyerToken) {
+    const btn = $('ni-book-btn');
+    if (!btn) return;
+    buyerToken = buyerToken || localStorage.getItem('nk_buyer_' + listingId);
+    let booked = false;
+    if (buyerToken) {
+      const { count } = await gdb.from('viewing_requests').select('id', { count: 'exact', head: true }).eq('listing_id', listingId).eq('buyer_token', buyerToken);
+      booked = (count || 0) > 0;
+    }
+    lastKnownBooked = booked;
+    renderQuickReplies();
+    btn.innerHTML = booked
+      ? `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Book another viewing`
+      : `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Book a viewing`;
+  }
+
+  /* ── Read receipts ── */
+  function tickSvg(isRead) { return `<svg class="ni-tick${isRead ? ' read' : ''}" viewBox="0 0 16 11" width="15" height="10"><path d="M1 5.5l3 3 5-6"/><path d="M6 5.5l3 3 5-6"/></svg>`; }
+  function messageIsRead(m) { return !!m.read_at; }
+
+  /* ── Sync (resume-link) ── */
+  function scanLocalConversations() {
+    const out = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      const m = key.match(/^nk_buyer_(?!name_|phone_)(.+)$/);
+      if (!m) continue;
+      const token = localStorage.getItem(key);
+      if (token) out.push({ listingId: m[1], buyerToken: token });
+    }
+    return out;
+  }
+  function buildResumeLink() {
+    const pairs = scanLocalConversations();
+    if (!pairs.length) return null;
+    const payload = pairs.map(p => `${p.listingId}:${p.buyerToken}`).join(',');
+    const encoded = encodeURIComponent(btoa(unescape(encodeURIComponent(payload))));
+    const url = new URL(window.location.origin + window.location.pathname);
+    url.searchParams.set('nk_resume', encoded);
+    return url.toString();
+  }
+  function importResumeParam() {
+    const params = new URLSearchParams(window.location.search);
+    const encoded = params.get('nk_resume');
+    if (!encoded) return;
+    try {
+      const payload = decodeURIComponent(escape(atob(decodeURIComponent(encoded))));
+      payload.split(',').forEach(pair => {
+        const idx = pair.indexOf(':');
+        if (idx < 0) return;
+        const lid = pair.slice(0, idx), token = pair.slice(idx + 1);
+        if (lid && token) localStorage.setItem('nk_buyer_' + lid, token);
+      });
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete('nk_resume');
+      window.history.replaceState({}, '', cleanUrl.toString());
+    } catch (e) { console.error('Failed to import resume link:', e); }
+  }
+  function openSyncModal() { $('ni-sync-link').value = buildResumeLink() || ''; $('ni-sync-overlay').classList.add('open'); }
+  function closeSyncModal() { $('ni-sync-overlay').classList.remove('open'); }
+
+  function shareActiveListingWithFriend() {
+    if (!activeListingId) return;
+    const convo = conversations.find(c => c.listingId === activeListingId);
+    const title = convo?.title || 'this property';
+    const href = $('ni-thread-link')?.getAttribute('href');
+    const listingUrl = href && href !== '#' ? `${location.origin}/${href}` : location.href;
+    const text = `Check out "${title}" on Nyumba254: ${listingUrl}`;
+    if (navigator.share) navigator.share({ title, text, url: listingUrl }).catch(() => {});
+    else window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+  }
+
+  /* ── Conversation list & thread ── */
+  function loadConversations() {
+    if (loadPromise) return loadPromise;
+    loadPromise = (async () => {
+      const pairs = scanLocalConversations();
+      if (!pairs.length) { conversations = []; renderList(); return; }
+      const { data, error } = await gdb.rpc('get_buyer_conversations', { p_pairs: pairs.map(p => ({ listing_id: p.listingId, buyer_token: p.buyerToken })) });
+      if (error) { console.error('get_buyer_conversations error:', error); return; }
+      conversations = (data || []).map(row => ({
+        listingId: String(row.listing_id), buyerToken: row.buyer_token,
+        title: row.listing_title || 'Listing', coverUrl: row.cover_url || '',
+        sellerName: row.seller_name || 'Seller', sellerVerified: row.seller_verified === true,
+        lastMessage: row.last_message || '', lastAt: row.last_message_at, unread: row.unread_count || 0,
+      })).sort((a,b) => new Date(b.lastAt||0) - new Date(a.lastAt||0));
+      renderList();
+      updateTabTitle();
+      subscribeAll();
+    })();
+    loadPromise.finally(() => { loadPromise = null; });
+    return loadPromise;
+  }
+
+  function updateTabTitle() {
+    const n = conversations.reduce((s,c) => s + c.unread, 0);
+    document.title = n > 0 ? `(${n > 9 ? '9+' : n}) My Chats — Nyumba254` : 'My Chats — Nyumba254';
+  }
+
+  function renderList() {
+    const list = $('ni-list');
+    const term = searchTerm.trim().toLowerCase();
+    const visible = term ? conversations.filter(c => c.title.toLowerCase().includes(term) || c.sellerName.toLowerCase().includes(term)) : conversations;
+    if (!conversations.length) { list.innerHTML = '<div id="ni-empty">No conversations yet — messages you send to sellers will show up here.</div>'; return; }
+    if (!visible.length) { list.innerHTML = '<div id="ni-empty">No conversations match your search.</div>'; return; }
+    list.innerHTML = visible.map(c => `
+      <div class="ni-convo${c.listingId===activeListingId?' active':''}" data-listing="${c.listingId}">
+        ${c.coverUrl ? `<img class="ni-convo-img" src="${c.coverUrl}"/>` : `<div class="ni-convo-img"></div>`}
+        <div class="ni-convo-body">
+          <div class="ni-convo-title">${escHtml(c.title)}${c.sellerVerified ? ' <svg style="display:inline;vertical-align:-2px;color:var(--green)" viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 2l2.4 2.4 3.3-.5.5 3.3L21 9.5 18.4 12 21 14.5l-2.8 2.3-.5 3.3-3.3-.5L12 22l-2.4-2.4-3.3.5-.5-3.3L3 14.5 5.6 12 3 9.5l2.8-2.3.5-3.3 3.3.5z"/></svg>' : ''}</div>
+          <div class="ni-convo-last">${escHtml(c.lastMessage || 'No messages yet')}</div>
+        </div>
+        ${c.unread ? `<div class="ni-convo-badge">${c.unread>9?'9+':c.unread}</div>` : ''}
+      </div>`).join('');
+    list.querySelectorAll('.ni-convo').forEach(el => el.addEventListener('click', () => openConversation(el.dataset.listing)));
+  }
+
+  async function openConversation(listingId, knownBuyerToken) {
+    listingId = String(listingId);
+    let convo = conversations.find(c => c.listingId === listingId);
+    const buyerToken = convo?.buyerToken || knownBuyerToken || localStorage.getItem('nk_buyer_' + listingId);
+    if (!buyerToken) return;
+
+    if (!convo) {
+      convo = { listingId, buyerToken, title: 'Listing', sellerName: 'Seller', lastMessage: '', lastAt: null, unread: 0, coverUrl: '' };
+      conversations.unshift(convo);
+    }
+
+    activeListingId = listingId; activeBuyerToken = buyerToken; activeMessages = [];
+    document.body.classList.add('ni-thread-open');
+    $('ni-thread').classList.add('open');
+    $('ni-thread-empty').style.display = 'none';
+    updateBookButtonLabel(listingId, buyerToken);
+    renderList();
+
+    const verifiedBadge = convo.sellerVerified
+      ? `<svg class="ni-verified" viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 2l2.4 2.4 3.3-.5.5 3.3L21 9.5 18.4 12 21 14.5l-2.8 2.3-.5 3.3-3.3-.5L12 22l-2.4-2.4-3.3.5-.5-3.3L3 14.5 5.6 12 3 9.5l2.8-2.3.5-3.3 3.3.5z"/><path d="M9 12l2 2 4-4" stroke="var(--green)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>` : '';
+    $('ni-thread-name').innerHTML = `<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(convo.sellerName)}</span>${verifiedBadge}`;
+    $('ni-thread-link').href = '#';
+    $('ni-messages').innerHTML = '<div style="text-align:center;font-size:12px;color:var(--muted);padding:16px">Loading messages…</div>';
+
+    const [{ data, error }, { data: listingRow }] = await Promise.all([
+      gdb.from('messages').select('*').eq('listing_id', listingId).eq('buyer_token', buyerToken).order('created_at', { ascending: true }),
+      gdb.from('listings').select('listing_number').eq('id', listingId).single()
+    ]);
+    if (activeListingId !== listingId) return;
+    if (listingRow?.listing_number != null) $('ni-thread-link').href = `listing?id=${String(listingRow.listing_number).padStart(6, '0')}`;
+
+    if (!error) {
+      activeMessages = data || [];
+      renderThread();
+      await gdb.rpc('mark_thread_read', { p_listing_id: listingId, p_buyer_token: buyerToken });
+      convo.unread = 0;
+      renderList();
+      updateTabTitle();
+      subscribeAll();
+    }
+    loadConversations();
+  }
+
+  function closeThread() {
+    document.body.classList.remove('ni-thread-open');
+    activeListingId = null; activeBuyerToken = null; activeMessages = [];
+    $('ni-thread').classList.remove('open');
+    $('ni-thread-empty').style.display = 'flex';
+    renderList();
+  }
+
+  function renderThread() {
+    const box = $('ni-messages');
+    if (!activeMessages.length) { box.innerHTML = '<div style="text-align:center;font-size:12px;color:var(--muted);padding:16px">No messages yet</div>'; renderQuickReplies(); return; }
+    let lastDate = '';
+    box.innerHTML = activeMessages.map(m => {
+      const mine = m.sender === 'buyer';
+      const d = new Date(m.created_at);
+      const dateStr = d.toLocaleDateString('en-KE',{weekday:'short',day:'numeric',month:'short'});
+      const time = d.toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'});
+      const sep = dateStr !== lastDate ? `<div class="ni-date-sep">${dateStr}</div>` : ''; lastDate = dateStr;
+      const bodyText = (m.content || m.message || '').replace(/^🤖\s*\[Automated reply\]\s*/, '');
+      const ticks = mine ? tickSvg(messageIsRead(m)) : '';
+      return `${sep}<div class="ni-row ${mine?'mine':''}">
+        <div class="ni-av">${mine?'You':'S'}</div>
+        <div><div class="ni-bubble">${escHtml(bodyText)}</div><div class="ni-time">${time}${ticks}</div></div>
+      </div>`;
+    }).join('');
+    box.scrollTop = box.scrollHeight;
+    renderQuickReplies();
+  }
+
+  async function triggerAiConcierge(listingId, buyerToken, message) {
+    try {
+      const buyerName = localStorage.getItem('nk_buyer_name_' + listingId) || '';
+      await fetch(`${EDGE_URL}/ai-concierge-reply`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+        body: JSON.stringify({ listingId, buyerToken, buyerName, buyerMessage: message }) });
+    } catch (e) { console.error('AI concierge trigger failed (non-fatal):', e); }
+  }
+
+  async function sendMessage(overrideText) {
+    const input = $('ni-input');
+    const fromChip = typeof overrideText === 'string';
+    const text = (fromChip ? overrideText : input.value).trim();
+    if (!text || !activeListingId || !activeBuyerToken) return;
+    const sendBtn = $('ni-send');
+    sendBtn.disabled = true;
+    if (!fromChip) { input.value = ''; input.style.height = 'auto'; }
+
+    const { data, error } = await gdb.from('messages').insert({
+      listing_id: activeListingId, buyer_token: activeBuyerToken,
+      buyer_name: localStorage.getItem('nk_buyer_name_' + activeListingId) || '',
+      buyer_phone: localStorage.getItem('nk_buyer_phone_' + activeListingId) || null,
+      sender: 'buyer', content: text
+    }).select().single();
+
+    sendBtn.disabled = false;
+    if (error) { alert('Could not send message, please try again.'); return; }
+
+    activeMessages.push(data);
+    renderThread();
+    const convo = conversations.find(c => c.listingId === activeListingId);
+    if (convo) { convo.lastMessage = text; convo.lastAt = data.created_at; renderList(); }
+    triggerAiConcierge(activeListingId, activeBuyerToken, text);
+  }
+
+  function subscribeAll() {
+    conversations.forEach(c => {
+      if (channels[c.listingId]) return;
+      channels[c.listingId] = gdb.channel(`ni-messages-${c.listingId}`)
+        .on('postgres_changes', { event:'INSERT', schema:'public', table:'messages', filter:`listing_id=eq.${c.listingId}` }, (payload) => {
+          const row = payload.new;
+          if (row.buyer_token !== c.buyerToken) return;
+          if (row.sender !== 'seller') return;
+          c.lastMessage = row.content || row.message || '';
+          c.lastAt = row.created_at;
+          if (activeListingId === c.listingId) {
+            if (!activeMessages.some(m => m.id === row.id)) { activeMessages.push(row); renderThread(); }
+            gdb.rpc('mark_thread_read', { p_listing_id: c.listingId, p_buyer_token: c.buyerToken });
+          } else { c.unread += 1; }
+          renderList();
+          updateTabTitle();
+        }).subscribe();
+    });
+  }
+
+  /* ── Wiring ── */
+  $('ni-send').addEventListener('click', () => sendMessage());
+  $('ni-input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+  $('ni-input').addEventListener('input', function(){ this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,120)+'px'; });
+  $('ni-search').addEventListener('input', function(){ searchTerm = this.value; renderList(); });
+  $('ni-thread-back').addEventListener('click', closeThread);
+
+  $('ni-book-btn').addEventListener('click', () => { if (activeListingId) openBookViewing(activeListingId, activeBuyerToken); });
+  $('ni-v-cancel').addEventListener('click', closeBookViewing);
+  $('ni-v-submit').addEventListener('click', submitBookViewing);
+  $('ni-viewing-overlay').addEventListener('click', (e) => { if (e.target.id === 'ni-viewing-overlay') closeBookViewing(); });
+
+  $('ni-invite-btn').addEventListener('click', shareActiveListingWithFriend);
+  $('ni-sync-btn').addEventListener('click', openSyncModal);
+  $('ni-sync-close').addEventListener('click', closeSyncModal);
+  $('ni-sync-overlay').addEventListener('click', (e) => { if (e.target.id === 'ni-sync-overlay') closeSyncModal(); });
+  $('ni-sync-copy').addEventListener('click', () => {
+    const input = $('ni-sync-link');
+    if (!input.value) return;
+    navigator.clipboard.writeText(input.value).then(() => {
+      const btn = $('ni-sync-copy'); const orig = btn.textContent;
+      btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = orig; }, 1800);
+    });
+  });
+
+  // Public API, kept for parity with the floating widget in case this page
+  // is ever deep-linked to a specific conversation (e.g. inbox.html?open=123).
+  window.NKInbox = { refresh: loadConversations, open: openConversation, getResumeLink: buildResumeLink };
+
+  importResumeParam();
+  const params = new URLSearchParams(window.location.search);
+  const openParam = params.get('open');
+  loadConversations().then(() => { if (openParam) openConversation(openParam); });
+  setInterval(loadConversations, 20000);
+})();
+</script>
+</body>
+</html>

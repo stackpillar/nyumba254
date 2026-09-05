@@ -100,7 +100,10 @@
     #gcw-resume-btn{background:rgba(255,255,255,.16);border:none;color:#fff;cursor:pointer;padding:6px 10px;border-radius:20px;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;font-family:inherit;margin-right:2px}
     #gcw-resume-btn:hover{background:rgba(255,255,255,.28)}
     #gcw-resume-label{white-space:nowrap}
-    @media(max-width:380px){#gcw-resume-label{display:none}#gcw-resume-btn{padding:6px;border-radius:50%}}
+    #gcw-fullpage-btn{background:rgba(255,255,255,.16);border:none;color:#fff;cursor:pointer;padding:6px 10px;border-radius:20px;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;font-family:inherit;margin-right:2px}
+    #gcw-fullpage-btn:hover{background:rgba(255,255,255,.28)}
+    #gcw-fullpage-label{white-space:nowrap}
+    @media(max-width:380px){#gcw-resume-label,#gcw-fullpage-label{display:none}#gcw-resume-btn,#gcw-fullpage-btn{padding:6px;border-radius:50%}}
     /* ── First-time hint bubble pointing at the sync button ── */
     #gcw-resume-hint{display:none;position:absolute;top:calc(100% + 6px);right:12px;background:#1a1a18;color:#fff;font-size:11.5px;line-height:1.4;padding:9px 11px;border-radius:9px;max-width:190px;box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:1600}
     #gcw-resume-hint.show{display:block}
@@ -130,6 +133,7 @@
           <div id="gcw-title">🔔 Doorbell</div>
           <div id="gcw-subtitle">Your conversations with sellers</div>
         </div>
+        <button id="gcw-fullpage-btn" aria-label="Open full chat in a new tab" title="Open full chat in a new tab"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg><span id="gcw-fullpage-label">Full chat</span></button>
         <button id="gcw-resume-btn" aria-label="Continue on another device" title="Continue on another device"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg><span id="gcw-resume-label">Sync</span></button>
         <button id="gcw-close" aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         <div id="gcw-resume-hint">Tap "Sync" to open these chats on another phone or computer</div>
@@ -704,6 +708,10 @@
   document.getElementById('gcw-book-viewing-btn').addEventListener('click', () => { if (activeListingId) openBookViewing(activeListingId, activeBuyerToken); });
 
   document.getElementById('gcw-invite-btn').addEventListener('click', shareActiveListingWithFriend);
+  document.getElementById('gcw-fullpage-btn').addEventListener('click', () => {
+    const url = activeListingId ? `/inbox?open=${encodeURIComponent(activeListingId)}` : '/inbox';
+    window.open(url, '_blank', 'noopener');
+  });
   document.getElementById('gcw-browse-btn').addEventListener('click', browseMoreListings);
   document.getElementById('gcw-resume-btn').addEventListener('click', () => {
     document.getElementById('gcw-resume-hint').classList.remove('show');
