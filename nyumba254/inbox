@@ -179,8 +179,20 @@
             <button class="ni-back-btn" id="ni-thread-back" aria-label="Back to list"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
             <div id="ni-thread-info">
               <div id="ni-thread-name">Seller</div>
+              <div id="ni-thread-presence" style="font-size:11px;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:5px;margin-top:1px">
+                <span id="ni-presence-dot" style="width:6px;height:6px;border-radius:50%;background:#9a9a94;flex-shrink:0"></span>
+                <span id="ni-presence-text">Offline</span>
+              </div>
               <a id="ni-thread-link" href="#">View listing →</a>
             </div>
+            <button id="ni-thread-search-btn" type="button" aria-label="Search in conversation" style="background:none;border:none;color:#fff;cursor:pointer;padding:4px;opacity:.85;flex-shrink:0">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button>
+          </div>
+          <div id="ni-thread-searchbar" style="display:none;padding:8px 18px;background:var(--tint);border-bottom:1px solid var(--border);gap:8px;align-items:center">
+            <input id="ni-thread-search-input" placeholder="Search this conversation…" style="flex:1;padding:7px 11px;border:1.5px solid var(--tint-border);border-radius:8px;font-size:12.5px;outline:none"/>
+            <span id="ni-thread-search-count" style="font-size:11.5px;color:var(--green-dark);white-space:nowrap"></span>
+            <button id="ni-thread-search-close" type="button" style="background:none;border:none;color:var(--green-dark);cursor:pointer;font-size:16px">✕</button>
           </div>
           <div class="ni-thread-subbar">
             <button id="ni-book-btn" class="ni-subbar-btn" type="button">
@@ -275,6 +287,7 @@
 
   let conversations = [], activeListingId = null, activeBuyerToken = null, activeMessages = [];
   let channels = {}, loadPromise = null, lastKnownBooked = false, searchTerm = '';
+  let presenceChannel = null, typingTimeout = null, lastTypingSentAt = 0, threadSearchTerm = '';
 
   const $ = (id) => document.getElementById(id);
   function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -373,6 +386,66 @@
   /* ── Read receipts ── */
   function tickSvg(isRead) { return `<svg class="ni-tick${isRead ? ' read' : ''}" viewBox="0 0 16 11" width="15" height="10"><path d="M1 5.5l3 3 5-6"/><path d="M6 5.5l3 3 5-6"/></svg>`; }
   function messageIsRead(m) { return !!m.read_at; }
+
+  /* ── Presence: seller online / typing status ── */
+  function setPresenceUI(state) {
+    const dot = $('ni-presence-dot'), txt = $('ni-presence-text');
+    if (!dot || !txt) return;
+    if (state === 'online') { dot.style.background = '#2ecc71'; txt.textContent = 'Online now'; }
+    else { dot.style.background = '#9a9a94'; txt.textContent = 'Offline'; }
+  }
+  function sellerCurrentlyOnline() {
+    if (!presenceChannel) return false;
+    return Object.keys(presenceChannel.presenceState()).some(k => k.startsWith('seller-'));
+  }
+  function showTypingIndicator() {
+    const txt = $('ni-presence-text'), dot = $('ni-presence-dot');
+    if (!txt) return;
+    txt.textContent = 'Typing…'; dot.style.background = '#F0B429';
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => setPresenceUI(sellerCurrentlyOnline() ? 'online' : 'offline'), 2500);
+  }
+  function broadcastTyping() {
+    if (!presenceChannel || !activeListingId) return;
+    const now = Date.now();
+    if (now - lastTypingSentAt < 2000) return;
+    lastTypingSentAt = now;
+    presenceChannel.send({ type: 'broadcast', event: 'typing', payload: { from: 'buyer' } });
+  }
+  function joinPresence(listingId, buyerToken) {
+    leavePresence();
+    presenceChannel = gdb.channel(`presence-${listingId}`, { config: { presence: { key: 'buyer-' + buyerToken } } });
+    presenceChannel
+      .on('presence', { event: 'sync' }, () => setPresenceUI(sellerCurrentlyOnline() ? 'online' : 'offline'))
+      .on('broadcast', { event: 'typing' }, ({ payload }) => { if (payload?.from === 'seller') showTypingIndicator(); })
+      .subscribe(async (status) => { if (status === 'SUBSCRIBED') await presenceChannel.track({ online: true, at: Date.now() }); });
+  }
+  function leavePresence() {
+    if (presenceChannel) { gdb.removeChannel(presenceChannel); presenceChannel = null; }
+    clearTimeout(typingTimeout);
+  }
+
+  /* ── In-thread search ── */
+  function escRegex(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  function highlightText(text, term) {
+    const esc = escHtml(text);
+    if (!term) return esc;
+    const re = new RegExp('(' + escRegex(escHtml(term)) + ')', 'ig');
+    return esc.replace(re, '<mark style="background:#FFE58A;color:inherit;border-radius:2px;padding:0 1px">$1</mark>');
+  }
+  function toggleThreadSearch(show) {
+    $('ni-thread-searchbar').style.display = show ? 'flex' : 'none';
+    if (!show) { threadSearchTerm = ''; $('ni-thread-search-input').value = ''; $('ni-thread-search-count').textContent = ''; renderThread(); }
+    else $('ni-thread-search-input').focus();
+  }
+  function runThreadSearch(term) {
+    threadSearchTerm = term.trim();
+    renderThread();
+    const count = threadSearchTerm ? $('ni-messages').querySelectorAll('mark').length : 0;
+    $('ni-thread-search-count').textContent = threadSearchTerm ? (count ? `${count} match${count > 1 ? 'es' : ''}` : 'No matches') : '';
+    const firstMark = $('ni-messages').querySelector('mark');
+    if (firstMark) firstMark.scrollIntoView({ block: 'center' });
+  }
 
   /* ── Sync (resume-link) ── */
   function scanLocalConversations() {
@@ -487,6 +560,7 @@
     $('ni-thread').classList.add('open');
     $('ni-thread-empty').style.display = 'none';
     updateBookButtonLabel(listingId, buyerToken);
+    joinPresence(listingId, buyerToken);
     renderList();
 
     const verifiedBadge = convo.sellerVerified
@@ -519,6 +593,8 @@
     activeListingId = null; activeBuyerToken = null; activeMessages = [];
     $('ni-thread').classList.remove('open');
     $('ni-thread-empty').style.display = 'flex';
+    toggleThreadSearch(false);
+    leavePresence();
     renderList();
   }
 
@@ -536,7 +612,7 @@
       const ticks = mine ? tickSvg(messageIsRead(m)) : '';
       return `${sep}<div class="ni-row ${mine?'mine':''}">
         <div class="ni-av">${mine?'You':'S'}</div>
-        <div><div class="ni-bubble">${escHtml(bodyText)}</div><div class="ni-time">${time}${ticks}</div></div>
+        <div><div class="ni-bubble">${highlightText(bodyText, threadSearchTerm)}</div><div class="ni-time">${time}${ticks}</div></div>
       </div>`;
     }).join('');
     box.scrollTop = box.scrollHeight;
@@ -600,9 +676,12 @@
   /* ── Wiring ── */
   $('ni-send').addEventListener('click', () => sendMessage());
   $('ni-input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
-  $('ni-input').addEventListener('input', function(){ this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,120)+'px'; });
+  $('ni-input').addEventListener('input', function(){ this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,120)+'px'; broadcastTyping(); });
   $('ni-search').addEventListener('input', function(){ searchTerm = this.value; renderList(); });
   $('ni-thread-back').addEventListener('click', closeThread);
+  $('ni-thread-search-btn').addEventListener('click', () => toggleThreadSearch($('ni-thread-searchbar').style.display !== 'flex'));
+  $('ni-thread-search-close').addEventListener('click', () => toggleThreadSearch(false));
+  $('ni-thread-search-input').addEventListener('input', function(){ runThreadSearch(this.value); });
 
   $('ni-book-btn').addEventListener('click', () => { if (activeListingId) openBookViewing(activeListingId, activeBuyerToken); });
   $('ni-v-cancel').addEventListener('click', closeBookViewing);
