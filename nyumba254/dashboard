@@ -6584,9 +6584,10 @@ async function sendChatReply(){
     autoResizeTextarea(input);
     return;
   }
-  allMessages.push(data||{...nm,id:Date.now(),created_at:new Date().toISOString()});
+  allMessages.push(data);
   buildThreads();activeThread=threads.find(t=>t.key===activeThread.key)||activeThread;
   input.value='';input.style.height='auto';renderChatMessages(activeThread);renderThreadList();
+  notifyBuyerIfOffline(activeThread.buyer_token, activeThread.listing_title, text);
   setTimeout(()=>{const mc=document.getElementById('chat-messages');mc.scrollTop=mc.scrollHeight;},30);
 }
 
@@ -7035,6 +7036,20 @@ function escAttr(s){if(!s)return'';return String(s).replace(/"/g,'&quot;').repla
    (those actions happen there, not in this file) — see the
    note further down for the exact snippet to add there.
 ══════════════════════════════════════ */
+async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText) {
+  if (!buyerToken) return;
+  try {
+    const { data: contact } = await db.from('buyer_contacts').select('email,full_name,notify_email').eq('buyer_token', buyerToken).maybeSingle();
+    if (!contact?.email || contact.notify_email === false) return;
+    const listingIdRow = allListings.find(l => l.title === listingTitle);
+    const encoded = encodeURIComponent(btoa(unescape(encodeURIComponent(`${listingIdRow?.id||''}:${buyerToken}`))));
+    const accessLink = `${location.origin}/inbox.html?nk_resume=${encoded}`;
+    await fetch(`${EDGE_URL}/send-notification-email`, {
+      method: 'POST', headers: { 'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}` },
+      body: JSON.stringify({ type:'buyer_new_message_alert', buyerEmail: contact.email, buyerName: contact.full_name, sellerName: currentProfile?.full_name, listingTitle, messagePreview: messageText.slice(0,150), accessLink }),
+    });
+  } catch (e) { console.error('notifyBuyerIfOffline failed:', e); }
+}
 async function notifyByEmail(type,payload){
   try{
     const res=await fetch(`${EDGE_URL}/send-notification-email`,{

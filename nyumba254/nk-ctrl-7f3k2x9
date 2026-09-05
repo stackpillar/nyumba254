@@ -1857,6 +1857,20 @@ function notifySms(type, payload) {
     body: JSON.stringify({ type, ...payload }),
   }).catch(e => console.error('notifySms failed:', e));
 }
+async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listingId) {
+  if (!buyerToken) return;
+  try {
+    const { data: contact } = await db.from('buyer_contacts').select('email,full_name,notify_email').eq('buyer_token', buyerToken).maybeSingle();
+    if (!contact?.email || contact.notify_email === false) return;
+    const encoded = encodeURIComponent(btoa(unescape(encodeURIComponent(`${listingId||''}:${buyerToken}`))));
+    const accessLink = `${location.origin}/inbox.html?nk_resume=${encoded}`;
+    await fetch(`${EDGE_URL}/send-notification-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+      body: JSON.stringify({ type: 'buyer_new_message_alert', buyerEmail: contact.email, buyerName: contact.full_name, sellerName: 'the seller', listingTitle, messagePreview: (messageText||'').slice(0,150), accessLink }),
+    });
+  } catch (e) { console.error('notifyBuyerIfOffline failed:', e); }
+}
   async function notifyInApp(sellerId, type, title, body, link) {
     if (!sellerId) return;
     try { await db.from('notifications').insert({ seller_id: sellerId, type, title, body, link }); }
@@ -5421,6 +5435,7 @@ async function messageSellerInChat(sellerId) {
     ccRenderThreadList();
     if (_ccActiveKey === t.key) ccRenderThread(t);
     logAction('concierge_reply','listing',t.listingId,`Replied to ${t.buyerName}`);
+    notifyBuyerIfOffline(t.buyerToken, t.listing?.title, body, t.listingId);
   }
   async function ccSendComposer() {
     const t = _ccThreads.find(x=>x.key===_ccActiveKey); if (!t) return;
