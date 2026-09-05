@@ -6505,43 +6505,65 @@ function renderThreadList(){
   el.innerHTML=filtered.map(t=>{const lm=t.messages[t.messages.length-1];const prev=lm?(lm.sender==='seller'?'You: ':'')+(lm.content||lm.message||''):'';const ini=t.buyer_name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()||'?';const isA=activeThread&&activeThread.key===t.key;const isU=(t.unread_count||0)>0;return `<div class="thread-item${isA?' active':''}${isU?' unread':''}" onclick="openThread('${t.key}')" role="button" tabindex="0" aria-label="Conversation with ${escAttr(t.buyer_name)}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><div class="thread-avatar">${ini}</div><div class="thread-meta"><div class="thread-name">${escHtml(t.buyer_name)}</div><div class="thread-listing-ref">${escHtml(t.listing_title)}${t.listing_area?' · '+t.listing_area:''}</div><div class="thread-preview">${escHtml(prev)}</div></div><div class="thread-time">${timeAgo(t.last_at)}</div></div>`;}).join('');
 }
 
-/* ── Presence: buyer online / typing status, mirrors inbox.html's version ── */
-let dashPresenceChannel=null, dashTypingTimeout=null, dashLastTypingSentAt=0;
+/* ── Presence: seller online across the WHOLE dashboard, not just an open
+   thread — a seller browsing Overview/Listings/etc should still show
+   buyers as "Online now". We join a presence channel for every listing
+   the seller owns as soon as the dashboard loads, and keep all of them
+   joined for the session. Typing indicators still only matter for
+   whichever thread is actually open in Messages, so those stay
+   thread-scoped. Mirrors the "seller-<id>" key inbox.html/global-chat-
+   widget.js already listen for on presence-<listingId>. ── */
+let dashPresenceChannels={}; // listingId -> channel
+let dashBuyerOnlineByListing={}; // listingId -> bool, updated on every presence sync
+let dashTypingTimeout=null, dashLastTypingSentAt=0;
+
 function dashSetPresenceUI(state){
   const dot=document.getElementById('chat-presence-dot'), txt=document.getElementById('chat-presence-text');
   if(!dot||!txt)return;
   if(state==='online'){dot.style.background='#2ecc71';txt.textContent='Buyer online now';}
   else{dot.style.background='#9a9a94';txt.textContent='Buyer offline';}
 }
-function dashBuyerCurrentlyOnline(){
-  if(!dashPresenceChannel)return false;
-  return Object.keys(dashPresenceChannel.presenceState()).some(k=>k.startsWith('buyer-'));
-}
 function dashShowTypingIndicator(){
   const txt=document.getElementById('chat-presence-text'), dot=document.getElementById('chat-presence-dot');
   if(!txt)return;
   txt.textContent='Buyer is typing…';dot.style.background='#F0B429';
   clearTimeout(dashTypingTimeout);
-  dashTypingTimeout=setTimeout(()=>dashSetPresenceUI(dashBuyerCurrentlyOnline()?'online':'offline'),2500);
+  dashTypingTimeout=setTimeout(()=>{
+    const online=activeThread&&dashBuyerOnlineByListing[activeThread.listing_id];
+    dashSetPresenceUI(online?'online':'offline');
+  },2500);
 }
 function dashBroadcastTyping(){
-  if(!dashPresenceChannel||!activeThread)return;
+  if(!activeThread)return;
+  const ch=dashPresenceChannels[activeThread.listing_id];
+  if(!ch)return;
   const now=Date.now();
   if(now-dashLastTypingSentAt<2000)return;
   dashLastTypingSentAt=now;
-  dashPresenceChannel.send({type:'broadcast',event:'typing',payload:{from:'seller'}});
+  ch.send({type:'broadcast',event:'typing',payload:{from:'seller'}});
 }
-function dashJoinPresence(listingId){
-  dashLeavePresence();
-  dashSetPresenceUI('offline');
-  dashPresenceChannel=db.channel(`presence-${listingId}`,{config:{presence:{key:'seller-'+(effectiveSellerId||currentUser.id)}}});
-  dashPresenceChannel
-    .on('presence',{event:'sync'},()=>dashSetPresenceUI(dashBuyerCurrentlyOnline()?'online':'offline'))
-    .on('broadcast',{event:'typing'},({payload})=>{if(payload?.from==='buyer')dashShowTypingIndicator();})
-    .subscribe(async(status)=>{if(status==='SUBSCRIBED')await dashPresenceChannel.track({online:true,at:Date.now()});});
+function dashJoinPresenceForListing(listingId){
+  if(dashPresenceChannels[listingId])return; // already joined this session
+  const ch=db.channel(`presence-${listingId}`,{config:{presence:{key:'seller-'+(effectiveSellerId||currentUser.id)}}});
+  ch.on('presence',{event:'sync'},()=>{
+    const online=Object.keys(ch.presenceState()).some(k=>k.startsWith('buyer-'));
+    dashBuyerOnlineByListing[listingId]=online;
+    if(activeThread&&String(activeThread.listing_id)===String(listingId)){
+      dashSetPresenceUI(online?'online':'offline');
+    }
+  }).on('broadcast',{event:'typing'},({payload})=>{
+    if(payload?.from==='buyer'&&activeThread&&String(activeThread.listing_id)===String(listingId))dashShowTypingIndicator();
+  }).subscribe(async(status)=>{if(status==='SUBSCRIBED')await ch.track({online:true,at:Date.now()});});
+  dashPresenceChannels[listingId]=ch;
 }
-function dashLeavePresence(){
-  if(dashPresenceChannel){db.removeChannel(dashPresenceChannel);dashPresenceChannel=null;}
+// Called once per session (after listings load) and again any time a new
+// listing shows up, so a freshly posted listing gets presence coverage too.
+function dashJoinAllPresence(){
+  (allListings||[]).forEach(l=>dashJoinPresenceForListing(l.id));
+}
+function dashLeaveAllPresence(){
+  Object.values(dashPresenceChannels).forEach(ch=>db.removeChannel(ch));
+  dashPresenceChannels={};dashBuyerOnlineByListing={};
   clearTimeout(dashTypingTimeout);
 }
 
@@ -6554,7 +6576,8 @@ async function openThread(key){
   renderChatPane(activeThread);
   markThreadRead(activeThread).then(()=>renderThreadList());
   showChatMobile();
-  dashJoinPresence(activeThread.listing_id);
+  dashJoinPresenceForListing(activeThread.listing_id); // no-ops if already joined
+  dashSetPresenceUI(dashBuyerOnlineByListing[activeThread.listing_id]?'online':'offline');
 }
 
 // The bulk preload only covers the last MSG_HISTORY_DAYS days for speed.
@@ -6586,7 +6609,7 @@ function renderChatPane(t){
   document.getElementById('chat-wa-hint').innerHTML=t.buyer_phone?'Replies also sent via WhatsApp if number is available.':'Buyer will see your reply when they revisit the listing.';
   renderChatMessages(t);
   setTimeout(()=>{const mc=document.getElementById('chat-messages');mc.scrollTop=mc.scrollHeight;},50);
-  dashSetPresenceUI(dashBuyerCurrentlyOnline()?'online':'offline');
+  dashSetPresenceUI(dashBuyerOnlineByListing[t.listing_id]?'online':'offline');
 }
 
 function renderChatMessages(t){
@@ -7058,7 +7081,7 @@ function closeModal(id){document.getElementById(id).classList.remove('open');doc
 })();
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal-overlay.open').forEach(m=>{m.classList.remove('open');document.body.style.overflow='';});scwSyncOverlayVisibility();}});
 document.querySelectorAll('.modal-overlay').forEach(ov=>ov.addEventListener('click',e=>{if(e.target===ov)closeModal(ov.id);}));
-async function doSignOut(){clearInterval(msgPollTimer);clearInterval(listingStatusPollTimer);clearInterval(notifPollTimer);document.removeEventListener('visibilitychange',handleVisibilityChange);if(messagesChannel){messagesChannel.unsubscribe();messagesChannel=null;}if(notifBellChannel){notifBellChannel.unsubscribe();notifBellChannel=null;}scwCleanup();await db.auth.signOut();window.location.href='/login';}
+async function doSignOut(){clearInterval(msgPollTimer);clearInterval(listingStatusPollTimer);clearInterval(notifPollTimer);document.removeEventListener('visibilitychange',handleVisibilityChange);if(messagesChannel){messagesChannel.unsubscribe();messagesChannel=null;}if(notifBellChannel){notifBellChannel.unsubscribe();notifBellChannel=null;}dashLeaveAllPresence();scwCleanup();await db.auth.signOut();window.location.href='/login';}
 let toastTimer;
 function showToast(msg,type='success'){const t=document.getElementById('toast'),m=document.getElementById('toast-msg');clearTimeout(toastTimer);t.className='toast '+type;m.textContent=msg;t.classList.add('show');toastTimer=setTimeout(()=>t.classList.remove('show'),3500);}
 function timeAgo(iso){if(!iso)return'';const d=(Date.now()-new Date(iso))/1000;if(d<60)return'just now';if(d<3600)return`${Math.floor(d/60)}m ago`;if(d<86400)return`${Math.floor(d/3600)}h ago`;if(d<604800)return`${Math.floor(d/86400)}d ago`;return new Date(iso).toLocaleDateString('en-KE',{day:'numeric',month:'short'});}
