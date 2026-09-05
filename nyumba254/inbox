@@ -839,6 +839,11 @@
     // to this tab never shows up until a full page refresh.
     if (tab === 'saved') loadSavedListings();
   }
+  // The "Saved" / "Chats" tab buttons call this via an inline onclick="" in
+  // the HTML, which only resolves against the GLOBAL scope — but everything
+  // in this file lives inside this IIFE, so without this line the button
+  // silently threw "switchSidebarTab is not defined" and did nothing.
+  window.switchSidebarTab = switchSidebarTab;
 })();
 </script>
 </body>
