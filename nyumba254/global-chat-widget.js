@@ -41,7 +41,8 @@
     #gcw-thread-head{background:#0F6E56;color:#fff;padding:12px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0}
     #gcw-thread-head button.back{background:none;border:none;color:#fff;cursor:pointer;padding:2px;flex-shrink:0}
     #gcw-thread-info{flex:1;min-width:0}
-    #gcw-thread-name{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #gcw-thread-name{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px}
+    .gcw-verified-badge{display:inline-flex;flex-shrink:0;color:#7CE0C0}
     #gcw-thread-link{font-size:11px;color:rgba(255,255,255,.85);text-decoration:underline}
     #gcw-messages{flex:1;min-height:0;overflow-y:auto;padding:14px;background:#f7f6f2;display:flex;flex-direction:column;gap:8px}
     .gcw-row{display:flex;gap:6px;align-items:flex-end;width:100%}
@@ -285,6 +286,7 @@
     viewingSubmitting = false;
     submitBtn.disabled = false; submitBtn.textContent = 'Request viewing';
     closeBookViewing();
+    updateBookButtonLabel(listingId, buyerToken);
     loadConversations().then(() => openConversation(listingId, buyerToken));
   }
 
@@ -309,11 +311,11 @@
     'Is a deposit required?',
     'How far is it from town?'
   ];
+  let lastKnownBooked = false;
   function renderQuickReplies() {
     const box = document.getElementById('gcw-quick-replies');
     if (!box || !activeListingId) { if (box) box.innerHTML = ''; return; }
-    const booked = !!localStorage.getItem('nk_viewing_booked_' + activeListingId);
-    const bookingChip = booked ? 'Can we reschedule the viewing?' : "I'd like to book a viewing";
+    const bookingChip = lastKnownBooked ? 'Can we reschedule the viewing?' : "I'd like to book a viewing";
     const chips = [...QUICK_REPLIES_GENERAL, bookingChip];
     box.innerHTML = chips.map(c => `<button type="button" class="gcw-chip" data-txt="${escAttrGCW(c)}">${escHtml(c)}</button>`).join('');
     box.querySelectorAll('.gcw-chip').forEach(btn => btn.addEventListener('click', () => onQuickReplyClick(btn.dataset.txt)));
@@ -327,11 +329,21 @@
     input.focus();
   }
 
-  /* ── Booking button label (switches to "Book another viewing" once booked) ── */
-  function updateBookButtonLabel(listingId) {
+  /* ── Booking button label (switches to "Book another viewing" once a
+     viewing request already exists for this listing+buyer, per the
+     database — not a fragile localStorage guess). ── */
+  async function updateBookButtonLabel(listingId, buyerToken) {
     const btn = document.getElementById('gcw-book-viewing-btn');
     if (!btn) return;
-    const booked = !!localStorage.getItem('nk_viewing_booked_' + listingId);
+    buyerToken = buyerToken || localStorage.getItem('nk_buyer_' + listingId);
+    let booked = false;
+    if (buyerToken) {
+      const { count } = await gdb.from('viewing_requests').select('id', { count: 'exact', head: true })
+        .eq('listing_id', listingId).eq('buyer_token', buyerToken);
+      booked = (count || 0) > 0;
+    }
+    lastKnownBooked = booked;
+    renderQuickReplies();
     btn.innerHTML = booked
       ? `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Book another viewing`
       : `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Book a viewing`;
@@ -345,9 +357,8 @@
   function tickSvg(isRead) {
     return `<svg class="gcw-tick${isRead ? ' read' : ''}" viewBox="0 0 16 11" width="15" height="10"><path d="M1 5.5l3 3 5-6"/><path d="M6 5.5l3 3 5-6"/></svg>`;
   }
-  function messageIsRead(m, convo) {
-    if (!convo || !convo.sellerLastReadAt) return false;
-    return new Date(m.created_at) <= new Date(convo.sellerLastReadAt);
+  function messageIsRead(m) {
+    return !!m.read_at;
   }
 
   /* ── Continue on another device (resume link) ── */
@@ -429,6 +440,7 @@
         title: row.listing_title || 'Listing',
         coverUrl: row.cover_url || '',
         sellerName: row.seller_name || 'Seller',
+        sellerVerified: row.seller_verified === true,
         lastMessage: row.last_message || '',
         lastAt: row.last_message_at,
         unread: row.unread_count || 0,
@@ -459,7 +471,7 @@
       <div class="gcw-convo" data-listing="${c.listingId}">
         ${c.coverUrl ? `<img class="gcw-convo-img" src="${c.coverUrl}"/>` : `<div class="gcw-convo-img"></div>`}
         <div class="gcw-convo-body">
-          <div class="gcw-convo-title">${escHtml(c.title)}</div>
+          <div class="gcw-convo-title">${escHtml(c.title)}${c.sellerVerified ? ' <svg style="display:inline;vertical-align:-2px;color:#0F6E56" viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 2l2.4 2.4 3.3-.5.5 3.3L21 9.5 18.4 12 21 14.5l-2.8 2.3-.5 3.3-3.3-.5L12 22l-2.4-2.4-3.3.5-.5-3.3L3 14.5 5.6 12 3 9.5l2.8-2.3.5-3.3 3.3.5z"/></svg>' : ''}</div>
           <div class="gcw-convo-last">${escHtml(c.lastMessage || 'No messages yet')}</div>
         </div>
         ${c.unread ? `<div class="gcw-convo-badge">${c.unread>9?'9+':c.unread}</div>` : ''}
@@ -499,11 +511,15 @@
     threadOpen = true;
     if (!panelOpen) togglePanel();
     document.getElementById('gcw-thread').classList.add('open');
+    updateBookButtonLabel(listingId, buyerToken);
     // The list is a normal (always-rendered) flex child of #gcw-panel — if
     // it isn't hidden here, it keeps sharing flex space with the thread,
     // which is what was squeezing the input bar off-screen as messages grew.
     document.getElementById('gcw-list').style.display = 'none';
-    document.getElementById('gcw-thread-name').textContent = convo.sellerName;
+    const verifiedBadge = convo.sellerVerified
+      ? `<svg class="gcw-verified-badge" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 2l2.4 2.4 3.3-.5.5 3.3L21 9.5 18.4 12 21 14.5l-2.8 2.3-.5 3.3-3.3-.5L12 22l-2.4-2.4-3.3.5-.5-3.3L3 14.5 5.6 12 3 9.5l2.8-2.3.5-3.3 3.3.5z"/><path d="M9 12l2 2 4-4" stroke="#0F6E56" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+      : '';
+    document.getElementById('gcw-thread-name').innerHTML = `<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(convo.sellerName)}</span>${verifiedBadge}`;
     // href is set below once we know the listing's public-facing number —
     // linking with the raw UUID here is what caused "listing not found".
     document.getElementById('gcw-thread-link').href = '#';
@@ -553,20 +569,26 @@
 
   function renderThread() {
     const box = document.getElementById('gcw-messages');
-    if (!activeMessages.length) { box.innerHTML = '<div style="text-align:center;font-size:12px;color:#888780;padding:16px">No messages yet</div>'; return; }
+    if (!activeMessages.length) { box.innerHTML = '<div style="text-align:center;font-size:12px;color:#888780;padding:16px">No messages yet</div>'; renderQuickReplies(); return; }
+    let lastDate = '';
     box.innerHTML = activeMessages.map(m => {
       const mine = m.sender === 'buyer';
-      const time = new Date(m.created_at).toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'});
+      const d = new Date(m.created_at);
+      const dateStr = d.toLocaleDateString('en-KE',{weekday:'short',day:'numeric',month:'short'});
+      const time = d.toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'});
+      const sep = dateStr !== lastDate ? `<div class="gcw-date-sep">${dateStr}</div>` : ''; lastDate = dateStr;
       // Strip the internal "🤖 [Automated reply]" marker the edge function
       // stores for the seller's own dashboard — buyers only ever see plain
       // seller-labeled text here, indistinguishable from a human reply.
       const bodyText = (m.content || m.message || '').replace(/^🤖\s*\[Automated reply\]\s*/, '');
-      return `<div class="gcw-row ${mine?'mine':''}">
+      const ticks = mine ? tickSvg(messageIsRead(m)) : '';
+      return `${sep}<div class="gcw-row ${mine?'mine':''}">
         <div class="gcw-av">${mine?'You':'S'}</div>
-        <div><div class="gcw-bubble">${escHtml(bodyText)}</div><div class="gcw-time">${time}</div></div>
+        <div><div class="gcw-bubble">${escHtml(bodyText)}</div><div class="gcw-time">${time}${ticks}</div></div>
       </div>`;
     }).join('');
     box.scrollTop = box.scrollHeight;
+    renderQuickReplies();
   }
 
   // Fire-and-forget: asks ai-concierge-reply for an instant answer grounded
