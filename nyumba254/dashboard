@@ -5541,7 +5541,7 @@ function handleIncomingMessage(msg){
 
 function buildThreads(){
   const map=new Map();
-  allEnquiries.forEach(e=>{const key=`${e.listing_id}__${e.buyer_phone||e.buyer_token||e.id}`;if(!map.has(key)){map.set(key,{key,listing_id:e.listing_id,buyer_token:e.buyer_token||null,buyer_name:e.buyer_name||'Unknown buyer',buyer_phone:e.buyer_phone||'',listing_title:e.listings?.title||'Listing',listing_area:e.listings?.area||'',messages:[{id:'enq-'+e.id,sender:'buyer',message:e.message||'',created_at:e.created_at,read_at:e.read_at}],last_at:e.created_at,unread_count:e.read_at?0:1});}});
+  allEnquiries.forEach(e=>{const key=`${e.listing_id}__${e.buyer_phone||e.buyer_token||e.id}`;if(!map.has(key)){map.set(key,{key,listing_id:e.listing_id,buyer_token:e.buyer_token||null,buyer_name:e.buyer_name||'Unknown buyer',buyer_phone:e.buyer_phone||'',listing_title:e.listings?.title||'Listing',listing_area:e.listings?.area||'',messages:[{id:'enq-'+e.id,enquiry_id:e.id,sender:'buyer',message:e.message||'',created_at:e.created_at,read_at:e.read_at}],last_at:e.created_at,unread_count:e.read_at?0:1});}});
   allMessages.forEach(m=>{const key=`${m.listing_id}__${m.buyer_phone||m.buyer_token||''}`;if(map.has(key)){const t=map.get(key);const isDupe=t.messages.some(x=>x.id==='enq-'+m.id||((x.content||x.message)===(m.content||m.message)&&Math.abs(new Date(x.created_at)-new Date(m.created_at))<2000));if(!isDupe)t.messages.push(m);if(new Date(m.created_at)>new Date(t.last_at))t.last_at=m.created_at;if(m.sender==='buyer'&&!m.read_at)t.unread_count=(t.unread_count||0)+1;}else{const listing=allListings.find(l=>l.id===m.listing_id);map.set(key,{key,listing_id:m.listing_id,buyer_token:m.buyer_token||null,buyer_name:m.buyer_name||'Buyer',buyer_phone:m.buyer_phone||'',listing_title:listing?.title||'Listing',listing_area:listing?.area||'',messages:[m],last_at:m.created_at,unread_count:(m.sender==='buyer'&&!m.read_at)?1:0});}});
   threads=Array.from(map.values()).map(t=>{t.messages.sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));return t;}).sort((a,b)=>new Date(b.last_at)-new Date(a.last_at));
 }
@@ -6604,8 +6604,8 @@ async function markThreadRead(t){
   // list that produced the unread count — instead of re-filtering allEnquiries
   // by buyer_phone/buyer_token, which silently misses rows whenever a phone
   // number is formatted differently anywhere (spaces, +254 vs 0, etc).
-  const eIds=t.messages.filter(m=>m.sender==='buyer'&&!m.read_at&&String(m.id).startsWith('enq-')).map(m=>Number(String(m.id).slice(4))).filter(n=>!isNaN(n));
-  const uIds=t.messages.filter(m=>m.sender==='buyer'&&!m.read_at&&!String(m.id).startsWith('enq-')).map(m=>m.id);
+  const eIds=t.messages.filter(m=>m.sender==='buyer'&&!m.read_at&&m.enquiry_id!=null).map(m=>m.enquiry_id);
+  const uIds=t.messages.filter(m=>m.sender==='buyer'&&!m.read_at&&m.enquiry_id==null).map(m=>m.id);
 
   let markReadFailed=false;
   if(eIds.length){const{error:eErr}=await db.from('enquiries').update({read_at:new Date().toISOString()}).in('id',eIds);if(eErr){console.error('markThreadRead enquiries update failed:',eErr);markReadFailed=true;}else{eIds.forEach(id=>{const e=allEnquiries.find(e=>e.id===id);if(e)e.read_at=new Date().toISOString();});}}
@@ -6628,17 +6628,18 @@ async function markAllThreadsRead(){
 
   const eIds=[],mIds=[];
   unreadThreads.forEach(t=>{
-    t.messages.filter(m=>m.sender==='buyer'&&!m.read_at&&String(m.id).startsWith('enq-')).forEach(m=>{const n=Number(String(m.id).slice(4));if(!isNaN(n))eIds.push(n);});
-    t.messages.filter(m=>m.sender==='buyer'&&!m.read_at&&!String(m.id).startsWith('enq-')).forEach(m=>mIds.push(m.id));
+    t.messages.filter(m=>m.sender==='buyer'&&!m.read_at&&m.enquiry_id!=null).forEach(m=>eIds.push(m.enquiry_id));
+    t.messages.filter(m=>m.sender==='buyer'&&!m.read_at&&m.enquiry_id==null).forEach(m=>mIds.push(m.id));
   });
 
-  if(eIds.length){const{error}=await db.from('enquiries').update({read_at:new Date().toISOString()}).in('id',eIds);if(!error)eIds.forEach(id=>{const e=allEnquiries.find(e=>e.id===id);if(e)e.read_at=new Date().toISOString();});}
-  if(mIds.length){const{error}=await db.from('messages').update({read_at:new Date().toISOString()}).in('id',mIds);if(!error)mIds.forEach(id=>{const m=allMessages.find(m=>m.id===id);if(m)m.read_at=new Date().toISOString();});}
+  let markAllFailed=false;
+  if(eIds.length){const{error}=await db.from('enquiries').update({read_at:new Date().toISOString()}).in('id',eIds);if(error){console.error('markAllThreadsRead enquiries update failed:',error);markAllFailed=true;}else{eIds.forEach(id=>{const e=allEnquiries.find(e=>e.id===id);if(e)e.read_at=new Date().toISOString();});}}
+  if(mIds.length){const{error}=await db.from('messages').update({read_at:new Date().toISOString()}).in('id',mIds);if(error){console.error('markAllThreadsRead messages update failed:',error);markAllFailed=true;}else{mIds.forEach(id=>{const m=allMessages.find(m=>m.id===id);if(m)m.read_at=new Date().toISOString();});}}
 
   buildThreads();
   if(activeThread){activeThread=threads.find(x=>x.key===activeThread.key)||activeThread;}
   updateNavBadges();renderThreadList();
-  showToast('All conversations marked as read ✓','success');
+  if(markAllFailed){showToast('Some messages could not be marked read — check database permissions','error');}else{showToast('All conversations marked as read ✓','success');}
 }
 
 async function markAllThreadsUnread(){
