@@ -21,7 +21,7 @@
     @keyframes gcw-pop{from{transform:scale(0)}to{transform:scale(1)}}
     #gcw-panel{position:fixed;bottom:96px;right:24px;z-index:1500;width:360px;max-width:calc(100vw - 32px);height:540px;max-height:calc(100vh - 110px);background:#fff;border:1px solid #e0ded8;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.22);display:none;flex-direction:column;overflow:hidden;font-family:'Inter',sans-serif}
     #gcw-panel.open{display:flex}
-    #gcw-head{background:#0F6E56;color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+    #gcw-head{background:#0F6E56;color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;position:relative}
     #gcw-head button{background:none;border:none;color:#fff;cursor:pointer;padding:4px;opacity:.85}
     #gcw-head button:hover{opacity:1}
     #gcw-title-wrap{flex:1;min-width:0}
@@ -97,8 +97,14 @@
     .gcw-subbar-btn:hover{background:#E1F5EE}
     .gcw-subbar-btn.ghost{color:#4a4a46;border-color:#e0ded8}
     .gcw-subbar-btn.ghost:hover{background:#f7f6f2}
-    #gcw-resume-btn{background:none;border:none;color:#fff;cursor:pointer;padding:4px;opacity:.85;margin-right:2px}
-    #gcw-resume-btn:hover{opacity:1}
+    #gcw-resume-btn{background:rgba(255,255,255,.16);border:none;color:#fff;cursor:pointer;padding:6px 10px;border-radius:20px;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;font-family:inherit;margin-right:2px}
+    #gcw-resume-btn:hover{background:rgba(255,255,255,.28)}
+    #gcw-resume-label{white-space:nowrap}
+    @media(max-width:380px){#gcw-resume-label{display:none}#gcw-resume-btn{padding:6px;border-radius:50%}}
+    /* ── First-time hint bubble pointing at the sync button ── */
+    #gcw-resume-hint{display:none;position:absolute;top:calc(100% + 6px);right:12px;background:#1a1a18;color:#fff;font-size:11.5px;line-height:1.4;padding:9px 11px;border-radius:9px;max-width:190px;box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:1600}
+    #gcw-resume-hint.show{display:block}
+    #gcw-resume-hint::after{content:'';position:absolute;bottom:100%;right:16px;border:5px solid transparent;border-bottom-color:#1a1a18}
     /* ── Resume-on-another-device modal ── */
     .gcw-resume-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2300;align-items:center;justify-content:center;padding:20px;font-family:'Inter',sans-serif}
     .gcw-resume-overlay.open{display:flex}
@@ -124,8 +130,9 @@
           <div id="gcw-title">🔔 Doorbell</div>
           <div id="gcw-subtitle">Your conversations with sellers</div>
         </div>
-        <button id="gcw-resume-btn" aria-label="Continue on another device" title="Continue on another device"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></button>
+        <button id="gcw-resume-btn" aria-label="Continue on another device" title="Continue on another device"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg><span id="gcw-resume-label">Sync</span></button>
         <button id="gcw-close" aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <div id="gcw-resume-hint">Tap "Sync" to open these chats on another phone or computer</div>
       </div>
       <div id="gcw-list"><div id="gcw-empty">No conversations yet</div></div>
       <div id="gcw-thread">
@@ -672,6 +679,13 @@
     panelOpen = !panelOpen;
     document.getElementById('gcw-panel').classList.toggle('open', panelOpen);
     updateGlobalVisibility();
+    const hint = document.getElementById('gcw-resume-hint');
+    if (panelOpen && conversations.length && !localStorage.getItem('nk_resume_hint_seen')) {
+      hint.classList.add('show');
+    } else if (!panelOpen && hint.classList.contains('show')) {
+      hint.classList.remove('show');
+      localStorage.setItem('nk_resume_hint_seen', '1');
+    }
   }
 
   document.getElementById('gcw-btn').addEventListener('click', togglePanel);
@@ -691,7 +705,11 @@
 
   document.getElementById('gcw-invite-btn').addEventListener('click', shareActiveListingWithFriend);
   document.getElementById('gcw-browse-btn').addEventListener('click', browseMoreListings);
-  document.getElementById('gcw-resume-btn').addEventListener('click', openResumeModal);
+  document.getElementById('gcw-resume-btn').addEventListener('click', () => {
+    document.getElementById('gcw-resume-hint').classList.remove('show');
+    localStorage.setItem('nk_resume_hint_seen', '1');
+    openResumeModal();
+  });
   document.getElementById('gcw-resume-close-btn').addEventListener('click', closeResumeModal);
   document.getElementById('gcw-resume-copy-btn').addEventListener('click', () => {
     const input = document.getElementById('gcw-resume-link-input');
