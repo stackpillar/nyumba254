@@ -144,6 +144,10 @@
           <button class="back" id="gcw-back" aria-label="Back"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
           <div id="gcw-thread-info">
             <div id="gcw-thread-name">Seller</div>
+            <div id="gcw-presence" style="font-size:10.5px;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:5px;margin-top:1px">
+              <span id="gcw-presence-dot" style="width:6px;height:6px;border-radius:50%;background:#9a9a94;flex-shrink:0"></span>
+              <span id="gcw-presence-text">Offline</span>
+            </div>
             <a id="gcw-thread-link" href="#">View listing →</a>
           </div>
         </div>
@@ -310,6 +314,45 @@
   let panelOpen = false;
   let threadOpen = false;
   let loadPromise = null;
+  let gcwPresenceChannel = null, gcwTypingTimeout = null, gcwLastTypingSentAt = 0;
+  let gcwLastAiTriggerAt = {}; // per "listingId:buyerToken" — rate-limits the AI concierge trigger
+
+  function gcwSetPresenceUI(state) {
+    const dot = document.getElementById('gcw-presence-dot'), txt = document.getElementById('gcw-presence-text');
+    if (!dot || !txt) return;
+    if (state === 'online') { dot.style.background = '#2ecc71'; txt.textContent = 'Online now'; }
+    else { dot.style.background = '#9a9a94'; txt.textContent = 'Offline'; }
+  }
+  function gcwSellerCurrentlyOnline() {
+    if (!gcwPresenceChannel) return false;
+    return Object.keys(gcwPresenceChannel.presenceState()).some(k => k.startsWith('seller-'));
+  }
+  function gcwShowTypingIndicator() {
+    const txt = document.getElementById('gcw-presence-text'), dot = document.getElementById('gcw-presence-dot');
+    if (!txt) return;
+    txt.textContent = 'Typing…'; dot.style.background = '#F0B429';
+    clearTimeout(gcwTypingTimeout);
+    gcwTypingTimeout = setTimeout(() => gcwSetPresenceUI(gcwSellerCurrentlyOnline() ? 'online' : 'offline'), 2500);
+  }
+  function gcwBroadcastTyping() {
+    if (!gcwPresenceChannel || !activeListingId) return;
+    const now = Date.now();
+    if (now - gcwLastTypingSentAt < 2000) return;
+    gcwLastTypingSentAt = now;
+    gcwPresenceChannel.send({ type: 'broadcast', event: 'typing', payload: { from: 'buyer' } });
+  }
+  function gcwJoinPresence(listingId, buyerToken) {
+    gcwLeavePresence();
+    gcwPresenceChannel = gdb.channel(`presence-${listingId}`, { config: { presence: { key: 'buyer-' + buyerToken } } });
+    gcwPresenceChannel
+      .on('presence', { event: 'sync' }, () => gcwSetPresenceUI(gcwSellerCurrentlyOnline() ? 'online' : 'offline'))
+      .on('broadcast', { event: 'typing' }, ({ payload }) => { if (payload?.from === 'seller') gcwShowTypingIndicator(); })
+      .subscribe(async (status) => { if (status === 'SUBSCRIBED') await gcwPresenceChannel.track({ online: true, at: Date.now() }); });
+  }
+  function gcwLeavePresence() {
+    if (gcwPresenceChannel) { gdb.removeChannel(gcwPresenceChannel); gcwPresenceChannel = null; }
+    clearTimeout(gcwTypingTimeout);
+  }
 
   function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function escAttrGCW(s) { return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
@@ -520,6 +563,7 @@
     if (!panelOpen) togglePanel();
     document.getElementById('gcw-thread').classList.add('open');
     updateBookButtonLabel(listingId, buyerToken);
+    gcwJoinPresence(listingId, buyerToken);
     // The list is a normal (always-rendered) flex child of #gcw-panel — if
     // it isn't hidden here, it keeps sharing flex space with the thread,
     // which is what was squeezing the input bar off-screen as messages grew.
@@ -573,6 +617,7 @@
     activeMessages = [];
     document.getElementById('gcw-thread').classList.remove('open');
     document.getElementById('gcw-list').style.display = 'block';
+    gcwLeavePresence();
   }
 
   function renderThread() {
@@ -608,6 +653,13 @@
   // already listens for and renders automatically — no extra wiring needed
   // beyond calling this.
   async function triggerAiConcierge(listingId, buyerToken, message) {
+    // Rate limit: a buyer sending several messages in quick succession should
+    // not spawn one AI reply per message — wait at least 4s between calls
+    // for the same conversation.
+    const rlKey = listingId + ':' + buyerToken;
+    const now = Date.now();
+    if (gcwLastAiTriggerAt[rlKey] && now - gcwLastAiTriggerAt[rlKey] < 4000) return;
+    gcwLastAiTriggerAt[rlKey] = now;
     try {
       const buyerName = localStorage.getItem('nk_buyer_name_' + listingId) || '';
       await fetch(`${EDGE_URL}/ai-concierge-reply`, {
@@ -701,6 +753,7 @@
   });
   document.getElementById('gcw-input').addEventListener('input', function(){
     this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,100)+'px';
+    gcwBroadcastTyping();
   });
   document.getElementById('gcw-v-cancel').addEventListener('click', closeBookViewing);
   document.getElementById('gcw-v-submit').addEventListener('click', submitBookViewing);
@@ -713,6 +766,10 @@
     window.open(url, '_blank', 'noopener');
   });
   document.getElementById('gcw-browse-btn').addEventListener('click', browseMoreListings);
+  // Saved listings live in inbox.html's dedicated Saved tab — the floating
+  // widget just deep-links there instead of duplicating that whole panel.
+  window.NKGlobalChat = window.NKGlobalChat || {};
+  window.NKGlobalChat.openSaved = function() { window.open('/inbox?tab=saved', '_blank', 'noopener'); };
   document.getElementById('gcw-resume-btn').addEventListener('click', () => {
     document.getElementById('gcw-resume-hint').classList.remove('show');
     localStorage.setItem('nk_resume_hint_seen', '1');

@@ -619,7 +619,12 @@
     renderQuickReplies();
   }
 
+  let lastAiTriggerAt = {};
   async function triggerAiConcierge(listingId, buyerToken, message) {
+    const rlKey = listingId + ':' + buyerToken;
+    const now = Date.now();
+    if (lastAiTriggerAt[rlKey] && now - lastAiTriggerAt[rlKey] < 4000) return;
+    lastAiTriggerAt[rlKey] = now;
     try {
       const buyerName = localStorage.getItem('nk_buyer_name_' + listingId) || '';
       await fetch(`${EDGE_URL}/ai-concierge-reply`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
@@ -709,6 +714,7 @@
   const params = new URLSearchParams(window.location.search);
   const openParam = params.get('open');
   loadConversations().then(() => { if (openParam) openConversation(openParam); });
+  if (params.get('tab') === 'saved') switchSidebarTab('saved');
   setInterval(loadConversations, 20000);
     /* ── Buyer profile (name/email/phone) + offline notifications ── */
   const NI_PROFILE_KEYS = { name:'nk_profile_name', email:'nk_profile_email', phone:'nk_profile_phone', notify:'nk_profile_notify' };

@@ -1226,6 +1226,10 @@
                 <div class="cc-thread-head-info">
                   <div class="cc-thread-head-name" id="cc-thread-buyer">Buyer</div>
                   <div class="cc-thread-head-meta" id="cc-thread-meta"></div>
+                  <div id="cc-presence" style="font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:5px;margin-top:2px">
+                    <span id="cc-presence-dot" style="width:6px;height:6px;border-radius:50%;background:#9a9a94;flex-shrink:0"></span>
+                    <span id="cc-presence-text">Buyer offline</span>
+                  </div>
                 </div>
                 <div style="display:flex;gap:6px" id="cc-thread-actions"></div>
               </div>
@@ -1233,7 +1237,7 @@
               <div class="cc-suggestion" id="cc-suggestion"></div>
               <div class="cc-quickbar" id="cc-quickbar"></div>
               <div class="cc-composer">
-                <textarea id="cc-reply-input" rows="1" placeholder="Type a reply as the seller…" onkeydown="ccComposerKeydown(event)" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,110)+'px'"></textarea>
+                <textarea id="cc-reply-input" rows="1" placeholder="Type a reply as the seller…" onkeydown="ccComposerKeydown(event)" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,110)+'px';ccBroadcastTyping()"></textarea>
                 <button class="cc-send-btn" onclick="ccSendComposer()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
               </div>
             </div>
@@ -5192,6 +5196,46 @@ async function messageSellerInChat(sellerId) {
     return { template: tpl, body: tpl.body(ctx) };
   }
 
+  /* ── Presence: buyer online / typing status (mirrors inbox.html's buyer-side version) ── */
+  let _ccPresenceChannel = null, _ccTypingTimeout = null, _ccLastTypingSentAt = 0;
+  function ccSetPresenceUI(state) {
+    const dot = document.getElementById('cc-presence-dot'), txt = document.getElementById('cc-presence-text');
+    if (!dot || !txt) return;
+    if (state === 'online') { dot.style.background = '#2ecc71'; txt.textContent = 'Buyer online now'; }
+    else { dot.style.background = '#9a9a94'; txt.textContent = 'Buyer offline'; }
+  }
+  function ccBuyerCurrentlyOnline() {
+    if (!_ccPresenceChannel) return false;
+    return Object.keys(_ccPresenceChannel.presenceState()).some(k => k.startsWith('buyer-'));
+  }
+  function ccShowTypingIndicator() {
+    const txt = document.getElementById('cc-presence-text'), dot = document.getElementById('cc-presence-dot');
+    if (!txt) return;
+    txt.textContent = 'Buyer is typing…'; dot.style.background = '#F0B429';
+    clearTimeout(_ccTypingTimeout);
+    _ccTypingTimeout = setTimeout(() => ccSetPresenceUI(ccBuyerCurrentlyOnline() ? 'online' : 'offline'), 2500);
+  }
+  function ccBroadcastTyping() {
+    if (!_ccPresenceChannel || !_ccActiveKey) return;
+    const now = Date.now();
+    if (now - _ccLastTypingSentAt < 2000) return;
+    _ccLastTypingSentAt = now;
+    _ccPresenceChannel.send({ type: 'broadcast', event: 'typing', payload: { from: 'seller' } });
+  }
+  function ccJoinPresence(listingId) {
+    ccLeavePresence();
+    ccSetPresenceUI('offline');
+    _ccPresenceChannel = db.channel(`presence-${listingId}`, { config: { presence: { key: 'seller-admin-' + (currentUser?.id || 'unknown') } } });
+    _ccPresenceChannel
+      .on('presence', { event: 'sync' }, () => ccSetPresenceUI(ccBuyerCurrentlyOnline() ? 'online' : 'offline'))
+      .on('broadcast', { event: 'typing' }, ({ payload }) => { if (payload?.from === 'buyer') ccShowTypingIndicator(); })
+      .subscribe(async (status) => { if (status === 'SUBSCRIBED') await _ccPresenceChannel.track({ online: true, at: Date.now() }); });
+  }
+  function ccLeavePresence() {
+    if (_ccPresenceChannel) { db.removeChannel(_ccPresenceChannel); _ccPresenceChannel = null; }
+    clearTimeout(_ccTypingTimeout);
+  }
+
   async function loadConciergeSellers() {
     const { data } = await db.from('profiles').select('id,full_name,email,phone,concierge_enabled_at').eq('concierge_enabled', true).order('concierge_enabled_at',{ascending:false});
     _ccSellers = data || [];
@@ -5355,6 +5399,7 @@ async function messageSellerInChat(sellerId) {
     document.getElementById('cc-empty-state').style.display = 'none';
     document.getElementById('cc-thread-pane').style.display = 'flex';
     ccRenderThread(t);
+    ccJoinPresence(t.listingId);
     await ccMarkThreadRead(t);
   }
   function ccRenderThread(t) {
