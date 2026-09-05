@@ -779,19 +779,15 @@
   $('ni-profile-overlay').addEventListener('click', (e) => { if (e.target.id === 'ni-profile-overlay') closeProfileModal(); });
   $('ni-profile-save').addEventListener('click', saveProfileAndNotify);
 
-  /* ── Saved listings tab ── */
-  // ASSUMPTION: your heart-button (NKSaved) stores saved state as
-  // localStorage keys "nk_saved_<listingId>" = "1" (same per-item pattern
-  // your app already uses for nk_buyer_<listingId>). If saved-listings.js
-  // uses a different key, change the regex below to match it.
+  /* ── Saved listings tab ──
+     Matches saved.html exactly: one key, nk_saved_listings, holding a
+     JSON array of listing ids (not per-listing nk_saved_<id> flags). */
+  const SAVED_LISTINGS_KEY = 'nk_saved_listings';
   function scanSavedListingIds() {
-    const ids = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      const m = key && key.match(/^nk_saved_(.+)$/);
-      if (m && localStorage.getItem(key) === '1') ids.push(m[1]);
-    }
-    return ids;
+    try {
+      const raw = localStorage.getItem(SAVED_LISTINGS_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
   }
   let savedListingsLoaded = false;
   async function loadSavedListings() {
@@ -823,7 +819,8 @@
     }));
     panel.querySelectorAll('.ni-saved-remove').forEach(btn => btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      localStorage.removeItem('nk_saved_' + btn.dataset.id);
+      const remaining = scanSavedListingIds().filter(id => id !== btn.dataset.id);
+      localStorage.setItem(SAVED_LISTINGS_KEY, JSON.stringify(remaining));
       loadSavedListings();
     }));
   }
