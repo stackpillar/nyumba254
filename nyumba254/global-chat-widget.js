@@ -78,6 +78,37 @@
     #gcw-viewing-modal .gcw-v-submit{background:#0F6E56;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:inherit}
     #gcw-viewing-modal .gcw-v-submit:hover{background:#085041}
     #gcw-viewing-modal .gcw-v-submit:disabled{opacity:.6;cursor:not-allowed}
+
+    /* ── Quick replies ── */
+    #gcw-quick-replies{display:flex;gap:6px;flex-wrap:wrap;padding:8px 12px;background:#fff;border-top:1px solid #e0ded8}
+    #gcw-quick-replies:empty{display:none;padding:0;border:none}
+    .gcw-chip{background:#E1F5EE;color:#085041;border:1px solid #bfe6d8;border-radius:16px;padding:6px 12px;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;transition:background .15s;font-family:inherit}
+    .gcw-chip:hover{background:#c9ecdd}
+    /* ── Read receipts ── */
+    .gcw-tick{stroke:#9a9a94;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;margin-left:3px;vertical-align:-1px}
+    .gcw-tick.read{stroke:#34B7F1}
+    .gcw-time{display:inline-flex;align-items:center}
+    .gcw-date-sep{text-align:center;font-size:10px;color:#888780;padding:6px 0;font-weight:600}
+    /* ── Thread subbar buttons (booking / invite / browse) ── */
+    .gcw-subbar-row{display:flex;gap:8px}
+    .gcw-subbar-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 6px;background:#fff;color:#085041;border:1.5px solid #0F6E56;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s;white-space:nowrap}
+    .gcw-subbar-btn:hover{background:#E1F5EE}
+    .gcw-subbar-btn.ghost{color:#4a4a46;border-color:#e0ded8}
+    .gcw-subbar-btn.ghost:hover{background:#f7f6f2}
+    #gcw-resume-btn{background:none;border:none;color:#fff;cursor:pointer;padding:4px;opacity:.85;margin-right:2px}
+    #gcw-resume-btn:hover{opacity:1}
+    /* ── Resume-on-another-device modal ── */
+    .gcw-resume-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2300;align-items:center;justify-content:center;padding:20px;font-family:'Inter',sans-serif}
+    .gcw-resume-overlay.open{display:flex}
+    #gcw-resume-modal{background:#fff;border-radius:16px;max-width:420px;width:100%;padding:24px 22px;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+    #gcw-resume-modal h3{font-size:16px;font-weight:700;color:#1a1a18;margin-bottom:4px}
+    .gcw-resume-sub{font-size:12.5px;color:#888780;margin-bottom:16px;line-height:1.5}
+    .gcw-resume-link-row{display:flex;gap:8px;margin-bottom:16px}
+    #gcw-resume-link-input{flex:1;padding:10px 12px;border:1.5px solid #e0ded8;border-radius:8px;font-size:12.5px;color:#4a4a46;background:#f7f6f2}
+    #gcw-resume-copy-btn{background:#0F6E56;color:#fff;border:none;border-radius:8px;padding:0 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+    #gcw-resume-copy-btn:hover{background:#085041}
+    .gcw-resume-actions{display:flex;justify-content:flex-end}
+    #gcw-resume-close-btn{background:#f7f6f2;color:#4a4a46;border:none;padding:9px 18px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit}
   `;
   const styleEl = document.createElement('style');
   styleEl.textContent = STYLE;
@@ -91,6 +122,7 @@
           <div id="gcw-title">🔔 Doorbell</div>
           <div id="gcw-subtitle">Your conversations with sellers</div>
         </div>
+        <button id="gcw-resume-btn" aria-label="Continue on another device" title="Continue on another device"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></button>
         <button id="gcw-close" aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div id="gcw-list"><div id="gcw-empty">No conversations yet</div></div>
@@ -103,12 +135,25 @@
           </div>
         </div>
         <div class="gcw-thread-subbar">
-          <button id="gcw-book-viewing-btn" type="button">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Book a viewing
-          </button>
+          <div class="gcw-subbar-row">
+            <button id="gcw-book-viewing-btn" class="gcw-subbar-btn" type="button">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Book a viewing
+            </button>
+          </div>
+          <div class="gcw-subbar-row" style="margin-top:8px">
+            <button id="gcw-invite-btn" class="gcw-subbar-btn ghost" type="button">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              Invite a friend
+            </button>
+            <button id="gcw-browse-btn" class="gcw-subbar-btn ghost" type="button">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              Browse more
+            </button>
+          </div>
         </div>
         <div id="gcw-messages"></div>
+        <div id="gcw-quick-replies"></div>
         <div id="gcw-input-row">
           <textarea id="gcw-input" placeholder="Type a message…" rows="1"></textarea>
           <button id="gcw-send"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="white" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
@@ -153,6 +198,22 @@
         <div class="gcw-v-actions">
           <button class="gcw-v-cancel" type="button" id="gcw-v-cancel">Cancel</button>
           <button class="gcw-v-submit" type="button" id="gcw-v-submit">Request viewing</button>
+        </div>
+      </div>
+    </div>
+  `);
+
+  document.body.insertAdjacentHTML('beforeend', `
+    <div id="gcw-resume-overlay" class="gcw-resume-overlay">
+      <div id="gcw-resume-modal" role="dialog" aria-modal="true" aria-labelledby="gcw-resume-title">
+        <h3 id="gcw-resume-title">Continue on another device</h3>
+        <p class="gcw-resume-sub">This link opens all of your Nyumba254 conversations on any phone or computer — nothing is lost, nothing is shared publicly.</p>
+        <div class="gcw-resume-link-row">
+          <input type="text" id="gcw-resume-link-input" readonly placeholder="Send a message first to get your link"/>
+          <button id="gcw-resume-copy-btn" type="button">Copy</button>
+        </div>
+        <div class="gcw-resume-actions">
+          <button id="gcw-resume-close-btn" type="button">Done</button>
         </div>
       </div>
     </div>
@@ -237,6 +298,105 @@
   let loadPromise = null;
 
   function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function escAttrGCW(s) { return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+  /* ── Quick replies ── */
+  const QUICK_REPLIES_GENERAL = [
+    'Is this still available?',
+    'Can you share more photos?',
+    'Is the price negotiable?',
+    "What's included in the rent?",
+    'Is a deposit required?',
+    'How far is it from town?'
+  ];
+  function renderQuickReplies() {
+    const box = document.getElementById('gcw-quick-replies');
+    if (!box || !activeListingId) { if (box) box.innerHTML = ''; return; }
+    const booked = !!localStorage.getItem('nk_viewing_booked_' + activeListingId);
+    const bookingChip = booked ? 'Can we reschedule the viewing?' : "I'd like to book a viewing";
+    const chips = [...QUICK_REPLIES_GENERAL, bookingChip];
+    box.innerHTML = chips.map(c => `<button type="button" class="gcw-chip" data-txt="${escAttrGCW(c)}">${escHtml(c)}</button>`).join('');
+    box.querySelectorAll('.gcw-chip').forEach(btn => btn.addEventListener('click', () => onQuickReplyClick(btn.dataset.txt)));
+  }
+  function onQuickReplyClick(text) {
+    if (/book a viewing/i.test(text) && !/reschedule/i.test(text) && activeListingId) { openBookViewing(activeListingId, activeBuyerToken); return; }
+    const input = document.getElementById('gcw-input');
+    if (!input) return;
+    input.value = text;
+    input.dispatchEvent(new Event('input'));
+    input.focus();
+  }
+
+  /* ── Booking button label (switches to "Book another viewing" once booked) ── */
+  function updateBookButtonLabel(listingId) {
+    const btn = document.getElementById('gcw-book-viewing-btn');
+    if (!btn) return;
+    const booked = !!localStorage.getItem('nk_viewing_booked_' + listingId);
+    btn.innerHTML = booked
+      ? `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Book another viewing`
+      : `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Book a viewing`;
+  }
+
+  /* ── Read receipts ──
+     "Read" (blue) requires the seller's last-read timestamp for the thread.
+     If your get_buyer_conversations RPC doesn't yet return
+     seller_last_read_at, ticks simply stay grey (delivered). See note at
+     the bottom of this file for the backend addition. */
+  function tickSvg(isRead) {
+    return `<svg class="gcw-tick${isRead ? ' read' : ''}" viewBox="0 0 16 11" width="15" height="10"><path d="M1 5.5l3 3 5-6"/><path d="M6 5.5l3 3 5-6"/></svg>`;
+  }
+  function messageIsRead(m, convo) {
+    if (!convo || !convo.sellerLastReadAt) return false;
+    return new Date(m.created_at) <= new Date(convo.sellerLastReadAt);
+  }
+
+  /* ── Continue on another device (resume link) ── */
+  function buildResumeLink() {
+    const pairs = scanLocalConversations();
+    if (!pairs.length) return null;
+    const payload = pairs.map(p => `${p.listingId}:${p.buyerToken}`).join(',');
+    const encoded = encodeURIComponent(btoa(unescape(encodeURIComponent(payload))));
+    const url = new URL(window.location.origin + window.location.pathname);
+    url.searchParams.set('nk_resume', encoded);
+    return url.toString();
+  }
+  function importResumeParam() {
+    const params = new URLSearchParams(window.location.search);
+    const encoded = params.get('nk_resume');
+    if (!encoded) return;
+    try {
+      const payload = decodeURIComponent(escape(atob(decodeURIComponent(encoded))));
+      payload.split(',').forEach(pair => {
+        const idx = pair.indexOf(':');
+        if (idx < 0) return;
+        const lid = pair.slice(0, idx), token = pair.slice(idx + 1);
+        if (lid && token) localStorage.setItem('nk_buyer_' + lid, token);
+      });
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete('nk_resume');
+      window.history.replaceState({}, '', cleanUrl.toString());
+    } catch (e) { console.error('Failed to import resume link:', e); }
+  }
+  function openResumeModal() {
+    const link = buildResumeLink();
+    document.getElementById('gcw-resume-link-input').value = link || '';
+    document.getElementById('gcw-resume-overlay').classList.add('open');
+  }
+  function closeResumeModal() { document.getElementById('gcw-resume-overlay').classList.remove('open'); }
+
+  /* ── Invite a friend / Browse more ── */
+  function shareActiveListingWithFriend() {
+    if (!activeListingId) return;
+    const convo = conversations.find(c => c.listingId === activeListingId);
+    const title = convo?.title || 'this property';
+    const linkEl = document.getElementById('gcw-thread-link');
+    const href = linkEl?.getAttribute('href');
+    const listingUrl = href && href !== '#' ? `${location.origin}/${href}` : location.href;
+    const text = `Check out "${title}" on Nyumba254: ${listingUrl}`;
+    if (navigator.share) navigator.share({ title, text, url: listingUrl }).catch(() => {});
+    else window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+  }
+  function browseMoreListings() { window.open('/listings', '_blank', 'noopener'); }
 
   function scanLocalConversations() {
     const out = [];
@@ -509,6 +669,21 @@
   document.getElementById('gcw-viewing-overlay').addEventListener('click', (e) => { if (e.target.id === 'gcw-viewing-overlay') closeBookViewing(); });
   document.getElementById('gcw-book-viewing-btn').addEventListener('click', () => { if (activeListingId) openBookViewing(activeListingId, activeBuyerToken); });
 
+  document.getElementById('gcw-invite-btn').addEventListener('click', shareActiveListingWithFriend);
+  document.getElementById('gcw-browse-btn').addEventListener('click', browseMoreListings);
+  document.getElementById('gcw-resume-btn').addEventListener('click', openResumeModal);
+  document.getElementById('gcw-resume-close-btn').addEventListener('click', closeResumeModal);
+  document.getElementById('gcw-resume-copy-btn').addEventListener('click', () => {
+    const input = document.getElementById('gcw-resume-link-input');
+    if (!input.value) return;
+    navigator.clipboard.writeText(input.value).then(() => {
+      const btn = document.getElementById('gcw-resume-copy-btn');
+      const orig = btn.textContent; btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = orig; }, 1800);
+    });
+  });
+  document.getElementById('gcw-resume-overlay').addEventListener('click', (e) => { if (e.target.id === 'gcw-resume-overlay') closeResumeModal(); });
+
   // Public API — call this from listing.html the instant a buyer sends a
   // new enquiry, so the widget shows it immediately without waiting.
   window.NKGlobalChat = {
@@ -516,7 +691,12 @@
     open: openConversation,
     registerAndOpen: function(listingId, buyerToken) { openConversation(listingId, buyerToken); },
     openBookViewing: openBookViewing,
+    getResumeLink: buildResumeLink,
   };
 
+  // Import a handed-off conversation from another device (via the resume
+  // link) before the first load, then keep ticks fresh while open.
+  importResumeParam();
   loadConversations();
+  setInterval(() => { if (panelOpen) loadConversations(); }, 20000);
 })();
