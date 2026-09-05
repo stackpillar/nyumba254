@@ -1175,7 +1175,7 @@
             <div class="chat-quickreply-bar" id="chat-quickreply-bar" style="display:none"></div>
             <div class="chat-input-bar">
               <div class="chat-quick-btn" id="chat-quickreply-toggle" onclick="toggleQuickReplyBar()" title="Quick replies" role="button" tabindex="0" aria-label="Quick replies"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="13" y2="13"/></svg></div>
-              <textarea id="chat-reply-input" placeholder="Type your reply…" rows="1" onkeydown="handleChatKeydown(event)" oninput="autoResizeTextarea(this)"></textarea>
+              <textarea id="chat-reply-input" placeholder="Type your reply…" rows="1" onkeydown="handleChatKeydown(event)" oninput="autoResizeTextarea(this);dashBroadcastTyping()"></textarea>
               <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatReply()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
             </div>
           </div>
@@ -6505,6 +6505,46 @@ function renderThreadList(){
   el.innerHTML=filtered.map(t=>{const lm=t.messages[t.messages.length-1];const prev=lm?(lm.sender==='seller'?'You: ':'')+(lm.content||lm.message||''):'';const ini=t.buyer_name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()||'?';const isA=activeThread&&activeThread.key===t.key;const isU=(t.unread_count||0)>0;return `<div class="thread-item${isA?' active':''}${isU?' unread':''}" onclick="openThread('${t.key}')" role="button" tabindex="0" aria-label="Conversation with ${escAttr(t.buyer_name)}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><div class="thread-avatar">${ini}</div><div class="thread-meta"><div class="thread-name">${escHtml(t.buyer_name)}</div><div class="thread-listing-ref">${escHtml(t.listing_title)}${t.listing_area?' · '+t.listing_area:''}</div><div class="thread-preview">${escHtml(prev)}</div></div><div class="thread-time">${timeAgo(t.last_at)}</div></div>`;}).join('');
 }
 
+/* ── Presence: buyer online / typing status, mirrors inbox.html's version ── */
+let dashPresenceChannel=null, dashTypingTimeout=null, dashLastTypingSentAt=0;
+function dashSetPresenceUI(state){
+  const dot=document.getElementById('chat-presence-dot'), txt=document.getElementById('chat-presence-text');
+  if(!dot||!txt)return;
+  if(state==='online'){dot.style.background='#2ecc71';txt.textContent='Buyer online now';}
+  else{dot.style.background='#9a9a94';txt.textContent='Buyer offline';}
+}
+function dashBuyerCurrentlyOnline(){
+  if(!dashPresenceChannel)return false;
+  return Object.keys(dashPresenceChannel.presenceState()).some(k=>k.startsWith('buyer-'));
+}
+function dashShowTypingIndicator(){
+  const txt=document.getElementById('chat-presence-text'), dot=document.getElementById('chat-presence-dot');
+  if(!txt)return;
+  txt.textContent='Buyer is typing…';dot.style.background='#F0B429';
+  clearTimeout(dashTypingTimeout);
+  dashTypingTimeout=setTimeout(()=>dashSetPresenceUI(dashBuyerCurrentlyOnline()?'online':'offline'),2500);
+}
+function dashBroadcastTyping(){
+  if(!dashPresenceChannel||!activeThread)return;
+  const now=Date.now();
+  if(now-dashLastTypingSentAt<2000)return;
+  dashLastTypingSentAt=now;
+  dashPresenceChannel.send({type:'broadcast',event:'typing',payload:{from:'seller'}});
+}
+function dashJoinPresence(listingId){
+  dashLeavePresence();
+  dashSetPresenceUI('offline');
+  dashPresenceChannel=db.channel(`presence-${listingId}`,{config:{presence:{key:'seller-'+(effectiveSellerId||currentUser.id)}}});
+  dashPresenceChannel
+    .on('presence',{event:'sync'},()=>dashSetPresenceUI(dashBuyerCurrentlyOnline()?'online':'offline'))
+    .on('broadcast',{event:'typing'},({payload})=>{if(payload?.from==='buyer')dashShowTypingIndicator();})
+    .subscribe(async(status)=>{if(status==='SUBSCRIBED')await dashPresenceChannel.track({online:true,at:Date.now()});});
+}
+function dashLeavePresence(){
+  if(dashPresenceChannel){db.removeChannel(dashPresenceChannel);dashPresenceChannel=null;}
+  clearTimeout(dashTypingTimeout);
+}
+
 async function openThread(key){
   activeThread=threads.find(t=>t.key===key)||null;
   if(!activeThread)return;
@@ -6514,6 +6554,7 @@ async function openThread(key){
   renderChatPane(activeThread);
   markThreadRead(activeThread).then(()=>renderThreadList());
   showChatMobile();
+  dashJoinPresence(activeThread.listing_id);
 }
 
 // The bulk preload only covers the last MSG_HISTORY_DAYS days for speed.
@@ -6541,10 +6582,11 @@ function renderChatPane(t){
   const waLink=t.buyer_phone?`<a href="https://wa.me/${formatWaPhone(t.buyer_phone)}" target="_blank" class="btn btn-sm" style="background:#25D366;color:white;text-decoration:none">WhatsApp</a>`:'';
   const listing=allListings.find(l=>l.id===t.listing_id);
   const liveLink=listing?`<a href="/listing?id=${String(listing.listing_number).padStart(6,'0')}" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none">View listing</a>`:'';
-  document.getElementById('chat-header').innerHTML=`<button class="mobile-back-btn" onclick="showThreadListMobile()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="chat-header-avatar">${ini}</div><div><div class="chat-header-name">${escHtml(t.buyer_name)}</div><div class="chat-header-sub">${t.buyer_phone||'No phone'} · Re: ${escHtml(t.listing_title)}</div></div><div class="chat-header-actions">${waLink}${liveLink}</div>`;
+  document.getElementById('chat-header').innerHTML=`<button class="mobile-back-btn" onclick="showThreadListMobile()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="chat-header-avatar">${ini}</div><div><div class="chat-header-name">${escHtml(t.buyer_name)}</div><div class="chat-header-sub">${t.buyer_phone||'No phone'} · Re: ${escHtml(t.listing_title)}</div><div style="font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:5px;margin-top:2px"><span id="chat-presence-dot" style="width:6px;height:6px;border-radius:50%;background:#9a9a94;flex-shrink:0"></span><span id="chat-presence-text">Buyer offline</span></div></div><div class="chat-header-actions">${waLink}${liveLink}</div>`;
   document.getElementById('chat-wa-hint').innerHTML=t.buyer_phone?'Replies also sent via WhatsApp if number is available.':'Buyer will see your reply when they revisit the listing.';
   renderChatMessages(t);
   setTimeout(()=>{const mc=document.getElementById('chat-messages');mc.scrollTop=mc.scrollHeight;},50);
+  dashSetPresenceUI(dashBuyerCurrentlyOnline()?'online':'offline');
 }
 
 function renderChatMessages(t){

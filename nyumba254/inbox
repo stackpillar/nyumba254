@@ -715,6 +715,7 @@
   const openParam = params.get('open');
   loadConversations().then(() => { if (openParam) openConversation(openParam); });
   if (params.get('tab') === 'saved') switchSidebarTab('saved');
+  else loadSavedListings(); // populates the badge count even if the tab is never opened
   setInterval(loadConversations, 20000);
     /* ── Buyer profile (name/email/phone) + offline notifications ── */
   const NI_PROFILE_KEYS = { name:'nk_profile_name', email:'nk_profile_email', phone:'nk_profile_phone', notify:'nk_profile_notify' };
@@ -795,7 +796,6 @@
       return raw ? JSON.parse(raw) : [];
     } catch (e) { return []; }
   }
-  let savedListingsLoaded = false;
   async function loadSavedListings() {
     const ids = scanSavedListingIds();
     const countBadge = $('ni-saved-count');
@@ -835,7 +835,9 @@
     $('ni-search-row').style.display = tab === 'chats' ? 'block' : 'none';
     $('ni-list').style.display = tab === 'chats' ? 'block' : 'none';
     $('ni-saved-panel').style.display = tab === 'saved' ? 'block' : 'none';
-    if (tab === 'saved' && !savedListingsLoaded) { savedListingsLoaded = true; loadSavedListings(); }
+    // Reload every time — otherwise a listing saved after the first visit
+    // to this tab never shows up until a full page refresh.
+    if (tab === 'saved') loadSavedListings();
   }
 })();
 </script>
