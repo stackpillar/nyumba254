@@ -104,10 +104,14 @@
     #gcw-fullpage-btn:hover{background:rgba(255,255,255,.28)}
     #gcw-fullpage-label{white-space:nowrap}
     @media(max-width:380px){#gcw-resume-label,#gcw-fullpage-label{display:none}#gcw-resume-btn,#gcw-fullpage-btn{padding:6px;border-radius:50%}}
-    /* ── First-time hint bubble pointing at the sync button ── */
-    #gcw-resume-hint{display:none;position:absolute;top:calc(100% + 6px);right:12px;background:#1a1a18;color:#fff;font-size:11.5px;line-height:1.4;padding:9px 11px;border-radius:9px;max-width:190px;box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:1600}
+    /* ── First-time hint bubble pointing at the sync button ──
+       Anchored to a small wrapper around just the Sync button (not the
+       whole #gcw-head, which wraps to 3 lines of title text and pushed
+       this out of place). top:100% here means "right under the button". */
+    #gcw-resume-hint{display:none;position:absolute;top:calc(100% + 8px);right:-40px;background:#1a1a18;color:#fff;font-size:11.5px;line-height:1.4;padding:9px 11px;border-radius:9px;width:180px;box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:1600}
     #gcw-resume-hint.show{display:block}
-    #gcw-resume-hint::after{content:'';position:absolute;bottom:100%;right:16px;border:5px solid transparent;border-bottom-color:#1a1a18}
+    #gcw-resume-hint::after{content:'';position:absolute;bottom:100%;right:44px;border:5px solid transparent;border-bottom-color:#1a1a18}
+    @media(max-width:380px){#gcw-resume-hint{right:-10px;width:160px}#gcw-resume-hint::after{right:14px}}
     /* ── Resume-on-another-device modal ── */
     .gcw-resume-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2300;align-items:center;justify-content:center;padding:20px;font-family:'Inter',sans-serif}
     .gcw-resume-overlay.open{display:flex}
@@ -134,9 +138,11 @@
           <div id="gcw-subtitle">Your conversations with sellers</div>
         </div>
         <button id="gcw-fullpage-btn" aria-label="Open full chat in a new tab" title="Open full chat in a new tab"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg><span id="gcw-fullpage-label">Full chat</span></button>
-        <button id="gcw-resume-btn" aria-label="Continue on another device" title="Continue on another device"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg><span id="gcw-resume-label">Sync</span></button>
+        <div id="gcw-resume-btn-wrap" style="position:relative">
+          <button id="gcw-resume-btn" aria-label="Continue on another device" title="Continue on another device"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg><span id="gcw-resume-label">Sync</span></button>
+          <div id="gcw-resume-hint">Tap "Sync" to open these chats on another phone or computer</div>
+        </div>
         <button id="gcw-close" aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-        <div id="gcw-resume-hint">Tap "Sync" to open these chats on another phone or computer</div>
       </div>
       <div id="gcw-list"><div id="gcw-empty">No conversations yet</div></div>
       <div id="gcw-thread">
