@@ -414,9 +414,27 @@
 
   /* ── Continue on another device (resume link) ── */
   function buildResumeLink() {
-    const pairs = scanLocalConversations();
-    if (!pairs.length) return null;
-    const payload = pairs.map(p => `${p.listingId}:${p.buyerToken}`).join(',');
+    // Same schema as inbox.html's version — a link built here must restore
+    // cleanly there too, and vice versa. Carries per-listing name/phone,
+    // the buyer's global profile (if this device also visited inbox.html
+    // and filled in "My details"), and saved listings.
+    const pairs = scanLocalConversations().map(p => ({
+      listingId: p.listingId,
+      buyerToken: p.buyerToken,
+      name: localStorage.getItem('nk_buyer_name_' + p.listingId) || '',
+      phone: localStorage.getItem('nk_buyer_phone_' + p.listingId) || '',
+    }));
+    const profile = {
+      name: localStorage.getItem('nk_profile_name') || '',
+      email: localStorage.getItem('nk_profile_email') || '',
+      phone: localStorage.getItem('nk_profile_phone') || '',
+      notify: localStorage.getItem('nk_profile_notify') !== '0',
+    };
+    let saved = [];
+    try { saved = JSON.parse(localStorage.getItem('nk_saved_listings') || '[]'); } catch (e) {}
+    const hasProfile = profile.name || profile.email || profile.phone;
+    if (!pairs.length && !saved.length && !hasProfile) return null;
+    const payload = JSON.stringify({ v: 2, c: pairs, p: profile, s: saved });
     const encoded = encodeURIComponent(btoa(unescape(encodeURIComponent(payload))));
     const url = new URL(window.location.origin + window.location.pathname);
     url.searchParams.set('nk_resume', encoded);
@@ -427,13 +445,37 @@
     const encoded = params.get('nk_resume');
     if (!encoded) return;
     try {
-      const payload = decodeURIComponent(escape(atob(decodeURIComponent(encoded))));
-      payload.split(',').forEach(pair => {
-        const idx = pair.indexOf(':');
-        if (idx < 0) return;
-        const lid = pair.slice(0, idx), token = pair.slice(idx + 1);
-        if (lid && token) localStorage.setItem('nk_buyer_' + lid, token);
-      });
+      const raw = decodeURIComponent(escape(atob(decodeURIComponent(encoded))));
+      let data = null;
+      try { data = JSON.parse(raw); } catch (e) { data = null; }
+      if (data && data.v === 2) {
+        (data.c || []).forEach(p => {
+          if (!p.listingId || !p.buyerToken) return;
+          localStorage.setItem('nk_buyer_' + p.listingId, p.buyerToken);
+          if (p.name) localStorage.setItem('nk_buyer_name_' + p.listingId, p.name);
+          if (p.phone) localStorage.setItem('nk_buyer_phone_' + p.listingId, p.phone);
+        });
+        if (data.p) {
+          if (data.p.name) localStorage.setItem('nk_profile_name', data.p.name);
+          if (data.p.email) localStorage.setItem('nk_profile_email', data.p.email);
+          if (data.p.phone) localStorage.setItem('nk_profile_phone', data.p.phone);
+          localStorage.setItem('nk_profile_notify', data.p.notify === false ? '0' : '1');
+        }
+        if (Array.isArray(data.s) && data.s.length) {
+          let existing = [];
+          try { existing = JSON.parse(localStorage.getItem('nk_saved_listings') || '[]'); } catch (e) {}
+          const merged = Array.from(new Set([...existing, ...data.s]));
+          localStorage.setItem('nk_saved_listings', JSON.stringify(merged));
+        }
+      } else {
+        // Legacy links from before this fix.
+        raw.split(',').forEach(pair => {
+          const idx = pair.indexOf(':');
+          if (idx < 0) return;
+          const lid = pair.slice(0, idx), token = pair.slice(idx + 1);
+          if (lid && token) localStorage.setItem('nk_buyer_' + lid, token);
+        });
+      }
       const cleanUrl = new URL(window.location.href);
       cleanUrl.searchParams.delete('nk_resume');
       window.history.replaceState({}, '', cleanUrl.toString());
