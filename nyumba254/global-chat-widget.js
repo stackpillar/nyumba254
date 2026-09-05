@@ -19,7 +19,7 @@
     #gcw-btn-label{color:#fff;font-size:14px;font-weight:600;font-family:'Inter',sans-serif;white-space:nowrap}
     #gcw-badge{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;padding:0 5px;background:#C53030;color:#fff;font-size:11px;font-weight:700;border-radius:20px;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
     @keyframes gcw-pop{from{transform:scale(0)}to{transform:scale(1)}}
-    #gcw-panel{position:fixed;bottom:96px;right:24px;z-index:1500;width:360px;max-width:calc(100vw - 32px);height:480px;max-height:calc(100vh - 140px);background:#fff;border:1px solid #e0ded8;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.22);display:none;flex-direction:column;overflow:hidden;font-family:'Inter',sans-serif}
+    #gcw-panel{position:fixed;bottom:96px;right:24px;z-index:1500;width:360px;max-width:calc(100vw - 32px);height:540px;max-height:calc(100vh - 110px);background:#fff;border:1px solid #e0ded8;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.22);display:none;flex-direction:column;overflow:hidden;font-family:'Inter',sans-serif}
     #gcw-panel.open{display:flex}
     #gcw-head{background:#0F6E56;color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
     #gcw-head button{background:none;border:none;color:#fff;cursor:pointer;padding:4px;opacity:.85}
@@ -80,10 +80,11 @@
     #gcw-viewing-modal .gcw-v-submit:hover{background:#085041}
     #gcw-viewing-modal .gcw-v-submit:disabled{opacity:.6;cursor:not-allowed}
 
-    /* ── Quick replies ── */
-    #gcw-quick-replies{display:flex;gap:6px;flex-wrap:wrap;padding:8px 12px;background:#fff;border-top:1px solid #e0ded8}
-    #gcw-quick-replies:empty{display:none;padding:0;border:none}
-    .gcw-chip{background:#E1F5EE;color:#085041;border:1px solid #bfe6d8;border-radius:16px;padding:6px 12px;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;transition:background .15s;font-family:inherit}
+    /* ── Quick replies: single row, scrolls horizontally, never stacks/masks the thread ── */
+    #gcw-quick-replies{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:8px 12px;background:#fff;border-top:1px solid #e0ded8;mask-image:linear-gradient(to right,#000 92%,transparent 100%);-webkit-mask-image:linear-gradient(to right,#000 92%,transparent 100%)}
+    #gcw-quick-replies::-webkit-scrollbar{display:none}
+    #gcw-quick-replies:empty{display:none;padding:0;border:none;mask-image:none;-webkit-mask-image:none}
+    .gcw-chip{flex-shrink:0;background:#E1F5EE;color:#085041;border:1px solid #bfe6d8;border-radius:16px;padding:6px 12px;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;transition:background .15s;font-family:inherit}
     .gcw-chip:hover{background:#c9ecdd}
     /* ── Read receipts ── */
     .gcw-tick{stroke:#9a9a94;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;margin-left:3px;vertical-align:-1px}
@@ -322,11 +323,7 @@
   }
   function onQuickReplyClick(text) {
     if (/book a viewing/i.test(text) && !/reschedule/i.test(text) && activeListingId) { openBookViewing(activeListingId, activeBuyerToken); return; }
-    const input = document.getElementById('gcw-input');
-    if (!input) return;
-    input.value = text;
-    input.dispatchEvent(new Event('input'));
-    input.focus();
+    sendMessage(text);
   }
 
   /* ── Booking button label (switches to "Book another viewing" once a
@@ -612,13 +609,14 @@
     }
   }
 
-  async function sendMessage() {
+  async function sendMessage(overrideText) {
     const input = document.getElementById('gcw-input');
-    const text = input.value.trim();
+    const fromChip = typeof overrideText === 'string';
+    const text = (fromChip ? overrideText : input.value).trim();
     if (!text || !activeListingId || !activeBuyerToken) return;
     const sendBtn = document.getElementById('gcw-send');
     sendBtn.disabled = true;
-    input.value = ''; input.style.height = 'auto';
+    if (!fromChip) { input.value = ''; input.style.height = 'auto'; }
 
     const { data, error } = await gdb.from('messages').insert({
       listing_id: activeListingId, buyer_token: activeBuyerToken,
