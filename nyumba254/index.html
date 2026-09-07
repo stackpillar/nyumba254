@@ -1132,7 +1132,7 @@
   }
 
   async function loadCountyListingCounts() {
-    const { data, error } = await db.from('listings').select('area').eq('status', 'active');
+    const { data, error } = await db.from('listings').select('area').in('status', ['active', 'occupied']);
     if (error) { console.error(error); return; }
     const counts = {};
     (data || []).forEach(row => {
@@ -1269,11 +1269,15 @@
     const subText = listing.address || (NK_AREA_TO_COUNTY[listing.area] ? nkCountyLabel(NK_AREA_TO_COUNTY[listing.area]) : (listing.county ? nkCountyLabel(listing.county) : ''));
     const href = `/listing?id=${String(listing.listing_number).padStart(6,'0')}`;
     const isNew = listing.created_at && (Date.now() - new Date(listing.created_at).getTime()) < 3 * 24 * 60 * 60 * 1000;
-    const topBadge = listing.is_featured
-      ? '<span class="badge-featured">Featured</span>'
-      : (isNew ? '<span class="badge-new">New</span>' : '');
+    const isOccupied = listing.status === 'occupied';
+    const occLabel = listing.price_frequency === 'once' ? 'Sold' : 'Occupied';
+    const topBadge = isOccupied
+      ? `<span class="badge-new" style="background:#C53030">${occLabel}</span>`
+      : (listing.is_featured
+          ? '<span class="badge-featured">Featured</span>'
+          : (isNew ? '<span class="badge-new">New</span>' : ''));
     return `
-      <a class="card" href="${href}" aria-label="${safeTitle}">
+      <a class="card" href="${href}" aria-label="${safeTitle}" style="${isOccupied ? 'opacity:.7' : ''}">
         <div class="card-img">
         ${imgHtml}
         ${topBadge}
@@ -1384,7 +1388,7 @@
     const { data, error } = await db
       .from('listings')
       .select('*, listing_photos(*)')
-      .eq('status', 'active')
+      .in('status', ['active', 'occupied'])
       .eq('is_featured', true)
       .order('created_at', { ascending: false })
       .limit(12);
@@ -1401,7 +1405,7 @@
       <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line short"></div><div class="skeleton-line"></div></div></div>
       <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line short"></div><div class="skeleton-line"></div></div></div>
     </div>`;
-    let query = db.from('listings').select('*, listing_photos(*)').eq('status', 'active');
+    let query = db.from('listings').select('*, listing_photos(*)').in('status', ['active', 'occupied']);
     if (area) {
       query = query.eq('area', area);
     } else if (county) {
@@ -1417,9 +1421,9 @@
     const cats = ['apartment', 'house', 'boarding', 'airbnb', 'commercial'];
     const [catResults, totalResult] = await Promise.all([
       Promise.all(cats.map(cat =>
-        db.from('listings').select('*', { count: 'exact', head: true }).eq('status', 'active').eq('category', cat)
+        db.from('listings').select('*', { count: 'exact', head: true }).in('status', ['active', 'occupied']).eq('category', cat)
       )),
-      db.from('listings').select('*', { count: 'exact', head: true }).eq('status', 'active')
+      db.from('listings').select('*', { count: 'exact', head: true }).in('status', ['active', 'occupied'])
     ]);
     cats.forEach((cat, i) => {
       const count = catResults[i].count;

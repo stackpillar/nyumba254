@@ -1575,7 +1575,7 @@
       nkHasMorePages = true;
     }
 
-    let query = db.from('listings').select('*, listing_photos(*), listing_units(*), profiles(verification_status)', { count: 'exact' }).eq('status', 'active');
+    let query = db.from('listings').select('*, listing_photos(*), listing_units(*), profiles(verification_status)', { count: 'exact' }).in('status', ['active', 'occupied']);
 
     if (f.freq)     query = query.eq('price_frequency', f.freq);
     if (f.cat)      query = query.eq('category', f.cat);
@@ -1654,6 +1654,10 @@
   }
 
   function buildStatusPill(l, meta) {
+    if (l.status === 'occupied') {
+      const label = l.price_frequency === 'once' ? 'Sold' : 'Occupied';
+      return `<span class="card-status-pill low" style="background:#FFF5F5;color:#C53030">${label} — unavailable</span>`;
+    }
     if (meta.group === 'boarding') {
       const units = l.listing_units || [];
       const total = units.reduce((s,u) => s + (u.quantity_total ?? u.quantity_available ?? 0), 0);
@@ -1805,6 +1809,13 @@
      sizing) so the feed reads cleaner; label text stays for desktop and
      for screen readers via aria-label either way. */
   function cardCtaButtonHtml(listingId) {
+    const l = cardDataById[listingId];
+    if (l && l.status === 'occupied') {
+      return `<button type="button" class="card-inquire-btn" id="card-cta-${listingId}" disabled style="opacity:.55;cursor:not-allowed" aria-label="No longer available">
+        ${ciSentIconHtml()}
+        <span class="card-inquire-label">No longer available</span>
+      </button>`;
+    }
     if (nkHasCardThread(listingId)) {
       return `<button type="button" class="card-inquire-btn sent" id="card-cta-${listingId}" onclick="handleCardCta(event,'${listingId}')" aria-label="View conversation">
         ${ciSentIconHtml()}

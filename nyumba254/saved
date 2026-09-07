@@ -683,18 +683,21 @@
     const imgHtml = cover
       ? `<img src="${cover.url}" alt="${escHtmlS(l.title)}" loading="lazy" decoding="async"/>`
       : `<div class="card-img-placeholder"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="font-size:11px">No photo</span></div>`;
-    const unavailable = l.is_disabled || l.recycle_bin || l.status !== 'active';
+    const isOccupied = l.status === 'occupied' && !l.is_disabled && !l.recycle_bin;
+    const unavailable = l.is_disabled || l.recycle_bin || (l.status !== 'active' && l.status !== 'occupied');
+    const occLabel = l.price_frequency === 'once' ? 'Sold' : 'Occupied';
     const savedDate = row.created_at
       ? `Saved ${new Date(row.created_at).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'})}`
       : 'Saved on this device';
     const catLabel = (NK_CATEGORIES[l.category] || {}).label || l.category;
     return `
-      <div class="card ${unavailable ? 'unavailable' : ''}" data-id="${l.id}">
+      <div class="card ${(unavailable || isOccupied) ? 'unavailable' : ''}" data-id="${l.id}">
         <a class="card-img-link" href="${unavailable ? 'javascript:void(0)' : nkListingUrl(l)}">
           <div class="card-img">
             ${imgHtml}
-            ${l.is_admin_verified && !unavailable ? '<span class="badge-featured">Reviewed by Nyumba254</span>' : ''}
+            ${l.is_admin_verified && !unavailable && !isOccupied ? '<span class="badge-featured">Reviewed by Nyumba254</span>' : ''}
             ${unavailable ? `<div class="badge-unavailable">${l.is_disabled ? (l.disabled_reason ? 'Disabled by admin' : 'No longer available') : 'No longer available'}</div>` : ''}
+            ${isOccupied ? `<div class="badge-unavailable">${occLabel} — not available</div>` : ''}
           </div>
         </a>
         <button class="remove-heart-btn" title="Remove from shortlist" onclick="removeSaved('${l.id}', this)">
@@ -716,7 +719,9 @@
           <div class="card-saved-date">${savedDate}</div>
           ${unavailable
             ? `<span class="card-view-btn disabled-btn">No longer available</span>`
-            : `<a class="card-view-btn" href="${nkListingUrl(l)}">View listing</a>`}
+            : (isOccupied
+                ? `<a class="card-view-btn" href="${nkListingUrl(l)}" style="background:var(--text-3)">View listing (${occLabel.toLowerCase()})</a>`
+                : `<a class="card-view-btn" href="${nkListingUrl(l)}">View listing</a>`)}
         </div>
       </div>`;
   }
