@@ -324,7 +324,6 @@
       margin-top: auto;
     }
     .card-inquire-btn:hover { background: var(--green-dark); }
-    .card-inquire-btn svg { width: 14px; height: 14px; stroke: white; fill: none; stroke-width: 2; }
     .card-inquire-btn.sent { background: white; color: var(--green-dark); border: 1.5px solid var(--green); }
     .card-inquire-btn.sent:hover { background: var(--green-light); }
     .card-inquire-btn.sent svg { stroke: var(--green-dark); }
@@ -511,18 +510,176 @@
       .notify-strip-inner .btn { width: 100%; justify-content: center; }
       .footer-top { grid-template-columns: 1fr; }
     }
+
+    /* ══════════════════════════════════════════════════════════════
+       MOBILE UPGRADE — items 1–14
+       ══════════════════════════════════════════════════════════════ */
+
+    /* Item 1: vertical infinite-scroll feed on mobile — a single column,
+       normal top-to-bottom document flow instead of horizontally-paged
+       swiping. Only kicks in when body.nk-mobile-feed is set by JS. */
+    body.nk-mobile-feed .listings-grid {
+      display: flex;
+      flex-direction: column;
+      overflow: visible;
+      scroll-snap-type: none;
+      gap: 16px;
+    }
+    body.nk-mobile-feed .listings-page { display: contents; }
+    body.nk-mobile-feed .scroll-hint { display: none !important; }
+    body.nk-mobile-feed .card { max-width: 100%; }
+    body.nk-mobile-feed .card-img { height: 210px; } /* item 6: bigger photos on mobile */
+    body.nk-mobile-feed .pagination { display: none; }
+
+    .nk-fade-in { animation: nkFadeInCard .28s ease both; }
+    @keyframes nkFadeInCard { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: reduce) { .nk-fade-in { animation: none; } }
+
+    .nk-load-more-wrap { display: flex; justify-content: center; padding: 8px 0 4px; }
+    .nk-load-more-btn {
+      padding: 12px 26px; border-radius: 24px; background: var(--green); color: white;
+      font-size: 14px; font-weight: 600; transition: background .15s;
+    }
+    .nk-load-more-btn:hover { background: var(--green-dark); }
+    .nk-load-more-spinner {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 16px 0; font-size: 13px; color: var(--text-3);
+    }
+    .nk-spinner {
+      width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--green);
+      border-radius: 50%; animation: nkSpin .7s linear infinite; display: inline-block;
+    }
+    @keyframes nkSpin { to { transform: rotate(360deg); } }
+    .nk-feed-end { text-align: center; padding: 18px 0; font-size: 12.5px; color: var(--text-3); }
+
+    .nk-inline-notify {
+      grid-column: 1/-1; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      background: var(--green-light); border: 1.5px dashed var(--green-mid); border-radius: var(--radius);
+      padding: 12px 14px; font-size: 13px; color: var(--green-dark); font-weight: 500;
+    }
+    .nk-inline-notify .btn { flex-shrink: 0; padding: 7px 12px; font-size: 12.5px; }
+
+    /* Item 4: verified badge on the card itself */
+    .card-verified-badge {
+      display: inline-flex; align-items: center; gap: 3px; background: var(--green-light);
+      color: var(--green-dark); font-size: 9.5px; font-weight: 700; padding: 1px 6px 1px 4px;
+      border-radius: 20px; margin-left: 6px; vertical-align: middle;
+    }
+    .card-verified-badge svg { width: 9px; height: 9px; stroke: var(--green-dark); fill: none; stroke-width: 2.6; }
+
+    /* Item 9: card CTA becomes an icon-only round button on mobile */
+    .card-inquire-label { display: inline; }
+
+    /* Sticky quick-filter chip bar (items 3 & 4 in the plan) */
+    .nk-quickbar {
+      display: none;
+      position: sticky; top: 64px; z-index: 90;
+      background: var(--white); border-bottom: 1px solid var(--border);
+      padding: 10px 16px; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+      scrollbar-width: none; align-items: center;
+    }
+    .nk-quickbar::-webkit-scrollbar { display: none; }
+    .nk-qchip {
+      flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px;
+      font-size: 12.5px; font-weight: 600; padding: 7px 13px; border-radius: 20px;
+      border: 1.5px solid var(--border); background: white; color: var(--text-2); white-space: nowrap;
+    }
+    .nk-qchip.active { background: var(--green); color: white; border-color: var(--green); }
+    .nk-qchip svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2.4; }
+    .nk-qchip-count {
+      flex-shrink: 0; font-size: 12px; color: var(--text-3); font-weight: 600; padding: 0 4px 0 2px; white-space: nowrap;
+    }
+    body.nk-mobile-feed .nk-quickbar { display: flex; }
+
+    /* Bottom sheet used by quick-filter chips */
+    .nk-sheet-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 400;
+    }
+    .nk-sheet-overlay.open { display: block; }
+    .nk-sheet {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 401;
+      background: white; border-radius: 18px 18px 0 0; padding: 18px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+      max-height: 72vh; overflow-y: auto; transform: translateY(100%); transition: transform .22s ease;
+      box-shadow: 0 -8px 30px rgba(0,0,0,0.18);
+    }
+    .nk-sheet-overlay.open .nk-sheet { transform: translateY(0); }
+    .nk-sheet-handle { width: 36px; height: 4px; background: var(--border); border-radius: 4px; margin: 0 auto 14px; }
+    .nk-sheet-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 14px; }
+    .nk-sheet-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .nk-sheet-actions .btn { flex: 1; justify-content: center; }
+
+    /* Sticky compact search pill, revealed once page header scrolls out
+       of view — mirrors the pattern already used on the homepage nav */
+    .nk-nav-compact-search {
+      display: none; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 6px 6px 6px 14px;
+      flex: 1; max-width: 320px; margin: 0 12px;
+    }
+    .nk-nav-compact-search input {
+      flex: 1; border: none; outline: none; background: transparent;
+      font-family: inherit; font-size: 13px; color: var(--text); min-width: 0;
+    }
+    .nk-nav-compact-search button {
+      flex-shrink: 0; background: var(--green); color: white; border-radius: 16px;
+      padding: 7px 13px; font-size: 12.5px; font-weight: 600; font-family: inherit;
+    }
+    nav.nk-scrolled .nk-nav-compact-search { display: flex; }
+    nav.nk-scrolled .logo span.nk-logo-text { display: none; }
+
+    /* Item 10: map view toggle */
+    .nk-map-toggle-btn {
+      display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 20px;
+      border: 1.5px solid var(--border); background: white; font-size: 13px; font-weight: 600; color: var(--text-2);
+    }
+    .nk-map-toggle-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .nk-map-toggle-btn.active { background: var(--green); color: white; border-color: var(--green); }
+    #nk-map-view { display: none; height: 60vh; min-height: 340px; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); margin-bottom: 20px; position: relative; }
+    #nk-map-view.open { display: block; }
+    #nk-map-view-inner { position: absolute; inset: 0; }
+    .nk-map-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--surface); font-size: 13px; color: var(--text-3); z-index: 2; }
+
+    /* Item 11: recently-viewed strip */
+    .nk-recent-strip { margin-bottom: 20px; }
+    .nk-recent-strip-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+    .nk-recent-row { display: flex; gap: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 4px; }
+    .nk-recent-row::-webkit-scrollbar { display: none; }
+    .nk-recent-card { flex: 0 0 140px; cursor: pointer; }
+    .nk-recent-card img { width: 140px; height: 100px; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); }
+    .nk-recent-card .nk-recent-title { font-size: 11.5px; font-weight: 600; color: var(--text); margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .nk-recent-card .nk-recent-price { font-size: 11.5px; font-weight: 700; color: var(--green-dark); }
+
+    /* Item 13: pull-to-refresh indicator */
+    #nk-ptr-indicator {
+      position: fixed; top: 64px; left: 50%; transform: translate(-50%, -60px); z-index: 150;
+      background: white; border: 1px solid var(--border); border-radius: 50%; width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(0,0,0,0.14);
+      transition: transform .15s ease; pointer-events: none;
+    }
+    #nk-ptr-indicator.visible { transform: translate(-50%, 8px); }
+    #nk-ptr-indicator .nk-spinner { border-top-color: var(--green); }
+
+    @media (max-width: 768px) {
+      .nk-quickbar { top: 56px; }
+    }
   </style>
 </head>
 <body>
 
+<div id="nk-ptr-indicator"><span class="nk-spinner"></span></div>
+
 <!-- ── NAVBAR ── -->
-<nav>
+<nav id="main-nav">
   <a href="/" class="logo">
     <div class="logo-icon">
       <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     </div>
-    Nyumba254
+    <span class="nk-logo-text">Nyumba254</span>
   </a>
+  <div class="nk-nav-compact-search" id="nk-nav-compact-search">
+    <input type="text" id="nk-nav-compact-search-input" placeholder="Search area or price…" aria-label="Search listings"/>
+    <button onclick="nkCompactSearchSubmit()">Search</button>
+  </div>
   <div class="nav-links">
     <a href="/listings" class="nav-link" style="color:var(--green);font-weight:500">Browse</a>
     <a href="/how-it-works" class="nav-link">How it works</a>
@@ -568,6 +725,9 @@
 
 <!-- ── MOBILE SIDEBAR OVERLAY ── -->
 <div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- ── QUICK FILTER BAR (mobile only, built by JS) ── -->
+<div id="nk-quickbar-mount"></div>
 
 <!-- ── LAYOUT ── -->
 <div class="layout">
@@ -679,16 +839,31 @@
         </button>
         <span class="result-count" id="result-count">Loading…</span>
       </div>
-      <select class="sort-select" id="sort-select" onchange="applyFilters()">
-        <option value="created_at_desc">Newest first</option>
-        <option value="price_asc">Price: low to high</option>
-        <option value="price_desc">Price: high to low</option>
-        <option value="featured">Featured first</option>
-      </select>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button type="button" class="nk-map-toggle-btn" id="nk-map-toggle-btn" onclick="nkToggleMapView()">
+          <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Map
+        </button>
+        <select class="sort-select" id="sort-select" onchange="applyFilters()">
+          <option value="created_at_desc">Newest first</option>
+          <option value="price_asc">Price: low to high</option>
+          <option value="price_desc">Price: high to low</option>
+          <option value="featured">Featured first</option>
+        </select>
+      </div>
     </div>
 
     <!-- Active filter tags -->
     <div class="active-filters" id="active-filters"></div>
+
+    <!-- Item 11: recently-viewed strip -->
+    <div id="nk-recent-strip-mount"></div>
+
+    <!-- Item 10: map view panel -->
+    <div id="nk-map-view">
+      <div class="nk-map-loading" id="nk-map-loading">Loading map…</div>
+      <div id="nk-map-view-inner"></div>
+    </div>
 
     <!-- Results grid -->
     <div id="results">
@@ -996,9 +1171,6 @@
 
   const nkSessionPromise = db.auth.getSession();
 
-  /* ══════════════════════════════════════════════════════════════
-     PROPERTY TYPES — must mirror NK_CATEGORIES in post-listing.html
-     ══════════════════════════════════════════════════════════════ */
   const NK_CATEGORIES = {
     apartment:  { label: 'Apartment', group: 'standard' },
     house:      { label: 'House',     group: 'standard' },
@@ -1178,12 +1350,14 @@
     renderAreaChecklist(county);
     applyFilters();
   }
-
   const PAGE_SIZE = 12;
   let currentPage = 1;
   let totalCount = 0;
   let debounceTimer = null;
   let nkRequestId = 0;
+  let nkMobileMode = false;
+  let nkHasMorePages = true;
+  let nkLoadingMore = false;
 
   function toggleMoreAreas() {
     const more = document.getElementById('area-checks-more');
@@ -1239,11 +1413,9 @@
     el.classList.add('active');
     if (groupId === 'cat-pills') toggleGroupFilters(el.dataset.val);
     applyFilters();
+    nkSyncQuickChipLabels();
   }
 
-  /* Bedrooms only makes sense for "standard" (apartment/house) and "airbnb"
-     groups. Furnishing only applies to the "standard" group. Boarding
-     houses use their own room-tier pricing instead. */
   function toggleGroupFilters(cat) {
     const meta = NK_CATEGORIES[cat];
     const group = meta ? meta.group : '';
@@ -1251,24 +1423,29 @@
     const furnSection = document.getElementById('furnished-filter-section');
 
     if (group === 'boarding' || group === 'commercial') {
-      setPill(document.querySelector('#bed-pills .filter-pill[data-val=""]'), 'bed-pills');
+      setPillSilent(document.querySelector('#bed-pills .filter-pill[data-val=""]'), 'bed-pills');
       bedSection.style.display = 'none';
     } else {
       bedSection.style.display = '';
     }
 
     if (group === 'boarding' || group === 'airbnb' || group === 'commercial') {
-      setPill(document.querySelector('#furn-pills .filter-pill[data-val=""]'), 'furn-pills');
+      setPillSilent(document.querySelector('#furn-pills .filter-pill[data-val=""]'), 'furn-pills');
       furnSection.style.display = 'none';
     } else {
       furnSection.style.display = '';
     }
+  }
+  function setPillSilent(el, groupId) {
+    document.querySelectorAll(`#${groupId} .filter-pill`).forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
   }
 
   function setPreset(min, max) {
     document.getElementById('price-min').value = min || '';
     document.getElementById('price-max').value = max || '';
     applyFilters();
+    nkSyncQuickChipLabels();
   }
 
   function nkFormatSearchInput(el) {
@@ -1373,13 +1550,14 @@
       delete searchEl.dataset.priceValue;
       applyFilters();
     }
+    nkSyncQuickChipLabels();
   }
 
   function resetAllFilters() {
-    setPill(document.querySelector('#type-pills .filter-pill[data-val=""]'), 'type-pills');
-    setPill(document.querySelector('#cat-pills .filter-pill[data-val=""]'), 'cat-pills');
-    setPill(document.querySelector('#bed-pills .filter-pill[data-val=""]'), 'bed-pills');
-    setPill(document.querySelector('#furn-pills .filter-pill[data-val=""]'), 'furn-pills');
+    setPillSilent(document.querySelector('#type-pills .filter-pill[data-val=""]'), 'type-pills');
+    setPillSilent(document.querySelector('#cat-pills .filter-pill[data-val=""]'), 'cat-pills');
+    setPillSilent(document.querySelector('#bed-pills .filter-pill[data-val=""]'), 'bed-pills');
+    setPillSilent(document.querySelector('#furn-pills .filter-pill[data-val=""]'), 'furn-pills');
     document.getElementById('county-select').value = '';
     renderAreaChecklist('');
     document.querySelectorAll('#amen-checks input:checked').forEach(cb => cb.checked = false);
@@ -1389,20 +1567,26 @@
     searchEl.value = '';
     delete searchEl.dataset.priceValue;
     applyFilters();
+    nkSyncQuickChipLabels();
   }
 
-  /* ── Build and run Supabase query ── */
-  async function applyFilters(page) {
-    if (page) currentPage = page;
+  /* ── Build and run Supabase query. `append` (used by mobile infinite
+     scroll) fetches the next page and adds cards to the existing feed
+     instead of replacing everything and re-showing skeletons. ── */
+  async function applyFilters(page, append) {
+    if (page) currentPage = page; else if (!append) currentPage = 1;
     const requestId = ++nkRequestId;
     const f = getFilters();
     renderActiveTags(f);
 
     const grid = document.getElementById('listings-grid');
-    grid.innerHTML = Array(6).fill(`<div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line xshort"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>`).join('');
-    document.getElementById('result-count').textContent = 'Loading…';
+    if (!append) {
+      grid.innerHTML = Array(6).fill(`<div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line xshort"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>`).join('');
+      document.getElementById('result-count').textContent = 'Loading…';
+      nkHasMorePages = true;
+    }
 
-    let query = db.from('listings').select('*, listing_photos(*), listing_units(*)', { count: 'exact' }).eq('status', 'active');
+    let query = db.from('listings').select('*, listing_photos(*), listing_units(*), profiles(verification_status)', { count: 'exact' }).eq('status', 'active');
 
     if (f.freq)     query = query.eq('price_frequency', f.freq);
     if (f.cat)      query = query.eq('category', f.cat);
@@ -1443,21 +1627,23 @@
     if (error) {
       console.error(error);
       document.getElementById('result-count').textContent = 'Something went wrong loading listings';
-      document.getElementById('listings-grid').innerHTML = `<div class="empty-state">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <h3>Couldn't load listings</h3>
-        <p>Please check your connection and <a onclick="applyFilters()" style="cursor:pointer">try again</a></p>
-      </div>`;
+      if (!append) {
+        document.getElementById('listings-grid').innerHTML = `<div class="empty-state">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <h3>Couldn't load listings</h3>
+          <p>Please check your connection and <a onclick="applyFilters()" style="cursor:pointer">try again</a></p>
+        </div>`;
+      }
+      nkLoadingMore = false;
       return;
     }
 
     totalCount = count || 0;
-    renderResults(data || [], totalCount);
+    nkHasMorePages = from + (data ? data.length : 0) < totalCount;
+    renderResults(data || [], totalCount, append);
     renderPagination(totalCount);
+    nkLoadingMore = false;
   }
-
-  /* ── Render listing cards (expanded style — carousel, status pill,
-     room-type/spec chips, amenity chips, inline Send Inquiry) ── */
   const ciBedIcon  = `<svg viewBox="0 0 24 24"><path d="M2 4v16M22 4v16M2 12h20M2 8h4a2 2 0 012 2v2H2V8zM16 8h4a2 2 0 012 2v2h-6V8z"/></svg>`;
   const ciBathIcon = `<svg viewBox="0 0 24 24"><path d="M9 6l1-1a2 2 0 012.83 0l6.17 6.17a1 1 0 010 1.41L17 14M3 20h18M5 20v-4a3 3 0 013-3h1"/></svg>`;
   const ciSizeIcon = `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/></svg>`;
@@ -1465,7 +1651,6 @@
   const ciGroupIcon = `<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>`;
   const ciWalkIcon = `<svg viewBox="0 0 24 24"><circle cx="12" cy="4" r="2"/><path d="M12 6v6l-3 8M12 12l3 8M9 10l-3 2M15 10l3 2"/></svg>`;
 
-  /* Per-listing state/lookup used by the card carousel + inquiry popup */
   const cardPhotoIndex = {};
   const cardDataById = {};
   let ciActiveListingId = null;
@@ -1556,6 +1741,13 @@
 
   function escHtmlC(str) { if (!str) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+  /* Item 4: small verified badge shown right on the card when the seller
+     has been reviewed/verified — builds trust before the tap-through. */
+  function buildVerifiedBadgeHtml(l) {
+    if (l?.profiles?.verification_status !== 'verified') return '';
+    return `<span class="card-verified-badge"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>Verified</span>`;
+  }
+
   function buildCard(l) {
     const photos = l.listing_photos && l.listing_photos.length
       ? [...l.listing_photos].sort((a,b) => a.position - b.position)
@@ -1576,6 +1768,8 @@
       ? `<img id="card-img-${l.id}" src="${current.url}" alt="${l.title}" loading="lazy"/>`
       : `<div class="card-img-placeholder" id="card-img-${l.id}"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="font-size:11px">No photo</span></div>`;
 
+    /* Item 3/6: swipeable photo strip — touch handlers wired up after
+       insertion via nkBindCardSwipe(); arrows stay for desktop/mouse. */
     const carouselArrows = photos.length > 1 ? `
       <button class="card-carousel-arrow prev" onclick="nkCardPhotoNav(event,'${l.id}',-1)" aria-label="Previous photo"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
       <button class="card-carousel-arrow next" onclick="nkCardPhotoNav(event,'${l.id}',1)" aria-label="Next photo"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
@@ -1590,9 +1784,11 @@
       : buildSpecsChipsHtml(l, meta, d);
 
     const goto = `window.location='/listing?id=${String(l.listing_number).padStart(6,'0')}'`;
+    const lat = (typeof l.latitude === 'number') ? l.latitude : '';
+    const lng = (typeof l.longitude === 'number') ? l.longitude : '';
 
     return `
-      <div class="card" onclick="${goto}" role="button" tabindex="0" aria-label="${l.title}" onkeydown="if(event.key==='Enter'){${goto}}">
+      <div class="card nk-fade-in" data-listing-id="${l.id}" data-lat="${lat}" data-lng="${lng}" data-area="${escHtmlC(l.area)}" onclick="${goto}" role="button" tabindex="0" aria-label="${l.title}" onkeydown="if(event.key==='Enter'){${goto}}">
         <div class="card-img" id="card-imgwrap-${l.id}">
           ${imgHtml}
           ${statusPill}
@@ -1601,7 +1797,7 @@
           ${carouselArrows}
         </div>
         <div class="card-body">
-          <div class="card-area">${l.area}</div>
+          <div class="card-area">${l.area} ${buildVerifiedBadgeHtml(l)}</div>
           <div class="card-title">${l.title}</div>
           <div class="card-sub">${subText}</div>
           <div class="card-price">${formatPrice(l)}</div>
@@ -1612,23 +1808,23 @@
       </div>`;
   }
 
-  /* ── Card CTA button: "Send Inquiry" the first time, "View conversation"
-     once this buyer already has a thread with this listing (checked via
-     the same nk_buyer_<id> localStorage key listing.html uses). ── */
   function nkHasCardThread(listingId) { return !!nkLSGetC('nk_buyer_' + listingId); }
-
   function ciSentIconHtml() { return `<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>`; }
 
+  /* Item 9: on mobile the full-width "Send Inquiry" button on every card
+     is replaced with a small round icon button (CSS handles the mobile
+     sizing) so the feed reads cleaner; label text stays for desktop and
+     for screen readers via aria-label either way. */
   function cardCtaButtonHtml(listingId) {
     if (nkHasCardThread(listingId)) {
-      return `<button type="button" class="card-inquire-btn sent" id="card-cta-${listingId}" onclick="handleCardCta(event,'${listingId}')">
+      return `<button type="button" class="card-inquire-btn sent" id="card-cta-${listingId}" onclick="handleCardCta(event,'${listingId}')" aria-label="View conversation">
         ${ciSentIconHtml()}
-        View conversation
+        <span class="card-inquire-label">View conversation</span>
       </button>`;
     }
-    return `<button type="button" class="card-inquire-btn" id="card-cta-${listingId}" onclick="handleCardCta(event,'${listingId}')">
+    return `<button type="button" class="card-inquire-btn" id="card-cta-${listingId}" onclick="handleCardCta(event,'${listingId}')" aria-label="Send inquiry">
       ${ciSentIconHtml()}
-      Send Inquiry
+      <span class="card-inquire-label">Send Inquiry</span>
     </button>`;
   }
 
@@ -1641,8 +1837,6 @@
     }
   }
 
-  /* Swap only the photo/counter DOM for one card — avoids re-rendering the
-     whole grid on every arrow click. */
   function nkCardPhotoNav(event, listingId, dir) {
     event.stopPropagation();
     const l = cardDataById[listingId];
@@ -1659,19 +1853,11 @@
     const counterEl = document.getElementById(`card-counter-${listingId}`);
     if (counterEl) counterEl.textContent = `${idx+1}/${photos.length}`;
   }
-
-  /* ── Paging: chunk listings into groups of rows×cols and render each
-     chunk as its own normal grid page. Grid's default row-major flow
-     (fills left-to-right, row by row) handles the ordering correctly.
-     Column count is MEASURED from the actual rendered container width —
-     never guessed from window.innerWidth — and applied as an inline
-     style, which always wins over any stylesheet/media-query rule. This
-     is the only way to guarantee CSS and JS can never disagree on how
-     many columns are showing. ── */
+  /* ── Desktop paging (unchanged: rows×cols pages you swipe through). Mobile
+     no longer uses this — see nkMobileMode below. ── */
   function nkGetGridDims() {
     const wrap = document.querySelector('#results .scroll-wrap');
     const width = wrap ? wrap.clientWidth : document.documentElement.clientWidth;
-    // A card needs roughly 250px to look right; below that, force 1 column.
     return width < 560 ? { rows: 4, cols: 1 } : { rows: 5, cols: 3 };
   }
   function nkChunkIntoPages(items, rows, cols) {
@@ -1690,14 +1876,58 @@
 
   let nkLastListings = [];
   let nkLastDimsKey = null;
+  let nkMobileAccum = [];
 
-  function renderResults(listings, count) {
-    nkLastListings = listings;
-    const dims0 = nkGetGridDims();
-    nkLastDimsKey = dims0.cols + 'x' + dims0.rows;
+  /* Item 1: on mobile, render one continuous vertical column instead of
+     horizontally-paged chunks — the fix for "swiping sideways through a
+     feed feels foreign". `append` is used by infinite scroll (item 1) to
+     add the next page's cards onto the bottom instead of replacing. */
+  function renderResults(listings, count, append) {
     const grid = document.getElementById('listings-grid');
     const rc = document.getElementById('result-count');
     rc.innerHTML = `<strong>${count.toLocaleString()}</strong> listing${count !== 1 ? 's' : ''} found`;
+    nkUpdateQuickFilterCount(count);
+
+    if (nkMobileMode) {
+      if (!append) {
+        nkMobileAccum = [];
+        grid.innerHTML = '';
+        nkRemoveInfiniteSentinel();
+      }
+      if (!listings.length && !nkMobileAccum.length) {
+        grid.innerHTML = `<div class="empty-state" style="width:100%">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+          <h3>No listings match your filters</h3>
+          <p>Try adjusting your search or <a onclick="resetAllFilters()" style="cursor:pointer">reset all filters</a></p>
+          <button class="btn btn-primary" style="margin-top:14px" onclick="openNotifyModal()">🔔 Notify me when a match is posted</button>
+        </div>`;
+        return;
+      }
+      nkMobileAccum = nkMobileAccum.concat(listings);
+      const frag = document.createElement('div');
+      frag.className = 'nk-mobile-feed-batch';
+      frag.innerHTML = listings.map(buildCard).join('');
+      grid.appendChild(frag);
+      nkBindCardSwipe(frag);
+      // Item 9: after the 5th card, surface a lighter inline "notify me"
+      // nudge for people who are scrolling past a lot without a match yet.
+      if (nkMobileAccum.length >= 5 && !document.getElementById('nk-inline-notify')) {
+        const nudge = document.createElement('div');
+        nudge.id = 'nk-inline-notify';
+        nudge.className = 'nk-inline-notify';
+        nudge.innerHTML = `<span>🔔 Not seeing the right one yet?</span>
+          <button class="btn btn-outline" onclick="openNotifyModal()">Get notified</button>`;
+        if (grid.children[4]) grid.insertBefore(nudge, grid.children[5] || null);
+        else grid.appendChild(nudge);
+      }
+      nkInsertInfiniteSentinel();
+      return;
+    }
+
+    // Desktop: original paged-grid behavior, unchanged.
+    nkLastListings = listings;
+    const dims0 = nkGetGridDims();
+    nkLastDimsKey = dims0.cols + 'x' + dims0.rows;
 
     if (!listings.length) {
       grid.innerHTML = `<div class="empty-state" style="width:100%">
@@ -1713,10 +1943,80 @@
     requestAnimationFrame(nkUpdateScrollHints);
   }
 
+  /* ── Item 1: infinite scroll sentinel + observer (mobile only) ── */
+  let nkInfiniteObserver = null;
+  function nkInsertInfiniteSentinel() {
+    nkRemoveInfiniteSentinel();
+    const grid = document.getElementById('listings-grid');
+    const sentinel = document.createElement('div');
+    sentinel.id = 'nk-infinite-sentinel';
+    sentinel.style.cssText = 'height:1px;width:100%;';
+    grid.appendChild(sentinel);
+    if (nkHasMorePages) {
+      const loadMoreWrap = document.createElement('div');
+      loadMoreWrap.id = 'nk-load-more-wrap';
+      loadMoreWrap.innerHTML = `<button class="nk-load-more-btn" onclick="nkLoadNextMobilePage()">Load more listings</button>`;
+      grid.appendChild(loadMoreWrap);
+    } else if (nkMobileAccum.length) {
+      const doneMsg = document.createElement('div');
+      doneMsg.className = 'nk-feed-end';
+      doneMsg.textContent = "You've reached the end of the results.";
+      grid.appendChild(doneMsg);
+    }
+    if (!nkInfiniteObserver && 'IntersectionObserver' in window) {
+      nkInfiniteObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => { if (entry.isIntersecting) nkLoadNextMobilePage(); });
+      }, { rootMargin: '600px 0px 600px 0px' });
+    }
+    if (nkInfiniteObserver) nkInfiniteObserver.observe(sentinel);
+  }
+  function nkRemoveInfiniteSentinel() {
+    document.getElementById('nk-infinite-sentinel')?.remove();
+    document.getElementById('nk-load-more-wrap')?.remove();
+    document.querySelector('.nk-feed-end')?.remove();
+  }
+  function nkLoadNextMobilePage() {
+    if (!nkMobileMode || nkLoadingMore || !nkHasMorePages) return;
+    nkLoadingMore = true;
+    document.getElementById('nk-load-more-wrap')?.remove();
+    const spinner = document.createElement('div');
+    spinner.className = 'nk-load-more-spinner';
+    spinner.id = 'nk-load-more-spinner';
+    spinner.innerHTML = `<span class="nk-spinner"></span> Loading more…`;
+    document.getElementById('listings-grid').appendChild(spinner);
+    applyFilters(currentPage + 1, true).then(() => {
+      document.getElementById('nk-load-more-spinner')?.remove();
+    });
+  }
+
+  /* ── Item 3: swipe gesture across a card's photo strip (touch only;
+     desktop keeps the tap arrows already in the markup). ── */
+  function nkBindCardSwipe(scopeEl) {
+    (scopeEl || document).querySelectorAll('.card-img').forEach(imgWrap => {
+      if (imgWrap.dataset.swipeBound) return;
+      imgWrap.dataset.swipeBound = '1';
+      let startX = 0, startY = 0, dragging = false;
+      imgWrap.addEventListener('touchstart', (e) => {
+        if (!e.touches || !e.touches.length) return;
+        startX = e.touches[0].clientX; startY = e.touches[0].clientY; dragging = true;
+      }, { passive: true });
+      imgWrap.addEventListener('touchend', (e) => {
+        if (!dragging) return;
+        dragging = false;
+        const t = e.changedTouches && e.changedTouches[0];
+        if (!t) return;
+        const dx = t.clientX - startX, dy = t.clientY - startY;
+        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+          const card = imgWrap.closest('.card');
+          const listingId = card?.dataset.listingId;
+          if (listingId) nkCardPhotoNav({ stopPropagation(){} }, listingId, dx < 0 ? 1 : -1);
+        }
+      }, { passive: true });
+    });
+  }
+
   /* ════════════════════════════════════════════════════
-     INLINE CARD INQUIRY — same enquiries/messages tables
-     and buyer-token model as listing.html, but launched
-     from the grid card instead of the detail page.
+     INLINE CARD INQUIRY
   ════════════════════════════════════════════════════ */
   function openCardInquiry(event, listingId) {
     event.stopPropagation();
@@ -1756,58 +2056,55 @@
     document.body.style.overflow = '';
     ciActiveListingId = null;
   }
-function nkScrollWrap(btn, dir) {
-  const wrap = btn.closest('.scroll-wrap');
-  if (!wrap) return;
-  const scroller = wrap.querySelector('.categories, .listings-grid, .areas');
-  if (!scroller) return;
-  // Listings are now paged — one arrow click moves exactly one full page
-  // (rows×cols cards), landing cleanly instead of mid-card.
-  const step = scroller.classList.contains('listings-grid')
-    ? scroller.clientWidth
-    : (() => {
-        const firstCard = scroller.querySelector(':scope > *');
-        const gap = parseFloat(getComputedStyle(scroller).gap) || 16;
-        return firstCard ? firstCard.getBoundingClientRect().width + gap : scroller.clientWidth * 0.8;
-      })();
-  scroller.scrollBy({ left: step * (dir || 1), behavior: 'smooth' });
-}
 
-function nkUpdateScrollHints() {
-  const wrap = document.querySelector('#results .scroll-wrap');
-  if (!wrap) return;
-  const scroller = wrap.querySelector('.listings-grid');
-  const leftBtn = wrap.querySelector('.scroll-hint.left');
-  const rightBtn = wrap.querySelector('.scroll-hint.right');
-  if (!scroller || !leftBtn || !rightBtn) return;
-  const hasOverflow = scroller.scrollWidth > scroller.clientWidth + 4;
-  leftBtn.classList.toggle('show', hasOverflow);
-  rightBtn.classList.toggle('show', hasOverflow);
-}
-window.addEventListener('resize', nkUpdateScrollHints);
+  function nkScrollWrap(btn, dir) {
+    const wrap = btn.closest('.scroll-wrap');
+    if (!wrap) return;
+    const scroller = wrap.querySelector('.categories, .listings-grid, .areas');
+    if (!scroller) return;
+    const step = scroller.classList.contains('listings-grid')
+      ? scroller.clientWidth
+      : (() => {
+          const firstCard = scroller.querySelector(':scope > *');
+          const gap = parseFloat(getComputedStyle(scroller).gap) || 16;
+          return firstCard ? firstCard.getBoundingClientRect().width + gap : scroller.clientWidth * 0.8;
+        })();
+    scroller.scrollBy({ left: step * (dir || 1), behavior: 'smooth' });
+  }
 
-function nkRebuildPagesIfDimsChanged() {
-  if (!nkLastListings.length) return;
-  const dims = nkGetGridDims();
-  const key = dims.cols + 'x' + dims.rows;
-  if (key === nkLastDimsKey) return;
-  nkLastDimsKey = key;
-  const grid = document.getElementById('listings-grid');
-  if (!grid || grid.querySelector('.skeleton') || grid.querySelector('.empty-state')) return;
-  grid.innerHTML = nkBuildPagesHtml(nkLastListings, dims);
-  nkUpdateScrollHints();
-}
+  function nkUpdateScrollHints() {
+    const wrap = document.querySelector('#results .scroll-wrap');
+    if (!wrap) return;
+    const scroller = wrap.querySelector('.listings-grid');
+    const leftBtn = wrap.querySelector('.scroll-hint.left');
+    const rightBtn = wrap.querySelector('.scroll-hint.right');
+    if (!scroller || !leftBtn || !rightBtn) return;
+    const hasOverflow = scroller.scrollWidth > scroller.clientWidth + 4;
+    leftBtn.classList.toggle('show', hasOverflow);
+    rightBtn.classList.toggle('show', hasOverflow);
+  }
+  window.addEventListener('resize', nkUpdateScrollHints);
 
-// ResizeObserver reacts to the container's REAL rendered width — covers
-// window resize, sidebar toggling, zoom, orientation change, DevTools
-// device emulation — anything that changes available space, without ever
-// relying on window.innerWidth matching a CSS breakpoint.
-const nkResultsWrapEl = document.querySelector('#results .scroll-wrap');
-if (window.ResizeObserver && nkResultsWrapEl) {
-  new ResizeObserver(() => nkRebuildPagesIfDimsChanged()).observe(nkResultsWrapEl);
-} else {
-  window.addEventListener('resize', nkRebuildPagesIfDimsChanged);
-}
+  function nkRebuildPagesIfDimsChanged() {
+    if (nkMobileMode) return;
+    if (!nkLastListings.length) return;
+    const dims = nkGetGridDims();
+    const key = dims.cols + 'x' + dims.rows;
+    if (key === nkLastDimsKey) return;
+    nkLastDimsKey = key;
+    const grid = document.getElementById('listings-grid');
+    if (!grid || grid.querySelector('.skeleton') || grid.querySelector('.empty-state')) return;
+    grid.innerHTML = nkBuildPagesHtml(nkLastListings, dims);
+    nkUpdateScrollHints();
+  }
+
+  const nkResultsWrapEl = document.querySelector('#results .scroll-wrap');
+  if (window.ResizeObserver && nkResultsWrapEl) {
+    new ResizeObserver(() => nkRebuildPagesIfDimsChanged()).observe(nkResultsWrapEl);
+  } else {
+    window.addEventListener('resize', nkRebuildPagesIfDimsChanged);
+  }
+
   function nkLSGetC(key) { try { return localStorage.getItem(key); } catch(e) { return null; } }
   function nkLSSetC(key, val) { try { localStorage.setItem(key, val); } catch(e) {} }
 
@@ -1876,18 +2173,20 @@ if (window.ResizeObserver && nkResultsWrapEl) {
     setTimeout(() => { closeCardInquiry(); }, 2200);
   }
 
-  /* Flips one card's CTA button to "View conversation" immediately after a
-     successful send — no full grid re-render needed. */
   function nkUpdateCardCtaToSent(listingId) {
     const btn = document.getElementById(`card-cta-${listingId}`);
     if (!btn) return;
     btn.classList.add('sent');
-    btn.innerHTML = `${ciSentIconHtml()}View conversation`;
+    btn.innerHTML = `${ciSentIconHtml()}<span class="card-inquire-label">View conversation</span>`;
+    btn.setAttribute('aria-label', 'View conversation');
   }
 
+  /* Desktop pagination stays as numbered buttons; mobile hides this
+     entirely in favor of infinite scroll (see nkApplyResponsiveMode). */
   function renderPagination(count) {
-    const totalPages = Math.ceil(count / PAGE_SIZE);
     const el = document.getElementById('pagination');
+    if (nkMobileMode) { el.innerHTML = ''; return; }
+    const totalPages = Math.ceil(count / PAGE_SIZE);
     if (totalPages <= 1) { el.innerHTML = ''; return; }
 
     let html = `<button class="page-btn" onclick="applyFilters(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>←</button>`;
@@ -1904,7 +2203,7 @@ if (window.ResizeObserver && nkResultsWrapEl) {
 
   function debouncedApply() {
     clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(applyFilters, 500);
+    debounceTimer = setTimeout(() => applyFilters(), 500);
   }
 
   function openSidebar() {
@@ -2108,6 +2407,343 @@ if (window.ResizeObserver && nkResultsWrapEl) {
     }
   }
 
+  /* ══════════════════════════════════════════════════════════════
+     ITEM 1 — responsive mode switch (vertical infinite feed on
+     mobile vs the existing paged grid on desktop)
+     ══════════════════════════════════════════════════════════════ */
+  const NK_MOBILE_QUERY = window.matchMedia('(max-width: 768px)');
+  function nkApplyResponsiveMode() {
+    const shouldBeMobile = NK_MOBILE_QUERY.matches;
+    if (shouldBeMobile === nkMobileMode) return;
+    nkMobileMode = shouldBeMobile;
+    document.body.classList.toggle('nk-mobile-feed', nkMobileMode);
+    // Re-fetch from page 1 in the new mode so the feed/pagination matches.
+    if (document.getElementById('listings-grid').children.length) applyFilters(1);
+  }
+  NK_MOBILE_QUERY.addEventListener ? NK_MOBILE_QUERY.addEventListener('change', nkApplyResponsiveMode) : NK_MOBILE_QUERY.addListener(nkApplyResponsiveMode);
+
+  /* ══════════════════════════════════════════════════════════════
+     ITEMS 3 & 4 — sticky quick-filter chip bar + bottom sheets
+     ══════════════════════════════════════════════════════════════ */
+  function nkBuildQuickFilterBar() {
+    const mount = document.getElementById('nk-quickbar-mount');
+    mount.innerHTML = `
+      <div class="nk-quickbar" id="nk-quickbar">
+        <span class="nk-qchip-count" id="nk-qchip-count">…</span>
+        <button type="button" class="nk-qchip" id="nk-qchip-price" onclick="nkOpenPriceSheet()">Price</button>
+        <button type="button" class="nk-qchip" id="nk-qchip-beds" onclick="nkOpenBedsSheet()">Beds</button>
+        <button type="button" class="nk-qchip" id="nk-qchip-type" onclick="nkOpenTypeSheet()">Type</button>
+        <button type="button" class="nk-qchip" id="nk-qchip-sort" onclick="nkOpenSortSheet()">Sort</button>
+        <button type="button" class="nk-qchip" id="nk-qchip-more" onclick="openSidebar()">
+          <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="12" y1="18" x2="20" y2="18"/></svg>
+          More filters
+        </button>
+      </div>
+      <div class="nk-sheet-overlay" id="nk-sheet-overlay" onclick="if(event.target===this) nkCloseSheet()">
+        <div class="nk-sheet" id="nk-sheet">
+          <div class="nk-sheet-handle"></div>
+          <div class="nk-sheet-title" id="nk-sheet-title">Filter</div>
+          <div id="nk-sheet-body"></div>
+        </div>
+      </div>`;
+    nkSyncQuickChipLabels();
+  }
+
+  function nkUpdateQuickFilterCount(count) {
+    const el = document.getElementById('nk-qchip-count');
+    if (el) el.textContent = `${count.toLocaleString()} results`;
+  }
+
+  function nkSyncQuickChipLabels() {
+    const f = getFilters();
+    const priceChip = document.getElementById('nk-qchip-price');
+    const bedsChip = document.getElementById('nk-qchip-beds');
+    const typeChip = document.getElementById('nk-qchip-type');
+    const sortChip = document.getElementById('nk-qchip-sort');
+    if (!priceChip) return;
+    priceChip.textContent = (f.priceMin || f.priceMax)
+      ? `KES ${f.priceMin ? Number(f.priceMin).toLocaleString() : '0'}–${f.priceMax ? Number(f.priceMax).toLocaleString() : '∞'}`
+      : 'Price';
+    priceChip.classList.toggle('active', !!(f.priceMin || f.priceMax));
+    bedsChip.textContent = f.beds !== '' ? (f.beds === '0' ? 'Studio' : `${f.beds}+ beds`) : 'Beds';
+    bedsChip.classList.toggle('active', f.beds !== '');
+    typeChip.textContent = f.cat && NK_CATEGORIES[f.cat] ? NK_CATEGORIES[f.cat].label : 'Type';
+    typeChip.classList.toggle('active', !!f.cat);
+    const sortLabels = { created_at_desc: 'Newest', price_asc: 'Price ↑', price_desc: 'Price ↓', featured: 'Featured' };
+    sortChip.textContent = sortLabels[f.sort] || 'Sort';
+    sortChip.classList.toggle('active', f.sort !== 'created_at_desc');
+  }
+
+  function nkOpenSheet(title, bodyHtml) {
+    document.getElementById('nk-sheet-title').textContent = title;
+    document.getElementById('nk-sheet-body').innerHTML = bodyHtml;
+    document.getElementById('nk-sheet-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function nkCloseSheet() {
+    document.getElementById('nk-sheet-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function nkOpenPriceSheet() {
+    const min = document.getElementById('price-min').value;
+    const max = document.getElementById('price-max').value;
+    nkOpenSheet('Price range (KES)', `
+      <div class="range-row" style="margin-bottom:14px">
+        <input type="number" class="range-input" id="nk-sheet-price-min" placeholder="Min" value="${min}"/>
+        <span class="range-sep">–</span>
+        <input type="number" class="range-input" id="nk-sheet-price-max" placeholder="Max" value="${max}"/>
+      </div>
+      <div class="pill-group">
+        <div class="filter-pill" onclick="nkSheetSetPreset(0,10000)">Under 10K</div>
+        <div class="filter-pill" onclick="nkSheetSetPreset(10000,30000)">10K–30K</div>
+        <div class="filter-pill" onclick="nkSheetSetPreset(30000,80000)">30K–80K</div>
+        <div class="filter-pill" onclick="nkSheetSetPreset(80000,null)">80K+</div>
+      </div>
+      <div class="nk-sheet-actions">
+        <button class="btn btn-outline" onclick="nkSheetClearPrice()">Clear</button>
+        <button class="btn btn-primary" onclick="nkSheetApplyPrice()">Apply</button>
+      </div>`);
+  }
+  function nkSheetSetPreset(min, max) {
+    document.getElementById('nk-sheet-price-min').value = min || '';
+    document.getElementById('nk-sheet-price-max').value = max ?? '';
+  }
+  function nkSheetApplyPrice() {
+    document.getElementById('price-min').value = document.getElementById('nk-sheet-price-min').value;
+    document.getElementById('price-max').value = document.getElementById('nk-sheet-price-max').value;
+    nkCloseSheet();
+    applyFilters();
+    nkSyncQuickChipLabels();
+  }
+  function nkSheetClearPrice() {
+    document.getElementById('price-min').value = '';
+    document.getElementById('price-max').value = '';
+    nkCloseSheet();
+    applyFilters();
+    nkSyncQuickChipLabels();
+  }
+
+  function nkOpenBedsSheet() {
+    const active = getFilters().beds;
+    const opts = [['', 'Any'], ['0', 'Studio'], ['1', '1'], ['2', '2'], ['3', '3'], ['4', '4+']];
+    nkOpenSheet('Bedrooms', `<div class="pill-group">${opts.map(([val, label]) =>
+      `<div class="filter-pill ${active === val ? 'active' : ''}" onclick="nkSheetPickBeds('${val}')">${label}</div>`).join('')}</div>`);
+  }
+  function nkSheetPickBeds(val) {
+    setPill(document.querySelector(`#bed-pills .filter-pill[data-val="${val}"]`), 'bed-pills');
+    nkCloseSheet();
+  }
+
+  function nkOpenTypeSheet() {
+    const active = getFilters().cat;
+    const opts = [['', 'All'], ...Object.entries(NK_CATEGORIES).map(([k, v]) => [k, v.label])];
+    nkOpenSheet('Property type', `<div class="pill-group">${opts.map(([val, label]) =>
+      `<div class="filter-pill ${active === val ? 'active' : ''}" onclick="nkSheetPickType('${val}')">${label}</div>`).join('')}</div>`);
+  }
+  function nkSheetPickType(val) {
+    setPill(document.querySelector(`#cat-pills .filter-pill[data-val="${val}"]`), 'cat-pills');
+    nkCloseSheet();
+  }
+
+  function nkOpenSortSheet() {
+    const active = document.getElementById('sort-select').value;
+    const opts = [['created_at_desc', 'Newest first'], ['price_asc', 'Price: low to high'], ['price_desc', 'Price: high to low'], ['featured', 'Featured first']];
+    nkOpenSheet('Sort by', `<div style="display:flex;flex-direction:column;gap:8px">${opts.map(([val, label]) =>
+      `<div class="filter-pill" style="justify-content:flex-start;padding:12px 14px;${active === val ? 'background:var(--green);color:white;border-color:var(--green)' : ''}" onclick="nkSheetPickSort('${val}')">${label}</div>`).join('')}</div>`);
+  }
+  function nkSheetPickSort(val) {
+    document.getElementById('sort-select').value = val;
+    applyFilters();
+    nkSyncQuickChipLabels();
+    nkCloseSheet();
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     ITEM 14 — sticky compact search pill in the nav
+     ══════════════════════════════════════════════════════════════ */
+  function nkBuildStickyCompactSearch() {
+    const nav = document.getElementById('main-nav');
+    const header = document.querySelector('.page-header');
+    if (!nav || !header) return;
+    function update() {
+      const past = header.getBoundingClientRect().bottom < 64;
+      nav.classList.toggle('nk-scrolled', past);
+    }
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+  }
+  function nkCompactSearchSubmit() {
+    const val = document.getElementById('nk-nav-compact-search-input').value.trim();
+    if (!val) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+    const searchEl = document.getElementById('search-q');
+    searchEl.value = val;
+    nkFormatSearchInput(searchEl);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    applyFilters();
+  }
+  document.getElementById('nk-nav-compact-search-input')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') nkCompactSearchSubmit();
+  });
+
+  /* ══════════════════════════════════════════════════════════════
+     ITEM 10 — map view toggle (Leaflet is lazy-loaded on first use)
+     ══════════════════════════════════════════════════════════════ */
+  let nkLeafletLoading = null;
+  let nkMapInstance = null;
+  let nkMapMarkersLayer = null;
+  let nkMapOpen = false;
+  const nkGeocodeCache = {};
+
+  function nkLoadLeaflet() {
+    if (window.L) return Promise.resolve();
+    if (nkLeafletLoading) return nkLeafletLoading;
+    nkLeafletLoading = new Promise((resolve) => {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(link);
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      script.onload = resolve;
+      document.head.appendChild(script);
+    });
+    return nkLeafletLoading;
+  }
+
+  async function nkToggleMapView() {
+    nkMapOpen = !nkMapOpen;
+    const panel = document.getElementById('nk-map-view');
+    const btn = document.getElementById('nk-map-toggle-btn');
+    const resultsEl = document.getElementById('results');
+    panel.classList.toggle('open', nkMapOpen);
+    btn.classList.toggle('active', nkMapOpen);
+    if (resultsEl) resultsEl.style.display = nkMapOpen ? 'none' : '';
+    if (!nkMapOpen) return;
+
+    document.getElementById('nk-map-loading').style.display = 'flex';
+    await nkLoadLeaflet();
+    if (!nkMapInstance) {
+      nkMapInstance = L.map('nk-map-view-inner', { scrollWheelZoom: true }).setView([-1.286389, 36.817223], 6);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors', maxZoom: 19 }).addTo(nkMapInstance);
+      nkMapMarkersLayer = L.layerGroup().addTo(nkMapInstance);
+    }
+    setTimeout(() => nkMapInstance.invalidateSize(), 120);
+    await nkPopulateMapMarkers();
+    document.getElementById('nk-map-loading').style.display = 'none';
+  }
+
+  async function nkGeocodeArea(area, county) {
+    const key = area + '|' + county;
+    if (nkGeocodeCache[key]) return nkGeocodeCache[key];
+    try {
+      const q = [area, county, 'Kenya'].filter(Boolean).join(', ');
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      if (data && data[0]) {
+        const pos = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+        nkGeocodeCache[key] = pos;
+        return pos;
+      }
+    } catch (e) { /* ignore, marker just gets skipped */ }
+    return null;
+  }
+
+  async function nkPopulateMapMarkers() {
+    if (!nkMapMarkersLayer) return;
+    nkMapMarkersLayer.clearLayers();
+    const source = nkMobileMode ? nkMobileAccum : nkLastListings;
+    const listings = (source && source.length) ? source : Object.values(cardDataById);
+    if (!listings.length) return;
+    const bounds = [];
+    for (const l of listings.slice(0, 60)) {
+      let lat = typeof l.latitude === 'number' ? l.latitude : null;
+      let lng = typeof l.longitude === 'number' ? l.longitude : null;
+      if (lat === null || lng === null) {
+        const county = l.county || NK_AREA_TO_COUNTY[l.area] || '';
+        const pos = await nkGeocodeArea(l.area, county);
+        if (!pos) continue;
+        lat = pos.lat; lng = pos.lng;
+      }
+      const marker = L.marker([lat, lng]).addTo(nkMapMarkersLayer);
+      const href = `/listing?id=${String(l.listing_number).padStart(6,'0')}`;
+      marker.bindPopup(`<strong>${escHtmlC(l.title)}</strong><br/>KES ${Number(l.price).toLocaleString('en-KE')}${NK_FREQ_LABEL[l.price_frequency]||''}<br/><a href="${href}" style="color:#0F6E56;font-weight:600">View listing →</a>`);
+      bounds.push([lat, lng]);
+    }
+    if (bounds.length) nkMapInstance.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 });
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     ITEM 11 — recently-viewed strip. Reads an ordered list that
+     listing.html should maintain in localStorage under 'nk_recent_viewed'
+     (an array of listing UUIDs, most-recent first, capped at ~10):
+       let recent = JSON.parse(localStorage.getItem('nk_recent_viewed')||'[]');
+       recent = [listingId, ...recent.filter(id => id !== listingId)].slice(0,10);
+       localStorage.setItem('nk_recent_viewed', JSON.stringify(recent));
+     Renders nothing if that key isn't present yet.
+     ══════════════════════════════════════════════════════════════ */
+  async function nkRenderRecentlyViewedStrip() {
+    const mount = document.getElementById('nk-recent-strip-mount');
+    if (!mount) return;
+    let ids = [];
+    try { ids = JSON.parse(localStorage.getItem('nk_recent_viewed') || '[]'); } catch (e) { ids = []; }
+    if (!Array.isArray(ids) || !ids.length) { mount.innerHTML = ''; return; }
+
+    const { data, error } = await db.from('listings').select('*, listing_photos(*)').in('id', ids.slice(0, 10)).eq('status', 'active');
+    if (error || !data || !data.length) { mount.innerHTML = ''; return; }
+    const byId = Object.fromEntries(data.map(l => [l.id, l]));
+    const ordered = ids.map(id => byId[id]).filter(Boolean);
+    if (!ordered.length) { mount.innerHTML = ''; return; }
+
+    mount.innerHTML = `
+      <div class="nk-recent-strip">
+        <div class="nk-recent-strip-title">Recently viewed</div>
+        <div class="nk-recent-row">
+          ${ordered.map(l => {
+            const cover = (l.listing_photos || []).find(p => p.is_cover) || (l.listing_photos || [])[0];
+            const href = `/listing?id=${String(l.listing_number).padStart(6,'0')}`;
+            const freq = l.price_frequency || 'once';
+            return `<div class="nk-recent-card" onclick="window.location='${href}'">
+              ${cover ? `<img src="${cover.url}" alt="${escHtmlC(l.title)}" loading="lazy"/>` : `<div style="width:140px;height:100px;background:var(--surface);border-radius:10px;border:1px solid var(--border)"></div>`}
+              <div class="nk-recent-title">${escHtmlC(l.title)}</div>
+              <div class="nk-recent-price">KES ${Number(l.price).toLocaleString('en-KE')}${NK_FREQ_LABEL[freq] || ''}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     ITEM 13 — pull-to-refresh (mobile only, top of page only)
+     ══════════════════════════════════════════════════════════════ */
+  (function () {
+    let startY = 0, pulling = false, triggered = false;
+    const indicator = document.getElementById('nk-ptr-indicator');
+    document.addEventListener('touchstart', (e) => {
+      if (!nkMobileMode || window.scrollY > 4 || !e.touches.length) return;
+      startY = e.touches[0].clientY; pulling = true; triggered = false;
+    }, { passive: true });
+    document.addEventListener('touchmove', (e) => {
+      if (!pulling || !e.touches.length) return;
+      const dy = e.touches[0].clientY - startY;
+      if (dy > 12 && window.scrollY === 0) {
+        indicator.classList.add('visible');
+        if (dy > 80) triggered = true;
+      }
+    }, { passive: true });
+    document.addEventListener('touchend', () => {
+      if (pulling && triggered) {
+        indicator.classList.add('visible');
+        applyFilters(1).finally(() => {
+          indicator.classList.remove('visible');
+        });
+      } else {
+        indicator.classList.remove('visible');
+      }
+      pulling = false; triggered = false;
+    }, { passive: true });
+  })();
+
   document.getElementById('footer-year').textContent = new Date().getFullYear();
   nkPopulateFooterCounties();
   nkPopulateCountySelect();
@@ -2115,8 +2751,13 @@ if (window.ResizeObserver && nkResultsWrapEl) {
   renderAmenityChecks();
   readUrlParams();
   toggleGroupFilters(document.querySelector('#cat-pills .filter-pill.active')?.dataset.val || '');
+  nkApplyResponsiveMode();
+  nkBuildQuickFilterBar();
+  nkBuildStickyCompactSearch();
+  nkRenderRecentlyViewedStrip();
   applyFilters();
   nkMakeClickablesKeyboardAccessible();
+  window.addEventListener('resize', nkApplyResponsiveMode);
 </script>
 
 <script src="saved-listings.js"></script>
