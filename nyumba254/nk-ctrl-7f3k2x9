@@ -2982,6 +2982,8 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
         l.is_disabled
           ? {label:'Activate',   cls:'success', fn:`activateListing('${l.id}')`}
           : {label:'Deactivate', cls:'danger',  fn:`deactivateListing('${l.id}')`},
+        ...((l.status==='active' && !l.is_disabled) ? [{label:'Mark occupied/sold', cls:'danger', fn:`markListingOccupied('${l.id}')`}] : []),
+        ...((l.status==='occupied' && !l.is_disabled) ? [{label:'Mark available again', cls:'success', fn:`unmarkListingOccupied('${l.id}')`}] : []),
         {label:'📘 Post to Facebook', cls:'blue', fn:`postToSocial('${l.id}','facebook')`, disabled: locked},
         {label:'📷 Post to Instagram', cls:'blue', fn:`postToSocial('${l.id}','instagram')`, disabled: locked},
         {label:'🎵 Post to TikTok (private)', cls:'blue', fn:`postToSocial('${l.id}','tiktok')`, disabled: locked},
@@ -3014,6 +3016,8 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
             ${l.is_disabled
               ? aBtn('activate','Activate listing','approve',`activateListing('${l.id}')`)
               : aBtn('deactivate','Deactivate listing','reject',`deactivateListing('${l.id}')`)}
+            ${(l.status==='active' && !l.is_disabled) ? aBtn('deactivate','Mark occupied/sold','reject',`markListingOccupied('${l.id}')`) : ''}
+            ${(l.status==='occupied' && !l.is_disabled) ? aBtn('activate','Mark available again','approve',`unmarkListingOccupied('${l.id}')`) : ''}
             ${renderSocialButtons(l, locked)}
             ${aBtn('recycle','Move to recycle bin','reject',`recycleListing('${l.id}')`)}
             ${aBtn('delete','Delete permanently','delete',`deleteListingPermanently('${l.id}')`)}
@@ -3058,6 +3062,8 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
           ${l.is_disabled
             ? aBtn('activate','Activate','approve',`activateListing('${l.id}')`)
             : aBtn('deactivate','Deactivate','reject',`deactivateListing('${l.id}')`)}
+          ${(l.status==='active' && !l.is_disabled) ? aBtn('deactivate','Occupied','reject',`markListingOccupied('${l.id}')`) : ''}
+          ${(l.status==='occupied' && !l.is_disabled) ? aBtn('activate','Available','approve',`unmarkListingOccupied('${l.id}')`) : ''}
           ${aBtn('recycle','Recycle','reject',`recycleListing('${l.id}')`)}
           ${aBtn('delete','Delete','delete',`deleteListingPermanently('${l.id}')`)}
         </div>
@@ -3432,6 +3438,32 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
     if (!data?.length){ toast('Blocked by RLS — check Supabase policy','error'); return; }
     logAction('activate_listing','listing',id,_listings[id]?.title||'');
     toast('Listing activated ✓','success');
+    loadOverview(); if(currentView==='listings') loadAllListings();
+  }
+
+  function markListingOccupied(id) {
+    const l = _listings[id]; if(!l) return;
+    openConfirm({
+      title: l.price_type==='rent' ? 'Mark as occupied?' : 'Mark as sold?',
+      message: `"${l.title}" will stay visible on the site but shown to buyers as ${l.price_type==='rent'?'occupied':'sold'} and unavailable.`,
+      confirmText: 'Mark it', confirmClass:'approve',
+      onConfirm: () => doMarkOccupied(id)
+    });
+  }
+  async function doMarkOccupied(id) {
+    const {data,error} = await db.from('listings').update({status:'occupied', occupied_at:new Date().toISOString()}).eq('id',id).select();
+    if (error)        { toast('Error: '+error.message,'error'); return; }
+    if (!data?.length){ toast('Blocked by RLS — check Supabase policy','error'); return; }
+    logAction('mark_occupied','listing',id,_listings[id]?.title||'');
+    toast('Listing marked occupied/sold ✓','success');
+    loadOverview(); if(currentView==='listings') loadAllListings();
+  }
+  async function unmarkListingOccupied(id) {
+    const {data,error} = await db.from('listings').update({status:'active', occupied_at:null}).eq('id',id).select();
+    if (error)        { toast('Error: '+error.message,'error'); return; }
+    if (!data?.length){ toast('Blocked by RLS — check Supabase policy','error'); return; }
+    logAction('unmark_occupied','listing',id,'');
+    toast('Listing reactivated as available ✓','success');
     loadOverview(); if(currentView==='listings') loadAllListings();
   }
 

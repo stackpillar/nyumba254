@@ -5596,7 +5596,7 @@ function updateNavBadges(){
 function getListingStatusDisplay(l){
   if(l.recycle_bin){const d=l.purge_at?Math.max(0,Math.ceil((new Date(l.purge_at)-new Date())/86400000)):null;return{label:'In recycle bin',cls:'status-disabled',banner:`Disabled by admin${l.disabled_reason?': '+escHtml(l.disabled_reason):''}. Contact admin for more information.`+(d!==null?` Removed in ${d} day(s).`:'')};}
   if(l.is_disabled)return{label:l.disabled_by_subscription?'Plan expired':'Disabled by admin',cls:'status-disabled',banner:l.disabled_by_subscription?'Your BNB plan expired — subscribe again from Settings to bring this listing back.':`Disabled by admin${l.disabled_reason?': '+escHtml(l.disabled_reason):''}. Contact admin for more information.`};
-  if(l.status==='occupied'){const word=l.price_type==='rent'?'occupied':'sold';return{label:l.price_type==='rent'?'Occupied':'Sold',cls:'status-occupied',banner:`Marked as ${word} — hidden from public search and listing pages.`};}
+  if(l.status==='occupied'){const word=l.price_type==='rent'?'occupied':'sold';return{label:l.price_type==='rent'?'Occupied':'Sold',cls:'status-occupied',banner:`Marked as ${word} — still visible to buyers, shown as unavailable.`};}
   if(l.status==='scheduled')return{label:'Scheduled',cls:'status-pending',banner:l.publish_at?`Approved — goes live automatically on ${new Date(l.publish_at).toLocaleString('en-KE')}.`:null};
   if(l.status==='approved_unpaid'&&l.payment_status==='pending_verification')return{label:'Verifying payment',cls:'status-pending',banner:'Your M-Pesa payment is being verified — this usually takes a few minutes.'};
   if(l.status==='approved_unpaid')return{label:'Awaiting payment',cls:'status-pending',banner:'Approved — pay the listing fee to make it live.'};
@@ -5736,7 +5736,7 @@ function openOccupiedModal(id,title){
   const isRent=l.price_type==='rent';
   document.getElementById('occupied-modal-title').textContent=isRent?'Mark as occupied?':'Mark as sold?';
   document.getElementById('occupied-listing-name').textContent=title;
-  document.getElementById('occupied-modal-copy').innerHTML=`This will hide <strong>${escHtml(title)}</strong> from public search immediately. It stays in your dashboard so you keep messages and history. You can reactivate it later if that falls through.`;
+  document.getElementById('occupied-modal-copy').innerHTML=`This will mark <strong>${escHtml(title)}</strong> as ${isRent?'occupied':'sold'} — it stays visible on the site but shown to buyers as unavailable, and you keep all your messages and history. You can reactivate it later if that falls through.`;
   document.getElementById('btn-confirm-occupied').textContent=isRent?'Yes, mark as occupied':'Yes, mark as sold';
   openModal('modal-occupied');
 }
@@ -5869,7 +5869,7 @@ async function confirmOccupied(){
   const l=allListings.find(l=>l.id===occupiedTargetId);
   if(l){l.status='occupied';l.occupied_at=new Date().toISOString();}
   occupiedTargetId=null;closeModal('modal-occupied');renderListingsTable();renderOverview();
-  showToast('Listing hidden from public — marked as occupied/sold ✓','success');
+  showToast('Listing marked as occupied/sold ✓ — still visible, marked unavailable','success');
 }
 
 async function publishScheduledNow(id){

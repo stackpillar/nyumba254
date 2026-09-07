@@ -456,9 +456,11 @@
         <label>Security <span class="req">*</span></label>
         <select id="std_security">
           <option value="">Select…</option>
+          <option value="gated_guard_cctv">Gated, guarded &amp; CCTV coverage</option>
           <option value="gated_guard">Gated compound with guard</option>
+          <option value="gated_cctv">Gated compound with CCTV, no guard</option>
           <option value="gated">Gated compound, no guard</option>
-          <option value="cctv">CCTV coverage</option>
+          <option value="cctv">CCTV coverage only</option>
           <option value="none">No dedicated security</option>
         </select>
       </div>

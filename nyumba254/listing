@@ -1169,13 +1169,13 @@ async function loadListing() {
     listingId = data.id;
     listingUnits = (data.listing_units || []).sort((a,b) => (a.id||0) - (b.id||0));
 
-    const isFullyActive = (data.status === 'active') && !data.is_disabled && !data.recycle_bin;
+    const isViewable = (data.status === 'active' || data.status === 'occupied') && !data.is_disabled && !data.recycle_bin;
     const { data: { session } } = await nkSessionPromise;
     const viewerUserId = session?.user?.id || null;
     isListingOwner = !!viewerUserId && (data.seller_id === viewerUserId);
     currentBuyerId = isListingOwner ? null : viewerUserId;
 
-    if (isFullyActive) {
+    if (isViewable) {
       trackView(data);
       renderListing(data);
       renderLiveMap(data);
@@ -1305,7 +1305,11 @@ function renderListing(l) {
   renderGallery();
 
   /* Badge row */
-  const badges = [`<span class="status-pill"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Available now</span>`];
+  const isOccupied = l.status === 'occupied';
+  const occLabel = l.price_frequency === 'once' ? 'Sold' : 'Occupied';
+  const badges = isOccupied
+    ? [`<span class="status-pill plain" style="background:var(--red-light);color:var(--red)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>${occLabel} — not available</span>`]
+    : [`<span class="status-pill"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Available now</span>`];
   if (l.profiles?.verification_status === 'verified') badges.push(`<span class="status-pill verified"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg>Reviewed by Nyumba254</span>`);
   badges.push(`<span class="status-pill plain">${meta.label}</span>`);
   if (meta.group === 'boarding') badges.push(`<span class="status-pill plain">Student friendly</span>`);
@@ -1395,6 +1399,15 @@ function renderListing(l) {
   const contactHidden = !!l.contact_hidden;
   const phoneFieldEl = document.getElementById('enq-phone-field');
   if (phoneFieldEl) phoneFieldEl.style.display = contactHidden ? 'none' : 'block';
+
+  if (isOccupied) {
+    document.getElementById('btn-call')?.setAttribute('disabled', 'true');
+    document.getElementById('btn-whatsapp')?.setAttribute('disabled', 'true');
+    const enquiryFormEl = document.getElementById('enquiry-form');
+    if (enquiryFormEl) enquiryFormEl.style.display = 'none';
+    const sidebarSubEl = document.querySelector('.sidebar-sub');
+    if (sidebarSubEl) sidebarSubEl.textContent = `This property has already been ${occLabel.toLowerCase()} — browse similar listings below.`;
+  }
 
   document.getElementById('skeleton-wrap').style.display = 'none';
   document.getElementById('listing-content').style.display = 'block';
