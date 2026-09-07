@@ -317,26 +317,43 @@
     .area-card.coming-soon:hover { border-color: var(--border); background: white; }
     .area-card.tier1 { border-color: #9FE1CB; }
 
-    /* ── Horizontal scroll hint (mobile only) — an ambient pulsing dot,
-       not a control. No click target, no arrow icon. ── */
+    /* ── Horizontal scroll hint — silent by default. JS reveals a side
+       only when the track actually overflows in that direction. ── */
     .scroll-wrap { position: relative; }
     .scroll-hint {
       display: none;
       position: absolute;
-      right: 10px;
       top: 50%;
       transform: translateY(-50%);
-      width: 8px;
-      height: 8px;
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
-      pointer-events: none;
+      align-items: center;
+      justify-content: center;
       z-index: 5;
-      background: var(--green);
-      box-shadow: 0 0 0 6px rgba(15,110,86,0.16);
+      background: white;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 16px rgba(15,26,22,0.14);
+      padding: 0;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .12s ease, box-shadow .15s ease;
+      -webkit-tap-highlight-color: transparent;
     }
-    @keyframes nk-pulse-hint {
-      0%, 100% { transform: translateY(-50%) scale(1); opacity: .7; box-shadow: 0 0 0 6px rgba(15,110,86,0.16); }
-      50% { transform: translateY(-50%) scale(1.4); opacity: 1; box-shadow: 0 0 0 10px rgba(15,110,86,0.05); }
+    .scroll-hint.visible { opacity: 1; pointer-events: auto; }
+    .scroll-hint:hover { box-shadow: 0 6px 20px rgba(15,26,22,0.2); }
+    .scroll-hint:active { transform: translateY(-50%) scale(0.9); }
+    .scroll-hint.right { right: 8px; }
+    .scroll-hint.left { left: 8px; }
+    .scroll-hint svg {
+      width: 16px;
+      height: 16px;
+      stroke: var(--green-dark);
+      stroke-width: 2.6;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
     .carousel-dots {
       display: none;
@@ -480,7 +497,7 @@
       }
       .areas::-webkit-scrollbar { display: none; }
 
-      .scroll-hint { display: flex; animation: nk-pulse-hint 1.8s ease-in-out infinite; }
+      .scroll-hint { display: flex; }
       .carousel-dots { display: flex; }
     }
     @media (max-width: 480px) {
@@ -656,7 +673,8 @@
       <div class="cat-count" id="count-commercial">Loading…</div>
     </div>
   </div>
-  <span class="scroll-hint" aria-hidden="true"></span>
+  <button class="scroll-hint left" aria-label="Scroll to previous categories" onclick="nkScrollWrap(this,-1)"><svg viewBox="0 0 24 24"><polyline points="15 6 9 12 15 18"/></svg></button>
+  <button class="scroll-hint right" aria-label="Scroll for more categories" onclick="nkScrollWrap(this,1)"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
   </div>
 </section>
 
@@ -677,7 +695,8 @@
       <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line short"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
     </div>
   </div>
-  <span class="scroll-hint" aria-hidden="true"></span>
+  <button class="scroll-hint left" aria-label="Scroll to previous featured listings" onclick="nkScrollWrap(this,-1)"><svg viewBox="0 0 24 24"><polyline points="15 6 9 12 15 18"/></svg></button>
+  <button class="scroll-hint right" aria-label="Scroll for more featured listings" onclick="nkScrollWrap(this,1)"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
   </div>
 </section>
 
@@ -702,7 +721,8 @@
       <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line short"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
     </div>
   </div>
-  <span class="scroll-hint" aria-hidden="true"></span>
+  <button class="scroll-hint left" aria-label="Scroll to previous listings" onclick="nkScrollWrap(this,-1)"><svg viewBox="0 0 24 24"><polyline points="15 6 9 12 15 18"/></svg></button>
+  <button class="scroll-hint right" aria-label="Scroll for more listings" onclick="nkScrollWrap(this,1)"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
   </div>
 </section>
 
@@ -714,7 +734,8 @@
   </div>
   <div class="scroll-wrap">
   <div class="areas" id="counties-grid"></div>
-  <span class="scroll-hint" aria-hidden="true"></span>
+  <button class="scroll-hint left" aria-label="Scroll to previous counties" onclick="nkScrollWrap(this,-1)"><svg viewBox="0 0 24 24"><polyline points="15 6 9 12 15 18"/></svg></button>
+  <button class="scroll-hint right" aria-label="Scroll for more counties" onclick="nkScrollWrap(this,1)"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
   </div>
 </section>
 
@@ -975,6 +996,7 @@
       counts[county] = (counts[county] || 0) + 1;
     });
     renderCountiesGrid(counts);
+    nkRefreshAllScrollHints();
   }
 
   function renderFooterCounties() {
@@ -1059,6 +1081,51 @@
       nav.classList.remove('open');
     }
   });
+function nkScrollWrap(btn, dir) {
+  const wrap = btn.closest('.scroll-wrap');
+  if (!wrap) return;
+  const scroller = wrap.querySelector('.categories, .listings-grid, .areas');
+  if (!scroller) return;
+  const firstCard = scroller.querySelector(':scope > *');
+  const gap = parseFloat(getComputedStyle(scroller).gap) || 16;
+  const step = firstCard ? firstCard.getBoundingClientRect().width + gap : scroller.clientWidth * 0.8;
+  scroller.scrollBy({ left: step * (dir || 1), behavior: 'smooth' });
+}
+
+/* ── Scroll-hint visibility: silent unless the track overflows, and only
+   the side that still has content to reveal lights up. ── */
+function nkGetScroller(wrap) {
+  return wrap.querySelector('.categories, .listings-grid, .areas');
+}
+function nkUpdateHintVisibility(wrap) {
+  const scroller = nkGetScroller(wrap);
+  if (!scroller) return;
+  const leftBtn = wrap.querySelector('.scroll-hint.left');
+  const rightBtn = wrap.querySelector('.scroll-hint.right');
+  const hasOverflow = scroller.scrollWidth > scroller.clientWidth + 4;
+  const atStart = scroller.scrollLeft <= 4;
+  const atEnd = scroller.scrollLeft >= scroller.scrollWidth - scroller.clientWidth - 4;
+  if (leftBtn) leftBtn.classList.toggle('visible', hasOverflow && !atStart);
+  if (rightBtn) rightBtn.classList.toggle('visible', hasOverflow && !atEnd);
+}
+function nkInitScrollWrap(wrap) {
+  const scroller = nkGetScroller(wrap);
+  if (!scroller) return;
+  if (!wrap.dataset.hintsBound) {
+    wrap.dataset.hintsBound = '1';
+    let ticking = false;
+    scroller.addEventListener('scroll', () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => { nkUpdateHintVisibility(wrap); ticking = false; });
+    }, { passive: true });
+  }
+  nkUpdateHintVisibility(wrap);
+}
+function nkRefreshAllScrollHints() {
+  document.querySelectorAll('.scroll-wrap').forEach(nkInitScrollWrap);
+}
+window.addEventListener('resize', nkRefreshAllScrollHints);
   /* ── Price formatting driven by price_frequency, matching listings ── */
   function formatPrice(listing) {
     const suffix = NK_FREQ_LABEL[listing.price_frequency] || '';
@@ -1161,7 +1228,7 @@
     }
     el.innerHTML = `<div class="listings-grid">${listings.map(buildCard).join('')}</div>${buildDotsHtml(listings.length)}`;
     const wrap = el.closest('.scroll-wrap');
-    if (wrap) attachCarouselDots(wrap);
+    if (wrap) { attachCarouselDots(wrap); nkInitScrollWrap(wrap); }
   }
 
   /* ── Featured: fetch enough rows for up to ~2–3 rows on desktop. The grid
@@ -1305,6 +1372,8 @@
   nkSetAreaStat();
   loadFeatured();
   loadCounts();
+  nkRefreshAllScrollHints();
+  window.addEventListener('load', nkRefreshAllScrollHints);
 </script>
 <script src="saved-listings.js"></script>
 <script>if (typeof NKSaved !== 'undefined') NKSaved.init();</script>
