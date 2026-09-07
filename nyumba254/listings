@@ -2728,7 +2728,10 @@
       const dy = e.touches[0].clientY - startY;
       if (dy > 12 && window.scrollY === 0) {
         indicator.classList.add('visible');
-        if (dy > 80) triggered = true;
+        triggered = dy > 80;
+      } else {
+        indicator.classList.remove('visible');
+        triggered = false;
       }
     }, { passive: true });
     document.addEventListener('touchend', () => {
