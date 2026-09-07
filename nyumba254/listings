@@ -654,7 +654,7 @@
       position: fixed; top: 64px; left: 50%; transform: translate(-50%, -60px); z-index: 150;
       background: white; border: 1px solid var(--border); border-radius: 50%; width: 40px; height: 40px;
       display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(0,0,0,0.14);
-      transition: transform .15s ease; pointer-events: none;
+      transition: transform .15s ease; pointer-events: none !important;
     }
     #nk-ptr-indicator.visible { transform: translate(-50%, 8px); }
     #nk-ptr-indicator .nk-spinner { border-top-color: var(--green); }
@@ -2784,6 +2784,17 @@
     document.addEventListener('scroll', () => {
       if (!pulling && !refreshing) indicator.classList.remove('visible');
     }, { passive: true });
+
+    // Absolute last resort: no event, timer, or promise chain has to
+    // fire correctly for this to work. Every second, if nothing is
+    // actively being pulled or refreshed right now, force the
+    // indicator hidden. This makes a permanent "stuck spinner" state
+    // structurally impossible, regardless of what else goes wrong.
+    setInterval(() => {
+      if (!pulling && !refreshing && indicator.classList.contains('visible')) {
+        indicator.classList.remove('visible');
+      }
+    }, 1000);
   })();
 
   document.getElementById('footer-year').textContent = new Date().getFullYear();
