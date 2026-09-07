@@ -41,8 +41,8 @@
       --radius:      10px;
       --radius-lg:   16px;
     }
-    html { scroll-behavior: smooth; overflow-x: hidden; overscroll-behavior-x: none; }
-    body { font-family: 'Inter', sans-serif; color: var(--text); background: var(--surface); font-size: 15px; line-height: 1.6; overflow-x: hidden; overscroll-behavior-x: none; width: 100%; }
+    html { scroll-behavior: smooth; overflow-x: hidden; overscroll-behavior: none; }
+    body { font-family: 'Inter', sans-serif; color: var(--text); background: var(--surface); font-size: 15px; line-height: 1.6; overflow-x: hidden; overscroll-behavior: none; width: 100%; }
     a { text-decoration: none; color: inherit; }
     button { font-family: inherit; cursor: pointer; border: none; }
     input, select { font-family: inherit; }
