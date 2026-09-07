@@ -323,10 +323,10 @@
       font-size: 13px; font-weight: 600; transition: background .15s;
       margin-top: auto;
     }
-    .card-inquire-btn:hover { background: var(--green-dark); }
     .card-inquire-btn.sent { background: white; color: var(--green-dark); border: 1.5px solid var(--green); }
     .card-inquire-btn.sent:hover { background: var(--green-light); }
     .card-inquire-btn.sent svg { stroke: var(--green-dark); }
+    .card-inquire-btn svg { width: 15px; height: 15px; flex-shrink: 0; stroke: white; fill: none; stroke-width: 2; }
 
     .ci-success { display: none; text-align: center; padding: 10px 0 4px; }
     .ci-success-icon { width: 46px; height: 46px; background: var(--green-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
