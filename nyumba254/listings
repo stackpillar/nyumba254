@@ -2719,8 +2719,9 @@
   (function () {
     let startY = 0, pulling = false, triggered = false;
     const indicator = document.getElementById('nk-ptr-indicator');
+    const nkPtrReadyAt = Date.now() + 1000; // ignore touches for 1s after page load
     document.addEventListener('touchstart', (e) => {
-      if (!nkMobileMode || window.scrollY > 4 || !e.touches.length) return;
+      if (!nkMobileMode || window.scrollY > 4 || !e.touches.length || Date.now() < nkPtrReadyAt) return;
       startY = e.touches[0].clientY; pulling = true; triggered = false;
     }, { passive: true });
     document.addEventListener('touchmove', (e) => {
@@ -2740,6 +2741,10 @@
       } else {
         indicator.classList.remove('visible');
       }
+      pulling = false; triggered = false;
+    }, { passive: true });
+    document.addEventListener('touchcancel', () => {
+      indicator.classList.remove('visible');
       pulling = false; triggered = false;
     }, { passive: true });
   })();
