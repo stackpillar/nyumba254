@@ -1794,7 +1794,7 @@ function nkRenderVideoEmbed(url) {
   if (!url) return '';
 
   // YouTube — lite-embed: thumbnail + play button first, real iframe loads only on click
-  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{6,})/i);
+  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([\w-]{6,})/i);
   if (yt) return nkLiteEmbed(`https://img.youtube.com/vi/${yt[1]}/hqdefault.jpg`, `https://www.youtube.com/embed/${yt[1]}?autoplay=1`, 'YouTube');
 
   // Vimeo — same lite pattern, generic thumbnail (no public thumbnail API without a key)
