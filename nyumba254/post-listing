@@ -881,6 +881,8 @@ const PLATFORM_SETTINGS = {
   standard_min_fee: 500, standard_max_fee: 18000,
   standard_fee_per_unit: 50, trial_days: 14,
   bnb_basic_price: 700,
+  enforce_verification_general: 0,
+  unverified_listing_limit: 2,
 };
 let isFirstListing = false;
 
@@ -889,6 +891,20 @@ async function loadPlatformSettings() {
   (data||[]).forEach(r => { PLATFORM_SETTINGS[r.key] = Number(r.value); });
 }
 let sellerCoverage = { rental:false, bnb:false }; // replaces sellerPlanCategory
+async function checkVerificationGate() {
+  if (!currentUser) return { blocked: false }; // a guest is always creating their first listing
+  const { data: prof } = await db.from('profiles').select('verification_status, verification_enforced').eq('id', currentUser.id).single();
+  const enforced = Number(PLATFORM_SETTINGS.enforce_verification_general) === 1 || !!prof?.verification_enforced;
+  if (!enforced) return { blocked: false };
+  if (prof?.verification_status === 'verified') return { blocked: false };
+  const limit = Number(PLATFORM_SETTINGS.unverified_listing_limit) || 2;
+  const { count } = await db.from('listings').select('*', { count: 'exact', head: true })
+    .eq('seller_id', currentUser.id).eq('recycle_bin', false)
+    .in('status', ['active','pending','scheduled','approved_unpaid','approved_unpaid_bnb']);
+  if ((count || 0) >= limit) return { blocked: true, limit };
+  return { blocked: false };
+}
+
 async function checkFirstListing() {
   if (!currentUser) { isFirstListing = true; sellerCoverage = { rental: false, bnb: false }; return; }
   const { count } = await db.from('listings').select('*', { count:'exact', head:true }).eq('seller_id', currentUser.id);
@@ -1792,6 +1808,13 @@ function showToast(msg, type = '') {
    SUBMIT
    ══════════════════════════════════════════════════════════════ */
 async function submitListing() {
+  const gate = await checkVerificationGate();
+  if (gate.blocked) {
+    showToast(`Verify your account first — unverified sellers are limited to ${gate.limit} listing(s).`, 'error');
+    forceSaveDraftNow();
+    setTimeout(() => { window.location.href = `dashboard.html?verify=1&limit=${gate.limit}`; }, 1200);
+    return;
+  }
   const agreeEl = document.getElementById('agree-terms');
   const agreeErr = document.getElementById('err-agree-terms');
   if (!agreeEl.checked) {

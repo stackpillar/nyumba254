@@ -2316,6 +2316,7 @@ async function init(){
     currentUser=session.user;
     document.getElementById('topbar-date').textContent=new Date().toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
     await resolveEffectiveSeller();
+    await loadPlatformVerifySettings();
     await loadProfile();
     if(currentProfile?.role==='admin'){
       document.getElementById('loading-screen').style.display='none';
@@ -2338,6 +2339,14 @@ async function init(){
     renderOverview();
     document.getElementById('loading-screen').style.display='none';
     document.getElementById('app-shell').style.display='flex';
+    const urlParams=new URLSearchParams(location.search);
+    if(urlParams.get('verify')==='1'){
+      const lim=urlParams.get('limit')||PLATFORM_VERIFY_SETTINGS.unverified_listing_limit||2;
+      showToast(`Please verify your account — unverified sellers are limited to ${lim} listing(s).`,'error');
+      showPage('settings');
+      setTimeout(()=>openKycModal(),400);
+      history.replaceState(null,'',location.pathname);
+    }
     const lastPage=sessionStorage.getItem('ny_last_page');
     if(lastPage&&lastPage!=='overview'&&document.getElementById('page-'+lastPage)){showPage(lastPage);}
     msgPollTimer=setInterval(pollNewMessages,MSG_POLL_MS);
@@ -2586,6 +2595,15 @@ async function verifyAccountStillActive(){
   if(!error && count===0){ await handleDeletedAccount(); }
 }
 
+let PLATFORM_VERIFY_SETTINGS = { enforce_verification_general: 0, unverified_listing_limit: 2 };
+async function loadPlatformVerifySettings(){
+  const{data}=await db.from('platform_settings').select('key,value').in('key',['enforce_verification_general','unverified_listing_limit']);
+  (data||[]).forEach(r=>{ PLATFORM_VERIFY_SETTINGS[r.key]=Number(r.value); });
+}
+function verificationEnforcedForMe(){
+  return Number(PLATFORM_VERIFY_SETTINGS.enforce_verification_general)===1 || !!currentProfile?.verification_enforced;
+}
+
 async function loadProfile(){
   const{data,error}=await db.from('profiles').select('*').eq('id',currentUser.id).single();
   if(error || !data){
@@ -2647,7 +2665,13 @@ function updateVerifyWarningBanner(){
   const banner=document.getElementById('verify-warning-banner');
   if(!banner)return;
   const status=currentProfile?.verification_status||'unverified';
-  banner.style.display=(status==='unverified'||status==='rejected')?'flex':'none';
+  const applies = verificationEnforcedForMe() && (status==='unverified'||status==='rejected');
+  banner.style.display = applies ? 'flex' : 'none';
+  if(applies){
+    const limit = Number(PLATFORM_VERIFY_SETTINGS.unverified_listing_limit)||2;
+    const textEl = banner.querySelector('span');
+    if(textEl) textEl.textContent = `Your account isn't verified yet — your active listings are limited to ${limit}. Verify your account to unlock unlimited listings and a trust badge buyers can see.`;
+  }
 }
 function goToVerification(){
   openKycModal();

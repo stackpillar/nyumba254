@@ -1106,6 +1106,22 @@
         </div>
       </div>
       <div class="card">
+        <div class="card-header"><span class="card-title">Platform controls</span></div>
+        <p style="padding:14px 22px 4px;font-size:12px;color:var(--text-3);line-height:1.6">Master switches, live instantly. Per-seller verification overrides live in each seller's profile (Sellers → Manage profile).</p>
+        <div style="padding:8px 22px 24px;display:flex;flex-direction:column;gap:14px;max-width:520px">
+          <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text-2);cursor:pointer">
+            <input type="checkbox" id="set-require_payment_to_publish" style="width:18px;height:18px;margin-top:2px"/>
+            <span><strong>Require payment before listings go live</strong><br/><span style="color:var(--text-3);font-size:12px">On (default): current behavior — pay or trial before going active. Off: every approved listing goes straight to active for free.</span></span>
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text-2);cursor:pointer">
+            <input type="checkbox" id="set-enforce_verification_general" style="width:18px;height:18px;margin-top:2px"/>
+            <span><strong>Enforce verification limit — all sellers</strong><br/><span style="color:var(--text-3);font-size:12px">Caps every unverified seller at the limit below and sends them to KYC on submit. Leave off to only enforce it on individually flagged sellers.</span></span>
+          </label>
+          <div class="settings-field" style="max-width:260px"><label>Unverified seller listing limit</label><input type="number" id="set-unverified_listing_limit" min="0"/></div>
+          <button class="btn-modal approve" style="width:fit-content" onclick="saveSettings()">Save platform controls</button>
+        </div>
+      </div>
+      <div class="card">
         <div class="card-header"><span class="card-title">Social media auto-posting</span></div>
         <p style="padding:14px 22px 4px;font-size:12px;color:var(--text-3);line-height:1.6">Posts go to Nyumba254's own Facebook Page and Instagram — not sellers' individual accounts. You can also post any listing manually from the Actions column any time, regardless of these settings.</p>
         <div style="padding:8px 22px 24px;display:flex;flex-direction:column;gap:10px;max-width:440px">
@@ -2028,6 +2044,9 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
     elite_valuation_uses_monthly: 20,
     bnb_basic_price: 700,
     bnb_bundle_price: 2000,
+    require_payment_to_publish: 1,
+    enforce_verification_general: 0,
+    unverified_listing_limit: 2,
   };
 
   // Shared logic — keep this in sync with the identical function in
@@ -2065,10 +2084,13 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
     if (featLabel) featLabel.textContent = `Sale ${SETTINGS.sale_featured_pct}% / Rent ${SETTINGS.rent_featured_pct}%`;
   }
 
+  const SETTINGS_CHECKBOX_KEYS = ['require_payment_to_publish','enforce_verification_general'];
   function loadSettingsForm() {
     SETTINGS_KEYS.forEach(k => {
       const el = document.getElementById('set-' + k);
-      if (el) el.value = SETTINGS[k];
+      if (!el) return;
+      if (SETTINGS_CHECKBOX_KEYS.includes(k)) el.checked = !!Number(SETTINGS[k]);
+      else el.value = SETTINGS[k];
     });
     db.from('platform_settings').select('key,value').in('key',['rm_name','rm_phone']).then(({data})=>{
       (data||[]).forEach(row=>{ const el=document.getElementById('set-'+row.key); if(el) el.value=row.value||''; });
@@ -2078,8 +2100,10 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
   async function saveSettings() {
     const rows = SETTINGS_KEYS.map(k => {
       const el = document.getElementById('set-' + k);
-      const val = Number(el?.value);
-      return { key: k, value: isNaN(val) ? SETTINGS[k] : val, updated_at: new Date().toISOString(), updated_by: currentUser?.id || null };
+      let val;
+      if (SETTINGS_CHECKBOX_KEYS.includes(k)) val = el ? (el.checked ? 1 : 0) : SETTINGS[k];
+      else { val = Number(el?.value); if (isNaN(val)) val = SETTINGS[k]; }
+      return { key: k, value: val, updated_at: new Date().toISOString(), updated_by: currentUser?.id || null };
     });
     const rmName = document.getElementById('set-rm_name')?.value.trim() || '';
     const rmPhone = document.getElementById('set-rm_phone')?.value.trim() || '';
@@ -3161,12 +3185,13 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
     // a covered listing goes straight to active — no per-listing payment.
     const planCoversThis = (!isTrial && l?.seller_id) ? await sellerPlanCoversListing(l) : false;
 
+    const bypassPayment = Number(SETTINGS.require_payment_to_publish) === 0;
     const newStatus = isFutureScheduled ? 'scheduled'
-      : (isTrial || isPaid || planCoversThis) ? 'active'
+      : (isTrial || isPaid || planCoversThis || bypassPayment) ? 'active'
       : isAirbnb ? 'approved_unpaid_bnb'
       : 'approved_unpaid';
 
-    const {data,error} = await db.from('listings').update({status:newStatus, payment_status: planCoversThis ? 'paid' : l.payment_status}).eq('id',id).select();
+    const {data,error} = await db.from('listings').update({status:newStatus, payment_status: (planCoversThis || bypassPayment) ? 'paid' : l.payment_status}).eq('id',id).select();
     if (error)       { toast('Error approving: '+error.message,'error'); return; }
     if (!data?.length){ toast('Blocked by RLS — check Supabase policy','error'); return; }
     logAction(isFutureScheduled ? 'approve_listing_scheduled' : 'approve_listing','listing',id,title||'');
@@ -3176,7 +3201,7 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
         notifySeller('listing_approved', { listingId: id, listingTitle: title, sellerName: l.profiles.full_name, sellerEmail: l.profiles.email });
       } else if (isFutureScheduled) {
         notifySeller('listing_scheduled', { listingId: id, listingTitle: title, publishAt: l.publish_at, sellerName: l.profiles.full_name, sellerEmail: l.profiles.email });
-      } else if (planCoversThis) {
+      } else if (planCoversThis || bypassPayment) {
         notifySeller('listing_approved', { listingId: id, listingTitle: title, sellerName: l.profiles.full_name, sellerEmail: l.profiles.email });
       } else if (isAirbnb) {
         notifySeller('listing_approved_subscribe_bnb', { listingId: id, listingTitle: title, sellerName: l.profiles.full_name, sellerEmail: l.profiles.email });
@@ -4276,6 +4301,7 @@ async function messageSellerInChat(sellerId) {
         <option value="seller" ${u.role!=='admin'?'selected':''}>Seller</option>
         <option value="admin"  ${u.role==='admin' ?'selected':''}>Admin</option>
       </select></div>
+      <div class="field check-field"><input type="checkbox" id="pf-verification_enforced" ${u.verification_enforced?'checked':''}/><label for="pf-verification_enforced">Force this seller to verify (caps them at the unverified listing limit even if the general switch is off)</label></div>
       <div class="field"><label>Joined</label><div class="val">${fmtDate(u.created_at)}</div></div>
       <div class="field"><label>Profile ID</label><div class="val mono">${u.id}</div></div>`;
     document.getElementById('profile-modal-footer').innerHTML = `
@@ -4304,6 +4330,7 @@ async function messageSellerInChat(sellerId) {
       phone:     document.getElementById('pf-phone').value.trim(),
       email:     document.getElementById('pf-email').value.trim(),
       role:      document.getElementById('pf-role').value,
+      verification_enforced: document.getElementById('pf-verification_enforced')?.checked || false,
     };
     const {error} = await db.from('profiles').update(updates).eq('id',editingProfileId);
     profileEditBusy = false;
