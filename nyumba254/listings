@@ -2715,37 +2715,74 @@
 
   /* ══════════════════════════════════════════════════════════════
      ITEM 13 — pull-to-refresh (mobile only, top of page only)
+     Hardened: a watchdog timer guarantees the indicator/lock always
+     clears even if a touch sequence gets interrupted (modal opens,
+     browser swallows touchend, network hangs, etc). Nothing here can
+     block scrolling — listeners stay passive and only ever read state.
      ══════════════════════════════════════════════════════════════ */
   (function () {
-    let startY = 0, pulling = false, triggered = false;
+    let startY = 0, pulling = false, triggered = false, refreshing = false;
+    let watchdogTimer = null;
     const indicator = document.getElementById('nk-ptr-indicator');
     const nkPtrReadyAt = Date.now() + 1000; // ignore touches for 1s after page load
+
+    function nkPtrReset() {
+      clearTimeout(watchdogTimer);
+      watchdogTimer = null;
+      indicator.classList.remove('visible');
+      pulling = false;
+      triggered = false;
+    }
+
+    function nkPtrArmWatchdog() {
+      clearTimeout(watchdogTimer);
+      // Absolute safety net: no matter what happens (dropped event,
+      // hung request, etc), force-clear within 4s so nothing can stay
+      // stuck showing "refreshing" forever.
+      watchdogTimer = setTimeout(nkPtrReset, 4000);
+    }
+
     document.addEventListener('touchstart', (e) => {
-      if (!nkMobileMode || window.scrollY > 4 || !e.touches.length || Date.now() < nkPtrReadyAt) return;
+      if (!nkMobileMode || refreshing || window.scrollY > 4 || !e.touches.length || Date.now() < nkPtrReadyAt) return;
       startY = e.touches[0].clientY; pulling = true; triggered = false;
     }, { passive: true });
+
     document.addEventListener('touchmove', (e) => {
-      if (!pulling || !e.touches.length) return;
+      if (!pulling || refreshing || !e.touches.length) return;
       const dy = e.touches[0].clientY - startY;
       if (dy > 12 && window.scrollY === 0) {
         indicator.classList.add('visible');
-        if (dy > 80) triggered = true;
+        triggered = dy > 80;
+      } else if (window.scrollY > 4) {
+        // User is actually scrolling the page, not pulling — bail out
+        // cleanly instead of leaving a half-triggered gesture behind.
+        nkPtrReset();
       }
     }, { passive: true });
+
     document.addEventListener('touchend', () => {
-      if (pulling && triggered) {
+      if (pulling && triggered && !refreshing) {
+        refreshing = true;
         indicator.classList.add('visible');
-        applyFilters(1).finally(() => {
-          indicator.classList.remove('visible');
-        });
+        nkPtrArmWatchdog();
+        applyFilters(1)
+          .catch(err => console.error('Pull-to-refresh failed:', err))
+          .finally(() => {
+            refreshing = false;
+            nkPtrReset();
+          });
       } else {
-        indicator.classList.remove('visible');
+        nkPtrReset();
       }
-      pulling = false; triggered = false;
     }, { passive: true });
-    document.addEventListener('touchcancel', () => {
-      indicator.classList.remove('visible');
-      pulling = false; triggered = false;
+
+    document.addEventListener('touchcancel', nkPtrReset, { passive: true });
+
+    // Belt-and-braces: if a gesture ever leaves the indicator visible
+    // without an active pull or refresh in progress, clear it on the
+    // next scroll or tap anywhere.
+    document.addEventListener('scroll', () => {
+      if (!pulling && !refreshing) indicator.classList.remove('visible');
     }, { passive: true });
   })();
 
