@@ -2701,6 +2701,16 @@
       </div>`;
   }
 
+  // Safety net: if body scroll is ever left locked with no modal actually
+  // open (e.g. a modal's close path got skipped), unlock it automatically.
+  setInterval(() => {
+    const anyModalOpen = document.querySelector('.notify-modal-overlay.open, .nk-sheet-overlay.open')
+      || document.getElementById('sidebar')?.classList.contains('open');
+    if (!anyModalOpen && document.body.style.overflow === 'hidden') {
+      document.body.style.overflow = '';
+    }
+  }, 1000);
+
   document.getElementById('footer-year').textContent = new Date().getFullYear();
   nkPopulateFooterCounties();
   nkPopulateCountySelect();
@@ -2785,9 +2795,12 @@
     if (exitPendingHref) window.location.href = exitPendingHref;
   }
 
-  document.addEventListener('mouseout', (e) => {
-    if (e.clientY <= 0) exitOpenModal(null);
-  });
+  const nkIsTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+  if (!nkIsTouchDevice) {
+    document.addEventListener('mouseout', (e) => {
+      if (e.clientY <= 0) exitOpenModal(null);
+    });
+  }
 
   document.addEventListener('click', (e) => {
     if (exitAlreadyShown()) return;
