@@ -41,8 +41,8 @@
       --radius:      10px;
       --radius-lg:   16px;
     }
-    html { scroll-behavior: smooth; overflow-x: hidden; overscroll-behavior: none; }
-    body { font-family: 'Inter', sans-serif; color: var(--text); background: var(--surface); font-size: 15px; line-height: 1.6; overflow-x: hidden; overscroll-behavior: none; width: 100%; }
+    html { scroll-behavior: smooth; overflow-x: hidden; overscroll-behavior-x: none; }
+    body { font-family: 'Inter', sans-serif; color: var(--text); background: var(--surface); font-size: 15px; line-height: 1.6; overflow-x: hidden; overscroll-behavior-x: none; width: 100%; }
     a { text-decoration: none; color: inherit; }
     button { font-family: inherit; cursor: pointer; border: none; }
     input, select { font-family: inherit; }
@@ -649,12 +649,24 @@
     .nk-recent-card .nk-recent-title { font-size: 11.5px; font-weight: 600; color: var(--text); margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .nk-recent-card .nk-recent-price { font-size: 11.5px; font-weight: 700; color: var(--green-dark); }
 
-@media (max-width: 768px) {
-  .nk-quickbar { top: 64px; }
+    /* Item 13: pull-to-refresh indicator */
+    #nk-ptr-indicator {
+      position: fixed; top: 64px; left: 50%; transform: translate(-50%, -60px); z-index: 150;
+      background: white; border: 1px solid var(--border); border-radius: 50%; width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(0,0,0,0.14);
+      transition: transform .15s ease; pointer-events: none;
+    }
+    #nk-ptr-indicator.visible { transform: translate(-50%, 8px); }
+    #nk-ptr-indicator .nk-spinner { border-top-color: var(--green); }
+
+    @media (max-width: 768px) {
+      .nk-quickbar { top: 56px; }
     }
   </style>
 </head>
 <body>
+
+<div id="nk-ptr-indicator"><span class="nk-spinner"></span></div>
 
 <!-- ── NAVBAR ── -->
 <nav id="main-nav">
@@ -2405,10 +2417,8 @@
     if (shouldBeMobile === nkMobileMode) return;
     nkMobileMode = shouldBeMobile;
     document.body.classList.toggle('nk-mobile-feed', nkMobileMode);
-    // Re-fetch from page 1 only if real listings were already showing
-    // (a genuine mobile↔desktop mode switch), not on first paint when
-    // only the skeleton placeholders are present.
-    if (document.querySelector('#listings-grid .card')) applyFilters(1);
+    // Re-fetch from page 1 in the new mode so the feed/pagination matches.
+    if (document.getElementById('listings-grid').children.length) applyFilters(1);
   }
   NK_MOBILE_QUERY.addEventListener ? NK_MOBILE_QUERY.addEventListener('change', nkApplyResponsiveMode) : NK_MOBILE_QUERY.addListener(nkApplyResponsiveMode);
 
@@ -2703,15 +2713,36 @@
       </div>`;
   }
 
-  // Safety net: if body scroll is ever left locked with no modal actually
-  // open (e.g. a modal's close path got skipped), unlock it automatically.
-  setInterval(() => {
-    const anyModalOpen = document.querySelector('.notify-modal-overlay.open, .nk-sheet-overlay.open')
-      || document.getElementById('sidebar')?.classList.contains('open');
-    if (!anyModalOpen && document.body.style.overflow === 'hidden') {
-      document.body.style.overflow = '';
-    }
-  }, 1000);
+  /* ══════════════════════════════════════════════════════════════
+     ITEM 13 — pull-to-refresh (mobile only, top of page only)
+     ══════════════════════════════════════════════════════════════ */
+  (function () {
+    let startY = 0, pulling = false, triggered = false;
+    const indicator = document.getElementById('nk-ptr-indicator');
+    document.addEventListener('touchstart', (e) => {
+      if (!nkMobileMode || window.scrollY > 4 || !e.touches.length) return;
+      startY = e.touches[0].clientY; pulling = true; triggered = false;
+    }, { passive: true });
+    document.addEventListener('touchmove', (e) => {
+      if (!pulling || !e.touches.length) return;
+      const dy = e.touches[0].clientY - startY;
+      if (dy > 12 && window.scrollY === 0) {
+        indicator.classList.add('visible');
+        if (dy > 80) triggered = true;
+      }
+    }, { passive: true });
+    document.addEventListener('touchend', () => {
+      if (pulling && triggered) {
+        indicator.classList.add('visible');
+        applyFilters(1).finally(() => {
+          indicator.classList.remove('visible');
+        });
+      } else {
+        indicator.classList.remove('visible');
+      }
+      pulling = false; triggered = false;
+    }, { passive: true });
+  })();
 
   document.getElementById('footer-year').textContent = new Date().getFullYear();
   nkPopulateFooterCounties();
@@ -2797,12 +2828,9 @@
     if (exitPendingHref) window.location.href = exitPendingHref;
   }
 
-  const nkIsTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-  if (!nkIsTouchDevice) {
-    document.addEventListener('mouseout', (e) => {
-      if (e.clientY <= 0) exitOpenModal(null);
-    });
-  }
+  document.addEventListener('mouseout', (e) => {
+    if (e.clientY <= 0) exitOpenModal(null);
+  });
 
   document.addEventListener('click', (e) => {
     if (exitAlreadyShown()) return;
