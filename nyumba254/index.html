@@ -317,43 +317,26 @@
     .area-card.coming-soon:hover { border-color: var(--border); background: white; }
     .area-card.tier1 { border-color: #9FE1CB; }
 
-    /* ── Horizontal scroll hint — silent by default. JS reveals a side
-       only when the track actually overflows in that direction. ── */
+    /* ── Horizontal scroll hint (mobile only) — an ambient pulsing dot,
+       not a control. No click target, no arrow icon. ── */
     .scroll-wrap { position: relative; }
     .scroll-hint {
       display: none;
       position: absolute;
+      right: 10px;
       top: 50%;
       transform: translateY(-50%);
-      width: 38px;
-      height: 38px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
-      align-items: center;
-      justify-content: center;
-      z-index: 5;
-      background: white;
-      border: 1px solid var(--border);
-      box-shadow: 0 4px 16px rgba(15,26,22,0.14);
-      padding: 0;
-      cursor: pointer;
-      opacity: 0;
       pointer-events: none;
-      transition: opacity .18s ease, transform .12s ease, box-shadow .15s ease;
-      -webkit-tap-highlight-color: transparent;
+      z-index: 5;
+      background: var(--green);
+      box-shadow: 0 0 0 6px rgba(15,110,86,0.16);
     }
-    .scroll-hint.visible { opacity: 1; pointer-events: auto; }
-    .scroll-hint:hover { box-shadow: 0 6px 20px rgba(15,26,22,0.2); }
-    .scroll-hint:active { transform: translateY(-50%) scale(0.9); }
-    .scroll-hint.right { right: 8px; }
-    .scroll-hint.left { left: 8px; }
-    .scroll-hint svg {
-      width: 16px;
-      height: 16px;
-      stroke: var(--green-dark);
-      stroke-width: 2.6;
-      fill: none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
+    @keyframes nk-pulse-hint {
+      0%, 100% { transform: translateY(-50%) scale(1); opacity: .7; box-shadow: 0 0 0 6px rgba(15,110,86,0.16); }
+      50% { transform: translateY(-50%) scale(1.4); opacity: 1; box-shadow: 0 0 0 10px rgba(15,110,86,0.05); }
     }
     .carousel-dots {
       display: none;
@@ -497,7 +480,7 @@
       }
       .areas::-webkit-scrollbar { display: none; }
 
-      .scroll-hint { display: flex; }
+      .scroll-hint { display: flex; animation: nk-pulse-hint 1.8s ease-in-out infinite; }
       .carousel-dots { display: flex; }
     }
     @media (max-width: 480px) {
@@ -506,6 +489,117 @@
       .search-box select, .search-box input, .search-box button { width: 100%; }
       .footer-bottom { flex-direction: column; align-items: flex-start; gap: 8px; }
       .areas { grid-auto-columns: 130px; }
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       NEW: scroll-reveal, animated counters, edge fade, category
+       thumbnails, sticky compact search, mobile FAB, bottom tab bar
+       ══════════════════════════════════════════════════════════════ */
+
+    /* 1. Scroll-reveal — sections fade/slide up once as they enter view */
+    .reveal { opacity: 0; transform: translateY(18px); transition: opacity .6s ease, transform .6s ease; }
+    .reveal.is-visible { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; transform: none; transition: none; }
+    }
+
+    /* 3. Edge fade mask on horizontal carousels — pure CSS "more content" cue */
+    @media (max-width: 768px) {
+      .categories, .listings-grid, .areas {
+        -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent 100%);
+        mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent 100%);
+      }
+    }
+
+    /* 4. Category thumbnails — photo-style backdrop behind the icon.
+       These are CSS-only duotone/pattern placeholders (no external
+       images), ready to swap for real photos later by adding a
+       background-image to the relevant .cat-card rule. */
+    .cat-card { position: relative; overflow: hidden; }
+    .cat-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        radial-gradient(circle at 85% 15%, rgba(255,255,255,0.16) 0%, transparent 45%),
+        repeating-linear-gradient(135deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 2px, transparent 2px, transparent 14px);
+      pointer-events: none;
+    }
+    .cat-card.airbnb::before { background-image:
+        radial-gradient(circle at 85% 15%, rgba(15,110,86,0.08) 0%, transparent 45%),
+        repeating-linear-gradient(135deg, rgba(15,110,86,0.04) 0px, rgba(15,110,86,0.04) 2px, transparent 2px, transparent 14px); }
+    .cat-card.boarding::before { background-image:
+        radial-gradient(circle at 85% 15%, rgba(15,110,86,0.08) 0%, transparent 45%),
+        repeating-linear-gradient(135deg, rgba(15,110,86,0.04) 0px, rgba(15,110,86,0.04) 2px, transparent 2px, transparent 14px); }
+    .cat-card > * { position: relative; z-index: 1; }
+
+    /* 5. Sticky compact search — hidden pill that slides into the nav
+       once the hero has been scrolled past */
+    .nav-compact-search {
+      display: none;
+      align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 6px 6px 6px 14px;
+      flex: 1; max-width: 360px; margin: 0 16px;
+    }
+    .nav-compact-search input {
+      flex: 1; border: none; outline: none; background: transparent;
+      font-family: inherit; font-size: 13px; color: var(--text); min-width: 0;
+    }
+    .nav-compact-search button {
+      flex-shrink: 0; background: var(--green); color: white; border-radius: 16px;
+      padding: 7px 14px; font-size: 13px; font-weight: 600; font-family: inherit;
+    }
+    .nav-compact-search button:hover { background: var(--green-dark); }
+    nav.nk-scrolled .nav-compact-search { display: flex; }
+    @media (max-width: 768px) {
+      nav.nk-scrolled .nav-compact-search { display: flex; margin: 0 10px; max-width: none; }
+      nav.nk-scrolled .logo span { display: none; }
+    }
+
+    /* 6. Sticky mobile FAB — bottom-LEFT so it never collides with the
+       existing chat widget, which sits bottom-right */
+    .nk-fab-post {
+      display: none;
+      position: fixed; left: 16px; bottom: 84px; z-index: 60;
+      align-items: center; gap: 8px;
+      background: var(--green); color: white;
+      padding: 13px 18px; border-radius: 30px;
+      font-size: 14px; font-weight: 600;
+      box-shadow: 0 6px 20px rgba(15,110,86,0.4);
+    }
+    .nk-fab-post svg { width: 16px; height: 16px; stroke: white; fill: none; stroke-width: 2.5; }
+    @media (max-width: 768px) {
+      .nk-fab-post { display: flex; }
+    }
+
+    /* 7. Bottom mobile tab bar */
+    .nk-tabbar {
+      display: none;
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 70;
+      background: white; border-top: 1px solid var(--border);
+      padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+      align-items: stretch; justify-content: space-around;
+      box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
+    }
+    .nk-tab {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      font-size: 10.5px; font-weight: 600; color: var(--text-3);
+      padding: 4px 0; flex: 1; position: relative;
+    }
+    .nk-tab svg { width: 21px; height: 21px; stroke: var(--text-3); fill: none; stroke-width: 2; }
+    .nk-tab.active, .nk-tab.active svg { color: var(--green); stroke: var(--green); }
+    .nk-tab-postbtn { position: relative; top: -14px; }
+    .nk-tab-postbtn .nk-tab-postcircle {
+      width: 42px; height: 42px; border-radius: 50%; background: var(--green);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 14px rgba(15,110,86,0.4); margin-bottom: 2px;
+    }
+    .nk-tab-postbtn .nk-tab-postcircle svg { width: 20px; height: 20px; stroke: white; }
+    .nk-tab-postbtn { color: var(--green); }
+    @media (max-width: 768px) {
+      .nk-tabbar { display: flex; }
+      body { padding-bottom: 62px; }
+      .nk-fab-post { bottom: 78px; }
     }
   </style>
 </head>
@@ -519,8 +613,12 @@
     <div class="logo-icon">
       <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     </div>
-    Nyumba254
+    <span>Nyumba254</span>
   </a>
+  <div class="nav-compact-search" id="nav-compact-search">
+    <input type="text" id="nav-compact-search-input" placeholder="Search area or price…" aria-label="Search"/>
+    <button onclick="nkCompactSearch()">Search</button>
+  </div>
   <div class="nav-links">
 <a href="/listings" class="nav-link">Browse</a>
     <a href="/how-it-works" class="nav-link">How it works</a>
@@ -626,7 +724,7 @@
 </div>
 
 <!-- ── CATEGORIES ── -->
-<section class="section" id="categories">
+<section class="section reveal" id="categories">
   <div class="section-header">
     <h2 class="section-title">What are you looking for?</h2>
     <a href="/how-it-works" class="see-all">How it works →</a>
@@ -673,13 +771,12 @@
       <div class="cat-count" id="count-commercial">Loading…</div>
     </div>
   </div>
-  <button class="scroll-hint left" aria-label="Scroll to previous categories" onclick="nkScrollWrap(this,-1)"><svg viewBox="0 0 24 24"><polyline points="15 6 9 12 15 18"/></svg></button>
-  <button class="scroll-hint right" aria-label="Scroll for more categories" onclick="nkScrollWrap(this,1)"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
+  <span class="scroll-hint" aria-hidden="true"></span>
   </div>
 </section>
 
 <!-- ── FEATURED LISTINGS ── -->
-<section class="section section-alt">
+<section class="section section-alt reveal">
   <div class="section-header">
     <div>
       <h2 class="section-title">Featured listings</h2>
@@ -695,13 +792,12 @@
       <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line short"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
     </div>
   </div>
-  <button class="scroll-hint left" aria-label="Scroll to previous featured listings" onclick="nkScrollWrap(this,-1)"><svg viewBox="0 0 24 24"><polyline points="15 6 9 12 15 18"/></svg></button>
-  <button class="scroll-hint right" aria-label="Scroll for more featured listings" onclick="nkScrollWrap(this,1)"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
+  <span class="scroll-hint" aria-hidden="true"></span>
   </div>
 </section>
 
 <!-- ── LATEST LISTINGS ── -->
-<section class="section">
+<section class="section reveal">
   <div class="section-header">
     <div>
       <h2 class="section-title">Latest listings</h2>
@@ -721,26 +817,24 @@
       <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line short"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
     </div>
   </div>
-  <button class="scroll-hint left" aria-label="Scroll to previous listings" onclick="nkScrollWrap(this,-1)"><svg viewBox="0 0 24 24"><polyline points="15 6 9 12 15 18"/></svg></button>
-  <button class="scroll-hint right" aria-label="Scroll for more listings" onclick="nkScrollWrap(this,1)"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
+  <span class="scroll-hint" aria-hidden="true"></span>
   </div>
 </section>
 
 <!-- ── AREAS ── -->
-<section class="section section-alt" id="areas">
+<section class="section section-alt reveal" id="areas">
   <div class="section-header">
     <h2 class="section-title">Browse by county</h2>
     <a href="/listings" class="see-all">All listings →</a>
   </div>
   <div class="scroll-wrap">
   <div class="areas" id="counties-grid"></div>
-  <button class="scroll-hint left" aria-label="Scroll to previous counties" onclick="nkScrollWrap(this,-1)"><svg viewBox="0 0 24 24"><polyline points="15 6 9 12 15 18"/></svg></button>
-  <button class="scroll-hint right" aria-label="Scroll for more counties" onclick="nkScrollWrap(this,1)"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
+  <span class="scroll-hint" aria-hidden="true"></span>
   </div>
 </section>
 
 <!-- ── CTA BANNER ── -->
-<section class="section">
+<section class="section reveal">
   <div class="cta-banner">
     <div>
       <h2>Selling or renting out your apartment, house, or bed space?</h2>
@@ -752,6 +846,36 @@
     </div>
   </div>
 </section>
+
+<!-- ── MOBILE: sticky "List property" FAB (bottom-left, clear of the chat widget) ── -->
+<a href="/post-listing" class="nk-fab-post" aria-label="List your property">
+  <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  List property
+</a>
+
+<!-- ── MOBILE: bottom tab bar ── -->
+<nav class="nk-tabbar" aria-label="Primary">
+  <a href="/" class="nk-tab active">
+    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Home
+  </a>
+  <a href="/listings" class="nk-tab">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    Browse
+  </a>
+  <a href="/post-listing" class="nk-tab nk-tab-postbtn">
+    <span class="nk-tab-postcircle"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+    Post
+  </a>
+  <a href="/saved" class="nk-tab">
+    <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+    Saved
+  </a>
+  <a href="/login" class="nk-tab" id="tab-account-link">
+    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Account
+  </a>
+</nav>
 
 <!-- ── FOOTER ── -->
 <footer>
@@ -996,7 +1120,6 @@
       counts[county] = (counts[county] || 0) + 1;
     });
     renderCountiesGrid(counts);
-    nkRefreshAllScrollHints();
   }
 
   function renderFooterCounties() {
@@ -1081,51 +1204,6 @@
       nav.classList.remove('open');
     }
   });
-function nkScrollWrap(btn, dir) {
-  const wrap = btn.closest('.scroll-wrap');
-  if (!wrap) return;
-  const scroller = wrap.querySelector('.categories, .listings-grid, .areas');
-  if (!scroller) return;
-  const firstCard = scroller.querySelector(':scope > *');
-  const gap = parseFloat(getComputedStyle(scroller).gap) || 16;
-  const step = firstCard ? firstCard.getBoundingClientRect().width + gap : scroller.clientWidth * 0.8;
-  scroller.scrollBy({ left: step * (dir || 1), behavior: 'smooth' });
-}
-
-/* ── Scroll-hint visibility: silent unless the track overflows, and only
-   the side that still has content to reveal lights up. ── */
-function nkGetScroller(wrap) {
-  return wrap.querySelector('.categories, .listings-grid, .areas');
-}
-function nkUpdateHintVisibility(wrap) {
-  const scroller = nkGetScroller(wrap);
-  if (!scroller) return;
-  const leftBtn = wrap.querySelector('.scroll-hint.left');
-  const rightBtn = wrap.querySelector('.scroll-hint.right');
-  const hasOverflow = scroller.scrollWidth > scroller.clientWidth + 4;
-  const atStart = scroller.scrollLeft <= 4;
-  const atEnd = scroller.scrollLeft >= scroller.scrollWidth - scroller.clientWidth - 4;
-  if (leftBtn) leftBtn.classList.toggle('visible', hasOverflow && !atStart);
-  if (rightBtn) rightBtn.classList.toggle('visible', hasOverflow && !atEnd);
-}
-function nkInitScrollWrap(wrap) {
-  const scroller = nkGetScroller(wrap);
-  if (!scroller) return;
-  if (!wrap.dataset.hintsBound) {
-    wrap.dataset.hintsBound = '1';
-    let ticking = false;
-    scroller.addEventListener('scroll', () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => { nkUpdateHintVisibility(wrap); ticking = false; });
-    }, { passive: true });
-  }
-  nkUpdateHintVisibility(wrap);
-}
-function nkRefreshAllScrollHints() {
-  document.querySelectorAll('.scroll-wrap').forEach(nkInitScrollWrap);
-}
-window.addEventListener('resize', nkRefreshAllScrollHints);
   /* ── Price formatting driven by price_frequency, matching listings ── */
   function formatPrice(listing) {
     const suffix = NK_FREQ_LABEL[listing.price_frequency] || '';
@@ -1228,7 +1306,7 @@ window.addEventListener('resize', nkRefreshAllScrollHints);
     }
     el.innerHTML = `<div class="listings-grid">${listings.map(buildCard).join('')}</div>${buildDotsHtml(listings.length)}`;
     const wrap = el.closest('.scroll-wrap');
-    if (wrap) { attachCarouselDots(wrap); nkInitScrollWrap(wrap); }
+    if (wrap) attachCarouselDots(wrap);
   }
 
   /* ── Featured: fetch enough rows for up to ~2–3 rows on desktop. The grid
@@ -1372,8 +1450,99 @@ window.addEventListener('resize', nkRefreshAllScrollHints);
   nkSetAreaStat();
   loadFeatured();
   loadCounts();
-  nkRefreshAllScrollHints();
-  window.addEventListener('load', nkRefreshAllScrollHints);
+
+  /* ── 1. Scroll-reveal: fade/slide each .reveal section up once, the
+     first time it enters the viewport ── */
+  (function () {
+    const targets = document.querySelectorAll('.reveal');
+    if (!targets.length) return;
+    if (!('IntersectionObserver' in window)) {
+      targets.forEach(t => t.classList.add('is-visible'));
+      return;
+    }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    targets.forEach(t => io.observe(t));
+  })();
+
+  /* ── 2. Animated counters: count up from 0 once real numbers land.
+     Wraps the two existing stat-writing spots without changing their
+     data-fetching logic. ── */
+  function nkAnimateCount(el, target, opts) {
+    if (!el) return;
+    const suffix = (opts && opts.suffix) || '';
+    const dur = (opts && opts.duration) || 700;
+    const start = performance.now();
+    const from = 0;
+    function tick(now) {
+      const p = Math.min(1, (now - start) / dur);
+      const eased = 1 - Math.pow(1 - p, 3); // ease-out cubic
+      const val = Math.round(from + (target - from) * eased);
+      el.textContent = val.toLocaleString('en-KE') + suffix;
+      if (p < 1) requestAnimationFrame(tick);
+      else el.textContent = target.toLocaleString('en-KE') + suffix;
+    }
+    requestAnimationFrame(tick);
+  }
+  (function () {
+    const statListings = document.getElementById('stat-listings');
+    const statAreas = document.getElementById('stat-areas');
+    if (!statListings && !statAreas) return;
+    const seen = { listings: false, areas: false };
+    const mo = new MutationObserver(() => {
+      if (!seen.listings && statListings && /^[\d,]+$/.test(statListings.textContent.trim())) {
+        seen.listings = true;
+        const n = parseInt(statListings.textContent.replace(/,/g, ''), 10);
+        nkAnimateCount(statListings, n);
+      }
+      if (!seen.areas && statAreas && /^[\d,]+$/.test(statAreas.textContent.trim())) {
+        seen.areas = true;
+        const n = parseInt(statAreas.textContent.replace(/,/g, ''), 10);
+        nkAnimateCount(statAreas, n);
+      }
+      if (seen.listings && seen.areas) mo.disconnect();
+    });
+    if (statListings) mo.observe(statListings, { childList: true });
+    if (statAreas) mo.observe(statAreas, { childList: true });
+  })();
+
+  /* ── 5. Sticky compact search: reveal the nav search pill once the
+     hero has scrolled past ── */
+  (function () {
+    const nav = document.querySelector('nav');
+    const hero = document.getElementById('main-content');
+    if (!nav || !hero) return;
+    function update() {
+      const past = hero.getBoundingClientRect().bottom < 64;
+      nav.classList.toggle('nk-scrolled', past);
+    }
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+  })();
+
+  function nkCompactSearch() {
+    const val = document.getElementById('nav-compact-search-input').value.trim();
+    if (!val) { document.getElementById('main-content').scrollIntoView({ behavior: 'smooth' }); return; }
+    const params = new URLSearchParams();
+    const stripped = val.replace(/^KES\s?/i, '').replace(/,/g, '');
+    if (/^[0-9]+$/.test(stripped)) {
+      const price = Number(stripped);
+      params.set('minPrice', Math.max(0, Math.round(price * 0.85)));
+      params.set('maxPrice', Math.round(price * 1.15));
+    } else {
+      params.set('q', val);
+    }
+    window.location.href = `listings?${params.toString()}`;
+  }
+  document.getElementById('nav-compact-search-input')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') nkCompactSearch();
+  });
 </script>
 <script src="saved-listings.js"></script>
 <script>if (typeof NKSaved !== 'undefined') NKSaved.init();</script>
@@ -1394,6 +1563,7 @@ window.addEventListener('resize', nkRefreshAllScrollHints);
     if (!session) return;
     const desktopLink = document.getElementById('nav-account-link');
     const mobileLink = document.getElementById('mobile-account-link');
+    const tabLink = document.getElementById('tab-account-link');
     [desktopLink, mobileLink].forEach(link => {
       if (!link) return;
       link.textContent = 'My Account';
@@ -1401,6 +1571,7 @@ window.addEventListener('resize', nkRefreshAllScrollHints);
       link.style.fontWeight = '600';
       link.style.color = 'var(--green)';
     });
+    if (tabLink) tabLink.href = '/dashboard';
   });
 </script>
 <script src="nav-badge.js"></script>
