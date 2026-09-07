@@ -2742,6 +2742,10 @@
       }
       pulling = false; triggered = false;
     }, { passive: true });
+    document.addEventListener('touchcancel', () => {
+      indicator.classList.remove('visible');
+      pulling = false; triggered = false;
+    }, { passive: true });
   })();
 
   document.getElementById('footer-year').textContent = new Date().getFullYear();
