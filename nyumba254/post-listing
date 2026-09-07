@@ -653,7 +653,7 @@
         <div class="field-hint">Works with TikTok, Instagram, YouTube, Vimeo, or a direct video file link.</div>
       </div>
       <div class="field" style="margin-top:16px;padding-top:16px;border-top:1px dashed var(--border)">
-        <label>Or record / upload a short video <span class="opt">optional, max 12 minutes</span></label>
+        <label>Or record / upload a short video <span class="opt">optional, max 60 seconds</span></label>
         <div class="grid-2" style="gap:10px">
           <button type="button" class="camera-btn" style="margin-top:0" onclick="document.getElementById('video_upload_input').click()">
             <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -667,6 +667,7 @@
         <input type="file" id="video_upload_input" accept="video/*" style="display:none" onchange="handleVideoFileSelect(this.files[0]); this.value='';"/>
         <input type="file" id="video_record_input" accept="video/*" capture="environment" style="display:none" onchange="handleVideoFileSelect(this.files[0]); this.value='';"/>
         <div class="field-hint">"Upload video file" opens your gallery/files; "Record video" opens your camera directly. Sent for a quick review before it appears on your listing — doesn't affect your submission either way.</div>
+        <div class="field-hint">Got a longer video? Email it to <a href="mailto:hellonyumba254@gmail.com" style="color:var(--green-dark);font-weight:600">hellonyumba254@gmail.com</a> and we'll add it to your listing for you.</div>
         <div id="video-file-status" style="font-size:12px;color:var(--text-3);margin-top:6px"></div>
       </div>
     </div>
@@ -1034,7 +1035,7 @@ let customAmenities   = []; // free-typed amenities not in NK_AMENITIES, stored 
 let photos            = [];
 let coverIndex        = 0;
 let selectedVideoFile = null;
-const MAX_VIDEO_SECONDS = 720; // 12 minutes
+const MAX_VIDEO_SECONDS = 60;
 
 function getVideoDuration(file) {
   return new Promise((resolve, reject) => {
@@ -1069,14 +1070,14 @@ async function handleVideoFileSelect(file) {
   try {
     const duration = await getVideoDuration(file);
     if (duration > MAX_VIDEO_SECONDS) {
-      statusEl.textContent = `That's ${Math.round(duration)}s — please trim it to under ${MAX_VIDEO_SECONDS}s.`;
-      showToast('Video is too long — max 60 seconds', 'error');
+      statusEl.textContent = `That's ${Math.round(duration)}s — max is ${MAX_VIDEO_SECONDS}s. For longer videos, please email it to hellonyumba254@gmail.com.`;
+      showToast('Video is too long — max 60 seconds. For longer videos, email hellonyumba254@gmail.com', 'error');
       clearVideoFileInputs();
       selectedVideoFile = null;
       return;
     }
-    if (file.size > 500 * 1024 * 1024) {
-      statusEl.textContent = 'File is too large — please pick a shorter or lower-quality clip.';
+    if (file.size > 100 * 1024 * 1024) {
+      statusEl.textContent = 'File is too large. For longer videos, please email it to hellonyumba254@gmail.com.';
       clearVideoFileInputs();
       selectedVideoFile = null;
       return;
