@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Find my booking — Nyumba254</title>
+<meta name="description" content="Look up your Nyumba254 stay booking by phone number or email."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --green:#0F6E56;--green-mid:#1D9E75;--green-dark:#085041;--green-light:#E1F5EE;
+    --gold:#BA7517;--gold-light:#FAEEDA;--red:#c0392b;--red-light:#fdecea;
+    --text:#1a1a18;--text-2:#4a4a46;--text-3:#888780;
+    --border:#e0ded8;--surface:#f7f6f2;--white:#ffffff;
+    --radius:10px;--radius-lg:16px;
+    --shadow:0 1px 3px rgba(0,0,0,0.06),0 4px 14px rgba(0,0,0,0.05);
+  }
+  body{font-family:'Inter',sans-serif;color:var(--text);background:var(--surface);line-height:1.6;font-size:15px;min-height:100vh}
+  a{color:inherit;text-decoration:none}
+  h1,h2{font-family:'Playfair Display',serif;font-weight:700;color:var(--text)}
+  button{font-family:inherit;cursor:pointer}
+
+  .topbar{background:var(--white);border-bottom:1px solid var(--border)}
+  .topbar-inner{max-width:760px;margin:0 auto;padding:16px 28px;display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand-mark{width:34px;height:34px;border-radius:8px;background:var(--green);display:flex;align-items:center;justify-content:center}
+  .brand-mark svg{width:17px;height:17px;stroke:white;fill:none;stroke-width:2}
+  .brand-name{font-family:'Playfair Display',serif;font-size:18px;font-weight:700}
+  .back-link{display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;color:var(--text-2)}
+  .back-link:hover{color:var(--green)}
+  .back-link svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+
+  .wrap{max-width:640px;margin:0 auto;padding:44px 28px 60px}
+  .intro{text-align:center;margin-bottom:30px}
+  .intro h1{font-size:26px;margin-bottom:8px}
+  .intro p{font-size:14px;color:var(--text-2)}
+
+  .lookup-card{background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;box-shadow:var(--shadow);margin-bottom:28px}
+  .tabs{display:flex;gap:6px;background:var(--surface);border-radius:10px;padding:4px;margin-bottom:18px}
+  .tab{flex:1;text-align:center;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:600;color:var(--text-3);transition:all .15s}
+  .tab.active{background:white;color:var(--green-dark);box-shadow:var(--shadow)}
+
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--text-3);margin-bottom:6px}
+  .field input{width:100%;padding:12px 13px;border:1.5px solid var(--border);border-radius:8px;font-size:14.5px;outline:none;font-family:inherit;color:var(--text)}
+  .field input:focus{border-color:var(--green)}
+
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:520px){.field-row{grid-template-columns:1fr}}
+
+  .form-error{font-size:13px;color:var(--red);background:var(--red-light);border-radius:8px;padding:10px 12px;margin-bottom:14px;display:none}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:var(--radius);font-weight:600;font-size:14px;padding:13px 20px;width:100%;transition:all .15s}
+  .btn-primary{background:var(--green);color:white}
+  .btn-primary:hover{background:var(--green-dark)}
+  .btn-primary:disabled{opacity:.55;cursor:not-allowed}
+  .hint{font-size:12px;color:var(--text-3);text-align:center;margin-top:12px}
+
+  /* ── Results ───────────────────────────────────────────── */
+  .results-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .results-head h2{font-size:16px}
+  .results-head button{background:none;border:none;font-size:12.5px;font-weight:600;color:var(--text-2)}
+  .results-head button:hover{color:var(--green)}
+
+  .booking-card{background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:14px}
+  .bc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px}
+  .bc-title{font-size:15.5px;font-weight:600}
+  .bc-area{font-size:12.5px;color:var(--text-3);margin-top:2px}
+  .status-pill{font-size:11px;font-weight:700;padding:5px 11px;border-radius:20px;white-space:nowrap;text-transform:capitalize}
+  .status-pending{background:var(--gold-light);color:var(--gold)}
+  .status-confirmed,.status-verified{background:var(--green-light);color:var(--green-dark)}
+  .status-cancelled{background:var(--red-light);color:var(--red)}
+
+  .bc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:14px}
+  .bc-fact{font-size:12px;color:var(--text-3)}
+  .bc-fact strong{display:block;font-size:14px;color:var(--text);font-weight:600;margin-top:2px}
+
+  .bc-ref{font-size:12px;color:var(--text-3)}
+  .bc-ref b{color:var(--text);font-family:monospace;font-size:13px;letter-spacing:.02em}
+
+  .state{text-align:center;padding:50px 20px;color:var(--text-3)}
+  .state svg{width:38px;height:38px;stroke:var(--border);fill:none;stroke-width:1.4;margin:0 auto 14px}
+  .state h3{font-family:'Inter',sans-serif;font-weight:600;font-size:14.5px;color:var(--text-2);margin-bottom:4px}
+  .state p{font-size:13px;max-width:320px;margin:0 auto}
+
+  footer{background:var(--green-dark);color:rgba(255,255,255,0.7);padding:32px 28px;text-align:center;font-size:12.5px;margin-top:20px}
+  footer a{color:rgba(255,255,255,0.9);font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-mark"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>
+      <div class="brand-name">Nyumba254</div>
+    </div>
+    <a href="index.html" class="back-link"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Browse stays</a>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="intro">
+    <h1>Find my booking</h1>
+    <p>Look up a stay using the phone number or email you booked with.</p>
+  </div>
+
+  <div class="lookup-card" id="lookup-card">
+    <div class="tabs">
+      <div class="tab active" data-mode="phone">Phone number</div>
+      <div class="tab" data-mode="email">Email</div>
+    </div>
+
+    <div class="form-error" id="form-error"></div>
+
+    <div id="field-phone">
+      <div class="field-row">
+        <div class="field"><label for="l-phone">Phone number</label><input type="tel" id="l-phone" placeholder="07xx xxx xxx" autocomplete="tel"/></div>
+        <div class="field"><label for="l-ref-phone">Booking reference <span style="text-transform:none;font-weight:500">(optional)</span></label><input type="text" id="l-ref-phone" placeholder="NK-XXXXXXXX"/></div>
+      </div>
+    </div>
+
+    <div id="field-email" style="display:none">
+      <div class="field-row">
+        <div class="field"><label for="l-email">Email address</label><input type="email" id="l-email" autocomplete="email"/></div>
+        <div class="field"><label for="l-ref-email">Booking reference <span style="text-transform:none;font-weight:500">(optional)</span></label><input type="text" id="l-ref-email" placeholder="NK-XXXXXXXX"/></div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="btn-lookup">Find my booking</button>
+    <div class="hint">Adding your booking reference narrows the search if you've booked more than once.</div>
+  </div>
+
+  <div id="results-wrap"></div>
+</div>
+
+<footer><p>Nyumba254 — book direct, no agent fees. <a href="index.html">Browse more stays</a></p></footer>
+
+<script>
+const SUPABASE_URL='https://vliuuloyfhyxcsuchpss.supabase.co';
+const SUPABASE_KEY='sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
+const EDGE_URL=`${SUPABASE_URL}/functions/v1`;
+
+let mode='phone';
+
+function escHtml(s){ if(!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtDate(d){ return new Date(d).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'}); }
+function normalizePhone(p){ return (p||'').replace(/\s/g,'').replace(/^\+254/,'0').replace(/^254/,'0'); }
+
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    mode=tab.dataset.mode;
+    document.getElementById('field-phone').style.display = mode==='phone' ? 'block' : 'none';
+    document.getElementById('field-email').style.display = mode==='email' ? 'block' : 'none';
+    document.getElementById('form-error').style.display='none';
+  });
+});
+
+function showError(msg){
+  const el=document.getElementById('form-error');
+  el.textContent=msg;
+  el.style.display='block';
+}
+
+function statusInfo(payment_status, status){
+  if(status==='cancelled') return {label:'Cancelled', cls:'status-cancelled'};
+  if(payment_status==='verified' || payment_status==='paid') return {label:'Confirmed', cls:'status-verified'};
+  return {label:'Pending verification', cls:'status-pending'};
+}
+
+function bookingCardHtml(b){
+  const nights = Math.max(1, Math.round((new Date(b.check_out)-new Date(b.check_in))/86400000));
+  const info = statusInfo(b.payment_status, b.status);
+  return `<div class="booking-card">
+    <div class="bc-top">
+      <div>
+        <div class="bc-title">${escHtml(b.property_label)}</div>
+        ${b.area?`<div class="bc-area">${escHtml(b.area)}</div>`:''}
+      </div>
+      <span class="status-pill ${info.cls}">${info.label}</span>
+    </div>
+    <div class="bc-grid">
+      <div class="bc-fact">Check-in<strong>${fmtDate(b.check_in)}</strong></div>
+      <div class="bc-fact">Check-out<strong>${fmtDate(b.check_out)}</strong></div>
+      <div class="bc-fact">Nights<strong>${nights}</strong></div>
+      <div class="bc-fact">Total<strong>KES ${Number(b.total_amount||0).toLocaleString('en-KE')}</strong></div>
+    </div>
+    <div class="bc-ref">Booking reference · <b>${escHtml(b.bookingRef)}</b></div>
+  </div>`;
+}
+
+function renderResults(list){
+  const wrap=document.getElementById('results-wrap');
+  if(!list.length){
+    wrap.innerHTML=`<div class="state">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <h3>No bookings found</h3>
+      <p>Double check the ${mode==='phone'?'phone number':'email'} you booked with, or try the other lookup option above.</p>
+    </div>`;
+    return;
+  }
+  wrap.innerHTML = `
+    <div class="results-head">
+      <h2>${list.length} booking${list.length!==1?'s':''} found</h2>
+      <button id="btn-clear" type="button">Search again</button>
+    </div>
+    ${list.map(bookingCardHtml).join('')}
+  `;
+  document.getElementById('btn-clear').addEventListener('click',()=>{
+    document.getElementById('results-wrap').innerHTML='';
+    document.getElementById('lookup-card').scrollIntoView({behavior:'smooth'});
+  });
+}
+
+async function doLookup(){
+  document.getElementById('form-error').style.display='none';
+  const btn=document.getElementById('btn-lookup');
+
+  // Lookups go through the lookup-booking Edge Function (service-role,
+  // server-side filtered) rather than a direct client query — bnb_bookings
+  // has no anon SELECT access at all, by design, so this is the only path.
+  const body = {};
+  if(mode==='phone'){
+    const phone=normalizePhone(document.getElementById('l-phone').value);
+    if(!/^0\d{9}$/.test(phone)){ showError('Enter a valid phone number, e.g. 0712345678.'); return; }
+    body.phone = phone;
+    body.ref = document.getElementById('l-ref-phone').value.trim();
+  } else {
+    const email=document.getElementById('l-email').value.trim();
+    if(!/^\S+@\S+\.\S+$/.test(email)){ showError('Enter a valid email address.'); return; }
+    body.email = email;
+    body.ref = document.getElementById('l-ref-email').value.trim();
+  }
+
+  btn.disabled=true; btn.textContent='Searching…';
+  try{
+    const res = await fetch(`${EDGE_URL}/lookup-booking`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY},
+      body: JSON.stringify(body),
+    });
+    const result = await res.json().catch(()=>({}));
+    if(!res.ok || result.error){
+      showError(result.error || 'Something went wrong looking that up. Please try again.');
+      return;
+    }
+    renderResults(result.results || []);
+    document.getElementById('results-wrap').scrollIntoView({behavior:'smooth', block:'start'});
+  } catch(err){
+    console.error('booking lookup failed:', err);
+    showError('Something went wrong looking that up. Please try again.');
+  } finally {
+    btn.disabled=false; btn.textContent='Find my booking';
+  }
+}
+
+document.getElementById('btn-lookup').addEventListener('click',doLookup);
+[document.getElementById('l-phone'),document.getElementById('l-email')].forEach(el=>{
+  el.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); doLookup(); } });
+});
+</script>
+</body>
+</html>
