@@ -657,6 +657,20 @@
           </div>
         </div>
 
+        <!-- BNB direct booking -->
+        <div class="lcard" id="bnb-book-card" style="display:none;background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;color:white">
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+            <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
+            </div>
+            <div style="flex:1;min-width:200px">
+              <div style="font-size:14px;font-weight:700">Check availability &amp; book instantly</div>
+              <div style="font-size:12.5px;opacity:.85">See live dates and pay securely — no waiting for a reply</div>
+            </div>
+            <a href="#" id="bnb-book-link" target="_blank" rel="noopener" class="btn-primary" style="background:white;color:#5b21b6;flex-shrink:0">Book this stay →</a>
+          </div>
+        </div>
+
         <!-- Amenities -->
         <div class="lcard" id="amenities-card" style="display:none">
           <div class="lcard-head">
@@ -1185,6 +1199,7 @@ async function loadListing() {
       loadSellerReviewStats(data.seller_id);
       nkCheckReviewPrompt(data.id);
       nkUpdateReportButtonState(data.id);
+      if (data.category === 'airbnb') checkBnbDirectBooking(data.id);
       if (isListingOwner) renderManageUnitsPanel();
       return;
     }
@@ -1207,6 +1222,18 @@ async function loadEnquiryCount(lId) {
   enquiryCount = count || 0;
   const el = document.getElementById('listing-enq-count');
   if (el) el.textContent = `${enquiryCount} enquir${enquiryCount === 1 ? 'y' : 'ies'}`;
+}
+
+// Update BOOK_PLATFORM_URL if your booking subdomain differs
+const BOOK_PLATFORM_URL = 'https://book.nyumba254.com';
+async function checkBnbDirectBooking(lId) {
+  const { data, error } = await db.from('bnb_properties').select('id,is_publicly_bookable').eq('listing_id', lId).maybeSingle();
+  if (error || !data || !data.is_publicly_bookable) return;
+  const card = document.getElementById('bnb-book-card');
+  const link = document.getElementById('bnb-book-link');
+  if (!card || !link) return;
+  link.href = `${BOOK_PLATFORM_URL}/property.html?id=${data.id}`;
+  card.style.display = 'block';
 }
 
 /* Views */

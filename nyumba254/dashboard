@@ -3317,6 +3317,7 @@ function renderBnbProperties(){
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-outline btn-sm" onclick="openAddBnbBookingModal('${p.id}')">+ Log booking</button>
           <button class="btn btn-outline btn-sm" onclick="openBnbPublicBookingModal('${p.id}')">${p.is_publicly_bookable?'🌐 Public booking: ON':'🌐 Public booking'}</button>
+          ${p.is_publicly_bookable?`<a class="btn btn-outline btn-sm" href="https://book.nyumba254.com/property.html?id=${p.id}" target="_blank" rel="noopener">↗ View book page</a>`:''}
           <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteBnbProperty('${p.id}','${escAttr(p.property_label)}')">Delete</button>
         </div>
       </div>
