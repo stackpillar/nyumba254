@@ -757,14 +757,9 @@
   </style>
 </head>
 <body>
-<body>
-
-<div id="admin-gate" style="position:fixed;inset:0;background:var(--surface);z-index:99999;display:flex;align-items:center;justify-content:center">
-  <div style="width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite"></div>
-</div>
 
 <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">
+  <div class="sidebar-logo">
     <div class="sidebar-logo-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
     Nyumba254
     <span class="sidebar-badge">ADMIN</span>
@@ -2786,6 +2781,14 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
     return true;
   }
 
+  function showAdminLoginScreen(err) {
+    document.getElementById('loading-screen')?.remove?.() || (document.getElementById('loading-screen').style.display='none');
+    document.getElementById('admin-login-screen').style.display = 'flex';
+    const errEl = document.getElementById('admin-login-error');
+    if (err) { errEl.textContent = err; errEl.style.display = 'block'; }
+    else { errEl.style.display = 'none'; }
+    setTimeout(()=>document.getElementById('admin-login-email')?.focus(),50);
+  }
 
   async function doAdminLogin() {
     const email = document.getElementById('admin-login-email').value.trim();
@@ -2810,6 +2813,7 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
       errEl.style.display = 'block';
       return;
     }
+    document.getElementById('admin-login-screen').style.display = 'none';
     document.getElementById('loading-screen').style.display = 'flex';
     init();
   }
@@ -7079,7 +7083,23 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
     updateModalState();
   }
 
- 
+  async function init() {
+    const ok = await checkAuth();
+    if (!ok) return;
+    populateCountyFilter();
+    await loadSettings();
+    syncThemeIcon();
+    loadOverview();
+    loadEnquiriesBadge();
+    loadReportsBadge();
+    loadReviewsBadge();
+    loadPremiumBadge();
+    loadConciergeBadge();
+    subscribeReportsRealtime();
+    loadSocialSettings();
+    watchModalsForChatWidget();
+    ACW.init();
+  }
   init();
 </script>
 </body>
