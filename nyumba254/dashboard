@@ -1840,6 +1840,32 @@
   </div>
 </div>
 
+<!-- BNB PUBLIC BOOKING SETTINGS MODAL -->
+<div class="modal-overlay" id="modal-bnb-public-booking">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-head"><h3>Public booking settings</h3><div class="modal-close" onclick="closeModal('modal-bnb-public-booking')">✕</div></div>
+    <div class="modal-body">
+      <div class="toggle-row" style="border-bottom:none">
+        <div class="toggle-label"><strong>Allow public booking</strong><span>Turns this property on/off at book.nyumba254.com</span></div>
+        <label class="switch"><input type="checkbox" id="pb-is-bookable"/><span class="switch-track"></span></label>
+      </div>
+      <div class="form-grid" style="margin-top:14px">
+        <div class="form-group"><label>Max guests</label><input type="number" id="pb-max-guests" min="1"/></div>
+        <div class="form-group"><label>Min stay (nights)</label><input type="number" id="pb-min-stay" min="1" value="1"/></div>
+      </div>
+      <div class="form-group"><label>Cancellation policy</label>
+        <select id="pb-cancellation-policy">
+          <option value="flexible">Flexible</option>
+          <option value="moderate">Moderate</option>
+          <option value="strict">Strict</option>
+        </select>
+      </div>
+      <p style="font-size:11.5px;color:var(--text-3);line-height:1.6">Guests will see this property at <strong>book.nyumba254.com</strong> once turned on — make sure nightly rate and cleaning fee above are correct first.</p>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-bnb-public-booking')">Cancel</button><button class="btn btn-primary" id="btn-save-bnb-public-booking" onclick="saveBnbPublicBooking()">Save</button></div>
+  </div>
+</div>
+
 <!-- ADD BNB BOOKING MODAL -->
 <div class="modal-overlay" id="modal-add-bnb-booking">
   <div class="modal" style="max-width:460px">
@@ -3266,6 +3292,7 @@ function renderBnbProperties(){
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-outline btn-sm" onclick="openAddBnbBookingModal('${p.id}')">+ Log booking</button>
+          <button class="btn btn-outline btn-sm" onclick="openBnbPublicBookingModal('${p.id}')">${p.is_publicly_bookable?'🌐 Public booking: ON':'🌐 Public booking'}</button>
           <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteBnbProperty('${p.id}','${escAttr(p.property_label)}')">Delete</button>
         </div>
       </div>
@@ -3610,6 +3637,37 @@ async function saveBnbProperty(){
   if(error){showToast('Could not save: '+error.message,'error');return;}
   closeModal('modal-add-bnb-property');
   showToast('Property added ✓','success');
+  loadBnbLedger();
+}
+
+let pbActivePropertyId=null;
+function openBnbPublicBookingModal(propertyId){
+  const p=bnbPropertiesCache.find(x=>String(x.id)===String(propertyId));
+  if(!p){showToast('Property not found','error');return;}
+  pbActivePropertyId=propertyId;
+  document.getElementById('pb-is-bookable').checked=!!p.is_publicly_bookable;
+  document.getElementById('pb-max-guests').value=p.max_guests||'';
+  document.getElementById('pb-min-stay').value=p.min_stay_nights||1;
+  document.getElementById('pb-cancellation-policy').value=p.cancellation_policy||'flexible';
+  openModal('modal-bnb-public-booking');
+}
+async function saveBnbPublicBooking(){
+  if(!pbActivePropertyId)return;
+  const isBookable=document.getElementById('pb-is-bookable').checked;
+  const maxGuests=parseInt(document.getElementById('pb-max-guests').value)||null;
+  if(isBookable&&!maxGuests){showToast('Please set max guests before turning public booking on','error');return;}
+  const payload={
+    is_publicly_bookable:isBookable,
+    max_guests:maxGuests,
+    min_stay_nights:parseInt(document.getElementById('pb-min-stay').value)||1,
+    cancellation_policy:document.getElementById('pb-cancellation-policy').value,
+  };
+  const btn=document.getElementById('btn-save-bnb-public-booking');btn.disabled=true;btn.textContent='Saving…';
+  const{error}=await db.from('bnb_properties').update(payload).eq('id',pbActivePropertyId);
+  btn.disabled=false;btn.textContent='Save';
+  if(error){showToast('Could not save: '+error.message,'error');return;}
+  closeModal('modal-bnb-public-booking');
+  showToast(isBookable?'Public booking turned ON ✓ — live at book.nyumba254.com':'Public booking turned off','success');
   loadBnbLedger();
 }
 async function deleteBnbProperty(id,label){
