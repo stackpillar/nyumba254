@@ -2882,7 +2882,11 @@ function isBnbLedgerMode(){
   return bnbCapacityActive();
 }
 let ledgerViewOverride = null;
-function setLedgerView(v){ ledgerViewOverride = v; updateEliteGatedPages(subscriptionInfo()); }
+function setLedgerView(v){
+  ledgerViewOverride = v;
+  updateEliteGatedPages(subscriptionInfo());
+  if(v==='bnb') loadBnbLedger(); else loadRentalUnits();
+}
 function updateEliteGatedPages(sub){
   const isElite = sub.active && sub.plan==='elite';
   const switcher = document.getElementById('rl-capacity-switcher');
