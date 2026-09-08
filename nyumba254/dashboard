@@ -968,10 +968,9 @@
     </div>
     <h2>This is an admin account</h2>
     <p>Admin accounts can't post or manage listings as a seller — this dashboard is for sellers only.</p>
-    <p class="emphasis">Use your admin panel to manage the platform instead.</p>
+    <p class="emphasis">Admin accounts sign in separately and aren't accessible from this login.</p>
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:6px">
-      <a href="/nk-ctrl-7f3k2x9" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;text-decoration:none">Go to admin panel</a>
-      <a href="/" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;text-decoration:none">Browse listings</a>
+      <a href="/" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;text-decoration:none">Browse listings</a>
     </div>
     <div class="suspended-footer">Nyumba254 · Account Roles · <span onclick="doSignOut()" style="text-decoration:underline;cursor:pointer">Sign out instead</span></div>
   </div>
