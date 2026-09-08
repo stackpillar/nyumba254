@@ -951,6 +951,7 @@ function updateKickerAndFeeNote() {
   if (!kicker) return;
   if (isFirstListing) {
     kicker.textContent = `🎉 Your first listing is free for ${PLATFORM_SETTINGS.trial_days} days`;
+    kicker.style.display = 'none';
   } else if (selectedCat === 'airbnb') {
     kicker.textContent = 'Airbnb listings run on a monthly BNB plan';
   } else {
