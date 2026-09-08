@@ -2359,7 +2359,7 @@ function subscribeBnbBookingsRealtime(){
       if(!bnbPropertyIdSet.has(String(payload.new.bnb_property_id)))return;
       playActivitySound();
       showToast(`New booking request from ${payload.new.guest_name||'a guest'} — check BNB Booking Ledger`,'success');
-      notifyInApp('rent_ledger',`New booking — ${payload.new.guest_name||'Guest'}`,`${payload.new.check_in} → ${payload.new.check_out} · Awaiting confirmation`,'#');
+      notifyInApp('rent_ledger',`New booking — ${payload.new.guest_name||'Guest'}`,`${payload.new.check_in} → ${payload.new.check_out} · Awaiting confirmation`);
       if(document.getElementById('page-rent-ledger')?.classList.contains('active')&&isBnbLedgerMode())loadBnbLedger();
     })
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'bnb_bookings'},payload=>{
@@ -2511,7 +2511,7 @@ async function init(){
       n.is_read = true; renderNotifBell();
     }
     document.getElementById('notif-bell-panel').style.display = 'none';
-    if (link) { if (link.startsWith('http')) window.open(link, '_blank'); else window.location.href = link; }
+    if (link && link !== '#') { if (link.startsWith('http')) window.open(link, '_blank'); else window.location.href = link; }
   }
   async function markAllNotifsRead() {
     const unreadIds = notifItems.filter(n => !n.is_read).map(n => n.id);
