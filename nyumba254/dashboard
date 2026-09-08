@@ -135,6 +135,13 @@
     .icon-btn.purple:hover{border-color:var(--purple);color:var(--purple);background:#EDE9FE}
     .icon-btn.locked{opacity:.4;cursor:not-allowed;pointer-events:none}
     .icon-btn.locked:hover{border-color:var(--border);color:var(--text-2);background:white}
+    .action-menu{position:fixed;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:6px;min-width:210px;z-index:600;display:none}
+    .action-menu.open{display:block}
+    .action-menu-item{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border-radius:8px;font-size:13px;font-weight:500;color:var(--text-2);cursor:pointer;text-align:left;background:none;border:none}
+    .action-menu-item:hover{background:var(--surface);color:var(--text)}
+    .action-menu-item svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0}
+    .action-menu-item.danger{color:var(--red)}
+    .action-menu-item.danger:hover{background:var(--red-light)}
     .toast{position:fixed;bottom:28px;right:28px;z-index:9999;background:var(--text);color:white;padding:12px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;box-shadow:0 12px 32px rgba(0,0,0,0.28);display:flex;align-items:center;gap:10px;transform:translateY(80px) scale(.95);opacity:0;transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .25s;max-width:340px}
     .toast.show{transform:translateY(0) scale(1);opacity:1}
     .toast.success{background:var(--green-dark)}
@@ -483,6 +490,7 @@
     .kyc-upload-card:hover{border-color:var(--green)}
     .kyc-upload-card.has-file{border-style:solid;border-color:var(--green);background:var(--green-light)}
     .kyc-upload-top{display:flex;align-items:center;gap:12px}
+.kyc-upload-info{flex:1;min-width:0}
     .kyc-upload-icon{width:38px;height:38px;border-radius:10px;background:var(--white);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0}
     .kyc-upload-card.has-file .kyc-upload-icon{background:var(--green);border-color:var(--green)}
     .kyc-upload-icon svg{width:18px;height:18px;stroke:var(--text-3);stroke-width:1.8;fill:none}
@@ -737,6 +745,11 @@
       .scw-panel{width:calc(100vw - 20px);right:10px;height:min(600px, calc(100vh - 96px))}
       .scw-fab{bottom:calc(16px + env(safe-area-inset-bottom));right:calc(16px + env(safe-area-inset-right));padding:10px 14px 10px 10px}
       .scw-fab-text{display:none}
+      .chat-header{padding:10px 14px;gap:8px}
+      .chat-header-avatar{width:32px;height:32px;font-size:11px}
+      .chat-header-actions{gap:6px}
+      .chat-header-actions .btn{padding:6px 10px;font-size:11px}
+      .chat-header-actions .btn svg{display:none}
     }
     @media(max-width:1100px){.overview-grid{grid-template-columns:1fr}.settings-grid{grid-template-columns:1fr}}
     @media(max-width:900px){
@@ -815,6 +828,8 @@
     }
     @media(max-width:600px){
   .stat-grid{grid-template-columns:1fr 1fr}
+  .stat-val{font-size:22px;overflow-wrap:break-word;word-break:break-word}
+  .stat-card{padding:16px 16px}
   .page{padding:16px}
   .form-grid{grid-template-columns:1fr}
   .topbar{padding:0 12px}
@@ -5454,7 +5469,7 @@ function loadVerificationUI() {
     <div class="kyc-upload-card">
       <div class="kyc-upload-top">
         <div class="kyc-upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="8" cy="11" r="2.4"/><path d="M4 18c1-2.2 2.8-3.4 4-3.4s3 1.2 4 3.4M15 9h5M15 13h5"/></svg></div>
-        <div><div class="kyc-upload-title">National ID — front side</div><div class="kyc-upload-sub">Clear photo or scan, all corners visible</div></div>
+        <div class="kyc-upload-info"><div class="kyc-upload-title">National ID — front side</div><div class="kyc-upload-sub">Clear photo or scan, all corners visible</div></div>
         <span class="kyc-required-tag">Required</span>
       </div>
       <div class="kyc-upload-input"><input type="file" id="kyc-id-front-file" accept="image/*,.pdf"/></div>
@@ -5472,7 +5487,7 @@ function loadVerificationUI() {
     <div class="kyc-upload-card">
       <div class="kyc-upload-top">
         <div class="kyc-upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-        <div><div class="kyc-upload-title" id="kyc-proof-title">Title deed or lease copy</div><div class="kyc-upload-sub" id="kyc-proof-sub">Confirms your right to list this property</div></div>
+        <div class="kyc-upload-info"><div class="kyc-upload-title" id="kyc-proof-title">Title deed or lease copy</div><div class="kyc-upload-sub" id="kyc-proof-sub">Confirms your right to list this property</div></div>
         <span class="kyc-required-tag">Required</span>
       </div>
       <div class="kyc-upload-input"><input type="file" id="kyc-proof-file" accept="image/*,.pdf"/></div>
@@ -6103,11 +6118,9 @@ const contactHideBtn = globalContactHidden
       <td><div class="actions-cell">
         <a href="/listing?id=${String(l.listing_number).padStart(6,'0')}" target="_blank" class="icon-btn" title="View live listing"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
         <div class="icon-btn" onclick="openMessagesForListing('${l.id}')" title="Messages" role="button" tabindex="0" aria-label="Open messages for this listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
-        ${socialLocked?`<div class="icon-btn" title="Only available while the listing is active" style="opacity:.4;pointer-events:none"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>`:`<div class="icon-btn" onclick="shareListing('${l.id}')" title="Share" role="button" tabindex="0" aria-label="Share listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>`}
-        ${socialLocked?`<div class="icon-btn" title="Only available while the listing is active" style="opacity:.4;pointer-events:none"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></div>`:`<div class="icon-btn" data-id="${l.id}" onclick="shareListingToFacebook(this.dataset.id)" title="Share to Facebook — free" role="button" tabindex="0" aria-label="Share to Facebook" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></div>`}
-        ${socialLocked?`<div class="icon-btn" title="Only available while the listing is active" style="opacity:.4;pointer-events:none"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></div>`:`<div class="icon-btn" data-id="${l.id}" onclick="shareListingToInstagram(this.dataset.id)" title="Copy caption for Instagram — free (Instagram has no direct share link, so this copies the text for you to paste)" role="button" tabindex="0" aria-label="Copy caption for Instagram" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></div>`}
-        ${socialLocked?`<div class="icon-btn" title="Only available while the listing is active" style="opacity:.4;pointer-events:none"><svg viewBox="0 0 24 24"><path d="M9 12a4 4 0 104 4V4c1 2 3 3 5 3"/></svg></div>`:`<div class="icon-btn" data-id="${l.id}" onclick="shareListingToTiktok(this.dataset.id)" title="Copy caption for TikTok — free (TikTok has no direct share link, so this copies the text for you to paste)" role="button" tabindex="0" aria-label="Copy caption for TikTok" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M9 12a4 4 0 104 4V4c1 2 3 3 5 3"/></svg></div>`}
-        ${editBtn}${statusBtn}${pauseBtn}${publishNowBtn}${payNowBtn}${manageUnitsBtn}${socialLocked?`<div class="icon-btn purple" title="Only available while the listing is active" style="opacity:.4;pointer-events:none"><svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>`:manageVideosBtn}${socialLocked?'':brochureBtn}${contactHideBtn}
+        ${socialLocked?`<div class="icon-btn" title="Only available while the listing is active" style="opacity:.4;pointer-events:none"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>`:`<div class="icon-btn" data-id="${l.id}" onclick="openShareMenu('${l.id}',this)" title="Share listing" role="button" tabindex="0" aria-label="Share listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>`}
+        ${editBtn}${statusBtn}${pauseBtn}${publishNowBtn}${payNowBtn}${manageUnitsBtn}
+        <div class="icon-btn" data-id="${l.id}" onclick="openMoreActionsMenu('${l.id}',this)" title="More actions" role="button" tabindex="0" aria-label="More actions" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
         <div class="icon-btn danger" data-id="${l.id}" data-title="${escAttr(l.title)}" onclick="openDeleteModal(this.dataset.id,this.dataset.title)" title="Delete listing" role="button" tabindex="0" aria-label="Delete listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></div>
       </div></td>
     </tr>`;
@@ -6115,6 +6128,66 @@ const contactHideBtn = globalContactHidden
 }
 
 function statusLabel(s){return{active:'Active',pending:'Pending review',paused:'Paused',rejected:'Rejected',expired:'Expired',occupied:'Occupied',scheduled:'Scheduled'}[s]||s;}
+
+// ── Share picker — one button, extensible platform list. Add a new
+// platform anywhere by pushing another entry into SHARE_PLATFORMS; no
+// changes needed to the row-rendering code below. ──
+const SHARE_PLATFORMS=[
+  {label:'WhatsApp',icon:'<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>',action:(id)=>shareListing(id)},
+  {label:'Facebook',icon:'<path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" fill="currentColor" stroke="none"/>',action:(id)=>shareListingToFacebook(id)},
+  {label:'Instagram (copy caption)',icon:'<rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>',action:(id)=>shareListingToInstagram(id)},
+  {label:'TikTok (copy caption)',icon:'<path d="M9 12a4 4 0 104 4V4c1 2 3 3 5 3"/>',action:(id)=>shareListingToTiktok(id)},
+];
+
+let __openActionMenuEl=null;
+function closeActionMenu(){
+  if(__openActionMenuEl){__openActionMenuEl.remove();__openActionMenuEl=null;}
+  document.removeEventListener('click',closeActionMenuOnOutsideClick,true);
+}
+function closeActionMenuOnOutsideClick(e){
+  if(__openActionMenuEl && !__openActionMenuEl.contains(e.target)) closeActionMenu();
+}
+function openActionMenu(anchorEl,items){
+  closeActionMenu();
+  const menu=document.createElement('div');
+  menu.className='action-menu open';
+  menu.innerHTML=items.map((it,i)=>`<button type="button" class="action-menu-item ${it.danger?'danger':''}" data-idx="${i}">${it.icon?`<svg viewBox="0 0 24 24">${it.icon}</svg>`:''}${escHtml(it.label)}</button>`).join('');
+  document.body.appendChild(menu);
+  const r=anchorEl.getBoundingClientRect();
+  const menuW=Math.max(210,menu.offsetWidth||210);
+  const menuH=items.length*40+14;
+  let left=r.left;
+  if(left+menuW>window.innerWidth-8) left=window.innerWidth-menuW-8;
+  let top=r.bottom+6;
+  if(top+menuH>window.innerHeight-8) top=r.top-menuH-6;
+  menu.style.left=Math.max(8,left)+'px';
+  menu.style.top=Math.max(8,top)+'px';
+  menu.querySelectorAll('.action-menu-item').forEach(btn=>{
+    btn.onclick=()=>{ const it=items[Number(btn.dataset.idx)]; closeActionMenu(); it.onclick&&it.onclick(); };
+  });
+  __openActionMenuEl=menu;
+  setTimeout(()=>document.addEventListener('click',closeActionMenuOnOutsideClick,true),0);
+}
+
+function openShareMenu(listingId,anchorEl){
+  const items=SHARE_PLATFORMS.map(p=>({label:p.label,icon:p.icon,onclick:()=>p.action(listingId)}));
+  openActionMenu(anchorEl,items);
+}
+
+function openMoreActionsMenu(listingId,anchorEl){
+  const l=allListings.find(x=>String(x.id)===String(listingId));
+  if(!l)return;
+  const items=[
+    {label:'Manage video walkthrough',icon:'<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>',onclick:()=>openManageVideosModal(listingId)},
+  ];
+  if(subscriptionInfo().active){
+    items.push({label:'Download brochure',icon:'<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>',onclick:()=>generateBrochure(listingId)});
+  }
+  if(!(ownerProfile||currentProfile)?.hide_buyer_contact){
+    items.push({label:l.contact_hidden?'Show Call/WhatsApp again':'Hide Call/WhatsApp (chat only)',icon:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',onclick:()=>toggleListingContactHidden(listingId)});
+  }
+  openActionMenu(anchorEl,items);
+}
 async function toggleListingContactHidden(id){
   if(listingActionBusy.has(id))return;
   listingActionBusy.add(id);
