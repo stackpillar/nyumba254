@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Checkout — Nyumba254</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --green:#0F6E56;--green-mid:#1D9E75;--green-dark:#085041;--green-light:#E1F5EE;
+    --gold:#BA7517;--gold-light:#FAEEDA;--red:#c0392b;--red-light:#fdecea;
+    --text:#1a1a18;--text-2:#4a4a46;--text-3:#888780;
+    --border:#e0ded8;--surface:#f7f6f2;--white:#ffffff;
+    --radius:10px;--radius-lg:16px;
+    --shadow:0 1px 3px rgba(0,0,0,0.06),0 4px 14px rgba(0,0,0,0.05);
+  }
+  body{font-family:'Inter',sans-serif;color:var(--text);background:var(--surface);line-height:1.6;font-size:15px}
+  a{color:inherit;text-decoration:none}
+  h1,h2{font-family:'Playfair Display',serif;font-weight:700;color:var(--text)}
+  button{font-family:inherit;cursor:pointer}
+
+  .topbar{background:var(--white);border-bottom:1px solid var(--border)}
+  .topbar-inner{max-width:960px;margin:0 auto;padding:16px 28px;display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand-mark{width:34px;height:34px;border-radius:8px;background:var(--green);display:flex;align-items:center;justify-content:center}
+  .brand-mark svg{width:17px;height:17px;stroke:white;fill:none;stroke-width:2}
+  .brand-name{font-family:'Playfair Display',serif;font-size:18px;font-weight:700}
+  .back-link{display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;color:var(--text-2)}
+  .back-link svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+
+  .wrap{max-width:960px;margin:0 auto;padding:36px 28px 60px}
+  h1{font-size:24px;margin-bottom:26px}
+
+  .layout{display:grid;grid-template-columns:1.4fr 1fr;gap:32px;align-items:start}
+  @media(max-width:800px){.layout{grid-template-columns:1fr}}
+
+  .card{background:white;border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px}
+  .card + .card{margin-top:20px}
+  .card h2{font-size:16px;margin-bottom:16px}
+
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--text-3);margin-bottom:6px}
+  .field input{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;outline:none;font-family:inherit;color:var(--text)}
+  .field input:focus{border-color:var(--green)}
+  .field-err{font-size:12px;color:var(--red);margin-top:5px;display:none}
+
+  .pay-option{display:flex;align-items:center;gap:12px;padding:14px;border:1.5px solid var(--border);border-radius:10px;margin-bottom:10px;cursor:pointer}
+  .pay-option.selected{border-color:var(--green);background:var(--green-light)}
+  .pay-option input{accent-color:var(--green)}
+  .pay-option strong{font-size:13.5px}
+  .pay-option span{display:block;font-size:12px;color:var(--text-3)}
+  .paybill-box{background:var(--surface);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--text-2);margin-top:12px}
+  .paybill-box strong{color:var(--text)}
+
+  .summary-item{display:flex;gap:14px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+  .summary-thumb{width:64px;height:52px;border-radius:8px;background:var(--green-light);flex-shrink:0;overflow:hidden}
+  .summary-thumb img{width:100%;height:100%;object-fit:cover}
+  .summary-title{font-size:14px;font-weight:600}
+  .summary-sub{font-size:12px;color:var(--text-3);margin-top:2px}
+  .price-line{display:flex;justify-content:space-between;font-size:13.5px;color:var(--text-2);padding:5px 0}
+  .price-line.total{font-weight:700;color:var(--text);border-top:1px solid var(--border);margin-top:8px;padding-top:12px;font-size:15px}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:var(--radius);font-weight:600;font-size:14.5px;padding:14px 20px;width:100%;transition:all .15s}
+  .btn-primary{background:var(--green);color:white}
+  .btn-primary:hover{background:var(--green-dark)}
+  .btn-primary:disabled{opacity:.55;cursor:not-allowed}
+  .form-error{font-size:13px;color:var(--red);background:var(--red-light);border-radius:8px;padding:10px 12px;margin-bottom:14px;display:none}
+  .fine-print{font-size:11.5px;color:var(--text-3);text-align:center;margin-top:12px;line-height:1.6}
+
+  .state{text-align:center;padding:80px 20px;color:var(--text-3)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-mark"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>
+      <div class="brand-name">Nyumba254</div>
+    </div>
+    <a href="#" id="back-link" class="back-link"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Back to stay</a>
+  </div>
+</div>
+
+<div class="wrap" id="page-content">
+  <div class="state">Loading your reservation…</div>
+</div>
+
+<script>
+const SUPABASE_URL='https://vliuuloyfhyxcsuchpss.supabase.co';
+const SUPABASE_KEY='sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
+const EDGE_URL=`${SUPABASE_URL}/functions/v1`;
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const params=new URLSearchParams(location.search);
+const propertyId=params.get('property');
+const checkin=params.get('checkin');
+const checkout=params.get('checkout');
+const guests=params.get('guests')||'1';
+
+let property=null;
+document.getElementById('back-link').href = propertyId ? `property.html?id=${encodeURIComponent(propertyId)}` : 'index.html';
+
+function escHtml(s){ if(!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function nights(){ return Math.max(1,Math.round((new Date(checkout)-new Date(checkin))/86400000)); }
+function fmtDate(d){ return new Date(d).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'}); }
+
+async function loadAndRender(){
+  if(!propertyId||!checkin||!checkout){ renderError('Missing booking details — please start again from a stay.'); return; }
+  const{data,error}=await db.from('bnb_properties')
+    .select('id,property_label,nightly_rate,cleaning_fee,is_publicly_bookable,listing_id,listings(area,listing_photos(url,is_cover))')
+    .eq('id',propertyId).maybeSingle();
+  if(error||!data||!data.is_publicly_bookable){ renderError('This stay is no longer available for booking.'); return; }
+  property=data;
+  renderPage();
+}
+
+function renderError(msg){
+  document.getElementById('page-content').innerHTML=`<div class="state"><h1 style="font-size:20px;margin-bottom:8px">Can't continue to checkout</h1><p>${escHtml(msg)} <a href="index.html" style="color:var(--green);font-weight:600">Browse stays →</a></p></div>`;
+}
+
+function renderPage(){
+  const n=nights();
+  const nightlyTotal=n*Number(property.nightly_rate||0);
+  const cleaning=Number(property.cleaning_fee||0);
+  const total=nightlyTotal+cleaning;
+  const photo=(property.listings?.listing_photos||[]).sort((a,b)=>(b.is_cover?1:0)-(a.is_cover?1:0))[0]?.url;
+
+  document.getElementById('page-content').innerHTML=`
+    <h1>Confirm and pay</h1>
+    <div class="layout">
+      <div>
+        <div class="card">
+          <h2>Your details</h2>
+          <div class="form-error" id="form-error"></div>
+          <div class="field"><label for="g-name">Full name</label><input type="text" id="g-name" autocomplete="name"/><div class="field-err" id="err-name">Please enter your name</div></div>
+          <div class="field-row">
+            <div class="field"><label for="g-phone">Phone number</label><input type="tel" id="g-phone" placeholder="07xx xxx xxx" autocomplete="tel"/><div class="field-err" id="err-phone">Enter a valid phone number</div></div>
+            <div class="field"><label for="g-email">Email</label><input type="email" id="g-email" autocomplete="email"/><div class="field-err" id="err-email">Enter a valid email</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Pay with</h2>
+          <label class="pay-option selected" id="pay-mpesa-row">
+            <input type="radio" name="pay-method" value="mpesa" checked/>
+            <div><strong>M-Pesa</strong><span>Pay via Paybill, then confirm your transaction code</span></div>
+          </label>
+          <div class="paybill-box">
+            Paybill <strong>522522</strong> · Account <strong>BNB-${escHtml(String(propertyId).slice(0,6).toUpperCase())}</strong><br/>
+            Amount: <strong>KES ${total.toLocaleString('en-KE')}</strong>
+          </div>
+          <div class="field" style="margin-top:14px">
+            <label for="g-ref">M-Pesa transaction code</label>
+            <input type="text" id="g-ref" maxlength="10" placeholder="e.g. QFT7H8K2LM" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"/>
+            <div class="field-err" id="err-ref">Enter the 10-character M-Pesa code after paying</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="summary-item">
+          <div class="summary-thumb">${photo?`<img src="${escHtml(photo)}" alt=""/>`:''}</div>
+          <div>
+            <div class="summary-title">${escHtml(property.property_label)}</div>
+            <div class="summary-sub">${escHtml(property.listings?.area||'')}</div>
+          </div>
+        </div>
+        <div class="price-line"><span>${fmtDate(checkin)} → ${fmtDate(checkout)}</span><span>${n} night${n!==1?'s':''}</span></div>
+        <div class="price-line"><span>${guests} guest${guests!=='1'?'s':''}</span><span></span></div>
+        <div class="price-line"><span>KES ${Number(property.nightly_rate).toLocaleString('en-KE')} × ${n}</span><span>KES ${nightlyTotal.toLocaleString('en-KE')}</span></div>
+        ${cleaning?`<div class="price-line"><span>Cleaning fee</span><span>KES ${cleaning.toLocaleString('en-KE')}</span></div>`:''}
+        <div class="price-line total"><span>Total</span><span>KES ${total.toLocaleString('en-KE')}</span></div>
+        <button class="btn btn-primary" id="btn-confirm" style="margin-top:16px">Confirm booking</button>
+        <div class="fine-print">Your host confirms the M-Pesa payment before your booking is finalised. You'll get a confirmation with your booking reference.</div>
+      </div>
+    </div>
+  `;
+  document.getElementById('btn-confirm').addEventListener('click',submitBooking);
+}
+
+function validate(){
+  let ok=true;
+  const name=document.getElementById('g-name').value.trim();
+  const phone=document.getElementById('g-phone').value.trim();
+  const email=document.getElementById('g-email').value.trim();
+  const ref=document.getElementById('g-ref').value.trim();
+  const show=(id,bad)=>{ document.getElementById(id).style.display=bad?'block':'none'; };
+  show('err-name', !name); if(!name) ok=false;
+  show('err-phone', !/^0\d{9}$/.test(phone.replace(/\s/g,''))); if(!/^0\d{9}$/.test(phone.replace(/\s/g,''))) ok=false;
+  show('err-email', !/^\S+@\S+\.\S+$/.test(email)); if(!/^\S+@\S+\.\S+$/.test(email)) ok=false;
+  show('err-ref', ref.length!==10); if(ref.length!==10) ok=false;
+  return ok ? {name,phone,email,ref} : null;
+}
+
+async function submitBooking(){
+  const errEl=document.getElementById('form-error');
+  errEl.style.display='none';
+  const vals=validate();
+  if(!vals) return;
+  const btn=document.getElementById('btn-confirm');
+  btn.disabled=true; btn.textContent='Confirming…';
+  try{
+    // This calls a Supabase Edge Function (not a raw table insert) so the
+    // server can re-check the date range for conflicts atomically and
+    // validate is_publicly_bookable before writing to bnb_bookings — the
+    // anon key must never have direct INSERT rights on that table.
+    // Requires creating this function: supabase/functions/create-public-booking
+    const res=await fetch(`${EDGE_URL}/create-public-booking`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY},
+      body:JSON.stringify({
+        bnb_property_id:propertyId,
+        check_in:checkin, check_out:checkout,
+        guest_name:vals.name, guest_phone:vals.phone, guest_email:vals.email,
+        payment_reference:vals.ref, source:'direct_platform',
+      }),
+    });
+    const body=await res.json().catch(()=>({}));
+    if(!res.ok||body.error) throw new Error(body.error||'Could not confirm booking — please try again.');
+    location.href=`confirmation.html?ref=${encodeURIComponent(body.bookingRef||body.id||'')}`;
+  }catch(err){
+    console.error('submitBooking failed:',err);
+    errEl.textContent=err.message||'Something went wrong confirming your booking. Please try again.';
+    errEl.style.display='block';
+    btn.disabled=false; btn.textContent='Confirm booking';
+  }
+}
+
+loadAndRender();
+</script>
+</body>
+</html>
