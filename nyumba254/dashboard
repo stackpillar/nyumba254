@@ -1887,7 +1887,7 @@
       </div>
       <div class="form-grid">
         <div class="form-group"><label>Amount paid so far</label><input type="number" id="bb-paid" min="0" value="0"/></div>
-        <div class="form-group"><label>Payment status</label><select id="bb-payment-status"><option value="due">Due</option><option value="partial">Partial</option><option value="paid">Paid</option><option value="refunded">Refunded</option></select></div>
+        <div class="form-group"><label>Payment status</label><select id="bb-payment-status"><option value="pending_verification">Awaiting confirmation</option><option value="due">Due</option><option value="partial">Partial</option><option value="paid">Paid</option><option value="refunded">Refunded</option></select></div>
       </div>
       <div class="form-group"><label>Notes</label><textarea id="bb-notes"></textarea></div>
     </div>
@@ -2304,7 +2304,30 @@ applyStoredTheme();
 }
 
 
-let currentUser=null,currentProfile=null,ownerProfile=null,effectiveSellerId=null,isTeamMember=false,allListings=[],allEnquiries=[],allPayments=[],allMessages=[],allReviews=[],threads=[],activeThread=null,listingFilter='all',enquiryFilter='all',deleteTargetId=null,occupiedTargetId=null,replyTargetEnquiry=null,msgPollTimer=null,threadListingFilter=null,messagesChannel=null,listingActionBusy=new Set(),notifPollTimer=null;
+let currentUser=null,currentProfile=null,ownerProfile=null,effectiveSellerId=null,isTeamMember=false,allListings=[],allEnquiries=[],allPayments=[],allMessages=[],allReviews=[],threads=[],activeThread=null,listingFilter='all',enquiryFilter='all',deleteTargetId=null,occupiedTargetId=null,replyTargetEnquiry=null,msgPollTimer=null,threadListingFilter=null,messagesChannel=null,listingActionBusy=new Set(),notifPollTimer=null,bnbBookingsChannel=null,bnbPropertyIdSet=new Set();
+
+async function refreshBnbPropertyIdSet(){
+  const{data}=await db.from('bnb_properties').select('id').eq('seller_id',effectiveSellerId);
+  bnbPropertyIdSet=new Set((data||[]).map(r=>String(r.id)));
+  subscribeBnbBookingsRealtime();
+}
+
+function subscribeBnbBookingsRealtime(){
+  if(bnbBookingsChannel){bnbBookingsChannel.unsubscribe();bnbBookingsChannel=null;}
+  bnbBookingsChannel=db.channel('dash-bnb-bookings-'+effectiveSellerId)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'bnb_bookings'},payload=>{
+      if(!bnbPropertyIdSet.has(String(payload.new.bnb_property_id)))return;
+      playActivitySound();
+      showToast(`New booking request from ${payload.new.guest_name||'a guest'} — check BNB Booking Ledger`,'success');
+      notifyInApp('rent_ledger',`New booking — ${payload.new.guest_name||'Guest'}`,`${payload.new.check_in} → ${payload.new.check_out} · Awaiting confirmation`,'#');
+      if(document.getElementById('page-rent-ledger')?.classList.contains('active')&&isBnbLedgerMode())loadBnbLedger();
+    })
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'bnb_bookings'},payload=>{
+      if(!bnbPropertyIdSet.has(String(payload.new.bnb_property_id)))return;
+      if(document.getElementById('page-rent-ledger')?.classList.contains('active')&&isBnbLedgerMode())loadBnbLedger();
+    })
+    .subscribe();
+}
 
 // Message history window: only pulls the last N days of messages on load,
 // so this query and buildThreads() stay fast as conversations pile up over
@@ -2360,6 +2383,7 @@ async function init(){
       return;
     }
     await loadAllData();
+    await refreshBnbPropertyIdSet();
     loadPlatformPrices();
     loadNotifBell();
     renderOverview();
@@ -3303,7 +3327,8 @@ function renderBnbProperties(){
           return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12.5px">
             <span><strong>${escHtml(b.guest_name)}</strong> · ${nights} night(s) · ${escHtml(b.source)} · ${new Date(b.check_in).toLocaleDateString('en-KE',{day:'numeric',month:'short'})}–${new Date(b.check_out).toLocaleDateString('en-KE',{day:'numeric',month:'short'})}</span>
             <span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-              <span class="rl-chip ${b.payment_status==='paid'?'paid':b.payment_status==='partial'?'partial':b.payment_status==='refunded'?'due':'overdue'}">${b.payment_status}${balance>0?' · KES '+balance.toLocaleString('en-KE')+' due':''}</span>
+              <span class="rl-chip ${b.payment_status==='paid'?'paid':b.payment_status==='partial'?'partial':b.payment_status==='pending_verification'?'partial':b.payment_status==='refunded'?'due':'overdue'}">${b.payment_status==='pending_verification'?'Awaiting confirmation':b.payment_status}${balance>0&&b.payment_status!=='pending_verification'?' · KES '+balance.toLocaleString('en-KE')+' due':''}</span>
+              ${b.payment_status==='pending_verification'?`<button class="btn btn-primary btn-sm" style="background:#7c3aed" onclick="confirmBnbBookingPayment('${b.id}')" title="Confirm the M-Pesa payment cleared">✓ Confirm payment</button>`:''}
               ${b.guest_email?`<button class="btn btn-outline btn-sm" onclick="sendBnbCheckinReminder('${b.id}')" title="Send check-in instructions">✉️ Check-in</button>`:''}
               ${(b.guest_email && b.check_out<=new Date().toISOString().slice(0,10))?`<button class="btn btn-outline btn-sm" onclick="sendBnbReviewRequest('${b.id}')" title="Ask for a review">⭐ Review</button>`:''}
               <button class="btn btn-outline btn-sm" onclick="downloadBnbBookingReceiptPDF('${b.id}')" title="Download guest receipt">🧾 Receipt</button>
@@ -3735,6 +3760,17 @@ async function saveBnbBooking(){
   if(error){showToast('Could not save: '+error.message,'error');return;}
   closeModal('modal-add-bnb-booking');
   showToast('Booking saved ✓','success');
+  loadBnbLedger();
+}
+
+async function confirmBnbBookingPayment(bookingId){
+  if(!confirm('Confirm this M-Pesa payment cleared and finalize the booking?'))return;
+  const{error}=await db.from('bnb_bookings').update({payment_status:'paid',status:'confirmed'}).eq('id',bookingId);
+  if(error){showToast('Could not confirm: '+error.message,'error');return;}
+  showToast('Booking confirmed ✓','success');
+  let found=null;
+  bnbPropertiesCache.forEach(p=>{(p.bnb_bookings||[]).forEach(b=>{if(String(b.id)===String(bookingId))found={p,b};});});
+  if(found)notifyInApp('rent_ledger',`Booking confirmed — ${found.b.guest_name}`,`${found.p.property_label} · ${found.b.check_in} → ${found.b.check_out}`);
   loadBnbLedger();
 }
 
