@@ -3248,8 +3248,8 @@ async function downloadBnbBookingReceiptPDF(bookingId){
 }
 
 function bnbActiveOrFutureBookings(p){
-  const today=new Date().toISOString().slice(0,10);
-  return (p.bnb_bookings||[]).filter(b=>b.status!=='cancelled' && b.check_out>=today).sort((a,b)=>new Date(a.check_in)-new Date(b.check_in));
+  const cutoff=new Date(Date.now()-30*86400000).toISOString().slice(0,10); // keep receipts reachable for 30 days after checkout
+  return (p.bnb_bookings||[]).filter(b=>b.status!=='cancelled' && b.check_out>=cutoff).sort((a,b)=>new Date(a.check_in)-new Date(b.check_in));
 }
 function bnbNightsBetween(ci,co){ return Math.max(1,Math.round((new Date(co)-new Date(ci))/86400000)); }
 
