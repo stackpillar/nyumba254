@@ -1176,14 +1176,20 @@
         <button class="filter-pill" onclick="filterListings('occupied',this)">Occupied / sold</button>
         <div class="filter-search">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" placeholder="Search listings…" id="listing-search" oninput="renderListingsTable()"/>
+          <input type="text" placeholder="Search listings…" id="listing-search" oninput="debouncedRenderListingsTable()"/>
         </div>
+      </div>
+      <div id="listings-bulk-bar" style="display:none;align-items:center;gap:12px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius);padding:10px 16px;margin-bottom:14px">
+        <strong id="listings-bulk-count" style="font-size:13px;color:var(--green-dark)"></strong>
+        <button class="btn btn-outline btn-sm" onclick="bulkPauseSelectedListings()">Pause selected</button>
+        <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="bulkDeleteSelectedListings()">Delete selected</button>
+        <button class="btn btn-outline btn-sm" style="margin-left:auto" onclick="toggleSelectAllListings(false)">Clear selection</button>
       </div>
       <div class="card" id="listings-table-card" style="overflow:hidden">
         <div style="overflow-x:auto;max-width:100%">
         <table class="listings-table">
-          <thead><tr><th>Property</th><th>Price</th><th>Status</th><th>Messages</th><th>Views</th><th>Posted</th><th>Actions</th></tr></thead>
-          <tbody id="listings-tbody"><tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-3)">Loading listings…</td></tr></tbody>
+          <thead><tr><th style="width:34px"><input type="checkbox" id="listings-select-all" onchange="toggleSelectAllListings(this.checked)"/></th><th>Property</th><th>Price</th><th>Status</th><th>Messages</th><th>Views</th><th>Posted</th><th>Actions</th></tr></thead>
+          <tbody id="listings-tbody"><tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-3)">Loading listings…</td></tr></tbody>
         </table>
         </div>
       </div>
@@ -2382,7 +2388,7 @@ function subscribeBnbBookingsRealtime(){
 const MSG_HISTORY_DAYS=90;
 // Realtime already delivers new messages instantly; these two intervals are
 // just a fallback in case a realtime channel silently drops.
-const MSG_POLL_MS=120000, LISTING_STATUS_POLL_MS=30000;
+const MSG_POLL_MS=300000, LISTING_STATUS_POLL_MS=30000; // 5min fallback poll — realtime (subscribeMessagesRealtime) is the primary delivery path
 
 // ── Multi-unit management state (Manage units modal) ──
 let muActiveListingId=null,muUnits=[],muActionBusy=false;
@@ -2446,6 +2452,7 @@ async function init(){
     }
     const lastPage=sessionStorage.getItem('ny_last_page');
     if(lastPage&&lastPage!=='overview'&&document.getElementById('page-'+lastPage)){showPage(lastPage);}
+    retryQueuedNotifications(); // flush any emails that failed to send last session
     msgPollTimer=setInterval(pollNewMessages,MSG_POLL_MS);
     listingStatusPollTimer=setInterval(pollListingStatusChanges,LISTING_STATUS_POLL_MS);
     notifPollTimer=setInterval(loadNotifBell,60000);
@@ -2601,7 +2608,7 @@ async function init(){
     const listEl = document.getElementById('notif-groups-list');
     if (!listEl) return;
     if (!total) {
-      listEl.innerHTML = `<div class="notif-empty-state"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><h3 style="font-size:15px;font-weight:600;color:var(--text-2);margin-bottom:4px">No notifications yet</h3><p style="font-size:12.5px">You'll see messages, listing updates, payments, and account activity here.</p></div>`;
+      listEl.innerHTML = `<div class="notif-empty-state"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><h3 style="font-size:15px;font-weight:600;color:var(--text-2);margin-bottom:4px">No notifications yet</h3><p style="font-size:12.5px;margin-bottom:14px">You'll see messages, listing updates, payments, and account activity here.</p><button class="btn btn-primary btn-sm" onclick="showPage('overview')">Go to Overview</button></div>`;
       return;
     }
 
@@ -2929,10 +2936,17 @@ function isBnbLedgerMode(){
   return bnbCapacityActive();
 }
 let ledgerViewOverride = null;
+function rlShowSkeleton(containerId){
+  const el=document.getElementById(containerId);
+  if(!el)return;
+  el.innerHTML=`<div style="padding:30px;text-align:center;color:var(--text-3);font-size:13px">
+    <div class="spinner-sm" style="border-top-color:var(--text-3);width:20px;height:20px;margin:0 auto 10px"></div>Loading…</div>`;
+}
 function setLedgerView(v){
   ledgerViewOverride = v;
   updateEliteGatedPages(subscriptionInfo());
-  if(v==='bnb') loadBnbLedger(); else loadRentalUnits();
+  if(v==='bnb'){ rlShowSkeleton('bnb-properties-list'); loadBnbLedger(); }
+  else { rlShowSkeleton('rental-units-list'); loadRentalUnits(); }
 }
 function updateEliteGatedPages(sub){
   const isElite = sub.active && sub.plan==='elite';
@@ -3850,10 +3864,11 @@ function openRenewBnbPropertyModal(propertyId){
   const p=bnbPropertiesCache.find(x=>String(x.id)===String(propertyId));
   if(!p){showToast('Property not found','error');return;}
   rbpActivePropertyId=propertyId;
-  document.getElementById('pay-listing-intro').textContent=`Renew "${p.property_label}" to bring it back live on the book page.`;
+  const wasBundle=p.plan_tier==='bundle';
+  document.getElementById('pay-listing-intro').textContent=`Renew "${p.property_label}" (${wasBundle?'Bundle':'Basic'} tier) to bring it back live on the book page.`;
   document.getElementById('pay-plan-standard-row').style.display='flex';
   document.getElementById('pay-plan-featured-row').style.display='none';
-  const amt=Number(platformPrices.bnb_basic_price||700);
+  const amt=Number(wasBundle?(platformPrices.bnb_bundle_price||2000):(platformPrices.bnb_basic_price||700));
   document.getElementById('pay-standard-amount').textContent='KES '+amt.toLocaleString('en-KE')+' / 30 days';
   document.getElementById('pay-listing-amount-display').textContent='KES '+amt.toLocaleString('en-KE');
   document.getElementById('pay-listing-ref').value='';
@@ -3865,7 +3880,7 @@ async function submitRenewBnbProperty(){
   if(!code||code.length!==10){showToast('Enter a valid 10-character M-Pesa code','error');return;}
   const p=bnbPropertiesCache.find(x=>String(x.id)===String(rbpActivePropertyId));
   if(!p)return;
-  const amount=Number(platformPrices.bnb_basic_price)||700;
+  const amount=Number(p.plan_tier==='bundle'?(platformPrices.bnb_bundle_price||2000):(platformPrices.bnb_basic_price||700))||700;
   const btn=document.getElementById('btn-submit-pay-listing');btn.disabled=true;btn.textContent='Submitting…';
   const{error}=await db.from('payments').insert({seller_id:effectiveSellerId,amount,method:'paybill',reference:code,type:'bnb_property_renewal',status:'pending_verification',bnb_property_id:p.id});
   btn.disabled=false;btn.textContent='Submit for verification';
@@ -3910,8 +3925,24 @@ async function saveBnbBooking(){
   const name=document.getElementById('bb-guest-name').value.trim();
   const checkin=document.getElementById('bb-checkin').value;
   const checkout=document.getElementById('bb-checkout').value;
+  const propertyId=document.getElementById('bb-property').value;
   if(!name||!checkin||!checkout){showToast('Guest name, check-in and check-out are required','error');return;}
   if(checkout<=checkin){showToast('Check-out must be after check-in','error');return;}
+
+  // Overlap guard: check_in < existing.check_out && check_out > existing.check_in
+  {
+    let overlapQ=db.from('bnb_bookings').select('id,guest_name,check_in,check_out')
+      .eq('bnb_property_id',propertyId).neq('status','cancelled')
+      .lt('check_in',checkout).gt('check_out',checkin);
+    if(bbEditingId) overlapQ=overlapQ.neq('id',bbEditingId);
+    const{data:overlaps,error:ovErr}=await overlapQ;
+    if(ovErr){showToast('Could not verify availability: '+ovErr.message,'error');return;}
+    if(overlaps&&overlaps.length){
+      showToast(`These dates overlap an existing booking for ${overlaps[0].guest_name} (${overlaps[0].check_in} → ${overlaps[0].check_out})`,'error');
+      return;
+    }
+  }
+
   const payload={
     bnb_property_id:document.getElementById('bb-property').value,
     guest_name:name,
@@ -3932,7 +3963,21 @@ async function saveBnbBooking(){
   if(error){showToast('Could not save: '+error.message,'error');return;}
   closeModal('modal-add-bnb-booking');
   showToast('Booking saved ✓','success');
-  loadBnbLedger();
+  await bnbPatchPropertyBookings(propertyId); // targeted refetch, not a full ledger reload
+}
+
+// Refetches bookings for ONE property and merges into the cache instead of
+// re-fetching every property + booking + expense + maintenance row on every
+// single-booking edit.
+async function bnbPatchPropertyBookings(propertyId){
+  const{data,error}=await db.from('bnb_properties').select('*, bnb_bookings(*)').eq('id',propertyId).single();
+  if(error||!data)return loadBnbLedger(); // fall back to full reload if anything's off
+  const idx=bnbPropertiesCache.findIndex(p=>String(p.id)===String(propertyId));
+  if(idx!==-1) bnbPropertiesCache[idx]=data; else bnbPropertiesCache.unshift(data);
+  renderBnbSummary();renderBnbUpcoming();renderBnbProperties();
+  if(bnbActiveTab==='calendar')renderBnbCalendar();
+  if(bnbActiveTab==='analytics')renderBnbAnalytics();
+  if(bnbActiveTab==='guests')renderBnbGuests();
 }
 
 async function confirmBnbBookingPayment(bookingId){
@@ -4396,6 +4441,9 @@ async function saveTenant(){
   if(!name){showToast('Please enter the tenant name','error');return;}
   const payload={rental_unit_id:ruAddTenantUnitId,full_name:name,phone:document.getElementById('tn-phone').value.trim()||null,email:document.getElementById('tn-email').value.trim()||null,move_in_date:document.getElementById('tn-movein').value||null,deposit_amount:parseFloat(document.getElementById('tn-deposit').value)||null,lease_end_date:document.getElementById('tn-lease-end')?.value||null,status:'active'};
   const btn=document.getElementById('btn-save-tenant');btn.disabled=true;btn.textContent='Saving…';
+  // Guard against a second tab/device adding a tenant to the same unit first
+  const{count:activeCount}=await db.from('tenants').select('id',{count:'exact',head:true}).eq('rental_unit_id',ruAddTenantUnitId).eq('status','active');
+  if(activeCount>0){btn.disabled=false;btn.textContent='Add tenant';showToast('This unit already has an active tenant — refreshing…','error');closeModal('modal-add-tenant');loadRentalUnits();return;}
   const{error}=await db.from('tenants').insert(payload);
   btn.disabled=false;btn.textContent='Add tenant';
   if(error){showToast('Could not save: '+error.message,'error');return;}
@@ -4425,10 +4473,7 @@ async function saveRentPayment(){
   const periodMonth=monthVal+'-01';
   const payload={tenant_id:rpTenantId,period_month:periodMonth,amount:parseFloat(document.getElementById('rp-amount').value)||0,paid_date:document.getElementById('rp-paiddate').value||null,method:document.getElementById('rp-method').value,status:document.getElementById('rp-status').value,notes:document.getElementById('rp-notes').value.trim()||null};
   const btn=document.getElementById('btn-save-rent-payment');btn.disabled=true;btn.textContent='Saving…';
-  const{data:existing}=await db.from('rent_payments').select('id').eq('tenant_id',rpTenantId).eq('period_month',periodMonth).maybeSingle();
-  let error;
-  if(existing){({error}=await db.from('rent_payments').update(payload).eq('id',existing.id));}
-  else{({error}=await db.from('rent_payments').insert(payload));}
+  const{error}=await db.from('rent_payments').upsert(payload,{onConflict:'tenant_id,period_month'});
   btn.disabled=false;btn.textContent='Save payment';
   if(error){showToast('Could not save: '+error.message,'error');return;}
   closeModal('modal-log-rent-payment');
@@ -5678,6 +5723,14 @@ async function uploadVerifyFile(file, kind) {
   return path;
 }
 
+const KYC_MAX_FILE_MB=10;
+const KYC_ALLOWED_TYPES=['image/jpeg','image/png','image/webp','application/pdf'];
+function kycValidateFile(file,label){
+  if(!file)return null;
+  if(!KYC_ALLOWED_TYPES.includes(file.type)){showToast(`${label}: please upload a JPG, PNG, or PDF file`,'error');return false;}
+  if(file.size>KYC_MAX_FILE_MB*1024*1024){showToast(`${label} is too large (max ${KYC_MAX_FILE_MB}MB) — try a lower-resolution photo`,'error');return false;}
+  return true;
+}
 async function submitVerification() {
   const idFile = document.getElementById('kyc-id-front-file').files[0];
   const idFile2 = document.getElementById('kyc-id-back-file').files[0];
@@ -5685,6 +5738,9 @@ async function submitVerification() {
   const isOwner = document.getElementById('kyc-is-owner').value === 'yes';
   if (!idFile || !idFile2) { showToast('Please upload both the front and back of your ID','error'); return; }
   if (!proofFile) { showToast('Please attach your proof of ownership document','error'); return; }
+  if(kycValidateFile(idFile,'ID front')===false)return;
+  if(kycValidateFile(idFile2,'ID back')===false)return;
+  if(kycValidateFile(proofFile,'Proof document')===false)return;
   const btn = document.getElementById('kyc-submit-btn');
   btn.disabled = true; btn.textContent = 'Uploading…';
   try {
@@ -5716,6 +5772,7 @@ async function submitVerification() {
 async function submitExtraVerification() {
   const file = document.getElementById('kyc-extra-doc-file')?.files[0];
   if (!file) { showToast('Please attach a file','error'); return; }
+  if(kycValidateFile(file,'Document')===false)return;
   try {
     const path = await uploadVerifyFile(file, 'extra');
     const docs = Array.isArray(currentProfile?.extra_verification_docs) ? [...currentProfile.extra_verification_docs] : [];
@@ -5960,6 +6017,8 @@ function renderQuickListings(){
   el.innerHTML=allListings.slice(0,5).map(l=>{const cover=(l.listing_photos||[]).find(p=>p.is_cover)||(l.listing_photos||[])[0];const img=cover?`<img src="${cover.url}" alt=""/>`:`<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;const d=getListingStatusDisplay(l);const trialDays=getTrialDaysLeft(l);const trialTxt=trialDays!==null?` · Trial: ${trialDays}d left`:'';const hasUnitTypes=(l.listing_units&&l.listing_units.length>0);const priceTxt=hasUnitTypes?muPriceRangeText(l):`KES ${Number(l.price).toLocaleString('en-KE')}${l.price_type==='rent'?'/mo':''}`;return `<div class="quick-listing"><div class="quick-img">${img}</div><div style="flex:1;min-width:0"><div class="quick-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(l.title)}</div><div class="quick-meta" style="${l.is_disabled?'color:var(--red)':''}">${l.area} · ${d.label}${trialTxt}</div></div><div class="quick-price">${priceTxt}</div></div>`;}).join('');
 }
 
+function debounce(fn,ms){let t;return function(...args){clearTimeout(t);t=setTimeout(()=>fn.apply(this,args),ms);};}
+const debouncedRenderListingsTable=debounce(renderListingsTable,200);
 function filterListings(status,el){listingFilter=status;document.querySelectorAll('#page-listings .filter-pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');renderListingsTable();}
 
 function getTrialDaysLeft(l){
@@ -6177,7 +6236,7 @@ function renderListingsTable(){
   const q=(document.getElementById('listing-search')?.value||'').toLowerCase();
   const rows=allListings.filter(l=>{if(listingFilter!=='all'&&l.status!==listingFilter)return false;if(q&&!l.title.toLowerCase().includes(q)&&!(l.area||'').toLowerCase().includes(q))return false;return true;});
   const tbody=document.getElementById('listings-tbody');
-  if(!rows.length){tbody.innerHTML=`<tr><td colspan="7"><div class="empty-state"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><h3>No listings found</h3><p>${listingFilter==='all'?"You haven't posted any listings yet.":`No ${listingFilter} listings.`}</p><a href="/post-listing" class="btn btn-primary">Post your first listing</a></div></td></tr>`;return;}
+  if(!rows.length){tbody.innerHTML=`<tr><td colspan="8"><div class="empty-state"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><h3>No listings found</h3><p>${listingFilter==='all'?"You haven't posted any listings yet.":`No ${listingFilter} listings.`}</p><a href="/post-listing" class="btn btn-primary">Post your first listing</a></div></td></tr>`;return;}
   tbody.innerHTML=rows.map(l=>{
     const cover=(l.listing_photos||[]).find(p=>p.is_cover)||(l.listing_photos||[])[0];
     const img=cover?`<img src="${cover.url}" alt=""/>`:`<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
@@ -6254,6 +6313,7 @@ const contactHideBtn = globalContactHidden
     :`<div class="icon-btn" data-id="${l.id}" onclick="toggleListingContactHidden(this.dataset.id)" title="Hide Call/WhatsApp — force chat-only on this listing" role="button" tabindex="0" aria-label="Hide buyer contact for this listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>`);
 
     return `<tr>
+      <td><input type="checkbox" class="listing-select-cb" data-id="${l.id}" ${selectedListingIds.has(String(l.id))?'checked':''} onchange="toggleListingSelected('${l.id}',this.checked)"/></td>
       <td><div class="listing-name-cell"><div class="listing-thumb">${img}</div><div>
         <div class="listing-title-text">${escHtml(l.title)}</div>
         <div class="listing-area-text">${l.area}${l.sub_area?' · '+l.sub_area:''}</div>
@@ -6278,6 +6338,60 @@ const contactHideBtn = globalContactHidden
 }
 
 function statusLabel(s){return{active:'Active',pending:'Pending review',paused:'Paused',rejected:'Rejected',expired:'Expired',occupied:'Occupied',scheduled:'Scheduled'}[s]||s;}
+
+// ── Bulk selection / actions on My Listings ──
+let selectedListingIds=new Set();
+function toggleListingSelected(id,checked){
+  if(checked)selectedListingIds.add(String(id));else selectedListingIds.delete(String(id));
+  updateBulkBar();
+}
+function toggleSelectAllListings(checked){
+  selectedListingIds.clear();
+  if(checked)document.querySelectorAll('.listing-select-cb').forEach(cb=>selectedListingIds.add(cb.dataset.id));
+  renderListingsTable();
+  updateBulkBar();
+}
+function updateBulkBar(){
+  const bar=document.getElementById('listings-bulk-bar');
+  const count=document.getElementById('listings-bulk-count');
+  const selectAll=document.getElementById('listings-select-all');
+  if(!bar)return;
+  bar.style.display=selectedListingIds.size?'flex':'none';
+  if(count)count.textContent=`${selectedListingIds.size} selected`;
+  if(selectAll)selectAll.checked=selectedListingIds.size>0&&selectedListingIds.size===document.querySelectorAll('.listing-select-cb').length;
+}
+async function bulkPauseSelectedListings(){
+  const ids=[...selectedListingIds].filter(id=>{const l=allListings.find(x=>String(x.id)===id);return l&&l.status==='active'&&!l.is_disabled;});
+  if(!ids.length){showToast('None of the selected listings can be paused (only active listings can be)','error');return;}
+  if(!confirm(`Pause ${ids.length} listing(s)?`))return;
+  const{error}=await db.from('listings').update({status:'paused'}).in('id',ids);
+  if(error){showToast('Could not pause: '+error.message,'error');return;}
+  ids.forEach(id=>{const l=allListings.find(x=>String(x.id)===id);if(l)l.status='paused';});
+  selectedListingIds.clear();
+  renderListingsTable();renderOverview();updateBulkBar();
+  showToast(`${ids.length} listing(s) paused`,'success');
+}
+async function bulkDeleteSelectedListings(){
+  const ids=[...selectedListingIds];
+  if(!ids.length)return;
+  if(!confirm(`Permanently delete ${ids.length} listing(s)? This removes their messages and history too. This cannot be undone.`))return;
+  await db.from('listing_photos').delete().in('listing_id',ids);
+  await db.from('enquiries').delete().in('listing_id',ids);
+  await db.from('messages').delete().in('listing_id',ids);
+  await db.from('unit_occupancy_log').delete().in('listing_id',ids);
+  await db.from('listing_units').delete().in('listing_id',ids);
+  await db.from('reviews').delete().in('listing_id',ids);
+  const{data,error}=await db.from('listings').delete().in('id',ids).select();
+  if(error){showToast('Could not delete: '+error.message,'error');return;}
+  const deletedIds=new Set((data||[]).map(r=>String(r.id)));
+  allListings=allListings.filter(l=>!deletedIds.has(String(l.id)));
+  allEnquiries=allEnquiries.filter(e=>!deletedIds.has(String(e.listing_id)));
+  allMessages=allMessages.filter(m=>!deletedIds.has(String(m.listing_id)));
+  buildThreads();updateNavBadges();
+  selectedListingIds.clear();
+  renderListingsTable();renderOverview();updateBulkBar();
+  showToast(`${deletedIds.size} listing(s) deleted`,'success');
+}
 
 // ── Share picker — one button, extensible platform list. Add a new
 // platform anywhere by pushing another entry into SHARE_PLATFORMS; no
@@ -6430,6 +6544,17 @@ function renderManageUnitsModal(){
           <button class="btn btn-outline btn-sm" onclick="muOpenEditForm(${u.id})">Edit</button>
           <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="muDeleteUnit(${u.id},'${escAttr(u.unit_label)}')">Delete</button>
         </div>
+        <div class="mu-occupy-form mu-edit-form" id="mu-edit-form-${u.id}">
+          <div class="mu-occupy-grid">
+            <div><label>Unit label</label><input type="text" id="mu-edit-label-${u.id}" value="${escAttr(u.unit_label)}"/></div>
+            <div><label>Price (KES)</label><input type="number" id="mu-edit-price-${u.id}" value="${u.price}"/></div>
+            <div><label>Total units of this type</label><input type="number" id="mu-edit-total-${u.id}" value="${u.quantity_total??u.quantity_available}" min="1"/></div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary btn-sm" onclick="muSaveEditFromForm(${u.id})">Save changes</button>
+            <button class="btn btn-outline btn-sm" onclick="muCancelEditForm(${u.id})">Cancel</button>
+          </div>
+        </div>
         <div class="mu-occupy-form" id="mu-occupy-form-${u.id}">
           <div class="mu-occupy-grid">
             <div><label>Floor</label><input type="text" id="mu-floor-${u.id}" placeholder="e.g. 2nd floor"/></div>
@@ -6479,14 +6604,17 @@ async function muSaveNewUnit(){
 }
 
 function muOpenEditForm(unitId){
-  const u=muUnits.find(x=>x.id===unitId);if(!u)return;
-  const newLabel=prompt('Unit label:',u.unit_label);
-  if(newLabel===null)return;
-  const newPrice=prompt('Price (KES):',u.price);
-  if(newPrice===null)return;
-  const newTotal=prompt('Total units of this type:',u.quantity_total??u.quantity_available);
-  if(newTotal===null)return;
-  muSaveEditedUnit(unitId,newLabel.trim(),parseFloat(newPrice)||0,parseInt(newTotal)||1);
+  document.querySelectorAll('.mu-edit-form.open').forEach(f=>f.classList.remove('open'));
+  document.getElementById(`mu-edit-form-${unitId}`)?.classList.toggle('open');
+}
+function muCancelEditForm(unitId){
+  document.getElementById(`mu-edit-form-${unitId}`)?.classList.remove('open');
+}
+async function muSaveEditFromForm(unitId){
+  const label=document.getElementById(`mu-edit-label-${unitId}`).value.trim();
+  const price=parseFloat(document.getElementById(`mu-edit-price-${unitId}`).value)||0;
+  const total=parseInt(document.getElementById(`mu-edit-total-${unitId}`).value)||1;
+  await muSaveEditedUnit(unitId,label,price,total);
 }
 async function muSaveEditedUnit(unitId,label,price,total){
   if(!label){showToast('Label cannot be empty','error');return;}
@@ -7176,7 +7304,7 @@ function renderReviews(){
   const el=document.getElementById('reviews-list');
   const summary=document.getElementById('reviews-summary');
   if(!allReviews.length){
-    el.innerHTML=`<div class="empty-state"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><h3>No reviews yet</h3><p>When a buyer reviews you after contacting about a listing, it appears here.</p></div>`;
+    el.innerHTML=`<div class="empty-state"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><h3>No reviews yet</h3><p>When a buyer reviews you after contacting about a listing, it appears here.</p><button class="btn btn-primary" onclick="showPage('listings')">View my listings</button></div>`;
     summary.textContent='';
     return;
   }
@@ -7433,6 +7561,7 @@ async function doSignOut(){clearInterval(msgPollTimer);clearInterval(listingStat
 let toastTimer;
 function showToast(msg,type='success'){const t=document.getElementById('toast'),m=document.getElementById('toast-msg');clearTimeout(toastTimer);t.className='toast '+type;m.textContent=msg;t.classList.add('show');toastTimer=setTimeout(()=>t.classList.remove('show'),3500);}
 function timeAgo(iso){if(!iso)return'';const d=(Date.now()-new Date(iso))/1000;if(d<60)return'just now';if(d<3600)return`${Math.floor(d/60)}m ago`;if(d<86400)return`${Math.floor(d/3600)}h ago`;if(d<604800)return`${Math.floor(d/86400)}d ago`;return new Date(iso).toLocaleDateString('en-KE',{day:'numeric',month:'short'});}
+function fmtKES(n,suffix=''){return `KES ${Number(n||0).toLocaleString('en-KE')}${suffix}`;}
 function escHtml(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function escAttr(s){if(!s)return'';return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function truncateWords(s,maxWords){
@@ -7469,7 +7598,10 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText) {
     });
   } catch (e) { console.error('notifyBuyerIfOffline failed:', e); }
 }
-async function notifyByEmail(type,payload){
+const NOTIFY_RETRY_KEY='ny_notify_retry_queue';
+function notifyQueueRead(){try{return JSON.parse(localStorage.getItem(NOTIFY_RETRY_KEY)||'[]');}catch(e){return[];}}
+function notifyQueueWrite(q){try{localStorage.setItem(NOTIFY_RETRY_KEY,JSON.stringify(q.slice(-20)));}catch(e){}}
+async function notifyByEmail(type,payload,_isRetry){
   try{
     const res=await fetch(`${EDGE_URL}/send-notification-email`,{
       method:'POST',
@@ -7480,8 +7612,21 @@ async function notifyByEmail(type,payload){
       },
       body:JSON.stringify({type,...payload}),
     });
-    if(!res.ok)console.error('notifyByEmail: edge function returned',res.status);
-  }catch(err){console.error('notifyByEmail failed:',err);}
+    if(!res.ok){
+      console.error('notifyByEmail: edge function returned',res.status);
+      if(!_isRetry){const q=notifyQueueRead();q.push({type,payload,queuedAt:Date.now()});notifyQueueWrite(q);}
+    }else if(_isRetry){
+      // successful retry — drop it from the queue
+      notifyQueueWrite(notifyQueueRead().filter(e=>!(e.type===type&&JSON.stringify(e.payload)===JSON.stringify(payload))));
+    }
+  }catch(err){
+    console.error('notifyByEmail failed:',err);
+    if(!_isRetry){const q=notifyQueueRead();q.push({type,payload,queuedAt:Date.now()});notifyQueueWrite(q);}
+  }
+}
+async function retryQueuedNotifications(){
+  const q=notifyQueueRead().filter(e=>Date.now()-e.queuedAt<7*86400000); // drop anything older than a week
+  for(const entry of q){ await notifyByEmail(entry.type,entry.payload,true); }
 }
 function notifyAdmin(type,payload){return notifyByEmail(type,{...payload,audience:'admin'});}
 function notifySeller(type,payload){return notifyByEmail(type,{...payload,audience:'seller'});}
@@ -7566,6 +7711,11 @@ function handleVisibilityChange(){
     clearInterval(listingStatusPollTimer);listingStatusPollTimer=null;
     clearInterval(notifPollTimer);notifPollTimer=null;
   }else{
+    // A backgrounded tab's realtime sockets can silently drop — force a
+    // resubscribe of all three, not just resume the poll-fallback timers.
+    subscribeMessagesRealtime();
+    refreshBnbPropertyIdSet(); // re-subscribes bnbBookingsChannel internally
+    subscribeNotifBellRealtime();
     pollNewMessages();
     pollListingStatusChanges();
     loadNotifBell();
@@ -8315,6 +8465,7 @@ const Tour = (() => {
     { selector:'#btn-new-listing-tour', page:'overview', title:'Post a listing', desc:'Ready to list a property? Tap this any time to add a new apartment, house, or commercial space.' },
     { selector:'#nav-listings', page:'overview', title:'My listings', desc:'Tap "My listings" now to see everything you\'ve posted.', click:true },
     { selector:'#listings-filter-bar', page:'listings', title:'Filter your listings', desc:'Filter by status — active, pending, paused, occupied/sold — or search by name.' },
+    { selector:'#listings-select-all', page:'listings', title:'Select multiple listings', desc:'Tick the checkbox on any row (or this header checkbox to select all) to pause or delete several listings at once — a bar appears above the table with those actions.' },
     { selector:'#listings-table-card', page:'listings', title:'Manage each listing', desc:'Edit, view messages, share, mark occupied/sold, pause, or delete — from the icons on each row.' },
     { selector:'#listings-table-card', page:'listings', title:'Share to social media — free', desc:'Tap the Facebook, Instagram, or TikTok icon on any listing to share it to your own page or profile — free for every seller, no upgrade needed.' },
     { selector:'#listings-table-card', page:'listings', title:'More per-listing tools', desc:'Purple icons handle the rest: manage unit types, add a video walkthrough, download a printable brochure, and hide/show your Call & WhatsApp buttons — right from this row.' },
