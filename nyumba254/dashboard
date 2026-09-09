@@ -3859,6 +3859,7 @@ async function saveBnbProperty(){
   else{({data:row,error}=await db.from('bnb_properties').insert(payload).select().single());}
   if(error){btn.disabled=false;btn.textContent=isEdit?'Save changes':'Add property';showToast('Could not save: '+error.message,'error');return;}
 
+  let photoUploadFailed=false;
   if(!listingId && (bpPendingPhotos.length || isEdit)){
     btn.textContent='Uploading photos…';
     const urls=[...bpExistingPhotos];
@@ -3867,7 +3868,16 @@ async function saveBnbProperty(){
       const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
       const path=`${effectiveSellerId}/${row.id}/${Date.now()}_${i}.${ext}`;
       const{error:upErr}=await db.storage.from(BNB_PROPERTY_PHOTOS_BUCKET).upload(path,file);
-      if(upErr){console.error('bnb photo upload failed:',upErr.message);showToast('Some photos failed to upload: '+upErr.message,'error');continue;}
+      if(upErr){
+        console.error('bnb photo upload failed:',upErr.message);
+        photoUploadFailed=true;
+        if(upErr.message.toLowerCase().includes('bucket not found')){
+          showToast('Photo storage isn\'t set up yet — contact support to enable BNB property photos.','error');
+        }else{
+          showToast('A photo failed to upload: '+upErr.message,'error');
+        }
+        continue;
+      }
       const{data:pub}=db.storage.from(BNB_PROPERTY_PHOTOS_BUCKET).getPublicUrl(path);
       urls.push(pub.publicUrl);
     }
@@ -3876,7 +3886,11 @@ async function saveBnbProperty(){
 
   btn.disabled=false;btn.textContent=isEdit?'Save changes':'Add property';
   closeModal('modal-add-bnb-property');
-  showToast(isEdit?'Property updated ✓':'Property added ✓','success');
+  if(photoUploadFailed){
+    showToast(isEdit?'Property saved, but photo upload failed — try again':'Property added, but photo upload failed — edit it to retry','error');
+  }else{
+    showToast(isEdit?'Property updated ✓':'Property added ✓','success');
+  }
   bpPendingPhotos=[];bpExistingPhotos=[];bpEditingId=null;
   loadBnbLedger();
 }
