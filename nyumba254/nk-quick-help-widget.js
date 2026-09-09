@@ -465,7 +465,7 @@ A: "Of course — connecting you with our team now."`;
         {
           label: 'Browsing & listings',
           chips: [
-            { label: '🏠 Browse listings', type: 'nav', href: 'listings.html' },
+            { label: '🏠 Browse listings', type: 'nav', href: 'listings' },
             { label: '📋 List my property', type: 'nav', href: 'post-listing.html' },
             { label: '💰 Pricing & plans', type: 'ask', q: 'What does it cost to list?' },
             { label: '⭐ Standard vs Featured?', type: 'ask', q: "What's the difference between a Standard and Featured listing?" },
