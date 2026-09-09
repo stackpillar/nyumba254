@@ -1868,26 +1868,30 @@
   </div>
 </div>
 
-<!-- ADD BNB PROPERTY MODAL -->
+<!-- ADD/EDIT BNB PROPERTY MODAL -->
 <div class="modal-overlay" id="modal-add-bnb-property">
   <div class="modal" style="max-width:460px">
-    <div class="modal-head"><h3>Add BNB property</h3><div class="modal-close" onclick="closeModal('modal-add-bnb-property')">✕</div></div>
+    <div class="modal-head"><h3 id="bp-modal-title">Add BNB property</h3><div class="modal-close" onclick="closeModal('modal-add-bnb-property')">✕</div></div>
     <div class="modal-body">
       <div class="form-group"><label>Property label</label><input type="text" id="bp-label" placeholder="e.g. Milimani 2BR Apartment"/></div>
-      <div class="form-group"><label>Link to an existing listing (optional)</label><select id="bp-listing" onchange="bpToggleUnlinkedFields()"></select></div>
-      <div class="form-group" id="bp-photos-group">
-        <label>Photos <span style="font-weight:400;text-transform:none">— only needed if not linked to a listing above</span></label>
-        <div id="bp-photos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-bottom:10px"></div>
-        <input type="file" id="bp-photo-upload" accept="image/*" multiple style="display:none" onchange="handleBpPhotoUpload(this.files)"/>
-        <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('bp-photo-upload').click()">+ Add photos</button>
-        <div id="bp-photo-upload-status" style="font-size:11px;color:var(--text-3);margin-top:6px"></div>
+      <div class="form-group" id="bp-listing-group"><label>Link to an existing listing (optional)</label><select id="bp-listing" onchange="bpToggleUnlinkedFields()"></select><p style="font-size:11px;color:var(--text-3);margin-top:4px">Linked properties automatically use that listing's title, photos, description and amenities — nothing else to fill in below, and it can't be edited here (edit the listing instead).</p></div>
+      <div id="bp-unlinked-fields">
+        <div class="form-group" id="bp-photos-group">
+          <label>Photos <span style="font-weight:400;text-transform:none">— required before this property can be made publicly bookable</span></label>
+          <div id="bp-photos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-bottom:10px"></div>
+          <input type="file" id="bp-photo-upload" accept="image/*" multiple style="display:none" onchange="handleBpPhotoUpload(this.files)"/>
+          <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('bp-photo-upload').click()">+ Add photos</button>
+          <div id="bp-photo-upload-status" style="font-size:11px;color:var(--text-3);margin-top:6px"></div>
+        </div>
+        <div class="form-group"><label>Description</label><textarea id="bp-description" placeholder="What guests should know — the space, the neighbourhood, house rules…" style="min-height:90px"></textarea></div>
+        <div class="form-group"><label>Amenities</label><div id="bp-amenities-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px"></div></div>
       </div>
       <div class="form-grid">
         <div class="form-group"><label>Nightly rate (KES)</label><input type="number" id="bp-nightly" min="0"/></div>
         <div class="form-group"><label>Weekend rate (optional)</label><input type="number" id="bp-weekend" min="0"/></div>
       </div>
       <div class="form-group"><label>Cleaning fee (optional)</label><input type="number" id="bp-cleaning" min="0"/></div>
-      <div class="form-group"><label>Notes</label><textarea id="bp-notes"></textarea></div>
+      <div class="form-group"><label>Notes <span style="font-weight:400;text-transform:none">— private, for you only</span></label><textarea id="bp-notes"></textarea></div>
     </div>
     <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-add-bnb-property')">Cancel</button><button class="btn btn-primary" id="btn-save-bnb-property" onclick="saveBnbProperty()">Add property</button></div>
   </div>
@@ -3411,6 +3415,7 @@ function renderBnbProperties(){
           </div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${!p.listing_id?`<button class="btn btn-outline btn-sm" onclick="openEditBnbPropertyModal('${p.id}')">✏️ Edit</button>`:''}
           <button class="btn btn-outline btn-sm" onclick="openAddBnbBookingModal('${p.id}')">+ Log booking</button>
           ${expired
             ?`<button class="btn btn-primary btn-sm" style="background:#7c3aed" onclick="openRenewBnbPropertyModal('${p.id}')">🔄 Renew to reactivate</button>`
@@ -3418,6 +3423,7 @@ function renderBnbProperties(){
           ${(p.is_publicly_bookable&&!expired)?`<a class="btn btn-outline btn-sm" href="https://book.nyumba254.com/property.html?id=${p.id}" target="_blank" rel="noopener">↗ View book page</a>`:''}
           <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteBnbProperty('${p.id}','${escAttr(p.property_label)}')">Delete</button>
         </div>
+        ${(!p.listing_id && !(Array.isArray(p.photos)&&p.photos.length))?`<div style="margin-top:8px;font-size:11px;color:var(--red)">⚠️ No photos yet — add at least one before turning on public booking.</div>`:''}
       </div>
       ${bookings.length ? `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
         ${bookings.map(b=>{
@@ -3738,19 +3744,47 @@ async function sendBnbReviewRequest(bookingId){
 }
 
 let bpPendingPhotos=[];
+let bpExistingPhotos=[];
+let bpEditingId=null;
+const BNB_AMENITY_KEYS=[
+  { key:'wifi', label:'WiFi' },
+  { key:'parking', label:'Parking' },
+  { key:'pool', label:'Swimming pool' },
+  { key:'backup_power', label:'Backup power' },
+  { key:'hot_water', label:'Hot water' },
+  { key:'kitchen', label:'Full kitchen' },
+  { key:'workspace', label:'Workspace' },
+  { key:'ac', label:'Air conditioning' },
+  { key:'tv', label:'TV / Netflix' },
+  { key:'washer', label:'Washing machine' },
+  { key:'security', label:'24/7 security' },
+  { key:'pets_allowed', label:'Pets allowed' },
+];
+function bpRenderAmenitiesGrid(selected){
+  const grid=document.getElementById('bp-amenities-grid');
+  if(!grid)return;
+  const sel=selected||[];
+  grid.innerHTML=BNB_AMENITY_KEYS.map(a=>`<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:7px;background:var(--surface);border-radius:6px"><input type="checkbox" id="bp-amenity-${a.key}" ${sel.includes(a.key)?'checked':''}/>${a.label}</label>`).join('');
+}
 function bpToggleUnlinkedFields(){
   const linked=!!document.getElementById('bp-listing').value;
-  const grp=document.getElementById('bp-photos-group');
+  const grp=document.getElementById('bp-unlinked-fields');
   if(grp) grp.style.display = linked ? 'none' : 'block';
 }
 function renderBpPhotosGrid(){
   const grid=document.getElementById('bp-photos-grid');
   if(!grid)return;
-  grid.innerHTML=bpPendingPhotos.map((p,i)=>`
+  const existingHtml=bpExistingPhotos.map((url,i)=>`
+    <div style="position:relative;border-radius:8px;overflow:hidden;border:2px solid var(--green);aspect-ratio:1">
+      <img src="${escAttr(url)}" style="width:100%;height:100%;object-fit:cover;display:block"/>
+      <button type="button" onclick="removeBpExistingPhoto(${i})" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.6);border:none;color:white;border-radius:6px;width:20px;height:20px;font-size:12px;cursor:pointer">✕</button>
+    </div>`).join('');
+  const pendingHtml=bpPendingPhotos.map((p,i)=>`
     <div style="position:relative;border-radius:8px;overflow:hidden;border:2px solid var(--border);aspect-ratio:1">
       <img src="${p.previewUrl}" style="width:100%;height:100%;object-fit:cover;display:block"/>
       <button type="button" onclick="removeBpPendingPhoto(${i})" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.6);border:none;color:white;border-radius:6px;width:20px;height:20px;font-size:12px;cursor:pointer">✕</button>
     </div>`).join('');
+  grid.innerHTML=existingHtml+pendingHtml;
 }
 function handleBpPhotoUpload(fileList){
   Array.from(fileList||[]).forEach(file=>bpPendingPhotos.push({file,previewUrl:URL.createObjectURL(file)}));
@@ -3758,11 +3792,39 @@ function handleBpPhotoUpload(fileList){
   document.getElementById('bp-photo-upload').value='';
 }
 function removeBpPendingPhoto(i){bpPendingPhotos.splice(i,1);renderBpPhotosGrid();}
+function removeBpExistingPhoto(i){bpExistingPhotos.splice(i,1);renderBpPhotosGrid();}
 function openAddBnbPropertyModal(){
+  bpEditingId=null;
+  document.getElementById('bp-modal-title').textContent='Add BNB property';
+  document.getElementById('btn-save-bnb-property').textContent='Add property';
+  document.getElementById('bp-listing-group').style.display='block';
   const sel=document.getElementById('bp-listing');
   sel.innerHTML='<option value="">Not linked to a listing</option>'+allListings.filter(l=>l.category==='airbnb').map(l=>`<option value="${l.id}">${escHtml(l.title)}</option>`).join('');
-  document.getElementById('bp-label').value='';document.getElementById('bp-nightly').value='';document.getElementById('bp-weekend').value='';document.getElementById('bp-cleaning').value='';document.getElementById('bp-notes').value='';
-  bpPendingPhotos=[];renderBpPhotosGrid();bpToggleUnlinkedFields();
+  document.getElementById('bp-label').value='';document.getElementById('bp-nightly').value='';document.getElementById('bp-weekend').value='';document.getElementById('bp-cleaning').value='';document.getElementById('bp-notes').value='';document.getElementById('bp-description').value='';
+  bpRenderAmenitiesGrid([]);
+  bpPendingPhotos=[];bpExistingPhotos=[];renderBpPhotosGrid();bpToggleUnlinkedFields();
+  document.getElementById('bp-photo-upload-status').textContent='';
+  openModal('modal-add-bnb-property');
+}
+
+function openEditBnbPropertyModal(propertyId){
+  const p=bnbPropertiesCache.find(x=>String(x.id)===String(propertyId));
+  if(!p){showToast('Property not found','error');return;}
+  if(p.listing_id){showToast('This property is linked to a listing — edit the listing itself instead.','error');return;}
+  bpEditingId=propertyId;
+  document.getElementById('bp-modal-title').textContent='Edit BNB property';
+  document.getElementById('btn-save-bnb-property').textContent='Save changes';
+  document.getElementById('bp-listing-group').style.display='none';
+  document.getElementById('bp-label').value=p.property_label||'';
+  document.getElementById('bp-nightly').value=p.nightly_rate||'';
+  document.getElementById('bp-weekend').value=p.weekend_rate||'';
+  document.getElementById('bp-cleaning').value=p.cleaning_fee||'';
+  document.getElementById('bp-notes').value=p.notes||'';
+  document.getElementById('bp-description').value=p.description||'';
+  bpRenderAmenitiesGrid(Array.isArray(p.amenities)?p.amenities:[]);
+  bpPendingPhotos=[];bpExistingPhotos=Array.isArray(p.photos)?[...p.photos]:[];
+  renderBpPhotosGrid();
+  document.getElementById('bp-unlinked-fields').style.display='block';
   document.getElementById('bp-photo-upload-status').textContent='';
   openModal('modal-add-bnb-property');
 }
@@ -3770,42 +3832,52 @@ const BNB_PROPERTY_PHOTOS_BUCKET='bnb-property-photos';
 async function saveBnbProperty(){
   const label=document.getElementById('bp-label').value.trim();
   if(!label){showToast('Please name the property','error');return;}
-  const listingId=document.getElementById('bp-listing').value||null;
+  const isEdit=!!bpEditingId;
+  const listingId=isEdit?null:(document.getElementById('bp-listing').value||null);
   const payload={
-    seller_id:effectiveSellerId,
-    listing_id:listingId,
     property_label:label,
     nightly_rate:parseFloat(document.getElementById('bp-nightly').value)||0,
     weekend_rate:document.getElementById('bp-weekend').value?parseFloat(document.getElementById('bp-weekend').value):null,
     cleaning_fee:parseFloat(document.getElementById('bp-cleaning').value)||0,
     notes:document.getElementById('bp-notes').value.trim()||null,
-    photos:[],
-    plan_status:'active',
-    plan_expires_at:new Date(Date.now()+30*86400000).toISOString().slice(0,10),
   };
-  const btn=document.getElementById('btn-save-bnb-property');btn.disabled=true;btn.textContent='Saving…';
-  const{data:row,error}=await db.from('bnb_properties').insert(payload).select().single();
-  if(error){btn.disabled=false;btn.textContent='Add property';showToast('Could not save: '+error.message,'error');return;}
+  if(!isEdit){
+    payload.seller_id=effectiveSellerId;
+    payload.listing_id=listingId;
+    payload.photos=[];
+    payload.plan_status='active';
+    payload.plan_expires_at=new Date(Date.now()+30*86400000).toISOString().slice(0,10);
+  }
+  if(isEdit||!listingId){
+    payload.description=document.getElementById('bp-description').value.trim()||null;
+    payload.amenities=BNB_AMENITY_KEYS.filter(a=>document.getElementById('bp-amenity-'+a.key)?.checked).map(a=>a.key);
+  }
 
-  if(!listingId && bpPendingPhotos.length){
+  const btn=document.getElementById('btn-save-bnb-property');btn.disabled=true;btn.textContent='Saving…';
+  let row,error;
+  if(isEdit){({data:row,error}=await db.from('bnb_properties').update(payload).eq('id',bpEditingId).select().single());}
+  else{({data:row,error}=await db.from('bnb_properties').insert(payload).select().single());}
+  if(error){btn.disabled=false;btn.textContent=isEdit?'Save changes':'Add property';showToast('Could not save: '+error.message,'error');return;}
+
+  if(!listingId && (bpPendingPhotos.length || isEdit)){
     btn.textContent='Uploading photos…';
-    const urls=[];
+    const urls=[...bpExistingPhotos];
     for(let i=0;i<bpPendingPhotos.length;i++){
       const file=bpPendingPhotos[i].file;
       const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
       const path=`${effectiveSellerId}/${row.id}/${Date.now()}_${i}.${ext}`;
       const{error:upErr}=await db.storage.from(BNB_PROPERTY_PHOTOS_BUCKET).upload(path,file);
-      if(upErr){console.error('bnb photo upload failed:',upErr.message);continue;}
+      if(upErr){console.error('bnb photo upload failed:',upErr.message);showToast('Some photos failed to upload: '+upErr.message,'error');continue;}
       const{data:pub}=db.storage.from(BNB_PROPERTY_PHOTOS_BUCKET).getPublicUrl(path);
       urls.push(pub.publicUrl);
     }
-    if(urls.length) await db.from('bnb_properties').update({photos:urls}).eq('id',row.id);
+    await db.from('bnb_properties').update({photos:urls}).eq('id',row.id);
   }
 
-  btn.disabled=false;btn.textContent='Add property';
+  btn.disabled=false;btn.textContent=isEdit?'Save changes':'Add property';
   closeModal('modal-add-bnb-property');
-  showToast('Property added ✓','success');
-  bpPendingPhotos=[];
+  showToast(isEdit?'Property updated ✓':'Property added ✓','success');
+  bpPendingPhotos=[];bpExistingPhotos=[];bpEditingId=null;
   loadBnbLedger();
 }
 
@@ -3825,6 +3897,16 @@ async function saveBnbPublicBooking(){
   const isBookable=document.getElementById('pb-is-bookable').checked;
   const maxGuests=parseInt(document.getElementById('pb-max-guests').value)||null;
   if(isBookable&&!maxGuests){showToast('Please set max guests before turning public booking on','error');return;}
+  if(isBookable){
+    const p=bnbPropertiesCache.find(x=>String(x.id)===String(pbActivePropertyId));
+    const linkedListing=p?.listing_id?allListings.find(l=>String(l.id)===String(p.listing_id)):null;
+    const linkedHasPhotos=linkedListing&&(linkedListing.listing_photos||[]).length>0;
+    const ownHasPhotos=Array.isArray(p?.photos)&&p.photos.length>0;
+    if(!linkedHasPhotos&&!ownHasPhotos){
+      showToast('Add at least one photo to this property before making it publicly bookable','error');
+      return;
+    }
+  }
   const payload={
     is_publicly_bookable:isBookable,
     max_guests:maxGuests,
