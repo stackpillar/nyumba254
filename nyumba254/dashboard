@@ -1342,7 +1342,8 @@
           <button class="rl-tab" data-bnbtab="maintenance" onclick="bnbSetTab('maintenance')">🔧 Maintenance</button>
         </div>
         <div id="bnb-tab-properties">
-          <div id="bnb-upcoming-card" class="card" style="padding:18px 20px;margin-bottom:16px"></div>
+          <div id="bnb-expiry-alerts" class="rl-lease-alert" style="display:none"></div>
+        <div id="bnb-upcoming-card" class="card" style="padding:18px 20px;margin-bottom:16px"></div>
           <div class="section-head" style="margin-top:4px"><h3 style="font-size:15px">Your properties</h3></div>
           <div id="bnb-properties-list"><div style="padding:30px;text-align:center;color:var(--text-3);font-size:13px">Loading…</div></div>
           <div class="card" style="padding:14px 18px;margin-top:14px;font-size:12px;color:var(--text-3);line-height:1.7">
@@ -3172,6 +3173,7 @@ async function loadBnbLedger(){
   bnbPropertiesCache=data||[];
   await bnbAutoExpireProperties();
   await rlLoadExtras();
+  renderBnbExpiryAlerts();
   renderBnbSummary();
   renderBnbGoalCard();
   renderBnbUpcoming();
@@ -3300,6 +3302,26 @@ function bnbActiveOrFutureBookings(p){
 }
 function bnbNightsBetween(ci,co){ return Math.max(1,Math.round((new Date(co)-new Date(ci))/86400000)); }
 
+function bnbDaysUntilExpiry(p){
+  if(!p.plan_expires_at)return null;
+  return Math.ceil((new Date(p.plan_expires_at)-new Date())/86400000);
+}
+function renderBnbExpiryAlerts(){
+  const el=document.getElementById('bnb-expiry-alerts');
+  if(!el)return;
+  const soon=[];
+  bnbPropertiesCache.forEach(p=>{
+    if(p.plan_status==='expired')return; // already expired — the per-card "Renew" button covers this
+    const days=bnbDaysUntilExpiry(p);
+    if(days!==null&&days<=7)soon.push({p,days});
+  });
+  if(!soon.length){el.style.display='none';el.innerHTML='';return;}
+  soon.sort((a,b)=>a.days-b.days);
+  el.style.display='block';
+  el.innerHTML=`<strong>⏰ ${soon.length} propert${soon.length!==1?'ies':'y'} expiring soon</strong>` +
+    soon.map(s=>`${escHtml(s.p.property_label)} — ${s.days<=0?'expires today':`expires in ${s.days}d`}`).join(' · ') +
+    ` — renew below to stay live on book.nyumba254.com.`;
+}
 function renderBnbSummary(){
   const el=document.getElementById('bnb-summary-grid');
   if(!el)return;
@@ -3371,7 +3393,7 @@ function renderBnbProperties(){
           <div>
             <div style="font-weight:700;font-size:14px">${escHtml(p.property_label)}${expired?' <span class="status status-disabled" style="margin-left:6px">Expired</span>':''}</div>
             <div style="font-size:12px;color:var(--text-3)">KES ${Number(p.nightly_rate).toLocaleString('en-KE')}/night${p.cleaning_fee?' + KES '+Number(p.cleaning_fee).toLocaleString('en-KE')+' cleaning':''}${p.notes?' · '+escHtml(p.notes):''}</div>
-            ${p.plan_expires_at?`<div style="font-size:11px;color:${expired?'var(--red)':'var(--text-3)'};margin-top:2px">${expired?'Expired':'Renews/expires'} ${new Date(p.plan_expires_at).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'})}</div>`:''}
+            ${p.plan_expires_at?(()=>{const d=bnbDaysUntilExpiry(p);const soon=!expired&&d!==null&&d<=7;return `<div style="font-size:11px;color:${expired?'var(--red)':soon?'var(--amber)':'var(--text-3)'};font-weight:${expired||soon?700:400};margin-top:2px">${expired?'Expired':soon?`⏰ Expires in ${d<=0?'0 days':d+'d'}`:'Renews/expires'} ${new Date(p.plan_expires_at).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'})}</div>`;})():''}
           </div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
