@@ -2534,8 +2534,8 @@ async function init(){
     if (!notifItems.length) { list.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text-3);font-size:12.5px">No notifications yet</div>`; return; }
     list.innerHTML = notifItems.map(n => `
       <div style="display:flex;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);background:${n.is_read ? 'transparent' : 'var(--green-light)'}">
-        <span style="font-size:16px;flex-shrink:0;cursor:pointer" onclick="openNotifItem(${n.id}, ${n.link ? `'${n.link.replace(/'/g, "\\'")}'` : 'null'})">${NOTIF_ICON[n.type] || '🔔'}</span>
-        <div style="min-width:0;flex:1;cursor:pointer" onclick="openNotifItem(${n.id}, ${n.link ? `'${n.link.replace(/'/g, "\\'")}'` : 'null'})">
+        <span style="font-size:16px;flex-shrink:0;cursor:pointer" onclick="openNotifItem(${n.id})">${NOTIF_ICON[n.type] || '🔔'}</span>
+        <div style="min-width:0;flex:1;cursor:pointer" onclick="openNotifItem(${n.id})">
           <div style="font-size:12.5px;font-weight:${n.is_read ? 500 : 700};color:var(--text)">${escHtml(n.title)}</div>
           ${n.body ? `<div style="font-size:11.5px;color:var(--text-3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${escHtml(n.body)}</div>` : ''}
           <div style="font-size:10.5px;color:var(--text-3);margin-top:4px">${timeAgo(n.created_at)}</div>
@@ -2543,14 +2543,19 @@ async function init(){
         <button style="flex-shrink:0;align-self:center;font-size:10.5px;font-weight:700;color:var(--green-dark);background:var(--green-light);border:1px solid var(--green);border-radius:20px;padding:4px 10px;cursor:pointer;white-space:nowrap" onclick="event.stopPropagation();viewNotificationInCenter(${n.id})">View</button>
       </div>`).join('');
   }
-  async function openNotifItem(id, link) {
+  const LISTING_NOTIF_TYPES = new Set(['listing_approved', 'listing_rejected', 'listing_updated']);
+  async function openNotifItem(id) {
     const n = notifItems.find(x => x.id === id);
     if (n && !n.is_read) {
       await db.from('notifications').update({ is_read: true }).eq('id', id);
       n.is_read = true; renderNotifBell();
     }
     document.getElementById('notif-bell-panel').style.display = 'none';
-    if (link && link !== '#') { if (link.startsWith('http')) window.open(link, '_blank'); else window.location.href = link; }
+    // Only listing-related notifications navigate — straight to that listing.
+    // Everything else just marks read and stays put.
+    if (n && LISTING_NOTIF_TYPES.has(n.type) && n.link && n.link !== '#') {
+      window.location.href = n.link;
+    }
   }
   async function markAllNotifsRead() {
     const unreadIds = notifItems.filter(n => !n.is_read).map(n => n.id);
@@ -2651,7 +2656,7 @@ async function init(){
       const meta = NOTIF_CATEGORY_META[c];
       const items = groups[c];
       const rows = items.map(n => `
-        <div class="notif-card-item ${n.is_read?'':'unread'}" id="notif-card-${n.id}" onclick="openNotifItemFromPage(${n.id}, ${n.link ? `'${n.link.replace(/'/g, "\\'")}'` : 'null'})">
+        <div class="notif-card-item ${n.is_read?'':'unread'}" id="notif-card-${n.id}" onclick="openNotifItemFromPage(${n.id})">
           <div class="notif-card-icon">${NOTIF_ICON[n.type] || meta.icon}</div>
           <div class="notif-card-body">
             <div class="notif-card-top">
@@ -2669,13 +2674,18 @@ async function init(){
     }).join('');
   }
 
-  async function openNotifItemFromPage(id, link) {
+  async function openNotifItemFromPage(id) {
     const n = notifItems.find(x => x.id === id);
     if (n && !n.is_read) {
       await db.from('notifications').update({ is_read: true }).eq('id', id);
       n.is_read = true; renderNotifBell(); renderNotificationsPage();
     }
-    if (link) { if (link.startsWith('http')) window.open(link, '_blank'); else window.location.href = link; }
+    // Silent by default — just re-highlight the card in place.
+    document.getElementById('notif-card-' + id)?.classList.add('notif-card-highlight');
+    // Only listing-related notifications navigate, straight to the listing.
+    if (n && LISTING_NOTIF_TYPES.has(n.type) && n.link) {
+      window.location.href = n.link;
+    }
   }
 
 // Returns the owner's id if the caller is an active team member,
