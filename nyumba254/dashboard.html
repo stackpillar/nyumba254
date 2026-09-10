@@ -128,7 +128,7 @@
     .trial-note.urgent{color:var(--red);background:var(--red-light)}
     .multiunit-note{font-size:11px;color:#5B3E96;background:#EDE7F6;border-radius:6px;padding:6px 9px;margin-top:6px;line-height:1.5;max-width:320px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
     .multiunit-note .manage-link{color:#5B3E96;font-weight:700;text-decoration:underline;cursor:pointer}
-    .icon-btn{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;border:1px solid var(--border);background:white;color:var(--text-2);flex-shrink:0}
+    .icon-btn{width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;border:1px solid var(--border);background:white;color:var(--text-2);flex-shrink:0}
     .icon-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
     .icon-btn:hover{border-color:var(--green);color:var(--green);background:var(--green-light)}
     .icon-btn.danger:hover{border-color:var(--red);color:var(--red);background:var(--red-light)}
@@ -251,7 +251,14 @@
     .listing-area-text{font-size:11px;color:var(--text-3)}
     .listing-price-text{font-size:13px;font-weight:700;color:var(--green-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
     .listing-price-sub{font-size:11px;color:var(--text-3)}
-    .actions-cell{display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:flex-start}
+    .actions-cell{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;justify-items:center;align-items:center}
+.desktop-only-icon{display:flex}
+.mobile-only-icon{display:none}
+.listing-notes-bar{display:table-row}
+.listing-notes-bar td{padding:8px 20px;background:var(--surface);border-top:1px dashed var(--border)}
+.listing-notes-bar .note-wrap{display:flex;flex-wrap:wrap;gap:8px}
+.listing-notes-bar .disabled-note,.listing-notes-bar .occupied-note,.listing-notes-bar .trial-note,.listing-notes-bar .multiunit-note{margin-top:0;max-width:none}
+.listing-notes-inline{display:none}
     .empty-state{text-align:center;padding:60px 20px;color:var(--text-3)}
     .empty-state svg{width:48px;height:48px;stroke:var(--border);fill:none;stroke-width:1.2;margin:0 auto 16px}
     .empty-state h3{font-size:16px;font-weight:600;color:var(--text-2);margin-bottom:6px}
@@ -756,6 +763,10 @@
       .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.sidebar-overlay.open{display:block}
       .topbar{left:0}.main{margin-left:0}.hamburger{display:flex}
       .listings-table thead{display:none}
+      .desktop-only-icon{display:none !important}
+      .mobile-only-icon{display:flex !important}
+      .listing-notes-bar{display:none !important}
+      .listing-notes-inline{display:block !important}
       .listings-table{table-layout:fixed !important;width:100% !important;border-collapse:separate;border-spacing:0}
       .listings-table th,.listings-table td{width:auto !important}
 
@@ -6395,26 +6406,30 @@ const manageUnitsBtn=hasUnitTypes
   ?`<div class="icon-btn purple" data-id="${l.id}" onclick="openManageUnitsModal(this.dataset.id)" title="Manage unit types — mark occupied/available, add/edit/delete types" role="button" tabindex="0" aria-label="Manage unit types" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg></div>`
   :`<div class="icon-btn" data-id="${l.id}" onclick="openManageUnitsModal(this.dataset.id)" title="Add unit types to track separately" role="button" tabindex="0" aria-label="Add unit types" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg></div>`;
 
-const manageVideosBtn=`<div class="icon-btn purple" data-id="${l.id}" onclick="openManageVideosModal(this.dataset.id)" title="Manage video walkthrough" role="button" tabindex="0" aria-label="Manage videos" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>`;
+const manageVideosBtn=`<div class="icon-btn purple desktop-only-icon" data-id="${l.id}" onclick="openManageVideosModal(this.dataset.id)" title="Manage video walkthrough" role="button" tabindex="0" aria-label="Manage videos" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>`;
 
 const brochureBtn=subscriptionInfo().active
-  ?`<div class="icon-btn purple" data-id="${l.id}" onclick="generateBrochure(this.dataset.id)" title="Download printable brochure" role="button" tabindex="0" aria-label="Download brochure" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>`
+  ?`<div class="icon-btn purple desktop-only-icon" data-id="${l.id}" onclick="generateBrochure(this.dataset.id)" title="Download printable brochure" role="button" tabindex="0" aria-label="Download brochure" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>`
   :'';
 
 const globalContactHidden = !!(ownerProfile||currentProfile)?.hide_buyer_contact;
 const contactHideBtn = globalContactHidden
-  ? `<div class="icon-btn locked" title="Hidden platform-wide via Settings → Buyer contact privacy"><svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div>`
+  ? `<div class="icon-btn locked desktop-only-icon" title="Hidden platform-wide via Settings → Buyer contact privacy"><svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div>`
   : (l.contact_hidden
-    ?`<div class="icon-btn" data-id="${l.id}" onclick="toggleListingContactHidden(this.dataset.id)" title="Contact hidden — click to re-enable Call/WhatsApp on this listing" role="button" tabindex="0" aria-label="Show buyer contact for this listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}" style="color:var(--red);border-color:var(--red)"><svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div>`
-    :`<div class="icon-btn" data-id="${l.id}" onclick="toggleListingContactHidden(this.dataset.id)" title="Hide Call/WhatsApp — force chat-only on this listing" role="button" tabindex="0" aria-label="Hide buyer contact for this listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>`);
+    ?`<div class="icon-btn desktop-only-icon" data-id="${l.id}" onclick="toggleListingContactHidden(this.dataset.id)" title="Contact hidden — click to re-enable Call/WhatsApp on this listing" role="button" tabindex="0" aria-label="Show buyer contact for this listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}" style="color:var(--red);border-color:var(--red)"><svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div>`
+    :`<div class="icon-btn desktop-only-icon" data-id="${l.id}" onclick="toggleListingContactHidden(this.dataset.id)" title="Hide Call/WhatsApp — force chat-only on this listing" role="button" tabindex="0" aria-label="Hide buyer contact for this listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>`);
+
+    const noteHtml=[
+      (l.status!=='occupied'&&l.status!=='approved_unpaid'&&l.status!=='approved_unpaid_bnb'&&d.banner)?`<div class="disabled-note">${d.banner}</div>`:'',
+      occupiedNote,trialNote,payDueNote,bnbNote,multiUnitNote
+    ].join('');
 
     return `<tr>
       <td><input type="checkbox" class="listing-select-cb" data-id="${l.id}" ${selectedListingIds.has(String(l.id))?'checked':''} onchange="toggleListingSelected('${l.id}',this.checked)"/></td>
       <td><div class="listing-name-cell"><div class="listing-thumb">${img}</div><div>
         <div class="listing-title-text">${escHtml(l.title)}</div>
         <div class="listing-area-text">${l.area}${l.sub_area?' · '+l.sub_area:''}</div>
-        ${(l.status!=='occupied'&&l.status!=='approved_unpaid'&&l.status!=='approved_unpaid_bnb'&&d.banner)?`<div class="disabled-note">${d.banner}</div>`:''}
-        ${occupiedNote}${trialNote}${payDueNote}${bnbNote}${multiUnitNote}
+        <div class="listing-notes-inline">${noteHtml}</div>
       </div></div></td>
       <td><div class="listing-price-text">${hasUnitTypes?muPriceRangeText(l):`KES ${Number(l.price).toLocaleString('en-KE')}${l.price_type==='rent'?'/mo':''}`}</div><div class="listing-price-sub">${hasUnitTypes?(l.listing_units.length+' unit type(s)'):(l.price_type==='rent'?'Monthly rent':'For sale')}</div></td>
       <td><span class="status ${d.cls}">${d.label}</span></td>
@@ -6426,10 +6441,11 @@ const contactHideBtn = globalContactHidden
         <div class="icon-btn" onclick="openMessagesForListing('${l.id}')" title="Messages" role="button" tabindex="0" aria-label="Open messages for this listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
         ${socialLocked?`<div class="icon-btn" title="Only available while the listing is active" style="opacity:.4;pointer-events:none"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>`:`<div class="icon-btn" data-id="${l.id}" onclick="openShareMenu('${l.id}',this)" title="Share listing" role="button" tabindex="0" aria-label="Share listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>`}
         ${editBtn}${statusBtn}${pauseBtn}${publishNowBtn}${payNowBtn}${manageUnitsBtn}
-        <div class="icon-btn" data-id="${l.id}" onclick="openMoreActionsMenu('${l.id}',this)" title="More actions" role="button" tabindex="0" aria-label="More actions" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
+        ${manageVideosBtn}${brochureBtn}${contactHideBtn}
+        <div class="icon-btn mobile-only-icon" data-id="${l.id}" onclick="openMoreActionsMenu('${l.id}',this)" title="More actions" role="button" tabindex="0" aria-label="More actions" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
         <div class="icon-btn danger" data-id="${l.id}" data-title="${escAttr(l.title)}" onclick="openDeleteModal(this.dataset.id,this.dataset.title)" title="Delete listing" role="button" tabindex="0" aria-label="Delete listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></div>
       </div></td>
-    </tr>`;
+    </tr>${noteHtml?`<tr class="listing-notes-bar"><td colspan="8"><div class="note-wrap">${noteHtml}</div></td></tr>`:''}`;
   }).join('');
 }
 
