@@ -246,7 +246,7 @@
     .listing-thumb img{width:100%;height:100%;object-fit:cover}
     .listing-thumb svg{width:18px;height:18px;stroke:var(--text-3);fill:none;stroke-width:1.5}
     .listing-name-cell{display:flex;align-items:center;gap:12px}
-    .listing-name-cell > div{min-width:0;flex:1}
+    .listing-name-cell > div:not(.listing-thumb){min-width:0;flex:1}
     .listing-title-text{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .listing-area-text{font-size:11px;color:var(--text-3)}
     .listing-price-text{font-size:13px;font-weight:700;color:var(--green-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
