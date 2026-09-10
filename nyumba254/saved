@@ -303,7 +303,7 @@
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
     <span>Saved listings are stored on this device only. <strong>Sign in with your email</strong> to keep your shortlist if you switch phones or browsers.</span>
   </div>
-  <a href="/buyer-account" class="btn-outline" style="white-space:nowrap">Sign in to sync</a>
+  <a href="/login" class="btn-outline" style="white-space:nowrap">Sign in to sync</a>
 </div>
 
 <div class="sync-banner signed-in" id="sync-banner-signedin" style="display:none">
