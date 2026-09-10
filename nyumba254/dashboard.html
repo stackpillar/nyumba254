@@ -771,72 +771,84 @@
       .listings-table th,.listings-table td{width:auto !important}
 
       .listings-table tr{
-        display:block;
+        display:grid;
+        grid-template-columns:1fr 1fr 1fr;
+        grid-template-areas:
+          "cb prop prop"
+          "price price status"
+          "msgs views posted"
+          "actions actions actions";
         background:var(--white);
         border:1px solid var(--border);
         border-radius:var(--radius-lg);
         margin-bottom:14px;
         overflow:hidden;
-        box-shadow:0 1px 4px rgba(0,0,0,0.04);
+        box-shadow:0 2px 10px rgba(0,0,0,0.06);
       }
       .listings-table td{
         display:block;
-        width:100%;
-        padding:9px 16px;
+        padding:8px 16px;
         border:none;
         border-top:1px solid var(--border);
         vertical-align:top;
+        min-width:0;
       }
-      .listings-table td:first-child{
-        padding:14px 16px 12px;
-        border-top:none;
-      }
+      .listings-table td:nth-child(1){grid-area:cb;border-top:none;padding:14px 4px 8px 16px;display:flex;align-items:center}
+      .listings-table td:nth-child(2){grid-area:prop;border-top:none;padding:14px 16px 8px 4px}
+      .listings-table td:nth-child(3){grid-area:price;padding-top:10px}
+      .listings-table td:nth-child(4){grid-area:status;padding-top:10px;display:flex;align-items:center;justify-content:flex-end}
+      .listings-table td:nth-child(5){grid-area:msgs;text-align:center}
+      .listings-table td:nth-child(6){grid-area:views;text-align:center;border-left:1px solid var(--border)}
+      .listings-table td:nth-child(7){grid-area:posted;text-align:center;border-left:1px solid var(--border)}
+      .listings-table td:nth-child(8){grid-area:actions;border-top:none;padding:0}
       .listings-table td:first-child .listing-price-text{word-break:break-word}
 
-      .listings-table td:nth-child(2)::before{content:"PRICE"}
-      .listings-table td:nth-child(3)::before{content:"STATUS"}
-      .listings-table td:nth-child(4)::before{content:"MESSAGES"}
-      .listings-table td:nth-child(5)::before{content:"VIEWS"}
-      .listings-table td:nth-child(6)::before{content:"POSTED"}
-      .listings-table td:nth-child(2)::before,
+      .listings-table td:nth-child(3)::before{content:"Price"}
+      .listings-table td:nth-child(5)::before{content:"Messages"}
+      .listings-table td:nth-child(6)::before{content:"Views"}
+      .listings-table td:nth-child(7)::before{content:"Posted"}
       .listings-table td:nth-child(3)::before,
-      .listings-table td:nth-child(4)::before,
       .listings-table td:nth-child(5)::before,
-      .listings-table td:nth-child(6)::before{
-        display:block;font-size:10px;font-weight:700;letter-spacing:.06em;
-        text-transform:uppercase;color:var(--text-3);margin-bottom:4px;
+      .listings-table td:nth-child(6)::before,
+      .listings-table td:nth-child(7)::before{
+        display:block;font-size:9.5px;font-weight:700;letter-spacing:.04em;
+        text-transform:uppercase;color:var(--text-3);margin-bottom:2px;
       }
-      .listings-table tr{
-        box-shadow:0 2px 10px rgba(0,0,0,0.06) !important;
+      .listings-table td:nth-child(5),
+      .listings-table td:nth-child(6),
+      .listings-table td:nth-child(7){
+        font-size:12.5px;font-weight:600;color:var(--text);
       }
+      .listings-table td:nth-child(3) .listing-price-text{font-size:14px}
 
-      /* Lock the property thumbnail to a compact fixed size on mobile —
-         layout/order/action-buttons untouched. Sized closer to desktop's
-         proportions (wider than tall) so the photo actually reads, instead
-         of a tiny square crop. */
-      .listings-table .listing-name-cell{align-items:flex-start}
+      /* Photo: a small square badge next to the title, same box — not a full-width banner */
+      .listings-table .listing-name-cell{align-items:center;gap:10px}
       .listings-table .listing-thumb{
-        width:104px !important;
-        height:104px !important;
+        width:44px !important;
+        height:44px !important;
         flex-shrink:0 !important;
         flex-grow:0 !important;
-        border-radius:10px;
+        border-radius:8px;
         overflow:hidden !important;
         display:flex !important;
         align-items:center;
         justify-content:center;
-      }
-      .listings-table .listing-thumb img{
-        display:block !important;
-        width:100% !important;
-        height:100% !important;
-        object-fit:cover !important;
-        object-position:center;
-      }
-      .listings-table .listing-thumb svg{
-        width:26px !important;
-        height:26px !important;
-      }
+        background:var(--surface) !important;
+        border:1px solid var(--border);
+    }
+    .listings-table .listing-thumb img{
+      display:block !important;
+      width:100% !important;
+      height:100% !important;
+      object-fit:cover !important;
+      object-position:center;
+      border-radius:8px;
+    }
+    .listings-table .listing-thumb svg{
+      width:16px !important;
+      height:16px !important;
+      stroke:var(--text-3) !important;
+    }
 
       /* Actions: simple wrapping row of fixed-size buttons — never collapses, never scrolls */
       .listings-table .actions-cell{
