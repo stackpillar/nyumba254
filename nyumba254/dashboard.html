@@ -772,12 +772,12 @@
 
       .listings-table tr{
         display:grid;
-        grid-template-columns:28px 1fr 1fr;
+        grid-template-columns:repeat(6,1fr);
         grid-template-areas:
-          "cb prop prop"
-          "price price status"
-          "msgs views posted"
-          "actions actions actions";
+          "cb prop prop prop prop prop"
+          "price price price price status status"
+          "msgs msgs views views posted posted"
+          "actions actions actions actions actions actions";
         background:var(--white);
         border:1px solid var(--border);
         border-radius:var(--radius-lg);
