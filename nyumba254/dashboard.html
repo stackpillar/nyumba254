@@ -763,8 +763,6 @@
       .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.sidebar-overlay.open{display:block}
       .topbar{left:0}.main{margin-left:0}.hamburger{display:flex}
       .listings-table thead{display:none}
-      .desktop-only-icon{display:none !important}
-      .mobile-only-icon{display:flex !important}
       .listing-notes-bar{display:none !important}
       .listing-notes-inline{display:block !important}
       .listings-table{table-layout:fixed !important;width:100% !important;border-collapse:separate;border-spacing:0}
@@ -6332,10 +6330,11 @@ async function publishScheduledNow(id){
 }
 async function reactivateListing(id){
   if(listingActionBusy.has(id))return;
+  const l=allListings.find(l=>l.id===id);
+  if(l&&l.is_disabled){showToast('Disabled by admin. Contact admin.','error');return;}
+  if(!confirm(`Resume "${l?.title||'this listing'}"? It won't go live immediately — it will be sent back to our team for a quick re-approval first, just like a new listing.`))return;
   listingActionBusy.add(id);
   try{
-    const l=allListings.find(l=>l.id===id);
-    if(l&&l.is_disabled){showToast('Disabled by admin. Contact admin.','error');return;}
     const{error}=await db.from('listings').update({status:'pending',occupied_at:null}).eq('id',id);
     if(error){showToast('Could not reactivate: '+error.message,'error');return;}
     if(l){l.status='pending';l.occupied_at=null;}
@@ -6454,7 +6453,6 @@ const contactHideBtn = globalContactHidden
         ${socialLocked?`<div class="icon-btn" title="Only available while the listing is active" style="opacity:.4;pointer-events:none"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>`:`<div class="icon-btn" data-id="${l.id}" onclick="openShareMenu('${l.id}',this)" title="Share listing" role="button" tabindex="0" aria-label="Share listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>`}
         ${editBtn}${statusBtn}${pauseBtn}${publishNowBtn}${payNowBtn}${manageUnitsBtn}
         ${manageVideosBtn}${brochureBtn}${contactHideBtn}
-        <div class="icon-btn mobile-only-icon" data-id="${l.id}" onclick="openMoreActionsMenu('${l.id}',this)" title="More actions" role="button" tabindex="0" aria-label="More actions" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
         <div class="icon-btn danger" data-id="${l.id}" data-title="${escAttr(l.title)}" onclick="openDeleteModal(this.dataset.id,this.dataset.title)" title="Delete listing" role="button" tabindex="0" aria-label="Delete listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></div>
       </div></td>
     </tr>${noteHtml?`<tr class="listing-notes-bar"><td colspan="8"><div class="note-wrap">${noteHtml}</div></td></tr>`:''}`;
@@ -6593,9 +6591,13 @@ async function toggleListingContactHidden(id){
 }
 async function togglePause(id,cs){
   if(listingActionBusy.has(id))return;
+  const l=allListings.find(l=>l.id===id);
+  if(l&&l.is_disabled){showToast('Disabled by admin. Contact admin.','error');return;}
+  if(cs!=='active'){showToast('Only active listings can be paused.','error');return;}
+  if(!confirm(`Pause "${l?.title||'this listing'}"? It will be hidden from buyers immediately. Resuming it later sends it back to our team for a quick re-approval before it goes live again.`))return;
   listingActionBusy.add(id);
   try{
-    const l=allListings.find(l=>l.id===id);if(l&&l.is_disabled){showToast('Disabled by admin. Contact admin.','error');return;}if(cs!=='active'){showToast('Only active listings can be paused.','error');return;}const{error}=await db.from('listings').update({status:'paused'}).eq('id',id);if(error){showToast('Could not update','error');return;}if(l)l.status='paused';renderListingsTable();renderOverview();showToast('Listing paused','success');
+    const{error}=await db.from('listings').update({status:'paused'}).eq('id',id);if(error){showToast('Could not update','error');return;}if(l)l.status='paused';renderListingsTable();renderOverview();showToast('Listing paused','success');
   } finally {
     listingActionBusy.delete(id);
   }
