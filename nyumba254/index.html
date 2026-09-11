@@ -266,7 +266,9 @@
     .card-meta-item svg { width: 14px; height: 14px; stroke: var(--text-3); fill: none; stroke-width: 2; }
 
     /* ── Categories — green/white/dark only, no other hues ── */
-    .categories { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+    .categories { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 16px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.categories::-webkit-scrollbar { display: none; }
+.cat-card { flex: 0 0 240px; }
     .cat-card { border-radius: var(--radius-lg); padding: 24px; cursor: pointer; transition: transform .2s; border: 1.5px solid transparent; }
     .cat-card:hover, .cat-card:focus-visible { transform: translateY(-2px); }
     .cat-card:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
@@ -321,7 +323,7 @@
        not a control. No click target, no arrow icon. ── */
     .scroll-wrap { position: relative; }
     .scroll-hint {
-      display: none;
+      display: flex;
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
@@ -443,18 +445,13 @@
       .footer-top > *:nth-child(5) { display: block; }
       .cta-banner { padding: 32px 24px; }
 
-      /* ── Categories: horizontal scroll ── */
+      /* ── Categories: mobile-only tweaks (base rule now handles the
+         scroll container itself) ── */
       .categories {
-        display: flex;
-        grid-template-columns: none;
-        overflow-x: auto;
         scroll-snap-type: x mandatory;
         gap: 14px;
         padding-bottom: 6px;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
       }
-      .categories::-webkit-scrollbar { display: none; }
       .cat-card {
         flex: 0 0 76%;
         max-width: 300px;
