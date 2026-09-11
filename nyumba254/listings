@@ -106,13 +106,50 @@
     .header-search button:hover { background: var(--green-dark); }
 
     /* ── Layout ── */
-    .layout { display: grid; grid-template-columns: 280px 1fr; gap: 0; min-height: calc(100vh - 200px); }
+    .layout { position: relative; display: grid; grid-template-columns: var(--sw, 280px) 1fr; gap: 0; min-height: calc(100vh - 200px); transition: grid-template-columns .2s ease; }
+    .layout.sidebar-collapsed { --sw: 0px; }
+    .layout.sidebar-collapsed .sidebar { opacity: 0; pointer-events: none; padding-left: 0; padding-right: 0; }
+
+    /* Arrow sits fused directly on the sidebar's own border line (no
+       separate rail/column), and stays vertically centered in the
+       viewport as you scroll. It slides with the border as it collapses. */
+    .sidebar-toggle-wrap {
+      grid-column: 1 / -1; grid-row: 1;
+      position: sticky; top: 64px; height: calc(100vh - 64px);
+      pointer-events: none; z-index: 50;
+    }
+    .sidebar-toggle-btn {
+      position: absolute; top: 50%; left: var(--sw, 280px);
+      transform: translate(-50%, -50%);
+      width: 26px; height: 26px; border-radius: 50%;
+      background: white; border: 1.5px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      transition: left .2s ease, background .15s ease;
+      pointer-events: auto;
+    }
+    .sidebar-toggle-btn .toggle-tip {
+      position: absolute; left: 34px; top: 50%; transform: translateY(-50%);
+      background: var(--text); color: white; font-size: 12px; font-weight: 500;
+      padding: 5px 10px; border-radius: 6px; white-space: nowrap;
+      opacity: 0; pointer-events: none; transition: opacity .15s ease;
+    }
+    .sidebar-toggle-btn .toggle-tip::before {
+      content: ''; position: absolute; left: -4px; top: 50%; transform: translateY(-50%);
+      border: 4px solid transparent; border-right-color: var(--text);
+    }
+    .sidebar-toggle-btn:hover .toggle-tip,
+    .sidebar-toggle-btn:focus-visible .toggle-tip { opacity: 1; }
+    .sidebar-toggle-btn:hover { background: var(--green-light); border-color: var(--green-mid); }
+    .sidebar-toggle-btn svg { width: 13px; height: 13px; stroke: var(--text-2); fill: none; stroke-width: 2.4; transition: transform .2s ease; }
+    .layout.sidebar-collapsed .sidebar-toggle-btn svg { transform: rotate(180deg); }
 
     /* ── Sidebar filters ── */
     .sidebar {
       background: var(--white); border-right: 1px solid var(--border);
       padding: 24px 20px; position: sticky; top: 64px;
       height: calc(100vh - 64px); overflow-y: auto;
+      grid-column: 1; grid-row: 1;
     }
     .sidebar::-webkit-scrollbar { width: 4px; }
     .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
@@ -164,7 +201,7 @@
     .apply-btn:hover { background: var(--green-dark); }
 
     /* ── Main content ── */
-    .main { padding: 24px; }
+    .main { padding: 24px; grid-column: 2; grid-row: 1; }
 
     .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
     .toolbar > * { min-width: 0; }
@@ -455,6 +492,9 @@
         z-index: 200; transition: left .25s; padding-top: 16px;
       }
       .sidebar.open { left: 0; }
+      .sidebar-toggle-btn { display: none !important; }
+      .sidebar-toggle-wrap { display: none !important; }
+      .layout.sidebar-collapsed .sidebar { opacity: 1; pointer-events: auto; padding-left: 24px; padding-right: 20px; }
       .filter-toggle { display: flex; }
       .page-header { padding: 20px 16px 0; }
       .main { padding: 16px; }
@@ -816,6 +856,14 @@
 
     <button class="apply-btn" onclick="applyFilters(); closeSidebar()">Apply filters</button>
   </aside>
+
+  <!-- SIDEBAR COLLAPSE ARROW — fused to the sidebar's edge line, centered vertically -->
+  <div class="sidebar-toggle-wrap">
+    <button type="button" class="sidebar-toggle-btn" id="sidebar-toggle-btn" onclick="toggleSidebarPanel()" aria-label="Collapse filters" aria-expanded="true">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      <span class="toggle-tip" id="sidebar-toggle-tip">Collapse filters</span>
+    </button>
+  </div>
 
   <!-- MAIN -->
   <main class="main">
@@ -2742,6 +2790,36 @@
       });
     }, { passive: true });
   }
+
+  /* ── Sidebar collapse arrow (desktop only) ── */
+  function toggleSidebarPanel() {
+    const layout = document.querySelector('.layout');
+    const btn = document.getElementById('sidebar-toggle-btn');
+    const tip = document.getElementById('sidebar-toggle-tip');
+    if (!layout) return;
+    const collapsed = layout.classList.toggle('sidebar-collapsed');
+    if (btn) {
+      const label = collapsed ? 'Expand filters' : 'Collapse filters';
+      btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      btn.setAttribute('aria-label', label);
+      if (tip) tip.textContent = label;
+    }
+    localStorage.setItem('nk_sidebar_collapsed', collapsed ? '1' : '0');
+  }
+  function nkInitSidebarToggle() {
+    if (window.innerWidth <= 900) return;
+    if (localStorage.getItem('nk_sidebar_collapsed') === '1') {
+      document.querySelector('.layout')?.classList.add('sidebar-collapsed');
+      const btn = document.getElementById('sidebar-toggle-btn');
+      const tip = document.getElementById('sidebar-toggle-tip');
+      if (btn) { btn.setAttribute('aria-expanded', 'false'); btn.setAttribute('aria-label', 'Expand filters'); }
+      if (tip) tip.textContent = 'Expand filters';
+    }
+  }
+  window.addEventListener('resize', () => {
+    if (window.innerWidth <= 900) document.querySelector('.layout')?.classList.remove('sidebar-collapsed');
+  });
+  nkInitSidebarToggle();
 
   document.getElementById('footer-year').textContent = new Date().getFullYear();
   nkPopulateFooterCounties();
