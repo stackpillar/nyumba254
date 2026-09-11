@@ -193,69 +193,14 @@
        JS tricks needed). Pages sit side-by-side in a horizontal strip;
        the arrows scroll exactly one page at a time. ── */
     .listings-grid {
-      display: flex;
-      overflow-x: auto;
-      overflow-y: hidden;
-      scroll-behavior: smooth;
-      scroll-snap-type: x mandatory;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-      -webkit-overflow-scrolling: touch;
-      padding-bottom: 2px;
-    }
-    .listings-grid::-webkit-scrollbar { display: none; height: 0; }
-    .listings-page {
-      flex: 0 0 100%;
-      scroll-snap-align: start;
       display: grid;
-      grid-template-columns: repeat(3, 1fr);  /* desktop: 3 columns */
-      align-items: stretch;                    /* cards fill row height, no gaps */
+      grid-template-columns: repeat(3, 1fr);
       gap: 16px;
+      align-items: stretch;
+      max-width: 100%;
     }
 
-    #results { overflow: hidden; max-width: 100%; }
-
-    /* ── Horizontal scroll hint (mobile only) ── */
-    .scroll-wrap { position: relative; overflow: hidden; max-width: 100%; }
-    .scroll-hint {
-      display: none;
-      position: absolute;
-      right: 2px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 34px;
-      height: 34px;
-      align-items: center;
-      justify-content: center;
-      pointer-events: auto;
-      z-index: 5;
-      background: none;
-      border: none;
-      padding: 0;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .scroll-hint.left { left: 2px; right: auto; }
-    .scroll-hint.show { display: flex; }
-    .scroll-hint::before {
-      content: '';
-      position: absolute;
-      inset: -10px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(15,110,86,0.45) 0%, rgba(15,110,86,0) 72%);
-      filter: blur(7px);
-    }
-    .scroll-hint svg {
-      position: relative;
-      width: 15px;
-      height: 15px;
-      stroke: var(--green-dark);
-      stroke-width: 3;
-      fill: none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      filter: drop-shadow(0 0 3px rgba(255,255,255,0.9));
-    }
+    #results { max-width: 100%; }
 
     .card {
       background: white; border-radius: var(--radius-lg); border: 1px solid var(--border);
@@ -481,7 +426,7 @@
 
       /* Column count is now set inline by JS (measured, not guessed from
          window width) — this block only keeps the mobile gap/card sizing. */
-      .listings-page { gap: 14px; }
+      .listings-grid { gap: 14px; }
       .listings-grid .card { max-width: 100%; }
       .card-img { height: 140px; }
       .card-body { padding: 12px 14px; }
@@ -521,12 +466,8 @@
     body.nk-mobile-feed .listings-grid {
       display: flex;
       flex-direction: column;
-      overflow: visible;
-      scroll-snap-type: none;
       gap: 16px;
     }
-    body.nk-mobile-feed .listings-page { display: contents; }
-    body.nk-mobile-feed .scroll-hint { display: none !important; }
     body.nk-mobile-feed .card { max-width: 100%; }
     body.nk-mobile-feed .card-img { height: 210px; } /* item 6: bigger photos on mobile */
     body.nk-mobile-feed .pagination { display: none; }
@@ -569,6 +510,14 @@
 
     /* Item 9: card CTA becomes an icon-only round button on mobile */
     .card-inquire-label { display: inline; }
+    @media (max-width: 480px) {
+      .card-inquire-btn {
+        width: 42px; height: 42px; padding: 0; border-radius: 50%;
+        align-self: flex-end;
+      }
+      .card-inquire-btn svg { width: 18px; height: 18px; }
+      .card-inquire-label { display: none; }
+    }
 
     /* Sticky quick-filter chip bar (items 3 & 4 in the plan) */
     .nk-quickbar {
@@ -772,9 +721,9 @@
     <div class="filter-section">
       <span class="filter-label">Price (KES)</span>
       <div class="range-row">
-        <input type="number" class="range-input" id="price-min" placeholder="Min" oninput="debouncedApply()"/>
+        <input type="number" class="range-input" id="price-min" placeholder="Min" oninput="clearPricePresetActive(); debouncedApply()"/>
         <span class="range-sep">–</span>
-        <input type="number" class="range-input" id="price-max" placeholder="Max" oninput="debouncedApply()"/>
+        <input type="number" class="range-input" id="price-max" placeholder="Max" oninput="clearPricePresetActive(); debouncedApply()"/>
       </div>
       <div class="pill-group" style="margin-top:8px" id="price-presets">
         <div class="filter-pill" onclick="setPreset(0,10000)">Under 10K</div>
@@ -856,7 +805,6 @@
 
     <!-- Results grid -->
     <div id="results">
-      <div class="scroll-wrap">
       <div class="listings-grid" id="listings-grid">
         <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line xshort"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
         <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line xshort"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
@@ -864,9 +812,6 @@
         <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line xshort"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
         <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line xshort"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
         <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line xshort"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
-      </div>
-      <button class="scroll-hint left" aria-label="Scroll to previous listings" onclick="nkScrollWrap(this,-1)"><svg viewBox="0 0 24 24"><polyline points="15 6 9 12 15 18"/></svg></button>
-      <button class="scroll-hint right" aria-label="Scroll for more listings" onclick="nkScrollWrap(this,1)"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
       </div>
     </div>
 
@@ -1430,9 +1375,14 @@
     el.classList.add('active');
   }
 
+  function clearPricePresetActive() {
+    document.querySelectorAll('#price-presets .filter-pill').forEach(p => p.classList.remove('active'));
+  }
   function setPreset(min, max) {
     document.getElementById('price-min').value = min || '';
-    document.getElementById('price-max').value = max || '';
+    document.getElementById('price-max').value = max ?? '';
+    clearPricePresetActive();
+    if (typeof event !== 'undefined' && event.currentTarget) event.currentTarget.classList.add('active');
     applyFilters();
     nkSyncQuickChipLabels();
   }
@@ -1441,7 +1391,10 @@
     const raw = el.value;
     const stripped = raw.replace(/^KES\s?/i, '').replace(/,/g, '').trim();
     if (stripped.length && /^[0-9]+$/.test(stripped)) {
+      const caretFromEnd = el.value.length - el.selectionEnd;
       el.value = 'KES ' + Number(stripped).toLocaleString('en-KE');
+      const newPos = Math.max(0, el.value.length - caretFromEnd);
+      el.setSelectionRange(newPos, newPos);
       el.dataset.priceValue = stripped;
     } else {
       delete el.dataset.priceValue;
@@ -1532,6 +1485,7 @@
     } else if (key === 'price') {
       document.getElementById('price-min').value = '';
       document.getElementById('price-max').value = '';
+      clearPricePresetActive();
       applyFilters();
     } else if (key === 'q') {
       const searchEl = document.getElementById('search-q');
@@ -1545,6 +1499,7 @@
   function resetAllFilters() {
     setPillSilent(document.querySelector('#type-pills .filter-pill[data-val=""]'), 'type-pills');
     setPillSilent(document.querySelector('#cat-pills .filter-pill[data-val=""]'), 'cat-pills');
+    toggleGroupFilters('');
     setPillSilent(document.querySelector('#bed-pills .filter-pill[data-val=""]'), 'bed-pills');
     setPillSilent(document.querySelector('#furn-pills .filter-pill[data-val=""]'), 'furn-pills');
     document.getElementById('county-select').value = '';
@@ -1552,6 +1507,7 @@
     document.querySelectorAll('#amen-checks input:checked').forEach(cb => cb.checked = false);
     document.getElementById('price-min').value = '';
     document.getElementById('price-max').value = '';
+    clearPricePresetActive();
     const searchEl = document.getElementById('search-q');
     searchEl.value = '';
     delete searchEl.dataset.priceValue;
@@ -1631,6 +1587,7 @@
     nkHasMorePages = from + (data ? data.length : 0) < totalCount;
     renderResults(data || [], totalCount, append);
     renderPagination(totalCount);
+    if (nkMapOpen) nkPopulateMapMarkers();
     nkLoadingMore = false;
   }
   const ciBedIcon  = `<svg viewBox="0 0 24 24"><path d="M2 4v16M22 4v16M2 12h20M2 8h4a2 2 0 012 2v2H2V8zM16 8h4a2 2 0 012 2v2h-6V8z"/></svg>`;
@@ -1738,7 +1695,7 @@
      has been reviewed/verified — builds trust before the tap-through. */
   function buildVerifiedBadgeHtml(l) {
     if (l?.profiles?.verification_status !== 'verified') return '';
-    return `<span class="card-verified-badge"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>Verified</span>`;
+    return `<span class="card-verified-badge" title="This seller has been identity-verified by Nyumba254"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>Verified seller</span>`;
   }
 
   function buildCard(l) {
@@ -1853,29 +1810,7 @@
     const counterEl = document.getElementById(`card-counter-${listingId}`);
     if (counterEl) counterEl.textContent = `${idx+1}/${photos.length}`;
   }
-  /* ── Desktop paging (unchanged: rows×cols pages you swipe through). Mobile
-     no longer uses this — see nkMobileMode below. ── */
-  function nkGetGridDims() {
-    const wrap = document.querySelector('#results .scroll-wrap');
-    const width = wrap ? wrap.clientWidth : document.documentElement.clientWidth;
-    return width < 560 ? { rows: 4, cols: 1 } : { rows: 5, cols: 3 };
-  }
-  function nkChunkIntoPages(items, rows, cols) {
-    const pageSize = rows * cols;
-    const pages = [];
-    for (let i = 0; i < items.length; i += pageSize) {
-      pages.push(items.slice(i, i + pageSize));
-    }
-    return pages.length ? pages : [[]];
-  }
-  function nkBuildPagesHtml(listings, dims) {
-    return nkChunkIntoPages(listings, dims.rows, dims.cols)
-      .map(page => `<div class="listings-page" style="grid-template-columns:repeat(${dims.cols},1fr)">${page.map(buildCard).join('')}</div>`)
-      .join('');
-  }
-
   let nkLastListings = [];
-  let nkLastDimsKey = null;
   let nkMobileAccum = [];
 
   /* Item 1: on mobile, render one continuous vertical column instead of
@@ -1924,10 +1859,8 @@
       return;
     }
 
-    // Desktop: original paged-grid behavior, unchanged.
+    // Desktop: plain grid, no horizontal paging.
     nkLastListings = listings;
-    const dims0 = nkGetGridDims();
-    nkLastDimsKey = dims0.cols + 'x' + dims0.rows;
 
     if (!listings.length) {
       grid.innerHTML = `<div class="empty-state" style="width:100%">
@@ -1936,11 +1869,10 @@
         <p>Try adjusting your search or <a onclick="resetAllFilters()" style="cursor:pointer">reset all filters</a></p>
         <button class="btn btn-primary" style="margin-top:14px" onclick="openNotifyModal()">🔔 Notify me when a match is posted</button>
       </div>`;
-      nkUpdateScrollHints();
       return;
     }
-    grid.innerHTML = nkBuildPagesHtml(listings, dims0);
-    requestAnimationFrame(nkUpdateScrollHints);
+    grid.innerHTML = listings.map(buildCard).join('');
+    nkBindCardSwipe(grid);
   }
 
   /* ── Item 1: infinite scroll sentinel + observer (mobile only) ── */
@@ -2055,54 +1987,6 @@
     document.getElementById('card-inquiry-overlay').classList.remove('open');
     document.body.style.overflow = '';
     ciActiveListingId = null;
-  }
-
-  function nkScrollWrap(btn, dir) {
-    const wrap = btn.closest('.scroll-wrap');
-    if (!wrap) return;
-    const scroller = wrap.querySelector('.categories, .listings-grid, .areas');
-    if (!scroller) return;
-    const step = scroller.classList.contains('listings-grid')
-      ? scroller.clientWidth
-      : (() => {
-          const firstCard = scroller.querySelector(':scope > *');
-          const gap = parseFloat(getComputedStyle(scroller).gap) || 16;
-          return firstCard ? firstCard.getBoundingClientRect().width + gap : scroller.clientWidth * 0.8;
-        })();
-    scroller.scrollBy({ left: step * (dir || 1), behavior: 'smooth' });
-  }
-
-  function nkUpdateScrollHints() {
-    const wrap = document.querySelector('#results .scroll-wrap');
-    if (!wrap) return;
-    const scroller = wrap.querySelector('.listings-grid');
-    const leftBtn = wrap.querySelector('.scroll-hint.left');
-    const rightBtn = wrap.querySelector('.scroll-hint.right');
-    if (!scroller || !leftBtn || !rightBtn) return;
-    const hasOverflow = scroller.scrollWidth > scroller.clientWidth + 4;
-    leftBtn.classList.toggle('show', hasOverflow);
-    rightBtn.classList.toggle('show', hasOverflow);
-  }
-  window.addEventListener('resize', nkUpdateScrollHints);
-
-  function nkRebuildPagesIfDimsChanged() {
-    if (nkMobileMode) return;
-    if (!nkLastListings.length) return;
-    const dims = nkGetGridDims();
-    const key = dims.cols + 'x' + dims.rows;
-    if (key === nkLastDimsKey) return;
-    nkLastDimsKey = key;
-    const grid = document.getElementById('listings-grid');
-    if (!grid || grid.querySelector('.skeleton') || grid.querySelector('.empty-state')) return;
-    grid.innerHTML = nkBuildPagesHtml(nkLastListings, dims);
-    nkUpdateScrollHints();
-  }
-
-  const nkResultsWrapEl = document.querySelector('#results .scroll-wrap');
-  if (window.ResizeObserver && nkResultsWrapEl) {
-    new ResizeObserver(() => nkRebuildPagesIfDimsChanged()).observe(nkResultsWrapEl);
-  } else {
-    window.addEventListener('resize', nkRebuildPagesIfDimsChanged);
   }
 
   function nkLSGetC(key) { try { return localStorage.getItem(key); } catch(e) { return null; } }
@@ -2477,6 +2361,7 @@
   function nkOpenSheet(title, bodyHtml) {
     document.getElementById('nk-sheet-title').textContent = title;
     document.getElementById('nk-sheet-body').innerHTML = bodyHtml;
+    nkMakeClickablesKeyboardAccessible();
     document.getElementById('nk-sheet-overlay').classList.add('open');
     document.body.style.overflow = 'hidden';
   }
@@ -2508,6 +2393,8 @@
   function nkSheetSetPreset(min, max) {
     document.getElementById('nk-sheet-price-min').value = min || '';
     document.getElementById('nk-sheet-price-max').value = max ?? '';
+    document.querySelectorAll('#nk-sheet-body .pill-group .filter-pill').forEach(p => p.classList.remove('active'));
+    if (typeof event !== 'undefined' && event.currentTarget) event.currentTarget.classList.add('active');
   }
   function nkSheetApplyPrice() {
     document.getElementById('price-min').value = document.getElementById('nk-sheet-price-min').value;
@@ -2636,13 +2523,31 @@
   async function nkGeocodeArea(area, county) {
     const key = area + '|' + county;
     if (nkGeocodeCache[key]) return nkGeocodeCache[key];
+
+    // 1. Check the persistent cache — if any visitor has ever geocoded
+    //    this area before, we already have it and never touch Nominatim.
+    try {
+      const { data: cached } = await db.from('area_geocodes')
+        .select('lat,lng').eq('area', area).eq('county', county || '').maybeSingle();
+      if (cached) {
+        const pos = { lat: cached.lat, lng: cached.lng };
+        nkGeocodeCache[key] = pos;
+        return pos;
+      }
+    } catch (e) { /* table missing or network hiccup — fall through to live geocode */ }
+
+    // 2. Not cached anywhere yet — geocode live via Nominatim, then save
+    //    it so no future visitor ever needs to hit Nominatim for this area again.
     try {
       const q = [area, county, 'Kenya'].filter(Boolean).join(', ');
       const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`);
       const data = await res.json();
+      await new Promise(r => setTimeout(r, 1000)); // respect Nominatim's ~1 req/sec limit
       if (data && data[0]) {
         const pos = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
         nkGeocodeCache[key] = pos;
+        db.from('area_geocodes').insert({ area, county: county || '', lat: pos.lat, lng: pos.lng })
+          .then(({ error }) => { if (error && error.code !== '23505') console.warn('area_geocodes insert failed:', error.message); });
         return pos;
       }
     } catch (e) { /* ignore, marker just gets skipped */ }
