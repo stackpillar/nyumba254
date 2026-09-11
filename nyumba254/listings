@@ -753,7 +753,6 @@
 <div class="page-header">
   <h1 id="page-title">Browse listings</h1>
   <p id="page-desc">Apartments, houses, boarding houses and Airbnb rentals across Kenya</p>
-  <nav class="nk-breadcrumb" id="nk-breadcrumb" aria-label="Breadcrumb"></nav>
   <div class="header-search">
     <input type="text" id="search-q" placeholder="Search by keyword, area, or price (e.g. 7000)…" oninput="nkFormatSearchInput(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();applyFilters();}"/>
     <button onclick="applyFilters()">Search</button>
