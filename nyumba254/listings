@@ -2655,13 +2655,17 @@
      EXIT INTENT
   ════════════════════════════════════════════════════ */
   const EXIT_SESSION_KEY = 'nk_exit_prompt_last_shown';
-  const EXIT_COOLDOWN_MS = 2 * 60 * 60 * 1000;
+  const EXIT_COOLDOWN_MS = 24 * 60 * 60 * 1000; // show at most once per day per visitor
   const EXIT_REVIEW_DONE_KEY = 'nk_platform_review_done';
   let exitPendingHref = null;
   let exitStarRating = 0;
   let exitTriggered = false;
   let exitNotifyFlowActive = false;
+  let exitHasScrolled = false;
   const exitPageLoadedAt = Date.now();
+  const EXIT_MIN_TIME_MS = 20000; // don't ask until they've actually had time to look around
+
+  window.addEventListener('scroll', () => { exitHasScrolled = true; }, { passive: true, once: true });
 
   function exitAlreadyShown() {
     const last = parseInt(localStorage.getItem(EXIT_SESSION_KEY), 10);
@@ -2669,10 +2673,24 @@
   }
   function exitMarkShown() { localStorage.setItem(EXIT_SESSION_KEY, String(Date.now())); }
 
+  // If they've already messaged a seller this session, they've clearly
+  // found something — no need to ask if they found what they were looking for.
+  function exitHasActiveEnquiry() {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        if (localStorage.key(i)?.startsWith('nk_buyer_')) return true;
+      }
+    } catch (e) {}
+    return false;
+  }
+
   function exitOpenModal(href) {
     if (exitTriggered || exitAlreadyShown()) return;
-    if (Date.now() - exitPageLoadedAt < 1200) return;
+    if (Date.now() - exitPageLoadedAt < EXIT_MIN_TIME_MS) return;
+    if (!exitHasScrolled) return;
+    if (exitHasActiveEnquiry()) return;
     if (document.getElementById('notify-modal-overlay')?.classList.contains('open')) return;
+    if (document.getElementById('card-inquiry-overlay')?.classList.contains('open')) return;
     exitTriggered = true;
     exitMarkShown();
     exitPendingHref = href || null;
@@ -2703,6 +2721,7 @@
   }
 
   document.addEventListener('mouseout', (e) => {
+    if (window.innerWidth < 768) return; // this gesture doesn't translate to touch/mobile
     if (e.clientY <= 0) exitOpenModal(null);
   });
 
@@ -2713,6 +2732,11 @@
     if (!a) return;
     const href = a.getAttribute('href');
     if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:') || a.target === '_blank') return;
+    // Only intercept clicks that actually leave nyumba254.com — browsing
+    // between our own pages isn't "exiting" and shouldn't prompt this.
+    let isExternal = false;
+    try { isExternal = new URL(href, window.location.href).hostname !== window.location.hostname; } catch (e) { isExternal = false; }
+    if (!isExternal) return;
     e.preventDefault();
     exitOpenModal(href);
   });
