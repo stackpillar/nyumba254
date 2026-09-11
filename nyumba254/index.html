@@ -423,6 +423,71 @@
     .empty-state svg { width: 48px; height: 48px; margin: 0 auto 16px; stroke: var(--border); fill: none; stroke-width: 1.5; }
     .empty-state p { font-size: 15px; }
 
+    /* ══════════════════════════════════════════════════════════════
+       BATCH 2: data-saver, near-me, live search, recently viewed,
+       scroll memory, keyboard nav, saved badge, recent searches
+       ══════════════════════════════════════════════════════════════ */
+    .nk-datasaver-banner {
+      display: none; align-items: center; justify-content: center; gap: 10px;
+      background: #FFF7E6; color: #8a5a00; border-bottom: 1px solid #F3D9A0;
+      font-size: 13px; padding: 9px 16px; text-align: center; flex-wrap: wrap;
+    }
+    .nk-datasaver-banner.visible { display: flex; }
+    .nk-datasaver-banner button {
+      background: none; border: 1px solid #8a5a00; color: #8a5a00;
+      font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px;
+    }
+    .nk-datasaver-banner button:hover { background: #8a5a00; color: white; }
+    body.nk-datasaver .hero-illustration { display: none; }
+    body.nk-datasaver .reveal { transition: none; }
+
+    .hero-quick-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+    .nk-nearme-btn {
+      display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500;
+      color: white; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.3);
+      padding: 7px 14px; border-radius: 20px; transition: background .15s;
+    }
+    .nk-nearme-btn:hover { background: rgba(255,255,255,0.24); }
+    .nk-nearme-btn svg { width: 14px; height: 14px; stroke: white; fill: none; stroke-width: 2; }
+    .nk-recent-chip {
+      font-size: 12.5px; color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.25); padding: 6px 13px; border-radius: 20px; cursor: pointer;
+    }
+    .nk-recent-chip:hover { background: rgba(255,255,255,0.2); }
+
+    .nk-search-dropdown {
+      position: absolute; top: calc(100% + 8px); left: 0; right: 0;
+      background: white; border-radius: var(--radius-lg); box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+      border: 1px solid var(--border); overflow: hidden; z-index: 50; display: none;
+      max-height: 360px; overflow-y: auto;
+    }
+    .nk-search-dropdown.visible { display: block; }
+    .nk-sd-group-label { font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .05em; padding: 10px 16px 4px; }
+    .nk-sd-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; cursor: pointer; transition: background .1s; }
+    .nk-sd-item:hover { background: var(--surface); }
+    .nk-sd-item img { width: 38px; height: 38px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: var(--surface); }
+    .nk-sd-item-icon { width: 38px; height: 38px; border-radius: 8px; background: var(--green-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .nk-sd-item-icon svg { width: 16px; height: 16px; stroke: var(--green-dark); fill: none; stroke-width: 2; }
+    .nk-sd-item-title { font-size: 13.5px; font-weight: 600; color: var(--text); line-height: 1.3; }
+    .nk-sd-item-sub { font-size: 12px; color: var(--text-3); }
+    .nk-sd-empty { padding: 16px; font-size: 13px; color: var(--text-3); text-align: center; }
+
+    .nk-recently-viewed { display: none; }
+    .nk-recently-viewed.has-items { display: block; }
+
+    .nk-tab { position: relative; }
+    .nk-tab-badge {
+      position: absolute; top: -2px; right: 22%; background: var(--green); color: white;
+      font-size: 9px; font-weight: 800; min-width: 15px; height: 15px; border-radius: 10px;
+      display: none; align-items: center; justify-content: center; padding: 0 3px;
+      border: 1.5px solid white;
+    }
+    .nk-tab-badge.visible { display: flex; }
+
+    .categories:focus-visible, .listings-grid:focus-visible, .areas:focus-visible {
+      outline: 2px solid var(--green); outline-offset: 2px;
+    }
+
     /* ── Responsive ── */
     @media (max-width: 1024px) {
       .footer-top { grid-template-columns: 2fr 1fr 1fr; }
@@ -550,6 +615,7 @@
        once the hero has been scrolled past */
     .nav-compact-search {
       display: none;
+      position: relative;
       align-items: center; gap: 6px;
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 20px; padding: 6px 6px 6px 14px;
@@ -621,6 +687,11 @@
 
 <a href="#main-content" style="position:absolute;left:-9999px;top:0;background:var(--green);color:white;padding:10px 18px;border-radius:0 0 8px 0;z-index:1000;font-size:14px;font-weight:600" onfocus="this.style.left='0'" onblur="this.style.left='-9999px'">Skip to content</a>
 
+<div class="nk-datasaver-banner" id="nk-datasaver-banner">
+  <span>You're on a slower connection — Data Saver is on to load faster.</span>
+  <button onclick="nkToggleDataSaver()">Turn off</button>
+</div>
+
 <!-- ── NAVBAR ── -->
 <nav>
   <a href="/" class="logo">
@@ -630,8 +701,9 @@
     <span>Nyumba254</span>
   </a>
   <div class="nav-compact-search" id="nav-compact-search">
-    <input type="text" id="nav-compact-search-input" placeholder="Search area or price…" aria-label="Search"/>
+    <input type="text" id="nav-compact-search-input" placeholder="Search area or price…" aria-label="Search" oninput="nkNavSearchInput(this.value)"/>
     <button onclick="nkCompactSearch()">Search</button>
+    <div class="nk-search-dropdown" id="nav-search-dropdown"></div>
   </div>
   <div class="nav-links">
 <a href="/listings" class="nav-link">Browse</a>
@@ -696,8 +768,17 @@
       <option value="term">Per term</option>
       <option value="once">One-time (sale)</option>
     </select>
-    <input type="text" id="search-q" placeholder="Search by area, price (e.g. 7000), or keyword…" oninput="nkFormatSearchInput(this)"/>
+    <input type="text" id="search-q" placeholder="Search by area, price (e.g. 7000), or keyword…" oninput="nkFormatSearchInput(this); nkHeroSearchInput(this.value)"/>
     <button onclick="doSearch()">Search</button>
+    <div class="nk-search-dropdown" id="hero-search-dropdown"></div>
+  </div>
+
+  <div class="hero-quick-row">
+    <button class="nk-nearme-btn" id="nk-nearme-btn" onclick="nkUseNearMe()">
+      <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Near me
+    </button>
+    <div id="nk-recent-searches" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
   </div>
 
   <div class="hero-stats">
@@ -737,13 +818,25 @@
   </div>
 </div>
 
+<!-- ── RECENTLY VIEWED ── -->
+<section class="section reveal nk-recently-viewed" id="recently-viewed-section">
+  <div class="section-header">
+    <h2 class="section-title">Recently viewed</h2>
+  </div>
+  <div class="scroll-wrap">
+  <div id="recently-viewed-listings"></div>
+  <button class="scroll-hint left" aria-label="Scroll to previous recently viewed" onclick="nkScrollWrap(this,-1)"><svg viewBox="0 0 24 24"><polyline points="15 6 9 12 15 18"/></svg></button>
+  <button class="scroll-hint right" aria-label="Scroll for more recently viewed" onclick="nkScrollWrap(this,1)"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
+  </div>
+</section>
+
 <!-- ── CATEGORIES ── -->
 <section class="section reveal" id="categories">
   <div class="section-header">
     <h2 class="section-title">What are you looking for?</h2>
     <a href="/how-it-works" class="see-all">How it works →</a>
   </div>
-  <div class="scroll-wrap"><div class="categories">
+  <div class="scroll-wrap"><div class="categories" tabindex="0">
     <div class="cat-card apartment" onclick="filterCategory('apartment')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();filterCategory('apartment')}">
       <div class="cat-icon">
         <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -845,7 +938,7 @@
     <a href="/listings" class="see-all">All listings →</a>
   </div>
   <div class="scroll-wrap">
-  <div class="areas" id="counties-grid"></div>
+  <div class="areas" id="counties-grid" tabindex="0"></div>
   <button class="scroll-hint left" aria-label="Scroll to previous counties" onclick="nkScrollWrap(this,-1)"><svg viewBox="0 0 24 24"><polyline points="15 6 9 12 15 18"/></svg></button>
   <button class="scroll-hint right" aria-label="Scroll for more counties" onclick="nkScrollWrap(this,1)"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
   </div>
@@ -887,6 +980,7 @@
   </a>
   <a href="/saved" class="nk-tab">
     <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+    <span class="nk-tab-badge" id="nk-tab-saved-badge">0</span>
     Saved
   </a>
   <a href="/login" class="nk-tab" id="tab-account-link">
@@ -1274,7 +1368,7 @@
           ? '<span class="badge-featured">Featured</span>'
           : (isNew ? '<span class="badge-new">New</span>' : ''));
     return `
-      <a class="card" href="${href}" aria-label="${safeTitle}" style="${isOccupied ? 'opacity:.7' : ''}">
+      <a class="card" href="${href}" aria-label="${safeTitle}" style="${isOccupied ? 'opacity:.7' : ''}" data-rv-id="${listing.id}" data-rv-title="${safeTitle}" data-rv-area="${escHtml(listing.area || '')}" data-rv-price="${formatPrice(listing).replace(/"/g,'&quot;')}" data-rv-img="${cover ? cover.url : ''}">
         <div class="card-img">
         ${imgHtml}
         ${topBadge}
@@ -1357,6 +1451,8 @@
         requestAnimationFrame(() => { nkUpdateHintVisibility(wrap); ticking = false; });
       }, { passive: true });
     }
+    nkBindScrollMem(scroller);
+    nkRestoreScrollMem(scroller);
     nkUpdateHintVisibility(wrap);
   }
   function nkRefreshAllScrollHints() {
@@ -1373,7 +1469,7 @@
       </div>`;
       return;
     }
-    el.innerHTML = `<div class="listings-grid">${listings.map(buildCard).join('')}</div>${buildDotsHtml(listings.length)}`;
+    el.innerHTML = `<div class="listings-grid" tabindex="0">${listings.map(buildCard).join('')}</div>${buildDotsHtml(listings.length)}`;
     const wrap = el.closest('.scroll-wrap');
     if (wrap) { attachCarouselDots(wrap); nkInitScrollWrap(wrap); }
   }
@@ -1459,6 +1555,8 @@
   }
 
   function doSearch() {
+    const qElForHistory = document.getElementById('search-q');
+    if (qElForHistory && qElForHistory.value && !qElForHistory.dataset.priceValue) nkAddRecentSearch(qElForHistory.value);
     const county = document.getElementById('search-county').value;
     const area  = document.getElementById('search-area').value;
     const freq  = document.getElementById('search-freq').value;
@@ -1510,6 +1608,233 @@
     start();
   })();
 
+  /* ══════════════════════════════════════════════════════════════
+     BATCH 2 — data-saver, near-me, live search, recently viewed,
+     scroll memory, keyboard nav, saved badge, recent searches
+     ══════════════════════════════════════════════════════════════ */
+
+  /* ── 1. Data-saver mode ── */
+  function nkApplyDataSaver(on) {
+    document.body.classList.toggle('nk-datasaver', on);
+    const banner = document.getElementById('nk-datasaver-banner');
+    if (banner) banner.classList.toggle('visible', on);
+    localStorage.setItem('nk_datasaver', on ? '1' : '0');
+  }
+  function nkToggleDataSaver() { nkApplyDataSaver(!document.body.classList.contains('nk-datasaver')); }
+  (function () {
+    const stored = localStorage.getItem('nk_datasaver');
+    if (stored === '1') { nkApplyDataSaver(true); return; }
+    if (stored === '0') return;
+    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (conn && (conn.saveData || ['slow-2g', '2g'].includes(conn.effectiveType))) nkApplyDataSaver(true);
+  })();
+
+  /* ── 2. Near me (geolocation) ── */
+  const NK_COUNTY_COORDS = {
+    "Mombasa": [-4.0435, 39.6682], "Kwale": [-4.1747, 39.4520], "Kilifi": [-3.6305, 39.8499],
+    "Tana River": [-1.0167, 40.1167], "Lamu": [-2.2717, 40.9020], "Taita-Taveta": [-3.3968, 38.5637],
+    "Garissa": [-0.4569, 39.6583], "Wajir": [1.7471, 40.0629], "Mandera": [3.9366, 41.8670],
+    "Marsabit": [2.3284, 37.9899], "Isiolo": [0.3556, 37.5820], "Meru": [0.0470, 37.6556],
+    "Tharaka-Nithi": [-0.2971, 37.8459], "Embu": [-0.5310, 37.4500], "Kitui": [-1.3667, 38.0167],
+    "Machakos": [-1.5177, 37.2634], "Makueni": [-1.8038, 37.6242], "Nyandarua": [-0.3242, 36.4310],
+    "Nyeri": [-0.4167, 36.9500], "Kirinyaga": [-0.6591, 37.3833], "Murang'a": [-0.7217, 37.1500],
+    "Kiambu": [-1.1714, 36.8356], "Turkana": [3.1167, 35.6000], "West Pokot": [1.6167, 35.3833],
+    "Samburu": [1.2151, 36.9490], "Trans Nzoia": [1.0167, 35.0000], "Uasin Gishu": [0.5143, 35.2698],
+    "Elgeyo-Marakwet": [0.8000, 35.5000], "Nandi": [0.1833, 35.1167], "Baringo": [0.4667, 35.9667],
+    "Laikipia": [0.2000, 36.7833], "Nakuru": [-0.3031, 36.0800], "Narok": [-1.0833, 35.8667],
+    "Kajiado": [-1.8500, 36.7833], "Kericho": [-0.3667, 35.2833], "Bomet": [-0.7833, 35.3417],
+    "Kakamega": [0.2827, 34.7519], "Vihiga": [0.0667, 34.7167], "Bungoma": [0.5667, 34.5667],
+    "Busia": [0.4608, 34.1115], "Siaya": [0.0607, 34.2881], "Kisumu": [-0.0917, 34.7680],
+    "Homa Bay": [-0.5273, 34.4571], "Migori": [-1.0634, 34.4731], "Kisii": [-0.6817, 34.7680],
+    "Nyamira": [-0.5633, 34.9358], "Nairobi": [-1.2921, 36.8219]
+  };
+  function nkHaversine(lat1, lon1, lat2, lon2) {
+    const R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+  function nkFindNearestCounty(lat, lon) {
+    let best = null, bestDist = Infinity;
+    Object.entries(NK_COUNTY_COORDS).forEach(([county, [clat, clon]]) => {
+      if (!nkAreaCountFor(county)) return;
+      const d = nkHaversine(lat, lon, clat, clon);
+      if (d < bestDist) { bestDist = d; best = county; }
+    });
+    return best;
+  }
+  function nkUseNearMe() {
+    if (!navigator.geolocation) { alert("Location isn't available on this device/browser."); return; }
+    const btn = document.getElementById('nk-nearme-btn');
+    const resetBtn = () => { if (btn) btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> Near me'; };
+    if (btn) btn.textContent = 'Locating…';
+    navigator.geolocation.getCurrentPosition(pos => {
+      const county = nkFindNearestCounty(pos.coords.latitude, pos.coords.longitude);
+      resetBtn();
+      if (!county) return;
+      const sel = document.getElementById('latest-county-select');
+      if (sel) sel.value = county;
+      nkOnCountyChange(county);
+      document.getElementById('latest-listings')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, () => {
+      resetBtn();
+      alert('Could not get your location. You can pick a county manually below.');
+    }, { timeout: 8000 });
+  }
+
+  /* ── 3. Live instant-search dropdown ── */
+  function nkDebounce(fn, ms) {
+    let t;
+    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+  }
+  async function nkRunLiveSearch(term, dropdownEl) {
+    const q = term.trim();
+    if (q.length < 2) { dropdownEl.classList.remove('visible'); dropdownEl.innerHTML = ''; return; }
+    const matchedAreas = Object.keys(NK_AREA_TO_COUNTY).filter(a => a.toLowerCase().includes(q.toLowerCase())).slice(0, 4);
+    const { data } = await db.from('listings').select('id, listing_number, title, area, price, price_frequency, category, listing_photos(*)')
+      .in('status', ['active', 'occupied']).ilike('title', `%${q}%`).limit(5);
+    let html = '';
+    if (matchedAreas.length) {
+      html += `<div class="nk-sd-group-label">Areas</div>` + matchedAreas.map(a => `
+        <div class="nk-sd-item" onclick="goArea('${a.replace(/'/g, "\\'")}')">
+          <div class="nk-sd-item-icon"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+          <div><div class="nk-sd-item-title">${a}</div><div class="nk-sd-item-sub">${nkCountyLabel(NK_AREA_TO_COUNTY[a])}</div></div>
+        </div>`).join('');
+    }
+    if (data && data.length) {
+      html += `<div class="nk-sd-group-label">Listings</div>` + data.map(l => {
+        const cover = (l.listing_photos || []).find(p => p.is_cover) || (l.listing_photos || [])[0];
+        const img = cover ? `<img src="${cover.url}" alt=""/>` : `<div class="nk-sd-item-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>`;
+        const href = `/listing?id=${String(l.listing_number).padStart(6,'0')}`;
+        return `<div class="nk-sd-item" onclick="window.location.href='${href}'">
+          ${img}
+          <div><div class="nk-sd-item-title">${escHtml(l.title)}</div><div class="nk-sd-item-sub">${escHtml(l.area)} · ${formatPrice(l).replace(/<[^>]+>/g,'')}</div></div>
+        </div>`;
+      }).join('');
+    }
+    if (!html) html = `<div class="nk-sd-empty">No matches — try searching by county below.</div>`;
+    dropdownEl.innerHTML = html;
+    dropdownEl.classList.add('visible');
+  }
+  const nkHeroSearchInput = nkDebounce(val => nkRunLiveSearch(val, document.getElementById('hero-search-dropdown')), 300);
+  const nkNavSearchInput = nkDebounce(val => nkRunLiveSearch(val, document.getElementById('nav-search-dropdown')), 300);
+  document.addEventListener('click', e => {
+    document.querySelectorAll('.nk-search-dropdown.visible').forEach(dd => {
+      if (!dd.parentElement.contains(e.target)) dd.classList.remove('visible');
+    });
+  });
+
+  /* ── 4. Recently viewed strip ── */
+  function nkGetRecentlyViewed() {
+    try { return JSON.parse(localStorage.getItem('nk_recently_viewed') || '[]'); } catch { return []; }
+  }
+  function nkTrackView(entry) {
+    let list = nkGetRecentlyViewed().filter(e => e.id !== entry.id);
+    list.unshift(entry);
+    list = list.slice(0, 10);
+    localStorage.setItem('nk_recently_viewed', JSON.stringify(list));
+  }
+  document.addEventListener('click', e => {
+    const card = e.target.closest('.card[data-rv-id]');
+    if (!card) return;
+    nkTrackView({
+      id: card.dataset.rvId, title: card.dataset.rvTitle, area: card.dataset.rvArea,
+      price: card.dataset.rvPrice, img: card.dataset.rvImg, href: card.getAttribute('href')
+    });
+  });
+  function nkBuildRecentCard(entry) {
+    const imgHtml = entry.img
+      ? `<img src="${entry.img}" alt="${escHtml(entry.title)}" loading="lazy"/>`
+      : `<div class="card-img-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
+    return `<a class="card" href="${entry.href}">
+      <div class="card-img">${imgHtml}</div>
+      <div class="card-body">
+        <div class="card-area">${escHtml(entry.area || '')}</div>
+        <div class="card-title">${escHtml(entry.title || '')}</div>
+        <div class="card-price">${entry.price || ''}</div>
+      </div>
+    </a>`;
+  }
+  function nkRenderRecentlyViewed() {
+    const section = document.getElementById('recently-viewed-section');
+    const el = document.getElementById('recently-viewed-listings');
+    if (!section || !el) return;
+    const list = nkGetRecentlyViewed();
+    if (!list.length) { section.classList.remove('has-items'); return; }
+    section.classList.add('has-items');
+    el.innerHTML = `<div class="listings-grid" tabindex="0">${list.map(nkBuildRecentCard).join('')}</div>`;
+    const wrap = el.closest('.scroll-wrap');
+    if (wrap) nkInitScrollWrap(wrap);
+  }
+
+  /* ── 5. Scroll position memory ── */
+  function nkScrollMemKey(scroller) {
+    return scroller.id || scroller.closest('[id]')?.id || null;
+  }
+  function nkRestoreScrollMem(scroller) {
+    const key = nkScrollMemKey(scroller);
+    if (!key) return;
+    const saved = sessionStorage.getItem('nk_scroll_' + key);
+    if (saved) scroller.scrollLeft = parseInt(saved, 10) || 0;
+  }
+  function nkBindScrollMem(scroller) {
+    const key = nkScrollMemKey(scroller);
+    if (!key || scroller.dataset.scrollMemBound) return;
+    scroller.dataset.scrollMemBound = '1';
+    let ticking = false;
+    scroller.addEventListener('scroll', () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => { sessionStorage.setItem('nk_scroll_' + key, scroller.scrollLeft); ticking = false; });
+    }, { passive: true });
+  }
+
+  /* ── 6. Keyboard arrow-key scrolling on desktop ── */
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    const el = document.activeElement;
+    if (!el || !el.matches('.categories, .listings-grid, .areas')) return;
+    const step = el.clientWidth * 0.8;
+    el.scrollBy({ left: e.key === 'ArrowRight' ? step : -step, behavior: 'smooth' });
+  });
+
+  /* ── 7. Saved badge on mobile tab bar (mirrors nav-count-badge, set
+     elsewhere by saved-listings.js) ── */
+  (function () {
+    const source = document.getElementById('nav-count-badge');
+    const target = document.getElementById('nk-tab-saved-badge');
+    if (!source || !target) return;
+    function sync() {
+      const n = source.textContent.trim();
+      target.textContent = n;
+      target.classList.toggle('visible', source.style.display !== 'none' && n !== '0' && n !== '');
+    }
+    new MutationObserver(sync).observe(source, { childList: true, attributes: true, attributeFilter: ['style'] });
+    sync();
+  })();
+
+  /* ── 8. Recently searched chips ── */
+  function nkGetRecentSearches() {
+    try { return JSON.parse(localStorage.getItem('nk_recent_searches') || '[]'); } catch { return []; }
+  }
+  function nkAddRecentSearch(term) {
+    if (!term || !term.trim()) return;
+    let list = nkGetRecentSearches().filter(t => t.toLowerCase() !== term.toLowerCase());
+    list.unshift(term.trim());
+    list = list.slice(0, 5);
+    localStorage.setItem('nk_recent_searches', JSON.stringify(list));
+    nkRenderRecentSearches();
+  }
+  function nkRenderRecentSearches() {
+    const wrap = document.getElementById('nk-recent-searches');
+    if (!wrap) return;
+    const list = nkGetRecentSearches();
+    wrap.innerHTML = list.map(t => `<div class="nk-recent-chip" onclick="nkRepeatSearch('${t.replace(/'/g, "\\'")}')">${escHtml(t)}</div>`).join('');
+  }
+  function nkRepeatSearch(term) {
+    document.getElementById('search-q').value = term;
+    doSearch();
+  }
+
   renderCountiesGrid();
   loadCountyListingCounts();
   renderFooterCounties();
@@ -1521,6 +1846,8 @@
   loadCounts();
   nkRefreshAllScrollHints();
   window.addEventListener('load', nkRefreshAllScrollHints);
+  nkRenderRecentlyViewed();
+  nkRenderRecentSearches();
 
   /* ── 1. Scroll-reveal: fade/slide each .reveal section up once, the
      first time it enters the viewport ── */
