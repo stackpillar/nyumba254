@@ -1309,12 +1309,14 @@
     const nav = document.getElementById('mobile-nav');
     const isOpen = nav.classList.toggle('open');
     document.getElementById('mobile-menu-btn').setAttribute('aria-expanded', isOpen);
+    document.body.style.overflow = isOpen ? 'hidden' : '';
   }
   document.addEventListener('click', e => {
     const nav = document.getElementById('mobile-nav');
     const btn = document.querySelector('.mobile-menu-btn');
     if (nav.classList.contains('open') && !nav.contains(e.target) && !btn.contains(e.target)) {
       nav.classList.remove('open');
+      document.body.style.overflow = '';
     }
   });
   /* ── Price formatting driven by price_frequency, matching listings ── */

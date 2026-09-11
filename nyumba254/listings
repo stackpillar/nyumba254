@@ -70,14 +70,16 @@
     /* ── Mobile menu ── */
     .mobile-menu-btn {
       display: none; background: none; border: none; cursor: pointer;
-      padding: 6px; border-radius: 6px;
+      padding: 12px; border-radius: 6px; min-width: 44px; min-height: 44px;
+      align-items: center; justify-content: center;
     }
     .mobile-menu-btn svg { width: 22px; height: 22px; stroke: var(--text); fill: none; stroke-width: 2; display: block; }
     .mobile-nav {
-      display: none; position: fixed; top: 64px; left: 0; right: 0;
-      background: var(--white); border-bottom: 1px solid var(--border);
-      padding: 16px; z-index: 99; flex-direction: column; gap: 4px;
+      display: none; position: fixed; top: 64px; left: 0; right: 0; bottom: 0;
+      background-color: #ffffff; border-bottom: 1px solid var(--border);
+      padding: 16px; z-index: 9999; flex-direction: column; gap: 4px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      overflow-y: auto; -webkit-overflow-scrolling: touch;
     }
     .mobile-nav.open { display: flex; }
     .mobile-nav a { font-size: 15px; color: var(--text-2); padding: 10px 14px; border-radius: var(--radius); }
@@ -374,8 +376,9 @@
 
     .notify-modal-overlay {
       display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);
-      z-index: 500; align-items: center; justify-content: center; padding: 20px;
+      z-index: 100000; align-items: center; justify-content: center; padding: 20px;
     }
+    body.nk-modal-open .nk-scrolltop-btn { display: none !important; }
     .notify-modal-overlay.open { display: flex; }
     .notify-modal {
       background: white; border-radius: var(--radius-lg); max-width: 520px; width: 100%;
@@ -533,6 +536,10 @@
     }
     @media (max-width: 600px) {
       .nf-row { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .notify-modal-overlay { padding: 8px; }
+      .notify-modal { max-width: 100%; border-radius: 14px; }
     }
     @media (max-width: 480px) {
       .header-search { flex-direction: column; }
@@ -1969,17 +1976,6 @@
       frag.innerHTML = listings.map(buildCard).join('');
       grid.appendChild(frag);
       nkBindCardSwipe(frag);
-      // Item 9: after the 5th card, surface a lighter inline "notify me"
-      // nudge for people who are scrolling past a lot without a match yet.
-      if (nkMobileAccum.length >= 5 && !document.getElementById('nk-inline-notify')) {
-        const nudge = document.createElement('div');
-        nudge.id = 'nk-inline-notify';
-        nudge.className = 'nk-inline-notify';
-        nudge.innerHTML = `<span>🔔 Not seeing the right one yet?</span>
-          <button class="btn btn-outline" onclick="openNotifyModal()">Get notified</button>`;
-        if (grid.children[4]) grid.insertBefore(nudge, grid.children[5] || null);
-        else grid.appendChild(nudge);
-      }
       nkInsertInfiniteSentinel();
       return;
     }
@@ -2106,11 +2102,13 @@
 
     document.getElementById('card-inquiry-overlay').classList.add('open');
     document.body.style.overflow = 'hidden';
+    document.body.classList.add('nk-modal-open');
   }
 
   function closeCardInquiry() {
     document.getElementById('card-inquiry-overlay').classList.remove('open');
     document.body.style.overflow = '';
+    document.body.classList.remove('nk-modal-open');
     ciActiveListingId = null;
   }
 
@@ -2230,6 +2228,7 @@
     const nav = document.getElementById('mobile-nav');
     const isOpen = nav.classList.toggle('open');
     document.getElementById('mobile-menu-btn')?.setAttribute('aria-expanded', isOpen);
+    document.body.style.overflow = isOpen ? 'hidden' : '';
   }
 
   function nkMakeClickablesKeyboardAccessible() {
@@ -2247,6 +2246,7 @@
     const btn = document.querySelector('.mobile-menu-btn');
     if (nav && nav.classList.contains('open') && !nav.contains(e.target) && !btn.contains(e.target)) {
       nav.classList.remove('open');
+      document.body.style.overflow = '';
     }
   });
 
