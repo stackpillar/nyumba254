@@ -604,12 +604,12 @@
     /* Item 9: card CTA becomes an icon-only round button on mobile */
     .card-inquire-label { display: inline; }
     @media (max-width: 480px) {
-      .card-inquire-btn {
+      .card-inquire-btn:not(.ci-modal-submit-btn) {
         width: 42px; height: 42px; padding: 0; border-radius: 50%;
         align-self: flex-end;
       }
-      .card-inquire-btn svg { width: 18px; height: 18px; }
-      .card-inquire-label { display: none; }
+      .card-inquire-btn:not(.ci-modal-submit-btn) svg { width: 18px; height: 18px; }
+      .card-inquire-btn:not(.ci-modal-submit-btn) .card-inquire-label { display: none; }
     }
 
     /* Sticky quick-filter chip bar (items 3 & 4 in the plan) */
@@ -1128,7 +1128,7 @@
           <label>Message</label>
           <textarea id="ci-message" rows="3" maxlength="1000"></textarea>
         </div>
-        <button class="card-inquire-btn" id="ci-submit-btn" onclick="submitCardInquiry()">
+        <button class="card-inquire-btn ci-modal-submit-btn" id="ci-submit-btn" onclick="submitCardInquiry()">
           <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
           Send message
         </button>
