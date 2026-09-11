@@ -18,8 +18,6 @@
       --green-light: #E1F5EEF;
       --green-mid:   #1D9E75;
       --green-dark:  #085041;
-      --gold:        #BA7517;
-      --gold-light:  #FAEEDA;
       --text:        #1a1a18;
       --text-2:      #4a4a46;
       --text-3:      #888780;
@@ -373,7 +371,7 @@
             How do I list my apartment?
             <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
-          <div class="faq-a">Click "List your apartment" in the navigation bar. Fill in your property details, upload photos, choose a plan (KES 800 standard or KES 2,500 featured), then pay via M-Pesa STK Push. Your listing goes live within minutes of payment confirmation.</div>
+          <div class="faq-a">Click "List your apartment" in the navigation bar. Fill in your property details, upload photos, then submit for review. Your first listing is free for a trial period — after that, the fee is calculated automatically from your price and shown before you submit, and paid via M-Pesa STK Push only once your listing is approved.</div>
         </div>
 
         <div class="faq-item">
@@ -381,7 +379,7 @@
             How long does my listing stay active?
             <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
-          <div class="faq-a">Standard listings stay active for 60 days. Featured listings stay active for 90 days. You can renew anytime from your seller dashboard before expiry.</div>
+          <div class="faq-a">Your listing stays active until you mark it sold, occupied, or remove it yourself from your dashboard — there's no fixed expiry to track. If we ever need to change that, we'll always let you know in advance.</div>
         </div>
 
         <div class="faq-item">
@@ -413,7 +411,7 @@
             Is there a commission when my property sells?
             <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
-          <div class="faq-a">No. You pay a one-time listing fee (KES 800 or KES 2,500) and that's it. No commission, no hidden charges. Buyers contact you directly and any deal is between you and them.</div>
+          <div class="faq-a">No. You only ever pay the listing fee, shown to you before you submit — and that's it. No commission, no hidden charges. Buyers contact you directly and any deal is between you and them.</div>
         </div>
 
         <div class="faq-item">
@@ -421,7 +419,7 @@
             Can I list multiple apartments or commercial spaces?
             <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
-          <div class="faq-a">Yes — each listing is priced individually, and you can list residential apartments as well as shops and offices. If you're a landlord or agent with many units, contact us about bulk listing discounts.</div>
+          <div class="faq-a">Yes — each listing is priced individually, and you can list residential apartments as well as shops and offices. If you're a landlord or agent with many units, contact us and we'll advise on the best way to list them.</div>
         </div>
 
         <div class="faq-item">
@@ -453,7 +451,7 @@
             What payment methods do you accept?
             <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
-          <div class="faq-a">Listing fees are paid via M-Pesa STK Push at checkout. If M-Pesa isn't available to you, message us on WhatsApp and we'll arrange an alternative such as bank transfer.</div>
+          <div class="faq-a">Listing fees are paid via M-Pesa STK Push at checkout, once your listing is approved. If M-Pesa isn't available to you, message us on WhatsApp and we'll arrange an alternative.</div>
         </div>
 
         <div class="faq-item">
