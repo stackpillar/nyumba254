@@ -650,7 +650,10 @@
 
   // ── Redirect destination ──
   // If user came from post-listing page, send them back after login
-  const redirectTo = new URLSearchParams(window.location.search).get('next') || '/dashboard';
+  const urlParams = new URLSearchParams(window.location.search);
+  const redirectTo = urlParams.get('next') || '/dashboard';
+  const arrivalReason = urlParams.get('reason');
+  const arrivalEmail = urlParams.get('email');
 
   // ── If already logged in, redirect immediately; otherwise reveal the form ──
   db.auth.getSession().then(({ data }) => {
@@ -976,8 +979,17 @@
   });
 
   // ── Check URL for ?tab=register (e.g. from homepage CTA) ──
-  const tabParam = new URLSearchParams(window.location.search).get('tab');
+  const tabParam = urlParams.get('tab');
   if (tabParam === 'register') switchTab('register');
+
+  // ── Arrived here after post-listing detected an existing account ──
+  if (arrivalReason === 'existing_account') {
+    if (arrivalEmail) document.getElementById('login-email').value = decodeURIComponent(arrivalEmail);
+    showAlert('login-alert', 'login-alert-msg',
+      'Good news — you already have a Nyumba254 account with this email. Your listing details are saved, so just sign in below to pick up right where you left off.',
+      'success');
+    document.getElementById('login-password')?.focus();
+  }
 </script>
 <script src="nk-quick-help-widget.js" defer></script>
 </body>

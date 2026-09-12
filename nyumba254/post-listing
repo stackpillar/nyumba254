@@ -1142,6 +1142,39 @@ async function checkGuestEmailExists() {
     guestEmailBlocked = false; // fail open — never block submission on a network hiccup
   }
 }
+
+let redirectingToLogin = false;
+function redirectToLoginForExistingAccount() {
+  if (redirectingToLogin) return;
+  redirectingToLogin = true;
+
+  // Draft is keyed by device (localStorage) for guests, so it survives
+  // the trip to /login and back — this is what lets them "resume" after signing in.
+  forceSaveDraftNow();
+
+  const emailField = document.getElementById('contact_email');
+  const warnEl = document.getElementById('err-email-exists');
+  if (warnEl) {
+    warnEl.innerHTML = `✓ We found an existing Nyumba254 account with this email. Your listing details are saved — redirecting you to sign in so you can finish submitting…`;
+    warnEl.classList.add('show');
+  }
+  emailField?.classList.add('error');
+  emailField?.setAttribute('disabled', 'true');
+
+  const btn = document.getElementById('submit-btn');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Redirecting to sign in…`;
+  }
+
+  showToast('Account found — your progress is saved. Redirecting you to sign in…', 'error');
+  emailField?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  setTimeout(() => {
+    const email = encodeURIComponent(document.getElementById('contact_email').value.trim());
+    window.location.href = `login?next=post-listing&reason=existing_account&email=${email}`;
+  }, 3500);
+}
 let currentUserName    = '';
 let tierRows           = [];
 let tierSeq             = 0;
@@ -1844,9 +1877,14 @@ async function submitListing() {
   check('contact_email', 'err-contact-email', v => /\S+@\S+\.\S+/.test(v));
   if (!ok) { showToast('Please complete your contact details', 'error'); return; }
 
-  if (!currentUser && guestEmailBlocked) {
-    showToast('This email already has an account — please sign in to continue', 'error');
-    return;
+  if (!currentUser) {
+    // Re-check right before submit — the field may have changed since blur,
+    // or blur may never have fired (autofill, tab-skip, paste + Enter, etc).
+    await checkGuestEmailExists();
+    if (guestEmailBlocked) {
+      redirectToLoginForExistingAccount();
+      return;
+    }
   }
 
   const btn = document.getElementById('submit-btn');
