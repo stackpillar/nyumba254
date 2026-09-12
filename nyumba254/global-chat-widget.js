@@ -27,6 +27,7 @@
     #gcw-title-wrap{flex:1;min-width:0}
     #gcw-title{font-size:14px;font-weight:700;line-height:1.3}
     #gcw-subtitle{font-size:11px;opacity:.8;line-height:1.3}
+    @media(max-width:480px){#gcw-subtitle{display:none}#gcw-head{padding:10px 16px}}
     #gcw-list{flex:1;min-height:0;overflow-y:auto;background:#f7f6f2}
     .gcw-convo{display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid #e0ded8;cursor:pointer;transition:background .1s}
     .gcw-convo:hover{background:#fff}
@@ -59,9 +60,10 @@
     #gcw-input:focus{border-color:#0F6E56;background:#fff}
     #gcw-send{width:36px;height:36px;border-radius:50%;background:#0F6E56;color:#fff;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;flex-shrink:0}
     #gcw-send:disabled{opacity:.5;cursor:not-allowed}
-    @media(max-width:480px){#gcw-panel{right:16px;bottom:88px;width:calc(100vw - 32px)}#gcw-btn{right:16px;bottom:16px}}
+    @media(max-width:480px){#gcw-panel{right:16px;bottom:88px;width:calc(100vw - 32px);height:calc(100vh - 130px);max-height:calc(100vh - 130px)}#gcw-btn{right:16px;bottom:16px}}
     @media(max-width:380px){#gcw-btn-label{display:none}#gcw-btn{padding:0;width:52px;justify-content:center}}
-    .gcw-thread-subbar{padding:8px 14px;background:#E1F5EE;border-bottom:1px solid #e0ded8;flex-shrink:0}
+    .gcw-thread-subbar{padding:6px 14px;background:#E1F5EE;border-bottom:1px solid #e0ded8;flex-shrink:0}
+    @media(max-width:480px){.gcw-thread-subbar{padding:5px 12px}#gcw-thread-head{padding:8px 14px}}
     #gcw-book-viewing-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:9px;background:#fff;color:#085041;border:1.5px solid #0F6E56;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s}
     #gcw-book-viewing-btn:hover{background:#E1F5EE}
     #gcw-viewing-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2200;align-items:center;justify-content:center;padding:20px;font-family:'Inter',sans-serif}
@@ -93,7 +95,7 @@
     .gcw-date-sep{text-align:center;font-size:10px;color:#888780;padding:6px 0;font-weight:600}
     /* ── Thread subbar buttons (booking / invite / browse) ── */
     .gcw-subbar-row{display:flex;gap:8px}
-    .gcw-subbar-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 6px;background:#fff;color:#085041;border:1.5px solid #0F6E56;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s;white-space:nowrap}
+    .gcw-subbar-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:7px 6px;background:#fff;color:#085041;border:1.5px solid #0F6E56;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s;white-space:nowrap}
     .gcw-subbar-btn:hover{background:#E1F5EE}
     .gcw-subbar-btn.ghost{color:#4a4a46;border-color:#e0ded8}
     .gcw-subbar-btn.ghost:hover{background:#f7f6f2}
@@ -162,16 +164,6 @@
             <button id="gcw-book-viewing-btn" class="gcw-subbar-btn" type="button">
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
               Book a viewing
-            </button>
-          </div>
-          <div class="gcw-subbar-row" style="margin-top:8px">
-            <button id="gcw-invite-btn" class="gcw-subbar-btn ghost" type="button">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-              Invite a friend
-            </button>
-            <button id="gcw-browse-btn" class="gcw-subbar-btn ghost" type="button">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              Browse more
             </button>
           </div>
         </div>
@@ -808,12 +800,10 @@
   document.getElementById('gcw-viewing-overlay').addEventListener('click', (e) => { if (e.target.id === 'gcw-viewing-overlay') closeBookViewing(); });
   document.getElementById('gcw-book-viewing-btn').addEventListener('click', () => { if (activeListingId) openBookViewing(activeListingId, activeBuyerToken); });
 
-  document.getElementById('gcw-invite-btn').addEventListener('click', shareActiveListingWithFriend);
   document.getElementById('gcw-fullpage-btn').addEventListener('click', () => {
     const url = activeListingId ? `/inbox?open=${encodeURIComponent(activeListingId)}` : '/inbox';
     window.open(url, '_blank', 'noopener');
   });
-  document.getElementById('gcw-browse-btn').addEventListener('click', browseMoreListings);
   // Saved listings live in inbox.html's dedicated Saved tab — the floating
   // widget just deep-links there instead of duplicating that whole panel.
   window.NKGlobalChat = window.NKGlobalChat || {};
