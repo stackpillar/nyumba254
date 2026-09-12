@@ -2027,6 +2027,7 @@ async function submitListing() {
     }
 
     await clearDraft();
+    draftsReady = false; // stop scheduleDraftSave/forceSaveDraftNow from re-creating the draft after a successful submission
 
     const guestSignup = !currentUser; // true only when this submission just created a new account
 
