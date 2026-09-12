@@ -63,7 +63,7 @@
     @media(max-width:480px){#gcw-panel{right:16px;bottom:88px;width:calc(100vw - 32px);height:calc(100vh - 130px);max-height:calc(100vh - 130px)}#gcw-btn{right:16px;bottom:16px}}
     @media(max-width:380px){#gcw-btn-label{display:none}#gcw-btn{padding:0;width:52px;justify-content:center}}
     .gcw-thread-subbar{padding:6px 14px;background:#E1F5EE;border-bottom:1px solid #e0ded8;flex-shrink:0}
-    @media(max-width:480px){.gcw-thread-subbar{padding:5px 12px}#gcw-thread-head{padding:8px 14px}}
+    @media(max-width:480px){.gcw-thread-subbar{padding:4px 12px}#gcw-thread-head{padding:6px 14px}}
     #gcw-book-viewing-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:9px;background:#fff;color:#085041;border:1.5px solid #0F6E56;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s}
     #gcw-book-viewing-btn:hover{background:#E1F5EE}
     #gcw-viewing-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2200;align-items:center;justify-content:center;padding:20px;font-family:'Inter',sans-serif}
@@ -150,13 +150,11 @@
       <div id="gcw-thread">
         <div id="gcw-thread-head">
           <button class="back" id="gcw-back" aria-label="Back"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
-          <div id="gcw-thread-info">
-            <div id="gcw-thread-name">Seller</div>
-            <div id="gcw-presence" style="font-size:10.5px;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:5px;margin-top:1px">
-              <span id="gcw-presence-dot" style="width:6px;height:6px;border-radius:50%;background:#9a9a94;flex-shrink:0"></span>
-              <span id="gcw-presence-text">Offline</span>
-            </div>
-            <a id="gcw-thread-link" href="#">View listing →</a>
+          <div id="gcw-thread-info" style="display:flex;align-items:center;gap:6px;min-width:0">
+            <div id="gcw-thread-name" style="flex-shrink:1;min-width:0">Seller</div>
+            <span id="gcw-presence-dot" style="width:6px;height:6px;border-radius:50%;background:#9a9a94;flex-shrink:0"></span>
+            <span id="gcw-presence-text" style="font-size:10px;color:rgba(255,255,255,.75);white-space:nowrap;flex-shrink:0">Offline</span>
+            <a id="gcw-thread-link" href="#" style="margin-left:auto;flex-shrink:0;white-space:nowrap">View listing →</a>
           </div>
         </div>
         <div class="gcw-thread-subbar">
