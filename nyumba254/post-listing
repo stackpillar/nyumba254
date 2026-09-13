@@ -584,6 +584,10 @@
         </div>
       </div>
       <div class="field">
+        <label>Number of units <span class="opt">optional — e.g. a block of 6 shops</span></label>
+        <input type="number" id="comm_units" placeholder="e.g. 6" min="1"/>
+      </div>
+      <div class="field">
         <label>Frontage / visibility <span class="opt">optional</span></label>
         <input type="text" id="comm_frontage" placeholder="e.g. Main road frontage, high foot traffic"/>
       </div>
@@ -1896,11 +1900,17 @@ async function submitListing() {
     const price = parseFloat(document.getElementById('price').value) || 0;
     let validTiers = (meta.group === 'boarding' || standardUnitsEnabled()) ? getValidTiers() : [];
 
-    // Standard listings (apartment) with a plain "Number of Units" count but no
-    // named tiers get one auto-generated "Unit Type 1" row, so occupancy tracking
-    // (donut + mark-occupied controls) works the same way boarding houses do.
+    // Standard listings (apartment) or Shops & Offices with a plain "Number of
+    // units" count but no named tiers get one auto-generated "Unit Type 1" row,
+    // so occupancy tracking (donut + mark-occupied controls) works the same way
+    // boarding houses do.
     if (meta.group === 'standard' && !standardUnitsEnabled()) {
       const unitCount = parseInt(document.getElementById('std_units').value) || 0;
+      if (unitCount > 0) {
+        validTiers = [{ label: 'Unit Type 1', capacity: '', price: price || 0, quantity: unitCount }];
+      }
+    } else if (meta.group === 'commercial') {
+      const unitCount = parseInt(document.getElementById('comm_units').value) || 0;
       if (unitCount > 0) {
         validTiers = [{ label: 'Unit Type 1', capacity: '', price: price || 0, quantity: unitCount }];
       }
@@ -1941,6 +1951,7 @@ async function submitListing() {
         parking: document.getElementById('comm_parking').value || null,
         frontage: document.getElementById('comm_frontage').value || null,
         condition: document.getElementById('comm_condition').value || null,
+        units: document.getElementById('comm_units').value || null,
       });
     }
 
