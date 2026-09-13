@@ -1894,7 +1894,17 @@ async function submitListing() {
   try {
     const meta = NK_CATEGORIES[selectedCat];
     const price = parseFloat(document.getElementById('price').value) || 0;
-    const validTiers = (meta.group === 'boarding' || standardUnitsEnabled()) ? getValidTiers() : [];
+    let validTiers = (meta.group === 'boarding' || standardUnitsEnabled()) ? getValidTiers() : [];
+
+    // Standard listings (apartment) with a plain "Number of Units" count but no
+    // named tiers get one auto-generated "Unit Type 1" row, so occupancy tracking
+    // (donut + mark-occupied controls) works the same way boarding houses do.
+    if (meta.group === 'standard' && !standardUnitsEnabled()) {
+      const unitCount = parseInt(document.getElementById('std_units').value) || 0;
+      if (unitCount > 0) {
+        validTiers = [{ label: 'Unit Type 1', capacity: '', price: price || 0, quantity: unitCount }];
+      }
+    }
 
     const detailsPayload = {};
     if (meta.group === 'standard') {
