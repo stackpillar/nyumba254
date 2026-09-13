@@ -1390,8 +1390,8 @@ function renderListing(l) {
     document.getElementById('video-embed-wrap').innerHTML = nkRenderVideoEmbed(videos[0].url);
   }
 
-  /* Boarding room options + occupancy donut */
-  if (meta.group === 'boarding') { renderUnitAvailability(); renderOccupancyOverview(); }
+  /* Unit options + occupancy donut — shown for ANY listing with tracked units, not just boarding */
+  if (listingUnits.length) { renderUnitAvailability(); renderOccupancyOverview(); }
 
   if (listingUnits.length) {
     document.getElementById('enq-unit-type-field').style.display = 'block';
