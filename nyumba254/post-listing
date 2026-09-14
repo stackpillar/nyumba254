@@ -1846,7 +1846,9 @@ function applyDraftData(draft) {
 
   if (Array.isArray(draft.tierRows) && draft.tierRows.length) {
     tierRows = draft.tierRows; tierSeq = Math.max(0, ...tierRows.map(t => t.id || 0));
-    renderTierRows();
+    // Don't render yet — price_frequency hasn't been restored to the DOM
+    // yet at this point, so the tier price labels would pick up the wrong
+    // (default) frequency. Rendered below, after all fields are set.
   }
 
   if (draft.mapLat && draft.mapLng) {
@@ -1864,6 +1866,10 @@ function applyDraftData(draft) {
   });
   handleAreaChange();
   if (document.getElementById('std_has_units')?.checked) toggleStandardUnits(true);
+
+  // Now that price_frequency (and everything else) is correctly set on the
+  // DOM, render the tier rows so their price label matches the real saved frequency.
+  if (tierRows.length) renderTierRows();
 
   if (draft.step) goStepRaw(draft.step);
 }
