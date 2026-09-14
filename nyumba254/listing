@@ -1353,6 +1353,10 @@ function renderListing(l) {
   if (l.profiles?.verification_status === 'verified') badges.push(`<span class="status-pill verified"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg>Reviewed by Nyumba254</span>`);
   badges.push(`<span class="status-pill plain">${meta.label}</span>`);
   if (meta.group === 'boarding') badges.push(`<span class="status-pill plain">Student friendly</span>`);
+  if (meta.group === 'standard' && d.furnished) {
+    const furnishedLabel = d.furnished === 'yes' ? 'Fully Furnished' : d.furnished === 'partial' ? 'Partly Furnished' : 'Unfurnished';
+    badges.push(`<span class="status-pill plain">${furnishedLabel}</span>`);
+  }
   document.getElementById('badge-row').innerHTML = badges.join('');
 
   document.getElementById('listing-title').textContent = l.title;
@@ -1364,12 +1368,17 @@ function renderListing(l) {
   if (meta.group === 'standard') {
     let bedroomStat = { val: d.bedrooms == 0 ? 'Studio' : (d.bedrooms || '—'), lbl: d.bedrooms == 0 ? 'Bedsitter' : 'Bedrooms' };
     if (l.category === 'apartment' && listingUnits.length) {
-      const bedroomVals = [...new Set(listingUnits.map(u => u.bedrooms).filter(b => b != null))].sort((a,b)=>a-b);
-      const fmt = b => b == 0 ? 'Studio' : `${b}BR`;
-      if (bedroomVals.length > 1) {
-        bedroomStat = { val: `${fmt(bedroomVals[0])}–${fmt(bedroomVals[bedroomVals.length-1])}`, lbl: 'Bedrooms' };
-      } else if (bedroomVals.length === 1) {
-        bedroomStat = { val: bedroomVals[0] == 0 ? 'Studio' : bedroomVals[0], lbl: bedroomVals[0] == 0 ? 'Bedsitter' : 'Bedrooms' };
+      if (listingUnits.length > 1) {
+        const totalUnits = listingUnits.reduce((s,u) => s + (u.quantity_total ?? 0), 0);
+        bedroomStat = { val: totalUnits, lbl: 'Total units' };
+      } else {
+        const bedroomVals = [...new Set(listingUnits.map(u => u.bedrooms).filter(b => b != null))].sort((a,b)=>a-b);
+        const fmt = b => b == 0 ? 'Studio' : `${b}BR`;
+        if (bedroomVals.length > 1) {
+          bedroomStat = { val: `${fmt(bedroomVals[0])}–${fmt(bedroomVals[bedroomVals.length-1])}`, lbl: 'Bedrooms' };
+        } else if (bedroomVals.length === 1) {
+          bedroomStat = { val: bedroomVals[0] == 0 ? 'Studio' : bedroomVals[0], lbl: bedroomVals[0] == 0 ? 'Bedsitter' : 'Bedrooms' };
+        }
       }
     }
     stats = [
@@ -1379,10 +1388,21 @@ function renderListing(l) {
     ];
   } else if (meta.group === 'boarding') {
     const totalUnits = listingUnits.reduce((s,u) => s + (u.quantity_total ?? u.quantity_available ?? 0), 0) || d.total_beds || 0;
+    let priceRange = '—';
+    if (listingUnits.length) {
+      const prices = listingUnits.map(u => u.price).filter(p => p != null && p > 0);
+      if (prices.length) {
+        const minPrice = Math.min(...prices);
+        const maxPrice = Math.max(...prices);
+        priceRange = minPrice === maxPrice 
+          ? `KES ${Number(minPrice).toLocaleString('en-KE')}`
+          : `KES ${Number(minPrice).toLocaleString('en-KE')}–${Number(maxPrice).toLocaleString('en-KE')}`;
+      }
+    }
     stats = [
       { val: totalUnits, lbl: 'Spaces' },
+      { val: priceRange, lbl: 'Price/month' },
       { val: nkTitleCase(d.gender || 'mixed'), lbl: 'Accommodation' },
-      { val: d.institution || '—', lbl: 'Nearby' },
     ];
   } else if (meta.group === 'airbnb') {
     stats = [
@@ -1416,6 +1436,7 @@ function renderListing(l) {
     if (d.parking) detailItems.push(['Parking', nkTitleCase(d.parking)]);
     if (d.condition) detailItems.push(['Condition', d.condition === 'fitted' ? 'Fitted / ready to use' : 'Shell / bare']);
     if (d.frontage) detailItems.push(['Frontage', d.frontage]);
+    if (d.units) detailItems.push(['Number of units', d.units]);
   } else if (meta.group === 'airbnb') {
     if (d.checkin) detailItems.push(['Check-in / out', d.checkin]);
   }
@@ -1508,16 +1529,28 @@ function renderUnitAvailability() {
   const card = document.getElementById('units-card');
   if (!listingUnits.length) { card.style.display = 'none'; return; }
   card.style.display = 'block';
+  const meta = NK_CATEGORIES[listing.category];
+  const roomTypesMap = meta.group === 'boarding' && listing.details?.room_types
+    ? Object.fromEntries(listing.details.room_types.map(rt => [rt.label, rt.capacity]))
+    : {};
+  
   document.getElementById('unit-type-list').innerHTML = listingUnits.map(u => {
     const available = u.quantity_available ?? 0;
     const total = u.quantity_total ?? null;
     const soldOut = available <= 0;
+    let capacityDisplay = '';
+    if (meta.group === 'standard' && u.bedrooms != null) {
+      capacityDisplay = u.bedrooms == 0 ? 'Studio' : u.bedrooms + ' bedroom' + (u.bedrooms === 1 ? '' : 's');
+    } else if (meta.group === 'boarding' && roomTypesMap[u.unit_label]) {
+      const capacity = roomTypesMap[u.unit_label];
+      capacityDisplay = capacity + ' person' + (capacity === 1 ? '' : 's');
+    }
     return `
       <div class="room-row">
         <div class="room-row-icon"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="13" rx="1"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>
         <div class="room-row-main">
           <div class="room-row-label">${escHtml(u.unit_label)}</div>
-          ${(listing.category==='apartment'||listing.category==='house') && u.bedrooms!=null ? `<div class="room-row-sub">${u.bedrooms==0?'Studio':u.bedrooms+' bedroom'+(u.bedrooms===1?'':'s')}</div>` : ''}
+          ${capacityDisplay ? `<div class="room-row-sub">${capacityDisplay}</div>` : ''}
         </div>
         <div class="room-row-avail ${soldOut?'none':''}">${total ? `${available} of ${total}` : `${available}`}<strong>${soldOut ? 'Full' : 'spaces open'}</strong></div>
         <div class="room-row-price"><strong>KES ${Number(u.price).toLocaleString('en-KE')}</strong><span>/month</span></div>
