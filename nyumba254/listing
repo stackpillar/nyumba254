@@ -1066,8 +1066,8 @@ const NK_AMENITIES = [
   { key:'has_gym', label:'Gym' }, { key:'has_pool', label:'Swimming pool' },
   { key:'has_pets_allowed', label:'Pets allowed' }, { key:'has_backup_power', label:'Backup power' },
 ];
-const NK_FREQ_LABEL = { month:'/month', once:'', night:'/night', term:'/term', week:'/week' };
-const NK_FREQ_META  = { month:'Monthly — negotiable', once:'Asking price — negotiable', night:'Nightly rate — negotiable', term:'Per term — negotiable', week:'Weekly rate — negotiable' };
+const NK_FREQ_LABEL = { month:'/month', once:'', night:'/night', term:'/term', semester:'/semester', week:'/week' };
+const NK_FREQ_META  = { month:'Monthly — negotiable', once:'Asking price — negotiable', night:'Nightly rate — negotiable', term:'Per term — negotiable', semester:'Per semester — negotiable', week:'Weekly rate — negotiable' };
 
 const NK_COUNTIES = [
   "Mombasa","Kwale","Kilifi","Tana River","Lamu","Taita-Taveta","Garissa","Wajir","Mandera",
@@ -1468,8 +1468,9 @@ function renderListing(l) {
   if (listingUnits.length) {
     document.getElementById('enq-unit-type-field').style.display = 'block';
     const sel = document.getElementById('enq-unit-type');
+    const freqSuffixSel = NK_FREQ_LABEL[l.price_frequency || 'month'] || '';
     sel.innerHTML = '<option value="">Any available unit</option>' + listingUnits.filter(u => (u.quantity_available ?? 0) > 0)
-      .map(u => `<option value="${escHtml(u.unit_label)}">${escHtml(u.unit_label)} — KES ${Number(u.price).toLocaleString('en-KE')}${meta.group==='boarding'?'/mo':''}</option>`).join('');
+      .map(u => `<option value="${escHtml(u.unit_label)}">${escHtml(u.unit_label)} — KES ${Number(u.price).toLocaleString('en-KE')}${meta.group==='boarding'?freqSuffixSel:''}</option>`).join('');
   }
 
   /* Where you'll be */
@@ -1553,7 +1554,7 @@ function renderUnitAvailability() {
           ${capacityDisplay ? `<div class="room-row-sub">${capacityDisplay}</div>` : ''}
         </div>
         <div class="room-row-avail ${soldOut?'none':''}">${total ? `${available} of ${total}` : `${available}`}<strong>${soldOut ? 'Full' : 'spaces open'}</strong></div>
-        <div class="room-row-price"><strong>KES ${Number(u.price).toLocaleString('en-KE')}</strong><span>/month</span></div>
+        <div class="room-row-price"><strong>KES ${Number(u.price).toLocaleString('en-KE')}</strong><span>${NK_FREQ_LABEL[listing.price_frequency || 'month'] || '/month'}</span></div>
         <button class="room-row-btn" ${soldOut?'disabled':''} onclick="selectRoomAndScroll('${escAttr(u.unit_label)}')">${soldOut ? 'Fully booked' : 'Send Inquiry'}</button>
       </div>`;
   }).join('');
