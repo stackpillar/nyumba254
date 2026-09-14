@@ -154,6 +154,9 @@
     .amenity-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; }
     .amenity-chip { display:flex; align-items:center; gap:8px; padding:12px; border-radius:var(--radius); background:var(--surface); font-size:13px; font-weight:600; color:var(--text-2); }
     .amenity-chip svg { width:16px; height:16px; stroke:var(--green-dark); fill:none; stroke-width:2.6; flex-shrink:0; }
+    .detail-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:14px; }
+    .detail-item .detail-label { font-size:11px; color:var(--text-3); text-transform:uppercase; letter-spacing:.04em; margin-bottom:3px; }
+    .detail-item .detail-value { font-size:14px; font-weight:600; color:var(--text); }
 
     .desc-text { font-size:14px; color:var(--text-2); line-height:1.8; white-space:pre-line; }
     .desc-text.collapsed { display:-webkit-box; -webkit-line-clamp:6; -webkit-box-orient:vertical; overflow:hidden; }
@@ -618,6 +621,15 @@
           <span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span id="listing-posted">Posted —</span></span>
         </div>
 
+        <!-- Property details — bathrooms, floor area, parking, security / commercial specifics -->
+        <div class="lcard" id="property-details-card" style="display:none">
+          <div class="lcard-head">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+            <h3>Property Details</h3>
+          </div>
+          <div class="detail-grid" id="property-details-grid"></div>
+        </div>
+
         <!-- Room options & pricing (boarding houses) -->
         <div class="lcard" id="units-card" style="display:none">
           <div class="lcard-head">
@@ -1039,10 +1051,11 @@ const nkSessionPromise = db.auth.getSession();
 
 /* ── Property types + amenities — must mirror post-listing.html ── */
 const NK_CATEGORIES = {
-  apartment: { label: 'Apartment', group: 'standard' },
-  house:     { label: 'House',     group: 'standard' },
-  boarding:  { label: 'Boarding House', group: 'boarding' },
-  airbnb:    { label: 'Airbnb / Holiday Rental', group: 'airbnb' },
+  apartment:  { label: 'Apartment', group: 'standard' },
+  house:      { label: 'House',     group: 'standard' },
+  boarding:   { label: 'Boarding House', group: 'boarding' },
+  airbnb:     { label: 'Airbnb / Holiday Rental', group: 'airbnb' },
+  commercial: { label: 'Shops & Offices', group: 'commercial' },
 };
 const NK_AMENITIES = [
   { key:'has_water', label:'Water supply' }, { key:'has_electricity', label:'Electricity' },
@@ -1349,11 +1362,18 @@ function renderListing(l) {
   /* Stat strip — 3 boxes, category-driven */
   let stats = [];
   if (meta.group === 'standard') {
-    const totalUnits = l.category === 'apartment' && listingUnits.length
-      ? listingUnits.reduce((s,u) => s + (u.quantity_total ?? 0), 0)
-      : null;
+    let bedroomStat = { val: d.bedrooms == 0 ? 'Studio' : (d.bedrooms || '—'), lbl: d.bedrooms == 0 ? 'Bedsitter' : 'Bedrooms' };
+    if (l.category === 'apartment' && listingUnits.length) {
+      const bedroomVals = [...new Set(listingUnits.map(u => u.bedrooms).filter(b => b != null))].sort((a,b)=>a-b);
+      const fmt = b => b == 0 ? 'Studio' : `${b}BR`;
+      if (bedroomVals.length > 1) {
+        bedroomStat = { val: `${fmt(bedroomVals[0])}–${fmt(bedroomVals[bedroomVals.length-1])}`, lbl: 'Bedrooms' };
+      } else if (bedroomVals.length === 1) {
+        bedroomStat = { val: bedroomVals[0] == 0 ? 'Studio' : bedroomVals[0], lbl: bedroomVals[0] == 0 ? 'Bedsitter' : 'Bedrooms' };
+      }
+    }
     stats = [
-      { val: totalUnits || (d.bedrooms == 0 ? 'Studio' : d.bedrooms || '—'), lbl: totalUnits ? 'Units' : (d.bedrooms == 0 ? 'Bedsitter' : 'Bedrooms') },
+      bedroomStat,
       { val: nkTitleCase(d.furnished === 'yes' ? 'Furnished' : d.furnished === 'partial' ? 'Partly furnished' : d.furnished === 'no' ? 'Unfurnished' : '—'), lbl: 'Furnishing' },
       { val: NK_FREQ_META[freq] ? NK_FREQ_META[freq].split(' —')[0] : '—', lbl: 'Terms' },
     ];
@@ -1370,11 +1390,40 @@ function renderListing(l) {
       { val: d.bedrooms || '—', lbl: 'Bedrooms' },
       { val: d.min_stay ? `${d.min_stay} night${d.min_stay==1?'':'s'}` : '—', lbl: 'Min. stay' },
     ];
+  } else if (meta.group === 'commercial') {
+    stats = [
+      { val: d.property_type ? nkTitleCase(d.property_type) : '—', lbl: 'Type' },
+      { val: d.size_sqm ? d.size_sqm + ' m²' : '—', lbl: 'Floor area' },
+      { val: d.lease_type === 'sale' ? 'For sale' : 'Lease', lbl: 'Terms' },
+    ];
   }
   document.getElementById('stat-strip').innerHTML = stats.map(s => `<div class="stat-box"><div class="val">${s.val}</div><div class="lbl">${s.lbl}</div></div>`).join('');
 
   document.getElementById('listing-views').textContent = `${l.views||0} views`;
   document.getElementById('listing-posted').textContent = `Posted ${l.created_at ? timeAgoShort(l.created_at) : '—'}`;
+
+  /* Property details — bathrooms/floor area/parking/security (standard), commercial specifics, or Airbnb check-in */
+  const detailItems = [];
+  if (meta.group === 'standard') {
+    if (d.bathrooms) detailItems.push(['Bathrooms', d.bathrooms]);
+    if (d.size_sqm) detailItems.push(['Floor area', d.size_sqm + ' m²']);
+    if (d.parking) detailItems.push(['Parking', nkTitleCase(d.parking)]);
+    if (d.security) detailItems.push(['Security', nkTitleCase(d.security)]);
+  } else if (meta.group === 'commercial') {
+    if (d.property_type) detailItems.push(['Property type', nkTitleCase(d.property_type)]);
+    if (d.size_sqm) detailItems.push(['Floor area', d.size_sqm + ' m²']);
+    if (d.lease_type) detailItems.push(['Lease/Sale', d.lease_type === 'sale' ? 'For sale' : 'Lease (rent)']);
+    if (d.parking) detailItems.push(['Parking', nkTitleCase(d.parking)]);
+    if (d.condition) detailItems.push(['Condition', d.condition === 'fitted' ? 'Fitted / ready to use' : 'Shell / bare']);
+    if (d.frontage) detailItems.push(['Frontage', d.frontage]);
+  } else if (meta.group === 'airbnb') {
+    if (d.checkin) detailItems.push(['Check-in / out', d.checkin]);
+  }
+  if (detailItems.length) {
+    document.getElementById('property-details-card').style.display = 'block';
+    document.getElementById('property-details-grid').innerHTML = detailItems.map(([label,value]) =>
+      `<div class="detail-item"><div class="detail-label">${escHtml(label)}</div><div class="detail-value">${escHtml(String(value))}</div></div>`).join('');
+  }
 
   /* Amenities */
   const amenities = Array.isArray(l.amenities) ? l.amenities : [];
