@@ -404,10 +404,6 @@
       <h2 id="details-standard-title">Apartment Details</h2>
       <p class="hint">Add the structured details that make the listing easier to review and match.</p>
       <div class="grid-2">
-        <div class="field" id="units-field">
-          <label>Number of Units <span class="req">*</span></label>
-          <input type="number" id="std_units" placeholder="e.g. 10" min="1"/>
-        </div>
         <div class="field">
           <label>Number of Bathrooms <span class="req">*</span></label>
           <input type="number" id="std_bathrooms" placeholder="e.g. 2" min="0"/>
@@ -1248,7 +1244,6 @@ function applyCategoryUI() {
   document.getElementById('details-airbnb').style.display   = meta.group === 'airbnb'   ? 'block' : 'none';
   document.getElementById('details-commercial').style.display = meta.group === 'commercial' ? 'block' : 'none';
   document.getElementById('details-standard-title').textContent = meta.detailsTitle;
-  document.getElementById('units-field').style.display = selectedCat === 'apartment' ? 'block' : 'none';
   document.getElementById('bedrooms-row').style.display = selectedCat === 'house' || selectedCat === 'apartment' ? 'grid' : 'none';
 
   // Step 2 price label/frequency defaults
@@ -1638,7 +1633,7 @@ function renderReview() {
   let detailRows = '';
   if (meta.group === 'standard') {
     detailRows = `
-      <div class="summary-row"><span>${selectedCat === 'apartment' ? 'Units' : 'Bedrooms'}</span><strong>${selectedCat === 'apartment' ? (document.getElementById('std_units').value || '—') : (document.getElementById('std_bedrooms').value || '—')}</strong></div>
+      <div class="summary-row"><span>Bedrooms</span><strong>${document.getElementById('std_bedrooms').value || '—'}</strong></div>
       <div class="summary-row"><span>Bathrooms</span><strong>${document.getElementById('std_bathrooms').value || '—'}</strong></div>
       <div class="summary-row"><span>Furnished</span><strong>${document.getElementById('std_furnished').value || '—'}</strong></div>
       <div class="summary-row"><span>Parking</span><strong>${document.getElementById('std_parking').value || '—'}</strong></div>
@@ -1900,16 +1895,11 @@ async function submitListing() {
     const price = parseFloat(document.getElementById('price').value) || 0;
     let validTiers = (meta.group === 'boarding' || standardUnitsEnabled()) ? getValidTiers() : [];
 
-    // Standard listings (apartment) or Shops & Offices with a plain "Number of
-    // units" count but no named tiers get one auto-generated "Unit Type 1" row,
-    // so occupancy tracking (donut + mark-occupied controls) works the same way
-    // boarding houses do.
-    if (meta.group === 'standard' && !standardUnitsEnabled()) {
-      const unitCount = parseInt(document.getElementById('std_units').value) || 0;
-      if (unitCount > 0) {
-        validTiers = [{ label: 'Unit Type 1', capacity: '', price: price || 0, quantity: unitCount }];
-      }
-    } else if (meta.group === 'commercial') {
+    // Shops & Offices keep their own separate units-count shortcut (comm_units),
+    // unchanged. Apartments have NO shortcut: no tiers checked = 1 implicit unit,
+    // no listing_units row, no occupancy tracking — exactly like an ordinary
+    // single apartment today.
+    if (meta.group === 'commercial') {
       const unitCount = parseInt(document.getElementById('comm_units').value) || 0;
       if (unitCount > 0) {
         validTiers = [{ label: 'Unit Type 1', capacity: '', price: price || 0, quantity: unitCount }];
@@ -1919,7 +1909,6 @@ async function submitListing() {
     const detailsPayload = {};
     if (meta.group === 'standard') {
       Object.assign(detailsPayload, {
-        units: document.getElementById('std_units').value || null,
         bathrooms: document.getElementById('std_bathrooms').value || null,
         bedrooms: document.getElementById('std_bedrooms').value || null,
         size_sqm: document.getElementById('std_size').value || null,

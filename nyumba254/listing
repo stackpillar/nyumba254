@@ -1349,7 +1349,9 @@ function renderListing(l) {
   /* Stat strip — 3 boxes, category-driven */
   let stats = [];
   if (meta.group === 'standard') {
-    const totalUnits = l.category === 'apartment' && d.units ? d.units : null;
+    const totalUnits = l.category === 'apartment' && listingUnits.length
+      ? listingUnits.reduce((s,u) => s + (u.quantity_total ?? 0), 0)
+      : null;
     stats = [
       { val: totalUnits || (d.bedrooms == 0 ? 'Studio' : d.bedrooms || '—'), lbl: totalUnits ? 'Units' : (d.bedrooms == 0 ? 'Bedsitter' : 'Bedrooms') },
       { val: nkTitleCase(d.furnished === 'yes' ? 'Furnished' : d.furnished === 'partial' ? 'Partly furnished' : d.furnished === 'no' ? 'Unfurnished' : '—'), lbl: 'Furnishing' },
