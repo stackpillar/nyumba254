@@ -1763,11 +1763,13 @@ async function clearDraft() {
   if (currentUser) { try { await db.from('listing_drafts').delete().eq('seller_id', currentUser.id); } catch(e) {} }
 }
 let pendingDraft = null;
+let draftPromptShown = false;
 function checkLocalDraftImmediately() {
   let local = null;
   try { const raw = localStorage.getItem(DRAFT_LS_KEY); if (raw) local = JSON.parse(raw); } catch(e) {}
   if (local && draftHasContent(local) && isDraftSane(local)) {
     pendingDraft = local;
+    draftPromptShown = true;
     showResumeDraftPrompt(local);
   }
 }
@@ -1784,7 +1786,10 @@ async function loadAndApplyDraft() {
   let draft = (local && server) ? (server.savedAt >= local.savedAt ? server : local) : (local || server);
   if (!draft || !draftHasContent(draft)) return;
   pendingDraft = draft;
-  showResumeDraftPrompt(draft);
+  if (!draftPromptShown) {
+    draftPromptShown = true;
+    showResumeDraftPrompt(draft);
+  }
 }
 function draftHasContent(draft) {
   const f = draft.fields || {};
