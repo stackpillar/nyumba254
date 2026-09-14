@@ -1211,6 +1211,10 @@ async function init() {
     document.getElementById('guest-account-notice').style.display = 'block';
   }
 
+  // Show the resume-draft prompt from localStorage immediately — don't
+  // make the user wait on network calls for something that's already on disk.
+  checkLocalDraftImmediately();
+
   await loadPlatformSettings();
   await checkFirstListing();
   updateKickerAndFeeNote();
@@ -1727,8 +1731,10 @@ function scheduleDraftSave() {
   if (!draftsReady) return;
   clearTimeout(draftLocalTimer);
   draftLocalTimer = setTimeout(() => {
+    const data = collectDraftData();
+    if (!isDraftSane(data)) return; // don't persist obviously corrupted form state
     document.getElementById('save-status').textContent = '✓ Draft saved';
-    try { localStorage.setItem(DRAFT_LS_KEY, JSON.stringify(collectDraftData())); } catch(e) {}
+    try { localStorage.setItem(DRAFT_LS_KEY, JSON.stringify(data)); } catch(e) {}
   }, 500);
   if (currentUser) {
     clearTimeout(draftServerTimer);
@@ -1757,6 +1763,14 @@ async function clearDraft() {
   if (currentUser) { try { await db.from('listing_drafts').delete().eq('seller_id', currentUser.id); } catch(e) {} }
 }
 let pendingDraft = null;
+function checkLocalDraftImmediately() {
+  let local = null;
+  try { const raw = localStorage.getItem(DRAFT_LS_KEY); if (raw) local = JSON.parse(raw); } catch(e) {}
+  if (local && draftHasContent(local) && isDraftSane(local)) {
+    pendingDraft = local;
+    showResumeDraftPrompt(local);
+  }
+}
 async function loadAndApplyDraft() {
   let local = null;
   try { const raw = localStorage.getItem(DRAFT_LS_KEY); if (raw) local = JSON.parse(raw); } catch(e) {}
@@ -1776,6 +1790,14 @@ function draftHasContent(draft) {
   const f = draft.fields || {};
   return !!(f.title?.trim() || f.description?.trim() || f.price);
 }
+// Rejects/repairs drafts that plainly aren't real form data (e.g. someone
+// pasted raw markup into a text field). Cheap guard against garbage drafts.
+function isDraftSane(draft) {
+  const t = (draft.fields?.title || '');
+  if (t.length > 200) return false;
+  if (/<!DOCTYPE|<html|<script/i.test(t)) return false;
+  return true;
+}
 function timeAgoLabel(ts) {
   const mins = Math.floor((Date.now() - ts) / 60000);
   if (mins < 1) return 'a moment ago';
@@ -1785,8 +1807,11 @@ function timeAgoLabel(ts) {
   return `${Math.floor(hrs/24)} day(s) ago`;
 }
 function showResumeDraftPrompt(draft) {
+  if (!isDraftSane(draft)) { pendingDraft = null; return; }
   const savedAgo = timeAgoLabel(draft.savedAt);
-  const titleBit = draft.fields?.title ? ` — "${draft.fields.title}"` : '';
+  const rawTitle = draft.fields?.title || '';
+  const shortTitle = rawTitle.length > 60 ? rawTitle.slice(0, 60) + '…' : rawTitle;
+  const titleBit = shortTitle ? ` — "${shortTitle}"` : '';
   document.getElementById('resume-draft-text').textContent = `We saved your progress from ${savedAgo}${titleBit}. Would you like to continue where you left off?`;
   document.getElementById('resume-draft-modal').classList.add('show');
 }
