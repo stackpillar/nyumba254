@@ -1468,6 +1468,7 @@ function renderUnitAvailability() {
         <div class="room-row-icon"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="13" rx="1"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>
         <div class="room-row-main">
           <div class="room-row-label">${escHtml(u.unit_label)}</div>
+          ${(listing.category==='apartment'||listing.category==='house') && u.bedrooms!=null ? `<div class="room-row-sub">${u.bedrooms==0?'Studio':u.bedrooms+' bedroom'+(u.bedrooms===1?'':'s')}</div>` : ''}
         </div>
         <div class="room-row-avail ${soldOut?'none':''}">${total ? `${available} of ${total}` : `${available}`}<strong>${soldOut ? 'Full' : 'spaces open'}</strong></div>
         <div class="room-row-price"><strong>KES ${Number(u.price).toLocaleString('en-KE')}</strong><span>/month</span></div>
