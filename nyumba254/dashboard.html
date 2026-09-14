@@ -6141,7 +6141,7 @@ function renderPerformanceSummary(){
 function renderQuickListings(){
   const el=document.getElementById('quick-listings');
   if(!allListings.length){el.innerHTML=`<div style="text-align:center;padding:20px 0;color:var(--text-3);font-size:13px">No listings yet. <a href="/post-listing" style="color:var(--green);font-weight:500">Post one →</a></div>`;return;}
-  el.innerHTML=allListings.slice(0,5).map(l=>{const cover=(l.listing_photos||[]).find(p=>p.is_cover)||(l.listing_photos||[])[0];const img=cover?`<img src="${cover.url}" alt=""/>`:`<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;const d=getListingStatusDisplay(l);const trialDays=getTrialDaysLeft(l);const trialTxt=trialDays!==null?` · Trial: ${trialDays}d left`:'';const hasUnitTypes=(l.listing_units&&l.listing_units.length>0);const priceTxt=hasUnitTypes?muPriceRangeText(l):`KES ${Number(l.price).toLocaleString('en-KE')}${l.price_type==='rent'?'/mo':''}`;return `<div class="quick-listing"><div class="quick-img">${img}</div><div style="flex:1;min-width:0"><div class="quick-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(l.title)}</div><div class="quick-meta" style="${l.is_disabled?'color:var(--red)':''}">${l.area} · ${d.label}${trialTxt}</div></div><div class="quick-price">${priceTxt}</div></div>`;}).join('');
+  el.innerHTML=allListings.slice(0,5).map(l=>{const cover=(l.listing_photos||[]).find(p=>p.is_cover)||(l.listing_photos||[])[0];const img=cover?`<img src="${cover.url}" alt=""/>`:`<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;const d=getListingStatusDisplay(l);const trialDays=getTrialDaysLeft(l);const trialTxt=trialDays!==null?` · Trial: ${trialDays}d left`:'';const hasUnitTypes=(l.listing_units&&l.listing_units.length>0);const priceTxt=hasUnitTypes?muPriceRangeText(l):`KES ${Number(l.price).toLocaleString('en-KE')}${NK_DASH_FREQ_SUFFIX[l.price_frequency||(l.price_type==='rent'?'month':'once')]||''}`;return `<div class="quick-listing"><div class="quick-img">${img}</div><div style="flex:1;min-width:0"><div class="quick-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(l.title)}</div><div class="quick-meta" style="${l.is_disabled?'color:var(--red)':''}">${l.area} · ${d.label}${trialTxt}</div></div><div class="quick-price">${priceTxt}</div></div>`;}).join('');
 }
 
 function debounce(fn,ms){let t;return function(...args){clearTimeout(t);t=setTimeout(()=>fn.apply(this,args),ms);};}
@@ -6156,12 +6156,13 @@ function getTrialDaysLeft(l){
 }
 
 // ── Multi-unit helpers used across the table, quick list, and the modal ──
+const NK_DASH_FREQ_SUFFIX = { month:'/mo', once:'', night:'/night', term:'/term', semester:'/semester', week:'/week' };
 function muPriceRangeText(l){
   const units=l.listing_units||[];
   const prices=units.map(u=>Number(u.price)).filter(p=>!isNaN(p));
   const min=prices.length?Math.min(...prices):Number(l.price_min)||Number(l.price)||0;
   const max=prices.length?Math.max(...prices):Number(l.price_max)||Number(l.price)||0;
-  const suffix=l.price_type==='rent'?'/mo':'';
+  const suffix=NK_DASH_FREQ_SUFFIX[l.price_frequency||(l.price_type==='rent'?'month':'once')]||'';
   return min===max?`KES ${min.toLocaleString('en-KE')}${suffix}`:`KES ${min.toLocaleString('en-KE')}–${max.toLocaleString('en-KE')}${suffix}`;
 }
 function muAvailabilitySummary(l){
@@ -6452,7 +6453,7 @@ const contactHideBtn = globalContactHidden
         <div class="listing-area-text">${l.area}${l.sub_area?' · '+l.sub_area:''}</div>
         <div class="listing-notes-inline">${noteHtml}</div>
       </div></div></td>
-      <td><div class="listing-price-text">${hasUnitTypes?muPriceRangeText(l):`KES ${Number(l.price).toLocaleString('en-KE')}${l.price_type==='rent'?'/mo':''}`}</div><div class="listing-price-sub">${hasUnitTypes?(l.listing_units.length+' unit type(s)'):(l.price_type==='rent'?'Monthly rent':'For sale')}</div></td>
+      <td><div class="listing-price-text">${hasUnitTypes?muPriceRangeText(l):`KES ${Number(l.price).toLocaleString('en-KE')}${NK_DASH_FREQ_SUFFIX[l.price_frequency||(l.price_type==='rent'?'month':'once')]||''}`}</div><div class="listing-price-sub">${hasUnitTypes?(l.listing_units.length+' unit type(s)'):(l.price_type==='rent'?'Monthly rent':'For sale')}</div></td>
       <td><span class="status ${d.cls}">${d.label}</span></td>
       <td><span style="font-size:13px;font-weight:600;color:${mc>0?'var(--green-dark)':'var(--text-3)'}">${mc}${uc>0?` <span style="color:var(--red);font-size:11px">(${uc} new)</span>`:''}</span></td>
       <td style="font-size:13px;color:var(--text-3)">${l.views||0}</td>
