@@ -1554,7 +1554,7 @@ function renderUnitAvailability() {
           ${capacityDisplay ? `<div class="room-row-sub">${capacityDisplay}</div>` : ''}
         </div>
         <div class="room-row-avail ${soldOut?'none':''}">${total ? `${available} of ${total}` : `${available}`}<strong>${soldOut ? 'Full' : 'spaces open'}</strong></div>
-        <div class="room-row-price"><strong>KES ${Number(u.price).toLocaleString('en-KE')}</strong><span>${NK_FREQ_LABEL[listing.price_frequency || 'month'] || '/month'}</span></div>
+        <div class="room-row-price"><strong>KES ${Number(u.price).toLocaleString('en-KE')}</strong><span>${NK_FREQ_LABEL[listing.price_frequency || 'month']}</span></div>
         <button class="room-row-btn" ${soldOut?'disabled':''} onclick="selectRoomAndScroll('${escAttr(u.unit_label)}')">${soldOut ? 'Fully booked' : 'Send Inquiry'}</button>
       </div>`;
   }).join('');
