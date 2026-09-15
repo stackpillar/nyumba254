@@ -25,8 +25,8 @@
 
   .topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
   .topbar-brand{display:flex;align-items:center;gap:10px}
-  .topbar-brand-icon{width:32px;height:32px;background:var(--green);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .topbar-brand-icon svg{width:16px;height:16px;stroke:white;fill:none;stroke-width:2}
+  .topbar-brand-icon{width:32px;height:32px;background:transparent;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .topbar-brand-icon img{width:100%;height:100%;object-fit:contain}
   .topbar-brand-text{font-family:'Playfair Display',serif;font-size:16px;color:var(--green-dark)}
   .topbar-back{font-size:13px;font-weight:600;color:var(--text-2);display:flex;align-items:center;gap:6px}
   .topbar-back:hover{color:var(--green-dark)}
@@ -131,7 +131,7 @@
 <div id="app" style="display:none">
   <div class="topbar">
     <div class="topbar-brand">
-      <div class="topbar-brand-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+      <div class="topbar-brand-icon"><img src="/logo-icon.png" alt="Nyumba254"/></div>
       <span class="topbar-brand-text">Nyumba254</span>
     </div>
     <a href="/dashboard.html" class="topbar-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Back to dashboard</a>

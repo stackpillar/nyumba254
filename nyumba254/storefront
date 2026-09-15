@@ -30,8 +30,8 @@
   /* ── minimal top bar, links back to the platform ── */
   .topbar{background:var(--white);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
   .topbar-logo{display:flex;align-items:center;gap:8px;font-family:'Playfair Display',serif;font-size:16px;color:var(--green-dark);font-weight:700}
-  .topbar-logo-icon{width:26px;height:26px;background:var(--green);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .topbar-logo-icon svg{width:13px;height:13px;stroke:white;fill:none;stroke-width:2;stroke-linecap:round}
+  .topbar-logo-icon{width:26px;height:26px;background:transparent;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .topbar-logo-icon img{width:100%;height:100%;object-fit:contain}
   .topbar-cta{font-size:13px;font-weight:600;color:var(--green);border:1.5px solid var(--green);padding:7px 14px;border-radius:20px}
   .topbar-cta:hover{background:var(--green-light)}
 
@@ -133,7 +133,7 @@
 
 <div class="topbar">
   <a href="/" class="topbar-logo">
-    <span class="topbar-logo-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+    <span class="topbar-logo-icon"><img src="/logo-icon.png" alt="Nyumba254"/></span>
     Nyumba254
   </a>
   <a href="/listings" class="topbar-cta">Browse all listings</a>

@@ -16,8 +16,8 @@
     button{font-family:inherit;cursor:pointer;border:none}
     .card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);max-width:440px;width:100%;padding:36px 32px;box-shadow:0 8px 32px rgba(0,0,0,0.08)}
     .logo{display:flex;align-items:center;gap:10px;font-family:'Playfair Display',serif;font-size:19px;color:var(--green-dark);margin-bottom:28px}
-    .logo-icon{width:32px;height:32px;background:var(--green);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .logo-icon svg{width:16px;height:16px;stroke:white;fill:none;stroke-width:2}
+    .logo-icon{width:32px;height:32px;background:transparent;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .logo-icon img{width:100%;height:100%;object-fit:contain}
     h1{font-family:'Playfair Display',serif;font-size:22px;margin-bottom:8px}
     .sub{font-size:14px;color:var(--text-3);margin-bottom:24px;line-height:1.6}
     .sub strong{color:var(--text-2)}
@@ -55,7 +55,7 @@
 
   <div class="card">
     <div class="logo">
-      <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+      <div class="logo-icon"><img src="/logo-icon.png" alt="Nyumba254"/></div>
       Nyumba254
     </div>
 

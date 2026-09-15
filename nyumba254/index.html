@@ -73,19 +73,19 @@
     }
     .logo {
       display: flex; align-items: center; gap: 10px;
-      font-family: 'Playfair Display', serif; font-size: 20px; color: var(--green-dark);
+      font-family: 'Playfair Display', serif; font-size: 20px; color: var(--green-dark); font-weight: 600;
     }
     .logo-icon {
-      width: 34px; height: 34px; background: var(--green); border-radius: 8px;
+      width: 34px; height: 34px; background: transparent; border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
     }
-    .logo-icon svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 2; stroke-linecap: round; }
+    .logo-icon img { width: 100%; height: 100%; object-fit: contain; }
     .nav-links { display: flex; align-items: center; gap: 6px; }
     .nav-link { font-size: 14px; color: var(--text-2); padding: 8px 14px; border-radius: var(--radius); transition: background .15s; white-space: nowrap; }
     .nav-link:hover { background: var(--surface); color: var(--text); }
     .btn { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; padding: 9px 18px; border-radius: var(--radius); transition: all .15s; }
-    .btn-primary { background: var(--green); color: white; }
-    .btn-primary:hover { background: var(--green-dark); }
+    .btn-primary { background: var(--green); color: white; font-weight: 600; letter-spacing: .02em; }
+    .btn-primary:hover { background: var(--green-dark); box-shadow: 0 6px 20px rgba(15,110,86,0.35); transform: translateY(-1px); transition: all .2s ease; }
     .btn-outline { background: transparent; color: var(--green); border: 1.5px solid var(--green); }
     .btn-outline:hover { background: var(--green-light); }
     .nav-count { background: var(--green); color: white; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; min-width: 16px; text-align: center; }
@@ -128,7 +128,7 @@
     .hero-slide.active { opacity: 1; }
     .hero-overlay {
       position: absolute; inset: 0; z-index: 1;
-      background: linear-gradient(90deg, rgba(4,52,44,0.90) 0%, rgba(4,52,44,0.78) 30%, rgba(4,52,44,0.32) 58%, rgba(4,52,44,0.08) 78%, rgba(4,52,44,0) 100%);
+      background: linear-gradient(90deg, rgba(4,52,44,0.85) 0%, rgba(4,52,44,0.72) 30%, rgba(4,52,44,0.28) 58%, rgba(4,52,44,0.05) 78%, rgba(4,52,44,0) 100%);
     }
     .hero-content {
       position: relative; z-index: 2; width: 100%; max-width: 620px;
@@ -150,10 +150,10 @@
       text-shadow: 0 1px 10px rgba(0,0,0,0.35);
     }
     .search-box {
-      background: white; border-radius: var(--radius-lg); padding: 8px;
-      display: flex; gap: 8px; flex-wrap: wrap;
-      max-width: 560px; margin: 0 0 24px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.28);
+      background: white; border-radius: var(--radius-lg); padding: 10px;
+      display: flex; gap: 10px; flex-wrap: wrap;
+      max-width: 600px; margin: 0 0 28px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.32);
       position: relative;
     }
     .search-box select, .search-box input {
@@ -165,16 +165,17 @@
     .search-box button {
       flex-shrink: 0; background: var(--green); color: white;
       font-size: 14px; font-weight: 500; padding: 10px 22px; border-radius: 8px;
-      transition: background .15s; font-family: inherit;
+      transition: background .15s; font-family: inherit; display: flex; align-items: center; gap: 6px;
     }
-    .search-box button:hover { background: var(--green-mid); }
+    .search-box button::before { content: '🔍'; font-size: 16px; }
+    .search-box button:hover { background: var(--green-dark); box-shadow: 0 4px 12px rgba(15,110,86,0.4); transition: all .2s ease; }
     .hero-stats { display: flex; justify-content: flex-start; gap: 32px; flex-wrap: wrap; position: relative; }
     .hero-stat { text-align: center; }
     .hero-stat-val { font-size: 22px; font-weight: 600; color: white; text-shadow: 0 1px 8px rgba(0,0,0,0.35); }
     .hero-stat-lbl { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 2px; text-shadow: 0 1px 6px rgba(0,0,0,0.3); }
 
     /* ── Sections ── */
-    .section { padding: 56px 32px; }
+    .section { padding: 72px 32px; }
     .section-alt { background: var(--surface); }
     .section-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 20px; gap: 12px; }
     .section-title { font-family: 'Playfair Display', serif; font-size: 26px; color: var(--text); line-height: 1.15; }
@@ -188,7 +189,7 @@
       padding: 18px 32px; display: flex; align-items: center; justify-content: center;
       gap: 40px; flex-wrap: wrap;
     }
-    .trust-item { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; color: var(--green-dark); }
+    .trust-item { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; color: var(--green-dark); }
     .trust-item svg { width: 16px; height: 16px; stroke: var(--green); fill: none; stroke-width: 2; flex-shrink: 0; }
 
     /* ── Area pills ── */
@@ -208,15 +209,13 @@
     }
     .pill-select:hover { border-color: var(--green); color: var(--green); }
 
-    /* ── Listings grid — columns unchanged; rows are purely a function of
-       however many cards exist, CSS Grid never reserves an empty row. ── */
     .listings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
     .card {
       display: block; background: white; border-radius: 18px; border: 1px solid var(--border);
       overflow: hidden; transition: transform .2s ease, box-shadow .2s ease; cursor: pointer;
       box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 14px rgba(15,110,86,0.07);
     }
-    .card:hover, .card:focus-visible { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(15,110,86,0.16); }
+    .card:hover, .card:focus-visible { transform: translateY(-6px); box-shadow: 0 12px 36px rgba(15,110,86,0.22); transition: all .25s ease; }
     .card:active { transform: translateY(-1px) scale(0.98); }
     .card:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
     .card-img {
@@ -255,20 +254,22 @@
     .badge-cat.airbnb     { background: white; color: var(--green-dark); border: 1px solid var(--green); }
     .badge-cat.commercial { background: var(--text); color: white; }
     .card-body { padding: 16px 16px 15px; }
-    .card-area { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: var(--green); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
-    .card-area::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+    .card-area { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: var(--green); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+    .card-area::before { content: '📍'; font-size: 12px; flex-shrink: 0; }
     .card-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 3px; line-height: 1.35; }
     .card-sub { font-size: 12.5px; color: var(--text-3); margin-bottom: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .card-price { font-size: 19px; font-weight: 800; color: var(--green-dark); margin-bottom: 12px; letter-spacing: -.01em; }
-    .card-price span { font-size: 12.5px; font-weight: 500; color: var(--text-3); }
-    .card-meta { display: flex; gap: 14px; font-size: 12px; color: var(--text-2); padding-top: 12px; border-top: 1px dashed var(--border); flex-wrap: wrap; }
+    .card-price { font-size: 18px; font-weight: 700; color: var(--green-dark); margin-bottom: 12px; letter-spacing: -.01em; display: flex; align-items: baseline; gap: 4px; }
+    .card-price span { font-size: 13px; font-weight: 500; color: var(--text-2); }
+    .card-meta { display: flex; gap: 12px; font-size: 12px; color: var(--text-2); padding-top: 12px; border-top: 1px solid var(--border); flex-wrap: wrap; align-items: center; }
     .card-meta-item { display: flex; align-items: center; gap: 4px; }
     .card-meta-item svg { width: 14px; height: 14px; stroke: var(--text-3); fill: none; stroke-width: 2; }
 
-    /* ── Categories — green/white/dark only, no other hues ── */
     .categories { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 16px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .categories::-webkit-scrollbar { display: none; }
-.cat-card { flex: 0 0 240px; }
+.cat-card { flex: 0 0 240px; cursor: pointer; }
+    @media (max-width: 768px) {
+      .cat-card { flex: 0 0 85%; }
+    }
     .cat-card { border-radius: var(--radius-lg); padding: 24px; cursor: pointer; transition: transform .2s; border: 1.5px solid transparent; }
     .cat-card:hover, .cat-card:focus-visible { transform: translateY(-2px); }
     .cat-card:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
@@ -308,7 +309,6 @@
     .cat-card.airbnb .cat-count     { color: var(--text-3); }
     .cat-card.commercial .cat-count { color: rgba(255,255,255,0.7); }
 
-    /* ── Areas ── */
     .areas { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
     .area-card { border-radius: var(--radius); padding: 20px 16px; background: white; border: 1px solid var(--border); cursor: pointer; transition: all .15s; text-align: center; }
     .area-card:hover, .area-card:focus-visible { border-color: var(--green); background: var(--green-light); }
@@ -319,8 +319,6 @@
     .area-card.coming-soon:hover { border-color: var(--border); background: white; }
     .area-card.tier1 { border-color: #9FE1CB; }
 
-    /* ── Horizontal scroll hint (mobile only) — an ambient pulsing dot,
-       not a control. No click target, no arrow icon. ── */
     .scroll-wrap { position: relative; }
     .scroll-hint {
       display: flex;
@@ -369,7 +367,6 @@
     }
     .carousel-dots span.active { background: var(--green); width: 18px; border-radius: 4px; }
 
-    /* ── CTA banner ── */
     .cta-banner {
       background: var(--green-dark); border-radius: var(--radius-lg); padding: 48px 40px;
       display: flex; align-items: center; justify-content: space-between; gap: 32px; flex-wrap: wrap;
@@ -382,13 +379,12 @@
     .btn-ghost { background: transparent; color: white; border: 1.5px solid rgba(255,255,255,0.4); font-size: 15px; padding: 12px 24px; border-radius: var(--radius); transition: all .15s; display: inline-block; }
     .btn-ghost:hover { border-color: white; }
 
-    /* ── Footer ── */
     footer { background: var(--text); color: rgba(255,255,255,0.6); padding: 56px 32px 28px; }
     .footer-inner { max-width: 1200px; margin: 0 auto; }
     .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 48px; }
     .footer-logo { font-family: 'Playfair Display', serif; font-size: 22px; color: white; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
-    .footer-logo-icon { width: 30px; height: 30px; background: var(--green); border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .footer-logo-icon svg { width: 15px; height: 15px; fill: none; stroke: white; stroke-width: 2; stroke-linecap: round; }
+    .footer-logo-icon { width: 30px; height: 30px; background: transparent; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .footer-logo-icon img { width: 100%; height: 100%; object-fit: contain; }
     .footer-tagline { font-size: 13px; line-height: 1.8; max-width: 240px; color: rgba(255,255,255,0.5); margin-bottom: 20px; }
     .footer-social { display: flex; gap: 8px; }
     .footer-social a {
@@ -411,7 +407,6 @@
     .footer-bottom-links a { font-size: 12px; color: rgba(255,255,255,0.35); transition: color .15s; }
     .footer-bottom-links a:hover { color: white; }
 
-    /* ── Loading & empty states ── */
     .loading-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
     .skeleton { background: var(--surface); border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); }
     .skeleton-img { height: 190px; background: linear-gradient(90deg, #f0efe9 25%, #e8e7e1 50%, #f0efe9 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
@@ -423,10 +418,6 @@
     .empty-state svg { width: 48px; height: 48px; margin: 0 auto 16px; stroke: var(--border); fill: none; stroke-width: 1.5; }
     .empty-state p { font-size: 15px; }
 
-    /* ══════════════════════════════════════════════════════════════
-       BATCH 2: data-saver, near-me, live search, recently viewed,
-       scroll memory, keyboard nav, saved badge, recent searches
-       ══════════════════════════════════════════════════════════════ */
     .nk-datasaver-banner {
       display: none; align-items: center; justify-content: center; gap: 10px;
       background: #FFF7E6; color: #8a5a00; border-bottom: 1px solid #F3D9A0;
@@ -488,7 +479,6 @@
       outline: 2px solid var(--green); outline-offset: 2px;
     }
 
-    /* ── Responsive ── */
     @media (max-width: 1024px) {
       .footer-top { grid-template-columns: 2fr 1fr 1fr; }
       .footer-top > *:nth-child(4),
@@ -510,8 +500,6 @@
       .footer-top > *:nth-child(5) { display: block; }
       .cta-banner { padding: 32px 24px; }
 
-      /* ── Categories: mobile-only tweaks (base rule now handles the
-         scroll container itself) ── */
       .categories {
         scroll-snap-type: x mandatory;
         gap: 14px;
@@ -523,7 +511,6 @@
         scroll-snap-align: start;
       }
 
-      /* ── Listings (Featured + Latest): peeking carousel ── */
       .listings-grid {
         display: flex;
         grid-template-columns: none;
@@ -544,7 +531,6 @@
         scroll-snap-stop: always;
       }
 
-      /* ── Browse by county: 2 fixed rows, scroll horizontally for the rest ── */
       .areas {
         display: grid;
         grid-template-columns: none;
@@ -564,25 +550,19 @@
     }
     @media (max-width: 480px) {
       .footer-top { grid-template-columns: 1fr; }
-      .search-box { flex-direction: column; }
-      .search-box select, .search-box input, .search-box button { width: 100%; }
+      .search-box { flex-direction: column; gap: 12px; }
+      .search-box select, .search-box input { width: 100%; }
+      .search-box button { width: 100%; padding: 12px 20px; font-size: 15px; }
       .footer-bottom { flex-direction: column; align-items: flex-start; gap: 8px; }
       .areas { grid-auto-columns: 130px; }
     }
 
-    /* ══════════════════════════════════════════════════════════════
-       NEW: scroll-reveal, animated counters, edge fade, category
-       thumbnails, sticky compact search, mobile FAB, bottom tab bar
-       ══════════════════════════════════════════════════════════════ */
-
-    /* 1. Scroll-reveal — sections fade/slide up once as they enter view */
     .reveal { opacity: 0; transform: translateY(18px); transition: opacity .6s ease, transform .6s ease; }
     .reveal.is-visible { opacity: 1; transform: none; }
     @media (prefers-reduced-motion: reduce) {
       .reveal { opacity: 1; transform: none; transition: none; }
     }
 
-    /* 3. Edge fade mask on horizontal carousels — pure CSS "more content" cue */
     @media (max-width: 768px) {
       .categories, .listings-grid, .areas {
         -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent 100%);
@@ -590,10 +570,6 @@
       }
     }
 
-    /* 4. Category thumbnails — photo-style backdrop behind the icon.
-       These are CSS-only duotone/pattern placeholders (no external
-       images), ready to swap for real photos later by adding a
-       background-image to the relevant .cat-card rule. */
     .cat-card { position: relative; overflow: hidden; }
     .cat-card::before {
       content: '';
@@ -611,8 +587,6 @@
         repeating-linear-gradient(135deg, rgba(15,110,86,0.04) 0px, rgba(15,110,86,0.04) 2px, transparent 2px, transparent 14px); }
     .cat-card > * { position: relative; z-index: 1; }
 
-    /* 5. Sticky compact search — hidden pill that slides into the nav
-       once the hero has been scrolled past */
     .nav-compact-search {
       display: none;
       position: relative;
@@ -636,8 +610,6 @@
       nav.nk-scrolled .logo span { display: none; }
     }
 
-    /* 6. Sticky mobile FAB — bottom-LEFT so it never collides with the
-       existing chat widget, which sits bottom-right */
     .nk-fab-post {
       display: none;
       position: fixed; left: 16px; bottom: 84px; z-index: 60;
@@ -652,7 +624,6 @@
       .nk-fab-post { display: flex; }
     }
 
-    /* 7. Bottom mobile tab bar */
     .nk-tabbar {
       display: none;
       position: fixed; left: 0; right: 0; bottom: 0; z-index: 70;
@@ -696,7 +667,7 @@
 <nav>
   <a href="/" class="logo">
     <div class="logo-icon">
-      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <img src="/logo-icon.png" alt="Nyumba254" />
     </div>
     <span>Nyumba254</span>
   </a>
@@ -768,7 +739,7 @@
       <option value="term">Per term</option>
       <option value="once">One-time (sale)</option>
     </select>
-    <input type="text" id="search-q" placeholder="Search by area, price (e.g. 7000), or keyword…" oninput="nkFormatSearchInput(this); nkHeroSearchInput(this.value)"/>
+    <input type="text" id="search-q" placeholder="Search by area, price, or keyword…" oninput="nkFormatSearchInput(this); nkHeroSearchInput(this.value)"/>
     <button onclick="doSearch()">Search</button>
     <div class="nk-search-dropdown" id="hero-search-dropdown"></div>
   </div>
@@ -921,9 +892,9 @@
   <div class="scroll-wrap">
   <div id="latest-listings">
     <div class="loading-grid">
-      <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line short"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
-      <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line short"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
-      <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line short"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
+      <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line short"></div><div class="skeleton-line"></div></div></div>
+      <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line short"></div><div class="skeleton-line"></div></div></div>
+      <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line short"></div><div class="skeleton-line"></div></div></div>
     </div>
   </div>
   <button class="scroll-hint left" aria-label="Scroll to previous listings" onclick="nkScrollWrap(this,-1)"><svg viewBox="0 0 24 24"><polyline points="15 6 9 12 15 18"/></svg></button>
@@ -997,7 +968,7 @@
       <div>
         <div class="footer-logo">
           <div class="footer-logo-icon">
-            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <img src="/logo-icon.png" alt="Nyumba254" />
           </div>
           Nyumba254
         </div>
@@ -1079,7 +1050,6 @@
   const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
   const { createClient } = supabase;
 
-  // ── Match the "Remember me" storage adapter used on the sign-in page ──
   const authStorage = {
     getItem: (key) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).getItem(key),
     setItem: (key, value) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).setItem(key, value),
@@ -1092,10 +1062,6 @@
 
   const nkSessionPromise = db.auth.getSession();
 
-  /* ══════════════════════════════════════════════════════════════
-     PROPERTY TYPES — must mirror post-listing.html / listings
-     exactly, including the "boarding" (not "boarding_house") value.
-     ══════════════════════════════════════════════════════════════ */
   const NK_CATEGORIES = {
     apartment:  { label: 'Apartment', group: 'standard' },
     house:      { label: 'House',     group: 'standard' },
@@ -1319,15 +1285,12 @@
       document.body.style.overflow = '';
     }
   });
-  /* ── Price formatting driven by price_frequency, matching listings ── */
   function formatPrice(listing) {
     const suffix = NK_FREQ_LABEL[listing.price_frequency] || '';
     const p = Number(listing.price || 0).toLocaleString('en-KE');
     return `KES ${p}${suffix ? `<span>${suffix}</span>` : ''}`;
   }
 
-  /* ── Spec chips read from the details jsonb column, only for the
-     "standard" group (apartment/house) — same convention as listings. ── */
   function buildCardMeta(listing) {
     const meta = NK_CATEGORIES[listing.category] || { group: 'standard' };
     const d = listing.details || {};
@@ -1346,8 +1309,6 @@
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  /* ── Build listing card — category/price/details all match the
-     post-listing.html / listings schema. ── */
   function buildCard(listing) {
     const photos = listing.listing_photos || [];
     const cover = photos.find(p => p.is_cover) || photos[0];
@@ -1414,9 +1375,6 @@
     }, { passive: true });
   }
 
-  /* ── Silent/conditional scroll arrows: invisible until the track
-     actually overflows, and only the side with more content lights up.
-     Direction-aware click handler + overflow-driven visibility. ── */
   function nkScrollWrap(btn, dir) {
     const wrap = btn.closest('.scroll-wrap');
     if (!wrap) return;
@@ -1476,9 +1434,6 @@
     if (wrap) { attachCarouselDots(wrap); nkInitScrollWrap(wrap); }
   }
 
-  /* ── Featured: fetch enough rows for up to ~2–3 rows on desktop. The grid
-     itself only ever renders as many rows as there are cards — nothing is
-     reserved or padded, so with fewer listings you simply get fewer rows. ── */
   async function loadFeatured() {
     const { data, error } = await db
       .from('listings')
@@ -1491,8 +1446,6 @@
     renderListings('featured-listings', data || []);
   }
 
-  /* ── Latest: fetch enough rows for up to ~4–5 rows on desktop, same
-     "grow silently" behavior as Featured above. ── */
   let currentArea = null;
   async function loadLatest(area, county) {
     document.getElementById('latest-listings').innerHTML = `<div class="loading-grid">
@@ -1598,24 +1551,17 @@
       current = (current + 1) % slides.length;
       loadIfNeeded(slides[current]);
       slides[current].classList.add('active');
-      loadIfNeeded(slides[(current + 1) % slides.length]); // preload the one after next
+      loadIfNeeded(slides[(current + 1) % slides.length]);
     }
     function start() { if (!timer) timer = setInterval(advance, 3000); }
     function stop() { clearInterval(timer); timer = null; }
     document.addEventListener('visibilitychange', () => {
       document.hidden ? stop() : start();
     });
-    // Preload slide 2 shortly after first paint so the first transition is instant
     setTimeout(() => loadIfNeeded(slides[1]), 1200);
     start();
   })();
 
-  /* ══════════════════════════════════════════════════════════════
-     BATCH 2 — data-saver, near-me, live search, recently viewed,
-     scroll memory, keyboard nav, saved badge, recent searches
-     ══════════════════════════════════════════════════════════════ */
-
-  /* ── 1. Data-saver mode ── */
   function nkApplyDataSaver(on) {
     document.body.classList.toggle('nk-datasaver', on);
     const banner = document.getElementById('nk-datasaver-banner');
@@ -1631,7 +1577,6 @@
     if (conn && (conn.saveData || ['slow-2g', '2g'].includes(conn.effectiveType))) nkApplyDataSaver(true);
   })();
 
-  /* ── 2. Near me (geolocation) ── */
   const NK_COUNTY_COORDS = {
     "Mombasa": [-4.0435, 39.6682], "Kwale": [-4.1747, 39.4520], "Kilifi": [-3.6305, 39.8499],
     "Tana River": [-1.0167, 40.1167], "Lamu": [-2.2717, 40.9020], "Taita-Taveta": [-3.3968, 38.5637],
@@ -1683,7 +1628,6 @@
     }, { timeout: 8000 });
   }
 
-  /* ── 3. Live instant-search dropdown ── */
   function nkDebounce(fn, ms) {
     let t;
     return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
@@ -1725,7 +1669,6 @@
     });
   });
 
-  /* ── 4. Recently viewed strip ── */
   function nkGetRecentlyViewed() {
     try { return JSON.parse(localStorage.getItem('nk_recently_viewed') || '[]'); } catch { return []; }
   }
@@ -1768,7 +1711,6 @@
     if (wrap) nkInitScrollWrap(wrap);
   }
 
-  /* ── 5. Scroll position memory ── */
   function nkScrollMemKey(scroller) {
     return scroller.id || scroller.closest('[id]')?.id || null;
   }
@@ -1790,7 +1732,6 @@
     }, { passive: true });
   }
 
-  /* ── 6. Keyboard arrow-key scrolling on desktop ── */
   document.addEventListener('keydown', e => {
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
     const el = document.activeElement;
@@ -1799,8 +1740,6 @@
     el.scrollBy({ left: e.key === 'ArrowRight' ? step : -step, behavior: 'smooth' });
   });
 
-  /* ── 7. Saved badge on mobile tab bar (mirrors nav-count-badge, set
-     elsewhere by saved-listings.js) ── */
   (function () {
     const source = document.getElementById('nav-count-badge');
     const target = document.getElementById('nk-tab-saved-badge');
@@ -1814,7 +1753,6 @@
     sync();
   })();
 
-  /* ── 8. Recently searched chips ── */
   function nkGetRecentSearches() {
     try { return JSON.parse(localStorage.getItem('nk_recent_searches') || '[]'); } catch { return []; }
   }
@@ -1851,8 +1789,6 @@
   nkRenderRecentlyViewed();
   nkRenderRecentSearches();
 
-  /* ── 1. Scroll-reveal: fade/slide each .reveal section up once, the
-     first time it enters the viewport ── */
   (function () {
     const targets = document.querySelectorAll('.reveal');
     if (!targets.length) return;
@@ -1871,9 +1807,6 @@
     targets.forEach(t => io.observe(t));
   })();
 
-  /* ── 2. Animated counters: count up from 0 once real numbers land.
-     Wraps the two existing stat-writing spots without changing their
-     data-fetching logic. ── */
   function nkAnimateCount(el, target, opts) {
     if (!el) return;
     const suffix = (opts && opts.suffix) || '';
@@ -1882,7 +1815,7 @@
     const from = 0;
     function tick(now) {
       const p = Math.min(1, (now - start) / dur);
-      const eased = 1 - Math.pow(1 - p, 3); // ease-out cubic
+      const eased = 1 - Math.pow(1 - p, 3);
       const val = Math.round(from + (target - from) * eased);
       el.textContent = val.toLocaleString('en-KE') + suffix;
       if (p < 1) requestAnimationFrame(tick);
@@ -1912,8 +1845,6 @@
     if (statAreas) mo.observe(statAreas, { childList: true });
   })();
 
-  /* ── 5. Sticky compact search: reveal the nav search pill once the
-     hero has scrolled past ── */
   (function () {
     const nav = document.querySelector('nav');
     const hero = document.getElementById('main-content');
