@@ -562,6 +562,11 @@
       flex-direction: column;
       gap: 16px;
     }
+    body.nk-mobile-feed .nk-mobile-feed-batch {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
     body.nk-mobile-feed .card { max-width: 100%; }
     body.nk-mobile-feed .card-img { height: 210px; } /* item 6: bigger photos on mobile */
     body.nk-mobile-feed .pagination { display: none; }
@@ -602,16 +607,7 @@
     }
     .card-verified-badge svg { width: 9px; height: 9px; stroke: var(--green-dark); fill: none; stroke-width: 2.6; }
 
-    /* Item 9: card CTA becomes an icon-only round button on mobile */
     .card-inquire-label { display: inline; }
-    @media (max-width: 480px) {
-      .card-inquire-btn:not(.ci-modal-submit-btn) {
-        width: 42px; height: 42px; padding: 0; border-radius: 50%;
-        align-self: flex-end;
-      }
-      .card-inquire-btn:not(.ci-modal-submit-btn) svg { width: 18px; height: 18px; }
-      .card-inquire-btn:not(.ci-modal-submit-btn) .card-inquire-label { display: none; }
-    }
 
     /* Sticky quick-filter chip bar (items 3 & 4 in the plan) */
     .nk-quickbar {
