@@ -2833,6 +2833,7 @@ async function init(){
     }
     await loadAllData();
     await refreshBnbPropertyIdSet();
+    dashJoinAllPresence();
     loadPlatformPrices();
     loadNotifBell();
     renderOverview();
@@ -5184,7 +5185,7 @@ async function exportRentLedgerPDF(){
 let unitExpensesCache=[],maintenanceCache=[];
 
 async function rlLoadExtras(){
-  if(!eliteActive())return;
+  if(!ledgerAccessActive())return;
   const[{data:exp},{data:maint}]=await Promise.all([
     db.from('unit_expenses').select('*').eq('seller_id',effectiveSellerId).order('expense_date',{ascending:false}),
     db.from('maintenance_requests').select('*').eq('seller_id',effectiveSellerId).order('reported_date',{ascending:false}),
@@ -9023,8 +9024,8 @@ let toastTimer;
 function showToast(msg,type='success'){const t=document.getElementById('toast'),m=document.getElementById('toast-msg');clearTimeout(toastTimer);t.className='toast '+type;m.textContent=msg;t.classList.add('show');toastTimer=setTimeout(()=>t.classList.remove('show'),3500);}
 function timeAgo(iso){if(!iso)return'';const d=(Date.now()-new Date(iso))/1000;if(d<60)return'just now';if(d<3600)return`${Math.floor(d/60)}m ago`;if(d<86400)return`${Math.floor(d/3600)}h ago`;if(d<604800)return`${Math.floor(d/86400)}d ago`;return new Date(iso).toLocaleDateString('en-KE',{day:'numeric',month:'short'});}
 function fmtKES(n,suffix=''){return `KES ${Number(n||0).toLocaleString('en-KE')}${suffix}`;}
-function escHtml(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function escAttr(s){if(!s)return'';return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function escHtml(s){if(s===null||s===undefined||s==='')return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function escAttr(s){if(s===null||s===undefined||s==='')return'';return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function truncateWords(s,maxWords){
   if(!s)return'';
   const words=String(s).trim().split(/\s+/);
