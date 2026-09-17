@@ -228,6 +228,33 @@
     .filter-search{margin-left:auto;display:flex;align-items:center;border:1.5px solid var(--border);border-radius:var(--radius);background:white;overflow:hidden}
     .filter-search svg{width:14px;height:14px;stroke:var(--text-3);fill:none;stroke-width:2;margin:0 10px;flex-shrink:0}
     .filter-search input{border:none;outline:none;font-size:13px;padding:7px 10px 7px 0;width:180px;color:var(--text);background:transparent}
+
+    /* ── Listings toolbar v2 ── */
+    .lc-toolbar{margin-bottom:20px}
+    .lc-pill-group{display:inline-flex;flex-wrap:wrap;gap:4px;padding:4px;background:var(--white);border:1.5px solid var(--border);border-radius:24px}
+    .lc-pill-group .filter-pill{border:none;box-shadow:none !important}
+    .lc-pill-group .filter-pill:hover{background:var(--surface)}
+    .lc-pill-group .filter-pill.active{background:var(--green);color:white}
+    .fp-count{opacity:.7;font-weight:700;margin-left:2px}
+    .lc-toolbar-row2{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px}
+    .lc-results-count{font-size:12.5px;color:var(--text-3);font-weight:500;white-space:nowrap}
+    .lc-toolbar-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto}
+    .lc-toolbar-controls .filter-search{margin-left:0}
+    .lc-toolbar-controls .filter-search input{width:170px}
+
+    /* ── Card badges & hierarchy v2 ── */
+    .lc-badge-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:5px}
+    .lc-featured-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;background:linear-gradient(135deg,var(--gold),#8a5a0f);color:white;padding:3px 9px;border-radius:20px;box-shadow:0 1px 4px rgba(186,117,23,0.35)}
+    .lc-new-badge{display:inline-flex;align-items:center;font-size:10px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;background:#DBEAFE;color:#1e40af;padding:3px 9px;border-radius:20px}
+    .lc-card.st-featured{border-top:2px solid var(--gold)}
+    .lc-price-row{display:flex;align-items:baseline;gap:8px;margin-top:6px;flex-wrap:wrap}
+    .lc-price-row .lc-price{font-size:17px}
+    .lc-chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+    .lc-alert-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;border-radius:20px;padding:4px 10px;cursor:default;line-height:1.3}
+    .lc-alert-chip.sev-danger{background:var(--red-light);color:var(--red)}
+    .lc-alert-chip.sev-warn{background:var(--amber-light);color:var(--amber)}
+    .lc-alert-chip.sev-info{background:#EDE9FE;color:#5b21b6}
+    .lc-alert-chip a,.lc-alert-chip .lc-alert-link{color:inherit;font-weight:700;text-decoration:underline;cursor:pointer;background:none;border:none;font-size:inherit;padding:0}
     .listings-table{width:100%;border-collapse:collapse;table-layout:fixed}
     .listings-table th:nth-child(1),.listings-table td:nth-child(1){width:32%}
     .listings-table th:nth-child(2),.listings-table td:nth-child(2){width:14%}
@@ -1045,6 +1072,11 @@
       .lc-btn span.lc-btn-label{display:none}
       .lc-btn-more{margin-left:auto}
       .lc-stats-row{gap:5px 10px;font-size:11.5px}
+      .lc-toolbar-row2{flex-direction:column;align-items:stretch}
+      .lc-toolbar-controls{margin-left:0;width:100%}
+      .lc-toolbar-controls .filter-search{flex:1}
+      .lc-toolbar-controls .filter-search input{width:100%}
+      .lc-price-row .lc-price{font-size:15px}
     }
   </style>
 </head>
@@ -1275,27 +1307,34 @@
         <h2>My listings</h2>
         <a href="/post-listing" class="btn btn-primary"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add listing</a>
       </div>
-      <div class="filter-bar" id="listings-filter-bar">
-        <button class="filter-pill active" data-status="all" onclick="filterListings('all',this)">All <span class="fp-count" id="fp-count-all"></span></button>
-        <button class="filter-pill" data-status="active" onclick="filterListings('active',this)">Active <span class="fp-count" id="fp-count-active"></span></button>
-        <button class="filter-pill" data-status="pending" onclick="filterListings('pending',this)">Pending <span class="fp-count" id="fp-count-pending"></span></button>
-        <button class="filter-pill" data-status="paused" onclick="filterListings('paused',this)">Paused <span class="fp-count" id="fp-count-paused"></span></button>
-        <button class="filter-pill" data-status="occupied" onclick="filterListings('occupied',this)">Occupied / sold <span class="fp-count" id="fp-count-occupied"></span></button>
-        <select class="lc-sort-select" id="listing-sort" onchange="debouncedRenderListingsTable()">
-          <option value="newest">Sort: Newest</option>
-          <option value="oldest">Sort: Oldest</option>
-          <option value="messages">Sort: Most messages</option>
-          <option value="views">Sort: Most viewed</option>
-          <option value="price_high">Sort: Price (high→low)</option>
-          <option value="price_low">Sort: Price (low→high)</option>
-        </select>
-        <button class="lc-select-toggle" id="lc-select-toggle-btn" onclick="toggleBulkSelectMode()">☑ Select</button>
-        <div class="filter-search">
-          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" placeholder="Search listings…" id="listing-search" oninput="debouncedRenderListingsTable()"/>
+      <div class="lc-toolbar" id="listings-filter-bar">
+        <div class="lc-pill-group" role="tablist" aria-label="Filter listings by status">
+          <button class="filter-pill active" data-status="all" onclick="filterListings('all',this)">All <span class="fp-count" id="fp-count-all"></span></button>
+          <button class="filter-pill" data-status="active" onclick="filterListings('active',this)">Active <span class="fp-count" id="fp-count-active"></span></button>
+          <button class="filter-pill" data-status="pending" onclick="filterListings('pending',this)">Pending <span class="fp-count" id="fp-count-pending"></span></button>
+          <button class="filter-pill" data-status="paused" onclick="filterListings('paused',this)">Paused <span class="fp-count" id="fp-count-paused"></span></button>
+          <button class="filter-pill" data-status="occupied" onclick="filterListings('occupied',this)">Occupied / sold <span class="fp-count" id="fp-count-occupied"></span></button>
+        </div>
+        <div class="lc-toolbar-row2">
+          <div class="lc-results-count" id="lc-results-count"></div>
+          <div class="lc-toolbar-controls">
+            <div class="filter-search">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" placeholder="Search listings…" id="listing-search" oninput="debouncedRenderListingsTable()"/>
+            </div>
+            <select class="lc-sort-select" id="listing-sort" onchange="debouncedRenderListingsTable()">
+              <option value="newest">Sort: Newest</option>
+              <option value="oldest">Sort: Oldest</option>
+              <option value="messages">Sort: Most messages</option>
+              <option value="views">Sort: Most viewed</option>
+              <option value="price_high">Sort: Price (high→low)</option>
+              <option value="price_low">Sort: Price (low→high)</option>
+            </select>
+            <button class="lc-select-toggle" id="lc-select-toggle-btn" onclick="toggleBulkSelectMode()">☑ Select</button>
+          </div>
         </div>
       </div>
-      <div id="listings-bulk-bar" style="display:none;align-items:center;gap:12px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius);padding:10px 16px;margin-bottom:14px">
+      <div id="listings-bulk-bar" style="display:none;align-items:center;gap:12px;background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius);padding:10px 16px;margin-bottom:14px;position:sticky;top:8px;z-index:20;box-shadow:0 4px 14px rgba(0,0,0,0.08)">
         <strong id="listings-bulk-count" style="font-size:13px;color:var(--green-dark)"></strong>
         <button class="btn btn-outline btn-sm" onclick="bulkPauseSelectedListings()">Pause selected</button>
         <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="bulkDeleteSelectedListings()">Delete selected</button>
@@ -6487,7 +6526,14 @@ function renderListingsTable(){
   let rows=allListings.filter(l=>{if(listingFilter!=='all'&&l.status!==listingFilter)return false;if(q&&!l.title.toLowerCase().includes(q)&&!(l.area||'').toLowerCase().includes(q))return false;return true;});
   rows=lcSortListings(rows);
   const wrap=document.getElementById('listings-tbody');
-  if(!rows.length){wrap.innerHTML=`<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><h3>No listings found</h3><p>${listingFilter==='all'?"You haven't posted any listings yet.":`No ${listingFilter} listings.`}</p><a href="/post-listing" class="btn btn-primary">Post your first listing</a></div>`;return;}
+  const countEl=document.getElementById('lc-results-count');
+  if(countEl)countEl.textContent=allListings.length?`Showing ${rows.length} of ${allListings.length} listing${allListings.length!==1?'s':''}`:'';
+
+  if(!rows.length){
+    const isFiltered=!!q||listingFilter!=='all';
+    wrap.innerHTML=`<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><h3>${isFiltered?'No matching listings':'No listings yet'}</h3><p>${q?`Nothing matches "${escHtml(q)}".`:listingFilter!=='all'?`No ${listingFilter} listings.`:"You haven't posted any listings yet."}</p>${isFiltered?'':'<a href="/post-listing" class="btn btn-primary">Post your first listing</a>'}</div>`;
+    return;
+  }
 
   wrap.innerHTML=rows.map(l=>{
     const cover=(l.listing_photos||[]).find(p=>p.is_cover)||(l.listing_photos||[])[0];
@@ -6501,54 +6547,58 @@ function renderListingsTable(){
     const trialDays=getTrialDaysLeft(l);
     const bnbDays=getBnbDaysLeft(l);
     const hasUnitTypes=(l.listing_units&&l.listing_units.length>0);
+    const isNew=(Date.now()-new Date(l.created_at).getTime())<48*3600*1000;
 
-    // ── Build alert list (most severe first), show one + "+N more" ──
+    // ── Alerts, rendered as compact chips (all visible, no dead-end "+N more") ──
     const alerts=[];
     if(l.status!=='occupied'&&l.status!=='approved_unpaid'&&l.status!=='approved_unpaid_bnb'&&d.banner)alerts.push({sev:'danger',html:d.banner});
     if(l.status==='occupied'&&d.banner)alerts.push({sev:'info',html:d.banner});
     if(l.status==='approved_unpaid'&&l.payment_status==='pending_verification')alerts.push({sev:'warn',html:'⏳ Payment submitted — verification in progress.'});
     else if(l.status==='approved_unpaid')alerts.push({sev:'danger',html:`💳 Approved — pay <strong>KES ${Number(l.payment_due_amount||0).toLocaleString('en-KE')}</strong> to go live. <span class="lc-alert-link" onclick="openPayListingModal('${l.id}')">Pay now →</span>`});
     else if(l.status==='approved_unpaid_bnb')alerts.push({sev:'danger',html:`📅 Approved — <span class="lc-alert-link" onclick="openPayListingModal('${l.id}')">pay for this listing</span> or <a href="/plans">subscribe to a BNB plan</a>`});
-    if(trialDays!==null)alerts.push({sev:trialDays<=2?'danger':'warn',html:`🕐 Free trial — ${trialDays}d left <span class="lc-alert-link" onclick="requestTrialUpgrade('${escAttr(l.title)}')">Upgrade</span>`});
-    if(bnbDays!==null)alerts.push({sev:bnbDays<=3?'danger':'warn',html:`📅 BNB plan — ${bnbDays}d left <a href="/plans">Renew</a>`});
-    else if(l.category==='airbnb'&&l.status!=='approved_unpaid_bnb')alerts.push({sev:'danger',html:`⚠️ No active BNB plan <a href="/plans">Subscribe</a>`});
-    if(hasUnitTypes){const av=muAvailabilitySummary(l);alerts.push({sev:'info',html:`🏢 Unit types${av?' · '+av:''} <span class="lc-alert-link" onclick="openManageUnitsModal('${l.id}')">Manage →</span>`});}
-
-    const shownAlert=alerts[0];
-    const moreCount=alerts.length-1;
-    const alertHtml=shownAlert?`<div class="lc-alert sev-${shownAlert.sev}">${shownAlert.html}${moreCount>0?`<span class="lc-alert-more" onclick="showAllAlertsForListing('${l.id}')">+${moreCount} more</span>`:''}</div>`:'';
+    if(trialDays!==null)alerts.push({sev:trialDays<=2?'danger':'warn',html:`🕐 Trial — ${trialDays}d left <span class="lc-alert-link" onclick="requestTrialUpgrade('${escAttr(l.title)}')">Upgrade</span>`});
+    if(bnbDays!==null)alerts.push({sev:bnbDays<=3?'danger':'warn',html:`📅 BNB — ${bnbDays}d left <a href="/plans">Renew</a>`});
+    else if(l.category==='airbnb'&&l.status!=='approved_unpaid_bnb')alerts.push({sev:'danger',html:`⚠️ No BNB plan <a href="/plans">Subscribe</a>`});
+    if(hasUnitTypes){const av=muAvailabilitySummary(l);alerts.push({sev:'info',html:`🏢 Units${av?' · '+av:''} <span class="lc-alert-link" onclick="openManageUnitsModal('${l.id}')">Manage →</span>`});}
+    const alertsHtml=alerts.length?`<div class="lc-chip-row">${alerts.map(a=>`<span class="lc-alert-chip sev-${a.sev}">${a.html}</span>`).join('')}</div>`:'';
 
     const isActive=l.status==='active'&&!l.is_disabled;
     const isPaused=l.status==='paused'&&!l.is_disabled;
     const isOccupied=l.status==='occupied'&&!l.is_disabled;
     const canEdit=(isActive||isPaused||isOccupied);
 
-    // ── Primary actions (max 3, always visible) ──
+    // ── Primary actions — View, Edit, Share (when live), plus the one contextual action ──
     let primaryBtns='';
     primaryBtns+=`<button class="lc-btn" data-id="${l.id}" onclick="window.open('/listing?id=${String(l.listing_number).padStart(6,'0')}','_blank')"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg><span class="lc-btn-label">View</span></button>`;
     primaryBtns+=canEdit
       ?`<button class="lc-btn" data-id="${l.id}" onclick="openEditModal('${l.id}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg><span class="lc-btn-label">Edit</span></button>`
       :`<button class="lc-btn lc-btn-locked"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/></svg><span class="lc-btn-label">Edit</span></button>`;
+    if(isActive)primaryBtns+=`<button class="lc-btn" data-id="${l.id}" onclick="openShareMenu('${l.id}',this)"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg><span class="lc-btn-label">Share</span></button>`;
     if(l.status==='approved_unpaid')primaryBtns+=`<button class="lc-btn lc-btn-purple" onclick="openPayListingModal('${l.id}')"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/></svg><span class="lc-btn-label">Pay now</span></button>`;
     else if(l.status==='scheduled')primaryBtns+=`<button class="lc-btn lc-btn-purple" onclick="publishScheduledNow('${l.id}')"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg><span class="lc-btn-label">Publish now</span></button>`;
     else if(isActive&&!hasUnitTypes)primaryBtns+=`<button class="lc-btn lc-btn-purple" data-id="${l.id}" data-title="${escAttr(l.title)}" onclick="openOccupiedModal('${l.id}','${escAttr(l.title)}')"><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg><span class="lc-btn-label">${l.price_type==='rent'?'Mark occupied':'Mark sold'}</span></button>`;
     else if((isOccupied||isPaused)&&!l.is_disabled)primaryBtns+=`<button class="lc-btn lc-btn-purple" onclick="reactivateListing('${l.id}')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg><span class="lc-btn-label">Resume</span></button>`;
     else if(hasUnitTypes)primaryBtns+=`<button class="lc-btn lc-btn-purple" onclick="openManageUnitsModal('${l.id}')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg><span class="lc-btn-label">Manage units</span></button>`;
 
-    return `<div class="lc-card ${stCls} ${selectedListingIds.has(String(l.id))?'selected':''}" data-id="${l.id}">
+    const priceTxt=hasUnitTypes?muPriceRangeText(l):`KES ${Number(l.price).toLocaleString('en-KE')}${NK_DASH_FREQ_SUFFIX[l.price_frequency||(l.price_type==='rent'?'month':'once')]||''}`;
+
+    return `<div class="lc-card ${stCls}${l.is_featured?' st-featured':''} ${selectedListingIds.has(String(l.id))?'selected':''}" data-id="${l.id}">
       <div class="lc-top">
         <div class="lc-select-cb-wrap"><input type="checkbox" class="listing-select-cb" data-id="${l.id}" ${selectedListingIds.has(String(l.id))?'checked':''} onchange="toggleListingSelected('${l.id}',this.checked)"/></div>
         <div class="lc-thumb">${img}${photoCount>1?`<span class="lc-thumb-count">📷 ${photoCount}</span>`:''}</div>
         <div class="lc-main">
           <div class="lc-title-row">
             <div class="lc-title">${escHtml(l.title)}</div>
+          </div>
+          <div class="lc-badge-row">
             <span class="status ${d.cls} lc-status-badge">${d.label}</span>
+            ${l.is_featured?'<span class="lc-featured-badge">⭐ Featured</span>':''}
+            ${isNew?'<span class="lc-new-badge">New</span>':''}
           </div>
           <div class="lc-meta">${escHtml(l.area)}${l.sub_area?' · '+escHtml(l.sub_area):''} · Posted ${posted}</div>
-          ${alertHtml}
+          <div class="lc-price-row"><span class="lc-price">${priceTxt}</span></div>
+          ${alertsHtml}
           <div class="lc-stats-row">
-            <span class="lc-price">${hasUnitTypes?muPriceRangeText(l):`KES ${Number(l.price).toLocaleString('en-KE')}${NK_DASH_FREQ_SUFFIX[l.price_frequency||(l.price_type==='rent'?'month':'once')]||''}`}</span>
-            <span class="lc-dot-sep">·</span>
             <span class="lc-stat-chip ${uc>0?'has-new':''}"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>${mc} message${mc!==1?'s':''}${uc>0?` · ${uc} new`:''}</span>
             <span class="lc-dot-sep">·</span>
             <span class="lc-stat-chip"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>${l.views||0} views</span>
@@ -6677,8 +6727,6 @@ function openMoreActionsMenu(listingId,anchorEl){
   if(!l)return;
   const isActive_lock=l.status==='active'&&!l.is_disabled;
   const items=[];
-
-  items.push({label:'Share to WhatsApp / Facebook / Instagram / TikTok',icon:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',onclick:()=>openShareMenu(listingId,anchorEl),disabled:!isActive_lock});
 
   items.push({label:'Manage unit types',icon:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/>',onclick:()=>openManageUnitsModal(listingId)});
 
