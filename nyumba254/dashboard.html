@@ -961,6 +961,91 @@
         max-height:min(70vh, calc(100vh - 16px - env(safe-area-inset-bottom)));
       }
     }
+
+    /* ══════════════════════════════════════
+       LISTING CARDS v2 — replaces .listings-table
+    ══════════════════════════════════════ */
+    .lc-toolbar-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:2px}
+    .lc-select-toggle{font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);background:white;color:var(--text-2);cursor:pointer;white-space:nowrap}
+    .lc-select-toggle.active{background:var(--green);color:white;border-color:var(--green)}
+    .lc-sort-select{font-size:12.5px;font-weight:500;padding:7px 12px;border-radius:20px;border:1.5px solid var(--border);background:white;color:var(--text-2);cursor:pointer;outline:none}
+    .filter-pill .fp-count{opacity:.65;font-weight:600;margin-left:3px}
+
+    .lc-list{display:flex;flex-direction:column;gap:12px}
+    .lc-card{
+      position:relative;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);
+      padding:16px 18px 16px 20px;border-left:4px solid var(--border);
+      transition:box-shadow .18s ease,transform .18s ease;
+    }
+    .lc-card:hover{box-shadow:0 6px 20px rgba(0,0,0,0.06);transform:translateY(-1px)}
+    .lc-card.st-active{border-left-color:#16a34a}
+    .lc-card.st-pending,.lc-card.st-scheduled{border-left-color:var(--amber)}
+    .lc-card.st-paused{border-left-color:var(--text-3)}
+    .lc-card.st-occupied{border-left-color:#7c3aed}
+    .lc-card.st-rejected,.lc-card.st-disabled{border-left-color:var(--red)}
+    .lc-card.selected{box-shadow:0 0 0 2px var(--green)}
+
+    .lc-top{display:flex;gap:14px;align-items:flex-start}
+    .lc-select-cb-wrap{display:none;align-items:center;padding-top:4px;flex-shrink:0}
+    .lc-list.select-mode .lc-select-cb-wrap{display:flex}
+    .lc-select-cb-wrap input{width:18px;height:18px;cursor:pointer}
+
+    .lc-thumb{position:relative;width:76px;height:76px;border-radius:10px;background:var(--surface);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;border:1px solid var(--border)}
+    .lc-thumb img{width:100%;height:100%;object-fit:cover}
+    .lc-thumb svg{width:22px;height:22px;stroke:var(--text-3);fill:none;stroke-width:1.5}
+    .lc-thumb-count{position:absolute;bottom:3px;right:3px;background:rgba(0,0,0,0.6);color:white;font-size:9.5px;font-weight:700;padding:1px 5px;border-radius:8px;display:flex;align-items:center;gap:2px}
+
+    .lc-main{flex:1;min-width:0}
+    .lc-title-row{display:flex;align-items:flex-start;gap:10px;justify-content:space-between}
+    .lc-title{font-size:14.5px;font-weight:700;color:var(--text);line-height:1.35;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
+    .lc-status-badge{flex-shrink:0}
+    .lc-meta{font-size:11.5px;color:var(--text-3);margin-top:2px}
+
+    .lc-alert{display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:500;border-radius:8px;padding:7px 10px;margin-top:9px;line-height:1.5}
+    .lc-alert.sev-danger{background:var(--red-light);color:var(--red)}
+    .lc-alert.sev-warn{background:var(--amber-light);color:var(--amber)}
+    .lc-alert.sev-info{background:#EDE9FE;color:#5b21b6}
+    .lc-alert a,.lc-alert .lc-alert-link{color:inherit;font-weight:700;text-decoration:underline;cursor:pointer;background:none;border:none;font-size:inherit}
+    .lc-alert-more{font-size:10.5px;font-weight:700;text-decoration:underline;cursor:pointer;margin-left:auto;flex-shrink:0;opacity:.8}
+
+    .lc-stats-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:12.5px;color:var(--text-2)}
+    .lc-price{font-weight:700;color:var(--green-dark);font-size:14px}
+    .lc-price-sub{font-size:11px;color:var(--text-3);font-weight:500}
+    .lc-stat-chip{display:flex;align-items:center;gap:4px;color:var(--text-3)}
+    .lc-stat-chip svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
+    .lc-stat-chip.has-new{color:var(--red);font-weight:700}
+    .lc-dot-sep{color:var(--border)}
+
+    .lc-actions-row{display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);flex-wrap:wrap}
+    .lc-btn{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:7px 13px;border-radius:8px;cursor:pointer;transition:all .15s;white-space:nowrap;border:1.5px solid var(--border);background:white;color:var(--text-2)}
+    .lc-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0}
+    .lc-btn:hover{border-color:var(--green);color:var(--green)}
+    .lc-btn.lc-btn-primary{background:var(--green);color:white;border-color:var(--green)}
+    .lc-btn.lc-btn-primary:hover{background:var(--green-dark);border-color:var(--green-dark)}
+    .lc-btn.lc-btn-purple{background:#EDE9FE;color:#5b21b6;border-color:#EDE9FE}
+    .lc-btn.lc-btn-purple:hover{background:#7c3aed;color:white;border-color:#7c3aed}
+    .lc-btn.lc-btn-locked{opacity:.45;cursor:not-allowed;pointer-events:none}
+    .lc-btn-more{margin-left:auto;width:32px;height:32px;padding:0;justify-content:center;border-radius:8px}
+    .lc-btn-more svg{width:16px;height:16px}
+
+    .lc-empty,.lc-skeleton-wrap{padding:0}
+    .lc-skel-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;display:flex;gap:14px;margin-bottom:12px}
+    .lc-skel-thumb{width:76px;height:76px;border-radius:10px;background:var(--surface);animation:lcPulse 1.4s ease-in-out infinite}
+    .lc-skel-lines{flex:1;display:flex;flex-direction:column;gap:8px;justify-content:center}
+    .lc-skel-line{height:11px;border-radius:4px;background:var(--surface);animation:lcPulse 1.4s ease-in-out infinite}
+    @keyframes lcPulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+    @media(max-width:640px){
+      .lc-card{padding:13px 14px}
+      .lc-top{gap:11px}
+      .lc-thumb{width:60px;height:60px}
+      .lc-title{font-size:13.5px}
+      .lc-actions-row{gap:6px}
+      .lc-btn{padding:7px 10px;font-size:11.5px}
+      .lc-btn span.lc-btn-label{display:none}
+      .lc-btn-more{margin-left:auto}
+      .lc-stats-row{gap:5px 10px;font-size:11.5px}
+    }
   </style>
 </head>
 <body>
@@ -1191,11 +1276,20 @@
         <a href="/post-listing" class="btn btn-primary"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add listing</a>
       </div>
       <div class="filter-bar" id="listings-filter-bar">
-        <button class="filter-pill active" onclick="filterListings('all',this)">All</button>
-        <button class="filter-pill" onclick="filterListings('active',this)">Active</button>
-        <button class="filter-pill" onclick="filterListings('pending',this)">Pending</button>
-        <button class="filter-pill" onclick="filterListings('paused',this)">Paused</button>
-        <button class="filter-pill" onclick="filterListings('occupied',this)">Occupied / sold</button>
+        <button class="filter-pill active" data-status="all" onclick="filterListings('all',this)">All <span class="fp-count" id="fp-count-all"></span></button>
+        <button class="filter-pill" data-status="active" onclick="filterListings('active',this)">Active <span class="fp-count" id="fp-count-active"></span></button>
+        <button class="filter-pill" data-status="pending" onclick="filterListings('pending',this)">Pending <span class="fp-count" id="fp-count-pending"></span></button>
+        <button class="filter-pill" data-status="paused" onclick="filterListings('paused',this)">Paused <span class="fp-count" id="fp-count-paused"></span></button>
+        <button class="filter-pill" data-status="occupied" onclick="filterListings('occupied',this)">Occupied / sold <span class="fp-count" id="fp-count-occupied"></span></button>
+        <select class="lc-sort-select" id="listing-sort" onchange="debouncedRenderListingsTable()">
+          <option value="newest">Sort: Newest</option>
+          <option value="oldest">Sort: Oldest</option>
+          <option value="messages">Sort: Most messages</option>
+          <option value="views">Sort: Most viewed</option>
+          <option value="price_high">Sort: Price (high→low)</option>
+          <option value="price_low">Sort: Price (low→high)</option>
+        </select>
+        <button class="lc-select-toggle" id="lc-select-toggle-btn" onclick="toggleBulkSelectMode()">☑ Select</button>
         <div class="filter-search">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" placeholder="Search listings…" id="listing-search" oninput="debouncedRenderListingsTable()"/>
@@ -1207,12 +1301,10 @@
         <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="bulkDeleteSelectedListings()">Delete selected</button>
         <button class="btn btn-outline btn-sm" style="margin-left:auto" onclick="toggleSelectAllListings(false)">Clear selection</button>
       </div>
-      <div class="card" id="listings-table-card" style="overflow:hidden">
-        <div style="overflow-x:auto;max-width:100%">
-        <table class="listings-table">
-          <thead><tr><th style="width:34px"><input type="checkbox" id="listings-select-all" onchange="toggleSelectAllListings(this.checked)"/></th><th>Property</th><th>Price</th><th>Status</th><th>Messages</th><th>Views</th><th>Posted</th><th>Actions</th></tr></thead>
-          <tbody id="listings-tbody"><tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-3)">Loading listings…</td></tr></tbody>
-        </table>
+      <div id="listings-table-card">
+        <div class="lc-list" id="listings-tbody">
+          <div class="lc-skel-card"><div class="lc-skel-thumb"></div><div class="lc-skel-lines"><div class="lc-skel-line" style="width:60%"></div><div class="lc-skel-line" style="width:40%"></div><div class="lc-skel-line" style="width:80%"></div></div></div>
+          <div class="lc-skel-card"><div class="lc-skel-thumb"></div><div class="lc-skel-lines"><div class="lc-skel-line" style="width:50%"></div><div class="lc-skel-line" style="width:35%"></div><div class="lc-skel-line" style="width:70%"></div></div></div>
         </div>
       </div>
     </div>
@@ -6147,7 +6239,7 @@ function renderQuickListings(){
 
 function debounce(fn,ms){let t;return function(...args){clearTimeout(t);t=setTimeout(()=>fn.apply(this,args),ms);};}
 const debouncedRenderListingsTable=debounce(renderListingsTable,200);
-function filterListings(status,el){listingFilter=status;document.querySelectorAll('#page-listings .filter-pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');renderListingsTable();}
+function filterListings(status,el){listingFilter=status;document.querySelectorAll('#page-listings .filter-pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');selectedListingIds.clear();updateBulkBar();renderListingsTable();}
 
 function getTrialDaysLeft(l){
   if(l.payment_status!=='trial'&&!l.is_trial)return null;
@@ -6358,117 +6450,125 @@ async function reactivateListing(id){
   }
 }
 
-// ── THE FIXED renderListingsTable — pending/rejected listings have all status
-//    buttons locked. Only active listings can be paused or marked sold/occupied.
-//    Reactivating an occupied listing sends it back to "pending" for admin review.
-//    Multi-unit listings also get a purple "Manage units" icon.
+// ── LISTING CARDS v2 ──
+let bulkSelectMode=false;
+function toggleBulkSelectMode(){
+  bulkSelectMode=!bulkSelectMode;
+  document.getElementById('listings-tbody')?.classList.toggle('select-mode',bulkSelectMode);
+  document.getElementById('lc-select-toggle-btn')?.classList.toggle('active',bulkSelectMode);
+  if(!bulkSelectMode){selectedListingIds.clear();updateBulkBar();renderListingsTable();}
+}
+function updateFilterCounts(){
+  const counts={all:allListings.length,active:0,pending:0,paused:0,occupied:0};
+  allListings.forEach(l=>{
+    if(l.status==='active'&&!l.is_disabled)counts.active++;
+    else if(l.status==='pending')counts.pending++;
+    else if(l.status==='paused')counts.paused++;
+    else if(l.status==='occupied')counts.occupied++;
+  });
+  Object.keys(counts).forEach(k=>{const el=document.getElementById('fp-count-'+k);if(el)el.textContent=counts[k]?'('+counts[k]+')':'';});
+}
+function lcSortListings(rows){
+  const mode=document.getElementById('listing-sort')?.value||'newest';
+  const withCount=l=>threads.filter(t=>t.listing_id===l.id).reduce((s,t)=>s+t.messages.length,0);
+  const arr=[...rows];
+  if(mode==='oldest')arr.sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  else if(mode==='messages')arr.sort((a,b)=>withCount(b)-withCount(a));
+  else if(mode==='views')arr.sort((a,b)=>(b.views||0)-(a.views||0));
+  else if(mode==='price_high')arr.sort((a,b)=>Number(b.price)-Number(a.price));
+  else if(mode==='price_low')arr.sort((a,b)=>Number(a.price)-Number(b.price));
+  else arr.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  return arr;
+}
+
 function renderListingsTable(){
+  updateFilterCounts();
   const q=(document.getElementById('listing-search')?.value||'').toLowerCase();
-  const rows=allListings.filter(l=>{if(listingFilter!=='all'&&l.status!==listingFilter)return false;if(q&&!l.title.toLowerCase().includes(q)&&!(l.area||'').toLowerCase().includes(q))return false;return true;});
-  const tbody=document.getElementById('listings-tbody');
-  if(!rows.length){tbody.innerHTML=`<tr><td colspan="8"><div class="empty-state"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><h3>No listings found</h3><p>${listingFilter==='all'?"You haven't posted any listings yet.":`No ${listingFilter} listings.`}</p><a href="/post-listing" class="btn btn-primary">Post your first listing</a></div></td></tr>`;return;}
-  tbody.innerHTML=rows.map(l=>{
+  let rows=allListings.filter(l=>{if(listingFilter!=='all'&&l.status!==listingFilter)return false;if(q&&!l.title.toLowerCase().includes(q)&&!(l.area||'').toLowerCase().includes(q))return false;return true;});
+  rows=lcSortListings(rows);
+  const wrap=document.getElementById('listings-tbody');
+  if(!rows.length){wrap.innerHTML=`<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><h3>No listings found</h3><p>${listingFilter==='all'?"You haven't posted any listings yet.":`No ${listingFilter} listings.`}</p><a href="/post-listing" class="btn btn-primary">Post your first listing</a></div>`;return;}
+
+  wrap.innerHTML=rows.map(l=>{
     const cover=(l.listing_photos||[]).find(p=>p.is_cover)||(l.listing_photos||[])[0];
+    const photoCount=(l.listing_photos||[]).length;
     const img=cover?`<img src="${cover.url}" alt=""/>`:`<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
     const mc=threads.filter(t=>t.listing_id===l.id).reduce((s,t)=>s+t.messages.length,0);
     const uc=threads.filter(t=>t.listing_id===l.id).reduce((s,t)=>s+(t.unread_count||0),0);
-    const posted=new Date(l.created_at).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'});
+    const posted=timeAgo(l.created_at);
     const d=getListingStatusDisplay(l);
+    const stCls='st-'+(l.is_disabled?'disabled':l.status);
     const trialDays=getTrialDaysLeft(l);
-    const trialNote=trialDays!==null?`<div class="trial-note${trialDays<=2?' urgent':''}">🕐 Free trial — ${trialDays} day${trialDays!==1?'s':''} left <span class="upgrade-link" onclick="requestTrialUpgrade('${escAttr(l.title)}')">Upgrade now</span></div>`:'';
     const bnbDays=getBnbDaysLeft(l);
-    const bnbNote=bnbDays!==null?`<div class="trial-note${bnbDays<=3?' urgent':''}">📅 BNB plan — ${bnbDays} day${bnbDays!==1?'s':''} left <a href="/plans" class="upgrade-link">Renew plan</a></div>`:(l.category==='airbnb'&&l.status!=='approved_unpaid_bnb'?`<div class="trial-note urgent">⚠️ No active BNB plan <a href="/plans" class="upgrade-link">Subscribe</a></div>`:'');
-    const occupiedNote=(l.status==='occupied'&&d.banner)?`<div class="occupied-note">${d.banner}</div>`:'';
-    const bnbListingFee = Number(l.payment_due_amount)||Number(platformPrices.bnb_basic_price)||0;
-    const payDueNote = (l.status==='approved_unpaid'&&l.payment_status==='pending_verification')
-      ? `<div class="trial-note">⏳ Payment submitted — verification in progress, usually done within a few minutes.</div>`
-      : l.status==='approved_unpaid'
-      ? `<div class="trial-note urgent">💳 Approved — pay <strong>KES ${Number(l.payment_due_amount||0).toLocaleString('en-KE')}</strong> to make this listing live. <span class="upgrade-link" onclick="openPayListingModal('${l.id}')">Pay now →</span></div>`
-      : l.status==='approved_unpaid_bnb'
-        ? `<div class="trial-note urgent">📅 Approved — <span class="upgrade-link" onclick="openPayListingModal('${l.id}')">pay KES ${bnbListingFee.toLocaleString('en-KE')} for just this listing →</span><br/>or <a href="/plans" class="upgrade-link">subscribe to a BNB plan →</a></div>`
-        : '';
     const hasUnitTypes=(l.listing_units&&l.listing_units.length>0);
-    const availSummary=hasUnitTypes?muAvailabilitySummary(l):null;
-    const multiUnitNote=hasUnitTypes?`<div class="multiunit-note">🏢 Has unit types${availSummary?' · '+availSummary:''} <span class="manage-link" onclick="openManageUnitsModal('${l.id}')">Manage unit types</span></div>`:'';
-    const isActive_lock=l.status==='active'&&!l.is_disabled;
-    const socialLocked=!isActive_lock;
 
-    // Which actions are permitted per status
-    const isActive   = l.status==='active'   && !l.is_disabled;
-    const isPaused   = l.status==='paused'   && !l.is_disabled;
-    const isOccupied = l.status==='occupied' && !l.is_disabled;
-    const canEdit    = (isActive||isPaused||isOccupied);
+    // ── Build alert list (most severe first), show one + "+N more" ──
+    const alerts=[];
+    if(l.status!=='occupied'&&l.status!=='approved_unpaid'&&l.status!=='approved_unpaid_bnb'&&d.banner)alerts.push({sev:'danger',html:d.banner});
+    if(l.status==='occupied'&&d.banner)alerts.push({sev:'info',html:d.banner});
+    if(l.status==='approved_unpaid'&&l.payment_status==='pending_verification')alerts.push({sev:'warn',html:'⏳ Payment submitted — verification in progress.'});
+    else if(l.status==='approved_unpaid')alerts.push({sev:'danger',html:`💳 Approved — pay <strong>KES ${Number(l.payment_due_amount||0).toLocaleString('en-KE')}</strong> to go live. <span class="lc-alert-link" onclick="openPayListingModal('${l.id}')">Pay now →</span>`});
+    else if(l.status==='approved_unpaid_bnb')alerts.push({sev:'danger',html:`📅 Approved — <span class="lc-alert-link" onclick="openPayListingModal('${l.id}')">pay for this listing</span> or <a href="/plans">subscribe to a BNB plan</a>`});
+    if(trialDays!==null)alerts.push({sev:trialDays<=2?'danger':'warn',html:`🕐 Free trial — ${trialDays}d left <span class="lc-alert-link" onclick="requestTrialUpgrade('${escAttr(l.title)}')">Upgrade</span>`});
+    if(bnbDays!==null)alerts.push({sev:bnbDays<=3?'danger':'warn',html:`📅 BNB plan — ${bnbDays}d left <a href="/plans">Renew</a>`});
+    else if(l.category==='airbnb'&&l.status!=='approved_unpaid_bnb')alerts.push({sev:'danger',html:`⚠️ No active BNB plan <a href="/plans">Subscribe</a>`});
+    if(hasUnitTypes){const av=muAvailabilitySummary(l);alerts.push({sev:'info',html:`🏢 Unit types${av?' · '+av:''} <span class="lc-alert-link" onclick="openManageUnitsModal('${l.id}')">Manage →</span>`});}
 
-    const editBtn=canEdit
-      ?`<div class="icon-btn" data-id="${l.id}" onclick="openEditModal(this.dataset.id)" title="Edit listing" role="button" tabindex="0" aria-label="Edit listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>`
-      :`<div class="icon-btn locked" title="Cannot edit — awaiting admin approval"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>`;
+    const shownAlert=alerts[0];
+    const moreCount=alerts.length-1;
+    const alertHtml=shownAlert?`<div class="lc-alert sev-${shownAlert.sev}">${shownAlert.html}${moreCount>0?`<span class="lc-alert-more" onclick="showAllAlertsForListing('${l.id}')">+${moreCount} more</span>`:''}</div>`:'';
 
-const statusBtn=l.is_disabled
-  ?`<div class="icon-btn locked" title="Disabled by admin — contact support"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>`
-  :(isOccupied||isPaused)
-    ?`<div class="icon-btn purple" data-id="${l.id}" onclick="reactivateListing(this.dataset.id)" title="Resume — sends back for a quick admin recheck" role="button" tabindex="0" aria-label="Resume listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg></div>`
-    :isActive
-      ?(hasUnitTypes
-        ?`<div class="icon-btn locked" title="Has unit types — use the purple &quot;Manage unit types&quot; icon to mark individual units occupied instead of the whole listing"><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg></div>`
-        :`<div class="icon-btn purple" data-id="${l.id}" data-title="${escAttr(l.title)}" onclick="openOccupiedModal(this.dataset.id,this.dataset.title)" title="${l.price_type==='rent'?'Mark as occupied':'Mark as sold'}" role="button" tabindex="0" aria-label="${l.price_type==='rent'?'Mark as occupied':'Mark as sold'}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg></div>`)
-      :`<div class="icon-btn locked" title="Awaiting admin approval — no status changes allowed"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>`;
+    const isActive=l.status==='active'&&!l.is_disabled;
+    const isPaused=l.status==='paused'&&!l.is_disabled;
+    const isOccupied=l.status==='occupied'&&!l.is_disabled;
+    const canEdit=(isActive||isPaused||isOccupied);
 
-const pauseBtn=isActive
-  ?`<div class="icon-btn" data-id="${l.id}" data-status="${l.status}" onclick="togglePause(this.dataset.id,this.dataset.status)" title="Pause listing" role="button" tabindex="0" aria-label="Pause listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></div>`
-  :'';
-const payNowBtn = (l.status==='approved_unpaid')
-  ?`<div class="icon-btn purple" data-id="${l.id}" onclick="openPayListingModal(this.dataset.id)" title="Pay to go live" role="button" tabindex="0" aria-label="Pay to go live"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>`
-  :(l.status==='approved_unpaid_bnb')
-    ?`<a href="/plans" class="icon-btn purple" title="Subscribe to a BNB plan"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></a>`
-    :'';
-const publishNowBtn = (l.status==='scheduled')
-  ?`<div class="icon-btn purple" data-id="${l.id}" onclick="publishScheduledNow(this.dataset.id)" title="Publish now instead of waiting" role="button" tabindex="0" aria-label="Publish now" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>`
-  :'';
+    // ── Primary actions (max 3, always visible) ──
+    let primaryBtns='';
+    primaryBtns+=`<button class="lc-btn" data-id="${l.id}" onclick="window.open('/listing?id=${String(l.listing_number).padStart(6,'0')}','_blank')"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg><span class="lc-btn-label">View</span></button>`;
+    primaryBtns+=canEdit
+      ?`<button class="lc-btn" data-id="${l.id}" onclick="openEditModal('${l.id}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg><span class="lc-btn-label">Edit</span></button>`
+      :`<button class="lc-btn lc-btn-locked"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/></svg><span class="lc-btn-label">Edit</span></button>`;
+    if(l.status==='approved_unpaid')primaryBtns+=`<button class="lc-btn lc-btn-purple" onclick="openPayListingModal('${l.id}')"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/></svg><span class="lc-btn-label">Pay now</span></button>`;
+    else if(l.status==='scheduled')primaryBtns+=`<button class="lc-btn lc-btn-purple" onclick="publishScheduledNow('${l.id}')"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg><span class="lc-btn-label">Publish now</span></button>`;
+    else if(isActive&&!hasUnitTypes)primaryBtns+=`<button class="lc-btn lc-btn-purple" data-id="${l.id}" data-title="${escAttr(l.title)}" onclick="openOccupiedModal('${l.id}','${escAttr(l.title)}')"><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg><span class="lc-btn-label">${l.price_type==='rent'?'Mark occupied':'Mark sold'}</span></button>`;
+    else if((isOccupied||isPaused)&&!l.is_disabled)primaryBtns+=`<button class="lc-btn lc-btn-purple" onclick="reactivateListing('${l.id}')"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg><span class="lc-btn-label">Resume</span></button>`;
+    else if(hasUnitTypes)primaryBtns+=`<button class="lc-btn lc-btn-purple" onclick="openManageUnitsModal('${l.id}')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg><span class="lc-btn-label">Manage units</span></button>`;
 
-const manageUnitsBtn=hasUnitTypes
-  ?`<div class="icon-btn purple" data-id="${l.id}" onclick="openManageUnitsModal(this.dataset.id)" title="Manage unit types — mark occupied/available, add/edit/delete types" role="button" tabindex="0" aria-label="Manage unit types" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg></div>`
-  :`<div class="icon-btn" data-id="${l.id}" onclick="openManageUnitsModal(this.dataset.id)" title="Add unit types to track separately" role="button" tabindex="0" aria-label="Add unit types" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg></div>`;
-
-const manageVideosBtn=`<div class="icon-btn purple desktop-only-icon" data-id="${l.id}" onclick="openManageVideosModal(this.dataset.id)" title="Manage video walkthrough" role="button" tabindex="0" aria-label="Manage videos" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>`;
-
-const brochureBtn=subscriptionInfo().active
-  ?`<div class="icon-btn purple desktop-only-icon" data-id="${l.id}" onclick="generateBrochure(this.dataset.id)" title="Download printable brochure" role="button" tabindex="0" aria-label="Download brochure" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>`
-  :'';
-
-const globalContactHidden = !!(ownerProfile||currentProfile)?.hide_buyer_contact;
-const contactHideBtn = globalContactHidden
-  ? `<div class="icon-btn locked desktop-only-icon" title="Hidden platform-wide via Settings → Buyer contact privacy"><svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div>`
-  : (l.contact_hidden
-    ?`<div class="icon-btn desktop-only-icon" data-id="${l.id}" onclick="toggleListingContactHidden(this.dataset.id)" title="Contact hidden — click to re-enable Call/WhatsApp on this listing" role="button" tabindex="0" aria-label="Show buyer contact for this listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}" style="color:var(--red);border-color:var(--red)"><svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div>`
-    :`<div class="icon-btn desktop-only-icon" data-id="${l.id}" onclick="toggleListingContactHidden(this.dataset.id)" title="Hide Call/WhatsApp — force chat-only on this listing" role="button" tabindex="0" aria-label="Hide buyer contact for this listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>`);
-
-    const noteHtml=[
-      (l.status!=='occupied'&&l.status!=='approved_unpaid'&&l.status!=='approved_unpaid_bnb'&&d.banner)?`<div class="disabled-note">${d.banner}</div>`:'',
-      occupiedNote,trialNote,payDueNote,bnbNote,multiUnitNote
-    ].join('');
-
-    return `<tr>
-      <td><input type="checkbox" class="listing-select-cb" data-id="${l.id}" ${selectedListingIds.has(String(l.id))?'checked':''} onchange="toggleListingSelected('${l.id}',this.checked)"/></td>
-      <td><div class="listing-name-cell"><div class="listing-thumb">${img}</div><div>
-        <div class="listing-title-text">${escHtml(l.title)}</div>
-        <div class="listing-area-text">${l.area}${l.sub_area?' · '+l.sub_area:''}</div>
-        <div class="listing-notes-inline">${noteHtml}</div>
-      </div></div></td>
-      <td><div class="listing-price-text">${hasUnitTypes?muPriceRangeText(l):`KES ${Number(l.price).toLocaleString('en-KE')}${NK_DASH_FREQ_SUFFIX[l.price_frequency||(l.price_type==='rent'?'month':'once')]||''}`}</div><div class="listing-price-sub">${hasUnitTypes?(l.listing_units.length+' unit type(s)'):(l.price_type==='rent'?'Monthly rent':'For sale')}</div></td>
-      <td><span class="status ${d.cls}">${d.label}</span></td>
-      <td><span style="font-size:13px;font-weight:600;color:${mc>0?'var(--green-dark)':'var(--text-3)'}">${mc}${uc>0?` <span style="color:var(--red);font-size:11px">(${uc} new)</span>`:''}</span></td>
-      <td style="font-size:13px;color:var(--text-3)">${l.views||0}</td>
-      <td style="font-size:12px;color:var(--text-3)">${posted}</td>
-      <td><div class="actions-cell">
-        <a href="/listing?id=${String(l.listing_number).padStart(6,'0')}" target="_blank" class="icon-btn" title="View live listing"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
-        <div class="icon-btn" onclick="openMessagesForListing('${l.id}')" title="Messages" role="button" tabindex="0" aria-label="Open messages for this listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
-        ${socialLocked?`<div class="icon-btn" title="Only available while the listing is active" style="opacity:.4;pointer-events:none"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>`:`<div class="icon-btn" data-id="${l.id}" onclick="openShareMenu('${l.id}',this)" title="Share listing" role="button" tabindex="0" aria-label="Share listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>`}
-        ${editBtn}${statusBtn}${pauseBtn}${publishNowBtn}${payNowBtn}${manageUnitsBtn}
-        ${manageVideosBtn}${brochureBtn}${contactHideBtn}
-        <div class="icon-btn danger" data-id="${l.id}" data-title="${escAttr(l.title)}" onclick="openDeleteModal(this.dataset.id,this.dataset.title)" title="Delete listing" role="button" tabindex="0" aria-label="Delete listing" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></div>
-      </div></td>
-    </tr>${noteHtml?`<tr class="listing-notes-bar"><td colspan="8"><div class="note-wrap">${noteHtml}</div></td></tr>`:''}`;
+    return `<div class="lc-card ${stCls} ${selectedListingIds.has(String(l.id))?'selected':''}" data-id="${l.id}">
+      <div class="lc-top">
+        <div class="lc-select-cb-wrap"><input type="checkbox" class="listing-select-cb" data-id="${l.id}" ${selectedListingIds.has(String(l.id))?'checked':''} onchange="toggleListingSelected('${l.id}',this.checked)"/></div>
+        <div class="lc-thumb">${img}${photoCount>1?`<span class="lc-thumb-count">📷 ${photoCount}</span>`:''}</div>
+        <div class="lc-main">
+          <div class="lc-title-row">
+            <div class="lc-title">${escHtml(l.title)}</div>
+            <span class="status ${d.cls} lc-status-badge">${d.label}</span>
+          </div>
+          <div class="lc-meta">${escHtml(l.area)}${l.sub_area?' · '+escHtml(l.sub_area):''} · Posted ${posted}</div>
+          ${alertHtml}
+          <div class="lc-stats-row">
+            <span class="lc-price">${hasUnitTypes?muPriceRangeText(l):`KES ${Number(l.price).toLocaleString('en-KE')}${NK_DASH_FREQ_SUFFIX[l.price_frequency||(l.price_type==='rent'?'month':'once')]||''}`}</span>
+            <span class="lc-dot-sep">·</span>
+            <span class="lc-stat-chip ${uc>0?'has-new':''}"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>${mc} message${mc!==1?'s':''}${uc>0?` · ${uc} new`:''}</span>
+            <span class="lc-dot-sep">·</span>
+            <span class="lc-stat-chip"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>${l.views||0} views</span>
+          </div>
+        </div>
+      </div>
+      <div class="lc-actions-row">
+        ${primaryBtns}
+        <button class="lc-btn lc-btn-more" data-id="${l.id}" onclick="openMoreActionsMenu('${l.id}',this)" title="More actions" aria-label="More actions">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+        </button>
+      </div>
+    </div>`;
   }).join('');
+}
+
+function showAllAlertsForListing(id){
+  const l=allListings.find(x=>String(x.id)===String(id));
+  if(!l)return;
+  showToast('Open the listing (Edit) to see all status notes for this property','');
 }
 
 function statusLabel(s){return{active:'Active',pending:'Pending review',paused:'Paused',rejected:'Rejected',expired:'Expired',occupied:'Occupied',scheduled:'Scheduled'}[s]||s;}
@@ -6575,16 +6675,30 @@ function openShareMenu(listingId,anchorEl){
 function openMoreActionsMenu(listingId,anchorEl){
   const l=allListings.find(x=>String(x.id)===String(listingId));
   if(!l)return;
-  const items=[
-    {label:'Manage video walkthrough',icon:'<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>',onclick:()=>openManageVideosModal(listingId)},
-  ];
+  const isActive_lock=l.status==='active'&&!l.is_disabled;
+  const items=[];
+
+  items.push({label:'Share to WhatsApp / Facebook / Instagram / TikTok',icon:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',onclick:()=>openShareMenu(listingId,anchorEl),disabled:!isActive_lock});
+
+  items.push({label:'Manage unit types',icon:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/>',onclick:()=>openManageUnitsModal(listingId)});
+
+  items.push({label:'Manage video walkthrough',icon:'<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>',onclick:()=>openManageVideosModal(listingId)});
+
   if(subscriptionInfo().active){
-    items.push({label:'Download brochure',icon:'<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>',onclick:()=>generateBrochure(listingId)});
+    items.push({label:'Download printable brochure',icon:'<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>',onclick:()=>generateBrochure(listingId)});
   }
   if(!(ownerProfile||currentProfile)?.hide_buyer_contact){
     items.push({label:l.contact_hidden?'Show Call/WhatsApp again':'Hide Call/WhatsApp (chat only)',icon:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',onclick:()=>toggleListingContactHidden(listingId)});
   }
-  openActionMenu(anchorEl,items);
+
+  const isOccupied_m=l.status==='occupied'&&!l.is_disabled;
+  const isPaused_m=l.status==='paused'&&!l.is_disabled;
+  if(isActive_lock)items.push({label:'Pause listing',icon:'<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>',onclick:()=>togglePause(listingId,l.status)});
+  if(isOccupied_m||isPaused_m)items.push({label:'Resume (resubmits for approval)',icon:'<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>',onclick:()=>reactivateListing(listingId)});
+
+  items.push({label:'Delete listing',icon:'<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/>',danger:true,onclick:()=>openDeleteModal(listingId,l.title)});
+
+  openActionMenu(anchorEl,items.filter(it=>!it.disabled));
 }
 async function toggleListingContactHidden(id){
   if(listingActionBusy.has(id))return;
