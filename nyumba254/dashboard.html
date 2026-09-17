@@ -2093,21 +2093,28 @@
 
 <!-- MANAGE VIDEOS MODAL (Premium/Elite video walkthroughs) -->
 <div class="modal-overlay" id="modal-manage-videos">
-  <div class="modal" style="max-width:520px">
-    <div class="modal-head"><h3>Video walkthroughs — <span id="mv-listing-title"></span></h3><div class="modal-close" onclick="closeModal('modal-manage-videos')" role="button" tabindex="0" aria-label="Close" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeModal('modal-manage-videos')}">✕</div></div>
-    <div class="modal-body">
-      <p style="font-size:12.5px;color:var(--text-3);margin-bottom:14px;line-height:1.6">Add a YouTube, Vimeo, or direct video link (e.g. a 360° tour) — buyers see it embedded on your listing page. <span id="mv-limit-note"></span></p>
-      <div class="form-group"><label>Video URL</label><input type="text" id="mv-url-input" placeholder="https://youtube.com/watch?v=…"/></div>
-      <button class="btn btn-primary btn-sm" id="mv-add-btn" onclick="addListingVideo()">+ Add video</button>
-      <div style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--border)">
-        <label style="display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Or record / upload directly <span style="font-weight:400;text-transform:none">max 60s</span></label>
-        <input type="file" id="mv-file-input" accept="video/*" capture="environment" onchange="handleMvFileSelect(this.files[0])"/>
-        <div id="mv-file-status" style="font-size:11.5px;color:var(--text-3);margin-top:6px"></div>
-        <div style="font-size:11px;color:var(--text-3);margin-top:4px">Goes to a quick review queue — it won't appear on the listing until approved.</div>
-      </div>
-      <div id="mv-video-list" style="margin-top:16px"></div>
+  <div class="modal" style="max-width:480px">
+    <div class="modal-head">
+      <h3>Video walkthrough — <span id="mv-listing-title"></span></h3>
+      <div class="modal-close" role="button" tabindex="0" aria-label="Close" onclick="closeModal('modal-manage-videos')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeModal('modal-manage-videos')}">✕</div>
     </div>
-    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-manage-videos')">Close</button></div>
+    <div class="modal-body">
+      <p id="mv-limit-note" style="font-size:12px;color:var(--text-3);margin-bottom:14px"></p>
+      <div id="mv-video-list" style="margin-bottom:16px"></div>
+      <label style="display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:6px">Paste a YouTube, Vimeo, or direct video link</label>
+      <div style="display:flex;gap:8px;margin-bottom:18px">
+        <input type="url" id="mv-url-input" placeholder="https://youtube.com/watch?v=…" style="flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;outline:none;background:var(--white);color:var(--text)"/>
+        <button type="button" class="btn btn-primary btn-sm" id="mv-add-btn" onclick="addListingVideo()">+ Add</button>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:14px">
+        <label style="display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:6px">Or upload a short clip (max 60s, 100MB)</label>
+        <input type="file" id="mv-file-input" accept="video/*" onchange="handleMvFileSelect(this.files[0])" style="font-size:12.5px"/>
+        <div id="mv-file-status" style="font-size:12px;color:var(--text-3);margin-top:8px"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('modal-manage-videos')">Done</button>
+    </div>
   </div>
 </div>
 
@@ -7977,6 +7984,325 @@ function exportListingsCSV(selectedOnly){
   closeActionMenu();
 }
 
+/* ══════════════════════════════════════
+   MANAGE UNITS MODAL — multi-unit properties
+   ════════════════════════════════════════════════════
+   Opened from the "Manage units" button or the Units alert
+   chip on a listing card. Fetches fresh listing_units +
+   occupancy log rows for that listing, then lets the seller
+   mark a unit occupied (optionally recording floor/door/
+   position) or free one up if they made a mistake.
+══════════════════════════════════════ */
+async function openManageUnitsModal(listingId){
+  const l=allListings.find(x=>String(x.id)===String(listingId));
+  if(!l){showToast('Listing not found','error');return;}
+  muActiveListingId=listingId;
+  document.getElementById('mu-listing-title').textContent=l.title;
+  document.getElementById('mu-unit-list').innerHTML='<div style="text-align:center;padding:20px;color:var(--text-3);font-size:13px">Loading units…</div>';
+  document.getElementById('mu-summary-strip').innerHTML='';
+  openModal('modal-manage-units');
+
+  const{data,error}=await db.from('listing_units').select('*').eq('listing_id',listingId).order('id',{ascending:true});
+  if(error){document.getElementById('mu-unit-list').innerHTML=`<div class="empty-state"><p>Could not load units: ${escHtml(error.message)}</p></div>`;return;}
+  muUnits=data||[];
+  l.listing_units=muUnits;
+  renderManageUnitsModal();
+}
+
+function muRenderSummaryStrip(){
+  const totalAvail=muUnits.reduce((s,u)=>s+(u.quantity_available??0),0);
+  const totalUnits=muUnits.reduce((s,u)=>s+(u.quantity_total??u.quantity_available??0),0);
+  const prices=muUnits.map(u=>Number(u.price)).filter(p=>!isNaN(p));
+  const min=prices.length?Math.min(...prices):0,max=prices.length?Math.max(...prices):0;
+  document.getElementById('mu-summary-strip').innerHTML=
+    `<span><strong>${totalAvail}</strong> of <strong>${totalUnits}</strong> units available</span>`+
+    `<span>Price range: <strong>KES ${min.toLocaleString('en-KE')}${min!==max?' – '+max.toLocaleString('en-KE'):''}</strong></span>`;
+}
+
+function renderManageUnitsModal(){
+  if(!muUnits.length){document.getElementById('mu-unit-list').innerHTML='<div class="empty-state"><p>No unit types found for this property.</p></div>';document.getElementById('mu-summary-strip').innerHTML='';return;}
+  muRenderSummaryStrip();
+  document.getElementById('mu-unit-list').innerHTML=muUnits.map(u=>{
+    const available=u.quantity_available??0;
+    const total=u.quantity_total??available;
+    const badgeCls=available<=0?'none':(total&&available/total<=0.2?'low':'');
+    return `
+      <div class="mu-unit-row" id="mu-unit-${u.id}">
+        <div class="mu-unit-row-top">
+          <strong>${escHtml(u.unit_label)}</strong>
+          <span class="mu-badge ${badgeCls}">${available} of ${total} available</span>
+        </div>
+        <div class="mu-unit-actions">
+          <button class="btn btn-primary btn-sm" ${available<=0?'disabled':''} onclick="muToggleOccupyForm(${u.id})">Mark one occupied</button>
+          <button class="btn btn-outline btn-sm" ${available>=total?'disabled':''} onclick="muMarkAvailable(${u.id})">Mark one available</button>
+          <button class="btn btn-outline btn-sm" onclick="muOpenEditForm(${u.id})">Edit</button>
+          <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="muDeleteUnit(${u.id},'${escAttr(u.unit_label)}')">Delete</button>
+        </div>
+        <div class="mu-occupy-form mu-edit-form" id="mu-edit-form-${u.id}">
+          <div class="mu-occupy-grid">
+            <div><label>Unit label</label><input type="text" id="mu-edit-label-${u.id}" value="${escAttr(u.unit_label)}"/></div>
+            <div><label>Price (KES)</label><input type="number" id="mu-edit-price-${u.id}" value="${u.price}"/></div>
+            <div><label>Total units of this type</label><input type="number" id="mu-edit-total-${u.id}" value="${u.quantity_total??u.quantity_available}" min="1"/></div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary btn-sm" onclick="muSaveEditFromForm(${u.id})">Save changes</button>
+            <button class="btn btn-outline btn-sm" onclick="muCancelEditForm(${u.id})">Cancel</button>
+          </div>
+        </div>
+        <div class="mu-occupy-form" id="mu-occupy-form-${u.id}">
+          <div class="mu-occupy-grid">
+            <div><label>Floor</label><input type="text" id="mu-floor-${u.id}" placeholder="e.g. 2nd floor"/></div>
+            <div><label>Door / unit number</label><input type="text" id="mu-door-${u.id}" placeholder="e.g. Door 4B"/></div>
+            <div><label>Position</label>
+              <select id="mu-pos-${u.id}">
+                <option value="">Not specified</option>
+                <option value="left">Left side</option>
+                <option value="right">Right side</option>
+                <option value="middle">Middle</option>
+                <option value="corner">Corner unit</option>
+                <option value="end">End of corridor</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary btn-sm" onclick="muConfirmOccupy(${u.id})">Confirm — mark occupied</button>
+            <button class="btn btn-outline btn-sm" onclick="muToggleOccupyForm(${u.id})">Cancel</button>
+          </div>
+        </div>
+        <div class="mu-log" id="mu-log-${u.id}"></div>
+      </div>`;
+  }).join('');
+  muUnits.forEach(u=>muLoadOccupancyLog(u.id));
+}
+
+function muToggleOccupyForm(unitId){document.getElementById(`mu-occupy-form-${unitId}`)?.classList.toggle('open');}
+
+function muToggleAddForm(){document.getElementById('mu-add-form')?.classList.toggle('open');}
+
+async function muSaveNewUnit(){
+  const label=document.getElementById('mu-new-label').value.trim();
+  const price=parseFloat(document.getElementById('mu-new-price').value)||0;
+  const total=parseInt(document.getElementById('mu-new-total').value)||1;
+  if(!label){showToast('Please name the unit type','error');return;}
+  if(muActionBusy)return;
+  muActionBusy=true;
+  try{
+    const{error}=await db.from('listing_units').insert({listing_id:muActiveListingId,unit_label:label,price,quantity_available:total,quantity_total:total});
+    if(error){showToast('Could not add unit type: '+error.message,'error');return;}
+    document.getElementById('mu-new-label').value='';document.getElementById('mu-new-price').value='';document.getElementById('mu-new-total').value='1';
+    muToggleAddForm();
+    showToast('Unit type added ✓','success');
+    await openManageUnitsModal(muActiveListingId);
+    renderListingsTable();renderQuickListings();
+  } finally { muActionBusy=false; }
+}
+
+function muOpenEditForm(unitId){
+  document.querySelectorAll('.mu-edit-form.open').forEach(f=>f.classList.remove('open'));
+  document.getElementById(`mu-edit-form-${unitId}`)?.classList.toggle('open');
+}
+function muCancelEditForm(unitId){
+  document.getElementById(`mu-edit-form-${unitId}`)?.classList.remove('open');
+}
+async function muSaveEditFromForm(unitId){
+  const label=document.getElementById(`mu-edit-label-${unitId}`).value.trim();
+  const price=parseFloat(document.getElementById(`mu-edit-price-${unitId}`).value)||0;
+  const total=parseInt(document.getElementById(`mu-edit-total-${unitId}`).value)||1;
+  await muSaveEditedUnit(unitId,label,price,total);
+}
+async function muSaveEditedUnit(unitId,label,price,total){
+  if(!label){showToast('Label cannot be empty','error');return;}
+  const u=muUnits.find(x=>x.id===unitId);if(!u)return;
+  const currentAvail=u.quantity_available??0;
+  const currentTotal=u.quantity_total??currentAvail;
+  const occupiedCount=Math.max(0,currentTotal-currentAvail);
+  const newAvail=Math.max(0,total-occupiedCount);
+  const{error}=await db.from('listing_units').update({unit_label:label,price,quantity_total:total,quantity_available:newAvail}).eq('id',unitId);
+  if(error){showToast('Could not update: '+error.message,'error');return;}
+  showToast('Unit type updated ✓','success');
+  await openManageUnitsModal(muActiveListingId);
+  renderListingsTable();renderQuickListings();
+}
+async function muDeleteUnit(unitId,label){
+  if(!await lcConfirm({title:'Delete unit type?',message:`Delete unit type <strong>${escHtml(label)}</strong>? This cannot be undone.`,confirmLabel:'Delete',danger:true}))return;
+  const{error}=await db.from('listing_units').delete().eq('id',unitId);
+  if(error){showToast('Could not delete: '+error.message,'error');return;}
+  showToast('Unit type deleted','success');
+  await openManageUnitsModal(muActiveListingId);
+  renderListingsTable();renderQuickListings();
+}
+
+async function muConfirmOccupy(unitId){
+  if(muActionBusy)return;
+  muActionBusy=true;
+  try{
+    const floor=document.getElementById(`mu-floor-${unitId}`).value.trim()||null;
+    const door=document.getElementById(`mu-door-${unitId}`).value.trim()||null;
+    const pos=document.getElementById(`mu-pos-${unitId}`).value||null;
+    const unit=muUnits.find(u=>u.id===unitId);
+    if(!unit||(unit.quantity_available??0)<=0)return;
+
+    const newAvailable=unit.quantity_available-1;
+    // Optimistic-locking guard: only succeeds if quantity_available still
+    // matches what we last read, so two people clicking at once can't both
+    // "win" and push the count below zero or out of sync.
+    const{data:updRows,error}=await db.from('listing_units').update({quantity_available:newAvailable}).eq('id',unitId).eq('quantity_available',unit.quantity_available).select();
+    if(error){showToast('Could not update unit: '+error.message,'error');return;}
+    if(!updRows||!updRows.length){showToast('This unit was just updated elsewhere — refreshing…','error');await openManageUnitsModal(muActiveListingId);return;}
+
+    try{
+      const{error:logErr}=await db.from('unit_occupancy_log').insert({listing_unit_id:unitId,listing_id:muActiveListingId,floor,door_number:door,position:pos,action:'occupied'});
+      if(logErr) console.warn('unit_occupancy_log insert failed (availability was still updated):',logErr.message);
+    }catch(e){console.warn('unit_occupancy_log insert failed (availability was still updated):',e.message||e);}
+
+    unit.quantity_available=newAvailable;
+    muSyncListingCache();
+    muToggleOccupyForm(unitId);
+    renderManageUnitsModal();
+    renderListingsTable();renderQuickListings();
+    showToast('Unit marked as occupied — live listing updated ✓','success');
+    {
+      const l=allListings.find(x=>String(x.id)===String(muActiveListingId));
+      if(l)notifyInApp('listing_updated',`Unit occupied — "${l.title}"`,`${unit.unit_label}: ${newAvailable} of ${unit.quantity_total??unit.quantity_available} now available`,lcNum(l)?`/listing?id=${lcNum(l)}`:null);
+    }
+  } finally {
+    muActionBusy=false;
+  }
+}
+
+async function muMarkAvailable(unitId){
+  if(muActionBusy)return;
+  muActionBusy=true;
+  try{
+    const unit=muUnits.find(u=>u.id===unitId);
+    if(!unit)return;
+    const total=unit.quantity_total??unit.quantity_available;
+    if((unit.quantity_available??0)>=total)return;
+
+    const newAvailable=unit.quantity_available+1;
+    const{data:updRows,error}=await db.from('listing_units').update({quantity_available:newAvailable}).eq('id',unitId).eq('quantity_available',unit.quantity_available).select();
+    if(error){showToast('Could not update unit: '+error.message,'error');return;}
+    if(!updRows||!updRows.length){showToast('This unit was just updated elsewhere — refreshing…','error');await openManageUnitsModal(muActiveListingId);return;}
+
+    try{
+      const{error:logErr}=await db.from('unit_occupancy_log').insert({listing_unit_id:unitId,listing_id:muActiveListingId,action:'freed'});
+      if(logErr) console.warn('unit_occupancy_log insert failed (availability was still updated):',logErr.message);
+    }catch(e){console.warn('unit_occupancy_log insert failed (availability was still updated):',e.message||e);}
+
+    unit.quantity_available=newAvailable;
+    muSyncListingCache();
+    renderManageUnitsModal();
+    renderListingsTable();renderQuickListings();
+    showToast('Unit marked as available again ✓','success');
+    {
+      const l=allListings.find(x=>String(x.id)===String(muActiveListingId));
+      if(l)notifyInApp('listing_updated',`Unit freed up — "${l.title}"`,`${unit.unit_label}: ${newAvailable} of ${unit.quantity_total??unit.quantity_available} now available`,lcNum(l)?`/listing?id=${lcNum(l)}`:null);
+    }
+  } finally {
+    muActionBusy=false;
+  }
+}
+
+function muSyncListingCache(){
+  const l=allListings.find(x=>String(x.id)===String(muActiveListingId));
+  if(l)l.listing_units=muUnits;
+}
+
+async function muLoadOccupancyLog(unitId){
+  const el=document.getElementById(`mu-log-${unitId}`);
+  if(!el)return;
+  try{
+    const{data,error}=await db.from('unit_occupancy_log').select('*').eq('listing_unit_id',unitId).order('created_at',{ascending:false}).limit(5);
+    if(error||!data||!data.length){el.innerHTML='';return;}
+  } catch(e){
+    console.error(e);
+  }
+}
+// ── Manage videos modal (Premium/Elite video walkthroughs) ──
+let mvActiveListingId=null, mvVideos=[];
+const MV_MAX_VIDEOS = 1; // adjust per plan tier if you want monthly=1 / yearly=5
+
+function mvGetLimit(){
+  const p = ownerProfile || currentProfile;
+  return p?.subscription_tier==='yearly' ? 5 : 1;
+}
+
+async function openManageVideosModal(listingId){
+  const l=allListings.find(x=>String(x.id)===String(listingId));
+  if(!l){showToast('Listing not found','error');return;}
+  if(!subscriptionInfo().active){showToast('Video walkthroughs are a Premium feature — upgrade to unlock.','error');return;}
+  mvActiveListingId=listingId;
+  document.getElementById('mv-listing-title').textContent=l.title;
+  document.getElementById('mv-url-input').value='';
+  document.getElementById('mv-file-input').value='';
+  document.getElementById('mv-file-status').textContent='';
+  const limit=mvGetLimit();
+  document.getElementById('mv-limit-note').textContent=`Up to ${limit} video${limit!==1?'s':''} per listing.`;
+  mvVideos = Array.isArray(l.videos) ? [...l.videos] : [];
+  mvRenderVideoList();
+  openModal('modal-manage-videos');
+}
+
+function mvRenderVideoList(){
+  const el=document.getElementById('mv-video-list');
+  if(!el)return;
+  if(!mvVideos.length){el.innerHTML='<div style="font-size:12px;color:var(--text-3)">No videos added yet.</div>';return;}
+  el.innerHTML=mvVideos.map((v,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px">
+      <span style="flex:1;font-size:12.5px;word-break:break-all">${escHtml(v.url||v)}</span>
+      <button type="button" class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="removeListingVideo(${i})">Remove</button>
+    </div>`).join('');
+}
+
+async function addListingVideo(){
+  const input=document.getElementById('mv-url-input');
+  const url=input.value.trim();
+  if(!url){showToast('Paste a video link first','error');return;}
+  if(mvVideos.length>=mvGetLimit()){showToast(`You can add up to ${mvGetLimit()} video(s) on your plan`,'error');return;}
+  mvVideos.push({url});
+  const btn=document.getElementById('mv-add-btn');
+  btn.disabled=true;btn.textContent='Saving…';
+  const{error}=await db.from('listings').update({videos:mvVideos}).eq('id',mvActiveListingId);
+  btn.disabled=false;btn.textContent='+ Add';
+  if(error){mvVideos.pop();showToast('Could not save: '+error.message,'error');return;}
+  const l=allListings.find(x=>String(x.id)===String(mvActiveListingId));
+  if(l)l.videos=mvVideos;
+  input.value='';
+  mvRenderVideoList();
+  showToast('Video added ✓','success');
+}
+
+async function removeListingVideo(index){
+  const removed=mvVideos.splice(index,1);
+  const{error}=await db.from('listings').update({videos:mvVideos}).eq('id',mvActiveListingId);
+  if(error){mvVideos.splice(index,0,removed[0]);showToast('Could not remove: '+error.message,'error');return;}
+  const l=allListings.find(x=>String(x.id)===String(mvActiveListingId));
+  if(l)l.videos=mvVideos;
+  mvRenderVideoList();
+  showToast('Video removed','success');
+}
+
+const LISTING_VIDEOS_BUCKET='listing-videos'; // create this Supabase storage bucket if it doesn't exist
+async function handleMvFileSelect(file){
+  if(!file)return;
+  if(mvVideos.length>=mvGetLimit()){showToast(`You can add up to ${mvGetLimit()} video(s) on your plan`,'error');document.getElementById('mv-file-input').value='';return;}
+  if(file.size>100*1024*1024){showToast('Video must be under 100MB','error');document.getElementById('mv-file-input').value='';return;}
+  const statusEl=document.getElementById('mv-file-status');
+  statusEl.textContent='Uploading…';
+  const ext=(file.name.split('.').pop()||'mp4').toLowerCase();
+  const path=`${mvActiveListingId}/${Date.now()}.${ext}`;
+  const{error:upErr}=await db.storage.from(LISTING_VIDEOS_BUCKET).upload(path,file);
+  if(upErr){statusEl.textContent='Upload failed: '+upErr.message;return;}
+  const{data:pub}=db.storage.from(LISTING_VIDEOS_BUCKET).getPublicUrl(path);
+  mvVideos.push({url:pub.publicUrl});
+  const{error}=await db.from('listings').update({videos:mvVideos}).eq('id',mvActiveListingId);
+  if(error){mvVideos.pop();statusEl.textContent='Save failed: '+error.message;return;}
+  const l=allListings.find(x=>String(x.id)===String(mvActiveListingId));
+  if(l)l.videos=mvVideos;
+  statusEl.textContent='Uploaded ✓';
+  document.getElementById('mv-file-input').value='';
+  mvRenderVideoList();
+}
 function openEditModal(id){
   const l=allListings.find(l=>l.id===id);if(!l)return;
   editPhotosListingId=id;
@@ -9601,12 +9927,19 @@ const Tour = (() => {
     { selector:'#overview-chart-card', page:'overview', title:'Messages this week', desc:'See how buyer activity on your listings has trended over the last 7 days.' },
     { selector:'#overview-quicklistings-card', page:'overview', title:'Your listings at a glance', desc:'A quick preview of your properties — tap "Manage" any time to see them all.' },
     { selector:'#btn-new-listing-tour', page:'overview', title:'Post a listing', desc:'Ready to list a property? Tap this any time to add a new apartment, house, or commercial space.' },
+
     { selector:'#nav-listings', page:'overview', title:'My listings', desc:'Tap "My listings" now to see everything you\'ve posted.', click:true },
-    { selector:'#listings-filter-bar', page:'listings', title:'Filter your listings', desc:'Filter by status — active, pending, paused, occupied/sold — or search by name.' },
-    { selector:'#listings-select-all', page:'listings', title:'Select multiple listings', desc:'Tick the checkbox on any row (or this header checkbox to select all) to pause or delete several listings at once — a bar appears above the table with those actions.' },
-    { selector:'#listings-table-card', page:'listings', title:'Manage each listing', desc:'Edit, view messages, share, mark occupied/sold, pause, or delete — from the icons on each row.' },
-    { selector:'#listings-table-card', page:'listings', title:'Share to social media — free', desc:'Tap the Facebook, Instagram, or TikTok icon on any listing to share it to your own page or profile — free for every seller, no upgrade needed.' },
-    { selector:'#listings-table-card', page:'listings', title:'More per-listing tools', desc:'Purple icons handle the rest: manage unit types, add a video walkthrough, download a printable brochure, and hide/show your Call & WhatsApp buttons — right from this row.' },
+    { selector:'#lc-pill-group', page:'listings', title:'Filter by status', desc:'Swipe this strip sideways to jump between Live, Awaiting payment, Pending review, Paused and more. "Needs attention" is always first — it collects everything that needs you today.' },
+    { selector:'#lc-saved-views', page:'listings', title:'Smart views', desc:'Shortcuts that find problems for you: underperformers, listings missing photos, buyers you haven\'t replied to, and listings going stale. They only appear when they actually apply.' },
+    { selector:'#lc-search-wrap', page:'listings', title:'Search anything', desc:'Search by title, area, address, or listing number — type a number like 000123 to jump straight to it. Press "/" any time to focus this box.' },
+    { selector:'#lc-view-btn', page:'listings', title:'Sort, density and CSV', desc:'Tap ⚙ View to change the sort order, switch between roomy cards and a compact list, or download all your listings as a CSV.' },
+    { selector:'#lc-select-toggle-btn', page:'listings', title:'Do several at once', desc:'Tap ☑ Select to tick multiple listings, then pause, resume, duplicate, feature, share or delete them all in one go. On mobile you can also long-press any card to jump straight into select mode.' },
+    { selector:'#listings-table-card', page:'listings', title:'Your listing cards', desc:'Each card shows the photo, price, status and live stats. The coloured ring on the right is that listing\'s health score out of 100 — tap it to see exactly what\'s pulling it down.' },
+    { selector:'#listings-table-card', page:'listings', title:'Tap a card for the full picture', desc:'Tapping anywhere on a card opens a detail panel with all its photos, description, amenities and stats — and you can change the cover photo there by tapping any picture.' },
+    { selector:'#listings-table-card', page:'listings', title:'One clear next step', desc:'The amber "Next step" line tells you the single most valuable thing to fix on that listing — add photos, rewrite the description with AI, or check your price against the market.' },
+    { selector:'#listings-table-card', page:'listings', title:'Share to social — free', desc:'Tap Share on any live listing for WhatsApp, Facebook, Instagram, TikTok, a copy-link, or a downloadable QR code. Free for every seller, no upgrade needed.' },
+    { selector:'#listings-table-card', page:'listings', title:'Everything else is under ⋯', desc:'The ⋯ button on each card holds the rest: duplicate, manage unit types, add a video walkthrough, request a price change, download a brochure, hide Call/WhatsApp, pause, resume and delete.' },
+
     { selector:'#nav-messages', page:'listings', title:'Messages', desc:'Tap "Messages" to see every conversation with buyers in one place.', click:true },
     { selector:'#thread-list', page:'messages', title:'Your inbox', desc:'All your buyer conversations live here, newest first. A green dot marks unread ones.' },
     { selector:'#chat-pane', page:'messages', title:'Chat with buyers', desc:'Open a conversation to reply directly, or via WhatsApp if the buyer shared their number. Tap the message icon by the input box any time for ready-made professional replies.' },
@@ -9618,9 +9951,10 @@ const Tour = (() => {
     { selector:'#payment-summary', page:'payments', title:'Payment history', desc:'Track what you\'ve paid, download receipts, and export everything to CSV.' },
     { selector:'#nav-rent-ledger', page:'payments', title:'Rent Ledger (Elite)', desc:'Tap "Rent Ledger" — track rent due dates, tenants, and payments for units you manage long-term.', click:true },
     { selector:['#rent-ledger-content','#rent-ledger-locked'], page:'rent-ledger', title:'Your rent roll', desc:'Add rental units, log payments, and get automatic overdue and lease-expiry alerts.' },
+    { selector:'#rl-capacity-switcher', page:'rent-ledger', title:'Switch ledger view', desc:'If you manage both long-term rentals and Airbnb/BNB, switch between the two ledgers here.' },
     { selector:'#nav-demand-heatmap', page:'rent-ledger', title:'Demand Insights (Elite)', desc:'Tap "Demand Insights" to see where buyers are searching most right now.', click:true },
     { selector:['#demand-content','#demand-locked'], page:'demand-heatmap', title:'Platform-wide demand', desc:'See top areas, categories, and rent-vs-sale demand — and how your listings compare to the area average.' },
-    { selector:'#rl-capacity-switcher', page:'rent-ledger', title:'Switch ledger view', desc:'If you manage both long-term rentals and Airbnb/BNB, switch between the two ledgers here.' },
+
     { selector:'#nav-settings', page:'demand-heatmap', title:'Settings', desc:'Tap "Settings" to manage your profile, notifications, and plan.', click:true },
     { selector:'#verification-settings-section', page:'settings', title:'Account verification', desc:'Submit your ID and proof of ownership here to get verified and unlock unlimited listings.' },
     { selector:'#settings-notifications-section', page:'settings', title:'Notifications', desc:'Choose exactly which alerts you want — messages, approvals, expiring listings, payments.' },
@@ -9628,8 +9962,8 @@ const Tour = (() => {
     { selector:'#settings-contact-privacy-section', page:'settings', title:'Contact privacy', desc:'Hide your Call/WhatsApp buttons platform-wide so buyers can only reach you through chat.' },
     { selector:'#settings-premium-section', page:'settings', title:'Premium', desc:'Unlock managed chat, a Pro badge, scheduled publishing, video tours, brochures, and SMS alerts.' },
     { selector:'#settings-elite-section', page:'settings', title:'Elite', desc:'AI Listing Assistant, Instant Valuation, a Storefront page, Rent Ledger, and Demand Insights.' },
-    { selector:'#elite-ai-listing-btn', page:'settings', title:'AI Listing Assistant', desc:'Jot a few bullet points and let AI draft a polished title, description, and suggested price for you.' },
-    { selector:'#elite-valuation-btn', page:'settings', title:'Instant Valuation', desc:'Check your price against similar active listings on the platform before you publish.' },
+    { selector:'#elite-ai-listing-btn', page:'settings', title:'AI Listing Assistant', desc:'Jot a few bullet points and let AI draft a polished title, description, and suggested price. Opening it from a listing\'s ⋯ menu pre-fills everything for you.' },
+    { selector:'#elite-valuation-btn', page:'settings', title:'Instant Valuation', desc:'Check your price against similar active listings on the platform before you publish — or straight from a listing\'s "Check price" button.' },
     { selector:'#storefront-banner-card', page:'overview', title:'Your storefront', desc:'A branded page listing all your active properties — share one link with buyers.' },
     { selector:'#settings-team-section', page:'settings', title:'Team seats', desc:'Invite someone to help manage your account — they get their own login with the same access.' },
     { selector:'#nav-premium-upgrade', page:'settings', title:'Upgrade any time', desc:'Your plan status always shows here in the sidebar — tap it any time to upgrade.' },
@@ -9659,7 +9993,7 @@ const Tour = (() => {
 
   function maybeStart(){
     if(!currentUser) return;
-    storageKey = `ny_tour_seen_${currentUser.id}`;
+    storageKey = `ny_tour_v4_seen_${currentUser.id}`;
     if(localStorage.getItem(storageKey)) return;
     idx = 0;
     start();
