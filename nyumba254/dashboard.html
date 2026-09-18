@@ -1534,6 +1534,9 @@
         </div>
       </div>
       <div class="topbar-right">
+              <button class="theme-switch-btn" onclick="openCmdPalette()" title="Quick search & jump to anything (⌘K)" aria-label="Quick search">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              </button>
               <div class="notif-bell-wrap" id="notif-bell-wrap" style="position:relative">
           <button class="theme-switch-btn" onclick="toggleNotifBell()" title="Notifications" aria-label="Notifications">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
@@ -1574,6 +1577,13 @@
 
     <!-- OVERVIEW -->
     <div class="page active" id="page-overview">
+      <div class="card" id="getting-started-card" style="display:none;padding:20px 22px;margin-bottom:20px;border:1.5px solid var(--green);background:var(--green-light)">
+        <div class="section-head" style="margin-bottom:14px">
+          <h2 style="color:var(--green-dark)">🚀 Getting started</h2>
+          <button class="icon-btn" title="Hide this checklist" onclick="dismissGettingStarted()">✕</button>
+        </div>
+        <div id="getting-started-list" style="display:flex;flex-direction:column;gap:10px"></div>
+      </div>
       <div class="card" id="storefront-banner-card" style="display:none;padding:16px 20px;margin-bottom:20px;background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;color:white">
         <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
           <div style="width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;flex-shrink:0">
@@ -1641,10 +1651,13 @@
                      aria-label="Search your listings" oninput="lcOnSearchInput()"/>
               <button type="button" class="lc-search-clear" onclick="lcClearSearch()" aria-label="Clear search">✕</button>
             </div>
-            <button type="button" class="lc-select-toggle" id="lc-filters-btn" onclick="openAttrFilters(this)" aria-haspopup="dialog" title="Filter by price, bedrooms and features">⛃ Filters</button>
-            <button type="button" class="lc-select-toggle" id="lc-view-btn" onclick="openViewMenu(this)" aria-haspopup="menu" title="Sort, layout, density and export options">⚙ View</button>
             <button type="button" class="lc-select-toggle" id="lc-select-toggle-btn" onclick="toggleBulkSelectMode()" aria-pressed="false" title="Select several listings at once">☑ Select</button>
-            <button type="button" class="lc-kbd-hint" onclick="lcShowShortcuts()" title="Keyboard shortcuts"><kbd>⌘K</kbd> shortcuts</button>
+            <button type="button" class="lc-select-toggle" id="lc-more-tools-btn" onclick="toggleMoreTools(this)" aria-expanded="false" title="More tools: filters, sorting, view options">⚙ More tools</button>
+            <span id="lc-more-tools-group" style="display:none;gap:8px;align-items:center;flex-wrap:wrap">
+              <button type="button" class="lc-select-toggle" id="lc-filters-btn" onclick="openAttrFilters(this)" aria-haspopup="dialog" title="Filter by price, bedrooms and features">⛃ Filters</button>
+              <button type="button" class="lc-select-toggle" id="lc-view-btn" onclick="openViewMenu(this)" aria-haspopup="menu" title="Sort, layout, density and export options">⚙ View</button>
+              <button type="button" class="lc-kbd-hint" onclick="lcShowShortcuts()" title="Keyboard shortcuts"><kbd>⌘K</kbd> shortcuts</button>
+            </span>
           </div>
         </div>
       </div>
@@ -1685,8 +1698,8 @@
     <div class="page" id="page-messages">
       <div class="messages-layout" id="messages-layout">
         <div class="thread-list" id="thread-list">
-          <div class="thread-list-head">
-            <h3>Messages</h3>
+          <div class="thread-list-head" style="flex-wrap:wrap">
+            <div><h3>Messages</h3><div style="font-size:11px;color:var(--text-3);font-weight:500">All buyer conversations — see the <a href="#" onclick="event.preventDefault();showPage('enquiries')" style="color:var(--green);font-weight:600">Enquiries feed</a> for a quick scan</div></div>
             <div style="display:flex;align-items:center;gap:10px">
               <span id="msg-thread-count" style="font-size:12px;color:var(--text-3);font-weight:600"></span>
               <button class="btn btn-outline btn-sm" id="btn-mark-all-read" onclick="markAllThreadsRead()">Mark all read</button>
@@ -1716,8 +1729,11 @@
 
     <!-- ENQUIRIES -->
     <div class="page" id="page-enquiries">
-      <div class="section-head">
+      <div class="section-head" style="flex-direction:column;align-items:flex-start;gap:6px">
         <h2>Enquiries from buyers</h2>
+        <p style="font-size:12.5px;color:var(--text-3);margin:0">A quick read-only feed of every buyer enquiry. To reply, open the full conversation in <a href="#" onclick="event.preventDefault();showAllMessages()" style="color:var(--green);font-weight:600">Messages</a>.</p>
+      </div>
+      <div class="section-head">
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           <button class="filter-pill active" id="enq-filter-all" onclick="filterEnquiries('all',this)">All</button>
           <button class="filter-pill" id="enq-filter-unread" onclick="filterEnquiries('unread',this)">Unread</button>
@@ -1899,7 +1915,10 @@
     <div class="page" id="page-notifications">
       <div class="section-head">
         <h2>Notification Center</h2>
-        <button class="btn btn-outline btn-sm" onclick="markAllNotifsRead()">Mark all read</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-2);cursor:pointer"><input type="checkbox" id="notif-unread-only" onchange="renderNotificationsPage()"/> Unread only</label>
+          <button class="btn btn-outline btn-sm" onclick="markAllNotifsRead()">Mark all read</button>
+        </div>
       </div>
       <div class="notif-page-stats" id="notif-page-stats"></div>
       <div class="notif-cat-tabs" id="notif-cat-tabs"></div>
@@ -1908,9 +1927,18 @@
 
     <!-- SETTINGS -->
     <div class="page" id="page-settings">
-      <div class="section-head" style="margin-bottom:24px"><h2>Account settings</h2></div>
+      <div class="section-head" style="margin-bottom:12px"><h2>Account settings</h2></div>
+      <div id="settings-quicknav" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;position:sticky;top:0;background:var(--surface);padding:8px 0;z-index:10">
+        <button type="button" class="filter-pill" onclick="settingsJumpTo('settings-profile-anchor')">👤 Profile</button>
+        <button type="button" class="filter-pill" onclick="settingsJumpTo('verification-settings-section')">🛡️ Verification</button>
+        <button type="button" class="filter-pill" onclick="settingsJumpTo('settings-contact-privacy-section')">🔒 Privacy</button>
+        <button type="button" class="filter-pill" onclick="settingsJumpTo('settings-notifications-section')">🔔 Notifications</button>
+        <button type="button" class="filter-pill" onclick="settingsJumpTo('settings-premium-section')">⭐ Premium</button>
+        <button type="button" class="filter-pill" onclick="settingsJumpTo('settings-elite-section')">👑 Elite</button>
+        <button type="button" class="filter-pill" onclick="settingsJumpTo('settings-team-section')">👥 Team</button>
+      </div>
       <div class="settings-grid">
-        <div class="settings-section">
+        <div class="settings-section" id="settings-profile-anchor">
           <h3><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</h3>
           <div class="profile-avatar-row"><div class="profile-avatar-lg" id="settings-avatar">?</div><div class="profile-avatar-info"><strong id="settings-fullname">—</strong><span id="settings-email-display">—</span></div></div>
           <p style="font-size:13px;color:var(--text-3);margin-bottom:18px;line-height:1.6">Edit your name, phone number, email address, and password from your dedicated profile page.</p>
@@ -2660,7 +2688,7 @@
 </div>
 <button class="scw-fab" id="scw-fab" onclick="scwToggle()">
   <span class="scw-fab-avatar"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span>
-  <span class="scw-fab-text">Let's Chat</span>
+  <span class="scw-fab-text">Help &amp; Support</span>
   <span class="scw-fab-badge" id="scw-fab-badge"></span>
 </button>
 
@@ -3197,7 +3225,9 @@ async function init(){
       return;
     }
 
-    const filtered = notifPageFilter === 'all' ? notifItems : notifItems.filter(n => notifCategoryFor(n.type) === notifPageFilter);
+    const unreadOnly = document.getElementById('notif-unread-only')?.checked;
+    let filtered = notifPageFilter === 'all' ? notifItems : notifItems.filter(n => notifCategoryFor(n.type) === notifPageFilter);
+    if (unreadOnly) filtered = filtered.filter(n => !n.is_read);
     if (!filtered.length) {
       listEl.innerHTML = `<div class="notif-empty-state"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><h3 style="font-size:15px;font-weight:600;color:var(--text-2)">Nothing in this category</h3></div>`;
       return;
@@ -3218,15 +3248,21 @@ async function init(){
               ${!n.is_read?'<span class="notif-card-new-dot"></span>':''}
               <span class="notif-card-title">${escHtml(n.title)}</span>
               <span class="notif-card-time">${timeAgo(n.created_at)}</span>
+              <button type="button" title="Delete notification" onclick="event.stopPropagation();deleteNotifItem(${n.id})" style="margin-left:6px;background:none;border:none;color:var(--text-3);cursor:pointer;font-size:13px;padding:2px 6px;border-radius:6px">✕</button>
             </div>
             ${n.body ? `<div class="notif-card-msg">${escHtml(n.body)}</div>` : ''}
           </div>
         </div>`).join('');
-      return `<div class="notif-group">
-        <div class="notif-group-head"><span style="font-size:14px">${meta.icon}</span><h3>${escHtml(meta.label)}</h3><span class="ngh-count">${items.length}</span></div>
-        ${rows}
-      </div>`;
     }).join('');
+  }
+
+  async function deleteNotifItem(id) {
+    const { error } = await db.from('notifications').delete().eq('id', id);
+    if (error) { showToast('Could not delete: '+error.message,'error'); return; }
+    notifItems = notifItems.filter(n => n.id !== id);
+    renderNotifBell();
+    renderNotificationsPage();
+    showToast('Notification deleted','success');
   }
 
   async function openNotifItemFromPage(id) {
@@ -6657,7 +6693,7 @@ function renderOverview(){
   document.getElementById('stat-views').textContent=views.toLocaleString('en-KE');
   const avgViewsPerListing=allListings.length?Math.round(views/allListings.length):0;
   document.getElementById('stat-views-delta').textContent=`~${avgViewsPerListing} views per listing`;
-  renderActivityFeed();renderChart();renderQuickListings();loadDemandMatches();renderPerformanceSummary();
+  renderActivityFeed();renderChart();renderQuickListings();loadDemandMatches();renderPerformanceSummary();renderGettingStarted();
 }
 
 function renderActivityFeed(){
@@ -6684,6 +6720,37 @@ function renderChart(){
   document.getElementById('chart-labels').innerHTML=labels.map(l=>`<div class="chart-label">${l}</div>`).join('');
 }
 
+function dismissGettingStarted(){
+  try{localStorage.setItem('ny_gs_dismissed_'+(currentUser?.id||''),'1');}catch(e){}
+  const card=document.getElementById('getting-started-card');
+  if(card)card.style.display='none';
+}
+function gettingStartedAction(i){
+  const steps=window.__gsSteps;
+  if(steps&&steps[i]&&typeof steps[i].action==='function')steps[i].action();
+}
+function renderGettingStarted(){
+  const card=document.getElementById('getting-started-card');
+  const list=document.getElementById('getting-started-list');
+  if(!card||!list)return;
+  let dismissed=false;
+  try{dismissed=localStorage.getItem('ny_gs_dismissed_'+(currentUser?.id||''))==='1';}catch(e){}
+  const steps=[
+    {done:currentProfile?.verification_status==='verified',label:'Verify your account',sub:'Unlocks unlimited listings and a trust badge',action:()=>{showPage('settings');setTimeout(()=>settingsJumpTo('verification-settings-section'),150);}},
+    {done:allListings.length>0,label:'Post your first listing',sub:'Takes about 3 minutes',action:()=>{window.location.href='/post-listing';}},
+    {done:allListings.length>0 && allListings.every(l=>(l.listing_photos||[]).length>0),label:'Add photos to every listing',sub:'Listings with 6+ photos get far more enquiries',action:()=>showPage('listings')},
+    {done:threads.some(t=>t.messages.some(m=>m.sender==='seller')),label:'Reply to a buyer message',sub:'Fast replies win more viewings',action:()=>showAllMessages()},
+  ];
+  const allDone=steps.every(s=>s.done);
+  if(dismissed||allDone){card.style.display='none';return;}
+  card.style.display='block';
+  window.__gsSteps=steps;
+  list.innerHTML=steps.map((s,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--white);border-radius:8px;border:1px solid var(--border)">
+    <span style="width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:${s.done?'var(--green)':'var(--surface)'};color:${s.done?'white':'var(--text-3)'}">${s.done?'✓':''}</span>
+    <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;${s.done?'text-decoration:line-through;color:var(--text-3)':''}">${escHtml(s.label)}</div><div style="font-size:11.5px;color:var(--text-3)">${escHtml(s.sub)}</div></div>
+    ${!s.done?`<button class="btn btn-primary btn-sm" onclick="gettingStartedAction(${i})">Go</button>`:''}
+  </div>`).join('');
+}
 function renderPerformanceSummary(){
   const el=document.getElementById('quick-listing-top');
   if(!el)return;
@@ -7893,6 +7960,14 @@ function lcSyncFilterBtn(){
   const n=lcActiveAttrCount();
   btn.innerHTML='⛃ Filters'+(n?` <span class="lc-filters-count">${n}</span>`:'');
   btn.classList.toggle('active',n>0);
+}
+function toggleMoreTools(btn){
+  const group=document.getElementById('lc-more-tools-group');
+  if(!group)return;
+  const show=group.style.display==='none';
+  group.style.display=show?'flex':'none';
+  btn.setAttribute('aria-expanded',String(show));
+  btn.classList.toggle('active',show);
 }
 function openAttrFilters(anchor){
   const pop=document.getElementById('lc-filters-pop');
@@ -9303,7 +9378,7 @@ function renderThreadList(){
   const q=(document.getElementById('thread-search-input')?.value||'').toLowerCase();
   let filtered=threads;
   if(threadListingFilter)filtered=filtered.filter(t=>t.listing_id===threadListingFilter);
-  if(q)filtered=filtered.filter(t=>t.buyer_name.toLowerCase().includes(q)||t.listing_title.toLowerCase().includes(q));
+  if(q)filtered=filtered.filter(t=>t.buyer_name.toLowerCase().includes(q)||t.listing_title.toLowerCase().includes(q)||t.messages.some(m=>(m.content||m.message||'').toLowerCase().includes(q)));
   const chipWrap=document.getElementById('thread-filter-chip');
   if(chipWrap){if(threadListingFilter){const l=allListings.find(l=>l.id===threadListingFilter);chipWrap.style.display='block';chipWrap.innerHTML=`<span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;background:var(--green-light);color:var(--green-dark);padding:4px 10px;border-radius:20px">Filtered: ${escHtml(l?.title||'listing')}<span style="cursor:pointer;font-weight:700" onclick="showAllMessages()">×</span></span>`;}else{chipWrap.style.display='none';chipWrap.innerHTML='';}}
   document.getElementById('msg-thread-count').textContent=`${filtered.length} conversation${filtered.length!==1?'s':''}`;
@@ -9838,6 +9913,14 @@ function showPage(name){sessionStorage.setItem('ny_last_page',name);document.que
       scwFabEl.style.display='';
     }
   }
+}
+function settingsJumpTo(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+  el.style.transition='box-shadow .3s';
+  el.style.boxShadow='0 0 0 3px var(--green)';
+  setTimeout(()=>{el.style.boxShadow='';},1500);
 }
 function toggleSidebar(){
   const isOpen=document.getElementById('sidebar').classList.toggle('open');
@@ -10806,11 +10889,8 @@ const Tour = (() => {
     { selector:'#lc-search-wrap', page:'listings', title:'Search anything', desc:'Search by title, area, address, or listing number — type a number like 000123 to jump straight to it. Press "/" any time to focus this box.' },
     { selector:'#lc-view-btn', page:'listings', title:'Sort, density and CSV', desc:'Tap ⚙ View to change the sort order, switch between roomy cards and a compact list, or download all your listings as a CSV.' },
     { selector:'#lc-select-toggle-btn', page:'listings', title:'Do several at once', desc:'Tap ☑ Select to tick multiple listings, then pause, resume, duplicate, feature, share or delete them all in one go. On mobile you can also long-press any card to jump straight into select mode.' },
-    { selector:'#listings-table-card', page:'listings', title:'Your listing cards', desc:'Each card shows the photo, price, status and live stats. The coloured ring on the right is that listing\'s health score out of 100 — tap it to see exactly what\'s pulling it down.' },
-    { selector:'#listings-table-card', page:'listings', title:'Tap a card for the full picture', desc:'Tapping anywhere on a card opens a detail panel with all its photos, description, amenities and stats — and you can change the cover photo there by tapping any picture.' },
-    { selector:'#listings-table-card', page:'listings', title:'One clear next step', desc:'The amber "Next step" line tells you the single most valuable thing to fix on that listing — add photos, rewrite the description with AI, or check your price against the market.' },
-    { selector:'#listings-table-card', page:'listings', title:'Share to social — free', desc:'Tap Share on any live listing for WhatsApp, Facebook, Instagram, TikTok, a copy-link, or a downloadable QR code. Free for every seller, no upgrade needed.' },
-    { selector:'#listings-table-card', page:'listings', title:'Everything else is under ⋯', desc:'The ⋯ button on each card holds the rest: duplicate, manage unit types, add a video walkthrough, request a price change, download a brochure, hide Call/WhatsApp, pause, resume and delete.' },
+    { selector:'#listings-table-card', page:'listings', title:'Your listing cards', desc:"Each card shows the photo, price, status, live stats and a health-score ring — tap the ring for exactly what to fix, or tap anywhere on the card for the full detail panel." },
+    { selector:'#listings-table-card', page:'listings', title:'Share, and everything else', desc:'Share to WhatsApp, Facebook, Instagram, TikTok, or a QR code — free for every seller. The ⋯ menu holds the rest: duplicate, manage units, add video, request a price change, download a brochure, pause or delete.' },
 
     { selector:'#nav-messages', page:'listings', title:'Messages', desc:'Tap "Messages" to see every conversation with buyers in one place.', click:true },
     { selector:'#thread-list', page:'messages', title:'Your inbox', desc:'All your buyer conversations live here, newest first. A green dot marks unread ones.' },
@@ -10829,15 +10909,9 @@ const Tour = (() => {
 
     { selector:'#nav-settings', page:'demand-heatmap', title:'Settings', desc:'Tap "Settings" to manage your profile, notifications, and plan.', click:true },
     { selector:'#verification-settings-section', page:'settings', title:'Account verification', desc:'Submit your ID and proof of ownership here to get verified and unlock unlimited listings.' },
-    { selector:'#settings-notifications-section', page:'settings', title:'Notifications', desc:'Choose exactly which alerts you want — messages, approvals, expiring listings, payments.' },
-    { selector:'#settings-concierge-section', page:'settings', title:'Managed chat', desc:'Let our team reply to buyer messages on your behalf — you\'ll still see everything in Messages.' },
-    { selector:'#settings-contact-privacy-section', page:'settings', title:'Contact privacy', desc:'Hide your Call/WhatsApp buttons platform-wide so buyers can only reach you through chat.' },
-    { selector:'#settings-premium-section', page:'settings', title:'Premium', desc:'Unlock managed chat, a Pro badge, scheduled publishing, video tours, brochures, and SMS alerts.' },
-    { selector:'#settings-elite-section', page:'settings', title:'Elite', desc:'AI Listing Assistant, Instant Valuation, a Storefront page, Rent Ledger, and Demand Insights.' },
-    { selector:'#elite-ai-listing-btn', page:'settings', title:'AI Listing Assistant', desc:'Jot a few bullet points and let AI draft a polished title, description, and suggested price. Opening it from a listing\'s ⋯ menu pre-fills everything for you.' },
-    { selector:'#elite-valuation-btn', page:'settings', title:'Instant Valuation', desc:'Check your price against similar active listings on the platform before you publish — or straight from a listing\'s "Check price" button.' },
-    { selector:'#storefront-banner-card', page:'overview', title:'Your storefront', desc:'A branded page listing all your active properties — share one link with buyers.' },
-    { selector:'#settings-team-section', page:'settings', title:'Team seats', desc:'Invite someone to help manage your account — they get their own login with the same access.' },
+    { selector:'#settings-quicknav', page:'settings', title:'Jump to any settings section', desc:'Use these shortcuts to jump straight to Profile, Verification, Privacy, Notifications, Premium, Elite or Team — no more scrolling to find what you need.' },
+    { selector:'#settings-contact-privacy-section', page:'settings', title:'Contact privacy', desc:'Hide your Call/WhatsApp buttons platform-wide so buyers can only reach you through chat — right here, not buried at the bottom.' },
+    { selector:'#settings-premium-section', page:'settings', title:'Premium & Elite', desc:'Premium unlocks managed chat, a Pro badge, video tours and SMS alerts. Elite adds AI tools, Instant Valuation, a branded Storefront, Rent Ledger and Demand Insights.' },
     { selector:'#nav-premium-upgrade', page:'settings', title:'Upgrade any time', desc:'Your plan status always shows here in the sidebar — tap it any time to upgrade.' },
     { selector:'#sidebar-user-block', page:'settings', title:"That's it!", desc:'Your account and sign-out are always one tap away from here. Enjoy Nyumba254! 🎉' },
   ];
