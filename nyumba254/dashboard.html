@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <script>window.__scwEarlyErrors=[];window.addEventListener('error',function(e){window.__scwEarlyErrors.push((e&&e.message)?e.message:'Unknown error at '+(e&&e.filename||'?')+':'+(e&&e.lineno||'?'));});
-  (function(){try{var t=localStorage.getItem('ny_theme');if(t&&t!=='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+  (function(){try{var t=localStorage.getItem('ny_theme');if(!t){var prefersDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;t=prefersDark?'dark':'light';localStorage.setItem('ny_theme',t);}if(t&&t!=='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
   </script>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -898,11 +898,15 @@
       .messages-layout.mobile-chat-active .chat-pane{display:flex}
       .mobile-back-btn{display:flex !important}
     }
+    @media(max-width:640px){
+      #overview-quickdock{display:flex !important}
+    }
     @media(max-width:600px){
   .stat-grid{grid-template-columns:1fr 1fr}
   .stat-val{font-size:22px;overflow-wrap:break-word;word-break:break-word}
   .stat-card{padding:16px 16px}
   .page{padding:16px}
+  #page-overview.active{padding-bottom:76px}
   .form-grid{grid-template-columns:1fr}
   .topbar{padding:0 12px}
   .topbar-right{gap:6px}
@@ -1577,6 +1581,11 @@
 
     <!-- OVERVIEW -->
     <div class="page active" id="page-overview">
+      <div id="overview-quickdock" style="display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom));z-index:390;background:var(--white);border:1px solid var(--border);border-radius:30px;box-shadow:var(--shadow-lg);padding:6px;gap:4px;align-items:center">
+        <a href="/post-listing" class="btn btn-primary btn-sm" style="border-radius:24px" onclick="return confirmListingCategoryBeforeLeaving()"><svg viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New</a>
+        <button class="btn btn-outline btn-sm" style="border-radius:24px" onclick="showAllMessages()"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Messages</button>
+        <button class="btn btn-outline btn-sm" style="border-radius:24px" onclick="scwToggle()"><svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Help</button>
+      </div>
       <div class="card" id="getting-started-card" style="display:none;padding:20px 22px;margin-bottom:20px;border:1.5px solid var(--green);background:var(--green-light)">
         <div class="section-head" style="margin-bottom:14px">
           <h2 style="color:var(--green-dark)">🚀 Getting started</h2>
@@ -1606,6 +1615,8 @@
         <div class="stat-card blue"><div class="stat-label">Total paid</div><div class="stat-val" id="stat-paid">—</div><div class="stat-delta" id="stat-paid-delta">listing fees</div><div class="stat-icon"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div></div>
         <div class="stat-card purple"><div class="stat-label">Total views</div><div class="stat-val" id="stat-views">—</div><div class="stat-delta" id="stat-views-delta">across all listings</div><div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div></div>
       </div>
+      <div class="card" id="week-momentum-card" style="display:none;padding:14px 20px;margin-bottom:20px;background:var(--green-light);border:1px solid var(--green)"></div>
+      <div class="card" id="smart-insight-card" style="display:none;padding:14px 20px;margin-bottom:20px;background:var(--gold-light);border:1px solid var(--gold)"></div>
       <div class="overview-grid">
         <div class="card" id="overview-activity-card" style="padding:20px 24px">
           <div class="section-head"><h2>Recent activity</h2><button class="btn btn-outline btn-sm" onclick="showAllMessages()">View messages</button></div>
@@ -2909,7 +2920,12 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
   };
 
   function applyStoredTheme(){
-  const saved=localStorage.getItem('ny_theme')||'light';
+  let saved=localStorage.getItem('ny_theme');
+  if(!saved){
+    const prefersDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;
+    saved=prefersDark?'dark':'light';
+    localStorage.setItem('ny_theme',saved);
+  }
   document.documentElement.setAttribute('data-theme',saved==='light'?'':saved);
   updateThemeMenuActive(saved);
 }
@@ -6693,7 +6709,7 @@ function renderOverview(){
   document.getElementById('stat-views').textContent=views.toLocaleString('en-KE');
   const avgViewsPerListing=allListings.length?Math.round(views/allListings.length):0;
   document.getElementById('stat-views-delta').textContent=`~${avgViewsPerListing} views per listing`;
-  renderActivityFeed();renderChart();renderQuickListings();loadDemandMatches();renderPerformanceSummary();renderGettingStarted();
+  renderActivityFeed();renderChart();renderQuickListings();loadDemandMatches();renderPerformanceSummary();renderGettingStarted();renderWeekMomentum();renderSmartInsight();
 }
 
 function renderActivityFeed(){
@@ -6718,6 +6734,48 @@ function renderChart(){
   const max=Math.max(...counts,1);
   document.getElementById('chart-bars').innerHTML=counts.map((c,i)=>`<div class="chart-bar" style="height:${Math.round((c/max)*68)+8}px"><div class="bar-tip">${labels[i]}: ${c}</div></div>`).join('');
   document.getElementById('chart-labels').innerHTML=labels.map(l=>`<div class="chart-label">${l}</div>`).join('');
+}
+
+function renderWeekMomentum(){
+  const card=document.getElementById('week-momentum-card');
+  if(!card)return;
+  const now=Date.now(), d7=7*86400000;
+  const enqThis=allEnquiries.filter(e=>now-new Date(e.created_at)<d7).length;
+  const enqPrev=allEnquiries.filter(e=>{const age=now-new Date(e.created_at);return age>=d7&&age<2*d7;}).length;
+  const confirmedPay=p=>p.status==='confirmed'||p.status==='paid';
+  const payThis=allPayments.filter(p=>confirmedPay(p)&&now-new Date(p.created_at)<d7).reduce((s,p)=>s+(Number(p.amount)||0),0);
+  const payPrev=allPayments.filter(p=>{const age=now-new Date(p.created_at);return confirmedPay(p)&&age>=d7&&age<2*d7;}).reduce((s,p)=>s+(Number(p.amount)||0),0);
+  if(!enqThis&&!enqPrev&&!payThis&&!payPrev){card.style.display='none';return;}
+  const enqDiff=enqThis-enqPrev;
+  const payDiff=payThis-payPrev;
+  const parts=[];
+  if(enqPrev||enqThis)parts.push(`<strong style="color:${enqDiff>=0?'#065f46':'var(--red)'}">${enqDiff>=0?'↑':'↓'} ${Math.abs(enqDiff)} ${Math.abs(enqDiff)===1?'enquiry':'enquiries'}</strong> vs last week`);
+  if(payPrev||payThis)parts.push(`<strong style="color:${payDiff>=0?'#065f46':'var(--red)'}">${payDiff>=0?'↑':'↓'} KES ${Math.abs(payDiff).toLocaleString('en-KE')}</strong> collected vs last week`);
+  card.style.display='block';
+  card.innerHTML=`<div style="font-size:13px;color:var(--green-dark);font-weight:600">📈 This week: ${parts.join(' · ')}</div>`;
+}
+
+function renderSmartInsight(){
+  const card=document.getElementById('smart-insight-card');
+  if(!card)return;
+  const tips=[];
+  const live=allListings.filter(l=>l.status==='active'&&!l.is_disabled);
+  live.forEach(l=>{
+    const dow=[0,0,0,0,0,0,0];
+    threads.filter(t=>t.listing_id===l.id).forEach(t=>t.messages.forEach(m=>{if(m.sender==='buyer')dow[new Date(m.created_at).getDay()]++;}));
+    const weekendCount=dow[0]+dow[6], weekdayCount=dow[1]+dow[2]+dow[3]+dow[4]+dow[5];
+    if(weekendCount>=4&&weekendCount>weekdayCount*1.5){
+      tips.push(`Your listing "${l.title}" gets noticeably more buyer messages on weekends — consider timing new posts or price updates for a Friday.`);
+    }
+  });
+  const noPhotoCount=allListings.filter(l=>lcIsLive(l)&&lcPhotoCount(l)<=2).length;
+  if(noPhotoCount>0)tips.push(`${noPhotoCount} of your live listing${noPhotoCount!==1?'s have':' has'} 2 or fewer photos — listings with 6+ photos consistently get more enquiries.`);
+  const staleCount=allListings.filter(l=>{const d=lcDaysSinceEnquiry(l);return lcIsLive(l)&&d!==null&&d>=lcStaleThresholds(l).quiet;}).length;
+  if(staleCount>0)tips.push(`${staleCount} listing${staleCount!==1?'s have':' has'} not had a buyer message in a while — a small price check might help (see Demand Insights or the Valuation tool).`);
+  if(!tips.length){card.style.display='none';return;}
+  const idx=Math.floor(Date.now()/86400000)%tips.length;
+  card.style.display='block';
+  card.innerHTML=`<div style="font-size:13px;color:#8a5a0f;font-weight:600">💡 ${escHtml(tips[idx])}</div>`;
 }
 
 function dismissGettingStarted(){
