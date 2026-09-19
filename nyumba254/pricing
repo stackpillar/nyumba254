@@ -51,7 +51,7 @@
       font-family: 'Playfair Display', serif; font-size: 19px; color: var(--green-dark);
     }
     .logo-icon {
-      width: 34px; height: 34px; background: var(--green); border-radius: 9px;
+      width: 34px; height: 40px; background: var(--green); border-radius: 9px;
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
     .logo-icon svg { width: 17px; height: 17px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; }
