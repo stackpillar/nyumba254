@@ -211,7 +211,7 @@
     .footer-inner { max-width: 1200px; margin: 0 auto; }
     .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 48px; }
     .footer-logo { font-family: 'Playfair Display', serif; font-size: 22px; color: white; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
-    .footer-logo-icon { width:auto; height:40px; background:#fff; border-radius:8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding:3px 6px; }
+    .footer-logo-icon { width:auto; height:40px; background:transparent; border-radius:0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .footer-logo-icon img { width:auto;height:100%; object-fit: contain; }
     .footer-tagline { font-size: 13px; line-height: 1.8; max-width: 240px; color: rgba(255,255,255,0.5); margin-bottom: 20px; }
     .footer-social { display: flex; gap: 8px; }
