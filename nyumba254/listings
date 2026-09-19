@@ -34,7 +34,7 @@
       --gold-light:  var(--green-light);
       --text:        #1a1a18;
       --text-2:      #4a4a46;
-      --text-3:      #888780;
+      --text-3:      #6b6a63;
       --border:      #e0ded8;
       --surface:     #f7f6f2;
       --white:       #ffffff;
@@ -227,6 +227,20 @@
     }
     .filter-tag button { background: none; color: var(--green-dark); font-size: 14px; line-height: 1; padding: 0; margin-left: 2px; opacity: .7; }
     .filter-tag button:hover { opacity: 1; }
+    /* ── card polish ── */
+    .listings-grid .card-img::after {
+      content: '';
+      position: absolute; inset: auto 0 0 0; height: 55%;
+      background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.35) 100%);
+      pointer-events: none; z-index: 1;
+    }
+    .listings-grid .card:hover, .listings-grid .card:focus-visible {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 32px rgba(15,110,86,0.18);
+      transition: transform .22s ease, box-shadow .22s ease;
+    }
+    .listings-grid .card-price { font-size: 18px; letter-spacing: -.01em; }
+    .listings-grid .card-area::before { content: '📍 '; }
 
     /* ── Listings are paged: each "page" is a normal grid (fills row-major
        natively — row 1 completes left-to-right before row 2 starts, no
@@ -314,7 +328,8 @@
     .card-inquire-btn svg { width: 15px; height: 15px; flex-shrink: 0; stroke: white; fill: none; stroke-width: 2; }
 
     .ci-success { display: none; text-align: center; padding: 10px 0 4px; }
-    .ci-success-icon { width: 46px; height: 46px; background: var(--green-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
+    .ci-success-icon { width: 46px; height: 46px; background: var(--green-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; animation: ciPulse .5s ease; }
+    @keyframes ciPulse { 0%{transform:scale(0.6);opacity:0} 60%{transform:scale(1.08);opacity:1} 100%{transform:scale(1)} }
     .ci-success-icon svg { width: 22px; height: 22px; stroke: var(--green); fill: none; stroke-width: 2.5; }
     .ci-success h4 { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
     .ci-success p { font-size: 13px; color: var(--text-3); }
@@ -549,7 +564,13 @@
       .notify-strip-inner .btn { width: 100%; justify-content: center; }
       .footer-top { grid-template-columns: 1fr; }
     }
-
+    .nk-compare-check {
+      position: absolute; left: 8px; bottom: 8px; z-index: 3;
+      display: flex; align-items: center; gap: 4px;
+      background: rgba(255,255,255,0.92); border-radius: 20px; padding: 3px 9px 3px 6px;
+      font-size: 10.5px; font-weight: 600; color: var(--text-2); cursor: pointer;
+    }
+    .nk-compare-check input { width: 13px; height: 13px; accent-color: var(--green); cursor: pointer; }
     /* ══════════════════════════════════════════════════════════════
        MOBILE UPGRADE — items 1–14
        ══════════════════════════════════════════════════════════════ */
@@ -692,6 +713,10 @@
     @media (max-width: 768px) {
       .nk-quickbar { top: 56px; }
     }
+    .nk-view-segment { display: inline-flex; border: 1.5px solid var(--border); border-radius: 20px; overflow: hidden; background: white; }
+    .nk-seg-btn { display: flex; align-items: center; gap: 6px; padding: 8px 14px; font-size: 13px; font-weight: 600; color: var(--text-2); background: white; border: none; cursor: pointer; }
+    .nk-seg-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .nk-seg-btn.active { background: var(--green); color: white; }
   </style>
 </head>
 <body>
@@ -754,6 +779,13 @@
     <input type="text" id="search-q" placeholder="Search by keyword, area, or price (e.g. 7000)…" oninput="nkFormatSearchInput(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();applyFilters();}"/>
     <button onclick="applyFilters()">Search</button>
   </div>
+</div>
+
+<!-- ── MINI TRUST BAR ── -->
+<div style="background:var(--green-light);border-bottom:1px solid #9FE1CB;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;font-size:12.5px;font-weight:600;color:var(--green-dark)">
+  <span>✓ No agents or middlemen</span>
+  <span>✓ Pay once via M-Pesa</span>
+  <span>✓ Message sellers directly</span>
 </div>
 
 <!-- ── MOBILE SIDEBAR OVERLAY ── -->
@@ -879,13 +911,20 @@
           Filters
           <span class="nk-filter-count-badge" id="nk-filter-count-badge">0</span>
         </button>
-        <span class="result-count" id="result-count">Loading…</span>
+        <span class="result-count" id="result-count" aria-live="polite">Loading…</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
-        <button type="button" class="nk-map-toggle-btn" id="nk-map-toggle-btn" onclick="nkToggleMapView()">
-          <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          Map
-        </button>
+        <div class="nk-view-segment" role="tablist" aria-label="View mode">
+          <button type="button" class="nk-seg-btn active" id="nk-seg-grid" onclick="nkSetViewSegment('grid')" role="tab" aria-selected="true">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            Grid
+          </button>
+          <button type="button" class="nk-seg-btn" id="nk-seg-map" onclick="nkSetViewSegment('map')" role="tab" aria-selected="false">
+            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Map
+          </button>
+        </div>
+        <label for="sort-select" style="font-size:13px;color:var(--text-3);font-weight:500;white-space:nowrap">Sort by</label>
         <select class="sort-select" id="sort-select" onchange="applyFilters()">
           <option value="created_at_desc">Newest first</option>
           <option value="price_asc">Price: low to high</option>
@@ -897,6 +936,7 @@
 
     <!-- Active filter tags -->
     <div class="active-filters" id="active-filters"></div>
+    <div id="nk-save-search-banner"></div>
 
     <!-- Item 11: recently-viewed strip -->
     <div id="nk-recent-strip-mount"></div>
@@ -1494,7 +1534,19 @@
     applyFilters();
     nkSyncQuickChipLabels();
   }
-
+  let nkSaveSearchDismissed = false;
+  function nkMaybeSuggestSaveSearch(tagCount) {
+    const el = document.getElementById('nk-save-search-banner');
+    if (!el) return;
+    if (nkSaveSearchDismissed || tagCount < 3 || totalCount === 0 || totalCount > 3) { el.innerHTML = ''; return; }
+    el.innerHTML = `<div style="background:var(--green-light);border:1.5px dashed var(--green-mid);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--green-dark)">
+      <span>🔍 Only ${totalCount} match${totalCount !== 1 ? 'es' : ''} your filters — want us to notify you if more come up?</span>
+      <span style="display:flex;gap:8px">
+        <button onclick="openNotifyModal()" style="background:var(--green);color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer">Save this search</button>
+        <button onclick="nkSaveSearchDismissed=true;document.getElementById('nk-save-search-banner').innerHTML=''" style="background:none;border:none;color:var(--green-dark);font-size:12.5px;cursor:pointer;text-decoration:underline">Dismiss</button>
+      </span>
+    </div>`;
+  }
   function nkFormatSearchInput(el) {
     const raw = el.value;
     const stripped = raw.replace(/^KES\s?/i, '').replace(/,/g, '').trim();
@@ -1509,6 +1561,40 @@
     }
     debouncedApply();
   }
+  (function(){
+    let ptrStartY = null, ptrPulling = false, ptrEl = null;
+    function ptrEnsureEl(){
+      if (ptrEl) return ptrEl;
+      ptrEl = document.createElement('div');
+      ptrEl.id = 'nk-ptr-indicator';
+      ptrEl.style.cssText = 'position:fixed;top:0;left:0;right:0;text-align:center;font-size:12.5px;font-weight:600;color:var(--green-dark);background:var(--green-light);padding:8px 0;transform:translateY(-100%);transition:transform .2s ease;z-index:500';
+      ptrEl.textContent = '↓ Pull to refresh listings';
+      document.body.appendChild(ptrEl);
+      return ptrEl;
+    }
+    document.addEventListener('touchstart', e => {
+      if (window.innerWidth > 768 || window.scrollY > 4) return;
+      ptrStartY = e.touches[0].clientY; ptrPulling = true;
+    }, { passive: true });
+    document.addEventListener('touchmove', e => {
+      if (!ptrPulling || ptrStartY === null) return;
+      const dy = e.touches[0].clientY - ptrStartY;
+      if (dy > 12) {
+        const el = ptrEnsureEl();
+        el.style.transform = 'translateY(0)';
+        el.textContent = dy > 70 ? '↻ Release to refresh' : '↓ Pull to refresh listings';
+      }
+    }, { passive: true });
+    document.addEventListener('touchend', () => {
+      if (!ptrPulling) return;
+      if (ptrEl) {
+        const wasFar = ptrEl.textContent.includes('Release');
+        ptrEl.style.transform = 'translateY(-100%)';
+        if (wasFar) applyFilters(1);
+      }
+      ptrPulling = false; ptrStartY = null;
+    }, { passive: true });
+  })();
 
   function getFilters() {
     const freq = document.querySelector('#type-pills .filter-pill.active')?.dataset.val || '';
@@ -1590,8 +1676,78 @@
       badge.textContent = tags.length;
       badge.classList.toggle('visible', tags.length > 0);
     }
+    if (typeof nkMaybeSuggestSaveSearch === 'function') nkMaybeSuggestSaveSearch(tags.length);
   }
+    const nkCompareIds = new Set();
 
+    function nkToggleCompare(id, checked) {
+      if (checked) {
+        if (nkCompareIds.size >= 3) {
+          alert('You can compare up to 3 listings at a time.');
+          if (event && event.target) event.target.checked = false;
+          return;
+        }
+        nkCompareIds.add(id);
+      } else {
+        nkCompareIds.delete(id);
+      }
+      nkRenderCompareBar();
+    }
+
+    function nkRenderCompareBar() {
+      let bar = document.getElementById('nk-compare-bar');
+      if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'nk-compare-bar';
+        bar.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:600;background:var(--green-dark);color:#fff;padding:12px 20px;display:none;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;box-shadow:0 -4px 16px rgba(0,0,0,0.2)';
+        document.body.appendChild(bar);
+      }
+      if (!nkCompareIds.size) { bar.style.display = 'none'; return; }
+      bar.style.display = 'flex';
+      bar.innerHTML = `<span style="font-size:13.5px;font-weight:600">${nkCompareIds.size} listing${nkCompareIds.size !== 1 ? 's' : ''} selected to compare</span>
+        <span style="display:flex;gap:10px">
+          <button onclick="nkCompareIds.clear();nkRenderCompareBar();document.querySelectorAll('.nk-compare-check input').forEach(c=>c.checked=false)" style="background:rgba(255,255,255,0.15);color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">Clear</button>
+          <button onclick="nkOpenCompareModal()" style="background:#fff;color:var(--green-dark);border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer" ${nkCompareIds.size < 2 ? 'disabled' : ''}>Compare now</button>
+        </span>`;
+    }
+
+    function nkOpenCompareModal() {
+      const ids = [...nkCompareIds];
+      const listings = ids.map(id => cardDataById[id]).filter(Boolean);
+      if (listings.length < 2) return;
+      let modal = document.getElementById('nk-compare-modal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'nk-compare-modal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:700;display:flex;align-items:center;justify-content:center;padding:20px';
+        modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+        document.body.appendChild(modal);
+      }
+      const rows = [
+        ['Title', l => l.title],
+        ['Area', l => l.area],
+        ['Price', l => formatPrice(l).replace(/<[^>]+>/g, '')],
+        ['Category', l => (NK_CATEGORIES[l.category] || {}).label || l.category],
+        ['Bedrooms', l => (l.details && l.details.bedrooms != null) ? (l.details.bedrooms == 0 ? 'Studio' : l.details.bedrooms) : '—'],
+        ['Bathrooms', l => (l.details && l.details.bathrooms) || '—'],
+        ['Amenities', l => (l.amenities || []).length + ' listed'],
+      ];
+      modal.innerHTML = `<div style="background:#fff;border-radius:16px;max-width:720px;width:100%;max-height:85vh;overflow:auto;padding:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h3 style="font-family:'Playfair Display',serif;font-size:20px;color:var(--text)">Compare listings</h3>
+          <button onclick="document.getElementById('nk-compare-modal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-3)">×</button>
+        </div>
+        <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr><th style="text-align:left;padding:8px"></th>${listings.map(l => `<th style="text-align:left;padding:8px;border-bottom:2px solid var(--border)">${l.title}</th>`).join('')}</tr></thead>
+          <tbody>
+            ${rows.map(([label, fn]) => `<tr><td style="padding:8px;font-weight:600;color:var(--text-2);border-bottom:1px solid var(--border)">${label}</td>${listings.map(l => `<td style="padding:8px;border-bottom:1px solid var(--border)">${fn(l)}</td>`).join('')}</tr>`).join('')}
+          </tbody>
+        </table>
+        </div>
+      </div>`;
+      modal.style.display = 'flex';
+    }
   function removeTag(key) {
     if (key === 'freq') setPill(document.querySelector('#type-pills .filter-pill[data-val=""]'), 'type-pills');
     else if (key === 'cat') setPill(document.querySelector('#cat-pills .filter-pill[data-val=""]'), 'cat-pills');
@@ -1854,6 +2010,7 @@
       <div class="card-photo-counter" id="card-counter-${l.id}">${idx+1}/${photos.length}</div>` : '';
 
     const catBadge = `<span class="badge-cat ${l.category}">${meta.label}</span>`;
+    const isFreshListing = l.created_at && (Date.now() - new Date(l.created_at).getTime()) < 3 * 24 * 60 * 60 * 1000;
     const statusPill = buildStatusPill(l, meta);
     const subText = l.address || (NK_AREA_TO_COUNTY[l.area] ? l.area + ', ' + nkCountyLabel(NK_AREA_TO_COUNTY[l.area]) : (l.county ? l.area + ', ' + nkCountyLabel(l.county) : 'Kenya'));
 
@@ -1872,10 +2029,14 @@
           ${statusPill}
           <div class="nk-heart-overlay">${typeof NKSaved !== 'undefined' ? NKSaved.buildHeartBtn(l.id) : ''}</div>
           ${catBadge}
+          <label class="nk-compare-check" onclick="event.stopPropagation()" title="Add to compare">
+            <input type="checkbox" onchange="nkToggleCompare('${l.id}', this.checked)" ${nkCompareIds.has(l.id) ? 'checked' : ''}/>
+            <span>Compare</span>
+          </label>
           ${carouselArrows}
         </div>
         <div class="card-body">
-          <div class="card-area">${l.area} ${buildVerifiedBadgeHtml(l)}</div>
+          <div class="card-area">${l.area} ${buildVerifiedBadgeHtml(l)} ${isFreshListing ? '<span style="background:#1D9E75;color:#fff;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:20px;margin-left:4px;vertical-align:middle">NEW</span>' : ''}</div>
           <div class="card-title">${l.title}</div>
           <div class="card-sub">${subText}</div>
           <div class="card-price">${formatPrice(l)}</div>
@@ -1910,7 +2071,7 @@
     return `<button type="button" class="card-inquire-btn" id="card-cta-${listingId}" onclick="handleCardCta(event,'${listingId}')" aria-label="Send inquiry">
       ${ciSentIconHtml()}
       <span class="card-inquire-label">Send Inquiry</span>
-    </button>`;
+    </button><div style="text-align:center;font-size:10.5px;color:var(--text-3);margin-top:4px">Sellers usually reply within a few hours</div>`;
   }
 
   function handleCardCta(event, listingId) {
@@ -1983,8 +2144,11 @@
       grid.innerHTML = `<div class="empty-state" style="width:100%">
         <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
         <h3>No listings match your filters</h3>
-        <p>Try adjusting your search or <a onclick="resetAllFilters()" style="cursor:pointer">reset all filters</a></p>
-        <button class="btn btn-primary" style="margin-top:14px" onclick="openNotifyModal()">🔔 Notify me when a match is posted</button>
+        <p>Try widening your price range, removing a filter, or checking a nearby area.</p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:10px">
+          <button class="btn btn-outline" onclick="resetAllFilters()">Reset all filters</button>
+          <button class="btn btn-primary" onclick="openNotifyModal()">🔔 Notify me when a match is posted</button>
+        </div>
       </div>`;
       return;
     }
@@ -2833,6 +2997,14 @@
   applyFilters();
   nkMakeClickablesKeyboardAccessible();
   window.addEventListener('resize', nkApplyResponsiveMode);
+  function nkSetViewSegment(mode) {
+  const wantMap = mode === 'map';
+  if (wantMap !== nkMapOpen) nkToggleMapView();
+  document.getElementById('nk-seg-grid')?.classList.toggle('active', !wantMap);
+  document.getElementById('nk-seg-map')?.classList.toggle('active', wantMap);
+  document.getElementById('nk-seg-grid')?.setAttribute('aria-selected', String(!wantMap));
+  document.getElementById('nk-seg-map')?.setAttribute('aria-selected', String(wantMap));
+}
 </script>
 
 <script src="saved-listings.js"></script>
