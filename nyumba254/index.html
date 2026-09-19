@@ -973,7 +973,15 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/nk-shared.js" defer></script>
+<script src="/nk-shared.js"></script>
+<!-- IMPORTANT: no `defer` here. `defer` only affects scripts with a `src`;
+     the inline <script> below it does NOT get deferred by its own `defer`
+     attribute (browsers silently ignore that) — it always runs immediately
+     at its position in the document. If nk-shared.js were still deferred,
+     it would execute later (right before DOMContentLoaded), so the inline
+     script below would run BEFORE nk-shared.js's functions exist and throw
+     on the first shared-function call. Loading it here, un-deferred, right
+     before the inline script guarantees it has already run. -->
 <script defer>
   /* ---------------- index.html page logic ---------------- */
   document.addEventListener('DOMContentLoaded', nkIndexInit);
