@@ -26,7 +26,7 @@
   .topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
   .topbar-brand{display:flex;align-items:center;gap:10px}
   .topbar-brand-icon{width:auto;height:40px;background:transparent;border-radius:0;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .topbar-brand-icon img{width:auto;height:100%;object-fit:contain; mix-blend-mode:multiply; }
+  .topbar-brand-icon img{width:auto;height:100%;object-fit:contain; mix-blend-mode:multiply; filter:contrast(1.1) saturate(1.2); }
   .topbar-brand-text{font-family:'Playfair Display',serif;font-size:16px;color:var(--green-dark)}
   .topbar-back{font-size:13px;font-weight:600;color:var(--text-2);display:flex;align-items:center;gap:6px}
   .topbar-back:hover{color:var(--green-dark)}
