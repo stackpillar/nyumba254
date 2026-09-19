@@ -51,13 +51,13 @@
     nav {
       position: sticky; top: 0; z-index: 100;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0 32px; height: 64px;
+      padding: 0 32px; height: 72px;
       background: var(--white); border-bottom: 1px solid var(--border);
     }
     .logo { display: flex; align-items: center; gap: 10px; font-family: 'Playfair Display', serif; font-size: 20px; color: var(--green-dark); }
-    .logo-icon { width: 34px; height: 34px; background: transparent; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .logo-icon { width:auto; height:56px; background:transparent; border-radius:0; display: flex; align-items: center; justify-content: center; }
     .logo-icon svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 2; stroke-linecap: round; }
-    .logo-icon img { width: 100%; height: 100%; object-fit: contain; }
+    .logo-icon img { width:auto;height:100%; object-fit: contain; }
     .nav-links { display: flex; align-items: center; gap: 6px; }
     .nav-link { font-size: 14px; color: var(--text-2); padding: 8px 14px; border-radius: var(--radius); transition: background .15s; white-space: nowrap; }
     .nav-link:hover { background: var(--surface); color: var(--text); }
@@ -76,8 +76,8 @@
     }
     .mobile-menu-btn svg { width: 22px; height: 22px; stroke: var(--text); fill: none; stroke-width: 2; display: block; }
     .mobile-nav {
-      display: none; position: fixed; top: 64px; left: 0; right: 0;
-      max-height: calc(100vh - 64px); overflow-y: auto; -webkit-overflow-scrolling: touch;
+      display: none; position: fixed; top: 72px; left: 0; right: 0;
+      max-height: calc(100vh - 72px); overflow-y: auto; -webkit-overflow-scrolling: touch;
       background-color: #ffffff; border-bottom: 1px solid var(--border);
       padding: 16px; z-index: 9999; flex-direction: column; gap: 4px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.1);
@@ -118,7 +118,7 @@
        viewport as you scroll. It slides with the border as it collapses. */
     .sidebar-toggle-wrap {
       grid-column: 1 / -1; grid-row: 1;
-      position: sticky; top: 64px; height: calc(100vh - 64px);
+      position: sticky; top: 72px; height: calc(100vh - 72px);
       pointer-events: none; z-index: 50;
     }
     .sidebar-toggle-btn {
@@ -150,8 +150,8 @@
     /* ── Sidebar filters ── */
     .sidebar {
       background: var(--white); border-right: 1px solid var(--border);
-      padding: 24px 20px; position: sticky; top: 64px;
-      height: calc(100vh - 64px); overflow-y: auto;
+      padding: 24px 20px; position: sticky; top: 72px;
+      height: calc(100vh - 72px); overflow-y: auto;
       grid-column: 1; grid-row: 1;
     }
     .sidebar::-webkit-scrollbar { width: 4px; }
@@ -612,7 +612,7 @@
     /* Sticky quick-filter chip bar (items 3 & 4 in the plan) */
     .nk-quickbar {
       display: none;
-      position: sticky; top: 64px; z-index: 90;
+      position: sticky; top: 72px; z-index: 90;
       background: var(--white); border-bottom: 1px solid var(--border);
       padding: 10px 16px; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch;
       scrollbar-width: none; align-items: center;
@@ -2575,7 +2575,7 @@
     const header = document.querySelector('.page-header');
     if (!nav || !header) return;
     function update() {
-      const past = header.getBoundingClientRect().bottom < 64;
+      const past = header.getBoundingClientRect().bottom < 72;
       nav.classList.toggle('nk-scrolled', past);
     }
     window.addEventListener('scroll', update, { passive: true });

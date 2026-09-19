@@ -41,14 +41,14 @@
     /* ── Navbar ── */
     nav {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0 32px; height: 64px;
+      padding: 0 32px; height: 72px;
       background: var(--white); border-bottom: 1px solid var(--border); flex-shrink: 0;
       gap: 12px;
     }
     .logo { display: flex; align-items: center; gap: 10px; font-family: 'Playfair Display', serif; font-size: 20px; color: var(--green-dark); flex-shrink: 0; white-space: nowrap; }
-    .logo-icon { width: 34px; height: 34px; background: transparent; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .logo-icon { width:auto; height:56px; background:transparent; border-radius:0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .logo-icon svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 2; stroke-linecap: round; }
-    .logo-icon img { width: 100%; height: 100%; object-fit: contain; }
+    .logo-icon img { width:auto;height:100%; object-fit: contain; }
     .nav-right { font-size: 14px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .nav-right a { color: var(--green); font-weight: 500; white-space: nowrap; }
     .nav-right a:hover { text-decoration: underline; }
@@ -56,7 +56,7 @@
     .nav-right .nav-right-short { display: none; }
 
     /* ── Layout ── */
-    .page { flex: 1; display: grid; grid-template-columns: 1fr 1fr; min-height: calc(100vh - 64px); }
+    .page { flex: 1; display: grid; grid-template-columns: 1fr 1fr; min-height: calc(100vh - 72px); }
 
     /* ── Left panel ── */
     .left-panel {
@@ -315,7 +315,7 @@
     @media (max-width: 420px) {
       nav { padding: 0 14px; height: 56px; }
       .logo { font-size: 17px; gap: 6px; }
-      .logo-icon { width: 28px; height: 28px; }
+      .logo-icon { width:auto; height:44px; }
       .nav-right .nav-right-full { display: none; }
       .nav-right .nav-right-short { display: inline; }
       .nav-right { font-size: 13px; }

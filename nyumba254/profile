@@ -71,13 +71,13 @@
     /* ── NAV ── */
     nav {
       position: sticky; top: 0; z-index: 100;
-      height: 64px; padding: 0 32px;
+      height: 72px; padding: 0 32px;
       background: var(--white); border-bottom: 1px solid var(--border);
       display: flex; align-items: center; justify-content: space-between;
     }
     .logo { display: flex; align-items: center; gap: 10px; font-family: 'Playfair Display', serif; font-size: 20px; color: var(--green-dark); }
-    .logo-icon { width: 34px; height: 34px; background: transparent; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
-    .logo-icon img { width: 100%; height: 100%; object-fit: contain; }
+    .logo-icon { width:auto; height:56px; background:transparent; border-radius:0; display: flex; align-items: center; justify-content: center; }
+    .logo-icon img { width:auto;height:100%; object-fit: contain; }
     .nav-right { display: flex; align-items: center; gap: 10px; }
     .nav-link { font-size: 14px; color: var(--text-2); padding: 8px 14px; border-radius: var(--radius); transition: background .15s; }
     .nav-link:hover { background: var(--surface); }

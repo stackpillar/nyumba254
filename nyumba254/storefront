@@ -30,8 +30,8 @@
   /* ── minimal top bar, links back to the platform ── */
   .topbar{background:var(--white);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
   .topbar-logo{display:flex;align-items:center;gap:8px;font-family:'Playfair Display',serif;font-size:16px;color:var(--green-dark);font-weight:700}
-  .topbar-logo-icon{width:26px;height:26px;background:transparent;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .topbar-logo-icon img{width:100%;height:100%;object-fit:contain}
+  .topbar-logo-icon{width:auto;height:36px;background:transparent;border-radius:0;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .topbar-logo-icon img{width:auto;height:100%;object-fit:contain}
   .topbar-cta{font-size:13px;font-weight:600;color:var(--green);border:1.5px solid var(--green);padding:7px 14px;border-radius:20px}
   .topbar-cta:hover{background:var(--green-light)}
 
