@@ -4,9 +4,9 @@
   <meta name="google-adsense-account" content="ca-pub-7668208654108171">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Nyumba254 — Apartments, Houses & Rentals Across Kenya</title>
-  <meta name="description" content="Find apartments, houses, boarding rooms, Airbnb rentals, and shops/offices across Kenya — starting with Kisumu, Nairobi, and Mombasa. No agents, no commission."/>
-  <link rel="canonical" href="https://nyumba254.com/"/>
+  <title id="nk-doc-title">Nyumba254 — Apartments, Houses & Rentals Across Kenya</title>
+  <meta name="description" id="nk-doc-desc" content="Find apartments, houses, boarding rooms, Airbnb rentals, and shops/offices across Kenya — starting with Kisumu, Nairobi, and Mombasa. No agents, no commission."/>
+  <link rel="canonical" href="https://nyumba254.com/" id="nk-canonical"/>
   <meta property="og:type" content="website"/>
   <meta property="og:title" content="Nyumba254 — Apartments, Houses & Rentals Across Kenya"/>
   <meta property="og:description" content="Find apartments, houses, boarding rooms, Airbnb rentals, and shops/offices across Kenya. No agents, no commission."/>
@@ -19,7 +19,9 @@
   <meta name="twitter:image" content="https://nyumba254.com/hero-photo.jpg"/>
   <meta name="twitter:site" content="@Nyumba254"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="preconnect" href="https://vliuuloyfhyxcsuchpss.supabase.co"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
@@ -39,6 +41,19 @@
     ]
   }
   </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "url": "https://nyumba254.com/",
+    "name": "Nyumba254",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://nyumba254.com/listings?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -50,15 +65,17 @@
       --gold-light:  var(--green-light);
       --text:        #1a1a18;
       --text-2:      #4a4a46;
-      --text-3:      #888780;
+      --text-3:      #6b6a63;
       --border:      #e0ded8;
       --surface:     #f7f6f2;
       --white:       #ffffff;
       --radius:      10px;
       --radius-lg:   16px;
       --shadow:      0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.06);
+      --nav-h:       64px;
     }
     html { scroll-behavior: smooth; }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
     body { font-family: 'Inter', sans-serif; color: var(--text); background: var(--white); font-size: 15px; line-height: 1.6; }
     a { text-decoration: none; color: inherit; }
     img { display: block; max-width: 100%; }
@@ -68,7 +85,7 @@
     nav {
       position: sticky; top: 0; z-index: 100;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0 32px; height: 64px;
+      padding: 0 32px; height: var(--nav-h);
       background: var(--white); border-bottom: 1px solid var(--border);
     }
     .logo {
@@ -83,6 +100,7 @@
     .nav-links { display: flex; align-items: center; gap: 6px; }
     .nav-link { font-size: 14px; color: var(--text-2); padding: 8px 14px; border-radius: var(--radius); transition: background .15s; white-space: nowrap; }
     .nav-link:hover { background: var(--surface); color: var(--text); }
+    .nav-link[aria-current="page"] { color: var(--green); font-weight: 600; }
     .btn { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; padding: 9px 18px; border-radius: var(--radius); transition: all .15s; }
     .btn-primary { background: var(--green); color: white; font-weight: 600; letter-spacing: .02em; }
     .btn-primary:hover { background: var(--green-dark); box-shadow: 0 6px 20px rgba(15,110,86,0.35); transform: translateY(-1px); transition: all .2s ease; }
@@ -98,10 +116,11 @@
     }
     .mobile-menu-btn svg { width: 22px; height: 22px; stroke: var(--text); fill: none; stroke-width: 2; display: block; }
     .mobile-nav {
-      display: none; position: fixed; top: 64px; left: 0; right: 0;
+      display: none; position: fixed; top: var(--nav-h); left: 0; right: 0;
       background: var(--white); border-bottom: 1px solid var(--border);
       padding: 16px; z-index: 99; flex-direction: column; gap: 4px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      max-height: calc(100dvh - var(--nav-h)); overflow-y: auto;
     }
     .mobile-nav.open { display: flex; }
     .mobile-nav a { font-size: 15px; color: var(--text-2); padding: 10px 14px; border-radius: var(--radius); }
@@ -117,22 +136,19 @@
       min-height: 600px;
       display: flex; align-items: center;
     }
-    .hero-illustration {
-      position: absolute; inset: 0; z-index: 0;
-    }
+    .hero-illustration { position: absolute; inset: 0; z-index: 0; }
     .hero-slide {
       position: absolute; inset: 0; width: 100%; height: 100%;
       object-fit: cover; object-position: center 30%; display: block;
       opacity: 0; transition: opacity 1.4s ease-in-out;
     }
+    @media (prefers-reduced-motion: reduce) { .hero-slide { transition: none; } }
     .hero-slide.active { opacity: 1; }
     .hero-overlay {
       position: absolute; inset: 0; z-index: 1;
       background: linear-gradient(90deg, rgba(4,52,44,0.85) 0%, rgba(4,52,44,0.72) 30%, rgba(4,52,44,0.28) 58%, rgba(4,52,44,0.05) 78%, rgba(4,52,44,0) 100%);
     }
-    .hero-content {
-      position: relative; z-index: 2; width: 100%; max-width: 620px;
-    }
+    .hero-content { position: relative; z-index: 2; width: 100%; max-width: 620px; }
     .hero-eyebrow {
       display: inline-block; background: rgba(255,255,255,0.16); color: #C9F0E0;
       font-size: 12px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase;
@@ -145,10 +161,21 @@
     }
     .hero h1 span { color: #6FE0B8; }
     .hero-sub {
-      font-size: 16px; color: rgba(255,255,255,0.9); margin-bottom: 36px;
+      font-size: 16px; color: rgba(255,255,255,0.9); margin-bottom: 28px;
       max-width: 440px;
       text-shadow: 0 1px 10px rgba(0,0,0,0.35);
     }
+
+    /* Intent tabs (D1) */
+    .intent-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+    .intent-tab {
+      font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.82);
+      background: rgba(255,255,255,0.12); border: 1.5px solid rgba(255,255,255,0.22);
+      padding: 8px 15px; border-radius: 20px; transition: all .15s;
+    }
+    .intent-tab:hover { background: rgba(255,255,255,0.2); }
+    .intent-tab.active { background: white; color: var(--green-dark); border-color: white; }
+
     .search-box {
       background: white; border-radius: var(--radius-lg); padding: 10px;
       display: flex; gap: 10px; flex-wrap: wrap;
@@ -183,7 +210,7 @@
     .see-all { font-size: 14px; color: var(--green); font-weight: 600; white-space: nowrap; }
     .see-all:hover { text-decoration: underline; }
 
-    /* ── Trust bar ── */
+    /* ── Trust bar (seeker-only messaging now — D content order) ── */
     .trust-bar {
       background: var(--green-light); border-top: 1px solid #9FE1CB; border-bottom: 1px solid #9FE1CB;
       padding: 18px 32px; display: flex; align-items: center; justify-content: center;
@@ -208,6 +235,14 @@
       background-repeat: no-repeat; background-position: right 8px center; background-size: 14px;
     }
     .pill-select:hover { border-color: var(--green); color: var(--green); }
+
+    /* Popular area quick links (D) */
+    .quicklinks { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+    .quicklink {
+      font-size: 12.5px; font-weight: 600; color: var(--green-dark); background: white;
+      border: 1px solid #9FE1CB; padding: 6px 13px; border-radius: 20px; transition: all .15s;
+    }
+    .quicklink:hover { background: var(--green-light); }
 
     .listings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
     .card {
@@ -256,20 +291,22 @@
     .card-body { padding: 16px 16px 15px; }
     .card-area { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: var(--green); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
     .card-area::before { content: '📍'; font-size: 12px; flex-shrink: 0; }
+    .card-verified-badge {
+      display: inline-flex; align-items: center; gap: 3px; background: var(--green-light);
+      color: var(--green-dark); font-size: 9px; font-weight: 700; padding: 1px 6px 1px 4px;
+      border-radius: 20px; text-transform: none; letter-spacing: 0; vertical-align: middle;
+    }
+    .card-verified-badge svg { width: 8px; height: 8px; stroke: var(--green-dark); fill: none; stroke-width: 2.6; }
     .card-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 3px; line-height: 1.35; }
     .card-sub { font-size: 12.5px; color: var(--text-3); margin-bottom: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .card-price { font-size: 18px; font-weight: 700; color: var(--green-dark); margin-bottom: 12px; letter-spacing: -.01em; display: flex; align-items: baseline; gap: 4px; }
+    .card-price { font-size: 18px; font-weight: 700; color: var(--green-dark); margin-bottom: 0; letter-spacing: -.01em; display: flex; align-items: baseline; gap: 4px; }
     .card-price span { font-size: 13px; font-weight: 500; color: var(--text-2); }
-    .card-meta { display: flex; gap: 12px; font-size: 12px; color: var(--text-2); padding-top: 12px; border-top: 1px solid var(--border); flex-wrap: wrap; align-items: center; }
-    .card-meta-item { display: flex; align-items: center; gap: 4px; }
-    .card-meta-item svg { width: 14px; height: 14px; stroke: var(--text-3); fill: none; stroke-width: 2; }
+    .nk-heart-overlay { position: absolute; top: 10px; right: 10px; z-index: 3; }
 
     .categories { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 16px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-.categories::-webkit-scrollbar { display: none; }
-.cat-card { flex: 0 0 240px; cursor: pointer; }
-    @media (max-width: 768px) {
-      .cat-card { flex: 0 0 85%; }
-    }
+    .categories::-webkit-scrollbar { display: none; }
+    .cat-card { flex: 0 0 240px; cursor: pointer; }
+    @media (max-width: 768px) { .cat-card { flex: 0 0 85%; } }
     .cat-card { border-radius: var(--radius-lg); padding: 24px; cursor: pointer; transition: transform .2s; border: 1.5px solid transparent; }
     .cat-card:hover, .cat-card:focus-visible { transform: translateY(-2px); }
     .cat-card:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
@@ -317,28 +354,16 @@
     .area-card-count { font-size: 12px; color: var(--text-3); }
     .area-card.coming-soon { cursor: default; opacity: .55; }
     .area-card.coming-soon:hover { border-color: var(--border); background: white; }
+    .area-card.zero-listings { opacity: .65; }
     .area-card.tier1 { border-color: #9FE1CB; }
 
     .scroll-wrap { position: relative; }
     .scroll-hint {
-      display: flex;
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      align-items: center;
-      justify-content: center;
-      z-index: 5;
-      background: white;
-      border: 1px solid var(--border);
-      box-shadow: 0 4px 16px rgba(15,26,22,0.14);
-      padding: 0;
-      cursor: pointer;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .18s ease, transform .12s ease, box-shadow .15s ease;
+      display: flex; position: absolute; top: 50%; transform: translateY(-50%);
+      width: 38px; height: 38px; border-radius: 50%; align-items: center; justify-content: center;
+      z-index: 5; background: white; border: 1px solid var(--border);
+      box-shadow: 0 4px 16px rgba(15,26,22,0.14); padding: 0; cursor: pointer;
+      opacity: 0; pointer-events: none; transition: opacity .18s ease, transform .12s ease, box-shadow .15s ease;
       -webkit-tap-highlight-color: transparent;
     }
     .scroll-hint.visible { opacity: 1; pointer-events: auto; }
@@ -346,25 +371,9 @@
     .scroll-hint:active { transform: translateY(-50%) scale(0.9); }
     .scroll-hint.right { right: 8px; }
     .scroll-hint.left { left: 8px; }
-    .scroll-hint svg {
-      width: 16px;
-      height: 16px;
-      stroke: var(--green-dark);
-      stroke-width: 2.6;
-      fill: none;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-    .carousel-dots {
-      display: none;
-      justify-content: center;
-      gap: 6px;
-      margin-top: 10px;
-    }
-    .carousel-dots span {
-      width: 6px; height: 6px; border-radius: 50%; background: var(--border);
-      transition: all .2s ease;
-    }
+    .scroll-hint svg { width: 16px; height: 16px; stroke: var(--green-dark); stroke-width: 2.6; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .carousel-dots { display: none; justify-content: center; gap: 6px; margin-top: 10px; }
+    .carousel-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: all .2s ease; }
     .carousel-dots span.active { background: var(--green); width: 18px; border-radius: 4px; }
 
     .cta-banner {
@@ -379,6 +388,21 @@
     .btn-ghost { background: transparent; color: white; border: 1.5px solid rgba(255,255,255,0.4); font-size: 15px; padding: 12px 24px; border-radius: var(--radius); transition: all .15s; display: inline-block; }
     .btn-ghost:hover { border-color: white; }
 
+    /* How it works strip (D) */
+    .steps-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 48px; }
+    .step-card { background: white; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; }
+    .step-num { font-family: 'Playfair Display', serif; font-size: 26px; color: var(--green); margin-bottom: 10px; }
+    .step-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+    .step-card p { font-size: 13px; color: var(--text-3); line-height: 1.55; }
+
+    /* Reviews (D — surfaced social proof previously only collected) */
+    .reviews-row { display: flex; gap: 16px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+    .reviews-row::-webkit-scrollbar { display: none; }
+    .review-card { flex: 0 0 280px; background: white; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; }
+    .review-stars { color: #E8973A; font-size: 14px; margin-bottom: 8px; letter-spacing: 1px; }
+    .review-comment { font-size: 13.5px; color: var(--text-2); line-height: 1.6; margin-bottom: 10px; }
+    .review-name { font-size: 12px; font-weight: 700; color: var(--text-3); }
+
     footer { background: var(--text); color: rgba(255,255,255,0.6); padding: 56px 32px 28px; }
     .footer-inner { max-width: 1200px; margin: 0 auto; }
     .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 48px; }
@@ -387,10 +411,7 @@
     .footer-logo-icon img { width:auto; height:100%; aspect-ratio:1/1; object-fit:cover; display:block; border-radius:22%; box-shadow:0 0 0 1px rgba(255,255,255,.18); }
     .footer-tagline { font-size: 13px; line-height: 1.8; max-width: 240px; color: rgba(255,255,255,0.5); margin-bottom: 20px; }
     .footer-social { display: flex; gap: 8px; }
-    .footer-social a {
-      width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,0.08);
-      display: flex; align-items: center; justify-content: center; transition: background .15s;
-    }
+    .footer-social a { width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; transition: background .15s; }
     .footer-social a:hover { background: var(--green); }
     .footer-social svg { width: 15px; height: 15px; stroke: rgba(255,255,255,0.6); fill: none; stroke-width: 2; }
     .footer-col h4 { font-size: 11px; font-weight: 700; color: white; margin-bottom: 16px; letter-spacing: .1em; text-transform: uppercase; }
@@ -424,10 +445,7 @@
       font-size: 13px; padding: 9px 16px; text-align: center; flex-wrap: wrap;
     }
     .nk-datasaver-banner.visible { display: flex; }
-    .nk-datasaver-banner button {
-      background: none; border: 1px solid #8a5a00; color: #8a5a00;
-      font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px;
-    }
+    .nk-datasaver-banner button { background: none; border: 1px solid #8a5a00; color: #8a5a00; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
     .nk-datasaver-banner button:hover { background: #8a5a00; color: white; }
     body.nk-datasaver .hero-illustration { display: none; }
     body.nk-datasaver .reveal { transition: none; }
@@ -475,15 +493,13 @@
     }
     .nk-tab-badge.visible { display: flex; }
 
-    .categories:focus-visible, .listings-grid:focus-visible, .areas:focus-visible {
-      outline: 2px solid var(--green); outline-offset: 2px;
-    }
+    .categories:focus-visible, .listings-grid:focus-visible, .areas:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
 
     @media (max-width: 1024px) {
       .footer-top { grid-template-columns: 2fr 1fr 1fr; }
-      .footer-top > *:nth-child(4),
-      .footer-top > *:nth-child(5) { display: none; }
+      .footer-top > *:nth-child(4), .footer-top > *:nth-child(5) { display: none; }
       .areas { grid-template-columns: repeat(4, 1fr); }
+      .steps-strip { grid-template-columns: 1fr; }
     }
     @media (max-width: 768px) {
       nav { padding: 0 16px; }
@@ -496,57 +512,26 @@
       .section { padding: 40px 16px; }
       .trust-bar { padding: 16px; gap: 20px; }
       .footer-top { grid-template-columns: 1fr 1fr; gap: 28px; }
-      .footer-top > *:nth-child(4),
-      .footer-top > *:nth-child(5) { display: block; }
+      .footer-top > *:nth-child(4), .footer-top > *:nth-child(5) { display: block; }
       .cta-banner { padding: 32px 24px; }
-
-      .categories {
-        scroll-snap-type: x mandatory;
-        gap: 14px;
-        padding-bottom: 6px;
-      }
-      .cat-card {
-        flex: 0 0 76%;
-        max-width: 300px;
-        scroll-snap-align: start;
-      }
-
+      .categories { scroll-snap-type: x mandatory; gap: 14px; padding-bottom: 6px; }
+      .cat-card { flex: 0 0 76%; max-width: 300px; scroll-snap-align: start; }
       .listings-grid {
-        display: flex;
-        grid-template-columns: none;
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
-        scroll-padding-left: 16px;
-        gap: 14px;
-        padding: 4px 16px 10px;
-        margin: 0 -16px;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
+        display: flex; grid-template-columns: none; overflow-x: auto; scroll-snap-type: x mandatory;
+        scroll-padding-left: 16px; gap: 14px; padding: 4px 16px 10px; margin: 0 -16px;
+        -webkit-overflow-scrolling: touch; scrollbar-width: none;
       }
       .listings-grid::-webkit-scrollbar { display: none; }
-      .listings-grid .card {
-        flex: 0 0 82%;
-        max-width: 320px;
-        scroll-snap-align: start;
-        scroll-snap-stop: always;
-      }
-
+      .listings-grid .card { flex: 0 0 82%; max-width: 320px; scroll-snap-align: start; scroll-snap-stop: always; }
       .areas {
-        display: grid;
-        grid-template-columns: none;
-        grid-auto-flow: column;
-        grid-template-rows: repeat(2, 1fr);
-        grid-auto-columns: 150px;
-        overflow-x: auto;
-        gap: 12px;
-        padding-bottom: 6px;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
+        display: grid; grid-template-columns: none; grid-auto-flow: column; grid-template-rows: repeat(2, 1fr);
+        grid-auto-columns: 150px; overflow-x: auto; gap: 12px; padding-bottom: 6px;
+        -webkit-overflow-scrolling: touch; scrollbar-width: none;
       }
       .areas::-webkit-scrollbar { display: none; }
-
       .scroll-hint { display: flex; }
       .carousel-dots { display: flex; }
+      .reviews-row { padding: 0 16px; margin: 0 -16px; }
     }
     @media (max-width: 480px) {
       .footer-top { grid-template-columns: 1fr; }
@@ -559,9 +544,7 @@
 
     .reveal { opacity: 0; transform: translateY(18px); transition: opacity .6s ease, transform .6s ease; }
     .reveal.is-visible { opacity: 1; transform: none; }
-    @media (prefers-reduced-motion: reduce) {
-      .reveal { opacity: 1; transform: none; transition: none; }
-    }
+    @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
 
     @media (max-width: 768px) {
       .categories, .listings-grid, .areas {
@@ -572,37 +555,24 @@
 
     .cat-card { position: relative; overflow: hidden; }
     .cat-card::before {
-      content: '';
-      position: absolute; inset: 0;
-      background-image:
-        radial-gradient(circle at 85% 15%, rgba(255,255,255,0.16) 0%, transparent 45%),
+      content: ''; position: absolute; inset: 0;
+      background-image: radial-gradient(circle at 85% 15%, rgba(255,255,255,0.16) 0%, transparent 45%),
         repeating-linear-gradient(135deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 2px, transparent 2px, transparent 14px);
       pointer-events: none;
     }
-    .cat-card.airbnb::before { background-image:
-        radial-gradient(circle at 85% 15%, rgba(15,110,86,0.08) 0%, transparent 45%),
-        repeating-linear-gradient(135deg, rgba(15,110,86,0.04) 0px, rgba(15,110,86,0.04) 2px, transparent 2px, transparent 14px); }
-    .cat-card.boarding::before { background-image:
-        radial-gradient(circle at 85% 15%, rgba(15,110,86,0.08) 0%, transparent 45%),
-        repeating-linear-gradient(135deg, rgba(15,110,86,0.04) 0px, rgba(15,110,86,0.04) 2px, transparent 2px, transparent 14px); }
+    .cat-card.airbnb::before, .cat-card.boarding::before {
+      background-image: radial-gradient(circle at 85% 15%, rgba(15,110,86,0.08) 0%, transparent 45%),
+        repeating-linear-gradient(135deg, rgba(15,110,86,0.04) 0px, rgba(15,110,86,0.04) 2px, transparent 2px, transparent 14px);
+    }
     .cat-card > * { position: relative; z-index: 1; }
 
     .nav-compact-search {
-      display: none;
-      position: relative;
-      align-items: center; gap: 6px;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 20px; padding: 6px 6px 6px 14px;
+      display: none; position: relative; align-items: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 6px 6px 6px 14px;
       flex: 1; max-width: 360px; margin: 0 16px;
     }
-    .nav-compact-search input {
-      flex: 1; border: none; outline: none; background: transparent;
-      font-family: inherit; font-size: 13px; color: var(--text); min-width: 0;
-    }
-    .nav-compact-search button {
-      flex-shrink: 0; background: var(--green); color: white; border-radius: 16px;
-      padding: 7px 14px; font-size: 13px; font-weight: 600; font-family: inherit;
-    }
+    .nav-compact-search input { flex: 1; border: none; outline: none; background: transparent; font-family: inherit; font-size: 13px; color: var(--text); min-width: 0; }
+    .nav-compact-search button { flex-shrink: 0; background: var(--green); color: white; border-radius: 16px; padding: 7px 14px; font-size: 13px; font-weight: 600; font-family: inherit; }
     .nav-compact-search button:hover { background: var(--green-dark); }
     nav.nk-scrolled .nav-compact-search { display: flex; }
     @media (max-width: 768px) {
@@ -611,40 +581,25 @@
     }
 
     .nk-fab-post {
-      display: none;
-      position: fixed; left: 16px; bottom: 84px; z-index: 60;
-      align-items: center; gap: 8px;
-      background: var(--green); color: white;
-      padding: 13px 18px; border-radius: 30px;
-      font-size: 14px; font-weight: 600;
+      display: none; position: fixed; left: 16px; bottom: 84px; z-index: 60;
+      align-items: center; gap: 8px; background: var(--green); color: white;
+      padding: 13px 18px; border-radius: 30px; font-size: 14px; font-weight: 600;
       box-shadow: 0 6px 20px rgba(15,110,86,0.4);
     }
     .nk-fab-post svg { width: 16px; height: 16px; stroke: white; fill: none; stroke-width: 2.5; }
-    @media (max-width: 768px) {
-      .nk-fab-post { display: flex; }
-    }
+    @media (max-width: 768px) { .nk-fab-post { display: flex; } }
 
     .nk-tabbar {
-      display: none;
-      position: fixed; left: 0; right: 0; bottom: 0; z-index: 70;
+      display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 70;
       background: white; border-top: 1px solid var(--border);
       padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
-      align-items: stretch; justify-content: space-around;
-      box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
+      align-items: stretch; justify-content: space-around; box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
     }
-    .nk-tab {
-      display: flex; flex-direction: column; align-items: center; gap: 2px;
-      font-size: 10.5px; font-weight: 600; color: var(--text-3);
-      padding: 4px 0; flex: 1; position: relative;
-    }
+    .nk-tab { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10.5px; font-weight: 600; color: var(--text-3); padding: 4px 0; flex: 1; position: relative; }
     .nk-tab svg { width: 21px; height: 21px; stroke: var(--text-3); fill: none; stroke-width: 2; }
     .nk-tab.active, .nk-tab.active svg { color: var(--green); stroke: var(--green); }
     .nk-tab-postbtn { position: relative; top: -14px; }
-    .nk-tab-postbtn .nk-tab-postcircle {
-      width: 42px; height: 42px; border-radius: 50%; background: var(--green);
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 14px rgba(15,110,86,0.4); margin-bottom: 2px;
-    }
+    .nk-tab-postbtn .nk-tab-postcircle { width: 42px; height: 42px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(15,110,86,0.4); margin-bottom: 2px; }
     .nk-tab-postbtn .nk-tab-postcircle svg { width: 20px; height: 20px; stroke: white; }
     .nk-tab-postbtn { color: var(--green); }
     @media (max-width: 768px) {
@@ -652,11 +607,16 @@
       body { padding-bottom: 62px; }
       .nk-fab-post { bottom: 78px; }
     }
+    .skip-link {
+      position: absolute; left: -9999px; top: 0; background: var(--green); color: white;
+      padding: 10px 18px; border-radius: 0 0 8px 0; z-index: 1000; font-size: 14px; font-weight: 600;
+    }
+    .skip-link:focus { left: 0; }
   </style>
 </head>
 <body>
 
-<a href="#main-content" style="position:absolute;left:-9999px;top:0;background:var(--green);color:white;padding:10px 18px;border-radius:0 0 8px 0;z-index:1000;font-size:14px;font-weight:600" onfocus="this.style.left='0'" onblur="this.style.left='-9999px'">Skip to content</a>
+<a href="#main-content" class="skip-link">Skip to content</a>
 
 <div class="nk-datasaver-banner" id="nk-datasaver-banner">
   <span>You're on a slower connection — Data Saver is on to load faster.</span>
@@ -665,48 +625,43 @@
 
 <!-- ── NAVBAR ── -->
 <nav>
-  <a href="/" class="logo">
-    <div class="logo-icon">
-      <img src="/logo-icon.png" alt="Nyumba254" />
-    </div>
+  <a href="/" class="logo" aria-current="page">
+    <div class="logo-icon"><img src="/logo-icon.png" alt="Nyumba254" /></div>
     <span>Nyumba254</span>
   </a>
   <div class="nav-compact-search" id="nav-compact-search">
-    <input type="text" id="nav-compact-search-input" placeholder="Search area or price…" aria-label="Search" oninput="nkNavSearchInput(this.value)"/>
+    <input type="text" id="nav-compact-search-input" placeholder="Search area or price…" aria-label="Search"/>
     <button onclick="nkCompactSearch()">Search</button>
     <div class="nk-search-dropdown" id="nav-search-dropdown"></div>
   </div>
   <div class="nav-links">
-<a href="/listings" class="nav-link">Browse</a>
+    <a href="/listings" class="nav-link">Browse</a>
     <a href="/how-it-works" class="nav-link">How it works</a>
     <a href="/about" class="nav-link">About us</a>
     <a href="/faq" class="nav-link">FAQ</a>
     <a href="/login" class="nav-link" id="nav-account-link">Sign in</a>
     <a href="/saved" class="nav-link">
-  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-  Saved
-  <span class="nav-count" id="nav-count-badge" style="display:none">0</span>
-</a>
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      Saved
+      <span class="nav-count" id="nav-count-badge" style="display:none">0</span>
+    </a>
     <a href="/post-listing" class="btn btn-primary">List your property</a>
   </div>
-  <!-- Mobile menu button -->
   <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Open menu" aria-expanded="false" id="mobile-menu-btn">
     <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
   </button>
 </nav>
 
-<!-- Mobile nav -->
 <div class="mobile-nav" id="mobile-nav">
   <a href="/listings">Browse listings</a>
   <a href="/how-it-works">How it works</a>
   <a href="/about" class="nav-link">About us</a>
   <a href="/faq">FAQ</a>
-  <a href="/login" class="mobile-nav-link" id="mobile-account-link">Sign in</a>
-  <a href="/saved" class="nav-link">
-  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-  Saved
-  <span class="nav-count" id="nav-count-badge-mobile" style="display:none">0</span>
-</a>
+  <a href="/login" id="mobile-account-link">Sign in</a>
+  <a href="/saved">
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+    Saved <span class="nav-count" id="nav-count-badge-mobile" style="display:none">0</span>
+  </a>
   <a href="/post-listing" class="btn btn-primary">List your property</a>
 </div>
 
@@ -720,84 +675,79 @@
   </div>
   <div class="hero-overlay" aria-hidden="true"></div>
   <div class="hero-content">
-  <div class="hero-eyebrow">Kisumu · Nairobi · Mombasa</div>
-  <h1>Find your next home<br>anywhere in <span>Kenya</span></h1>
-  <p class="hero-sub">Apartments, houses, boarding rooms, Airbnb rentals, and shops/offices across Kenya's counties — find and list property without agents.</p>
+    <div class="hero-eyebrow">Kisumu · Nairobi · Mombasa</div>
+    <h1>Find your next home<br>anywhere in <span>Kenya</span></h1>
+    <p class="hero-sub">Apartments, houses, boarding rooms, Airbnb rentals, and shops/offices across Kenya's counties — find and list property without agents.</p>
 
-  <div class="search-box">
-    <select id="search-county" aria-label="County" onchange="nkPopulateSearchAreas(this.value)">
-      <option value="">All counties</option>
-    </select>
-    <select id="search-area" aria-label="Area">
-      <option value="">All areas</option>
-    </select>
-    <select id="search-freq" aria-label="Payment frequency">
-      <option value="">Any frequency</option>
-      <option value="month">Monthly</option>
-      <option value="night">Nightly</option>
-      <option value="week">Weekly</option>
-      <option value="term">Per term</option>
-      <option value="once">One-time (sale)</option>
-    </select>
-    <input type="text" id="search-q" placeholder="Search by area, price, or keyword…" oninput="nkFormatSearchInput(this); nkHeroSearchInput(this.value)"/>
-    <button onclick="doSearch()">Search</button>
-    <div class="nk-search-dropdown" id="hero-search-dropdown"></div>
-  </div>
+    <!-- D1: intent tabs replace the free "Any frequency" dropdown -->
+    <div class="intent-tabs" id="intent-tabs" role="tablist" aria-label="What are you looking for">
+      <button type="button" class="intent-tab active" data-cat="" data-freq="month" role="tab" aria-selected="true">Rent</button>
+      <button type="button" class="intent-tab" data-cat="" data-freq="once" role="tab" aria-selected="false">Buy</button>
+      <button type="button" class="intent-tab" data-cat="airbnb" data-freq="" role="tab" aria-selected="false">Short stay</button>
+      <button type="button" class="intent-tab" data-cat="boarding" data-freq="" role="tab" aria-selected="false">Student/Boarding</button>
+      <button type="button" class="intent-tab" data-cat="commercial" data-freq="" role="tab" aria-selected="false">Shops & offices</button>
+    </div>
 
-  <div class="hero-quick-row">
-    <button class="nk-nearme-btn" id="nk-nearme-btn" onclick="nkUseNearMe()">
-      <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-      Near me
-    </button>
-    <div id="nk-recent-searches" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
-  </div>
+    <div class="search-box">
+      <select id="search-county" aria-label="County" onchange="nkPopulateSearchAreas(this.value)">
+        <option value="">All counties</option>
+      </select>
+      <select id="search-area" aria-label="Area">
+        <option value="">All areas</option>
+      </select>
+      <input type="text" id="search-q" placeholder="Search by area, price, or keyword…" oninput="nkFormatSearchInput(this); nkHeroSearchInput(this.value)"/>
+      <button onclick="doSearch()">Search</button>
+      <div class="nk-search-dropdown" id="hero-search-dropdown"></div>
+    </div>
 
-  <div class="hero-stats">
-    <div class="hero-stat">
-      <div class="hero-stat-val" id="stat-listings">—</div>
-      <div class="hero-stat-lbl">Active listings</div>
+    <div class="hero-quick-row">
+      <button class="nk-nearme-btn" id="nk-nearme-btn" onclick="nkHeroNearMe()">
+        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Near me
+      </button>
+      <div id="nk-recent-searches" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
     </div>
-    <div class="hero-stat">
-      <div class="hero-stat-val" id="stat-areas">—</div>
-      <div class="hero-stat-lbl">Areas covered</div>
+
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-val" id="stat-listings">—</div>
+        <div class="hero-stat-lbl">Active listings</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val" id="stat-areas">—</div>
+        <div class="hero-stat-lbl">Counties with listings</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">0%</div>
+        <div class="hero-stat-lbl">Agent commission</div>
+      </div>
     </div>
-    <div class="hero-stat">
-      <div class="hero-stat-val">0%</div>
-      <div class="hero-stat-lbl">Agent commission</div>
-    </div>
-  </div>
   </div>
 </section>
 
-<!-- ── TRUST BAR ── -->
+<!-- ── TRUST BAR (seeker-only messaging — seller messaging lives in the CTA banner) ── -->
 <div class="trust-bar">
   <div class="trust-item">
     <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
     No agents or middlemen
   </div>
   <div class="trust-item">
-    <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-    Pay once via M-Pesa
-  </div>
-  <div class="trust-item">
     <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.12 1.2 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
-    Buyers contact you directly
+    Message sellers directly
   </div>
   <div class="trust-item">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-    Live in under 10 minutes
+    <svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>
+    Verified sellers
   </div>
 </div>
 
 <!-- ── RECENTLY VIEWED ── -->
 <section class="section reveal nk-recently-viewed" id="recently-viewed-section">
-  <div class="section-header">
-    <h2 class="section-title">Recently viewed</h2>
-  </div>
+  <div class="section-header"><h2 class="section-title">Recently viewed</h2></div>
   <div class="scroll-wrap">
-  <div id="recently-viewed-listings"></div>
-  <button class="scroll-hint left" aria-label="Scroll to previous recently viewed" onclick="nkScrollWrap(this,-1)"><svg viewBox="0 0 24 24"><polyline points="15 6 9 12 15 18"/></svg></button>
-  <button class="scroll-hint right" aria-label="Scroll for more recently viewed" onclick="nkScrollWrap(this,1)"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
+    <div id="recently-viewed-listings"></div>
+    <button class="scroll-hint left" aria-label="Scroll to previous recently viewed" onclick="nkScrollWrap(this,-1)"><svg viewBox="0 0 24 24"><polyline points="15 6 9 12 15 18"/></svg></button>
+    <button class="scroll-hint right" aria-label="Scroll for more recently viewed" onclick="nkScrollWrap(this,1)"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
   </div>
 </section>
 
@@ -807,43 +757,33 @@
     <h2 class="section-title">What are you looking for?</h2>
     <a href="/how-it-works" class="see-all">How it works →</a>
   </div>
-  <div class="scroll-wrap"><div class="categories" tabindex="0">
-    <div class="cat-card apartment" onclick="filterCategory('apartment')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();filterCategory('apartment')}">
-      <div class="cat-icon">
-        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      </div>
+  <div class="scroll-wrap"><div class="categories" tabindex="0" id="categories-row">
+    <div class="cat-card apartment" data-cat="apartment" role="button" tabindex="0">
+      <div class="cat-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
       <div class="cat-title">Apartment</div>
       <div class="cat-desc">Flats, units, and compounds</div>
       <div class="cat-count" id="count-apartment">Loading…</div>
     </div>
-    <div class="cat-card house" onclick="filterCategory('house')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();filterCategory('house')}">
-      <div class="cat-icon">
-        <svg viewBox="0 0 24 24"><path d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V10"/></svg>
-      </div>
+    <div class="cat-card house" data-cat="house" role="button" tabindex="0">
+      <div class="cat-icon"><svg viewBox="0 0 24 24"><path d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V10"/></svg></div>
       <div class="cat-title">House</div>
       <div class="cat-desc">Standalone homes and yards</div>
       <div class="cat-count" id="count-house">Loading…</div>
     </div>
-    <div class="cat-card boarding" onclick="filterCategory('boarding')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();filterCategory('boarding')}">
-      <div class="cat-icon">
-        <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-      </div>
+    <div class="cat-card boarding" data-cat="boarding" role="button" tabindex="0">
+      <div class="cat-icon"><svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
       <div class="cat-title">Boarding House</div>
       <div class="cat-desc">Student rooms and bed spaces</div>
       <div class="cat-count" id="count-boarding">Loading…</div>
     </div>
-    <div class="cat-card airbnb" onclick="filterCategory('airbnb')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();filterCategory('airbnb')}">
-      <div class="cat-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 2C8 7 5 11 5 14.5a7 7 0 0014 0C19 11 16 7 12 2z"/></svg>
-      </div>
+    <div class="cat-card airbnb" data-cat="airbnb" role="button" tabindex="0">
+      <div class="cat-icon"><svg viewBox="0 0 24 24"><path d="M12 2C8 7 5 11 5 14.5a7 7 0 0014 0C19 11 16 7 12 2z"/></svg></div>
       <div class="cat-title">Airbnb / Holiday Rental</div>
       <div class="cat-desc">Short stays and furnished rentals</div>
       <div class="cat-count" id="count-airbnb">Loading…</div>
     </div>
-    <div class="cat-card commercial" onclick="filterCategory('commercial')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();filterCategory('commercial')}">
-      <div class="cat-icon">
-        <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6M9 11h.01M15 11h.01M9 7h.01M15 7h.01"/></svg>
-      </div>
+    <div class="cat-card commercial" data-cat="commercial" role="button" tabindex="0">
+      <div class="cat-icon"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6M9 11h.01M15 11h.01M9 7h.01M15 7h.01"/></svg></div>
       <div class="cat-title">Shops & offices</div>
       <div class="cat-desc">Retail shops, offices, and business spaces in Kisumu CBD and other areas</div>
       <div class="cat-count" id="count-commercial">Loading…</div>
@@ -861,7 +801,7 @@
       <h2 class="section-title">Featured listings</h2>
       <p class="section-subtitle">Hand-picked and verified — updated daily</p>
     </div>
-    <a href="/listings" class="see-all">See all →</a>
+    <a href="/listings?sort=featured" class="see-all">See all →</a>
   </div>
   <div class="scroll-wrap">
   <div id="featured-listings">
@@ -902,7 +842,7 @@
   </div>
 </section>
 
-<!-- ── AREAS ── -->
+<!-- ── AREAS (sorted by listing count, tier-1 first, D) ── -->
 <section class="section section-alt reveal" id="areas">
   <div class="section-header">
     <h2 class="section-title">Browse by county</h2>
@@ -913,6 +853,21 @@
   <button class="scroll-hint left" aria-label="Scroll to previous counties" onclick="nkScrollWrap(this,-1)"><svg viewBox="0 0 24 24"><polyline points="15 6 9 12 15 18"/></svg></button>
   <button class="scroll-hint right" aria-label="Scroll for more counties" onclick="nkScrollWrap(this,1)"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
   </div>
+  <div class="quicklinks" id="popular-area-links"></div>
+</section>
+
+<!-- ── HOW IT WORKS + REVIEWS (D) ── -->
+<section class="section reveal">
+  <div class="section-header"><h2 class="section-title">How it works</h2></div>
+  <div class="steps-strip">
+    <div class="step-card"><div class="step-num">1</div><h3>Search or browse</h3><p>Filter by county, area, price and category to find places that match what you need.</p></div>
+    <div class="step-card"><div class="step-num">2</div><h3>Message the seller</h3><p>Contact the person listing the property directly — no agent, no commission, no middleman.</p></div>
+    <div class="step-card"><div class="step-num">3</div><h3>Go view it</h3><p>Arrange a viewing, agree terms directly with the seller, and move in.</p></div>
+  </div>
+  <div id="reviews-section-wrap" style="display:none">
+    <div class="section-header"><h2 class="section-title">What people are saying</h2></div>
+    <div class="reviews-row" id="reviews-row"></div>
+  </div>
 </section>
 
 <!-- ── CTA BANNER ── -->
@@ -920,7 +875,7 @@
   <div class="cta-banner">
     <div>
       <h2>Selling or renting out your apartment, house, or bed space?</h2>
-      <p>List your property — apartment, house, boarding room, Airbnb, or commercial space — and reach thousands of buyers and tenants across Kenya, starting with Kisumu, Nairobi, and Mombasa — no agent needed.</p>
+      <p>List your property — apartment, house, boarding room, Airbnb, or commercial space — and reach thousands of buyers and tenants across Kenya, starting with Kisumu, Nairobi, and Mombasa — no agent needed. Pay once via M-Pesa and go live in under 10 minutes.</p>
     </div>
     <div class="cta-actions">
       <a href="/post-listing" class="btn-white">List your property</a>
@@ -929,15 +884,13 @@
   </div>
 </section>
 
-<!-- ── MOBILE: sticky "List property" FAB (bottom-left, clear of the chat widget) ── -->
 <a href="/post-listing" class="nk-fab-post" aria-label="List your property">
   <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   List property
 </a>
 
-<!-- ── MOBILE: bottom tab bar ── -->
 <nav class="nk-tabbar" aria-label="Primary">
-  <a href="/" class="nk-tab active">
+  <a href="/" class="nk-tab active" aria-current="page">
     <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     Home
   </a>
@@ -964,38 +917,21 @@
 <footer>
   <div class="footer-inner">
     <div class="footer-top">
-      <!-- Brand -->
       <div>
         <div class="footer-logo">
-          <div class="footer-logo-icon">
-            <img src="/logo-icon.png" alt="Nyumba254" />
-          </div>
+          <div class="footer-logo-icon"><img src="/logo-icon.png" alt="Nyumba254" /></div>
           Nyumba254
         </div>
         <p class="footer-tagline">The easiest way to find and list apartments, houses, boarding rooms, Airbnb rentals, and commercial spaces across Kenya — without agents or commissions.</p>
         <div class="footer-social">
-          <a href="https://wa.me/254739348560" target="_blank" rel="noopener" title="WhatsApp">
-            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
-          </a>
-          <a href="https://www.instagram.com/nyumba.254?igsh=Z2VhNzJkMm1td2Jz" target="_blank" rel="noopener" title="Instagram">
-            <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
-          </a>
-          <a href="https://www.facebook.com/share/1EdzJKujSK/" target="_blank" rel="noopener" title="Facebook">
-            <svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
-          </a>
-          <a href="https://www.tiktok.com/@nyumba.254?_r=1&_t=ZS-98w137YXueA" target="_blank" rel="noopener" title="TikTok">
-            <svg viewBox="0 0 24 24"><path d="M9 12a4 4 0 104 4V4a5 5 0 005 5"/></svg>
-          </a>
-          <a href="https://x.com/Nyumba254" target="_blank" rel="noopener" title="X (Twitter)">
-            <svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20"/></svg>
-          </a>
-          <a href="mailto:hello@nyumba254.co.ke" title="Email">
-            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          </a>
+          <a href="https://wa.me/254739348560" target="_blank" rel="noopener" title="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></a>
+          <a href="https://www.instagram.com/nyumba.254?igsh=Z2VhNzJkMm1td2Jz" target="_blank" rel="noopener" title="Instagram"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+          <a href="https://www.facebook.com/share/1EdzJKujSK/" target="_blank" rel="noopener" title="Facebook"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
+          <a href="https://www.tiktok.com/@nyumba.254?_r=1&_t=ZS-98w137YXueA" target="_blank" rel="noopener" title="TikTok"><svg viewBox="0 0 24 24"><path d="M9 12a4 4 0 104 4V4a5 5 0 005 5"/></svg></a>
+          <a href="https://x.com/Nyumba254" target="_blank" rel="noopener" title="X (Twitter)"><svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20"/></svg></a>
+          <a href="mailto:hello@nyumba254.co.ke" title="Email"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></a>
         </div>
       </div>
-
-      <!-- Browse -->
       <div class="footer-col">
         <h4>Browse</h4>
         <a href="/listings">All listings</a>
@@ -1005,22 +941,16 @@
         <a href="/listings?category=airbnb">Airbnb / Holiday Rental</a>
         <a href="/listings?category=commercial">Shops & offices</a>
       </div>
-
-      <!-- Areas -->
       <div class="footer-col">
         <h4>Counties</h4>
         <div class="footer-counties" id="footer-counties"></div>
       </div>
-
-      <!-- Platform -->
       <div class="footer-col">
         <h4>Platform</h4>
         <a href="/post-listing">List a property</a>
         <a href="/how-it-works">How it works</a>
         <a href="/login">Seller login</a>
       </div>
-
-      <!-- Company -->
       <div class="footer-col">
         <h4>Company</h4>
         <a href="/contact">Contact us</a>
@@ -1029,11 +959,9 @@
         <a href="/faq">FAQ</a>
       </div>
     </div>
-
     <div class="footer-divider"></div>
-
     <div class="footer-bottom">
-      <p>© 2026 Nyumba254. All rights reserved. Built for Kenya.</p>
+      <p>© <span id="nk-footer-year">2026</span> Nyumba254. All rights reserved. Built for Kenya.</p>
       <div class="footer-bottom-links">
         <a href="/terms">Terms</a>
         <a href="/privacy">Privacy</a>
@@ -1045,158 +973,111 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
-  const { createClient } = supabase;
+<script src="/nk-shared.js" defer></script>
+<script defer>
+  /* ---------------- index.html page logic ---------------- */
+  document.addEventListener('DOMContentLoaded', nkIndexInit);
 
-  const authStorage = {
-    getItem: (key) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).getItem(key),
-    setItem: (key, value) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).setItem(key, value),
-    removeItem: (key) => { localStorage.removeItem(key); sessionStorage.removeItem(key); }
-  };
+  function nkIndexInit() {
+    document.getElementById('nk-footer-year').textContent = new Date().getFullYear();
 
-  const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
-    auth: { storage: authStorage, persistSession: true, autoRefreshToken: true }
-  });
+    renderCountiesGrid();
+    loadCountyListingCounts();
+    renderFooterCounties();
+    renderLatestCountySelect();
+    renderAreaPills('');
+    nkPopulateSearchCounties();
+    loadFeatured();
+    loadCounts();
+    nkRefreshAllScrollHints();
+    nkRenderRecentlyViewed();
+    nkRenderRecentSearchChips();
+    nkRenderPopularAreaLinks();
+    nkLoadReviews();
+    nkInitAccountNav(['nav-account-link', 'mobile-account-link']);
+    nkTrackPageView();
+    nkInitDataSaver();
+    nkInitHeroSlideshow();
+    nkInitIntentTabs();
+    nkInitRevealAnimation();
+    nkInitStatCountUp();
+    nkInitScrolledNav();
 
-  const nkSessionPromise = db.auth.getSession();
+    // A3: delegated click handlers instead of onclick="fn('name-with-apostrophe')"
+    nkDelegate(document.getElementById('counties-grid'), '[data-county]', el => goCounty(el.dataset.county));
+    nkDelegate(document.getElementById('area-pills'), '[data-area-pill]', el => filterArea(el.dataset.areaPill || null, el));
+    nkDelegate(document.getElementById('categories-row'), '.cat-card', el => filterCategory(el.dataset.cat));
+    nkDelegate(document.getElementById('hero-search-dropdown'), '[data-goto-area]', el => goArea(el.dataset.gotoArea));
+    nkDelegate(document.getElementById('hero-search-dropdown'), '[data-goto-listing]', el => { window.location.href = el.dataset.gotoListing; });
+    nkDelegate(document.getElementById('nav-search-dropdown'), '[data-goto-area]', el => goArea(el.dataset.gotoArea));
+    nkDelegate(document.getElementById('nav-search-dropdown'), '[data-goto-listing]', el => { window.location.href = el.dataset.gotoListing; });
+    nkDelegate(document.getElementById('nk-recent-searches'), '[data-repeat-search]', el => nkRepeatSearchByIndex(Number(el.dataset.repeatSearch)));
+    nkDelegate(document.getElementById('popular-area-links'), '[data-quicklink]', () => {}); // links are real <a>, no-op placeholder for future analytics
 
-  const NK_CATEGORIES = {
-    apartment:  { label: 'Apartment', group: 'standard' },
-    house:      { label: 'House',     group: 'standard' },
-    boarding:   { label: 'Boarding House', group: 'boarding' },
-    airbnb:     { label: 'Airbnb / Holiday Rental', group: 'airbnb' },
-    commercial: { label: 'Shops & offices', group: 'commercial' },
-  };
-  const NK_FREQ_LABEL = { month: '/mo', night: '/night', week: '/week', term: '/term', once: '' };
+    // Recently-viewed and Featured/Latest sections all use <a data-listing-id>
+    // cards produced by nkBuildCard — wire recent-view tracking once at the body level.
+    nkBindRecentViewedTracking(document.body);
 
-  const NK_COUNTIES = [
-    "Mombasa","Kwale","Kilifi","Tana River","Lamu","Taita-Taveta","Garissa","Wajir","Mandera",
-    "Marsabit","Isiolo","Meru","Tharaka-Nithi","Embu","Kitui","Machakos","Makueni","Nyandarua",
-    "Nyeri","Kirinyaga","Murang'a","Kiambu","Turkana","West Pokot","Samburu","Trans Nzoia",
-    "Uasin Gishu","Elgeyo-Marakwet","Nandi","Baringo","Laikipia","Nakuru","Narok","Kajiado",
-    "Kericho","Bomet","Kakamega","Vihiga","Bungoma","Busia","Siaya","Kisumu","Homa Bay",
-    "Migori","Kisii","Nyamira","Nairobi"
-  ].sort();
-
-  const NK_AREAS_BY_COUNTY = {
-    "Kisumu": ["Ahero","Car Wash","Dunga","Elgon View","Kanyakwar","Kibos","Kibuye","Kisumu CBD","Kombewa","Kondele","Luanda","Mamboleo","Manyatta","Maseno","Matibabu","Migosi","Milimani","Nyalenda","Nyamasaria","Obunga","Otonglo","Riat Hills","Sega"],
-    "Nairobi": ["Nairobi CBD","Westlands","Parklands","Highridge","Kangemi","Kitisuru","Runda","Loresho","Muthaiga","Gigiri","Spring Valley","Nyari","Rosslyn","Thome","Garden Estate","Ridgeways","Kilimani","Kileleshwa","Lavington","Kawangware","Hurlingham","Upper Hill","Adams Arcade","Karen","Langata","South B","South C","Nairobi West","Madaraka","Otiende","Kibera","Woodley","Roysambu","Zimmerman","Kahawa West","Githurai","Mirema","Kasarani","Mwiki","Njiru","Ruaraka","Baba Dogo","Mathare","Huruma","Pipeline","Imara Daima","Nyayo Estate","Dandora","Kariobangi","Kayole","Komarock","Utawala","Tassia","Umoja","Buruburu","Donholm","Makadara","Eastleigh","Ngara","Pangani"],
-    "Mombasa": ["Mombasa CBD (Old Town)","Nyali","Bamburi","Kizingo","Tudor","Likoni","Changamwe","Kisauni","Shanzu","Mkomani","Bombolulu","Kiembeni","Port Reitz","Miritini","Chaani","Migadini","Kongowea","Junda","Mwakirunge","Mtopanga","Jomvu","Magongo"],
-    "Nakuru": ["Nakuru CBD","Milimani","Section 58","Langalanga","Pangani","Shabab","Bangladesh","Lanet","Free Area","Freehold","Ngata","Bahati","London","Afraha","Naka","Kiamunyi","White House","Pipeline","Kaptembwa","Rhoda","Menengai","Naivasha"],
-    "Uasin Gishu": ["Eldoret CBD","Kapsoya","Langas","Kimumu","Huruma","Elgon View","Pioneer","Annex","Rupa Village","Hazina","Kamukunji","Munyaka","West Indies"],
-    "Kiambu": ["Thika CBD","Landless","Makongeni","Section 9","Blue Post","Thika Greens","Kiganjo","Tora","Ngoingwa","Bahati Ridge","Kisii Estate","Ruiru","Membley","Kamakis","Juja","Kiambu Town","Kikuyu","Limuru"],
-    "Kilifi": ["Kilifi Town","Malindi CBD","Kisumu Ndogo","Majengo (Malindi)","Silversands","Watamu","Mtwapa","Mariakani","Kaloleni","Mazeras","Magarini"],
-    "Machakos": ["Machakos CBD","Mua Hills","Kalama","Mitaboni","Athi River","Mlolongo","Syokimau","Katani","Kangundo Road","Kola"],
-    "Kakamega": ["Kakamega CBD","Amalemba","Milimani","Shirere","Lurambi","Mahiakalo","Sudi","Mumias","Butere","Malava","Lugari"],
-    "Meru": ["Meru CBD","Makutano","Kinoru","Ntharene","Nkubu","Maua","Timau","Laare","Mikinduri","Kianjai"],
-    "Nyeri": ["Nyeri CBD","Ring Road","Mountain View Estate","Garden Estate","Kamakwa","Ruring'u","Majengo","Karatina","Othaya Town","Mukurweini Town","Naromoru"],
-    "Kericho": ["Kericho CBD","Kapsoit","Ainamoi","Litein","Kipkelion","Fort Ternan","Sosiot","Chepseon","Kedowa","Cheborge"],
-    "Trans Nzoia": ["Kitale CBD","Milimani","Mitume","Matisi","Tuwan","Endebess","Kiminini","Kwanza","Saboti","Cherangany"],
-    "Kwale": ["Kwale Town","Diani","Ukunda","Tiwi","Msambweni","Lunga Lunga","Matuga","Kinango","Waa","Shimoni","Mackinon Road","Vanga"],
-    "Tana River": ["Hola","Garsen","Bura","Galole","Wenje","Kipini","Madogo","Chewele","Bangale","Wayu"],
-    "Lamu": ["Lamu Town","Mokowe","Faza","Matondoni","Mpeketoni","Witu","Hindi","Kizingitini","Shela","Kiunga"],
-    "Taita-Taveta": ["Voi","Taveta","Wundanyi","Mwatate","Mgange","Wesu","Bura (Taita)","Mbale (Taveta)","Tausa","Werugha"],
-    "Garissa": ["Garissa Town","Dadaab","Balambala","Fafi","Ijara","Lagdera","Modogashe","Bura (Garissa)","Sankuri","Hulugho"],
-    "Wajir": ["Wajir Town","Habaswein","Griftu","Eldas","Tarbaj","Bute","Buna","Diif","Elnur","Khorof Harar"],
-    "Mandera": ["Mandera Town","Rhamu","Banissa","Lafey","Takaba","El Wak","Kotulo","Fino","Arabia","Warankara"],
-    "Marsabit": ["Marsabit Town","Moyale","Loiyangalani","North Horr","Laisamis","Sololo","Turbi","Maikona","Illeret","Dukana"],
-    "Isiolo": ["Isiolo Town","Garbatulla","Merti","Kinna","Oldonyiro","Burat","Bulapesa","Wabera","Chari","Cherab"],
-    "Tharaka-Nithi": ["Chuka","Marimanti","Kathwana","Chogoria","Gatunga","Nkondi","Igambang'ombe","Muthambi","Mitheru","Tunyai"],
-    "Embu": ["Embu Town","Runyenjes","Manyatta","Siakago","Ishiara","Kiritiri","Kyeni","Karurumo","Kirimari","Gaturi"],
-    "Kitui": ["Kitui Town","Mwingi","Mutomo","Mutitu","Migwani","Zombe","Kabati","Ikutha","Mutha","Kanyangi"],
-    "Makueni": ["Wote","Emali","Sultan Hamud","Kibwezi","Kilome","Mbooni","Kaiti","Nunguni","Makindu","Tawa"],
-    "Nyandarua": ["Ol Kalou","Engineer","Njabini","Nyahururu","Ndaragwa","Ol Joro Orok","North Kinangop","South Kinangop","Kipipiri","Shamata"],
-    "Kirinyaga": ["Kerugoya","Kutus","Sagana","Kagio","Wang'uru","Baricho","Kianyaga","Kimbimbi","Mwea","Kutus Town"],
-    "Murang'a": ["Murang'a Town","Kenol","Kangema","Maragua","Kandara","Kigumo","Gatanga","Kiria-ini","Kabati","Makuyu"],
-    "Turkana": ["Lodwar","Kakuma","Lokichogio","Lokitaung","Kalokol","Lokichar","Kainuk","Todonyang","Kibish","Katilu"],
-    "West Pokot": ["Kapenguria","Makutano (Pokot)","Chepareria","Kacheliba","Sigor","Alale","Chepnyal","Lomut","Ortum","Kongelai"],
-    "Samburu": ["Maralal","Baragoi","Wamba","Archer's Post","Suguta Marmar","Kirisia","South Horr","Poro","Loosuk","Kisima"],
-    "Elgeyo-Marakwet": ["Iten","Tambach","Kapsowar","Chepkorio","Kapyego","Kapsait","Chesoi","Kaptarakwa","Kamogoi","Kabiemit"],
-    "Nandi": ["Kapsabet","Nandi Hills","Mosoriot","Kabiyet","Kaptumo","Kobujoi","Kapsisiywa","Kapsabet Town","Chepterit","Kilibwoni"],
-    "Baringo": ["Kabarnet","Eldama Ravine","Marigat","Kabartonjo","Mogotio","Kimalel","Kabernet Town","Loruk","Kampi ya Samaki","Mochongoi"],
-    "Laikipia": ["Nanyuki","Nyahururu","Rumuruti","Dol Dol","Kinamba","Ngobit","Sipili","Marmanet","Mukogodo","Salama"],
-    "Narok": ["Narok Town","Kilgoris","Ololulunga","Suswa","Ewaso Ngiro","Nairagie Enkare","Naikarra","Ntulele","Melili","Lolgorian"],
-    "Kajiado": ["Kajiado Town","Ngong","Kitengela","Ongata Rongai","Kiserian","Loitokitok","Namanga","Isinya","Bissil","Mashuuru"],
-    "Bomet": ["Bomet Town","Sotik","Longisa","Mulot","Chepalungu","Silibwet","Sigor (Bomet)","Chebunyo","Kaplong","Mogogosiek"],
-    "Vihiga": ["Mbale","Luanda (Vihiga)","Chavakali","Majengo (Vihiga)","Emuhaya","Sabatia","Hamisi","Wodanga","Bunyore","Gisambai"],
-    "Bungoma": ["Bungoma CBD","Kanduyi","Sikata","Webuye","Kimilili","Chwele","Bumula","Sirisia","Naitiri","Malakisi"],
-    "Busia": ["Busia Town","Malaba","Nambale","Funyula","Budalangi","Amagoro","Port Victoria","Matayos","Alupe","Angurai"],
-    "Siaya": ["Siaya Town","Bondo","Ugunja","Yala","Ukwala","Usenge","Sega (Siaya)","Nyang'oma Kogelo","Uranga","Yenga"],
-    "Homa Bay": ["Homa Bay Central","Asego","Arujo","Kalanya","Kanyabala","Katuma","Posta/Bonde","Oyugis","Kendu Bay","Rangwe","Ndhiwa","Mbita","Sindo","Kabondo","Kasipul","Karachuonyo"],
-    "Migori": ["Migori Town","Rongo","Awendo","Isebania","Kehancha","Macalder","Muhuru Bay","Uriri","Ntimaru","Suna"],
-    "Kisii": ["Kisii CBD","Milimani","Nyanchwa","Nyamataro","Daraja Mbili","Mwembe","Jogoo","Nyamage","Nyakoe","Nyangena","Gesonso"],
-    "Nyamira": ["Nyamira Town","Keroka","Ekerenyo","Nyansiongo","Manga","Ikonge","Magwagwa","Nyamaiya","Bomwagamo","Ainapngetuny"]
-  };
-  const NK_TIER1 = ["Kisumu", "Nairobi", "Mombasa"];
-
-  const NK_AREA_TO_COUNTY = {};
-  Object.entries(NK_AREAS_BY_COUNTY).forEach(([county, areas]) => {
-    areas.forEach(area => { NK_AREA_TO_COUNTY[area] = county; });
-  });
-
-  const NK_COUNTY_LABEL = {
-    "Uasin Gishu": "Uasin Gishu (Eldoret)",
-    "Trans Nzoia": "Trans Nzoia (Kitale)",
-    "Kiambu": "Kiambu (Thika)",
-    "Kilifi": "Kilifi (Malindi)",
-    "Kwale": "Kwale (Diani)",
-    "Taita-Taveta": "Taita-Taveta (Voi)",
-    "West Pokot": "West Pokot (Kapenguria)",
-    "Vihiga": "Vihiga (Mbale)",
-    "Nyandarua": "Nyandarua (Ol Kalou)",
-    "Turkana": "Turkana (Lodwar)",
-    "Samburu": "Samburu (Maralal)",
-    "Elgeyo-Marakwet": "Elgeyo-Marakwet (Iten)",
-    "Nandi": "Nandi (Kapsabet)",
-    "Baringo": "Baringo (Kabarnet)",
-    "Laikipia": "Laikipia (Nanyuki)",
-    "Tharaka-Nithi": "Tharaka-Nithi (Chuka)",
-    "Kirinyaga": "Kirinyaga (Kerugoya)",
-    "Makueni": "Makueni (Wote)"
-  };
-  function nkCountyLabel(county) {
-    return NK_COUNTY_LABEL[county] || county;
+    document.getElementById('search-q').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+    document.getElementById('nav-compact-search-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') nkCompactSearch(); });
+    document.getElementById('nav-compact-search-input')?.addEventListener('input', e => nkNavSearchInput(e.target.value));
   }
 
-  function nkAreaCountFor(county) {
-    return (NK_AREAS_BY_COUNTY[county] || []).length;
-  }
   function nkCountyDesc(county, listingCount) {
     const n = nkAreaCountFor(county);
     if (!n) return 'Coming soon';
     const count = listingCount || 0;
+    if (count === 0) return 'Be the first to list';
     return `${count} listing${count !== 1 ? 's' : ''} available`;
   }
+
+  let nkCountyCountsCache = {};
 
   function renderCountiesGrid(countyCounts) {
     const grid = document.getElementById('counties-grid');
     if (!grid) return;
-    grid.innerHTML = NK_COUNTIES.map(county => {
+    const counts = countyCounts || nkCountyCountsCache;
+
+    // D: sort by listing count, tier-1 counties pinned first, empty ones dimmed to the back.
+    const sorted = [...NK_COUNTIES].sort((a, b) => {
+      const aTier1 = NK_TIER1.includes(a) ? 1 : 0, bTier1 = NK_TIER1.includes(b) ? 1 : 0;
+      if (aTier1 !== bTier1) return bTier1 - aTier1;
+      if (aTier1 && bTier1) return NK_TIER1.indexOf(a) - NK_TIER1.indexOf(b);
+      const aHas = nkAreaCountFor(a) > 0, bHas = nkAreaCountFor(b) > 0;
+      if (aHas !== bHas) return aHas ? -1 : 1;
+      return (counts[b] || 0) - (counts[a] || 0);
+    });
+
+    grid.innerHTML = sorted.map(county => {
       const hasAreas = nkAreaCountFor(county) > 0;
       const isTier1 = NK_TIER1.includes(county);
-      const desc = nkCountyDesc(county, countyCounts ? countyCounts[county] : undefined);
-      const classes = 'area-card' + (isTier1 ? ' tier1' : '') + (hasAreas ? '' : ' coming-soon');
-      const interactive = hasAreas
-        ? `onclick="goCounty('${county}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goCounty('${county}')}"`
-        : '';
+      const count = counts[county] || 0;
+      const desc = nkCountyDesc(county, count);
+      const classes = 'area-card' + (isTier1 ? ' tier1' : '') + (hasAreas ? '' : ' coming-soon') + (hasAreas && count === 0 ? ' zero-listings' : '');
+      const interactive = hasAreas ? `data-county="${escHtml(county)}" role="button" tabindex="0"` : '';
       return `<div class="${classes}" ${interactive}>
-        <div class="area-card-name">${nkCountyLabel(county)}</div>
-        <div class="area-card-count">${desc}</div>
+        <div class="area-card-name">${escHtml(nkCountyLabel(county))}</div>
+        <div class="area-card-count">${escHtml(desc)}</div>
       </div>`;
     }).join('');
+
+    grid.querySelectorAll('[data-county]').forEach(el => {
+      el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goCounty(el.dataset.county); } });
+    });
   }
 
   async function loadCountyListingCounts() {
-    const { data, error } = await db.from('listings').select('area').in('status', ['active', 'occupied']);
+    // A5 fix: group by the listing's own `county` column, never by
+    // matching area-name strings (several area names repeat across
+    // counties, which used to silently mis-count and mis-filter).
+    const { data, error } = await db.from('listings').select('county').in('status', ['active', 'occupied']).limit(10000);
     if (error) { console.error(error); return; }
     const counts = {};
     (data || []).forEach(row => {
-      const county = NK_AREA_TO_COUNTY[row.area];
-      if (!county) return;
-      counts[county] = (counts[county] || 0) + 1;
+      if (!row.county) return;
+      counts[row.county] = (counts[row.county] || 0) + 1;
     });
+    nkCountyCountsCache = counts;
     renderCountiesGrid(counts);
     nkRefreshAllScrollHints();
   }
@@ -1206,15 +1087,15 @@
     if (!el) return;
     el.innerHTML = NK_COUNTIES.map(county => {
       const hasAreas = nkAreaCountFor(county) > 0;
-      const href = hasAreas ? `listings?county=${encodeURIComponent(county)}` : '#';
-      return `<a href="${href}">${nkCountyLabel(county)}</a>`;
+      const href = hasAreas ? `/listings?county=${encodeURIComponent(county)}` : '#';
+      return `<a href="${href}">${escHtml(nkCountyLabel(county))}</a>`;
     }).join('');
   }
 
   function renderLatestCountySelect() {
     const sel = document.getElementById('latest-county-select');
     if (!sel) return;
-    sel.innerHTML = '<option value="" selected>All areas</option>' + NK_COUNTIES.map(c => `<option value="${c}">${nkCountyLabel(c)}</option>`).join('');
+    sel.innerHTML = '<option value="" selected>All areas</option>' + NK_COUNTIES.map(c => `<option value="${escHtml(c)}">${escHtml(nkCountyLabel(c))}</option>`).join('');
   }
 
   function renderAreaPills(county) {
@@ -1227,48 +1108,42 @@
     }
     const areas = NK_AREAS_BY_COUNTY[county] || [];
     if (!areas.length) {
-      wrap.innerHTML = `<div class="pill active" style="cursor:default;">No areas live in ${county} yet</div>`;
+      wrap.innerHTML = `<div class="pill active" style="cursor:default;">No areas live in ${escHtml(nkCountyLabel(county))} yet</div>`;
       loadLatest(null, county);
       return;
     }
     const shown = areas.slice(0, 6);
     const rest = areas.slice(6);
-    let html = `<div class="pill active" onclick="filterArea(null, this)">All areas</div>`;
-    html += shown.map(a => `<div class="pill" onclick="filterArea('${a}', this)">${a}</div>`).join('');
+    let html = `<div class="pill active" data-area-pill="">All areas</div>`;
+    html += shown.map(a => `<div class="pill" data-area-pill="${escHtml(a)}">${escHtml(a)}</div>`).join('');
     if (rest.length) {
       html += `<select class="pill-select" id="more-areas-pill" onchange="if(this.value){filterArea(this.value, null); this.selectedIndex=0;}">
         <option value="">More areas ▾</option>
-        ${rest.map(a => `<option value="${a}">${a}</option>`).join('')}
+        ${rest.map(a => `<option value="${escHtml(a)}">${escHtml(a)}</option>`).join('')}
       </select>`;
     }
     wrap.innerHTML = html;
     loadLatest(null, county);
   }
 
-  function nkOnCountyChange(county) {
-    renderAreaPills(county);
-  }
+  function nkOnCountyChange(county) { renderAreaPills(county); }
 
-  function goCounty(county) {
-    window.location.href = `listings?county=${encodeURIComponent(county)}`;
+  function goCounty(county) { window.location.href = nkBuildListingsUrl({ county }); }
+  function goArea(area) {
+    const county = NK_AREA_TO_COUNTY_GUESS[area] || '';
+    window.location.href = nkBuildListingsUrl({ county, area });
   }
 
   function nkPopulateSearchCounties() {
     const sel = document.getElementById('search-county');
     if (!sel) return;
-    sel.innerHTML = '<option value="">All counties</option>' + NK_COUNTIES.map(c => `<option value="${c}">${nkCountyLabel(c)}</option>`).join('');
+    sel.innerHTML = '<option value="">All counties</option>' + NK_COUNTIES.map(c => `<option value="${escHtml(c)}">${escHtml(nkCountyLabel(c))}</option>`).join('');
   }
   function nkPopulateSearchAreas(county) {
     const sel = document.getElementById('search-area');
     if (!sel) return;
     const areas = NK_AREAS_BY_COUNTY[county] || [];
-    sel.innerHTML = '<option value="">All areas</option>' + areas.map(a => `<option value="${a}">${a}</option>`).join('');
-  }
-
-  function nkSetAreaStat() {
-    const total = Object.values(NK_AREAS_BY_COUNTY).reduce((sum, arr) => sum + arr.length, 0);
-    const el = document.getElementById('stat-areas');
-    if (el) el.textContent = total;
+    sel.innerHTML = '<option value="">All areas</option>' + areas.map(a => `<option value="${escHtml(a)}">${escHtml(a)}</option>`).join('');
   }
 
   function toggleMobileMenu() {
@@ -1285,11 +1160,6 @@
       document.body.style.overflow = '';
     }
   });
-  function formatPrice(listing) {
-    const suffix = NK_FREQ_LABEL[listing.price_frequency] || '';
-    const p = Number(listing.price || 0).toLocaleString('en-KE');
-    return `KES ${p}${suffix ? `<span>${suffix}</span>` : ''}`;
-  }
 
   function buildCardMeta(listing) {
     const meta = NK_CATEGORIES[listing.category] || { group: 'standard' };
@@ -1297,55 +1167,10 @@
     if (meta.group !== 'standard') return '';
     const items = [];
     if (d.bedrooms !== undefined && d.bedrooms !== null && d.bedrooms !== '') {
-      items.push(`<div class="card-meta-item"><svg viewBox="0 0 24 24"><path d="M2 4v16M22 4v16M2 12h20M2 8h4a2 2 0 012 2v2H2V8zM16 8h4a2 2 0 012 2v2h-6V8z"/></svg>${d.bedrooms == 0 ? 'Studio' : d.bedrooms + ' bed'}</div>`);
+      items.push(`<div class="card-meta-item"><svg viewBox="0 0 24 24"><path d="M2 4v16M22 4v16M2 12h20M2 8h4a2 2 0 012 2v2H2V8zM16 8h4a2 2 0 012 2v2h-6V8z"/></svg>${d.bedrooms == 0 ? 'Studio' : escHtml(d.bedrooms) + ' bed'}</div>`);
     }
-    if (d.bathrooms) items.push(`<div class="card-meta-item"><svg viewBox="0 0 24 24"><path d="M9 6l1-1a2 2 0 012.83 0l6.17 6.17a1 1 0 010 1.41L17 14M3 20h18M5 20v-4a3 3 0 013-3h1"/></svg>${d.bathrooms} bath</div>`);
-    if (d.size_sqm) items.push(`<div class="card-meta-item"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/></svg>${d.size_sqm}m²</div>`);
+    if (d.bathrooms) items.push(`<div class="card-meta-item"><svg viewBox="0 0 24 24"><path d="M9 6l1-1a2 2 0 012.83 0l6.17 6.17a1 1 0 010 1.41L17 14M3 20h18M5 20v-4a3 3 0 013-3h1"/></svg>${escHtml(d.bathrooms)} bath</div>`);
     return items.length ? `<div class="card-meta">${items.join('')}</div>` : '';
-  }
-
-  function escHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  function buildCard(listing) {
-    const photos = listing.listing_photos || [];
-    const cover = photos.find(p => p.is_cover) || photos[0];
-    const safeTitle = escHtml(listing.title);
-    const imgHtml = cover
-      ? `<img src="${cover.url}" alt="${safeTitle}" loading="lazy"/>`
-      : `<div class="card-img-placeholder">
-           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-           <span style="font-size:12px">No photo yet</span>
-         </div>`;
-    const meta = NK_CATEGORIES[listing.category] || { label: listing.category };
-    const subText = listing.address || (NK_AREA_TO_COUNTY[listing.area] ? nkCountyLabel(NK_AREA_TO_COUNTY[listing.area]) : (listing.county ? nkCountyLabel(listing.county) : ''));
-    const href = `/listing?id=${String(listing.listing_number).padStart(6,'0')}`;
-    const isNew = listing.created_at && (Date.now() - new Date(listing.created_at).getTime()) < 3 * 24 * 60 * 60 * 1000;
-    const isOccupied = listing.status === 'occupied';
-    const occLabel = listing.price_frequency === 'once' ? 'Sold' : 'Occupied';
-    const topBadge = isOccupied
-      ? `<span class="badge-new" style="background:#C53030">${occLabel}</span>`
-      : (listing.is_featured
-          ? '<span class="badge-featured">Featured</span>'
-          : (isNew ? '<span class="badge-new">New</span>' : ''));
-    return `
-      <a class="card" href="${href}" aria-label="${safeTitle}" style="${isOccupied ? 'opacity:.7' : ''}" data-rv-id="${listing.id}" data-rv-title="${safeTitle}" data-rv-area="${escHtml(listing.area || '')}" data-rv-price="${formatPrice(listing).replace(/"/g,'&quot;')}" data-rv-img="${cover ? cover.url : ''}">
-        <div class="card-img">
-        ${imgHtml}
-        ${topBadge}
-        <div class="nk-heart-overlay">${typeof NKSaved !== 'undefined' ? NKSaved.buildHeartBtn(listing.id) : ''}</div>
-        <span class="badge-cat ${listing.category}">${meta.label}</span>
-      </div>
-        <div class="card-body">
-          <div class="card-area">${escHtml(listing.area)}</div>
-          <div class="card-title">${safeTitle}</div>
-          <div class="card-sub">${escHtml(subText)}</div>
-          <div class="card-price">${formatPrice(listing)}</div>
-          ${buildCardMeta(listing)}
-        </div>
-      </a>`;
   }
 
   function buildDotsHtml(count) {
@@ -1385,9 +1210,7 @@
     const step = firstCard ? firstCard.getBoundingClientRect().width + gap : scroller.clientWidth * 0.8;
     scroller.scrollBy({ left: step * (dir || 1), behavior: 'smooth' });
   }
-  function nkGetScroller(wrap) {
-    return wrap.querySelector('.categories, .listings-grid, .areas');
-  }
+  function nkGetScroller(wrap) { return wrap.querySelector('.categories, .listings-grid, .areas'); }
   function nkUpdateHintVisibility(wrap) {
     const scroller = nkGetScroller(wrap);
     if (!scroller) return;
@@ -1415,12 +1238,10 @@
     nkRestoreScrollMem(scroller);
     nkUpdateHintVisibility(wrap);
   }
-  function nkRefreshAllScrollHints() {
-    document.querySelectorAll('.scroll-wrap').forEach(nkInitScrollWrap);
-  }
+  function nkRefreshAllScrollHints() { document.querySelectorAll('.scroll-wrap').forEach(nkInitScrollWrap); }
   window.addEventListener('resize', nkRefreshAllScrollHints);
 
-  function renderListings(containerId, listings) {
+  function renderListings(containerId, listings, imgWidth) {
     const el = document.getElementById(containerId);
     if (!listings.length) {
       el.innerHTML = `<div class="empty-state">
@@ -1429,7 +1250,8 @@
       </div>`;
       return;
     }
-    el.innerHTML = `<div class="listings-grid" tabindex="0">${listings.map(buildCard).join('')}</div>${buildDotsHtml(listings.length)}`;
+    el.innerHTML = `<div class="listings-grid" tabindex="0">${listings.map(l => nkBuildCard(l, { compact: true, imgWidth: imgWidth || 480 })).join('')}</div>${buildDotsHtml(listings.length)}`;
+    if (typeof NKSaved !== 'undefined' && NKSaved.hydrate) NKSaved.hydrate(el);
     const wrap = el.closest('.scroll-wrap');
     if (wrap) { attachCarouselDots(wrap); nkInitScrollWrap(wrap); }
   }
@@ -1437,30 +1259,33 @@
   async function loadFeatured() {
     const { data, error } = await db
       .from('listings')
-      .select('*, listing_photos(*)')
+      .select('*, listing_photos(*), profiles(verification_status)')
       .in('status', ['active', 'occupied'])
       .eq('is_featured', true)
       .order('created_at', { ascending: false })
+      .order('id')
       .limit(12);
     if (error) { console.error(error); return; }
     renderListings('featured-listings', data || []);
   }
 
-  let currentArea = null;
   async function loadLatest(area, county) {
     document.getElementById('latest-listings').innerHTML = `<div class="loading-grid">
       <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line short"></div><div class="skeleton-line"></div></div></div>
       <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line short"></div><div class="skeleton-line"></div></div></div>
       <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line short"></div><div class="skeleton-line"></div></div></div>
     </div>`;
-    let query = db.from('listings').select('*, listing_photos(*)').in('status', ['active', 'occupied']);
+    let query = db.from('listings').select('*, listing_photos(*), profiles(verification_status)').in('status', ['active', 'occupied']);
+    // A5 fix: county filtering goes through the listing's own county
+    // column; area filtering is paired with county when we know it, so
+    // a duplicated area name in another county can't leak in.
     if (area) {
       query = query.eq('area', area);
+      if (county) query = query.eq('county', county);
     } else if (county) {
-      const areas = NK_AREAS_BY_COUNTY[county] || [];
-      if (areas.length) query = query.in('area', areas);
+      query = nkCountyEq(query, county);
     }
-    const { data, error } = await query.order('created_at', { ascending: false }).limit(20);
+    const { data, error } = await query.order('created_at', { ascending: false }).order('id').limit(20);
     if (error) { console.error(error); return; }
     renderListings('latest-listings', data || []);
   }
@@ -1468,10 +1293,8 @@
   async function loadCounts() {
     const cats = ['apartment', 'house', 'boarding', 'airbnb', 'commercial'];
     const [catResults, totalResult] = await Promise.all([
-      Promise.all(cats.map(cat =>
-        db.from('listings').select('*', { count: 'exact', head: true }).in('status', ['active', 'occupied']).eq('category', cat)
-      )),
-      db.from('listings').select('*', { count: 'exact', head: true }).in('status', ['active', 'occupied'])
+      Promise.all(cats.map(cat => db.from('listings').select('*', { count: 'exact', head: true }).eq('status', 'active').eq('category', cat))),
+      db.from('listings').select('*', { count: 'exact', head: true }).eq('status', 'active') // B5: stats/counts are ACTIVE only, occupied excluded
     ]);
     cats.forEach((cat, i) => {
       const count = catResults[i].count;
@@ -1479,73 +1302,81 @@
       if (el) el.textContent = `${count || 0} listing${count !== 1 ? 's' : ''} available`;
     });
     const stat = document.getElementById('stat-listings');
-    if (stat) stat.textContent = totalResult.count || '0';
+    if (stat) stat.dataset.target = totalResult.count || 0;
+    const areasStat = document.getElementById('stat-areas');
+    if (areasStat) {
+      const { count: countyCount } = await db.from('listings').select('county', { count: 'exact', head: true }).eq('status', 'active');
+      // approximate distinct-county count client-side from the cache once it's populated
+      const distinctCounties = Object.keys(nkCountyCountsCache).filter(c => nkCountyCountsCache[c] > 0).length;
+      areasStat.dataset.target = distinctCounties || 0;
+    }
+    nkInitStatCountUp();
   }
 
   function filterArea(area, el) {
-    currentArea = area;
     document.querySelectorAll('#area-pills .pill').forEach(p => p.classList.remove('active'));
     if (el) el.classList.add('active');
     const county = document.getElementById('latest-county-select')?.value;
-    loadLatest(area, county);
+    loadLatest(area || null, county);
   }
 
-  function goArea(area) {
-    window.location.href = `listings?area=${encodeURIComponent(area)}`;
-  }
+  function filterCategory(cat) { window.location.href = nkBuildListingsUrl({ category: cat }); }
 
-  function filterCategory(cat) {
-    window.location.href = `listings?category=${cat}`;
-  }
-
+  // D: fix the price-typing caret jump by preserving cursor position like listings.html does.
   function nkFormatSearchInput(el) {
     const raw = el.value;
     const stripped = raw.replace(/^KES\s?/i, '').replace(/,/g, '').trim();
     if (stripped.length && /^[0-9]+$/.test(stripped)) {
+      const caretFromEnd = el.value.length - el.selectionEnd;
       el.value = 'KES ' + Number(stripped).toLocaleString('en-KE');
+      const newPos = Math.max(0, el.value.length - caretFromEnd);
+      el.setSelectionRange(newPos, newPos);
       el.dataset.priceValue = stripped;
     } else {
       delete el.dataset.priceValue;
     }
   }
 
+  let nkIntentCat = '', nkIntentFreq = 'month';
+  function nkInitIntentTabs() {
+    const wrap = document.getElementById('intent-tabs');
+    if (!wrap) return;
+    wrap.querySelectorAll('.intent-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        wrap.querySelectorAll('.intent-tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+        tab.classList.add('active'); tab.setAttribute('aria-selected', 'true');
+        nkIntentCat = tab.dataset.cat || '';
+        nkIntentFreq = tab.dataset.freq || '';
+      });
+    });
+  }
+
   function doSearch() {
-    const qElForHistory = document.getElementById('search-q');
-    if (qElForHistory && qElForHistory.value && !qElForHistory.dataset.priceValue) nkAddRecentSearch(qElForHistory.value);
     const county = document.getElementById('search-county').value;
     const area  = document.getElementById('search-area').value;
-    const freq  = document.getElementById('search-freq').value;
     const qEl   = document.getElementById('search-q');
-    const params = new URLSearchParams();
-    if (county) params.set('county', county);
-    if (area) params.set('area', area);
-    if (freq) params.set('freq', freq);
+
+    const filters = { category: nkIntentCat, freq: nkIntentFreq, county, area };
 
     const priceRaw = qEl.dataset.priceValue;
     if (priceRaw) {
-      const price    = Number(priceRaw);
-      const minPrice = Math.max(0, Math.round(price * 0.85));
-      const maxPrice = Math.round(price * 1.15);
-      params.set('minPrice', minPrice);
-      params.set('maxPrice', maxPrice);
+      const price = Number(priceRaw);
+      filters.minPrice = Math.max(0, Math.round(price * 0.85));
+      filters.maxPrice = Math.round(price * 1.15);
     } else if (qEl.value) {
-      params.set('q', qEl.value);
+      filters.q = qEl.value;
     }
-    window.location.href = `listings?${params.toString()}`;
+    nkAddRecentSearch(filters);
+    window.location.href = nkBuildListingsUrl(filters);
   }
-
-  document.getElementById('search-q').addEventListener('keydown', e => {
-    if (e.key === 'Enter') doSearch();
-  });
 
   (function () {
     const slides = document.querySelectorAll('.hero-slide');
     if (slides.length < 2) return;
-    let current = 0;
-    let timer = null;
-    function loadIfNeeded(img) {
-      if (img.dataset.src && !img.src.endsWith(img.dataset.src)) img.src = img.dataset.src;
-    }
+    let current = 0, timer = null;
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function loadIfNeeded(img) { if (img.dataset.src && !img.src.endsWith(img.dataset.src)) img.src = img.dataset.src; }
     function advance() {
       slides[current].classList.remove('active');
       current = (current + 1) % slides.length;
@@ -1553,107 +1384,63 @@
       slides[current].classList.add('active');
       loadIfNeeded(slides[(current + 1) % slides.length]);
     }
-    function start() { if (!timer) timer = setInterval(advance, 3000); }
+    function start() { if (!timer && !reduceMotion && !isMobile) timer = setInterval(advance, 6000); } // D: slower + no timer on mobile/reduced-motion
     function stop() { clearInterval(timer); timer = null; }
-    document.addEventListener('visibilitychange', () => {
-      document.hidden ? stop() : start();
-    });
-    setTimeout(() => loadIfNeeded(slides[1]), 1200);
-    start();
+    window.nkInitHeroSlideshow = function () {
+      if (isMobile || reduceMotion) return; // D: mobile loads only the first (already-visible) slide to save data
+      document.addEventListener('visibilitychange', () => { document.hidden ? stop() : start(); });
+      setTimeout(() => loadIfNeeded(slides[1]), 1200);
+      start();
+    };
   })();
 
-  function nkApplyDataSaver(on) {
-    document.body.classList.toggle('nk-datasaver', on);
-    const banner = document.getElementById('nk-datasaver-banner');
-    if (banner) banner.classList.toggle('visible', on);
-    localStorage.setItem('nk_datasaver', on ? '1' : '0');
-  }
-  function nkToggleDataSaver() { nkApplyDataSaver(!document.body.classList.contains('nk-datasaver')); }
   (function () {
-    const stored = localStorage.getItem('nk_datasaver');
-    if (stored === '1') { nkApplyDataSaver(true); return; }
-    if (stored === '0') return;
     const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    if (conn && (conn.saveData || ['slow-2g', '2g'].includes(conn.effectiveType))) nkApplyDataSaver(true);
+    document.addEventListener('nk:datasaver', () => {});
   })();
 
-  const NK_COUNTY_COORDS = {
-    "Mombasa": [-4.0435, 39.6682], "Kwale": [-4.1747, 39.4520], "Kilifi": [-3.6305, 39.8499],
-    "Tana River": [-1.0167, 40.1167], "Lamu": [-2.2717, 40.9020], "Taita-Taveta": [-3.3968, 38.5637],
-    "Garissa": [-0.4569, 39.6583], "Wajir": [1.7471, 40.0629], "Mandera": [3.9366, 41.8670],
-    "Marsabit": [2.3284, 37.9899], "Isiolo": [0.3556, 37.5820], "Meru": [0.0470, 37.6556],
-    "Tharaka-Nithi": [-0.2971, 37.8459], "Embu": [-0.5310, 37.4500], "Kitui": [-1.3667, 38.0167],
-    "Machakos": [-1.5177, 37.2634], "Makueni": [-1.8038, 37.6242], "Nyandarua": [-0.3242, 36.4310],
-    "Nyeri": [-0.4167, 36.9500], "Kirinyaga": [-0.6591, 37.3833], "Murang'a": [-0.7217, 37.1500],
-    "Kiambu": [-1.1714, 36.8356], "Turkana": [3.1167, 35.6000], "West Pokot": [1.6167, 35.3833],
-    "Samburu": [1.2151, 36.9490], "Trans Nzoia": [1.0167, 35.0000], "Uasin Gishu": [0.5143, 35.2698],
-    "Elgeyo-Marakwet": [0.8000, 35.5000], "Nandi": [0.1833, 35.1167], "Baringo": [0.4667, 35.9667],
-    "Laikipia": [0.2000, 36.7833], "Nakuru": [-0.3031, 36.0800], "Narok": [-1.0833, 35.8667],
-    "Kajiado": [-1.8500, 36.7833], "Kericho": [-0.3667, 35.2833], "Bomet": [-0.7833, 35.3417],
-    "Kakamega": [0.2827, 34.7519], "Vihiga": [0.0667, 34.7167], "Bungoma": [0.5667, 34.5667],
-    "Busia": [0.4608, 34.1115], "Siaya": [0.0607, 34.2881], "Kisumu": [-0.0917, 34.7680],
-    "Homa Bay": [-0.5273, 34.4571], "Migori": [-1.0634, 34.4731], "Kisii": [-0.6817, 34.7680],
-    "Nyamira": [-0.5633, 34.9358], "Nairobi": [-1.2921, 36.8219]
-  };
-  function nkHaversine(lat1, lon1, lat2, lon2) {
-    const R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  }
-  function nkFindNearestCounty(lat, lon) {
-    let best = null, bestDist = Infinity;
-    Object.entries(NK_COUNTY_COORDS).forEach(([county, [clat, clon]]) => {
-      if (!nkAreaCountFor(county)) return;
-      const d = nkHaversine(lat, lon, clat, clon);
-      if (d < bestDist) { bestDist = d; best = county; }
-    });
-    return best;
-  }
-  function nkUseNearMe() {
-    if (!navigator.geolocation) { alert("Location isn't available on this device/browser."); return; }
-    const btn = document.getElementById('nk-nearme-btn');
-    const resetBtn = () => { if (btn) btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> Near me'; };
-    if (btn) btn.textContent = 'Locating…';
-    navigator.geolocation.getCurrentPosition(pos => {
-      const county = nkFindNearestCounty(pos.coords.latitude, pos.coords.longitude);
-      resetBtn();
-      if (!county) return;
-      const sel = document.getElementById('latest-county-select');
-      if (sel) sel.value = county;
-      nkOnCountyChange(county);
-      document.getElementById('latest-listings')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, () => {
-      resetBtn();
-      alert('Could not get your location. You can pick a county manually below.');
-    }, { timeout: 8000 });
+  function nkCompactSearch() {
+    const val = document.getElementById('nav-compact-search-input').value.trim();
+    if (!val) { document.getElementById('main-content').scrollIntoView({ behavior: 'smooth' }); return; }
+    const stripped = val.replace(/^KES\s?/i, '').replace(/,/g, '');
+    const filters = {};
+    if (/^[0-9]+$/.test(stripped)) {
+      const price = Number(stripped);
+      filters.minPrice = Math.max(0, Math.round(price * 0.85));
+      filters.maxPrice = Math.round(price * 1.15);
+    } else {
+      filters.q = val;
+    }
+    window.location.href = nkBuildListingsUrl(filters);
   }
 
-  function nkDebounce(fn, ms) {
-    let t;
-    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
-  }
+  const nkHeroSearchInput = nkDebounce(val => nkRunLiveSearch(val, document.getElementById('hero-search-dropdown')), 300);
+  const nkNavSearchInput = nkDebounce(val => nkRunLiveSearch(val, document.getElementById('nav-search-dropdown')), 300);
+
   async function nkRunLiveSearch(term, dropdownEl) {
-    const q = term.trim();
+    const q = nkSanitizeSearchTerm(term);
     if (q.length < 2) { dropdownEl.classList.remove('visible'); dropdownEl.innerHTML = ''; return; }
-    const matchedAreas = Object.keys(NK_AREA_TO_COUNTY).filter(a => a.toLowerCase().includes(q.toLowerCase())).slice(0, 4);
+    // Skip the text-search dropdown when the input is clearly a price (C: search fix)
+    if (/^\d+$/.test(q.replace(/\s/g, ''))) { dropdownEl.classList.remove('visible'); dropdownEl.innerHTML = ''; return; }
+    const matchedAreas = Object.keys(NK_AREA_TO_COUNTY_GUESS).filter(a => a.toLowerCase().includes(q.toLowerCase())).slice(0, 4);
     const { data } = await db.from('listings').select('id, listing_number, title, area, price, price_frequency, category, listing_photos(*)')
       .in('status', ['active', 'occupied']).ilike('title', `%${q}%`).limit(5);
     let html = '';
     if (matchedAreas.length) {
       html += `<div class="nk-sd-group-label">Areas</div>` + matchedAreas.map(a => `
-        <div class="nk-sd-item" onclick="goArea('${a.replace(/'/g, "\\'")}')">
+        <div class="nk-sd-item" data-goto-area="${escHtml(a)}">
           <div class="nk-sd-item-icon"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
-          <div><div class="nk-sd-item-title">${a}</div><div class="nk-sd-item-sub">${nkCountyLabel(NK_AREA_TO_COUNTY[a])}</div></div>
+          <div><div class="nk-sd-item-title">${escHtml(a)}</div><div class="nk-sd-item-sub">${escHtml(nkCountyLabel(NK_AREA_TO_COUNTY_GUESS[a]))}</div></div>
         </div>`).join('');
     }
     if (data && data.length) {
       html += `<div class="nk-sd-group-label">Listings</div>` + data.map(l => {
         const cover = (l.listing_photos || []).find(p => p.is_cover) || (l.listing_photos || [])[0];
-        const img = cover ? `<img src="${cover.url}" alt=""/>` : `<div class="nk-sd-item-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>`;
-        const href = `/listing?id=${String(l.listing_number).padStart(6,'0')}`;
-        return `<div class="nk-sd-item" onclick="window.location.href='${href}'">
+        const img = cover ? `<img src="${escHtml(cover.url)}" alt=""/>` : `<div class="nk-sd-item-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>`;
+        const href = `/listing?id=${String(l.listing_number).padStart(6, '0')}`;
+        return `<div class="nk-sd-item" data-goto-listing="${escHtml(href)}">
           ${img}
-          <div><div class="nk-sd-item-title">${escHtml(l.title)}</div><div class="nk-sd-item-sub">${escHtml(l.area)} · ${formatPrice(l).replace(/<[^>]+>/g,'')}</div></div>
+          <div><div class="nk-sd-item-title">${escHtml(l.title)}</div><div class="nk-sd-item-sub">${escHtml(l.area)} · ${formatPrice(l).replace(/<[^>]+>/g, '')}</div></div>
         </div>`;
       }).join('');
     }
@@ -1661,59 +1448,26 @@
     dropdownEl.innerHTML = html;
     dropdownEl.classList.add('visible');
   }
-  const nkHeroSearchInput = nkDebounce(val => nkRunLiveSearch(val, document.getElementById('hero-search-dropdown')), 300);
-  const nkNavSearchInput = nkDebounce(val => nkRunLiveSearch(val, document.getElementById('nav-search-dropdown')), 300);
   document.addEventListener('click', e => {
     document.querySelectorAll('.nk-search-dropdown.visible').forEach(dd => {
       if (!dd.parentElement.contains(e.target)) dd.classList.remove('visible');
     });
   });
 
-  function nkGetRecentlyViewed() {
-    try { return JSON.parse(localStorage.getItem('nk_recently_viewed') || '[]'); } catch { return []; }
-  }
-  function nkTrackView(entry) {
-    let list = nkGetRecentlyViewed().filter(e => e.id !== entry.id);
-    list.unshift(entry);
-    list = list.slice(0, 10);
-    localStorage.setItem('nk_recently_viewed', JSON.stringify(list));
-  }
-  document.addEventListener('click', e => {
-    const card = e.target.closest('.card[data-rv-id]');
-    if (!card) return;
-    nkTrackView({
-      id: card.dataset.rvId, title: card.dataset.rvTitle, area: card.dataset.rvArea,
-      price: card.dataset.rvPrice, img: card.dataset.rvImg, href: card.getAttribute('href')
-    });
-  });
-  function nkBuildRecentCard(entry) {
-    const imgHtml = entry.img
-      ? `<img src="${entry.img}" alt="${escHtml(entry.title)}" loading="lazy"/>`
-      : `<div class="card-img-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
-    return `<a class="card" href="${entry.href}">
-      <div class="card-img">${imgHtml}</div>
-      <div class="card-body">
-        <div class="card-area">${escHtml(entry.area || '')}</div>
-        <div class="card-title">${escHtml(entry.title || '')}</div>
-        <div class="card-price">${entry.price || ''}</div>
-      </div>
-    </a>`;
-  }
-  function nkRenderRecentlyViewed() {
+  async function nkRenderRecentlyViewed() {
     const section = document.getElementById('recently-viewed-section');
     const el = document.getElementById('recently-viewed-listings');
     if (!section || !el) return;
-    const list = nkGetRecentlyViewed();
+    const list = await nkFetchRecentlyViewed(); // A6: fresh price/status by ID, one shared key
     if (!list.length) { section.classList.remove('has-items'); return; }
     section.classList.add('has-items');
-    el.innerHTML = `<div class="listings-grid" tabindex="0">${list.map(nkBuildRecentCard).join('')}</div>`;
+    el.innerHTML = `<div class="listings-grid" tabindex="0">${list.map(l => nkBuildCard(l, { compact: true, imgWidth: 400 })).join('')}</div>`;
+    if (typeof NKSaved !== 'undefined' && NKSaved.hydrate) NKSaved.hydrate(el);
     const wrap = el.closest('.scroll-wrap');
     if (wrap) nkInitScrollWrap(wrap);
   }
 
-  function nkScrollMemKey(scroller) {
-    return scroller.id || scroller.closest('[id]')?.id || null;
-  }
+  function nkScrollMemKey(scroller) { return scroller.id || scroller.closest('[id]')?.id || null; }
   function nkRestoreScrollMem(scroller) {
     const key = nkScrollMemKey(scroller);
     if (!key) return;
@@ -1753,159 +1507,108 @@
     sync();
   })();
 
-  function nkGetRecentSearches() {
-    try { return JSON.parse(localStorage.getItem('nk_recent_searches') || '[]'); } catch { return []; }
-  }
-  function nkAddRecentSearch(term) {
-    if (!term || !term.trim()) return;
-    let list = nkGetRecentSearches().filter(t => t.toLowerCase() !== term.toLowerCase());
-    list.unshift(term.trim());
-    list = list.slice(0, 5);
-    localStorage.setItem('nk_recent_searches', JSON.stringify(list));
-    nkRenderRecentSearches();
-  }
-  function nkRenderRecentSearches() {
+  // D: recent searches are now full filter sets with a readable label, shared with listings.html
+  function nkRenderRecentSearchChips() {
     const wrap = document.getElementById('nk-recent-searches');
     if (!wrap) return;
     const list = nkGetRecentSearches();
-    wrap.innerHTML = list.map(t => `<div class="nk-recent-chip" onclick="nkRepeatSearch('${t.replace(/'/g, "\\'")}')">${escHtml(t)}</div>`).join('');
+    wrap.innerHTML = list.map((s, i) => `<div class="nk-recent-chip" data-repeat-search="${i}">${escHtml(s.label)}</div>`).join('');
   }
-  function nkRepeatSearch(term) {
-    document.getElementById('search-q').value = term;
-    doSearch();
+  function nkRepeatSearchByIndex(i) {
+    const s = nkGetRecentSearches()[i];
+    if (s) window.location.href = nkBuildListingsUrl(s.filters);
   }
 
-  renderCountiesGrid();
-  loadCountyListingCounts();
-  renderFooterCounties();
-  renderLatestCountySelect();
-  renderAreaPills('');
-  nkPopulateSearchCounties();
-  nkSetAreaStat();
-  loadFeatured();
-  loadCounts();
-  nkRefreshAllScrollHints();
-  window.addEventListener('load', nkRefreshAllScrollHints);
-  nkRenderRecentlyViewed();
-  nkRenderRecentSearches();
+  // D: popular area quick links
+  function nkRenderPopularAreaLinks() {
+    const el = document.getElementById('popular-area-links');
+    if (!el) return;
+    const popular = [
+      { area: 'Kilimani', county: 'Nairobi' },
+      { area: 'Nyali', county: 'Mombasa' },
+      { area: 'Milimani', county: 'Kisumu' },
+      { area: 'Westlands', county: 'Nairobi' },
+      { area: 'Bamburi', county: 'Mombasa' },
+    ];
+    el.innerHTML = popular.map(p => `<a class="quicklink" data-quicklink href="${nkBuildListingsUrl({ county: p.county, area: p.area })}">${escHtml(p.area)}</a>`).join('');
+  }
 
-  (function () {
+  // D: surface previously-collected platform reviews as social proof
+  async function nkLoadReviews() {
+    const { data, error } = await db.from('reviews').select('*').eq('review_type', 'platform').gte('rating', 4).order('created_at', { ascending: false }).limit(8);
+    if (error || !data || !data.length) return;
+    const wrap = document.getElementById('reviews-section-wrap');
+    const row = document.getElementById('reviews-row');
+    row.innerHTML = data.map(r => `
+      <div class="review-card">
+        <div class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div>
+        <div class="review-comment">${escHtml(r.comment || 'Great experience using Nyumba254.')}</div>
+        <div class="review-name">${r.is_anonymous ? 'Anonymous' : escHtml(r.reviewer_name || 'Nyumba254 user')}</div>
+      </div>`).join('');
+    wrap.style.display = 'block';
+  }
+
+  function nkInitRevealAnimation() {
     const targets = document.querySelectorAll('.reveal');
     if (!targets.length) return;
-    if (!('IntersectionObserver' in window)) {
-      targets.forEach(t => t.classList.add('is-visible'));
-      return;
-    }
+    if (!('IntersectionObserver' in window)) { targets.forEach(t => t.classList.add('is-visible')); return; }
     const io = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-visible');
-          io.unobserve(entry.target);
-        }
-      });
+      entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('is-visible'); io.unobserve(entry.target); } });
     }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
     targets.forEach(t => io.observe(t));
-  })();
+  }
 
   function nkAnimateCount(el, target, opts) {
     if (!el) return;
-    const suffix = (opts && opts.suffix) || '';
     const dur = (opts && opts.duration) || 700;
     const start = performance.now();
-    const from = 0;
     function tick(now) {
       const p = Math.min(1, (now - start) / dur);
       const eased = 1 - Math.pow(1 - p, 3);
-      const val = Math.round(from + (target - from) * eased);
-      el.textContent = val.toLocaleString('en-KE') + suffix;
-      if (p < 1) requestAnimationFrame(tick);
-      else el.textContent = target.toLocaleString('en-KE') + suffix;
+      const val = Math.round(target * eased);
+      el.textContent = val.toLocaleString('en-KE');
+      if (p < 1) requestAnimationFrame(tick); else el.textContent = target.toLocaleString('en-KE');
     }
     requestAnimationFrame(tick);
   }
-  (function () {
-    const statListings = document.getElementById('stat-listings');
-    const statAreas = document.getElementById('stat-areas');
-    if (!statListings && !statAreas) return;
-    const seen = { listings: false, areas: false };
-    const mo = new MutationObserver(() => {
-      if (!seen.listings && statListings && /^[\d,]+$/.test(statListings.textContent.trim())) {
-        seen.listings = true;
-        const n = parseInt(statListings.textContent.replace(/,/g, ''), 10);
-        nkAnimateCount(statListings, n);
-      }
-      if (!seen.areas && statAreas && /^[\d,]+$/.test(statAreas.textContent.trim())) {
-        seen.areas = true;
-        const n = parseInt(statAreas.textContent.replace(/,/g, ''), 10);
-        nkAnimateCount(statAreas, n);
-      }
-      if (seen.listings && seen.areas) mo.disconnect();
+  const nkAnimatedStats = new Set();
+  function nkInitStatCountUp() {
+    ['stat-listings', 'stat-areas'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el || nkAnimatedStats.has(id) || el.dataset.target === undefined) return;
+      nkAnimatedStats.add(id);
+      nkAnimateCount(el, Number(el.dataset.target) || 0);
     });
-    if (statListings) mo.observe(statListings, { childList: true });
-    if (statAreas) mo.observe(statAreas, { childList: true });
-  })();
+  }
 
-  (function () {
+  function nkInitScrolledNav() {
     const nav = document.querySelector('nav');
     const hero = document.getElementById('main-content');
     if (!nav || !hero) return;
-    function update() {
-      const past = hero.getBoundingClientRect().bottom < 64;
-      nav.classList.toggle('nk-scrolled', past);
-    }
+    function update() { nav.classList.toggle('nk-scrolled', hero.getBoundingClientRect().bottom < 64); }
     window.addEventListener('scroll', update, { passive: true });
     update();
-  })();
-
-  function nkCompactSearch() {
-    const val = document.getElementById('nav-compact-search-input').value.trim();
-    if (!val) { document.getElementById('main-content').scrollIntoView({ behavior: 'smooth' }); return; }
-    const params = new URLSearchParams();
-    const stripped = val.replace(/^KES\s?/i, '').replace(/,/g, '');
-    if (/^[0-9]+$/.test(stripped)) {
-      const price = Number(stripped);
-      params.set('minPrice', Math.max(0, Math.round(price * 0.85)));
-      params.set('maxPrice', Math.round(price * 1.15));
-    } else {
-      params.set('q', val);
-    }
-    window.location.href = `listings?${params.toString()}`;
   }
-  document.getElementById('nav-compact-search-input')?.addEventListener('keydown', e => {
-    if (e.key === 'Enter') nkCompactSearch();
-  });
+
+  function nkHeroNearMe() {
+    const btn = document.getElementById('nk-nearme-btn');
+    const original = btn.innerHTML;
+    btn.textContent = 'Locating…';
+    nkUseNearMe(
+      (county) => {
+        btn.innerHTML = original;
+        const sel = document.getElementById('latest-county-select');
+        if (sel) sel.value = county;
+        nkOnCountyChange(county);
+        document.getElementById('latest-listings')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      },
+      (msg) => { btn.innerHTML = original; alert(msg); }
+    );
+  }
 </script>
-<script src="saved-listings.js"></script>
+<script src="/saved-listings.js"></script>
 <script>if (typeof NKSaved !== 'undefined') NKSaved.init();</script>
-<script>
-  let nkSid = localStorage.getItem('nk_sid');
-  if (!nkSid) {
-    nkSid = (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2));
-    localStorage.setItem('nk_sid', nkSid);
-  }
-  db.from('page_views').insert({
-    path: location.pathname,
-    referrer: document.referrer || null,
-    user_agent: navigator.userAgent,
-    session_id: nkSid
-  });
-
-  nkSessionPromise.then(({ data: { session } }) => {
-    if (!session) return;
-    const desktopLink = document.getElementById('nav-account-link');
-    const mobileLink = document.getElementById('mobile-account-link');
-    const tabLink = document.getElementById('tab-account-link');
-    [desktopLink, mobileLink].forEach(link => {
-      if (!link) return;
-      link.textContent = 'My Account';
-      link.href = '/dashboard';
-      link.style.fontWeight = '600';
-      link.style.color = 'var(--green)';
-    });
-    if (tabLink) tabLink.href = '/dashboard';
-  });
-</script>
-<script src="nav-badge.js"></script>
-<script src="nk-quick-help-widget.js" defer></script>
+<script src="/nav-badge.js"></script>
+<script src="/nk-quick-help-widget.js" defer></script>
 </body>
 </html>
