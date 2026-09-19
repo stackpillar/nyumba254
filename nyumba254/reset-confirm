@@ -41,7 +41,7 @@
       width:auto; height:56px; background:transparent; border-radius:0;
       display: flex; align-items: center; justify-content: center;
     }
-    .logo-icon img { width:auto;height:100%; object-fit: contain; }
+    .logo-icon img { width:auto;height:100%; object-fit: contain; mix-blend-mode:multiply; }
     .nav-links { display: flex; align-items: center; gap: 6px; }
     .nav-link { font-size: 14px; color: var(--text-2); padding: 8px 14px; border-radius: var(--radius); transition: background .15s; white-space: nowrap; }
     .nav-link:hover { background: var(--surface); color: var(--text); }
@@ -90,7 +90,7 @@
     }
     .card-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:28px;font-family:'Playfair Display',serif;font-size:18px;color:var(--green-dark)}
     .card-logo-icon{width:auto;height:44px;background:transparent;border-radius:0;display:flex;align-items:center;justify-content:center}
-    .card-logo-icon img{width:auto;height:100%;object-fit:contain}
+    .card-logo-icon img{width:auto;height:100%;object-fit:contain; mix-blend-mode:multiply; }
 
     /* ── States ── */
     #state-loading,#state-form,#state-success,#state-error{display:none;text-align:center}
