@@ -41,12 +41,12 @@
     /* ── Navbar ── */
     nav {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0 32px; height: 72px;
+      padding: 0 32px; height: 64px;
       background: var(--white); border-bottom: 1px solid var(--border); flex-shrink: 0;
       gap: 12px;
     }
     .logo { display: flex; align-items: center; gap: 10px; font-family: 'Playfair Display', serif; font-size: 20px; color: var(--green-dark); flex-shrink: 0; white-space: nowrap; }
-    .logo-icon { width:auto; height:56px; background:transparent; border-radius:0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .logo-icon { width:auto; height:44px; background:transparent; border-radius:0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .logo-icon svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 2; stroke-linecap: round; }
     .logo-icon img { width:auto;height:100%; object-fit: contain; mix-blend-mode:multiply; }
     .nav-right { font-size: 14px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -56,7 +56,7 @@
     .nav-right .nav-right-short { display: none; }
 
     /* ── Layout ── */
-    .page { flex: 1; display: grid; grid-template-columns: 1fr 1fr; min-height: calc(100vh - 72px); }
+    .page { flex: 1; display: grid; grid-template-columns: 1fr 1fr; min-height: calc(100vh - 64px); }
 
     /* ── Left panel ── */
     .left-panel {

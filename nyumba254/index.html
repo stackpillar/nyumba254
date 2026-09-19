@@ -68,7 +68,7 @@
     nav {
       position: sticky; top: 0; z-index: 100;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0 32px; height: 72px;
+      padding: 0 32px; height: 64px;
       background: var(--white); border-bottom: 1px solid var(--border);
     }
     .logo {
@@ -76,7 +76,7 @@
       font-family: 'Playfair Display', serif; font-size: 20px; color: var(--green-dark); font-weight: 600;
     }
     .logo-icon {
-      width:auto; height:56px; background:transparent; border-radius:0;
+      width:auto; height:44px; background:transparent; border-radius:0;
       display: flex; align-items: center; justify-content: center;
     }
     .logo-icon img { width:auto;height:100%; object-fit: contain; mix-blend-mode:multiply; }
@@ -98,7 +98,7 @@
     }
     .mobile-menu-btn svg { width: 22px; height: 22px; stroke: var(--text); fill: none; stroke-width: 2; display: block; }
     .mobile-nav {
-      display: none; position: fixed; top: 72px; left: 0; right: 0;
+      display: none; position: fixed; top: 64px; left: 0; right: 0;
       background: var(--white); border-bottom: 1px solid var(--border);
       padding: 16px; z-index: 99; flex-direction: column; gap: 4px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.1);
@@ -1850,7 +1850,7 @@
     const hero = document.getElementById('main-content');
     if (!nav || !hero) return;
     function update() {
-      const past = hero.getBoundingClientRect().bottom < 72;
+      const past = hero.getBoundingClientRect().bottom < 64;
       nav.classList.toggle('nk-scrolled', past);
     }
     window.addEventListener('scroll', update, { passive: true });
