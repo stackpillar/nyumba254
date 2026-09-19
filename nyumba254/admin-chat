@@ -41,7 +41,7 @@
     .topnav-logo-icon {
       width:auto; height:36px; background:transparent; border-radius:0;
       display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-    .topnav-logo-icon img { width:auto; height:100%; object-fit:contain; }
+    .topnav-logo-icon img { width:auto; height:100%; aspect-ratio:1/1; object-fit:cover; display:block; border-radius:22%; box-shadow:0 0 0 1px rgba(0,0,0,.08); }
     .topnav-title { font-size:14px; font-weight:600; color:var(--text); }
     .topnav-right { margin-left:auto; display:flex; align-items:center; gap:10px; }
     .topnav-badge {

@@ -61,7 +61,7 @@
     .sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--green-dark);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .25s}
     .sidebar-logo{height:var(--topbar-h);display:flex;align-items:center;padding:0 20px;gap:10px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0}
     .sidebar-logo-icon{width:auto;height:40px;background:transparent;border-radius:0;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
-.sidebar-logo-icon img{width:auto;height:100%;object-fit:contain}
+.sidebar-logo-icon img{ width:auto; height:100%; aspect-ratio:1/1; object-fit:cover; display:block; border-radius:22%; box-shadow:0 0 0 1px rgba(255,255,255,.18); }
     .sidebar-logo-icon svg{width:16px;height:16px;stroke:white;fill:none;stroke-width:2;stroke-linecap:round}
     .sidebar-logo-text{font-family:'Playfair Display',serif;font-size:16px;color:white}
     .sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto}
