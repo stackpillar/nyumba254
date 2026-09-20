@@ -1,0 +1,40 @@
+{
+  "id": "/",
+  "name": "Nyumba254",
+  "short_name": "Nyumba254",
+  "description": "Find and list homes, rentals and commercial property across Kenya. No agents, no commission.",
+  "lang": "en-KE",
+  "dir": "ltr",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0F6E56",
+  "background_color": "#f7f6f2",
+  "categories": ["business", "lifestyle"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Browse listings",
+      "short_name": "Listings",
+      "url": "/listings?source=shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Post a listing",
+      "short_name": "Post",
+      "url": "/post-listing?source=shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Saved listings",
+      "short_name": "Saved",
+      "url": "/saved?source=shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

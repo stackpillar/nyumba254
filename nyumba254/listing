@@ -57,39 +57,33 @@
 @media(max-width:1000px){.layout{grid-template-columns:minmax(0,1fr) 340px;gap:24px}}
 @media(max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}.side{position:static;max-height:none;overflow:visible}}
 
-/* gallery: one bordered box. The photo always sits fully inside its frame (contain, never cropped), and every control lives
-   outside the picture, so nothing overlaps it. The frame's shape adapts to the cover photo (set from JS as --ar). */
-.gallery{--ar:1.6;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:22px;box-shadow:var(--shadow-card);overflow:hidden}
-.gstage{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;padding:12px}
-.gstage.single{grid-template-columns:minmax(0,1fr)}
-.gframe{position:relative;min-width:0;aspect-ratio:var(--ar);max-height:min(66vh,620px);min-height:200px;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;touch-action:pan-y}
-.gzoom{position:absolute;inset:0;display:block;width:100%;height:100%;padding:0;cursor:zoom-in}
-.gzoom img{width:100%;height:100%;object-fit:contain;object-position:center}
-.nophoto{position:absolute;inset:0;color:var(--text-3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:13.5px}
-.nophoto svg{width:44px;height:44px;stroke:currentColor;opacity:.5;fill:none;stroke-width:1.5}
-.gnav{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--border);background:var(--white);display:inline-flex;align-items:center;justify-content:center;color:var(--text-2);flex-shrink:0;transition:border-color .15s,background .15s,color .15s}
-.gnav:hover{border-color:var(--green);color:var(--green-dark);background:var(--green-light)}
-.gnav svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.4}
-.gnav.mob{display:none}
-.gbar{display:flex;align-items:center;gap:8px;padding:0 12px 12px}
-.gspacer{flex:1}
-.gcount{font-size:13px;font-weight:600;color:var(--text-2);background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:6px 13px;font-variant-numeric:tabular-nums}
-.gheart{position:relative;display:inline-flex;align-items:center}
-.gexp{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:0 15px;border-radius:22px;border:1.5px solid var(--border);background:var(--white);font-size:13px;font-weight:600;color:var(--text-2)}
-.gexp:hover{border-color:var(--green);color:var(--green-dark)}
-.gexp svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
-.gthumbs{position:relative;display:flex;gap:8px;padding:12px;overflow-x:auto;border-top:1px solid var(--border);background:var(--surface);scrollbar-width:thin}
-.gthumb{flex:0 0 88px;height:64px;border-radius:8px;overflow:hidden;border:2px solid transparent;opacity:.72;padding:0;background:var(--white);transition:opacity .15s}
-.gthumb:hover{opacity:1}
-.gthumb.on{border-color:var(--green);opacity:1}
-.gthumb img{width:100%;height:100%;object-fit:cover}
-@media(max-width:600px){
-  .gstage{grid-template-columns:minmax(0,1fr);padding:8px}
-  .gstage>.gnav{display:none}.gnav.mob{display:inline-flex}
-  .gframe{max-height:min(58vh,460px);min-height:180px}
-  .gbar{padding:0 8px 8px}.gexp span{display:none}.gexp{padding:0;width:44px}
-  .gthumbs{padding:8px}
-}
+/* gallery: every photo FILLS its tile (cover), it is only a preview. Tapping any photo opens the full, uncropped viewer.
+   Desktop: one large photo + up to four tiles. Phones: a swipeable carousel (native scroll-snap). */
+.gallery{position:relative;margin-bottom:22px}
+.gmosaic{display:grid;gap:6px;height:clamp(300px,40vw,480px);border-radius:var(--radius-lg);overflow:hidden;background:var(--border);border:1px solid var(--border);box-shadow:var(--shadow-card)}
+.gmosaic.n1{grid-template-columns:minmax(0,1fr)}
+.gmosaic.n2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.gmosaic.n3{grid-template-columns:minmax(0,2fr) minmax(0,1fr);grid-template-rows:repeat(2,minmax(0,1fr))}
+.gmosaic.n4{grid-template-columns:minmax(0,2fr) minmax(0,1fr);grid-template-rows:repeat(3,minmax(0,1fr))}
+.gmosaic.n5{grid-template-columns:minmax(0,2fr) repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
+.gmosaic.n3 .gt:first-child{grid-row:1/3}.gmosaic.n4 .gt:first-child{grid-row:1/4}.gmosaic.n5 .gt:first-child{grid-row:1/3}
+.gt{position:relative;display:block;padding:0;min-width:0;min-height:0;overflow:hidden;background:var(--surface);cursor:zoom-in}
+.gt img{width:100%;height:100%;object-fit:cover;object-position:center;transition:transform .35s ease}
+.gt:hover img{transform:scale(1.03)}
+.gall{position:absolute;right:14px;bottom:14px;z-index:3;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:22px;background:var(--white);border:1px solid var(--border);box-shadow:0 2px 10px rgba(0,0,0,.2);font-size:13.5px;font-weight:700;color:var(--text)}
+.gall:hover{background:var(--green-light);border-color:var(--green);color:var(--green-dark)}
+.gall svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+.gheart{position:absolute;top:12px;right:12px;z-index:3}
+.gcar{display:none;position:relative;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow-card);background:var(--surface)}
+.gtrack{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;overscroll-behavior-x:contain;aspect-ratio:4/3;max-height:min(64vh,500px)}
+.gtrack::-webkit-scrollbar{display:none}
+.gslide{flex:0 0 100%;min-width:0;height:100%;padding:0;display:block;scroll-snap-align:center;scroll-snap-stop:always}
+.gslide img{width:100%;height:100%;object-fit:cover}
+.gcount{position:absolute;right:12px;bottom:12px;z-index:3;display:inline-flex;align-items:center;gap:6px;background:rgba(0,0,0,.62);color:#fff;font-size:12.5px;font-weight:700;padding:5px 11px;border-radius:20px;font-variant-numeric:tabular-nums;pointer-events:none}
+.gcount svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+.gnone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;height:clamp(240px,32vw,340px);border-radius:var(--radius-lg);border:1px solid var(--border);background:var(--surface);color:var(--text-3);font-size:13.5px}
+.gnone svg{width:44px;height:44px;stroke:currentColor;opacity:.5;fill:none;stroke-width:1.5}
+@media(max-width:768px){.gmosaic,.gall{display:none}.gcar{display:block}}
 
 /* header block */
 .pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
@@ -596,25 +590,25 @@ function amenityLabels(){
 }
 
 /* ═══ render ═══ */
+const phoneGallery=()=>matchMedia('(max-width:768px)').matches;
 function galleryHtml(){
-  if(!photos.length)return `<div class="gallery" id="gallery"><div class="gstage single"><div class="gframe"><div class="nophoto">${IC.photo}<span>No photos for this listing yet</span></div></div></div></div>`;
-  const heart=(typeof NKSaved!=='undefined'&&NKSaved.buildHeartBtn)?NKSaved.buildHeartBtn(P.id):'';
-  const multi=photos.length>1,src=srcFor(photos[idx],mainW());
-  const arrows=cls=>`<button type="button" class="gnav ${cls} prev" data-act="prev" aria-label="Previous photo">${IC.chev(1)}</button><button type="button" class="gnav ${cls} next" data-act="next" aria-label="Next photo">${IC.chev(0)}</button>`;
-  return `<div class="gallery" id="gallery">
-    <div class="gstage${multi?'':' single'}">
-      ${multi?`<button type="button" class="gnav prev" data-act="prev" aria-label="Previous photo">${IC.chev(1)}</button>`:''}
-      <div class="gframe" id="gmain"><button type="button" class="gzoom" data-act="lb" aria-label="Open photo viewer"><img id="gimg" src="${escHtml(src)}" data-orig="${escHtml(photos[idx].url)}" alt="${escHtml(P.title)}, photo ${idx+1} of ${photos.length}" fetchpriority="high" decoding="async"/></button></div>
-      ${multi?`<button type="button" class="gnav next" data-act="next" aria-label="Next photo">${IC.chev(0)}</button>`:''}
-    </div>
-    <div class="gbar"><span class="gcount" id="gcount">${multi?`${idx+1} / ${photos.length}`:'1 photo'}</span><span class="gspacer"></span>
-      ${multi?`<button type="button" class="gnav mob prev" data-act="prev" aria-label="Previous photo">${IC.chev(1)}</button><button type="button" class="gnav mob next" data-act="next" aria-label="Next photo">${IC.chev(0)}</button>`:''}
-      <span class="gheart">${heart}</span>
-      <button type="button" class="gexp" data-act="lb" aria-label="View photos full screen">${IC.expand}<span>Full screen</span></button></div>
-    ${multi?`<div class="gthumbs" id="gthumbs">${photos.map((p,i)=>`<button type="button" class="gthumb${i===idx?' on':''}" data-act="photo" data-i="${i}" aria-label="Show photo ${i+1}"><img src="${escHtml(srcFor(p,160))}" data-orig="${escHtml(p.url)}" alt="" loading="lazy" width="88" height="64"/></button>`).join('')}</div>`:''}</div>`;
+  if(!photos.length)return `<div class="gallery" id="gallery"><div class="gnone">${IC.photo}<span>No photos for this listing yet</span></div></div>`;
+  const heart=(typeof NKSaved!=='undefined'&&NKSaved.buildHeartBtn)?NKSaved.buildHeartBtn(P.id):'',n=photos.length,saver=document.body.classList.contains('nk-datasaver');
+  const img=(p,w,i,extra)=>`<img src="${escHtml(srcFor(p,w))}" data-orig="${escHtml(p.url)}" alt="${i===0?escHtml(P.title)+', photo 1 of '+n:''}" ${i===0?'fetchpriority="high"':'loading="lazy"'} decoding="async" ${extra||''}/>`;
+  if(phoneGallery()){
+    return `<div class="gallery" id="gallery"><div class="gcar"><div class="gtrack" id="gtrack" role="group" aria-label="Photos, swipe to browse">${photos.map((p,i)=>`<button type="button" class="gslide" data-act="photo" data-i="${i}" aria-label="Open photo ${i+1} of ${n}">${img(p,saver?640:900,i)}</button>`).join('')}</div>
+      <div class="gcount" id="gcount" aria-hidden="true">${IC.photo}<span>${idx+1} / ${n}</span></div><span class="gheart">${heart}</span></div></div>`;
+  }
+  const show=photos.slice(0,Math.min(n,5)),cls='n'+show.length;
+  return `<div class="gallery" id="gallery"><div class="gmosaic ${cls}">${show.map((p,i)=>`<button type="button" class="gt" data-act="photo" data-i="${i}" aria-label="Open photo ${i+1} of ${n}">${img(p,i===0?(saver?640:1200):(saver?400:640),i)}</button>`).join('')}</div>
+    <span class="gheart">${heart}</span><button type="button" class="gall" data-act="photo" data-i="0">${IC.expand}${n>1?`Show all ${n} photos`:'View photo'}</button></div>`;
 }
-/* the frame takes its shape from the cover photo (landscape, 4:3, square), once, so it never jumps between photos */
-function fitFrame(im){const g=$('gallery');if(!g||g.dataset.ar||!im||!im.naturalWidth)return;g.dataset.ar='1';g.style.setProperty('--ar',Math.min(1.9,Math.max(1,im.naturalWidth/im.naturalHeight)).toFixed(3))}
+function renderGallery(){const g=$('gallery');if(!g||!P)return;g.outerHTML=galleryHtml();syncTrack();if(typeof NKSaved!=='undefined'&&NKSaved.hydrate)NKSaved.hydrate($('gallery'))}
+function syncTrack(){
+  const t=$('gtrack');if(!t||!photos.length)return;
+  const w=t.clientWidth;if(w&&Math.abs(t.scrollLeft-idx*w)>2)t.scrollTo({left:idx*w,behavior:'auto'});
+  const c=$('gcount');if(c)c.lastElementChild.textContent=`${idx+1} / ${photos.length}`;
+}
 function unitsHtml(){
   if(!units.length)return '';
   const g=meta().group,rt=g==='boarding'&&(P.details||{}).room_types?Object.fromEntries(P.details.room_types.map(r=>[r.label,r.capacity])):{};
@@ -711,7 +705,7 @@ function render(){
     <div class="listnav" id="listnav" hidden></div>
   </div><aside class="side" id="side" aria-label="Contact the seller">${sidebarHtml()}</aside></div>
   <section class="sim" id="sim" hidden><div class="sim-head"><h2>${occ?'Similar listings available now':'Similar listings nearby'}</h2><a class="link" href="${escHtml(nkBuildListingsUrl({category:P.category,county:P.county}))}">View all in ${escHtml(P.county?nkCountyLabel(P.county):'Kenya')}</a></div><div class="card-grid" id="sim-grid"><div class="sk" style="aspect-ratio:4/3"></div><div class="sk" style="aspect-ratio:4/3"></div><div class="sk" style="aspect-ratio:4/3"></div></div></section>`;
-  tabActions();prefill();initMap();{const im=$('gimg');if(im&&im.complete)fitFrame(im)}bnbCheck();ctaBar();initAnchors();initClamp();updateRating();
+  tabActions();prefill();initMap();bnbCheck();ctaBar();initAnchors();initClamp();updateRating();
   if(typeof NKSaved!=='undefined'&&NKSaved.hydrate)NKSaved.hydrate($('view'));
   loadEnqCount();
 }
@@ -796,12 +790,8 @@ function seo(){
 
 /* ═══ gallery + lightbox ═══ */
 function showPhoto(i){
-  if(!photos.length)return;idx=(i+photos.length)%photos.length;const im=$('gimg');if(!im)return;
-  const src=srcFor(photos[idx],mainW());im.dataset.orig=photos[idx].url;im.src=src;im.alt=`${P.title}, photo ${idx+1} of ${photos.length}`;
-  const c=$('gcount');if(c&&photos.length>1)c.textContent=`${idx+1} / ${photos.length}`;
-  const th=$('gthumbs');
-  qsa('.gthumb').forEach((b,k)=>{b.classList.toggle('on',k===idx);if(k===idx&&th)th.scrollTo({left:b.offsetLeft-th.clientWidth/2+b.clientWidth/2,behavior:'smooth'})});
-  const n=photos[(idx+1)%photos.length];if(n&&!document.body.classList.contains('nk-datasaver'))new Image().src=srcFor(n,mainW());
+  if(!photos.length)return;idx=(i+photos.length)%photos.length;syncTrack();
+  const n=photos[(idx+1)%photos.length];if(n&&!document.body.classList.contains('nk-datasaver'))new Image().src=nkImgSrc(n.url,1800);
   if($('lb').classList.contains('open'))lbShow();
 }
 function lbShow(){
@@ -1069,7 +1059,7 @@ document.addEventListener('click',e=>{
     return}
   const a=t.dataset.act;
   switch(a){
-    case 'photo':showPhoto(Number(t.dataset.i));break;case 'prev':showPhoto(idx-1);break;case 'next':showPhoto(idx+1);break;
+    case 'photo':idx=Number(t.dataset.i)||0;lbShow();nkOpenModal($('lb'));break;
     case 'lb':lbShow();nkOpenModal($('lb'));break;case 'lprev':showPhoto(idx-1);break;case 'lnext':showPhoto(idx+1);break;case 'lbzoom':lbZoom();break;
     case 'close':nkCloseModal(t.closest('.notify-modal-overlay, .nk-sheet-overlay'));break;case 'reload':location.reload();break;
     case 'call':case 'wa':reveal(a==='call'?'call':'whatsapp');break;
@@ -1098,14 +1088,16 @@ document.addEventListener('click',e=>{
 document.addEventListener('keydown',e=>{
   if($('lb').classList.contains('open')){if(e.key==='ArrowLeft')showPhoto(idx-1);if(e.key==='ArrowRight')showPhoto(idx+1);return}
   if(e.key==='Escape'&&$('mobile-nav').classList.contains('open')){closeMenu();$('mobile-menu-btn').focus();return}
-  const g=$('gallery');if(!P||photos.length<2||!g||!g.contains(document.activeElement))return;
-  if(e.key==='ArrowLeft'){e.preventDefault();showPhoto(idx-1)}if(e.key==='ArrowRight'){e.preventDefault();showPhoto(idx+1)}
 });
 document.addEventListener('change',e=>{if(e.target.id==='rp-reason')$('rp-amt-wrap').hidden=!/unreasonable_fee|scam_attempt/.test(e.target.value)});
-document.addEventListener('load',e=>{if(e.target&&e.target.id==='gimg')fitFrame(e.target)},true);
 /* photo fallback: if a resized URL fails (transforms unavailable), fall back to the original file once */
 document.addEventListener('error',e=>{const im=e.target;if(im&&im.tagName==='IMG'&&im.dataset&&im.dataset.orig&&im.getAttribute('src')!==im.dataset.orig)im.src=im.dataset.orig},true);
-new MutationObserver(()=>{const g=$('gmain');if(g&&!g.dataset.sw){g.dataset.sw='1';swipe(g,d=>showPhoto(idx+d))}}).observe($('view'),{childList:true,subtree:true});
+/* carousel: keep the counter and index in step with the native swipe */
+let gTick=false;
+document.addEventListener('scroll',e=>{const t=e.target;if(!t||t.id!=='gtrack'||gTick)return;gTick=true;requestAnimationFrame(()=>{gTick=false;const w=t.clientWidth;if(!w)return;const i=Math.round(t.scrollLeft/w);if(i!==idx&&i>=0&&i<photos.length){idx=i;const c=$('gcount');if(c)c.lastElementChild.textContent=`${idx+1} / ${photos.length}`}})},true);
+/* the carousel jumps to whichever photo the viewer was left on; the layout switches between mosaic and carousel at 768px */
+new MutationObserver(m=>{if(m.some(x=>x.attributeName==='class')&&!$('lb').classList.contains('open'))syncTrack()}).observe($('lb'),{attributes:true});
+matchMedia('(max-width:768px)').addEventListener('change',renderGallery);
 swipe($('lb-box'),d=>{if(!zoomed)showPhoto(idx+d)});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)maybeReach()});
 window.addEventListener('pageshow',e=>{if(e.persisted&&P){checkThread();maybeReach();if(typeof NKSaved!=='undefined'&&NKSaved.hydrate)NKSaved.hydrate($('view'))}});
