@@ -447,10 +447,11 @@
 <!-- ── SYNC BANNER ── -->
 <div class="sync-banner anon no-print" id="sync-banner-anon" hidden>
   <div class="sync-banner-text">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-    <span>Saved listings are stored on this device only. <strong>Sign in with your email</strong> to keep your shortlist if you switch phones or browsers.</span>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+    <span>Your shortlist is automatically synced across devices. <strong id="shortlist-link-display">Link copied!</strong></span>
   </div>
-  <a href="/login" class="btn-outline" style="white-space:nowrap">Sign in to sync</a>
+  <button type="button" class="btn-outline" id="copy-shortlist-link">📋 Copy link</button>
+  <button type="button" class="btn-outline" id="email-shortlist">✉️ Email to me</button>
 </div>
 
 <div class="sync-banner signed-in no-print" id="sync-banner-signedin" hidden>
@@ -724,6 +725,7 @@
 const SAVED_KEY = 'nk_saved_listings';              // written by saved-listings.js (heart buttons)
 const META_KEY = 'nk_saved_meta_v1';                // notes / status / folder / viewing / order / price snapshot (per device)
 const CACHE_KEY = 'nk_saved_cache_v1';              // last shortlist, for instant render
+const SHORTLIST_TOKEN_KEY = 'nk_shortlist_token';   // anonymous shortlist token
 const THEME_KEY = 'nk_theme';
 const NUDGE_KEY = 'nk_signin_nudge_dismissed';
 const PAGE_SIZE = 12;
@@ -757,6 +759,9 @@ let sharedNums = [];
 let mutating = 0;
 let metaKey = META_KEY + ':anon';
 let meta = { items: {}, order: [] };
+let shortlistToken = null;  // anonymous shortlist token
+let shortlistMode = false;  // loading from server (not just localStorage)
+let isAnonShortlist = false;  // true if viewing /saved?list=sl_abc123
 let renderedIds = [];
 let currentAvailIds = [];
 let unavailPref = null;
@@ -813,16 +818,86 @@ function addLocalSaved(id) {
 }
 
 /* ── per-device metadata (notes, status, folder, viewing date, manual order, price snapshot) ── */
-function readMeta(key) {
+
+/* ── Anonymous shortlist token ── */
+function getOrCreateShortlistToken() {
+  if (shortlistToken) return shortlistToken;
   try {
-    const m = JSON.parse(localStorage.getItem(key) || 'null');
-    if (m && typeof m === 'object') return { items: m.items || {}, order: Array.isArray(m.order) ? m.order : [] };
-  } catch (e) {}
-  return { items: {}, order: [] };
+    shortlistToken = localStorage.getItem(SHORTLIST_TOKEN_KEY);
+    if (!shortlistToken) {
+      // Generate: "sl_" + 16 random alphanumeric chars
+      shortlistToken = 'sl_' + Math.random().toString(36).substring(2, 18).padEnd(16, 'x');
+      localStorage.setItem(SHORTLIST_TOKEN_KEY, shortlistToken);
+    }
+  } catch (e) {
+    shortlistToken = null;
+  }
+  return shortlistToken;
 }
-function saveMeta() { try { localStorage.setItem(metaKey, JSON.stringify(meta)); } catch (e) {} }
-const getMi = id => (shareMode ? {} : (meta.items[id] || {}));
-function mi(id) { return meta.items[id] || (meta.items[id] = {}); }
+
+async function syncShortlistToServer() {
+  if (!shortlistToken || currentUser || shareMode) return;  // don't sync if signed in or in share mode
+  try {
+    const listings = savedRows.map(r => ({
+      id: r.listing_id,
+      title: r.listing.title,
+      area: r.listing.area,
+      price: r.listing.price,
+      price_frequency: r.listing.price_frequency,
+      saved_at: r.created_at || new Date().toISOString(),
+      notes: getMi(r.listing_id).note || '',
+      status: getMi(r.listing_id).status || '',
+      folder: getMi(r.listing_id).folder || '',
+    }));
+    await db.from('anonymous_shortlists').upsert({
+      token: shortlistToken,
+      listings,
+      accessed_at: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.error('Sync to server failed:', e.message);
+  }
+}
+
+async function loadFromAnonymousShortlist() {
+  const token = getOrCreateShortlistToken();
+  if (!token) { savedRows = []; return true; }
+  try {
+    const { data, error } = await db.from('anonymous_shortlists')
+      .select('listings')
+      .eq('token', token)
+      .maybeSingle();                 // returns null (no error) when the row doesn't exist yet
+    if (error) { console.error('Load anon shortlist error:', error.message); return false; }
+    shortlistMode = true;             // server round-trip succeeded, even if empty
+    try { localStorage.setItem(SHORTLIST_TOKEN_KEY, token); } catch (e2) {}   // remember this token on this device
+    const listings = (data && Array.isArray(data.listings)) ? data.listings : [];
+    if (!listings.length) { savedRows = []; assignSeq(); return true; }
+    const ids = listings.map(l => l.id).filter(Boolean);
+    const { data: rows, error: fetchErr } = await db.from('listings')
+      .select(LISTING_SELECT).in('id', ids);
+    if (fetchErr || !rows) return false;
+    const byId = Object.fromEntries(rows.map(l => [l.id, l]));
+    savedRows = ids.map(id => {
+      const l = byId[id];
+      const cached = listings.find(c => c.id === id);
+      if (!l) return null;
+      return { listing_id: id, created_at: cached?.saved_at || null, listing: l };
+    }).filter(Boolean);
+    meta.items = {};
+    listings.forEach(cached => {
+      if (!cached.id) return;
+      meta.items[cached.id] = meta.items[cached.id] || {};
+      if (cached.notes) meta.items[cached.id].note = cached.notes;
+      if (cached.status) meta.items[cached.id].status = cached.status;
+      if (cached.folder) meta.items[cached.id].folder = cached.folder;
+    });
+    assignSeq();
+    return true;
+  } catch (e) {
+    console.error('Load from anonymous shortlist failed:', e.message);
+    return false;
+  }
+}
 
 /* ── cache (item 29) ── */
 const cacheKey = () => CACHE_KEY + ':' + (currentUser ? currentUser.id : 'anon');
@@ -949,7 +1024,12 @@ async function loadShared(nums) {
   assignSeq();
   return true;
 }
-const loadOwn = () => (currentUser ? loadFromAccount() : loadFromLocalStorage());
+const loadOwn = async () => {
+  if (currentUser) return loadFromAccount();
+  const hasLocal = getLocalSavedIds().length > 0;
+  if (hasLocal) return loadFromLocalStorage();
+  return loadFromAnonymousShortlist();  // Try server first if no local
+};
 
 /* Item 1: merge anonymous saves into the account on sign-in. Nothing is deleted locally unless it was saved (or is a dead listing). */
 async function mergeLocalIntoAccount() {
@@ -1010,7 +1090,7 @@ async function silentRefresh(force) {
   if (!force && Date.now() - lastRefresh < 15000) return;
   refreshing = true;
   const before = savedRows.map(r => r.listing_id).sort().join();
-  const ok = await loadOwn();
+  const ok = isAnonShortlist ? await loadFromAnonymousShortlist() : await loadOwn();
   refreshing = false; lastRefresh = Date.now();
   if (!ok) return;
   loadError = false; $('stale-note').hidden = true;
@@ -1071,6 +1151,7 @@ async function removeMany(ids) {
     return;
   }
   writeCache();
+  if (shortlistMode) syncShortlistToServer();
   track('saved_remove', { count: rows.length, listing_id: rows.length === 1 ? rows[0].listing_id : null });
   toast(rows.length === 1 ? 'Removed from shortlist' : 'Removed ' + rows.length + ' listings', '', { label: 'Undo', fn: () => restoreRows(rows) });
   loadRecommended(); scheduleRealtime();
@@ -1095,7 +1176,9 @@ async function restoreRows(rows) {
     toast('Could not undo. Please save the listing again.', 'error');
     return;
   }
-  writeCache(); track('saved_undo', { count: fresh.length });
+  writeCache();
+  if (shortlistMode) syncShortlistToServer();
+  track('saved_undo', { count: fresh.length });
   toast(fresh.length === 1 ? 'Restored to your shortlist' : 'Restored ' + fresh.length + ' listings');
   loadRecommended(); scheduleRealtime();
 }
@@ -1494,6 +1577,9 @@ function render() {
     box.innerHTML = stateHtml(loadError ? 'error' : 'empty');
     setCount(loadError ? 'Could not load' : '<strong>0</strong> listings saved');
     renderedIds = []; currentAvailIds = [];
+    // Show sync banner if not signed in
+    if (!currentUser && !shareMode) $('sync-banner-anon').hidden = false;
+    else if (currentUser) $('sync-banner-signedin').hidden = false;
     return;
   }
 
@@ -1674,6 +1760,7 @@ function saveEdit() {
   m.note = $('em-note').value.trim().slice(0, 500);
   if (m.viewAt && !m.status) m.status = 'viewing';
   saveMeta();
+  if (shortlistMode) syncShortlistToServer();
   nkCloseModal($('edit-modal'));
   editingId = null;
   render();
@@ -1682,6 +1769,7 @@ function saveEdit() {
 }
 function markViewed(id) {
   const m = mi(id); m.status = 'viewed'; saveMeta();
+  if (shortlistMode) syncShortlistToServer();
   render(); toast('Marked as viewed');
   track('saved_viewed', { listing_id: id });
 }
@@ -1912,6 +2000,53 @@ function bindEvents() {
     if (e.target.classList && e.target.classList.contains('modal-overlay')) nkCloseModal(e.target);
   });
   $('sign-out-btn').addEventListener('click', doSignOut);
+  $('copy-shortlist-link').addEventListener('click', async () => {
+    const token = getOrCreateShortlistToken();
+    if (!token) { toast('Could not generate link', 'error'); return; }
+    const url = location.origin + '/saved?list=' + token;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast('Link copied to clipboard');
+      track('shortlist_link_copied');
+    } catch (e) {
+      const ta = document.createElement('textarea');
+      ta.value = url;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); toast('Link copied'); } catch (_) { toast('Could not copy', 'error'); }
+      document.body.removeChild(ta);
+    }
+  });
+  $('email-shortlist').addEventListener('click', async () => {
+    const token = getOrCreateShortlistToken();
+    if (!token) { toast('Could not generate link', 'error'); return; }
+    const email = prompt('Email address to send shortlist to:', currentUser?.email || '');
+    if (!email) return;
+    try {
+      const url = location.origin + '/saved?list=' + token;
+      const { error } = await db.functions.invoke('send-notification', {
+        body: {
+          type: 'shortlist_email_sent',
+          audience: 'buyer',
+          buyerEmail: email,
+          buyerName: 'Buyer',
+          shortlistUrl: url,
+          listingCount: savedRows.length,
+          listings: savedRows.slice(0, 10).map(r => ({
+            title: r.listing.title,
+            area: r.listing.area,
+            price: r.listing.price,
+          })),
+        },
+      });
+      if (error) throw error;
+      toast('Shortlist sent to ' + email);
+      track('shortlist_emailed');
+    } catch (e) {
+      console.error('Email failed:', e);
+      toast('Could not send email. Try copying the link instead.', 'error');
+    }
+  });
   $('theme-btn').addEventListener('click', toggleTheme);
   $('print-btn').addEventListener('click', () => { track('print'); window.print(); });
   $('share-all-btn').addEventListener('click', () => shareRows(savedRows.filter(r => isAvailable(r.listing)).length ? savedRows.filter(r => isAvailable(r.listing)) : savedRows, 'Share your shortlist'));
@@ -2055,6 +2190,10 @@ async function nkSavedInit() {
   if (sp) sharedNums = sp.split(',').map(s => Number(s)).filter(n => Number.isFinite(n) && n > 0).slice(0, 60);
   shareMode = sharedNums.length > 0;
 
+  // anonymous shortlist: /saved?list=sl_abc123xyz
+  const listParam = new URLSearchParams(location.search).get('list');
+  isAnonShortlist = !!(!currentUser && listParam && listParam.startsWith('sl_'));   // no `const` — assigns the global
+
   let ok;
   if (shareMode) {
     $('page-title').textContent = 'Shared shortlist';
@@ -2062,19 +2201,29 @@ async function nkSavedInit() {
     ok = await loadShared(sharedNums);
     $('share-banner').hidden = false;
     $('share-banner-text').textContent = savedRows.length + ' listing' + (savedRows.length !== 1 ? 's' : '') + ' shared with you.';
+  } else if (isAnonShortlist) {
+    shortlistToken = listParam;
+    $('page-title').textContent = 'Your shortlist';
+    $('page-sub').textContent = 'Properties you saved — no account needed.';
+    const cached = readCache();
+    if (cached && cached.rows.length) { savedRows = cached.rows; render(); }
+    ok = await loadFromAnonymousShortlist();
+    if (ok) $('sync-banner-anon').hidden = false;
   } else {
     let merged = 0;
     if (currentUser) {
       $('sync-banner-signedin').hidden = false;
       $('signed-in-email').textContent = currentUser.email || '';
       merged = await mergeLocalIntoAccount();
-    } else {
-      $('sync-banner-anon').hidden = false;
     }
     const cached = readCache();
     if (cached && cached.rows.length) { savedRows = cached.rows; render(); }     // instant paint, refreshed below
     ok = await loadOwn();
     if (merged) toast('Added ' + merged + ' listing' + (merged !== 1 ? 's' : '') + ' from this device to your account');
+    if (!currentUser) {
+      $('sync-banner-anon').hidden = false;
+      if (ok) { shortlistMode = true; syncShortlistToServer(); }   // push this device's existing saves to the server immediately
+    }
   }
 
   loaded = true; lastRefresh = Date.now();
