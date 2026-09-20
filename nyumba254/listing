@@ -63,7 +63,7 @@ nav#main-nav{position:sticky;top:0;z-index:100;display:flex;flex-wrap:wrap;align
 /* gallery */
 .gallery{border-radius:var(--radius-lg);overflow:hidden;background:#111;margin-bottom:18px;position:relative}
 .gmain{position:relative;aspect-ratio:16/10;max-height:62vh;min-height:200px;width:100%;display:flex;align-items:center;justify-content:center;touch-action:pan-y}
-.gmain img{width:100%;height:100%;object-fit:contain;background:#111;cursor:zoom-in}
+.gmain img{width:100%;height:100%;object-fit:contain;object-position:center;background:#111;cursor:zoom-in}
 .nophoto{color:#bbb;display:flex;flex-direction:column;align-items:center;gap:8px;font-size:13px}.nophoto svg{width:44px;height:44px;stroke:#666;fill:none;stroke-width:1.5}
 .garrow{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;z-index:2}
 .garrow svg{width:16px;height:16px;stroke:#1a1a18;fill:none;stroke-width:2.5}.garrow.prev{left:12px}.garrow.next{right:12px}
@@ -400,7 +400,7 @@ function galleryHtml(){
   const heart=(typeof NKSaved!=='undefined'&&NKSaved.buildHeartBtn)?NKSaved.buildHeartBtn(L.id):'';
   const multi=photos.length>1,saver=document.body.classList.contains('nk-datasaver');
   return `<div class="gallery"><div class="gmain" id="gmain">
-    <img id="gimg" src="${photoSrc(photos[idx],saver?640:1200)}" alt="${escHtml(L.title)}, photo ${idx+1} of ${photos.length}" width="1200" height="750" fetchpriority="high" decoding="async" data-act="lb"/>
+    <img id="gimg" src="${photoSrc(photos[idx],saver?640:1200)}" alt="${escHtml(L.title)}, photo ${idx+1} of ${photos.length}" fetchpriority="high" decoding="async" data-act="lb"/>
     <div class="gheart">${heart}</div>
     ${multi?`<button type="button" class="garrow prev" data-act="prev" aria-label="Previous photo">${IC.chev(1)}</button><button type="button" class="garrow next" data-act="next" aria-label="Next photo">${IC.chev(0)}</button><div class="gcount" id="gcount">${idx+1} / ${photos.length}</div>`:''}
   </div>${multi?`<div class="gthumbs" id="gthumbs">${photos.map((p,i)=>`<button type="button" class="gthumb${i===idx?' on':''}" data-act="photo" data-i="${i}" aria-label="Show photo ${i+1}"><img src="${photoSrc(p,160)}" alt="" loading="lazy" width="76" height="54"/></button>`).join('')}</div>`:''}</div>`;
