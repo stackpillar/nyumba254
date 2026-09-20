@@ -5,87 +5,74 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <title>Your Shortlist — Nyumba254</title>
   <meta name="description" content="Your saved property listings on Nyumba254 — keep track of apartments, houses, boarding rooms and Airbnb rentals you're interested in across Kenya."/>
+  <meta name="robots" content="noindex,follow"/>
+  <meta name="theme-color" content="#0F6E56"/>
   <link rel="canonical" href="https://nyumba254.com/saved"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link rel="preconnect" href="https://vliuuloyfhyxcsuchpss.supabase.co"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
-  <link rel="icon" href="/favicon.ico" sizes="any">
-  <link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
+  <link rel="icon" href="/favicon.ico" sizes="any"/>
+  <link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96"/>
   <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --green:       #0F6E56;
-      --green-light: #E1F5EE;
-      --green-mid:   #1D9E75;
-      --green-dark:  #085041;
-      --gold:        #BA7517;
-      --gold-light:  #FAEEDA;
-      --red:         #C53030;
-      --red-light:   #FFF5F5;
-      --text:        #1a1a18;
-      --text-2:      #4a4a46;
-      --text-3:      #6b6a63; /* B8: unified with index/listings — was #888780 (fails AA at 3.4:1) */
-      --border:      #e0ded8;
-      --surface:     #f7f6f2;
-      --white:       #ffffff;
-      --radius:      10px;
-      --radius-lg:   16px;
-      --nav-h:       64px;
+      --green: #0F6E56; --green-light: #E1F5EE; --green-mid: #1D9E75; --green-dark: #085041;
+      --gold: #BA7517; --gold-light: #FAEEDA;
+      --danger: #C53030; --danger-bg: #FFF5F5;
+      --text: #1a1a18; --text-2: #4a4a46; --text-3: #6b6a63;
+      --border: #e0ded8; --surface: #f7f6f2; --white: #ffffff;
+      --radius: 10px; --radius-lg: 16px;
+      --nav-h: 64px;
+      /* Same bottom-stack variables as listings.html/index.html — --nk-tabbar-h is measured by JS (initTabbarMeasure). */
+      --nk-tabbar-h: 0px; --nk-stack: 0px;
     }
     html { scroll-behavior: smooth; }
-    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
-    body { font-family: 'Inter', sans-serif; color: var(--text); background: var(--surface); font-size: 15px; line-height: 1.6; }
+    body { font-family: 'Inter', system-ui, sans-serif; color: var(--text); background: var(--white); font-size: 15px; line-height: 1.6; padding-bottom: var(--nk-tabbar-h); }
     a { text-decoration: none; color: inherit; }
-    button { font-family: inherit; cursor: pointer; border: none; }
+    img { display: block; max-width: 100%; }
+    button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+    [hidden] { display: none !important; }
+    :focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
+    .skip-link { position: absolute; left: -9999px; top: 0; background: var(--green); color: white; padding: 10px 18px; border-radius: 0 0 8px 0; z-index: 100001; font-size: 14px; font-weight: 600; }
+    .skip-link:focus { left: 0; }
+
+    /* ── Data saver banner (shared look) ── */
+    .nk-datasaver-banner { display: none; align-items: center; justify-content: center; gap: 10px; background: #FFF7E6; color: #7a4f00; border-bottom: 1px solid #F3D9A0; font-size: 13px; padding: 9px 16px; text-align: center; flex-wrap: wrap; }
+    .nk-datasaver-banner.visible { display: flex; }
+    .nk-datasaver-banner button { border: 1px solid #7a4f00; color: #7a4f00; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+    .nk-datasaver-banner button:hover { background: #7a4f00; color: white; }
 
     /* ── Navbar ── */
-    nav {
-      position: sticky; top: 0; z-index: 100;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 32px; height: var(--nav-h);
-      background: var(--white); border-bottom: 1px solid var(--border);
-    }
-    .logo { display: flex; align-items: center; gap: 10px; font-family: 'Playfair Display', serif; font-size: 20px; color: var(--green-dark); }
-    .logo-icon { width:auto; height:40px; background:transparent; border-radius:0; display: flex; align-items: center; justify-content: center; }
-    .logo-icon img { width:auto; height:100%; aspect-ratio:1/1; object-fit:cover; display:block; border-radius:22%; box-shadow:0 0 0 1px rgba(0,0,0,.08); }
+    nav#main-nav { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: var(--nav-h); background: var(--white); border-bottom: 1px solid var(--border); }
+    .logo { display: flex; align-items: center; gap: 10px; font-family: 'Playfair Display', serif; font-size: 20px; color: var(--green-dark); font-weight: 600; }
+    .logo-icon { height: 40px; display: flex; align-items: center; justify-content: center; }
+    .logo-icon img { width: auto; height: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 22%; box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
     .nav-links { display: flex; align-items: center; gap: 6px; }
     .nav-link { font-size: 14px; color: var(--text-2); padding: 8px 14px; border-radius: var(--radius); transition: background .15s; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
     .nav-link:hover { background: var(--surface); color: var(--text); }
-    .nav-link[aria-current="page"] { color: var(--green); font-weight: 500; }
+    .nav-link[aria-current="page"] { color: var(--green); font-weight: 600; }
     .nav-link svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; }
     .nav-count { background: var(--green); color: white; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; min-width: 16px; text-align: center; }
-    .btn { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; padding: 9px 18px; border-radius: var(--radius); transition: all .15s; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px; font-weight: 500; padding: 9px 18px; border-radius: var(--radius); transition: all .15s; }
     .btn-primary { background: var(--green); color: white; }
     .btn-primary:hover { background: var(--green-dark); }
     .btn-outline { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; padding: 8px 16px; border-radius: var(--radius); border: 1.5px solid var(--border); background: white; color: var(--text-2); transition: all .15s; }
     .btn-outline:hover { border-color: var(--green); color: var(--green); }
 
     /* ── Mobile menu ── */
-    .mobile-menu-btn { display: none; background: none; border: none; cursor: pointer; padding: 12px; border-radius: 6px; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; }
+    .mobile-menu-btn { display: none; padding: 12px; border-radius: 6px; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; }
     .mobile-menu-btn svg { width: 22px; height: 22px; stroke: var(--text); fill: none; stroke-width: 2; display: block; }
-    .mobile-nav {
-      display: none; position: fixed; top: var(--nav-h); left: 0; right: 0;
-      max-height: calc(100dvh - var(--nav-h)); overflow-y: auto; -webkit-overflow-scrolling: touch;
-      background: var(--white); border-bottom: 1px solid var(--border);
-      padding: 16px; z-index: 99; flex-direction: column; gap: 4px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-    }
+    .mobile-nav { display: none; position: fixed; top: var(--nav-h); left: 0; right: 0; max-height: calc(100dvh - var(--nav-h)); overflow-y: auto; -webkit-overflow-scrolling: touch; background: var(--white); border-bottom: 1px solid var(--border); padding: 16px; z-index: 99; flex-direction: column; gap: 4px; box-shadow: 0 8px 24px rgba(0,0,0,.1); }
     .mobile-nav.open { display: flex; }
-    .mobile-nav a { font-size: 15px; color: var(--text-2); padding: 10px 14px; border-radius: var(--radius); }
+    .mobile-nav a { font-size: 15px; color: var(--text-2); padding: 12px 14px; border-radius: var(--radius); }
     .mobile-nav a:hover { background: var(--surface); }
-    .mobile-nav .btn-primary { text-align: center; justify-content: center; margin-top: 8px; }
-
-    .nk-datasaver-banner {
-      display: none; align-items: center; justify-content: center; gap: 10px;
-      background: #FFF7E6; color: #8a5a00; border-bottom: 1px solid #F3D9A0;
-      font-size: 13px; padding: 9px 16px; text-align: center; flex-wrap: wrap;
-    }
-    .nk-datasaver-banner.visible { display: flex; }
-    .nk-datasaver-banner button { background: none; border: 1px solid #8a5a00; color: #8a5a00; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
-    .nk-datasaver-banner button:hover { background: #8a5a00; color: white; }
+    .mobile-nav a[aria-current="page"] { color: var(--green); font-weight: 600; }
+    .mobile-nav .btn-primary { color: #fff; margin-top: 8px; justify-content: center; }
 
     /* ── Page header ── */
     .page-header { background: var(--white); border-bottom: 1px solid var(--border); padding: 28px 32px; }
@@ -110,15 +97,15 @@
     .filter-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
     .result-count { font-size: 14px; color: var(--text-2); }
     .result-count strong { color: var(--text); font-weight: 600; }
-    .clear-all-btn { font-size: 13px; color: var(--red); background: none; font-weight: 500; }
+    .clear-all-btn { font-size: 13px; color: var(--danger); background: none; font-weight: 500; }
     .clear-all-btn:hover { text-decoration: underline; }
 
     /* ── Listings grid ── */
     .listings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
 
     /* Card */
-    .card { background: white; border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; transition: transform .2s, box-shadow .2s; position: relative; }
-    .card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.09); }
+    .card { position: relative; background: white; border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; transition: transform .2s, box-shadow .2s; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,.09); }
     .card.unavailable { opacity: .72; }
     .card-img-link { display: block; }
     .card-img-link:focus-visible { outline: 2px solid var(--green); outline-offset: -2px; }
@@ -127,34 +114,25 @@
     .card-img-placeholder { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--text-3); }
     .card-img-placeholder svg { width: 32px; height: 32px; opacity: .3; stroke: currentColor; fill: none; stroke-width: 1.5; }
     .badge-featured { position: absolute; top: 10px; left: 10px; background: var(--green-dark); color: white; font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 20px; z-index: 2; }
-    .badge-unavailable { position: absolute; inset: 0; background: rgba(20,20,18,0.55); color: white; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; text-align: center; padding: 12px; z-index: 2; }
+    .badge-unavailable { position: absolute; inset: 0; background: rgba(20,20,18,.55); color: white; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; text-align: center; padding: 12px; z-index: 2; }
 
-    .remove-heart-btn {
+    .remove-heart-btn, .add-heart-btn {
       position: absolute; top: 10px; right: 10px; z-index: 3;
       width: 36px; height: 36px; border-radius: 50%;
-      background: rgba(255,255,255,0.95); border: 1px solid var(--border);
+      background: rgba(255,255,255,.95); border: 1px solid var(--border);
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; transition: all .15s;
     }
-    .remove-heart-btn:hover { background: var(--red-light); border-color: var(--red); }
-    .remove-heart-btn:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
-    .remove-heart-btn svg { width: 16px; height: 16px; fill: var(--red); stroke: var(--red); stroke-width: 1.5; transition: transform .15s; }
+    .remove-heart-btn:hover { background: var(--danger-bg); border-color: var(--danger); }
+    .remove-heart-btn:focus-visible, .add-heart-btn:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+    .remove-heart-btn svg { width: 16px; height: 16px; fill: var(--danger); stroke: var(--danger); stroke-width: 1.5; transition: transform .15s; }
     .remove-heart-btn:hover svg { transform: scale(1.1); }
     .remove-heart-btn.removing svg { opacity: .3; }
-
-    .add-heart-btn {
-      position: absolute; top: 10px; right: 10px; z-index: 3;
-      width: 36px; height: 36px; border-radius: 50%;
-      background: rgba(255,255,255,0.95); border: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: all .15s;
-    }
     .add-heart-btn:hover { background: var(--green-light); border-color: var(--green); }
-    .add-heart-btn:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
     .add-heart-btn svg { fill: none; stroke: var(--text-2); width: 16px; height: 16px; stroke-width: 2; transition: all .15s; }
     .add-heart-btn:hover svg { stroke: var(--green-dark); transform: scale(1.1); }
     .add-heart-btn.added { pointer-events: none; }
-    .add-heart-btn.added svg { fill: var(--red); stroke: var(--red); }
+    .add-heart-btn.added svg { fill: var(--danger); stroke: var(--danger); }
 
     .card-body { padding: 14px 16px; }
     .card-top-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
@@ -189,7 +167,7 @@
     /* ── Empty state ── */
     .empty-state { text-align: center; padding: 80px 20px; color: var(--text-3); }
     .empty-state svg { width: 52px; height: 52px; margin: 0 auto 18px; stroke: var(--border); fill: none; stroke-width: 1.5; }
-    .empty-state h3 { font-size: 17px; font-weight: 600; color: var(--text-2); margin-bottom: 8px; }
+    .empty-state h2 { font-size: 17px; font-weight: 600; color: var(--text-2); margin-bottom: 8px; }
     .empty-state p { font-size: 14px; margin-bottom: 22px; max-width: 360px; margin-left: auto; margin-right: auto; }
 
     /* ── Recommended section ── */
@@ -199,67 +177,59 @@
     .recommended-header p { font-size: 13px; color: var(--text-3); }
 
     /* ── Confirm modal (clear all) ── */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 500; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 100000; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.open { display: flex; }
+    body.nk-modal-open .nk-scrolltop-btn { display: none !important; }
     .modal { background: var(--white); border-radius: var(--radius-lg); width: 100%; max-width: 380px; padding: 24px; }
-    .modal h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+    .modal h2 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
     .modal p { font-size: 13px; color: var(--text-2); line-height: 1.6; margin-bottom: 18px; }
     .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
-    .btn-danger { background: var(--red-light); color: var(--red); padding: 9px 16px; border-radius: var(--radius); font-size: 13px; font-weight: 600; }
-    .btn-danger:hover { background: var(--red); color: white; }
+    .btn-danger { background: var(--danger-bg); color: var(--danger); padding: 9px 16px; border-radius: var(--radius); font-size: 13px; font-weight: 600; }
+    .btn-danger:hover { background: var(--danger); color: white; }
 
-    /* ── Toast ── */
-    .toast { position: fixed; bottom: 24px; right: 24px; z-index: 999; background: var(--text); color: white; padding: 12px 20px; border-radius: var(--radius); font-size: 13px; transform: translateY(80px); opacity: 0; transition: all .3s; }
-    .toast.show { transform: translateY(0); opacity: 1; }
-    .toast.success { background: var(--green-dark); }
-    .toast.error { background: var(--red); }
-    @media (max-width: 768px) { .toast { bottom: 78px; right: 16px; left: 16px; } }
+    /* ── Toast (same positioning contract as index.html/listings.html) ── */
+    .toast { position: fixed; left: 50%; bottom: calc(var(--nk-tabbar-h) + var(--nk-stack) + 20px); transform: translate(-50%, 24px); z-index: 100002; background: var(--green-dark); color: #fff; padding: 12px 20px; border-radius: var(--radius); font-size: 13.5px; font-weight: 500; box-shadow: 0 8px 24px rgba(0,0,0,.2); opacity: 0; pointer-events: none; transition: all .25s; max-width: min(92vw, 420px); text-align: center; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .toast.error { background: var(--danger); }
 
     /* ── Footer ── */
-    footer { background: var(--text); color: rgba(255,255,255,0.6); padding: 48px 32px 28px; }
+    footer { background: var(--text); color: rgba(255,255,255,.6); padding: 48px 32px 28px; }
     .footer-inner { max-width: 1100px; margin: 0 auto; }
     .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
     .footer-logo { font-family: 'Playfair Display', serif; font-size: 20px; color: white; margin-bottom: 10px; }
     .footer-tagline { font-size: 13px; line-height: 1.7; max-width: 240px; }
-    .footer-col h4 { font-size: 12px; font-weight: 700; color: white; margin-bottom: 14px; letter-spacing: .08em; text-transform: uppercase; }
-    .footer-col a { display: block; font-size: 13px; color: rgba(255,255,255,0.55); margin-bottom: 8px; transition: color .15s; }
+    .footer-col h2 { font-size: 12px; font-weight: 700; color: white; margin-bottom: 14px; letter-spacing: .08em; text-transform: uppercase; }
+    .footer-col a { display: block; font-size: 13px; color: rgba(255,255,255,.55); margin-bottom: 8px; transition: color .15s; }
     .footer-col a:hover { color: white; }
     .footer-social { display: flex; gap: 8px; margin-top: 14px; }
-    .footer-social a { width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; transition: background .15s; }
+    .footer-social a { width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,.08); display: flex; align-items: center; justify-content: center; transition: background .15s; }
     .footer-social a:hover { background: var(--green); }
-    .footer-social svg { width: 15px; height: 15px; stroke: rgba(255,255,255,0.6); fill: none; stroke-width: 2; }
+    .footer-social svg { width: 15px; height: 15px; stroke: rgba(255,255,255,.7); fill: none; stroke-width: 2; }
     .footer-counties { column-count: 2; column-gap: 14px; max-height: 180px; overflow-y: auto; padding-right: 6px; }
     .footer-counties a { margin-bottom: 8px; break-inside: avoid; }
     .footer-counties::-webkit-scrollbar { width: 5px; }
-    .footer-counties::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
-    .footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-    .footer-bottom p { font-size: 12px; }
+    .footer-counties::-webkit-scrollbar-thumb { background: rgba(255,255,255,.2); border-radius: 4px; }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.1); padding-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .footer-bottom p, .footer-bottom-links a { font-size: 12px; color: rgba(255,255,255,.4); }
+    .footer-bottom-links { display: flex; gap: 20px; }
+    .footer-bottom-links a:hover { color: white; }
 
-    /* ── B7: same bottom tab bar + FAB as index.html/listings.html ── */
-    .nk-fab-post { display: none; position: fixed; left: 16px; bottom: 84px; z-index: 60; align-items: center; gap: 8px; background: var(--green); color: white; padding: 13px 18px; border-radius: 30px; font-size: 14px; font-weight: 600; box-shadow: 0 6px 20px rgba(15,110,86,0.4); }
-    .nk-fab-post svg { width: 16px; height: 16px; stroke: white; fill: none; stroke-width: 2.5; }
-    .nk-tabbar { display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 70; background: white; border-top: 1px solid var(--border); padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px)); align-items: stretch; justify-content: space-around; box-shadow: 0 -4px 16px rgba(0,0,0,0.06); }
-    .nk-tab { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10.5px; font-weight: 600; color: var(--text-3); padding: 4px 0; flex: 1; position: relative; }
-    .nk-tab svg { width: 21px; height: 21px; stroke: var(--text-3); fill: none; stroke-width: 2; }
-    .nk-tab.active, .nk-tab.active svg { color: var(--green); stroke: var(--green); }
-    .nk-tab-postbtn { position: relative; top: -14px; }
-    .nk-tab-postbtn .nk-tab-postcircle { width: 42px; height: 42px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(15,110,86,0.4); margin-bottom: 2px; }
-    .nk-tab-postbtn .nk-tab-postcircle svg { width: 20px; height: 20px; stroke: white; }
-    .nk-tab-postbtn { color: var(--green); }
-    .nk-tab-badge {
-      position: absolute; top: -2px; right: 22%; background: var(--green); color: white;
-      font-size: 9px; font-weight: 800; min-width: 15px; height: 15px; border-radius: 10px;
-      display: none; align-items: center; justify-content: center; padding: 0 3px; border: 1.5px solid white;
-    }
+    /* ── B7: same bottom tab bar as index.html/listings.html (height measured by JS, see initTabbarMeasure) ── */
+    .nk-tabbar { display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 70; background: white; border-top: 1px solid var(--border); padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px)); align-items: stretch; justify-content: space-around; box-shadow: 0 -4px 16px rgba(0,0,0,.06); }
+    .nk-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 10.5px; font-weight: 600; color: var(--text-3); padding: 4px 0; flex: 1; position: relative; min-height: 46px; }
+    .nk-tab svg { width: 21px; height: 21px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .nk-tab.active { color: var(--green); }
+    .nk-tab-postbtn { position: relative; top: -14px; color: var(--green); }
+    .nk-tab-postcircle { width: 42px; height: 42px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(15,110,86,.4); margin-bottom: 2px; }
+    .nk-tab-postcircle svg { width: 20px; height: 20px; stroke: white; }
+    .nk-tab-badge { position: absolute; top: 0; right: 22%; background: var(--green); color: white; font-size: 9px; font-weight: 800; min-width: 15px; height: 15px; border-radius: 10px; display: none; align-items: center; justify-content: center; padding: 0 3px; border: 1.5px solid white; }
     .nk-tab-badge.visible { display: flex; }
-    @media (max-width: 768px) {
-      .nk-tabbar { display: flex; }
-      .nk-fab-post { display: flex; bottom: 78px; }
-      body { padding-bottom: 62px; }
-    }
 
-    .skip-link { position: absolute; left: -9999px; top: 0; background: var(--green); color: white; padding: 10px 18px; border-radius: 0 0 8px 0; z-index: 1000; font-size: 14px; font-weight: 600; }
-    .skip-link:focus { left: 0; }
+    /* Third-party floating chat widget: tagged by liftChatWidget() and kept above the tab bar / toast on phones. */
+    @media (max-width: 768px) {
+      .nk-chat-fab { bottom: calc(var(--nk-tabbar-h) + var(--nk-stack) + 14px) !important; }
+      body.nk-modal-open .nk-chat-fab { display: none !important; }
+    }
 
     /* ── Responsive ── */
     @media (max-width: 900px) {
@@ -270,9 +240,10 @@
       .footer-top { grid-template-columns: 1fr 1fr; gap: 28px; }
     }
     @media (max-width: 768px) {
-      nav { padding: 0 16px; }
+      nav#main-nav { padding: 0 16px; }
       .nav-links { display: none; }
       .mobile-menu-btn { display: flex; }
+      .nk-tabbar { display: flex; }
     }
     @media (max-width: 480px) {
       .footer-top { grid-template-columns: 1fr; }
@@ -284,15 +255,15 @@
 
 <a href="#main-content" class="skip-link">Skip to content</a>
 
-<div class="nk-datasaver-banner" id="nk-datasaver-banner">
-  <span>You're on a slower connection — Data Saver is on to load faster.</span>
-  <button onclick="nkToggleDataSaver()">Turn off</button>
+<div class="nk-datasaver-banner" id="nk-datasaver-banner" role="status">
+  <span>You're on a slower connection. Data Saver is on so pages load faster.</span>
+  <button type="button" id="nk-datasaver-off">Turn off</button>
 </div>
 
 <!-- ── NAVBAR ── -->
-<nav>
+<nav id="main-nav" aria-label="Main">
   <a href="/" class="logo">
-    <div class="logo-icon"><img src="/logo-icon.png" alt="Nyumba254"/></div>
+    <div class="logo-icon"><img src="/logo-icon.png" alt="" width="40" height="40"/></div>
     Nyumba254
   </a>
   <div class="nav-links">
@@ -303,14 +274,13 @@
     <a href="/faq" class="nav-link">FAQ</a>
     <a href="/login" class="nav-link" id="nav-account-link">Sign in</a>
     <a href="/saved" class="nav-link" aria-current="page">
-      <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-      Saved
-      <span class="nav-count" id="nav-count-badge" style="display:none">0</span>
+      <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      Saved <span class="nav-count" id="nav-count-badge" style="display:none">0</span>
     </a>
     <a href="/post-listing" class="btn btn-primary">List your property</a>
   </div>
-  <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Open menu" aria-expanded="false" id="mobile-menu-btn">
-    <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  <button type="button" class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-nav">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
   </button>
 </nav>
 
@@ -319,53 +289,51 @@
   <a href="/" class="nav-link">Home</a>
   <a href="/listings">Browse listings</a>
   <a href="/how-it-works">How it works</a>
-  <a href="/about" class="nav-link">About us</a>
+  <a href="/about">About us</a>
   <a href="/faq">FAQ</a>
   <a href="/login" id="mobile-account-link">Sign in</a>
-  <a href="/saved" aria-current="page">
-    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-    Saved
-    <span class="nav-count" id="nav-count-badge-mobile" style="display:none">0</span>
-  </a>
+  <a href="/saved" aria-current="page">Saved <span class="nav-count" id="nav-count-badge-mobile" style="display:none">0</span></a>
   <a href="/post-listing" class="btn btn-primary">List your property</a>
 </div>
 
+<main id="main-content">
+
 <!-- ── PAGE HEADER ── -->
-<div class="page-header" id="main-content">
+<header class="page-header">
   <div class="page-header-inner">
     <div>
       <h1>Your shortlist</h1>
       <p>Properties you've saved to come back to later</p>
     </div>
   </div>
-</div>
+</header>
 
 <!-- ── SYNC BANNER ── -->
-<div class="sync-banner anon" id="sync-banner-anon" style="display:none">
+<div class="sync-banner anon" id="sync-banner-anon" hidden>
   <div class="sync-banner-text">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
     <span>Saved listings are stored on this device only. <strong>Sign in with your email</strong> to keep your shortlist if you switch phones or browsers.</span>
   </div>
   <a href="/login" class="btn-outline" style="white-space:nowrap">Sign in to sync</a>
 </div>
 
-<div class="sync-banner signed-in" id="sync-banner-signedin" style="display:none">
+<div class="sync-banner signed-in" id="sync-banner-signedin" hidden>
   <div class="sync-banner-text">
-    <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
     <span>Signed in as <strong id="signed-in-email">—</strong> — your shortlist syncs automatically across every device.</span>
   </div>
-  <button class="btn-outline" onclick="doSignOut()">Sign out</button>
+  <button type="button" class="btn-outline" id="sign-out-btn">Sign out</button>
 </div>
 
 <!-- ── MAIN ── -->
 <div class="main-wrap">
   <div class="filter-row">
     <span class="result-count" id="result-count" aria-live="polite">Loading…</span>
-    <button class="clear-all-btn" id="clear-all-btn" style="display:none" onclick="openClearModal()">Clear all saved listings</button>
+    <button type="button" class="clear-all-btn" id="clear-all-btn" hidden>Clear all saved listings</button>
   </div>
 
   <div id="results">
-    <div class="listings-grid" id="listings-grid">
+    <div class="listings-grid" id="listings-grid" aria-busy="true">
       <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line xshort"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
       <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line xshort"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
       <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line xshort"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
@@ -373,9 +341,9 @@
   </div>
 
   <!-- ── RECOMMENDED / RECENTLY LISTED ── -->
-  <div class="recommended-section" id="recommended-section">
+  <section class="recommended-section" id="recommended-section" aria-labelledby="rec-title" hidden>
     <div class="recommended-header">
-      <h2>You may also like</h2>
+      <h2 id="rec-title">You may also like</h2>
       <p>Recently listed properties across Kenya</p>
     </div>
     <div class="listings-grid" id="recommended-grid">
@@ -384,52 +352,10 @@
       <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line xshort"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
       <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line xshort"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
     </div>
-  </div>
+  </section>
 </div>
 
-<!-- ── CLEAR ALL CONFIRM MODAL ── -->
-<div class="modal-overlay" id="clear-modal" role="dialog" aria-modal="true" aria-labelledby="clear-modal-title">
-  <div class="modal">
-    <h3 id="clear-modal-title">Clear your whole shortlist?</h3>
-    <p>This removes every saved listing. This can't be undone, though you can always save them again later.</p>
-    <div class="modal-actions">
-      <button class="btn-outline" onclick="closeClearModal()">Cancel</button>
-      <button class="btn-danger" onclick="confirmClearAll()">Clear all</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── TOAST ── -->
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
-
-<!-- ── B7: mobile FAB + bottom tab bar, Saved active — matches index.html/listings.html ── -->
-<a href="/post-listing" class="nk-fab-post" aria-label="List your property">
-  <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-  List property
-</a>
-<nav class="nk-tabbar" aria-label="Primary">
-  <a href="/" class="nk-tab">
-    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    Home
-  </a>
-  <a href="/listings" class="nk-tab">
-    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    Browse
-  </a>
-  <a href="/post-listing" class="nk-tab nk-tab-postbtn">
-    <span class="nk-tab-postcircle"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
-    Post
-  </a>
-  <a href="/saved" class="nk-tab active" aria-current="page">
-    <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-    <span class="nk-tab-badge" id="nk-tab-saved-badge">0</span>
-    Saved
-  </a>
-  <a href="/login" class="nk-tab" id="tab-account-link">
-    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    Account
-  </a>
-</nav>
+</main>
 
 <!-- ── FOOTER ── -->
 <footer>
@@ -439,38 +365,28 @@
         <div class="footer-logo">Nyumba254</div>
         <p class="footer-tagline">Find and list apartments, houses, boarding rooms, holiday rentals, and commercial spaces across Kenya — no agents, no commission.</p>
         <div class="footer-social">
-          <a href="https://wa.me/254739348560" target="_blank" rel="noopener" title="WhatsApp">
-            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
-          </a>
-          <a href="https://www.instagram.com/nyumba.254?igsh=Z2VhNzJkMm1td2Jz" target="_blank" rel="noopener" title="Instagram">
-            <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
-          </a>
-          <a href="https://www.facebook.com/share/1EdzJKujSK/" target="_blank" rel="noopener" title="Facebook">
-            <svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
-          </a>
-          <a href="https://www.tiktok.com/@nyumba.254?_r=1&_t=ZS-98w137YXueA" target="_blank" rel="noopener" title="TikTok">
-            <svg viewBox="0 0 24 24"><path d="M9 12a4 4 0 104 4V4a5 5 0 005 5"/></svg>
-          </a>
-          <a href="https://x.com/Nyumba254" target="_blank" rel="noopener" title="X (Twitter)">
-            <svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20"/></svg>
-          </a>
+          <a href="https://wa.me/254739348560" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></a>
+          <a href="https://www.instagram.com/nyumba.254?igsh=Z2VhNzJkMm1td2Jz" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+          <a href="https://www.facebook.com/share/1EdzJKujSK/" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
+          <a href="https://www.tiktok.com/@nyumba.254?_r=1&amp;_t=ZS-98w137YXueA" target="_blank" rel="noopener" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="M9 12a4 4 0 104 4V4a5 5 0 005 5"/></svg></a>
+          <a href="https://x.com/Nyumba254" target="_blank" rel="noopener" aria-label="X (Twitter)"><svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20"/></svg></a>
         </div>
       </div>
       <div class="footer-col">
-        <h4>Browse</h4>
+        <h2>Browse</h2>
         <a href="/listings">All listings</a>
         <a href="/listings?category=apartment">Apartments</a>
         <a href="/listings?category=house">Houses</a>
         <a href="/listings?category=boarding">Boarding houses</a>
         <a href="/listings?category=airbnb">Airbnb / Holiday rentals</a>
-        <a href="/listings?category=commercial">Shops & offices</a>
+        <a href="/listings?category=commercial">Shops &amp; offices</a>
       </div>
       <div class="footer-col">
-        <h4>Counties</h4>
+        <h2>Counties</h2>
         <div class="footer-counties" id="footer-counties"></div>
       </div>
       <div class="footer-col">
-        <h4>Platform</h4>
+        <h2>Platform</h2>
         <a href="/post-listing">List a property</a>
         <a href="/login">Seller login</a>
         <a href="/how-it-works">How it works</a>
@@ -484,309 +400,380 @@
   </div>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/nk-shared.js" defer></script>
-<script defer>
-  /* ---------------- saved.html page logic ----------------
-     B2: NK_CATEGORIES / NK_COUNTIES / NK_AREAS_BY_COUNTY / nkCountyLabel,
-     the Supabase client, escHtml, formatPrice, data-saver and page-view
-     tracking all now come from nk-shared.js instead of being duplicated
-     (and drifting — this file's Airbnb label and --text-3 had already
-     diverged from index.html/listings.html before this pass). */
-  document.addEventListener('DOMContentLoaded', nkSavedInit);
+<!-- ── CLEAR ALL CONFIRM MODAL ── -->
+<div class="modal-overlay" id="clear-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="clear-modal-title">
+    <h2 id="clear-modal-title">Clear your whole shortlist?</h2>
+    <p>This removes every saved listing. This can't be undone, though you can always save them again later.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn-outline" id="clear-cancel-btn">Cancel</button>
+      <button type="button" class="btn-danger" id="clear-confirm-btn">Clear all</button>
+    </div>
+  </div>
+</div>
 
-  const SAVED_KEY = 'nk_saved_listings';
-  let currentUser = null;
-  let savedRows = [];
-  let recommendedRows = [];
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  function getLocalSavedIds() {
-    try { const raw = localStorage.getItem(SAVED_KEY); return raw ? JSON.parse(raw) : []; } catch { return []; }
+<!-- ── MOBILE TAB BAR (same markup and behaviour as index.html/listings.html; Saved is active) ── -->
+<nav class="nk-tabbar" aria-label="Primary">
+  <a href="/" class="nk-tab">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home
+  </a>
+  <a href="/listings" class="nk-tab">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Browse
+  </a>
+  <a href="/post-listing" class="nk-tab nk-tab-postbtn">
+    <span class="nk-tab-postcircle"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>Post
+  </a>
+  <a href="/saved" class="nk-tab active" aria-current="page">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+    <span class="nk-tab-badge" id="nk-tab-saved-badge">0</span>Saved
+  </a>
+  <a href="/login" class="nk-tab" id="tab-account-link">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Account
+  </a>
+</nav>
+
+<!-- Supabase client, then the shared module. NOT deferred: inline scripts ignore `defer`, so the page script
+     below would otherwise run before nk-shared.js has defined anything (see index.html / listings.html). -->
+<script src="/nk-shared.js"></script>
+<script>
+(function () {
+'use strict';
+
+/* ─── helpers (same names/shapes as index.html and listings.html) ─── */
+const $ = id => document.getElementById(id);
+const qsa = (sel, root) => Array.from((root || document).querySelectorAll(sel));
+const pad = n => String(n).padStart(6, '0');
+const listingHref = l => '/listing?id=' + pad(l.listing_number);
+
+const SAVED_KEY = 'nk_saved_listings';
+let currentUser = null;
+let savedRows = [];
+let recommendedRows = [];
+
+function getLocalSavedIds() {
+  try { const raw = localStorage.getItem(SAVED_KEY); return raw ? JSON.parse(raw) : []; } catch (e) { return []; }
+}
+function setLocalSavedIds(ids) { try { localStorage.setItem(SAVED_KEY, JSON.stringify(ids)); } catch (e) {} }
+function removeLocalSaved(id) { setLocalSavedIds(getLocalSavedIds().filter(x => x !== id)); }
+
+let toastTimer;
+function toast(msg, kind) {
+  const t = $('toast'); if (!t) return;
+  t.textContent = msg; t.className = 'toast show' + (kind === 'error' ? ' error' : '');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 4200);
+}
+
+function toggleMobileMenu() {
+  const open = $('mobile-nav').classList.toggle('open');
+  $('mobile-menu-btn').setAttribute('aria-expanded', String(open));
+  document.body.style.overflow = open ? 'hidden' : '';
+}
+
+function nkPopulateFooterCounties() {
+  $('footer-counties').innerHTML = NK_COUNTIES.map(c => nkAreaCountFor(c)
+    ? `<a href="${escHtml(nkBuildListingsUrl({ county: c }))}">${escHtml(nkCountyLabel(c))}</a>` : '').join('');
+}
+
+/* ── load ── */
+async function loadFromAccount() {
+  const { data, error } = await db
+    .from('saved_listings')
+    .select('listing_id, created_at, listings(*, listing_photos(*), listing_units(*), profiles(verification_status))')
+    .eq('user_id', currentUser.id)
+    .order('created_at', { ascending: false });
+  if (error) { console.error('Load saved listings error:', error.message); savedRows = []; return; }
+  savedRows = (data || []).filter(r => r.listings).map(r => ({ listing_id: r.listing_id, created_at: r.created_at, listing: r.listings }));
+}
+async function loadFromLocalStorage() {
+  const ids = getLocalSavedIds();
+  if (!ids.length) { savedRows = []; return; }
+  const { data, error } = await db.from('listings').select('*, listing_photos(*), listing_units(*), profiles(verification_status)').in('id', ids);
+  if (error) { console.error('Load saved listings error:', error.message); savedRows = []; return; }
+  savedRows = ids.slice().reverse().map(id => (data || []).find(l => l.id === id)).filter(Boolean).map(l => ({ listing_id: l.id, created_at: null, listing: l }));
+}
+
+/* ── mutate ── */
+async function removeSaved(listingId, btnEl) {
+  if (btnEl) btnEl.classList.add('removing');
+  if (currentUser) {
+    const { error } = await db.from('saved_listings').delete().eq('user_id', currentUser.id).eq('listing_id', listingId);
+    if (error) { toast('Could not remove — please try again', 'error'); if (btnEl) btnEl.classList.remove('removing'); return; }
+  } else {
+    removeLocalSaved(listingId);
   }
-  function setLocalSavedIds(ids) { try { localStorage.setItem(SAVED_KEY, JSON.stringify(ids)); } catch (e) {} }
-  function removeLocalSaved(id) { setLocalSavedIds(getLocalSavedIds().filter(x => x !== id)); }
-
-  function showToast(msg, type = '') {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = `toast ${type} show`;
-    setTimeout(() => t.className = 'toast', 3000);
+  savedRows = savedRows.filter(r => r.listing_id !== listingId);
+  render();
+  toast('Removed from shortlist');
+  loadRecommended();
+}
+async function addToSaved(listingId, btnEl) {
+  if (btnEl) { btnEl.classList.add('added'); btnEl.disabled = true; }
+  const listing = recommendedRows.find(l => l.id === listingId);
+  if (currentUser) {
+    const { error } = await db.from('saved_listings').insert({ user_id: currentUser.id, listing_id: listingId });
+    if (error) { toast('Could not save — please try again', 'error'); if (btnEl) { btnEl.classList.remove('added'); btnEl.disabled = false; } return; }
+  } else {
+    const ids = getLocalSavedIds();
+    if (!ids.includes(listingId)) { ids.push(listingId); setLocalSavedIds(ids); }
   }
-
-  function toggleMobileMenu() {
-    const nav = document.getElementById('mobile-nav');
-    const isOpen = nav.classList.toggle('open');
-    document.getElementById('mobile-menu-btn')?.setAttribute('aria-expanded', isOpen);
+  if (listing) savedRows.unshift({ listing_id: listingId, created_at: currentUser ? new Date().toISOString() : null, listing });
+  recommendedRows = recommendedRows.filter(l => l.id !== listingId);
+  render(); renderRecommended();
+  toast('Saved to your shortlist');
+}
+async function confirmClearAll() {
+  closeClearModal();
+  if (currentUser) {
+    const { error } = await db.from('saved_listings').delete().eq('user_id', currentUser.id);
+    if (error) { toast('Could not clear shortlist', 'error'); return; }
+  } else {
+    setLocalSavedIds([]);
   }
+  savedRows = [];
+  render();
+  toast('Shortlist cleared');
+  loadRecommended();
+}
+async function doSignOut() { await db.auth.signOut(); window.location.reload(); }
+
+function openClearModal() { nkOpenModal($('clear-modal')); }
+function closeClearModal() { nkCloseModal($('clear-modal')); }
+
+/* ── formatting helpers ── */
+function nkFormatPriceLike(price, freq) { return formatPrice({ price, price_frequency: freq, category: 'apartment' }); }
+function nkListingCounty(l) {
+  if (!l) return 'Kenya';
+  if (l.county) return nkCountyLabel(l.county);
+  return nkCountyLabel(NK_AREA_TO_COUNTY_GUESS[l.area] || '') || 'Kenya';
+}
+
+/* ── cards ── */
+function buildCard(row) {
+  const l = row.listing;
+  const d = l.details || {};
+  const cover = nkCardCoverPhoto(l);
+  const imgHtml = cover
+    ? `<img src="${escHtml(nkImgSrc(cover.url, 360))}" alt="${escHtml(l.title)}" loading="lazy" decoding="async" width="360" height="180"/>`
+    : `<div class="card-img-placeholder"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="font-size:11px">No photo</span></div>`;
+  const isOccupied = l.status === 'occupied' && !l.is_disabled && !l.recycle_bin;
+  const unavailable = l.is_disabled || l.recycle_bin || (l.status !== 'active' && l.status !== 'occupied');
+  const occLabel = l.price_frequency === 'once' ? 'Sold' : 'Occupied';
+  const savedDate = row.created_at
+    ? `Saved ${new Date(row.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}`
+    : 'Saved on this device';
+  const catLabel = (NK_CATEGORIES[l.category] || {}).label || l.category;
+  const safeCat = escHtml(l.category);
+  return `
+    <div class="card ${(unavailable || isOccupied) ? 'unavailable' : ''}" data-listing-id="${escHtml(l.id)}">
+      <a class="card-img-link" href="${unavailable ? 'javascript:void(0)' : listingHref(l)}" ${unavailable ? 'aria-disabled="true" tabindex="-1"' : ''}>
+        <div class="card-img">
+          ${imgHtml}
+          ${l.is_admin_verified && !unavailable && !isOccupied ? '<span class="badge-featured">Reviewed by Nyumba254</span>' : ''}
+          ${unavailable ? `<div class="badge-unavailable">${l.is_disabled ? (l.disabled_reason ? 'Disabled by admin' : 'No longer available') : 'No longer available'}</div>` : ''}
+          ${isOccupied ? `<div class="badge-unavailable">${escHtml(occLabel)} — not available</div>` : ''}
+        </div>
+      </a>
+      <button type="button" class="remove-heart-btn" aria-label="Remove ${escHtml(l.title)} from shortlist" data-remove="${escHtml(l.id)}">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      </button>
+      <div class="card-body">
+        <div class="card-top-row">
+          <div class="card-area">${escHtml(l.area)} ${nkBuildVerifiedBadge(l)}</div>
+          <span class="card-cat-pill ${safeCat}">${escHtml(catLabel)}</span>
+        </div>
+        <div class="card-title">${escHtml(l.title)}</div>
+        <div class="card-sub">${escHtml(l.address || l.area || nkListingCounty(l))}</div>
+        <div class="card-price">${nkFormatPriceLike(l.price, l.price_frequency)}</div>
+        <div class="card-meta">
+          ${d.bedrooms !== undefined && d.bedrooms !== null && d.bedrooms !== '' ? `<div class="card-meta-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4v16M22 4v16M2 12h20M2 8h4a2 2 0 012 2v2H2V8zM16 8h4a2 2 0 012 2v2h-6V8z"/></svg>${d.bedrooms == 0 ? 'Studio' : escHtml(d.bedrooms) + ' bed'}</div>` : ''}
+          ${d.bathrooms ? `<div class="card-meta-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l1-1a2 2 0 012.83 0l6.17 6.17a1 1 0 010 1.41L17 14M3 20h18M5 20v-4a3 3 0 013-3h1"/></svg>${escHtml(d.bathrooms)} bath</div>` : ''}
+          ${d.size_sqm ? `<div class="card-meta-item"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="1"/></svg>${escHtml(d.size_sqm)}m²</div>` : ''}
+        </div>
+        <div class="card-saved-date">${escHtml(savedDate)}</div>
+        ${unavailable
+          ? `<span class="card-view-btn disabled-btn">No longer available</span>`
+          : (isOccupied
+              ? `<a class="card-view-btn" href="${listingHref(l)}" style="background:var(--text-3)" data-listing-id="${escHtml(l.id)}">View listing (${occLabel.toLowerCase()})</a>`
+              : `<a class="card-view-btn" href="${listingHref(l)}" data-listing-id="${escHtml(l.id)}">View listing</a>`)}
+      </div>
+    </div>`;
+}
+function buildRecommendedCard(l) {
+  const d = l.details || {};
+  const cover = nkCardCoverPhoto(l);
+  const imgHtml = cover
+    ? `<img src="${escHtml(nkImgSrc(cover.url, 360))}" alt="${escHtml(l.title)}" loading="lazy" decoding="async" width="360" height="180"/>`
+    : `<div class="card-img-placeholder"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="font-size:11px">No photo</span></div>`;
+  const catLabel = (NK_CATEGORIES[l.category] || {}).label || l.category;
+  const safeCat = escHtml(l.category);
+  return `
+    <div class="card" data-listing-id="${escHtml(l.id)}">
+      <a class="card-img-link" href="${listingHref(l)}">
+        <div class="card-img">
+          ${imgHtml}
+          ${l.is_admin_verified ? '<span class="badge-featured">Reviewed by Nyumba254</span>' : ''}
+        </div>
+      </a>
+      <button type="button" class="add-heart-btn" aria-label="Save ${escHtml(l.title)} to shortlist" data-add="${escHtml(l.id)}">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      </button>
+      <div class="card-body">
+        <div class="card-top-row">
+          <div class="card-area">${escHtml(l.area)} ${nkBuildVerifiedBadge(l)}</div>
+          <span class="card-cat-pill ${safeCat}">${escHtml(catLabel)}</span>
+        </div>
+        <div class="card-title">${escHtml(l.title)}</div>
+        <div class="card-sub">${escHtml(l.address || l.area || nkListingCounty(l))}</div>
+        <div class="card-price">${nkFormatPriceLike(l.price, l.price_frequency)}</div>
+        <div class="card-meta">
+          ${d.bedrooms !== undefined && d.bedrooms !== null && d.bedrooms !== '' ? `<div class="card-meta-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4v16M22 4v16M2 12h20M2 8h4a2 2 0 012 2v2H2V8zM16 8h4a2 2 0 012 2v2h-6V8z"/></svg>${d.bedrooms == 0 ? 'Studio' : escHtml(d.bedrooms) + ' bed'}</div>` : ''}
+          ${d.bathrooms ? `<div class="card-meta-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l1-1a2 2 0 012.83 0l6.17 6.17a1 1 0 010 1.41L17 14M3 20h18M5 20v-4a3 3 0 013-3h1"/></svg>${escHtml(d.bathrooms)} bath</div>` : ''}
+          ${d.size_sqm ? `<div class="card-meta-item"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="1"/></svg>${escHtml(d.size_sqm)}m²</div>` : ''}
+        </div>
+        <a class="card-view-btn" href="${listingHref(l)}" style="margin-top:10px" data-listing-id="${escHtml(l.id)}">View listing</a>
+      </div>
+    </div>`;
+}
+
+function nkSyncSavedBadges(count) {
+  ['nav-count-badge', 'nav-count-badge-mobile'].forEach(id => {
+    const badge = $(id); if (!badge) return;
+    badge.textContent = count; badge.style.display = count ? 'inline-flex' : 'none';
+  });
+  const tabBadge = $('nk-tab-saved-badge');
+  if (tabBadge) { tabBadge.textContent = count; tabBadge.classList.toggle('visible', count > 0); }
+}
+
+function render() {
+  const grid = $('listings-grid');
+  const count = savedRows.length;
+  grid.setAttribute('aria-busy', 'false');
+  $('result-count').innerHTML = `<strong>${count}</strong> listing${count !== 1 ? 's' : ''} saved`;
+  $('clear-all-btn').hidden = !count;
+  nkSyncSavedBadges(count);
+  if (!count) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      <h2>No saved listings yet</h2>
+      <p>Tap the heart icon on any listing to save it here and come back to it later.</p>
+      <a href="/listings" class="btn btn-primary" style="display:inline-flex">Browse listings</a>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = savedRows.map(buildCard).join('');
+}
+
+async function loadRecommended() {
+  const excludeIds = savedRows.map(r => r.listing_id);
+  const fetchLimit = excludeIds.length + 8;
+  const { data, error } = await db.from('listings').select('*, listing_photos(*), listing_units(*), profiles(verification_status)')
+    .eq('status', 'active').eq('is_disabled', false).eq('recycle_bin', false)
+    .order('created_at', { ascending: false }).order('id')
+    .limit(fetchLimit);
+  if (error) { console.error('Load recommended error:', error.message); recommendedRows = []; renderRecommended(); return; }
+  recommendedRows = (data || []).filter(l => !excludeIds.includes(l.id)).slice(0, 8);
+  renderRecommended();
+}
+function renderRecommended() {
+  const section = $('recommended-section');
+  section.hidden = !recommendedRows.length;
+  if (!recommendedRows.length) return;
+  $('recommended-grid').innerHTML = recommendedRows.map(buildRecommendedCard).join('');
+}
+
+/* ── chrome shared with index.html / listings.html ── */
+function initTabbarMeasure() {
+  const tb = document.querySelector('.nk-tabbar'); if (!tb) return;
+  const sync = () => {
+    const h = getComputedStyle(tb).display === 'none' ? 0 : Math.ceil(tb.getBoundingClientRect().height);
+    document.documentElement.style.setProperty('--nk-tabbar-h', h + 'px');
+  };
+  sync();
+  if ('ResizeObserver' in window) new ResizeObserver(sync).observe(tb);
+  window.addEventListener('resize', sync); window.addEventListener('load', sync);
+  window.matchMedia('(max-width: 768px)').addEventListener('change', sync);
+}
+function liftChatWidget() {
+  const ours = new Set(['toast', 'clear-modal', 'main-nav', 'mobile-nav']);
+  const scan = () => {
+    Array.from(document.body.children).forEach(el => {
+      if (el.classList.contains('nk-chat-fab') || ours.has(el.id) || el.classList.contains('nk-tabbar') || el.tagName === 'SCRIPT') return;
+      const cs = getComputedStyle(el);
+      if (cs.position !== 'fixed' || cs.bottom === 'auto' || cs.right === 'auto') return;
+      const label = (el.textContent + ' ' + (el.getAttribute('aria-label') || '') + ' ' + el.id + ' ' + el.className).slice(0, 400);
+      if (/chat/i.test(label)) el.classList.add('nk-chat-fab');
+    });
+  };
+  scan();
+  new MutationObserver(nkDebounce(scan, 150)).observe(document.body, { childList: true });
+  setTimeout(scan, 1500); setTimeout(scan, 4000);
+}
+
+function bindEvents() {
+  $('mobile-menu-btn').addEventListener('click', toggleMobileMenu);
   document.addEventListener('click', e => {
-    const nav = document.getElementById('mobile-nav');
-    const btn = document.querySelector('.mobile-menu-btn');
-    if (nav && nav.classList.contains('open') && !nav.contains(e.target) && !btn.contains(e.target)) nav.classList.remove('open');
+    const n = $('mobile-nav');
+    if (n.classList.contains('open') && !n.contains(e.target) && !$('mobile-menu-btn').contains(e.target)) {
+      n.classList.remove('open'); document.body.style.overflow = ''; $('mobile-menu-btn').setAttribute('aria-expanded', 'false');
+    }
+  });
+  $('sign-out-btn').addEventListener('click', doSignOut);
+  $('clear-all-btn').addEventListener('click', openClearModal);
+  $('clear-cancel-btn').addEventListener('click', closeClearModal);
+  $('clear-confirm-btn').addEventListener('click', confirmClearAll);
+  document.addEventListener('click', e => { if (e.target.id === 'clear-modal') closeClearModal(); });
+
+  // results area: delegated (no inline handlers, matches listings.html's pattern; also tracks "recently viewed")
+  $('results').addEventListener('click', e => {
+    let el;
+    if ((el = e.target.closest('[data-remove]'))) return removeSaved(el.dataset.remove, el);
+    if ((el = e.target.closest('.card-view-btn[data-listing-id]'))) return nkTrackRecentViewed(el.dataset.listingId);
+  });
+  $('recommended-grid').addEventListener('click', e => {
+    let el;
+    if ((el = e.target.closest('[data-add]'))) return addToSaved(el.dataset.add, el);
+    if ((el = e.target.closest('[data-listing-id]'))) return nkTrackRecentViewed(el.dataset.listingId);
   });
 
-  async function nkSavedInit() {
-    document.getElementById('footer-year').textContent = new Date().getFullYear();
-    nkPopulateFooterCounties();
-    nkInitDataSaver();
-    nkTrackPageView();
+  $('nk-datasaver-off').addEventListener('click', nkToggleDataSaver);
+  window.addEventListener('pageshow', e => { if (e.persisted) { render(); renderRecommended(); } });
+}
 
-    const { data } = await nkSessionPromise;
-    currentUser = data?.session?.user || null;
+async function nkSavedInit() {
+  $('footer-year').textContent = new Date().getFullYear();
+  nkPopulateFooterCounties();
+  nkInitDataSaver();
+  bindEvents();
+  initTabbarMeasure();
+  liftChatWidget();
 
-    const desktopLink = document.getElementById('nav-account-link');
-    const mobileLink = document.getElementById('mobile-account-link');
-    const tabLink = document.getElementById('tab-account-link');
-    if (currentUser) {
-      if (desktopLink) { desktopLink.textContent = 'My Account'; desktopLink.href = '/dashboard'; desktopLink.style.fontWeight = '600'; desktopLink.style.color = 'var(--green)'; }
-      if (mobileLink) { mobileLink.textContent = 'My Account'; mobileLink.href = '/dashboard'; }
-      if (tabLink) tabLink.href = '/dashboard';
-    }
+  const { data } = await nkSessionPromise;
+  currentUser = (data && data.session && data.session.user) || null;
 
-    if (currentUser) {
-      document.getElementById('sync-banner-signedin').style.display = 'flex';
-      document.getElementById('signed-in-email').textContent = currentUser.email || '';
-      await loadFromAccount();
-    } else {
-      document.getElementById('sync-banner-anon').style.display = 'flex';
-      await loadFromLocalStorage();
-    }
-    render();
-    loadRecommended();
+  nkInitAccountNav(['nav-account-link', 'mobile-account-link']);
+  if (currentUser) $('tab-account-link').setAttribute('href', '/dashboard');
+
+  if (currentUser) {
+    $('sync-banner-signedin').hidden = false;
+    $('signed-in-email').textContent = currentUser.email || '';
+    await loadFromAccount();
+  } else {
+    $('sync-banner-anon').hidden = false;
+    await loadFromLocalStorage();
   }
+  render();
+  loadRecommended();
+  nkTrackPageView();
+}
 
-  function nkPopulateFooterCounties() {
-    const el = document.getElementById('footer-counties');
-    if (!el) return;
-    el.innerHTML = NK_COUNTIES.map(county => {
-      const hasAreas = (NK_AREAS_BY_COUNTY[county] || []).length > 0;
-      const href = hasAreas ? `/listings?county=${encodeURIComponent(county)}` : '/listings';
-      return `<a href="${href}">${escHtml(nkCountyLabel(county))}</a>`;
-    }).join('');
-  }
-
-  async function loadFromAccount() {
-    const { data, error } = await db
-      .from('saved_listings')
-      .select('listing_id, created_at, listings(*, listing_photos(*), listing_units(*))')
-      .eq('user_id', currentUser.id)
-      .order('created_at', { ascending: false });
-    if (error) { console.error('Load saved listings error:', error.message); savedRows = []; return; }
-    savedRows = (data || []).filter(r => r.listings).map(r => ({ listing_id: r.listing_id, created_at: r.created_at, listing: r.listings }));
-  }
-
-  async function loadFromLocalStorage() {
-    const ids = getLocalSavedIds();
-    if (!ids.length) { savedRows = []; return; }
-    const { data, error } = await db.from('listings').select('*, listing_photos(*), listing_units(*)').in('id', ids);
-    if (error) { console.error('Load saved listings error:', error.message); savedRows = []; return; }
-    savedRows = ids.slice().reverse().map(id => (data || []).find(l => l.id === id)).filter(Boolean).map(l => ({ listing_id: l.id, created_at: null, listing: l }));
-  }
-
-  async function removeSaved(listingId, btnEl) {
-    if (btnEl) btnEl.classList.add('removing');
-    if (currentUser) {
-      const { error } = await db.from('saved_listings').delete().eq('user_id', currentUser.id).eq('listing_id', listingId);
-      if (error) { showToast('Could not remove — please try again', 'error'); if (btnEl) btnEl.classList.remove('removing'); return; }
-    } else {
-      removeLocalSaved(listingId);
-    }
-    savedRows = savedRows.filter(r => r.listing_id !== listingId);
-    render();
-    showToast('Removed from shortlist', 'success');
-    loadRecommended();
-  }
-
-  async function addToSaved(listingId, btnEl) {
-    if (btnEl) { btnEl.classList.add('added'); btnEl.disabled = true; }
-    const listing = recommendedRows.find(l => l.id === listingId);
-    if (currentUser) {
-      const { error } = await db.from('saved_listings').insert({ user_id: currentUser.id, listing_id: listingId });
-      if (error) { showToast('Could not save — please try again', 'error'); if (btnEl) { btnEl.classList.remove('added'); btnEl.disabled = false; } return; }
-    } else {
-      const ids = getLocalSavedIds();
-      if (!ids.includes(listingId)) { ids.push(listingId); setLocalSavedIds(ids); }
-    }
-    if (listing) savedRows.unshift({ listing_id: listingId, created_at: currentUser ? new Date().toISOString() : null, listing });
-    recommendedRows = recommendedRows.filter(l => l.id !== listingId);
-    render();
-    renderRecommended();
-    showToast('Saved to your shortlist', 'success');
-  }
-
-  function openClearModal() { nkOpenModal(document.getElementById('clear-modal')); }
-  function closeClearModal() { nkCloseModal(document.getElementById('clear-modal')); }
-
-  async function confirmClearAll() {
-    closeClearModal();
-    if (currentUser) {
-      const { error } = await db.from('saved_listings').delete().eq('user_id', currentUser.id);
-      if (error) { showToast('Could not clear shortlist', 'error'); return; }
-    } else {
-      setLocalSavedIds([]);
-    }
-    savedRows = [];
-    render();
-    showToast('Shortlist cleared', 'success');
-    loadRecommended();
-  }
-
-  async function doSignOut() { await db.auth.signOut(); window.location.reload(); }
-
-  /* formatPrice in nk-shared.js takes a listing-shaped object; wrap the
-     raw (price, freq) pair this file works with so both pages format
-     prices identically instead of keeping a second copy of the logic. */
-  function nkFormatPriceLike(price, freq) { return formatPrice({ price, price_frequency: freq, category: 'apartment' }); }
-
-  function nkListingUrl(l) {
-    return l.listing_number != null ? `/listing?id=${String(l.listing_number).padStart(6, '0')}` : `/listing?id=${escHtml(l.id)}`;
-  }
-
-  // A5-consistent: a listing's own county is the source of truth; the
-  // area->county map is only ever a display-fallback guess (nk-shared.js).
-  function nkListingCounty(l) {
-    if (!l) return 'Kenya';
-    if (l.county) return nkCountyLabel(l.county);
-    return nkCountyLabel(NK_AREA_TO_COUNTY_GUESS[l.area] || '') || 'Kenya';
-  }
-
-  function buildCard(row) {
-    const l = row.listing;
-    const d = l.details || {};
-    const cover = nkCardCoverPhoto(l);
-    const imgHtml = cover
-      ? `<img src="${escHtml(nkImgSrc(cover.url, 360))}" alt="${escHtml(l.title)}" loading="lazy" decoding="async" width="360" height="180"/>`
-      : `<div class="card-img-placeholder"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="font-size:11px">No photo</span></div>`;
-    const isOccupied = l.status === 'occupied' && !l.is_disabled && !l.recycle_bin;
-    const unavailable = l.is_disabled || l.recycle_bin || (l.status !== 'active' && l.status !== 'occupied');
-    const occLabel = l.price_frequency === 'once' ? 'Sold' : 'Occupied';
-    const savedDate = row.created_at
-      ? `Saved ${new Date(row.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}`
-      : 'Saved on this device';
-    const catLabel = (NK_CATEGORIES[l.category] || {}).label || l.category;
-    const safeCat = escHtml(l.category);
-    return `
-      <div class="card ${(unavailable || isOccupied) ? 'unavailable' : ''}" data-id="${escHtml(l.id)}">
-        <a class="card-img-link" href="${unavailable ? 'javascript:void(0)' : nkListingUrl(l)}" ${unavailable ? 'aria-disabled="true" tabindex="-1"' : ''}>
-          <div class="card-img">
-            ${imgHtml}
-            ${l.is_admin_verified && !unavailable && !isOccupied ? '<span class="badge-featured">Reviewed by Nyumba254</span>' : ''}
-            ${unavailable ? `<div class="badge-unavailable">${l.is_disabled ? (l.disabled_reason ? 'Disabled by admin' : 'No longer available') : 'No longer available'}</div>` : ''}
-            ${isOccupied ? `<div class="badge-unavailable">${escHtml(occLabel)} — not available</div>` : ''}
-          </div>
-        </a>
-        <button class="remove-heart-btn" title="Remove from shortlist" aria-label="Remove ${escHtml(l.title)} from shortlist" onclick="removeSaved('${escHtml(l.id)}', this)">
-          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-        </button>
-        <div class="card-body">
-          <div class="card-top-row">
-            <div class="card-area">${escHtml(l.area)}</div>
-            <span class="card-cat-pill ${safeCat}">${escHtml(catLabel)}</span>
-          </div>
-          <div class="card-title">${escHtml(l.title)}</div>
-          <div class="card-sub">${escHtml(l.address || l.area || nkListingCounty(l))}</div>
-          <div class="card-price">${nkFormatPriceLike(l.price, l.price_frequency)}</div>
-          <div class="card-meta">
-            ${d.bedrooms !== undefined && d.bedrooms !== null && d.bedrooms !== '' ? `<div class="card-meta-item"><svg viewBox="0 0 24 24"><path d="M2 4v16M22 4v16M2 12h20M2 8h4a2 2 0 012 2v2H2V8zM16 8h4a2 2 0 012 2v2h-6V8z"/></svg>${d.bedrooms == 0 ? 'Studio' : escHtml(d.bedrooms) + ' bed'}</div>` : ''}
-            ${d.bathrooms ? `<div class="card-meta-item"><svg viewBox="0 0 24 24"><path d="M9 6l1-1a2 2 0 012.83 0l6.17 6.17a1 1 0 010 1.41L17 14M3 20h18M5 20v-4a3 3 0 013-3h1"/></svg>${escHtml(d.bathrooms)} bath</div>` : ''}
-            ${d.size_sqm ? `<div class="card-meta-item"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/></svg>${escHtml(d.size_sqm)}m²</div>` : ''}
-          </div>
-          <div class="card-saved-date">${escHtml(savedDate)}</div>
-          ${unavailable
-            ? `<span class="card-view-btn disabled-btn">No longer available</span>`
-            : (isOccupied
-                ? `<a class="card-view-btn" href="${nkListingUrl(l)}" style="background:var(--text-3)">View listing (${occLabel.toLowerCase()})</a>`
-                : `<a class="card-view-btn" href="${nkListingUrl(l)}">View listing</a>`)}
-        </div>
-      </div>`;
-  }
-
-  function nkSyncSavedBadges(count) {
-    ['nav-count-badge', 'nav-count-badge-mobile'].forEach(id => {
-      const badge = document.getElementById(id);
-      if (!badge) return;
-      badge.textContent = count;
-      badge.style.display = count ? 'inline-flex' : 'none';
-    });
-    const tabBadge = document.getElementById('nk-tab-saved-badge');
-    if (tabBadge) { tabBadge.textContent = count; tabBadge.classList.toggle('visible', count > 0); }
-  }
-
-  function render() {
-    const grid = document.getElementById('listings-grid');
-    const count = savedRows.length;
-    document.getElementById('result-count').innerHTML = `<strong>${count}</strong> listing${count !== 1 ? 's' : ''} saved`;
-    document.getElementById('clear-all-btn').style.display = count ? 'inline' : 'none';
-    nkSyncSavedBadges(count);
-    if (!count) {
-      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
-        <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-        <h3>No saved listings yet</h3>
-        <p>Tap the heart icon on any listing to save it here and come back to it later.</p>
-        <a href="/listings" class="btn btn-primary" style="display:inline-flex">Browse listings</a>
-      </div>`;
-      return;
-    }
-    grid.innerHTML = savedRows.map(buildCard).join('');
-  }
-
-  async function loadRecommended() {
-    const excludeIds = savedRows.map(r => r.listing_id);
-    const fetchLimit = excludeIds.length + 8;
-    const { data, error } = await db.from('listings').select('*, listing_photos(*), listing_units(*)')
-      .eq('status', 'active').eq('is_disabled', false).eq('recycle_bin', false)
-      .order('created_at', { ascending: false }).order('id')
-      .limit(fetchLimit);
-    if (error) { console.error('Load recommended error:', error.message); recommendedRows = []; renderRecommended(); return; }
-    recommendedRows = (data || []).filter(l => !excludeIds.includes(l.id)).slice(0, 8);
-    renderRecommended();
-  }
-
-  function buildRecommendedCard(l) {
-    const d = l.details || {};
-    const cover = nkCardCoverPhoto(l);
-    const imgHtml = cover
-      ? `<img src="${escHtml(nkImgSrc(cover.url, 360))}" alt="${escHtml(l.title)}" loading="lazy" decoding="async" width="360" height="180"/>`
-      : `<div class="card-img-placeholder"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="font-size:11px">No photo</span></div>`;
-    const catLabel = (NK_CATEGORIES[l.category] || {}).label || l.category;
-    const safeCat = escHtml(l.category);
-    return `
-      <div class="card" data-id="${escHtml(l.id)}">
-        <a class="card-img-link" href="${nkListingUrl(l)}">
-          <div class="card-img">
-            ${imgHtml}
-            ${l.is_admin_verified ? '<span class="badge-featured">Reviewed by Nyumba254</span>' : ''}
-          </div>
-        </a>
-        <button class="add-heart-btn" title="Save to shortlist" aria-label="Save ${escHtml(l.title)} to shortlist" onclick="addToSaved('${escHtml(l.id)}', this)">
-          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-        </button>
-        <div class="card-body">
-          <div class="card-top-row">
-            <div class="card-area">${escHtml(l.area)}</div>
-            <span class="card-cat-pill ${safeCat}">${escHtml(catLabel)}</span>
-          </div>
-          <div class="card-title">${escHtml(l.title)}</div>
-          <div class="card-sub">${escHtml(l.address || l.area || nkListingCounty(l))}</div>
-          <div class="card-price">${nkFormatPriceLike(l.price, l.price_frequency)}</div>
-          <div class="card-meta">
-            ${d.bedrooms !== undefined && d.bedrooms !== null && d.bedrooms !== '' ? `<div class="card-meta-item"><svg viewBox="0 0 24 24"><path d="M2 4v16M22 4v16M2 12h20M2 8h4a2 2 0 012 2v2H2V8zM16 8h4a2 2 0 012 2v2h-6V8z"/></svg>${d.bedrooms == 0 ? 'Studio' : escHtml(d.bedrooms) + ' bed'}</div>` : ''}
-            ${d.bathrooms ? `<div class="card-meta-item"><svg viewBox="0 0 24 24"><path d="M9 6l1-1a2 2 0 012.83 0l6.17 6.17a1 1 0 010 1.41L17 14M3 20h18M5 20v-4a3 3 0 013-3h1"/></svg>${escHtml(d.bathrooms)} bath</div>` : ''}
-            ${d.size_sqm ? `<div class="card-meta-item"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/></svg>${escHtml(d.size_sqm)}m²</div>` : ''}
-          </div>
-          <a class="card-view-btn" href="${nkListingUrl(l)}" style="margin-top:10px">View listing</a>
-        </div>
-      </div>`;
-  }
-
-  function renderRecommended() {
-    const section = document.getElementById('recommended-section');
-    const grid = document.getElementById('recommended-grid');
-    if (!recommendedRows.length) { section.style.display = 'none'; return; }
-    section.style.display = 'block';
-    grid.innerHTML = recommendedRows.map(buildRecommendedCard).join('');
-  }
+document.addEventListener('DOMContentLoaded', nkSavedInit);
+})();
 </script>
+<script src="/saved-listings.js"></script>
+<script>if (typeof NKSaved !== 'undefined') NKSaved.init();</script>
+<script src="/nav-badge.js"></script>
 <script src="/global-chat-widget.js"></script>
-
 </body>
 </html>
