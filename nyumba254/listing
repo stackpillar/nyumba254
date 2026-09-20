@@ -125,7 +125,8 @@ h1.title{font-family:'Playfair Display',serif;font-size:clamp(25px,5.4vw,34px);l
 .tchip svg,.vbadge svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.6}
 
 /* inline action row (phones: the fixed bar takes over once this scrolls out of view) */
-.inline-cta{grid-template-columns:1fr 1fr 1.35fr;gap:8px;margin-bottom:18px}
+.inline-cta{grid-template-columns:1.4fr 1fr 1fr;gap:8px;margin-bottom:18px}
+.inline-cta .vbtn{grid-column:1/-1;min-height:44px;font-size:13.5px}
 .inline-cta.two{grid-template-columns:1fr}
 .inline-cta .btn{padding:0 8px;min-height:48px}
 @media(max-width:400px){.inline-cta .btn{font-size:13.5px}.inline-cta .btn svg{display:none}}
@@ -213,7 +214,7 @@ video.vidfile{width:100%;border-radius:12px;background:#000;max-height:70vh}
 .seller .link{min-height:40px;padding:0;font-size:13px}
 .vbadge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:2px 9px;border-radius:20px;background:var(--green-light);color:var(--green-dark);margin:3px 0}
 .vbadge.no{background:var(--surface);color:var(--text-2);border:1px solid var(--border);font-weight:600}
-.cbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.cbtns{display:grid;grid-template-columns:1.5fr 1fr;gap:10px;margin-bottom:14px}
 .or{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--text-3);margin-bottom:14px}
 .or::before,.or::after{content:'';flex:1;height:1px;background:var(--border)}
 @media(max-width:900px){.cbtns,.or{display:none}}
@@ -231,6 +232,23 @@ details.more summary{cursor:pointer;font-size:13.5px;font-weight:600;color:var(-
 details.more summary::-webkit-details-marker{display:none}
 details.more[open] summary{margin-bottom:6px}
 .hp{position:absolute;left:-9999px}
+.sendrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sendrow .btn{padding:0 10px;font-size:13.5px}
+.nf-row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:420px){.nf-row2{grid-template-columns:1fr;gap:0}}
+.vlist{margin:10px 0 0 18px;font-size:14px;color:var(--text-2);line-height:1.7}
+.notify-modal-body p+p{margin-top:10px}
+.notify-modal-body.sent{padding:26px 20px}
+.notify-modal-body.sent p{font-size:13.5px;color:var(--text-3);margin-bottom:14px}
+.notify-modal-body.sent .btn{width:100%;margin-bottom:8px}
+button.tchip,button.vbadge{position:relative;cursor:pointer}
+button.tchip{border:0}button.vbadge:not(.no){border:0}
+button.tchip::after,button.vbadge::after{content:'';position:absolute;inset:-8px}
+button.tchip svg:last-child,button.vbadge svg:last-child{opacity:.7;margin-left:1px}
+.netbar{position:sticky;top:var(--nav-h);z-index:90;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;background:var(--amber-bg);border-bottom:1px solid var(--amber-border);color:var(--amber);font-size:13.5px;font-weight:500;padding:8px 16px;text-align:center}
+.netbar.ok{background:var(--green-light);border-color:var(--green-mid);color:var(--green-dark)}
+.netbar button{border:1px solid currentColor;border-radius:20px;min-height:36px;padding:0 14px;font-weight:600;font-size:13px}
+.netbar.ok button{display:none}
 .tip{font-size:12.5px;color:var(--text-2);margin-top:14px;line-height:1.55;background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:var(--radius);padding:10px 12px}
 .scard .report{display:block;margin:6px auto 0}
 .sent{text-align:center}
@@ -274,6 +292,10 @@ a.lncard:hover{border-color:var(--green);background:var(--green-light)}
 .ctabar-price span{display:block;font-size:12px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ctabar .btn{min-height:48px;padding:0 14px}
 .ctabar .ctabar-icon{flex:0 0 48px;padding:0}
+.ctabar .btn:not(.ctabar-icon){flex:1;padding:0 12px}
+.ctabar .ctabar-wa{flex:1.4}
+.ctabar-price{flex:1.2}
+@media(max-width:479px){.ctabar-price{display:none}}
 
 /* lightbox */
 .lb{background:rgba(0,0,0,.96);flex-direction:column;padding:0}
@@ -303,7 +325,7 @@ a.lncard:hover{border-color:var(--green);background:var(--green-light)}
 @media print{nav,.topbar,.side,.ctabar,.nk-tabbar,footer,.sim,.nk-scrolltop-btn,.anchors,.inline-cta{display:none!important}.layout{display:block}}
 </style>
 <link rel="stylesheet" href="/theme.css"/><script src="/theme.js"></script>
-   <link rel="manifest" href="/manifest.webmanifest"><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script></head>
+</head>
 <body>
 <a href="#main-content" class="skip-link">Skip to listing</a>
 <div class="nk-datasaver-banner" id="nk-datasaver-banner" role="status"><span>You're on a slower connection. Data Saver is on so pages load faster.</span><button type="button" id="nk-datasaver-off">Turn off</button></div>
@@ -327,6 +349,7 @@ a.lncard:hover{border-color:var(--green);background:var(--green-light)}
   <a href="/post-listing" class="btn btn-primary">List your property</a>
 </div>
 
+<div class="netbar" id="netbar" role="status" aria-live="polite" hidden><span id="netbar-t"></span><button type="button" data-act="retry-net">Retry</button></div>
 <main id="main-content" class="wrap">
   <div class="topbar">
     <a class="backlink" id="backlink" data-back href="/listings"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg><span>Back to results</span></a>
@@ -350,6 +373,15 @@ a.lncard:hover{border-color:var(--green);background:var(--green-light)}
   <button type="button" class="garrow prev" data-act="lprev" aria-label="Previous photo"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
   <button type="button" class="garrow next" data-act="lnext" aria-label="Next photo"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
   <div class="lb-count" id="lb-count" aria-live="polite"></div>
+</div>
+
+<!-- Phone/tablet contact sheet: the real #side card is moved in here (same nodes, same ids) instead of scrolling the page -->
+<div class="nk-sheet-overlay" id="ov-contact-sheet">
+  <div class="nk-sheet" role="dialog" aria-modal="true" aria-labelledby="cs-t">
+    <div class="nk-sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-head"><h2 id="cs-t">Contact seller</h2><button type="button" class="sheet-close" data-act="close" aria-label="Close">✕</button></div>
+    <div class="sheet-body" id="contact-sheet-slot"></div>
+  </div>
 </div>
 
 <div class="notify-modal-overlay" id="ov-share"><div class="notify-modal" role="dialog" aria-modal="true" aria-labelledby="sh-t">
@@ -379,14 +411,32 @@ a.lncard:hover{border-color:var(--green);background:var(--green-light)}
   </div>
   <div class="notify-modal-foot"><button type="button" class="btn btn-outline" data-act="close">Skip</button><button type="button" class="btn btn-primary" data-act="send-rate">Submit review</button></div></div></div>
 
-<!-- Phone/tablet contact sheet: the real #side card is moved in here (same nodes, same ids) instead of scrolling the page -->
-<div class="nk-sheet-overlay" id="ov-contact-sheet">
-  <div class="nk-sheet" role="dialog" aria-modal="true" aria-labelledby="cs-t">
-    <div class="nk-sheet-handle" aria-hidden="true"></div>
-    <div class="sheet-head"><h2 id="cs-t">Contact seller</h2><button type="button" class="sheet-close" data-act="close" aria-label="Close">✕</button></div>
-    <div class="sheet-body" id="contact-sheet-slot"></div>
+<div class="notify-modal-overlay" id="ov-view"><div class="notify-modal" role="dialog" aria-modal="true" aria-labelledby="vw-t">
+  <div class="notify-modal-head"><h2 id="vw-t">Request a viewing</h2><button type="button" class="notify-modal-close" data-act="close" aria-label="Close">✕</button></div>
+  <div id="vw-form">
+    <div class="notify-modal-body">
+      <p class="notify-modal-sub" id="vw-sub"></p>
+      <div class="nf-banner" id="vw-banner" role="alert"></div>
+      <div class="nf-row2">
+        <div class="nf-field"><label for="vw-date">Preferred date</label><input type="date" id="vw-date"/><div class="nf-err" id="vw-date-e" role="alert"></div></div>
+        <div class="nf-field"><label for="vw-slot">Time</label><select id="vw-slot"><option value="in the morning (8am to 12pm)">Morning, 8am to 12pm</option><option value="in the afternoon (12pm to 4pm)">Afternoon, 12pm to 4pm</option><option value="in the evening (4pm to 7pm)">Evening, 4pm to 7pm</option><option value="at any time that suits you">Any time</option></select></div>
+      </div>
+      <div class="nf-field"><label for="vw-name">Full name</label><input type="text" id="vw-name" autocomplete="name"/><div class="nf-err" id="vw-name-e" role="alert"></div></div>
+      <div class="nf-field" id="vw-phone-f"><label for="vw-phone">Phone</label><input type="tel" id="vw-phone" inputmode="tel" autocomplete="tel" placeholder="07XX XXX XXX"/><div class="nf-err" id="vw-phone-e" role="alert"></div></div>
+      <div class="nf-field"><label for="vw-note">Note <span class="nf-optional">optional</span></label><textarea id="vw-note" maxlength="300" placeholder="e.g. I will come with my family"></textarea></div>
+      <div class="hp" aria-hidden="true"><label for="vw-web">Leave empty</label><input id="vw-web" tabindex="-1" autocomplete="off"/></div>
+      <p class="tip">The seller confirms the time in your chat. Never pay before you have viewed the property.</p>
+    </div>
+    <div class="notify-modal-foot"><button type="button" class="btn btn-outline" data-act="close">Cancel</button><button type="button" class="btn btn-primary" id="vw-send" data-act="send-viewing">Send request</button></div>
   </div>
-</div>
+  <div class="notify-modal-body sent" id="vw-done" hidden><div class="sent-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></div><h3>Request sent</h3><p>The seller will confirm the time in your chat. You may also get a call.</p><button type="button" class="btn btn-primary" data-act="chat">Open conversation</button><button type="button" class="btn btn-outline" data-act="close">Close</button></div>
+</div></div>
+
+<div class="notify-modal-overlay" id="ov-verify"><div class="notify-modal" role="dialog" aria-modal="true" aria-labelledby="vf-t">
+  <div class="notify-modal-head"><h2 id="vf-t">What does Verified mean?</h2><button type="button" class="notify-modal-close" data-act="close" aria-label="Close">✕</button></div>
+  <div class="notify-modal-body" id="vf-body"></div>
+  <div class="notify-modal-foot"><a class="link" href="/how-it-works" style="margin-right:auto">How Nyumba254 checks sellers</a><button type="button" class="btn btn-primary" data-act="close">Got it</button></div>
+</div></div>
 
 <footer>
   <div class="footer-inner">
@@ -467,6 +517,9 @@ Object.assign(IC,{
  clock:svg('<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>'),
  eye:svg('<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'),
  tick:svg('<polyline points="20 6 9 17 4 12"/>')});
+Object.assign(IC,{
+ cal:svg('<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>'),
+ info:svg('<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>')});
 const FI={Bedrooms:'<path d="M2 4v16M2 8h18a2 2 0 012 2v10M2 17h20M6 8v9"/>',Bathrooms:'<path d="M9 6l1-1a2 2 0 012.83 0L14 6M4 12h16v3a4 4 0 01-4 4H8a4 4 0 01-4-4v-3zM6 19l-1 2M18 19l1 2"/>',
  'Floor area':'<rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h6V3"/>',Furnishing:'<path d="M4 11V8a3 3 0 013-3h10a3 3 0 013 3v3M2 13a2 2 0 014 0v2h12v-2a2 2 0 014 0v5H2zM5 18v2M19 18v2"/>',
  Parking:'<path d="M5 16l1.5-5.5A2 2 0 018.4 9h7.2a2 2 0 011.9 1.5L19 16M3 16h18v3H3zM7 19v1M17 19v1"/>',Security:'<path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/>',
@@ -485,6 +538,7 @@ const secHead=(k,t)=>`<h2><span class="hic">${svg(SI[k])}</span>${t}</h2>`;
 
 /* ═══ state (P = the property; window.L is Leaflet, so the listing is never called L) ═══ */
 const nav={prev:null,next:null,src:''};
+let loadFailed=false;
 let P=null,photos=[],idx=0,units=[],uid=null,isOwner=false,preview=false,phoneRaw=null,revealBusy=false,stars=0,zoomed=false;
 const ctx=(()=>{try{const c=JSON.parse(sessionStorage.getItem('nk_results_ctx')||'null');return c&&Date.now()-(c.ts||0)<36e5?c:null}catch(e){return null}})();
 let toastT;function toast(m,k){const t=$('toast');t.textContent=m;t.className='toast show'+(k==='error'?' error':'');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),4200)}
@@ -500,6 +554,22 @@ const srcFor=(p,w)=>nkImgSrc(p.url,w);
 const shortRef=()=>'#'+pad(P.listing_number);
 const baseMsg=()=>`Hi, I'm interested in "${P.title}" (ref ${shortRef()}).`;
 
+/* ═══ 1. usage tracking: one small insert per action. Stops by itself if the table does not exist yet. Never runs for owners or previews. ═══ */
+const EV={ok:true,photo:false};
+function track(type,meta){
+  if(!P||!EV.ok||preview||isOwner)return;
+  try{db.from('listing_events').insert({listing_id:P.id,event:type,session_id:lsg('nk_sid')||null,device:isMobileWidth()?'mobile':'desktop',meta:meta||null}).then(r=>{if(r&&r.error)EV.ok=false},()=>{EV.ok=false})}catch(e){EV.ok=false}
+}
+/* ═══ 5. offline handling ═══ */
+function offline(){return navigator.onLine===false}
+function isNetErr(err){return offline()||/failed to fetch|network|load failed/i.test((err&&err.message)||'')}
+function showNet(msg,kind){const b=$('netbar');$('netbar-t').textContent=msg;b.classList.toggle('ok',kind==='ok');b.hidden=false}
+function hideNet(){$('netbar').hidden=true}
+function needNet(msg){if(offline()){showNet(msg||"You're offline. Your message is kept, so try again when you're back online.");return true}return false}
+function retryNet(){
+  fetch('/favicon.ico',{method:'HEAD',cache:'no-store'}).then(()=>{hideNet();if(loadFailed)load()}).catch(()=>toast('Still offline. We will keep trying.','error'));
+}
+
 /* ═══ load ═══ */
 async function fetchListing(n){
   const q=cols=>db.from('listings').select(cols+', '+REL).eq('listing_number',n).single();
@@ -508,6 +578,7 @@ async function fetchListing(n){
   return r;
 }
 async function load(){
+  loadFailed=false;preview=false;
   const n=new URLSearchParams(location.search).get('id');
   if(!n||!/^\d+$/.test(n))return unavailable('missing');
   try{
@@ -537,7 +608,7 @@ async function countView(){
 }
 function unavailable(kind){
   P=null;document.title='Listing unavailable — Nyumba254';$('m-robots').setAttribute('content','noindex,follow');
-  const msg={missing:['This listing is no longer available','It may have been rented, sold or removed, or the link is incorrect.'],error:["We couldn't load this listing",'Check your connection and try again.']}[kind];
+  const msg={error:offline()?["You're offline",'Connect to the internet and this listing will load automatically.']:["We couldn't load this listing",'Check your connection and try again.'],missing:['This listing is no longer available','It may have been rented, sold or removed, or the link is incorrect.']}[kind];loadFailed=kind==='error';
   $('view').innerHTML=`<div class="state"><h1>${escHtml(msg[0])}</h1><p>${escHtml(msg[1])}</p>${kind==='error'?'<button type="button" class="btn btn-primary" data-act="reload">Try again</button>':'<a class="btn btn-primary" href="/listings">Browse listings</a><a class="btn btn-outline" href="/">Home</a>'}</div>`;
   tabActions();ctaBar();
 }
@@ -670,7 +741,7 @@ function ownerHtml(){
 }
 function sellerHead(){
   const p=P.profiles||{},name=P.contact_name||p.full_name||'Seller',ini=name.split(' ').filter(Boolean).map(x=>x[0]).join('').toUpperCase().slice(0,2)||'S',ver=p.verification_status==='verified',lb=(P.details||{}).listed_by;
-  return `<div class="seller"><div class="av" aria-hidden="true">${escHtml(ini)}</div><div><b>${escHtml(name)}</b><span class="vbadge${ver?'':' no'}">${ver?IC.check+'Verified seller':'Not yet verified'}</span><small class="js-rate"></small>${lb?`<small>${escHtml(nkTitleCase(lb))}</small>`:''}${p.created_at?`<small>Member since ${escHtml(new Date(p.created_at).toLocaleDateString('en-KE',{month:'long',year:'numeric'}))}</small>`:''}${!isOwner&&canReview()?'<button type="button" class="link" data-act="rate">Rate this seller</button>':''}</div></div>`;
+  return `<div class="seller"><div class="av" aria-hidden="true">${escHtml(ini)}</div><div><b>${escHtml(name)}</b><button type="button" class="vbadge${ver?'':' no'}" data-act="verinfo" data-v="${ver?1:0}" aria-haspopup="dialog" aria-label="${ver?'Verified seller. What does this mean?':'Not yet verified. What does this mean?'}">${ver?IC.check+'Verified seller':'Not yet verified'}${IC.info}</button><small class="js-rate"></small>${lb?`<small>${escHtml(nkTitleCase(lb))}</small>`:''}${p.created_at?`<small>Member since ${escHtml(new Date(p.created_at).toLocaleDateString('en-KE',{month:'long',year:'numeric'}))}</small>`:''}${!isOwner&&canReview()?'<button type="button" class="link" data-act="rate">Rate this seller</button>':''}</div></div>`;
 }
 const SAFETY='Never pay before you have viewed the property and met the seller. Nyumba254 never asks buyers for money.';
 function sidebarHtml(){
@@ -683,8 +754,8 @@ function sidebarHtml(){
   return `<div class="scard">${top}
     <div class="bnb-slot"></div>
     <div class="phone-panel" id="phone-panel" hidden></div>
-    ${hidden?'':`<div class="cbtns"><button type="button" class="btn btn-primary" data-act="call">${IC.call}Call</button><button type="button" class="btn btn-wa" data-act="wa">${IC.wa}WhatsApp</button></div><div class="or">or send a message here</div>`}
-    <div id="sent" class="sent" hidden><div class="sent-ic">${IC.sent}</div><h3>Message sent</h3><p>The seller will reply in your chat. You may also get a call.</p><button type="button" class="btn btn-primary" data-act="chat">Open conversation</button><button type="button" class="btn btn-outline" data-act="viewing">Book a viewing</button><button type="button" class="link" data-act="again">Send another message</button></div>
+    ${hidden?'':`<div class="cbtns"><button type="button" class="btn btn-wa" data-act="wa" data-src="sidebar">${IC.wa}WhatsApp</button><button type="button" class="btn btn-outline" data-act="call" data-src="sidebar">${IC.call}Call</button></div><div class="or">or send a message here</div>`}
+    <div id="sent" class="sent" hidden><div class="sent-ic">${IC.sent}</div><h3>Message sent</h3><p>The seller will reply in your chat. You may also get a call.</p><button type="button" class="btn btn-primary" data-act="chat">Open conversation</button><button type="button" class="btn btn-outline" data-act="viewing" data-src="sent">${IC.cal}Request a viewing</button><button type="button" class="link" data-act="again">Send another message</button></div>
     <div id="enq"><div class="nf-banner" id="q-banner" role="alert"></div>
       ${opts.length?`<div class="nf-field"><label for="q-unit">Unit type <span class="nf-optional">optional</span></label><select id="q-unit"><option value="">Any available unit</option>${opts.map(u=>`<option value="${escHtml(u.unit_label)}">${escHtml(u.unit_label)}${Number(u.price)>0?' · '+escHtml(money(u.price)):''}</option>`).join('')}</select></div>`:''}
       ${known?`<div class="csum" id="q-sum"><span>Sending as <b id="q-sum-t"></b></span><button type="button" class="link" data-act="edit-contact">Change</button></div>`:''}
@@ -695,7 +766,7 @@ function sidebarHtml(){
       </div>
       <div class="nf-field"><label for="q-msg">Message</label><div class="qchips" role="group" aria-label="Quick messages">${QMSG.map((m,i)=>`<button type="button" class="qchip" data-act="qmsg" data-i="${i}">${escHtml(m)}</button>`).join('')}</div><textarea id="q-msg" maxlength="1000"></textarea></div>
       <div class="hp" aria-hidden="true"><label for="q-web">Leave empty</label><input id="q-web" tabindex="-1" autocomplete="off"/></div>
-      <button type="button" class="btn btn-primary btn-block" id="q-send" data-act="send">Send message</button></div>
+      <div class="sendrow"><button type="button" class="btn btn-primary" id="q-send" data-act="send">Send message</button><button type="button" class="btn btn-outline" data-act="viewing" data-src="form">${IC.cal}Request viewing</button></div></div>
     <p class="tip">${SAFETY}</p><button type="button" class="link report" data-act="report">Report this listing</button></div>`;
 }
 function anchorsHtml(list){return `<nav class="anchors" id="anchors" aria-label="Page sections">${list.map(([id,l])=>`<a href="#${id}" data-anchor="${id}">${escHtml(l)}</a>`).join('')}</nav>`}
@@ -706,7 +777,7 @@ function render(){
   if(m.group==='boarding'&&(P.details||{}).institution)pills.push('<span class="pill plain">Student friendly</span>');
   const pv=preview?`<div class="notice warn" role="status"><b>Preview.</b> ${P.is_disabled?'Hidden by admin'+(P.disabled_reason?': '+escHtml(P.disabled_reason):'.'):P.recycle_bin?'This listing is in the recycle bin.':'Status: '+escHtml(nkTitleCase(P.status))+'. It is not public yet.'} Only you${isOwner?'':' and the admin team'} can see this page.</div>`:'';
   const stale=!preview&&!occ&&daysOld()>CFG.staleDays?`<div class="notice warn">This listing was posted ${Math.floor(daysOld())} days ago. Confirm it is still available before you visit.</div>`:'';
-  const inline=(!isOwner&&!occ)?`<div class="inline-cta md-only${P.contact_hidden?' two':''}" id="inline-cta">${P.contact_hidden?'':`<button type="button" class="btn btn-outline" data-act="call">${IC.call}Call</button><button type="button" class="btn btn-wa" data-act="wa">${IC.wa}WhatsApp</button>`}<button type="button" class="btn btn-primary" data-act="scroll">${IC.msg}Message</button></div>`:'';
+  const inline=(!isOwner&&!occ)?`<div class="inline-cta md-only${P.contact_hidden?' two':''}" id="inline-cta">${P.contact_hidden?'':`<button type="button" class="btn btn-wa" data-act="wa" data-src="inline">${IC.wa}WhatsApp</button>`}<button type="button" class="btn ${P.contact_hidden?'btn-primary':'btn-outline'}" data-act="scroll">${IC.msg}Message</button>${P.contact_hidden?'':`<button type="button" class="btn btn-outline" data-act="call" data-src="inline">${IC.call}Call</button>`}<button type="button" class="btn btn-outline vbtn" data-act="viewing" data-src="inline">${IC.cal}Request a viewing</button></div>`:'';
   const anchors=[];if(desc)anchors.push(['sec-about','About']);if(units.length)anchors.push(['sec-units','Units']);if(rest.length)anchors.push(['sec-details','Details']);if(am.length)anchors.push(['sec-amen','Amenities']);anchors.push(['sec-loc','Location'],['sim','Similar']);
   const rules=(P.details||{}).house_rules?String(P.details.house_rules).split(/\n/).map(r=>r.trim()).filter(Boolean):[];
   $('view').innerHTML=`${pv}<div class="layout"><div class="main-col">
@@ -714,7 +785,7 @@ function render(){
     <div class="pills">${pills.join('')}</div>
     <h1 class="title">${escHtml(P.title)}</h1><div class="loc">${IC.pin}<span>${escHtml(where())}</span></div><div class="price">${priceHtml()}</div>${cost?`<div class="cost">${escHtml(cost)}</div>`:''}
     ${strip.length?`<div class="strip" style="--n:${strip.length}">${strip.map(([k,v])=>`<div class="f">${factIcon(k)}<b title="${escHtml(v)}">${escHtml(v)}</b><span>${escHtml(k)}</span></div>`).join('')}</div>`:''}
-    <div class="meta">${ver?`<span class="tchip">${IC.check}Verified seller</span>`:''}<span class="mchip">${IC.clock}Posted ${P.created_at?escHtml(ago(P.created_at)):''}</span><span class="mchip">${IC.eye}<span id="m-views">${Number(P.views||0).toLocaleString('en-KE')} views</span></span><span class="mchip" id="m-enq-w" hidden>${IC.msg}<span id="m-enq"></span></span></div>
+    <div class="meta">${ver?`<button type="button" class="tchip" data-act="verinfo" data-v="1" aria-haspopup="dialog" aria-label="Verified seller. What does this mean?">${IC.check}Verified seller${IC.info}</button>`:''}<span class="mchip">${IC.clock}Posted ${P.created_at?escHtml(ago(P.created_at)):''}</span><span class="mchip">${IC.eye}<span id="m-views">${Number(P.views||0).toLocaleString('en-KE')} views</span></span><span class="mchip" id="m-enq-w" hidden>${IC.msg}<span id="m-enq"></span></span></div>
     ${stale}${inline}${isOwner?ownerHtml():''}
     <div class="bnb-slot md-only"></div>
     ${anchorsHtml(anchors)}
@@ -789,8 +860,8 @@ function measureCta(){const bar=$('ctabar'),on=bar&&!bar.hidden&&getComputedStyl
 function ctaBar(){
   const bar=$('ctabar');if(ctaObs){ctaObs.disconnect();ctaObs=null}
   if(!P||isOwner||P.status==='occupied'){bar.hidden=true;document.body.classList.remove('nk-cta','nk-cta-show');measureCta();tabbarSync();return}
-  const icons=P.contact_hidden?'':`<button type="button" class="btn btn-outline ctabar-icon" data-act="call" aria-label="Call seller">${IC.call}</button><button type="button" class="btn btn-wa ctabar-icon" data-act="wa" aria-label="WhatsApp seller">${IC.wa}</button>`;
-  bar.innerHTML=`<div class="ctabar-price"><strong>${priceHtml()}</strong><span>${escHtml(P.title)}</span></div>${icons}<button type="button" class="btn btn-primary" data-act="scroll">${IC.msg}Message</button>`;
+  const hid=!!P.contact_hidden;
+  bar.innerHTML=`<div class="ctabar-price"><strong>${priceHtml()}</strong><span>${escHtml(P.title)}</span></div>${hid?'':`<button type="button" class="btn btn-outline ctabar-icon" data-act="call" data-src="bar" aria-label="Call seller">${IC.call}</button>`}<button type="button" class="btn ${hid?'btn-primary':'btn-outline'}" data-act="scroll">${IC.msg}Message</button>${hid?'':`<button type="button" class="btn btn-wa ctabar-wa" data-act="wa" data-src="bar">${IC.wa}WhatsApp</button>`}`;
   bar.hidden=false;document.body.classList.add('nk-cta');
   const show=on=>{bar.classList.toggle('show',on);document.body.classList.toggle('nk-cta-show',on)},inl=$('inline-cta');
   if(inl&&'IntersectionObserver' in window){ctaObs=new IntersectionObserver(([e])=>show(!e.isIntersecting),{rootMargin:'0px 0px -8px 0px'});ctaObs.observe(inl)}else show(true);
@@ -921,12 +992,13 @@ function canReview(){const t=P?firstContactAt():0;return t>0&&Date.now()-t>CFG.r
 function setBusy(on){qsa('[data-act="call"],[data-act="wa"]').forEach(b=>{b.setAttribute('aria-busy',String(on));b.classList.toggle('busy',on)})}
 function showPhonePanel(){
   const el=$('phone-panel');if(!el)return;const n=nkNormalizePhone(phoneRaw);
-  el.hidden=false;el.innerHTML=`<div class="num">${escHtml(prettyPhone(phoneRaw))}</div><div class="row"><button type="button" class="btn btn-outline" data-act="copynum">Copy number</button><button type="button" class="btn btn-wa" data-act="wa">${IC.wa}WhatsApp</button></div>`;
+  el.hidden=false;el.innerHTML=`<div class="num">${escHtml(prettyPhone(phoneRaw))}</div><div class="row"><button type="button" class="btn btn-outline" data-act="copynum">Copy number</button><button type="button" class="btn btn-wa" data-act="wa" data-src="panel">${IC.wa}WhatsApp</button></div>`;
   el.dataset.n=n;
 }
 async function reveal(channel){
   if(P.contact_hidden){toast('This seller keeps contact on Nyumba254 chat. Send a message instead.');return openContactSheet()}
   if(revealBusy)return;
+  if(!phoneRaw&&needNet("You're offline. Connect to the internet to see the seller's contact."))return;
   const wa=channel==='whatsapp';let win=null;
   /* Safari blocks window.open() after an await, so the tab is opened first, inside the tap, and pointed at WhatsApp afterwards. */
   if(wa&&!phoneRaw){win=window.open('about:blank','_blank');if(win)try{win.opener=null}catch(e){}}
@@ -1002,6 +1074,22 @@ async function legacyEnquiry(x){
   const b=await db.from('messages').insert({id:uuid(),listing_id:x.listing_id,buyer_token:x.token,buyer_name:x.name,buyer_phone:x.phone,buyer_id:x.uid,sender:'buyer',content:x.message});
   if(b.error){await db.from('enquiries').delete().eq('id',eid);return {error:b.error}}return {error:null};
 }
+const COOLDOWN='You just sent an enquiry for this listing. Please wait a minute before sending another.';
+const cooling=()=>Date.now()-Number(lsg('nk_enq_ts_'+P.id)||0)<60000;
+function enquiryFailure(err){const m=(err&&err.message)||'';return /rate_limited/.test(m)?'Too many enquiries from this device. Try again in an hour.':/listing_unavailable/.test(m)?'This listing is no longer available.':isNetErr(err)?"No connection. Your message is kept, so try again when you're back online.":'Your message was not sent. Please try again.'}
+/* one place that writes an enquiry, so the form and the viewing request behave identically */
+async function postEnquiry(x,kind){
+  const token=lsg('nk_buyer_'+P.id)||uuid(),q={listing_id:P.id,name:x.name,phone:x.phone,email:x.email,message:x.message,token,uid};
+  let r=await db.rpc('submit_enquiry',{p_listing_id:P.id,p_name:x.name,p_phone:x.phone,p_email:x.email||null,p_message:x.message,p_buyer_token:token});
+  if(r.error&&(r.error.code==='PGRST202'||r.error.code==='42883'||/could not find the function|does not exist/i.test(r.error.message||'')))r=await legacyEnquiry(q);
+  if(r.error)return r;
+  lss('nk_buyer_'+P.id,token);lss('nk_enq_ts_'+P.id,String(Date.now()));nkSaveBuyerProfile({name:x.name,phone:x.phone,email:x.email});
+  const h={'Content-Type':'application/json',apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY};
+  fetch(`${EDGE_URL}/send-notification-email`,{method:'POST',headers:h,body:JSON.stringify({type:'new_buyer_enquiry',buyerName:x.name,buyerPhone:x.phone,buyerEmail:x.email||null,message:x.message,listingId:P.id,listingTitle:P.title})}).catch(()=>{});
+  fetch(`${EDGE_URL}/send-sms-alert`,{method:'POST',headers:h,body:JSON.stringify({type:'new_enquiry',listingId:P.id,buyerName:x.name,messagePreview:x.message,listingTitle:P.title})}).catch(()=>{});
+  track(kind==='viewing'?'viewing_request':'message_sent');
+  return {error:null};
+}
 async function sendEnquiry(){
   const hidden=!!P.contact_hidden;['q-name','q-phone','q-email'].forEach(i=>setErr(i,''));$('q-banner').textContent='';
   const name=$('q-name').value.trim(),phone=hidden?'':nkNormalizePhone($('q-phone').value.trim()),email=$('q-email').value.trim();let message=$('q-msg').value.trim(),ok=true;
@@ -1011,19 +1099,54 @@ async function sendEnquiry(){
   if(!ok){const f=$('q-fields');if(f)f.hidden=false;const s=$('q-sum');if(s)s.hidden=true;const bad=document.querySelector('#enq [aria-invalid="true"]');if(bad)bad.focus();return}
   if(!message)message=baseMsg()+' Is it still available?';
   if($('q-web').value){showSent(false);return}
-  if(Date.now()-Number(lsg('nk_enq_ts_'+P.id)||0)<60000){$('q-banner').textContent='You just sent an enquiry for this listing. Please wait a minute before sending another.';return}
+  if(cooling()){$('q-banner').textContent=COOLDOWN;return}
+  if(needNet())return;
   const unit=$('q-unit')&&$('q-unit').value;if(unit)message=`Interested in: ${unit}. ${message}`;
   const btn=$('q-send');btn.disabled=true;btn.innerHTML='<span class="spin"></span>Sending…';
-  const token=lsg('nk_buyer_'+P.id)||uuid(),x={listing_id:P.id,name,phone,email,message,token,uid};
-  let r=await db.rpc('submit_enquiry',{p_listing_id:x.listing_id,p_name:name,p_phone:phone,p_email:email||null,p_message:message,p_buyer_token:token});
-  if(r.error&&(r.error.code==='PGRST202'||r.error.code==='42883'||/could not find the function|does not exist/i.test(r.error.message||'')))r=await legacyEnquiry(x);
+  let r;try{r=await postEnquiry({name,phone,email,message},'form')}catch(e){r={error:e}}
   btn.disabled=false;btn.textContent='Send message';
-  if(r.error){const m=r.error.message||'';$('q-banner').textContent=/rate_limited/.test(m)?'Too many enquiries from this device. Try again in an hour.':/listing_unavailable/.test(m)?'This listing is no longer available.':'Your message was not sent. Please try again.';return}
-  lss('nk_buyer_'+P.id,token);lss('nk_enq_ts_'+P.id,String(Date.now()));nkSaveBuyerProfile({name,phone,email});
-  const h={'Content-Type':'application/json',apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY};
-  fetch(`${EDGE_URL}/send-notification-email`,{method:'POST',headers:h,body:JSON.stringify({type:'new_buyer_enquiry',buyerName:name,buyerPhone:phone,buyerEmail:email||null,message,listingId:P.id,listingTitle:P.title})}).catch(()=>{});
-  fetch(`${EDGE_URL}/send-sms-alert`,{method:'POST',headers:h,body:JSON.stringify({type:'new_enquiry',listingId:P.id,buyerName:name,messagePreview:message,listingTitle:P.title})}).catch(()=>{});
+  if(r.error){if(isNetErr(r.error))showNet("You're offline. Your message is kept, so try again when you're back online.");$('q-banner').textContent=enquiryFailure(r.error);return}
   showSent(false);   // the chat opens only when the buyer taps "Open conversation", so two layers never compete
+}
+
+/* ═══ 3. request a viewing: a date and time slot, sent to the seller through the same enquiry path ═══ */
+const localISO=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+function openViewing(){
+  if(!P||isOwner||P.status==='occupied')return;
+  const sheet=$('ov-contact-sheet');if(sheet&&sheet.classList.contains('open'))nkCloseModal(sheet);
+  ['vw-date','vw-name','vw-phone'].forEach(i=>setErr(i,''));$('vw-banner').textContent='';
+  const pr=nkGetBuyerProfile(),first=(P.contact_name||(P.profiles||{}).full_name||'the seller').split(' ')[0],t=new Date();
+  $('vw-sub').textContent=`Tell ${first} when you would like to see "${P.title}".`;
+  $('vw-date').min=localISO(t);t.setDate(t.getDate()+1);$('vw-date').value=localISO(t);
+  $('vw-name').value=pr.name||'';$('vw-phone').value=pr.phone||'';$('vw-note').value='';
+  $('vw-phone-f').hidden=!!P.contact_hidden;$('vw-form').hidden=false;$('vw-done').hidden=true;
+  nkOpenModal($('ov-view'));
+}
+async function sendViewing(){
+  ['vw-date','vw-name','vw-phone'].forEach(i=>setErr(i,''));$('vw-banner').textContent='';
+  const hidden=!!P.contact_hidden,date=$('vw-date').value,slot=$('vw-slot').value,name=$('vw-name').value.trim(),phone=hidden?'':nkNormalizePhone($('vw-phone').value.trim()),note=$('vw-note').value.trim();let ok=true;
+  if(!date){setErr('vw-date','Pick a date');ok=false}else if(date<localISO(new Date())){setErr('vw-date','Pick today or a later date');ok=false}
+  if(name.length<2){setErr('vw-name','Enter your name');ok=false}
+  if(!hidden&&!okPhone(phone)){setErr('vw-phone','Enter a valid phone number, e.g. 0712 345 678');ok=false}
+  if(!ok){const bad=document.querySelector('#vw-form [aria-invalid="true"]');if(bad)bad.focus();return}
+  const done=()=>{$('vw-form').hidden=true;$('vw-done').hidden=false;showSent(false)};
+  if($('vw-web').value){done();return}
+  if(cooling()){$('vw-banner').textContent=COOLDOWN;return}
+  if(needNet())return;
+  const when=new Date(date+'T00:00:00').toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long'});
+  const message=`Viewing request for "${P.title}" (ref ${shortRef()}): ${when}, ${slot}.${note?' Note: '+note+'.':''} Please confirm if this works.`;
+  const btn=$('vw-send');btn.disabled=true;btn.innerHTML='<span class="spin"></span>Sending…';
+  let r;try{r=await postEnquiry({name,phone,email:'',message},'viewing')}catch(e){r={error:e}}
+  btn.disabled=false;btn.textContent='Send request';
+  if(r.error){if(isNetErr(r.error))showNet("You're offline. Your request is kept, so try again when you're back online.");$('vw-banner').textContent=enquiryFailure(r.error);return}
+  done();
+}
+
+/* ═══ 4. verified explainer ═══ */
+function openVerify(verified){
+  $('vf-body').innerHTML=(verified?'<p><b>Verified seller</b> means Nyumba254 has checked this seller\'s identity.</p><p>That is a good sign, but it is not a guarantee about the property itself.</p>':'<p>This seller has not completed identity verification yet.</p><p>That does not mean anything is wrong, but take extra care.</p>')+
+    '<ul class="vlist"><li>View the property in person first.</li><li>Meet the person you will pay, and ask for a receipt.</li><li>Never pay before you have viewed it. Nyumba254 never asks buyers for money.</li></ul>';
+  nkOpenModal($('ov-verify'));
 }
 
 /* ═══ owner actions ═══ */
@@ -1076,6 +1199,8 @@ function closeMenu(){const n=$('mobile-nav');n.classList.remove('open');document
 document.addEventListener('click',e=>{
   const bk=e.target.closest('[data-back]');
   if(bk&&canHistoryBack()){e.preventDefault();history.back();return}
+  const nl=e.target.closest('a.navchip, a.lncard');if(nl)track('listing_nav',{dir:nl.getAttribute('rel')||''});
+  if(e.target.closest('#sim-grid a.card'))track('similar_click');
   const anc=e.target.closest('[data-anchor]');
   if(anc){e.preventDefault();const t=$(anc.dataset.anchor);if(t)t.scrollIntoView({behavior:'smooth',block:'start'});return}
   const t=e.target.closest('[data-act]');
@@ -1085,23 +1210,24 @@ document.addEventListener('click',e=>{
     return}
   const a=t.dataset.act;
   switch(a){
-    case 'photo':idx=Number(t.dataset.i)||0;lbShow();nkOpenModal($('lb'));break;case 'gprev':showPhoto(idx-1);break;case 'gnext':showPhoto(idx+1);break;
+    case 'photo':if(!EV.photo){EV.photo=true;track('photo_open')}idx=Number(t.dataset.i)||0;lbShow();nkOpenModal($('lb'));break;case 'gprev':showPhoto(idx-1);break;case 'gnext':showPhoto(idx+1);break;
     case 'lb':lbShow();nkOpenModal($('lb'));break;case 'lprev':showPhoto(idx-1);break;case 'lnext':showPhoto(idx+1);break;case 'lbzoom':lbZoom();break;
     case 'close':nkCloseModal(t.closest('.notify-modal-overlay, .nk-sheet-overlay'));break;case 'reload':location.reload();break;
-    case 'call':case 'wa':reveal(a==='call'?'call':'whatsapp');break;
+    case 'call':case 'wa':track(a==='call'?'call_tap':'whatsapp_tap',{src:t.dataset.src||'unknown'});reveal(a==='call'?'call':'whatsapp');break;
     case 'copynum':{const n=($('phone-panel')||{dataset:{}}).dataset.n||nkNormalizePhone(phoneRaw);navigator.clipboard.writeText(n).then(()=>toast('Number copied'),()=>toast('Could not copy the number','error'));break}
     case 'scroll':openContactSheet();break;case 'send':sendEnquiry();break;
     case 'qmsg':{$('q-msg').value=baseMsg()+' '+QMSG[Number(t.dataset.i)];$('q-msg').focus({preventScroll:true});break}
     case 'again':{$('sent').hidden=true;$('enq').hidden=false;$('q-msg').value=baseMsg()+' ';if(!coarse())$('q-msg').focus({preventScroll:true});break}
     case 'edit-contact':{$('q-fields').hidden=false;$('q-sum').hidden=true;$('q-name').focus({preventScroll:true});break}
     case 'chat':if(typeof NKGlobalChat!=='undefined')NKGlobalChat.registerAndOpen(P.id);break;
-    case 'viewing':if(typeof NKGlobalChat!=='undefined'&&NKGlobalChat.openBookViewing)NKGlobalChat.openBookViewing(P.id);break;
+    case 'viewing':track('viewing_open',{src:t.dataset.src||'unknown'});openViewing();break;case 'send-viewing':sendViewing();break;
+    case 'verinfo':track('verify_info');openVerify(t.dataset.v==='1');break;case 'retry-net':retryNet();break;
     case 'pick':openContactSheet(t.dataset.label);break;
     case 'occ':unitAction(t.dataset.id,true);break;case 'avail':unitAction(t.dataset.id,false);break;
     case 'status':ownerStatus();break;case 'map':window.__drawMap&&window.__drawMap();break;
     case 'more':{const d=$('desc'),x=d.classList.toggle('clamp');t.textContent=x?'Read more ↓':'Show less ↑';t.setAttribute('aria-expanded',String(!x));break}
     case 'vid':{const wrap=t;const f=document.createElement('div');f.className='vid';f.innerHTML=`<iframe src="${escHtml(t.dataset.src)}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="Video walkthrough"></iframe>`;wrap.replaceWith(f);break}
-    case 'share':openShare();break;
+    case 'share':track('share');openShare();break;
     case 'copy':navigator.clipboard.writeText(t.dataset.url).then(()=>{t.innerHTML='<span>✓</span>Copied';toast('Link copied')},()=>toast('Could not copy the link','error'));break;
     case 'report':$('rp-reason').value='';$('rp-amt-wrap').hidden=true;$('rp-banner').textContent='';nkOpenModal($('ov-report'));break;
     case 'send-report':sendReport();break;
@@ -1148,6 +1274,9 @@ function footerCounties(){$('footer-counties').innerHTML=NK_COUNTIES.map(c=>nkAr
 const src=$('nav-count-badge'),tgt=$('nk-tab-saved-badge');
 if(src&&tgt){const s=()=>{const n=src.textContent.trim();tgt.textContent=n;tgt.classList.toggle('visible',src.style.display!=='none'&&n!=='0'&&n!=='')};new MutationObserver(s).observe(src,{childList:true,attributes:true,attributeFilter:['style']});s()}
 $('yr').textContent=new Date().getFullYear();footerCounties();
+window.addEventListener('offline',()=>showNet("You're offline. What's already on screen still works, but sending messages needs a connection."));
+window.addEventListener('online',()=>{showNet('Back online.','ok');setTimeout(hideNet,2500);if(loadFailed)load()});
+if(offline())showNet("You're offline. What's already on screen still works, but sending messages needs a connection.");
 nkInitDataSaver();nkInitAccountNav(['nav-account-link','mobile-account-link']);
 nkSessionPromise.then(({data})=>{if(data&&data.session)$('tab-account-link').setAttribute('href','/dashboard')});
 nkTrackPageView();tabbar();liftChat();tabActions();load();
