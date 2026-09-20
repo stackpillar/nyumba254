@@ -106,7 +106,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 @media(max-width:480px){.cat-grid{grid-template-columns:1fr}}
 </style>
 <link rel="stylesheet" href="/theme.css"/><script src="/theme.js"></script>
-</head>
+<link rel="manifest" href="/manifest.webmanifest"><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script></head>
 <body>
 <a href="#main" class="skip-link">Skip to form</a>
 <nav aria-label="Main">

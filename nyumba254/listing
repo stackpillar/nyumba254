@@ -66,10 +66,22 @@
 .gmosaic.n3{grid-template-columns:minmax(0,2fr) minmax(0,1fr);grid-template-rows:repeat(2,minmax(0,1fr))}
 .gmosaic.n4{grid-template-columns:minmax(0,2fr) minmax(0,1fr);grid-template-rows:repeat(3,minmax(0,1fr))}
 .gmosaic.n5{grid-template-columns:minmax(0,2fr) repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
-.gmosaic.n3 .gt:first-child{grid-row:1/3}.gmosaic.n4 .gt:first-child{grid-row:1/4}.gmosaic.n5 .gt:first-child{grid-row:1/3}
+.gmosaic.n3>:first-child{grid-row:1/3}.gmosaic.n4>:first-child{grid-row:1/4}.gmosaic.n5>:first-child{grid-row:1/3}
+.gm-main{position:relative;min-width:0;min-height:0;overflow:hidden;background:var(--surface)}
+.gm-main .gt{position:absolute;inset:0;width:100%;height:100%}
+.gm-main .gcount{left:12px;right:auto}
 .gt{position:relative;display:block;padding:0;min-width:0;min-height:0;overflow:hidden;background:var(--surface);cursor:zoom-in}
-.gt img{width:100%;height:100%;object-fit:cover;object-position:center;transition:transform .35s ease}
+.gt img{width:100%;height:100%;object-fit:cover;object-position:center;transition:transform .35s ease;animation:gfade .28s ease}
+@keyframes gfade{from{opacity:.35}to{opacity:1}}
 .gt:hover img{transform:scale(1.03)}
+/* quiet arrows: light, round, sit on the photo edges; fully solid on hover or keyboard focus */
+.gnav{position:absolute;top:50%;transform:translateY(-50%);z-index:4;width:40px;height:40px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.9);color:var(--text);box-shadow:0 2px 10px rgba(0,0,0,.22);opacity:.72;transition:opacity .18s,background .15s,transform .15s}
+.gnav.prev{left:12px}.gnav.next{right:12px}
+.gnav svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.6}
+.gallery:hover .gnav,.gnav:hover,.gnav:focus-visible{opacity:1}
+.gnav:hover{background:#fff;transform:translateY(-50%) scale(1.06)}
+.gnav:active{transform:translateY(-50%) scale(.96)}
+@media(hover:none),(max-width:768px){.gnav{opacity:.9;width:38px;height:38px}.gnav.prev{left:8px}.gnav.next{right:8px}}
 .gall{position:absolute;right:14px;bottom:14px;z-index:3;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:22px;background:var(--white);border:1px solid var(--border);box-shadow:0 2px 10px rgba(0,0,0,.2);font-size:13.5px;font-weight:700;color:var(--text)}
 .gall:hover{background:var(--green-light);border-color:var(--green);color:var(--green-dark)}
 .gall svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
@@ -291,7 +303,7 @@ a.lncard:hover{border-color:var(--green);background:var(--green-light)}
 @media print{nav,.topbar,.side,.ctabar,.nk-tabbar,footer,.sim,.nk-scrolltop-btn,.anchors,.inline-cta{display:none!important}.layout{display:block}}
 </style>
 <link rel="stylesheet" href="/theme.css"/><script src="/theme.js"></script>
-</head>
+   <link rel="manifest" href="/manifest.webmanifest"><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script></head>
 <body>
 <a href="#main-content" class="skip-link">Skip to listing</a>
 <div class="nk-datasaver-banner" id="nk-datasaver-banner" role="status"><span>You're on a slower connection. Data Saver is on so pages load faster.</span><button type="button" id="nk-datasaver-off">Turn off</button></div>
@@ -591,22 +603,35 @@ function amenityLabels(){
 
 /* ═══ render ═══ */
 const phoneGallery=()=>matchMedia('(max-width:768px)').matches;
+const tileOrder=()=>{const n=photos.length;return Array.from({length:Math.min(n,5)},(_,j)=>(idx+j)%n)};   // current photo first, then the next ones, so tiles never repeat the main photo
+function tileBtn(i,main){
+  const p=photos[i],n=photos.length,saver=document.body.classList.contains('nk-datasaver'),w=main?(saver?640:1200):(saver?400:640);
+  return `<button type="button" class="gt${main?' gt-main':''}" data-act="photo" data-i="${i}" aria-label="Open photo ${i+1} of ${n}"><img src="${escHtml(srcFor(p,w))}" data-orig="${escHtml(p.url)}" alt="${main?escHtml(P.title)+', photo '+(i+1)+' of '+n:''}" ${main?'fetchpriority="high"':'loading="lazy"'} decoding="async"/></button>`;
+}
 function galleryHtml(){
   if(!photos.length)return `<div class="gallery" id="gallery"><div class="gnone">${IC.photo}<span>No photos for this listing yet</span></div></div>`;
   const heart=(typeof NKSaved!=='undefined'&&NKSaved.buildHeartBtn)?NKSaved.buildHeartBtn(P.id):'',n=photos.length,saver=document.body.classList.contains('nk-datasaver');
-  const img=(p,w,i,extra)=>`<img src="${escHtml(srcFor(p,w))}" data-orig="${escHtml(p.url)}" alt="${i===0?escHtml(P.title)+', photo 1 of '+n:''}" ${i===0?'fetchpriority="high"':'loading="lazy"'} decoding="async" ${extra||''}/>`;
+  const arrows=n>1?`<button type="button" class="gnav prev" data-act="gprev" aria-label="Previous photo">${IC.chev(1)}</button><button type="button" class="gnav next" data-act="gnext" aria-label="Next photo">${IC.chev(0)}</button>`:'';
+  const count=n>1?`<div class="gcount" id="gcount" aria-hidden="true">${IC.photo}<span>${idx+1} / ${n}</span></div>`:'';
   if(phoneGallery()){
-    return `<div class="gallery" id="gallery"><div class="gcar"><div class="gtrack" id="gtrack" role="group" aria-label="Photos, swipe to browse">${photos.map((p,i)=>`<button type="button" class="gslide" data-act="photo" data-i="${i}" aria-label="Open photo ${i+1} of ${n}">${img(p,saver?640:900,i)}</button>`).join('')}</div>
-      <div class="gcount" id="gcount" aria-hidden="true">${IC.photo}<span>${idx+1} / ${n}</span></div><span class="gheart">${heart}</span></div></div>`;
+    return `<div class="gallery" id="gallery"><div class="gcar"><div class="gtrack" id="gtrack" role="group" aria-label="Photos, swipe to browse">${photos.map((p,i)=>`<button type="button" class="gslide" data-act="photo" data-i="${i}" aria-label="Open photo ${i+1} of ${n}"><img src="${escHtml(srcFor(p,saver?640:900))}" data-orig="${escHtml(p.url)}" alt="${i===0?escHtml(P.title)+', photo 1 of '+n:''}" ${i===0?'fetchpriority="high"':'loading="lazy"'} decoding="async"/></button>`).join('')}</div>${arrows}${count}<span class="gheart">${heart}</span></div></div>`;
   }
-  const show=photos.slice(0,Math.min(n,5)),cls='n'+show.length;
-  return `<div class="gallery" id="gallery"><div class="gmosaic ${cls}">${show.map((p,i)=>`<button type="button" class="gt" data-act="photo" data-i="${i}" aria-label="Open photo ${i+1} of ${n}">${img(p,i===0?(saver?640:1200):(saver?400:640),i)}</button>`).join('')}</div>
-    <span class="gheart">${heart}</span><button type="button" class="gall" data-act="photo" data-i="0">${IC.expand}${n>1?`Show all ${n} photos`:'View photo'}</button></div>`;
+  const order=tileOrder();
+  return `<div class="gallery" id="gallery"><div class="gmosaic n${order.length}" id="gmosaic"><div class="gm-main" id="gm-main">${tileBtn(order[0],true)}${arrows}${count}</div>${order.slice(1).map(i=>tileBtn(i,false)).join('')}</div>
+    <span class="gheart">${heart}</span><button type="button" class="gall" data-act="photo" data-i="${idx}">${IC.expand}${n>1?`Show all ${n} photos`:'View photo'}</button></div>`;
 }
 function renderGallery(){const g=$('gallery');if(!g||!P)return;g.outerHTML=galleryHtml();syncTrack();if(typeof NKSaved!=='undefined'&&NKSaved.hydrate)NKSaved.hydrate($('gallery'))}
-function syncTrack(){
+/* desktop: swap only the photo tiles, so the arrow buttons keep keyboard focus */
+function renderMosaic(){
+  const gm=$('gm-main');if(!gm)return;const order=tileOrder();
+  gm.querySelector('.gt').outerHTML=tileBtn(order[0],true);
+  qsa('#gmosaic > .gt').forEach(b=>b.remove());
+  gm.insertAdjacentHTML('afterend',order.slice(1).map(i=>tileBtn(i,false)).join(''));
+  const c=$('gcount');if(c)c.lastElementChild.textContent=`${idx+1} / ${photos.length}`;
+}
+function syncTrack(smooth){
   const t=$('gtrack');if(!t||!photos.length)return;
-  const w=t.clientWidth;if(w&&Math.abs(t.scrollLeft-idx*w)>2)t.scrollTo({left:idx*w,behavior:'auto'});
+  const w=t.clientWidth;if(w&&Math.abs(t.scrollLeft-idx*w)>2)t.scrollTo({left:idx*w,behavior:smooth?'smooth':'auto'});
   const c=$('gcount');if(c)c.lastElementChild.textContent=`${idx+1} / ${photos.length}`;
 }
 function unitsHtml(){
@@ -790,8 +815,9 @@ function seo(){
 
 /* ═══ gallery + lightbox ═══ */
 function showPhoto(i){
-  if(!photos.length)return;idx=(i+photos.length)%photos.length;syncTrack();
-  const n=photos[(idx+1)%photos.length];if(n&&!document.body.classList.contains('nk-datasaver'))new Image().src=nkImgSrc(n.url,1800);
+  if(!photos.length)return;idx=(i+photos.length)%photos.length;
+  if(phoneGallery())syncTrack(!$('lb').classList.contains('open'));else renderMosaic();
+  if(!document.body.classList.contains('nk-datasaver'))[1,-1].forEach(d=>{const p=photos[(idx+d+photos.length)%photos.length];if(p)new Image().src=srcFor(p,phoneGallery()?900:1200)});
   if($('lb').classList.contains('open'))lbShow();
 }
 function lbShow(){
@@ -1059,7 +1085,7 @@ document.addEventListener('click',e=>{
     return}
   const a=t.dataset.act;
   switch(a){
-    case 'photo':idx=Number(t.dataset.i)||0;lbShow();nkOpenModal($('lb'));break;
+    case 'photo':idx=Number(t.dataset.i)||0;lbShow();nkOpenModal($('lb'));break;case 'gprev':showPhoto(idx-1);break;case 'gnext':showPhoto(idx+1);break;
     case 'lb':lbShow();nkOpenModal($('lb'));break;case 'lprev':showPhoto(idx-1);break;case 'lnext':showPhoto(idx+1);break;case 'lbzoom':lbZoom();break;
     case 'close':nkCloseModal(t.closest('.notify-modal-overlay, .nk-sheet-overlay'));break;case 'reload':location.reload();break;
     case 'call':case 'wa':reveal(a==='call'?'call':'whatsapp');break;
@@ -1088,6 +1114,7 @@ document.addEventListener('click',e=>{
 document.addEventListener('keydown',e=>{
   if($('lb').classList.contains('open')){if(e.key==='ArrowLeft')showPhoto(idx-1);if(e.key==='ArrowRight')showPhoto(idx+1);return}
   if(e.key==='Escape'&&$('mobile-nav').classList.contains('open')){closeMenu();$('mobile-menu-btn').focus();return}
+  const g=$('gallery');if(P&&photos.length>1&&g&&g.contains(document.activeElement)){if(e.key==='ArrowLeft'){e.preventDefault();showPhoto(idx-1)}if(e.key==='ArrowRight'){e.preventDefault();showPhoto(idx+1)}}
 });
 document.addEventListener('change',e=>{if(e.target.id==='rp-reason')$('rp-amt-wrap').hidden=!/unreasonable_fee|scam_attempt/.test(e.target.value)});
 /* photo fallback: if a resized URL fails (transforms unavailable), fall back to the original file once */

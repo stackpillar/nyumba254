@@ -445,7 +445,7 @@
       .hdr-btn { padding:5px 8px; font-size:11px; }
     }
   </style>
-</head>
+<link rel="manifest" href="/manifest.webmanifest"><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script></head>
 <body>
 
 <!-- TOP NAV -->

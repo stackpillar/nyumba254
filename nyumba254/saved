@@ -381,7 +381,7 @@
       .unavail { display: block; }
     }
   </style>
-</head>
+<link rel="manifest" href="/manifest.webmanifest"><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script></head>
 <body>
 
 <a href="#main-content" class="skip-link">Skip to content</a>

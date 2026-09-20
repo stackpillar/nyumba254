@@ -389,7 +389,7 @@
   </style>
   <link rel="stylesheet" href="/theme.css"/>
   <script src="/theme.js"></script>
-</head>
+<link rel="manifest" href="/manifest.webmanifest"><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script></head>
 <body>
 
 <!-- ── NAVBAR ── -->
