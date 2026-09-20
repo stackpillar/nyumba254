@@ -1,72 +1,179 @@
-/* theme.css — Nyumba254 shared dark mode.
-   Loaded on every page by add-theme.js. Change colours HERE and every page follows.
-   Palette is the same one saved.html already uses, so all pages match. */
+/* theme.css v2 — Nyumba254 shared dark mode.
+   Loaded on every page. Edit colours HERE and the whole site follows.
+   Why v1 looked broken: dark mode flips the TEXT variables to light, but many components
+   hard-code `background: white` / `#fff`, so light text landed on white cards.
+   v2 fixes every such surface found in index, listing, listings, login and post-listing,
+   and theme.js adds a runtime contrast guard for anything on pages not covered here. */
 
+/* ── 1. Palette (same family saved.html already used) ── */
 html[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0F1512;  --white: #0F1512;  --card: #151D19;  --surface: #1B2520;
+  --bg: #0F1512;  --white: #151D19;  --card: #151D19;  --surface: #1B2520;
   --text: #ECEFEC;  --text-2: #C3CBC6;  --text-3: #98A39C;
   --border: #2B3832;  --shadow: rgba(0,0,0,.5);
   --green-light: #123A2E;  --green-border: #245a49;
   --accent: #5FD3AE;  --accent-strong: #8FE6C8;
   --gold: #E0A245;  --gold-light: #3A2C12;
   --danger: #F07272;  --danger-bg: #3A1B1B;
+  --red: #F07272;  --red-light: #3A1B1B;
 }
 
-/* ── Base ── */
+/* ── 2. Page + form fields (!important: inputs must always be readable) ── */
 html[data-theme="dark"] body { background: var(--bg); color: var(--text); }
-html[data-theme="dark"] input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=color]):not([type=submit]):not([type=button]),
-html[data-theme="dark"] select,
-html[data-theme="dark"] textarea { background-color: var(--surface); color: var(--text); border-color: var(--border); }
+html[data-theme="dark"] :is(input, select, textarea):not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=color]):not([type=submit]):not([type=button]):not(.error):not([aria-invalid="true"]) {
+  background-color: var(--surface) !important;
+  color: var(--text) !important;
+}
+html[data-theme="dark"] :is(input, textarea, select).error,
+html[data-theme="dark"] [aria-invalid="true"] { color: var(--text) !important; }
+html[data-theme="dark"] input:-webkit-autofill,
+html[data-theme="dark"] textarea:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--surface) inset !important;
+  -webkit-text-fill-color: var(--text) !important;
+}
 html[data-theme="dark"] option { background: var(--card); color: var(--text); }
 html[data-theme="dark"] ::placeholder { color: var(--text-3); opacity: 1; }
 
-/* ── White surfaces → dark surfaces (:where keeps hover/active states working) ── */
-html[data-theme="dark"] :where(.card, .skeleton, .area-card, .step-card, .review-card, .pill, .pill-select,
-  .quicklink, .scroll-hint, .nk-tabbar, .nk-search-dropdown, .search-box, .modal) { background-color: var(--card); }
-html[data-theme="dark"] :where(.skeleton-img, .skeleton-line) {
-  background: linear-gradient(90deg, var(--surface) 25%, var(--border) 50%, var(--surface) 75%); background-size: 200% 100%;
+/* ── 3. White surfaces → dark surfaces.
+   :where() keeps these at zero extra specificity, so hover / active / selected states still win. ── */
+html[data-theme="dark"] :where(
+  /* index */ .card, .skeleton, .area-card, .step-card, .review-card, .pill, .pill-select, .quicklink, .scroll-hint, .nk-tabbar, .nk-search-dropdown, .search-box, .modal,
+  /* listings */ .nk-qchip, .filter-pill, .cat-tab, .nk-view-segment, .nk-seg-btn, .sidebar-actions, .sidebar-toggle-btn, .nk-compare-check, .relax-chip, .page-btn, .notify-modal, .notify-modal-head, .notify-modal-foot, .nk-sheet, .fb-prompt, .nk-scrolltop-btn, .card-msg-btn, .mobile-nav,
+  /* post-listing */ .form-card, .cat-option, .toggle-opt, .btn-back, .badge-pill, .modal-box, .tier-remove-btn, .camera-btn,
+  /* listing */ .btn-browse-more, .seller-disabled-reason-box,
+  /* shared */ .toast
+) { background-color: var(--card); }
+html[data-theme="dark"] :where(.toast) { color: var(--text); }
+html[data-theme="dark"] :where(.skeleton-img, .skeleton-line, .skel, .skel-block) {
+  background: linear-gradient(90deg, var(--surface) 25%, var(--border) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
 }
 html[data-theme="dark"] .pill-select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2398A39C' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
 }
 
-/* ── Green text that was dark-on-white → light-on-dark ── */
-html[data-theme="dark"] .logo,
-html[data-theme="dark"] .card-price,
-html[data-theme="dark"] .quicklink,
-html[data-theme="dark"] .card-verified-badge,
-html[data-theme="dark"] .trust-item { color: var(--accent-strong); }
-html[data-theme="dark"] .see-all,
-html[data-theme="dark"] .card-area,
-html[data-theme="dark"] .step-num,
-html[data-theme="dark"] .nk-tab.active { color: var(--accent); }
-html[data-theme="dark"] .btn-outline { color: var(--accent); border-color: var(--accent); }
-html[data-theme="dark"] .trust-item svg { stroke: var(--accent); }
-html[data-theme="dark"] .trust-bar { border-color: var(--green-border); }
-html[data-theme="dark"] .quicklink,
-html[data-theme="dark"] .area-card.tier1 { border-color: var(--green-border); }
-
-/* ── Category cards and badges that were light-tinted ── */
+/* ── 4. Light-tinted components: recolour background AND text together ── */
 html[data-theme="dark"] .cat-card.airbnb { background: var(--card); }
-html[data-theme="dark"] .cat-card.boarding .cat-title,
-html[data-theme="dark"] .cat-card.airbnb .cat-title { color: var(--accent-strong); }
 html[data-theme="dark"] .cat-card.boarding .cat-icon { background: var(--card); }
-html[data-theme="dark"] .cat-card.boarding .cat-icon svg,
-html[data-theme="dark"] .cat-card.airbnb .cat-icon svg { stroke: var(--accent-strong); }
 html[data-theme="dark"] .cat-card.commercial { background: #1F2A25; border-color: var(--border); }
 html[data-theme="dark"] .badge-cat.boarding { background: var(--green-light); color: var(--accent-strong); }
 html[data-theme="dark"] .badge-cat.airbnb { background: var(--card); color: var(--accent-strong); }
 html[data-theme="dark"] .badge-cat.commercial { background: var(--border); color: var(--text); }
+html[data-theme="dark"] .badge-avail { background: rgba(21,29,25,.92); color: var(--text); }
+html[data-theme="dark"] .card-inquire-btn.sent { background: var(--card); color: var(--accent-strong); }
+html[data-theme="dark"] .cat-option.selected .cat-option-icon { background: rgba(95,211,174,.16); }
+html[data-theme="dark"] .seller-disabled-icon { background: #4A2222; }
 
-/* ── Chrome ── */
+/* hover states that were hard-coded light */
+html[data-theme="dark"] .alert-btn:hover,
+html[data-theme="dark"] .nearme-btn:hover,
+html[data-theme="dark"] .btn-add-tier:hover { background: #1A4D3D; }
+html[data-theme="dark"] .report-scam-btn:hover { background: #4A2222; }
+html[data-theme="dark"] .btn-whatsapp:hover { background: var(--green); }
+html[data-theme="dark"] .camera-btn:hover { color: var(--accent-strong); }
+
+/* ── 5. Green text (was dark green on white) → light green on dark ── */
+html[data-theme="dark"] .logo,
+html[data-theme="dark"] .card-price,
+html[data-theme="dark"] .quicklink,
+html[data-theme="dark"] .card-verified-badge,
+html[data-theme="dark"] .trust-item,
+html[data-theme="dark"] .listing-price,
+html[data-theme="dark"] .similar-price,
+html[data-theme="dark"] .back-link,
+html[data-theme="dark"] .top-btn.share,
+html[data-theme="dark"] .status-pill:not(.verified):not(.plain),
+html[data-theme="dark"] .verified-badge,
+html[data-theme="dark"] .private-pill,
+html[data-theme="dark"] .seller-avatar,
+html[data-theme="dark"] .room-row-icon,
+html[data-theme="dark"] .room-row-avail:not(.none) strong,
+html[data-theme="dark"] .room-row-price strong,
+html[data-theme="dark"] .response-card .rc-title,
+html[data-theme="dark"] .response-card .rc-sub,
+html[data-theme="dark"] .kicker,
+html[data-theme="dark"] .review-block-title,
+html[data-theme="dark"] .alert-btn,
+html[data-theme="dark"] .nearme-btn,
+html[data-theme="dark"] .filter-tag,
+html[data-theme="dark"] .filter-tag button,
+html[data-theme="dark"] .card-amenity-chip:not(.more),
+html[data-theme="dark"] .nk-inline-notify,
+html[data-theme="dark"] .nf-hint,
+html[data-theme="dark"] .cmp-table td.best,
+html[data-theme="dark"] .cmp-table thead a,
+html[data-theme="dark"] .nk-recent-price,
+html[data-theme="dark"] #nk-ptr,
+html[data-theme="dark"] .step-label.active,
+html[data-theme="dark"] .amenity-chip.checked,
+html[data-theme="dark"] .btn-add-tier,
+html[data-theme="dark"] .auth-banner p,
+html[data-theme="dark"] .trust-strip span,
+html[data-theme="dark"] .trust-strip a,
+html[data-theme="dark"] .alert.success { color: var(--accent-strong); }
+
+html[data-theme="dark"] .see-all,
+html[data-theme="dark"] .card-area,
+html[data-theme="dark"] .step-num,
+html[data-theme="dark"] .nk-tab.active,
+html[data-theme="dark"] .similar-area,
+html[data-theme="dark"] .read-more,
+html[data-theme="dark"] .map-open-link,
+html[data-theme="dark"] .sidebar-kicker,
+html[data-theme="dark"] .step-label.done,
+html[data-theme="dark"] .remember-row a,
+html[data-theme="dark"] .nav-right a,
+html[data-theme="dark"] .terms a,
+html[data-theme="dark"] .consent-text a,
+html[data-theme="dark"] .cmp-yes,
+html[data-theme="dark"] .link-btn,
+html[data-theme="dark"] .nav-link[aria-current="page"],
+html[data-theme="dark"] .nk-pop a,
+html[data-theme="dark"] .btn-outline { color: var(--accent); }
+html[data-theme="dark"] .btn-outline { border-color: var(--accent); }
+
+/* ── 6. Icons ── */
+html[data-theme="dark"] .trust-item svg,
+html[data-theme="dark"] .step-dot.done svg,
+html[data-theme="dark"] .cat-option.selected .cat-option-icon svg,
+html[data-theme="dark"] .success-icon svg,
+html[data-theme="dark"] .enquiry-success-icon svg,
+html[data-theme="dark"] .ci-success-icon svg,
+html[data-theme="dark"] .amenity-chip svg,
+html[data-theme="dark"] .room-row-icon svg,
+html[data-theme="dark"] .trust-card-head svg,
+html[data-theme="dark"] .back-link svg,
+html[data-theme="dark"] .listing-location svg,
+html[data-theme="dark"] .lcard-head svg,
+html[data-theme="dark"] .trust-list li svg,
+html[data-theme="dark"] .cat-card.boarding .cat-icon svg,
+html[data-theme="dark"] .cat-card.airbnb .cat-icon svg { stroke: var(--accent); }
+/* round white arrow buttons over photos stay white, so their arrows must stay dark */
+html[data-theme="dark"] .gallery-arrow svg,
+html[data-theme="dark"] .card-carousel-arrow svg { stroke: #1a1a18; }
+
+/* ── 7. Borders, chrome, overlays ── */
+html[data-theme="dark"] .trust-bar { border-color: var(--green-border); }
+html[data-theme="dark"] .quicklink,
+html[data-theme="dark"] .area-card.tier1 { border-color: var(--green-border); }
 html[data-theme="dark"] footer { background: #141A17; }
 html[data-theme="dark"] .nk-tab-badge { border-color: var(--bg); }
-html[data-theme="dark"] .toast.error { background: #C53030; }
+html[data-theme="dark"] .toast.error { background: #C53030; color: #fff; }
+html[data-theme="dark"] #nk-inline-toast { background: #1F2A25 !important; color: var(--text) !important; }
+html[data-theme="dark"] .leaflet-popup-content-wrapper,
+html[data-theme="dark"] .leaflet-popup-tip { background: var(--card); color: var(--text); }
 
-/* ── Floating toggle (created by theme.js when a page has no toggle of its own) ── */
+/* inline styles written as `background:white` (share menu, dynamic banners) */
+html[data-theme="dark"] [style*="background:white"],
+html[data-theme="dark"] [style*="background: white"],
+html[data-theme="dark"] [style*="background:#fff"],
+html[data-theme="dark"] [style*="background: #fff"],
+html[data-theme="dark"] [style*="background:#ffffff"],
+html[data-theme="dark"] [style*="background: rgb(255, 255, 255)"] { background: var(--card) !important; }
+
+/* ── 8. Floating toggle (created by theme.js when a page has no toggle of its own) ── */
 .nk-theme-fab {
-  position: fixed; left: 14px; bottom: calc(var(--nk-tabbar-h, 0px) + 14px); z-index: 90;
+  position: fixed; left: 14px; bottom: calc(var(--nk-tabbar-h, 0px) + var(--nk-stack, 0px) + 14px); z-index: 90;
   width: 44px; height: 44px; padding: 0; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   background: #fff; color: #1a1a18; border: 1px solid #e0ded8;
