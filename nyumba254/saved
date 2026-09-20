@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <title>Your Shortlist — Nyumba254</title>
   <meta name="description" content="Your saved property listings on Nyumba254 — keep track of apartments, houses, boarding rooms and Airbnb rentals you're interested in across Kenya."/>
   <meta name="robots" content="noindex,follow"/>
-  <meta name="theme-color" content="#0F6E56"/>
+  <meta name="theme-color" content="#0f1512"/>
   <link rel="canonical" href="https://nyumba254.com/saved"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -15,188 +15,298 @@
   <link rel="icon" href="/favicon.ico" sizes="any"/>
   <link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96"/>
   <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
+  <!-- Apply the saved theme before first paint (no flash). Stored choice wins; otherwise dark, unless the device asks for light. -->
+  <script>
+  (function () {
+    var t = null;
+    try { t = localStorage.getItem('nk_theme'); } catch (e) {}
+    if (t !== 'light' && t !== 'dark') {
+      t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+    var m = document.querySelector('meta[name="theme-color"]');
+    if (m) m.setAttribute('content', t === 'dark' ? '#0f1512' : '#0F6E56');
+  })();
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --green: #0F6E56; --green-light: #E1F5EE; --green-mid: #1D9E75; --green-dark: #085041;
-      --gold: #BA7517; --gold-light: #FAEEDA;
-      --danger: #C53030; --danger-bg: #FFF5F5;
+      --green: #0F6E56; --green-light: #E1F5EE; --green-mid: #1D9E75; --green-dark: #085041; --green-border: #9FE1CB;
+      --accent: #0F6E56; --accent-strong: #085041;
+      --gold: #BA7517; --gold-light: #FAEEDA; --gold-border: #FAC775;
+      --danger: #C53030; --danger-solid: #C53030; --danger-bg: #FFF5F5;
       --text: #1a1a18; --text-2: #4a4a46; --text-3: #6b6a63;
-      --border: #e0ded8; --surface: #f7f6f2; --white: #ffffff;
+      --border: #e0ded8; --surface: #f7f6f2; --bg: #ffffff; --card: #ffffff;
+      --sk1: #f0efe9; --sk2: #e8e7e1; --shadow: rgba(0,0,0,.09);
       --radius: 10px; --radius-lg: 16px;
       --nav-h: 64px;
-      /* Same bottom-stack variables as listings.html/index.html — --nk-tabbar-h is measured by JS (initTabbarMeasure). */
       --nk-tabbar-h: 0px; --nk-stack: 0px;
+      color-scheme: light;
+    }
+    html[data-theme="dark"] {
+      --green-light: #123A2E; --green-border: #245a49;
+      --accent: #5FD3AE; --accent-strong: #8FE6C8;
+      --gold: #E0A245; --gold-light: #3A2C12; --gold-border: #6b4d1c;
+      --danger: #F07272; --danger-bg: #3A1B1B;
+      --text: #ECEFEC; --text-2: #C3CBC6; --text-3: #98A39C;
+      --border: #2B3832; --surface: #1B2520; --bg: #0F1512; --card: #151D19;
+      --sk1: #1B2520; --sk2: #232f29; --shadow: rgba(0,0,0,.5);
+      color-scheme: dark;
     }
     html { scroll-behavior: smooth; }
-    body { font-family: 'Inter', system-ui, sans-serif; color: var(--text); background: var(--white); font-size: 15px; line-height: 1.6; padding-bottom: var(--nk-tabbar-h); }
+    body { font-family: 'Inter', system-ui, sans-serif; color: var(--text); background: var(--bg); font-size: 15px; line-height: 1.6; padding-bottom: var(--nk-tabbar-h); }
+    body.has-bulk { padding-bottom: calc(var(--nk-tabbar-h) + 76px); }
     a { text-decoration: none; color: inherit; }
     img { display: block; max-width: 100%; }
     button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+    button:disabled { cursor: not-allowed; opacity: .5; }
+    input, select, textarea { font-family: inherit; font-size: 14px; color: var(--text); background: var(--surface); border: 1.5px solid var(--border); border-radius: 8px; padding: 9px 12px; width: 100%; }
+    input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--green-mid); outline-offset: 1px; }
     [hidden] { display: none !important; }
-    :focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+    :focus-visible { outline: 2px solid var(--green-mid); outline-offset: 2px; }
     .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
     .skip-link { position: absolute; left: -9999px; top: 0; background: var(--green); color: white; padding: 10px 18px; border-radius: 0 0 8px 0; z-index: 100001; font-size: 14px; font-weight: 600; }
     .skip-link:focus { left: 0; }
 
-    /* ── Data saver banner (shared look) ── */
+    /* ── Data saver banner ── */
     .nk-datasaver-banner { display: none; align-items: center; justify-content: center; gap: 10px; background: #FFF7E6; color: #7a4f00; border-bottom: 1px solid #F3D9A0; font-size: 13px; padding: 9px 16px; text-align: center; flex-wrap: wrap; }
     .nk-datasaver-banner.visible { display: flex; }
     .nk-datasaver-banner button { border: 1px solid #7a4f00; color: #7a4f00; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
     .nk-datasaver-banner button:hover { background: #7a4f00; color: white; }
 
     /* ── Navbar ── */
-    nav#main-nav { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: var(--nav-h); background: var(--white); border-bottom: 1px solid var(--border); }
-    .logo { display: flex; align-items: center; gap: 10px; font-family: 'Playfair Display', serif; font-size: 20px; color: var(--green-dark); font-weight: 600; }
+    nav#main-nav { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: var(--nav-h); background: var(--bg); border-bottom: 1px solid var(--border); }
+    .logo { display: flex; align-items: center; gap: 10px; font-family: 'Playfair Display', serif; font-size: 20px; color: var(--accent-strong); font-weight: 600; }
     .logo-icon { height: 40px; display: flex; align-items: center; justify-content: center; }
     .logo-icon img { width: auto; height: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 22%; box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
     .nav-links { display: flex; align-items: center; gap: 6px; }
     .nav-link { font-size: 14px; color: var(--text-2); padding: 8px 14px; border-radius: var(--radius); transition: background .15s; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
     .nav-link:hover { background: var(--surface); color: var(--text); }
-    .nav-link[aria-current="page"] { color: var(--green); font-weight: 600; }
+    .nav-link[aria-current="page"] { color: var(--accent); font-weight: 600; }
     .nav-link svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; }
     .nav-count { background: var(--green); color: white; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; min-width: 16px; text-align: center; }
     .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px; font-weight: 500; padding: 9px 18px; border-radius: var(--radius); transition: all .15s; }
     .btn-primary { background: var(--green); color: white; }
     .btn-primary:hover { background: var(--green-dark); }
-    .btn-outline { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; padding: 8px 16px; border-radius: var(--radius); border: 1.5px solid var(--border); background: white; color: var(--text-2); transition: all .15s; }
-    .btn-outline:hover { border-color: var(--green); color: var(--green); }
+    .btn-outline { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; font-weight: 500; padding: 8px 16px; border-radius: var(--radius); border: 1.5px solid var(--border); background: var(--card); color: var(--text-2); transition: all .15s; min-height: 38px; }
+    .btn-outline:hover:not(:disabled) { border-color: var(--green-mid); color: var(--accent); }
 
     /* ── Mobile menu ── */
     .mobile-menu-btn { display: none; padding: 12px; border-radius: 6px; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; }
     .mobile-menu-btn svg { width: 22px; height: 22px; stroke: var(--text); fill: none; stroke-width: 2; display: block; }
-    .mobile-nav { display: none; position: fixed; top: var(--nav-h); left: 0; right: 0; max-height: calc(100dvh - var(--nav-h)); overflow-y: auto; -webkit-overflow-scrolling: touch; background: var(--white); border-bottom: 1px solid var(--border); padding: 16px; z-index: 99; flex-direction: column; gap: 4px; box-shadow: 0 8px 24px rgba(0,0,0,.1); }
+    .mobile-nav { display: none; position: fixed; top: var(--nav-h); left: 0; right: 0; max-height: calc(100dvh - var(--nav-h)); overflow-y: auto; -webkit-overflow-scrolling: touch; background: var(--bg); border-bottom: 1px solid var(--border); padding: 16px; z-index: 99; flex-direction: column; gap: 4px; box-shadow: 0 8px 24px rgba(0,0,0,.2); }
     .mobile-nav.open { display: flex; }
     .mobile-nav a { font-size: 15px; color: var(--text-2); padding: 12px 14px; border-radius: var(--radius); }
     .mobile-nav a:hover { background: var(--surface); }
-    .mobile-nav a[aria-current="page"] { color: var(--green); font-weight: 600; }
+    .mobile-nav a[aria-current="page"] { color: var(--accent); font-weight: 600; }
     .mobile-nav .btn-primary { color: #fff; margin-top: 8px; justify-content: center; }
 
     /* ── Page header ── */
-    .page-header { background: var(--white); border-bottom: 1px solid var(--border); padding: 28px 32px; }
+    .page-header { background: var(--bg); border-bottom: 1px solid var(--border); padding: 28px 32px; }
     .page-header-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
     .page-header h1 { font-family: 'Playfair Display', serif; font-size: 28px; color: var(--text); margin-bottom: 4px; }
     .page-header p { font-size: 14px; color: var(--text-3); }
+    .header-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .print-header { display: none; }
 
-    /* ── Sync banner ── */
+    /* ── Banners ── */
     .sync-banner { max-width: 1100px; margin: 20px auto 0; padding: 14px 18px; border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
-    .sync-banner.anon { background: var(--gold-light); border: 1px solid #FAC775; }
-    .sync-banner.signed-in { background: var(--green-light); border: 1px solid #9FE1CB; }
+    .sync-banner.anon { background: var(--gold-light); border: 1px solid var(--gold-border); }
+    .sync-banner.signed-in { background: var(--green-light); border: 1px solid var(--green-border); }
     .sync-banner-text { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-2); }
     .sync-banner-text svg { width: 18px; height: 18px; flex-shrink: 0; }
     .sync-banner.anon svg { stroke: var(--gold); fill: none; stroke-width: 2; }
-    .sync-banner.signed-in svg { stroke: var(--green-dark); fill: none; stroke-width: 2; }
+    .sync-banner.signed-in svg { stroke: var(--accent-strong); fill: none; stroke-width: 2; }
     .sync-banner strong { color: var(--text); }
+
+    .notice { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 16px; border-radius: var(--radius); font-size: 13px; margin-bottom: 16px; }
+    .notice.nudge { background: var(--gold-light); border: 1px solid var(--gold-border); color: var(--text-2); }
+    .notice.info { background: var(--green-light); border: 1px solid var(--green-border); color: var(--text-2); }
+    .notice.warn { background: var(--surface); border: 1px solid var(--border); color: var(--text-2); }
+    .notice strong { color: var(--text); }
+    .notice-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
     /* ── Main ── */
     .main-wrap { max-width: 1100px; margin: 0 auto; padding: 28px 32px 80px; }
 
-    /* ── Filter row ── */
-    .filter-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+    /* ── Summary strip ── */
+    .summary-strip { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+    .sum-chip { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; display: flex; flex-direction: column; min-width: 120px; }
+    .sum-chip strong { font-size: 15px; color: var(--text); font-weight: 700; line-height: 1.3; }
+    .sum-chip span { font-size: 11.5px; color: var(--text-3); }
+
+    /* ── Filter row + toolbar ── */
+    .filter-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
     .result-count { font-size: 14px; color: var(--text-2); }
+    .result-count:focus { outline: none; }
     .result-count strong { color: var(--text); font-weight: 600; }
     .clear-all-btn { font-size: 13px; color: var(--danger); background: none; font-weight: 500; }
     .clear-all-btn:hover { text-decoration: underline; }
+    .toolbar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 18px; align-items: center; }
+    .toolbar .tb-search { grid-column: span 2; }
+    .toolbar select, .toolbar input { min-height: 40px; padding: 8px 10px; }
+    .toolbar-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; grid-column: 1 / -1; }
+    .view-toggle { display: inline-flex; border: 1.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .view-toggle button { padding: 8px 14px; font-size: 13px; font-weight: 600; color: var(--text-2); min-height: 38px; }
+    .view-toggle button[aria-pressed="true"] { background: var(--green); color: #fff; }
+    .btn-outline[aria-pressed="true"] { border-color: var(--green-mid); color: var(--accent); background: var(--green-light); }
 
     /* ── Listings grid ── */
     .listings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+    .more-wrap { text-align: center; margin: 22px 0 4px; }
 
     /* Card */
-    .card { position: relative; background: white; border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; transition: transform .2s, box-shadow .2s; }
-    .card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,.09); }
-    .card.unavailable { opacity: .72; }
+    .card { position: relative; background: var(--card); border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; transition: transform .2s, box-shadow .2s; display: flex; flex-direction: column; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px var(--shadow); }
+    .card.unavailable { opacity: .82; }
+    .card.selected { outline: 2px solid var(--green-mid); outline-offset: -1px; }
+    .card.dragging { opacity: .45; }
+    .card.drag-over { outline: 2px dashed var(--green-mid); outline-offset: 2px; }
+    .card[draggable="true"] { cursor: grab; }
+    .card-media { position: relative; }
     .card-img-link { display: block; }
-    .card-img-link:focus-visible { outline: 2px solid var(--green); outline-offset: -2px; }
+    .card-img-link:focus-visible { outline: 2px solid var(--green-mid); outline-offset: -2px; }
     .card-img { height: 180px; background: var(--surface); position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
     .card-img img { width: 100%; height: 100%; object-fit: cover; }
     .card-img-placeholder { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--text-3); }
     .card-img-placeholder svg { width: 32px; height: 32px; opacity: .3; stroke: currentColor; fill: none; stroke-width: 1.5; }
     .badge-featured { position: absolute; top: 10px; left: 10px; background: var(--green-dark); color: white; font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 20px; z-index: 2; }
-    .badge-unavailable { position: absolute; inset: 0; background: rgba(20,20,18,.55); color: white; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; text-align: center; padding: 12px; z-index: 2; }
+    .badge-unavailable { position: absolute; inset: 0; background: rgba(20,20,18,.6); color: white; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; text-align: center; padding: 12px; z-index: 2; }
+    .photo-count { position: absolute; right: 10px; bottom: 10px; background: rgba(0,0,0,.6); color: #fff; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 12px; z-index: 3; pointer-events: none; }
+    .photo-nav { position: absolute; top: 50%; transform: translateY(-50%); z-index: 3; width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,.5); color: #fff; font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .15s; }
+    .photo-nav.prev { left: 8px; } .photo-nav.next { right: 8px; }
+    .card:hover .photo-nav, .photo-nav:focus-visible { opacity: 1; }
+    @media (hover: none) { .photo-nav { opacity: .85; } }
+    .sel-box { position: absolute; left: 10px; bottom: 10px; z-index: 4; background: var(--card); border: 1.5px solid var(--border); border-radius: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .sel-box input { width: 18px; height: 18px; padding: 0; accent-color: var(--green); cursor: pointer; }
 
     .remove-heart-btn, .add-heart-btn {
-      position: absolute; top: 10px; right: 10px; z-index: 3;
+      position: absolute; top: 10px; right: 10px; z-index: 4;
       width: 36px; height: 36px; border-radius: 50%;
       background: rgba(255,255,255,.95); border: 1px solid var(--border);
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; transition: all .15s;
     }
-    .remove-heart-btn:hover { background: var(--danger-bg); border-color: var(--danger); }
-    .remove-heart-btn:focus-visible, .add-heart-btn:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
-    .remove-heart-btn svg { width: 16px; height: 16px; fill: var(--danger); stroke: var(--danger); stroke-width: 1.5; transition: transform .15s; }
+    .remove-heart-btn:hover { background: #FFF5F5; border-color: #C53030; }
+    .remove-heart-btn svg { width: 16px; height: 16px; fill: #C53030; stroke: #C53030; stroke-width: 1.5; transition: transform .15s; }
     .remove-heart-btn:hover svg { transform: scale(1.1); }
-    .remove-heart-btn.removing svg { opacity: .3; }
-    .add-heart-btn:hover { background: var(--green-light); border-color: var(--green); }
-    .add-heart-btn svg { fill: none; stroke: var(--text-2); width: 16px; height: 16px; stroke-width: 2; transition: all .15s; }
-    .add-heart-btn:hover svg { stroke: var(--green-dark); transform: scale(1.1); }
+    .add-heart-btn:hover { background: #E1F5EE; border-color: #0F6E56; }
+    .add-heart-btn svg { fill: none; stroke: #4a4a46; width: 16px; height: 16px; stroke-width: 2; transition: all .15s; }
+    .add-heart-btn:hover svg { stroke: #085041; transform: scale(1.1); }
     .add-heart-btn.added { pointer-events: none; }
-    .add-heart-btn.added svg { fill: var(--danger); stroke: var(--danger); }
+    .add-heart-btn.added svg { fill: #C53030; stroke: #C53030; }
 
-    .card-body { padding: 14px 16px; }
+    .card-body { padding: 14px 16px; display: flex; flex-direction: column; flex: 1; }
     .card-top-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
-    .card-area { font-size: 11px; font-weight: 600; color: var(--green); text-transform: uppercase; letter-spacing: .06em; }
+    .card-area { font-size: 11px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: .06em; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
     .card-cat-pill { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 12px; background: var(--surface); color: var(--text-3); border: 1px solid var(--border); white-space: nowrap; }
-    .card-cat-pill.apartment, .card-cat-pill.house, .card-cat-pill.boarding { background: var(--green-light); color: var(--green-dark); border-color: var(--green-mid); }
+    .card-cat-pill.apartment, .card-cat-pill.house, .card-cat-pill.boarding { background: var(--green-light); color: var(--accent-strong); border-color: var(--green-mid); }
     .card-cat-pill.airbnb { background: var(--gold-light); color: var(--gold); border-color: var(--gold); }
     .card-cat-pill.commercial { background: var(--surface); color: var(--text-2); border-color: var(--text-3); }
-    .card-area { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-    .card-verified-badge { display: inline-flex; align-items: center; gap: 3px; background: var(--green-light); color: var(--green-dark); font-size: 9.5px; font-weight: 700; padding: 1px 7px 1px 5px; border-radius: 20px; text-transform: none; letter-spacing: 0; }
-    .card-verified-badge svg { width: 9px; height: 9px; stroke: var(--green-dark); fill: none; stroke-width: 2.6; }
+    .card-verified-badge { display: inline-flex; align-items: center; gap: 3px; background: var(--green-light); color: var(--accent-strong); font-size: 9.5px; font-weight: 700; padding: 1px 7px 1px 5px; border-radius: 20px; text-transform: none; letter-spacing: 0; }
+    .card-verified-badge svg { width: 9px; height: 9px; stroke: var(--accent-strong); fill: none; stroke-width: 2.6; }
     .card-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 3px; line-height: 1.35; }
-    .card-sub { font-size: 12px; color: var(--text-3); margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .card-price { font-size: 17px; font-weight: 700; color: var(--green-dark); margin-bottom: 10px; }
+    .card-sub { font-size: 12px; color: var(--text-3); margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-price { font-size: 17px; font-weight: 700; color: var(--accent-strong); margin-bottom: 4px; }
     .card-price span { font-size: 12px; font-weight: 400; color: var(--text-3); }
-    .card-meta { display: flex; gap: 12px; font-size: 12px; color: var(--text-2); padding-top: 10px; border-top: 1px solid var(--border); margin-bottom: 12px; flex-wrap: wrap; }
+    .chip-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+    .chip { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 12px; background: var(--surface); color: var(--text-2); border: 1px solid var(--border); }
+    .chip.drop { background: var(--green-light); color: var(--accent-strong); border-color: var(--green-mid); }
+    .chip.rise { background: var(--gold-light); color: var(--gold); border-color: var(--gold); }
+    .chip.status { background: var(--green-light); color: var(--accent-strong); border-color: var(--green-mid); }
+    .chip.status.rejected { background: var(--danger-bg); color: var(--danger); border-color: var(--danger); }
+    .chip.folder { background: var(--surface); }
+    .chip.viewing { background: var(--gold-light); color: var(--gold); border-color: var(--gold); }
+    .card-meta { display: flex; gap: 12px; font-size: 12px; color: var(--text-2); padding-top: 10px; border-top: 1px solid var(--border); margin-bottom: 10px; flex-wrap: wrap; }
     .card-meta-item { display: flex; align-items: center; gap: 4px; }
     .card-meta-item svg { width: 13px; height: 13px; stroke: var(--text-3); fill: none; stroke-width: 2; }
+    .card-note { font-size: 12.5px; color: var(--text-2); background: var(--surface); border-left: 3px solid var(--green-mid); border-radius: 6px; padding: 7px 10px; margin-bottom: 10px; white-space: pre-wrap; word-break: break-word; }
     .card-saved-date { font-size: 11px; color: var(--text-3); margin-bottom: 10px; }
-    .card-view-btn { display: block; text-align: center; width: 100%; padding: 9px; border-radius: var(--radius); background: var(--green); color: white; font-size: 13px; font-weight: 600; transition: background .15s; }
+    .card-actions { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 10px; }
+    .act-btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text-2); min-height: 34px; transition: all .15s; }
+    .act-btn:hover:not(:disabled) { border-color: var(--green-mid); color: var(--accent); }
+    .act-btn.wa { border-color: #25D366; color: #128C7E; }
+    html[data-theme="dark"] .act-btn.wa { color: #4ADE80; }
+    .act-btn.danger { color: var(--danger); }
+    .card-reorder { display: flex; gap: 6px; margin-bottom: 8px; }
+    .card-view-btn { display: block; text-align: center; width: 100%; padding: 9px; border-radius: var(--radius); background: var(--green); color: white; font-size: 13px; font-weight: 600; transition: background .15s; margin-top: auto; }
     .card-view-btn:hover { background: var(--green-dark); }
-    .card-view-btn:focus-visible { outline: 2px solid var(--green-dark); outline-offset: 2px; }
+    .card-view-btn:focus-visible { outline: 2px solid var(--green-mid); outline-offset: 2px; }
     .card-view-btn.disabled-btn { background: var(--surface); color: var(--text-3); cursor: not-allowed; }
 
+    /* ── Unavailable section ── */
+    .unavail { margin-top: 32px; border-top: 1px solid var(--border); padding-top: 18px; }
+    .unavail > summary { cursor: pointer; font-weight: 600; font-size: 15px; color: var(--text-2); padding: 6px 0; }
+    .unavail-actions { margin: 10px 0 16px; }
+
+    /* ── Map ── */
+    #map { height: 480px; border-radius: var(--radius-lg); border: 1px solid var(--border); z-index: 1; }
+    .map-note { font-size: 12px; color: var(--text-3); margin-top: 8px; }
+
     /* ── Skeleton ── */
-    .skeleton { background: white; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); }
-    .skeleton-img { height: 180px; background: linear-gradient(90deg, #f0efe9 25%, #e8e7e1 50%, #f0efe9 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+    .skeleton { background: var(--card); border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); }
+    .skeleton-img { height: 180px; background: linear-gradient(90deg, var(--sk1) 25%, var(--sk2) 50%, var(--sk1) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
     .skeleton-body { padding: 14px 16px; }
-    .skeleton-line { height: 11px; background: linear-gradient(90deg, #f0efe9 25%, #e8e7e1 50%, #f0efe9 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 4px; margin-bottom: 9px; }
+    .skeleton-line { height: 11px; background: linear-gradient(90deg, var(--sk1) 25%, var(--sk2) 50%, var(--sk1) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 4px; margin-bottom: 9px; }
     .skeleton-line.short { width: 55%; }
     .skeleton-line.xshort { width: 35%; }
     @keyframes shimmer { to { background-position: -200% 0; } }
-    @media (prefers-reduced-motion: reduce) { .skeleton-img, .skeleton-line { animation: none; } }
 
-    /* ── Empty state ── */
-    .empty-state { text-align: center; padding: 80px 20px; color: var(--text-3); }
-    .empty-state svg { width: 52px; height: 52px; margin: 0 auto 18px; stroke: var(--border); fill: none; stroke-width: 1.5; }
+    /* ── Empty / error states ── */
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-3); }
+    .empty-state svg.big { width: 52px; height: 52px; margin: 0 auto 18px; stroke: var(--text-3); opacity: .6; fill: none; stroke-width: 1.5; display: block; }
     .empty-state h2 { font-size: 17px; font-weight: 600; color: var(--text-2); margin-bottom: 8px; }
-    .empty-state p { font-size: 14px; margin-bottom: 22px; max-width: 360px; margin-left: auto; margin-right: auto; }
+    .empty-state p { font-size: 14px; margin: 0 auto 22px; max-width: 380px; }
+    .empty-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .quick-block { margin-top: 28px; }
+    .quick-block h3 { font-size: 12.5px; font-weight: 600; color: var(--text-3); margin-bottom: 8px; }
+    .quick-links { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .quick-link { font-size: 12.5px; font-weight: 600; color: var(--accent-strong); background: var(--card); border: 1px solid var(--green-border); padding: 8px 14px; border-radius: 20px; }
+    .quick-link:hover { background: var(--green-light); }
 
-    /* ── Recommended section ── */
-    .recommended-section { margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border); }
-    .recommended-header { margin-bottom: 18px; }
-    .recommended-header h2 { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--text); margin-bottom: 4px; }
-    .recommended-header p { font-size: 13px; color: var(--text-3); }
+    /* ── Side sections ── */
+    .side-section { margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border); }
+    .side-header { margin-bottom: 18px; }
+    .side-header h2 { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--text); margin-bottom: 4px; }
+    .side-header p { font-size: 13px; color: var(--text-3); }
 
-    /* ── Confirm modal (clear all) ── */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 100000; display: none; align-items: center; justify-content: center; padding: 20px; }
+    /* ── Modals ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 100000; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.open { display: flex; }
     body.nk-modal-open .nk-scrolltop-btn { display: none !important; }
-    .modal { background: var(--white); border-radius: var(--radius-lg); width: 100%; max-width: 380px; padding: 24px; }
+    .modal { background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius-lg); width: 100%; max-width: 400px; padding: 24px; max-height: 92vh; overflow-y: auto; }
+    .modal.wide { max-width: 520px; }
+    .modal.xwide { max-width: 860px; }
     .modal h2 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
     .modal p { font-size: 13px; color: var(--text-2); line-height: 1.6; margin-bottom: 18px; }
-    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .modal .modal-sub { margin-bottom: 14px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 16px; }
+    .form-row { margin-bottom: 12px; }
+    .form-row label { display: block; font-size: 12.5px; font-weight: 600; color: var(--text-2); margin-bottom: 5px; }
     .btn-danger { background: var(--danger-bg); color: var(--danger); padding: 9px 16px; border-radius: var(--radius); font-size: 13px; font-weight: 600; }
-    .btn-danger:hover { background: var(--danger); color: white; }
+    .btn-danger:hover { background: var(--danger-solid); color: white; }
+    .compare-scroll { overflow-x: auto; }
+    .compare-table { border-collapse: collapse; width: 100%; min-width: 520px; font-size: 13px; }
+    .compare-table th, .compare-table td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
+    .compare-table th[scope="row"] { background: var(--surface); font-weight: 600; color: var(--text-2); width: 130px; }
+    .compare-table img { width: 100%; max-width: 200px; height: 110px; object-fit: cover; border-radius: 8px; }
+    .compare-table a { color: var(--accent); font-weight: 600; }
 
-    /* ── Toast (same positioning contract as index.html/listings.html) ── */
-    .toast { position: fixed; left: 50%; bottom: calc(var(--nk-tabbar-h) + var(--nk-stack) + 20px); transform: translate(-50%, 24px); z-index: 100002; background: var(--green-dark); color: #fff; padding: 12px 20px; border-radius: var(--radius); font-size: 13.5px; font-weight: 500; box-shadow: 0 8px 24px rgba(0,0,0,.2); opacity: 0; pointer-events: none; transition: all .25s; max-width: min(92vw, 420px); text-align: center; }
+    /* ── Bulk bar ── */
+    .bulk-bar { position: fixed; left: 0; right: 0; bottom: var(--nk-tabbar-h); z-index: 80; background: var(--card); border-top: 1px solid var(--border); padding: 10px 16px; display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; box-shadow: 0 -4px 16px rgba(0,0,0,.18); }
+    .bulk-bar .count { font-size: 13px; font-weight: 600; color: var(--text); margin-right: 6px; }
+
+    /* ── Toast ── */
+    .toast { position: fixed; left: 50%; bottom: calc(var(--nk-tabbar-h) + var(--nk-stack) + 20px); transform: translate(-50%, 24px); z-index: 100002; background: var(--green-dark); color: #fff; padding: 12px 20px; border-radius: var(--radius); font-size: 13.5px; font-weight: 500; box-shadow: 0 8px 24px rgba(0,0,0,.3); opacity: 0; pointer-events: none; transition: all .25s; max-width: min(92vw, 420px); text-align: center; }
     .toast.show { opacity: 1; transform: translate(-50%, 0); }
-    .toast.error { background: var(--danger); }
+    .toast.show.has-action { pointer-events: auto; }
+    .toast.error { background: var(--danger-solid); }
+    .toast-action { margin-left: 10px; font-weight: 700; text-decoration: underline; color: #fff; }
 
     /* ── Footer ── */
-    footer { background: var(--text); color: rgba(255,255,255,.6); padding: 48px 32px 28px; }
+    footer { background: #141a17; color: rgba(255,255,255,.6); padding: 48px 32px 28px; }
     .footer-inner { max-width: 1100px; margin: 0 auto; }
     .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
     .footer-logo { font-family: 'Playfair Display', serif; font-size: 20px; color: white; margin-bottom: 10px; }
@@ -205,7 +315,7 @@
     .footer-col a { display: block; font-size: 13px; color: rgba(255,255,255,.55); margin-bottom: 8px; transition: color .15s; }
     .footer-col a:hover { color: white; }
     .footer-social { display: flex; gap: 8px; margin-top: 14px; }
-    .footer-social a { width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,.08); display: flex; align-items: center; justify-content: center; transition: background .15s; }
+    .footer-social a { width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,.08); display: flex; align-items: center; justify-content: center; transition: background .15s; margin-bottom: 0; }
     .footer-social a:hover { background: var(--green); }
     .footer-social svg { width: 15px; height: 15px; stroke: rgba(255,255,255,.7); fill: none; stroke-width: 2; }
     .footer-counties { column-count: 2; column-gap: 14px; max-height: 180px; overflow-y: auto; padding-right: 6px; }
@@ -213,28 +323,23 @@
     .footer-counties::-webkit-scrollbar { width: 5px; }
     .footer-counties::-webkit-scrollbar-thumb { background: rgba(255,255,255,.2); border-radius: 4px; }
     .footer-bottom { border-top: 1px solid rgba(255,255,255,.1); padding-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-    .footer-bottom p, .footer-bottom-links a { font-size: 12px; color: rgba(255,255,255,.4); }
-    .footer-bottom-links { display: flex; gap: 20px; }
-    .footer-bottom-links a:hover { color: white; }
+    .footer-bottom p { font-size: 12px; color: rgba(255,255,255,.4); }
 
-    /* ── B7: same bottom tab bar as index.html/listings.html (height measured by JS, see initTabbarMeasure) ── */
-    .nk-tabbar { display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 70; background: white; border-top: 1px solid var(--border); padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px)); align-items: stretch; justify-content: space-around; box-shadow: 0 -4px 16px rgba(0,0,0,.06); }
+    /* ── Mobile tab bar ── */
+    .nk-tabbar { display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 90; background: var(--bg); border-top: 1px solid var(--border); padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px)); align-items: stretch; justify-content: space-around; box-shadow: 0 -4px 16px rgba(0,0,0,.12); }
     .nk-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 10.5px; font-weight: 600; color: var(--text-3); padding: 4px 0; flex: 1; position: relative; min-height: 46px; }
     .nk-tab svg { width: 21px; height: 21px; stroke: currentColor; fill: none; stroke-width: 2; }
-    .nk-tab.active { color: var(--green); }
-    .nk-tab-postbtn { position: relative; top: -14px; color: var(--green); }
+    .nk-tab.active { color: var(--accent); }
+    .nk-tab-postbtn { position: relative; top: -14px; color: var(--accent); }
     .nk-tab-postcircle { width: 42px; height: 42px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(15,110,86,.4); margin-bottom: 2px; }
     .nk-tab-postcircle svg { width: 20px; height: 20px; stroke: white; }
-    .nk-tab-badge { position: absolute; top: 0; right: 22%; background: var(--green); color: white; font-size: 9px; font-weight: 800; min-width: 15px; height: 15px; border-radius: 10px; display: none; align-items: center; justify-content: center; padding: 0 3px; border: 1.5px solid white; }
+    .nk-tab-badge { position: absolute; top: 0; right: 22%; background: var(--green); color: white; font-size: 9px; font-weight: 800; min-width: 15px; height: 15px; border-radius: 10px; display: none; align-items: center; justify-content: center; padding: 0 3px; border: 1.5px solid var(--bg); }
     .nk-tab-badge.visible { display: flex; }
 
-    /* Third-party floating chat widget: tagged by liftChatWidget() and kept above the tab bar / toast on phones. */
     @media (max-width: 768px) {
       .nk-chat-fab { bottom: calc(var(--nk-tabbar-h) + var(--nk-stack) + 14px) !important; }
       body.nk-modal-open .nk-chat-fab { display: none !important; }
     }
-
-    /* ── Responsive ── */
     @media (max-width: 900px) {
       .page-header { padding: 20px 16px; }
       .sync-banner { margin: 16px 16px 0; }
@@ -247,10 +352,33 @@
       .nav-links { display: none; }
       .mobile-menu-btn { display: flex; }
       .nk-tabbar { display: flex; }
+      .toolbar .tb-search { grid-column: 1 / -1; }
+      #map { height: 380px; }
     }
     @media (max-width: 480px) {
       .footer-top { grid-template-columns: 1fr; }
       .page-header-inner { flex-direction: column; }
+    }
+
+    /* ── Print / Save as PDF (item 21): forces light colours, hides chrome ── */
+    @media print {
+      html, html[data-theme="dark"] {
+        --bg: #fff; --card: #fff; --surface: #f4f4f2; --text: #111; --text-2: #333; --text-3: #555; --border: #ccc;
+        --accent: #0F6E56; --accent-strong: #085041; --green-light: #E1F5EE; --gold-light: #FAEEDA; --danger: #C53030;
+        color-scheme: light;
+      }
+      body { background: #fff; padding-bottom: 0 !important; font-size: 12px; }
+      .no-print, nav, .mobile-nav, footer, .nk-tabbar, .skip-link, .nk-datasaver-banner, .sync-banner, .toast, .bulk-bar,
+      .side-section, .card-actions, .card-reorder, .remove-heart-btn, .photo-nav, .photo-count, .sel-box, .card-view-btn, .more-wrap, #map-wrap, .nk-chat-fab { display: none !important; }
+      .print-header { display: block; max-width: 1100px; margin: 0 auto; padding: 0 0 12px; }
+      .print-header h1 { font-family: 'Playfair Display', serif; font-size: 22px; }
+      .page-header { border: none; padding: 12px 0 0; }
+      .header-actions { display: none !important; }
+      .main-wrap { padding: 8px 0; max-width: none; }
+      .listings-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .card { break-inside: avoid; box-shadow: none !important; transform: none !important; }
+      .card-img { height: 120px; }
+      .unavail { display: block; }
     }
   </style>
 </head>
@@ -305,14 +433,19 @@
 <header class="page-header">
   <div class="page-header-inner">
     <div>
-      <h1>Your shortlist</h1>
-      <p>Properties you've saved to come back to later</p>
+      <h1 id="page-title">Your shortlist</h1>
+      <p id="page-sub">Properties you've saved to come back to later</p>
+    </div>
+    <div class="header-actions no-print" id="header-actions">
+      <button type="button" class="btn-outline" id="share-all-btn" hidden>Share shortlist</button>
+      <button type="button" class="btn-outline" id="print-btn" hidden>Print / PDF</button>
+      <button type="button" class="btn-outline" id="theme-btn" aria-label="Switch colour theme">Theme</button>
     </div>
   </div>
 </header>
 
 <!-- ── SYNC BANNER ── -->
-<div class="sync-banner anon" id="sync-banner-anon" hidden>
+<div class="sync-banner anon no-print" id="sync-banner-anon" hidden>
   <div class="sync-banner-text">
     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
     <span>Saved listings are stored on this device only. <strong>Sign in with your email</strong> to keep your shortlist if you switch phones or browsers.</span>
@@ -320,7 +453,7 @@
   <a href="/login" class="btn-outline" style="white-space:nowrap">Sign in to sync</a>
 </div>
 
-<div class="sync-banner signed-in" id="sync-banner-signedin" hidden>
+<div class="sync-banner signed-in no-print" id="sync-banner-signedin" hidden>
   <div class="sync-banner-text">
     <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
     <span>Signed in as <strong id="signed-in-email">—</strong> — your shortlist syncs automatically across every device.</span>
@@ -330,31 +463,103 @@
 
 <!-- ── MAIN ── -->
 <div class="main-wrap">
+  <div class="print-header" aria-hidden="true"><h1>Nyumba254 shortlist</h1><p id="print-meta"></p></div>
+
+  <div class="notice info no-print" id="share-banner" hidden>
+    <span><strong>Shared shortlist.</strong> <span id="share-banner-text"></span></span>
+    <div class="notice-actions">
+      <button type="button" class="btn-outline" id="share-save-all">Save all to my shortlist</button>
+      <a href="/listings" class="btn-outline">Browse listings</a>
+    </div>
+  </div>
+
+  <div class="notice nudge no-print" id="nudge" hidden>
+    <span id="nudge-text"><strong>Don't lose your shortlist.</strong> You've saved several listings on this device only. Sign in to keep them on every phone and browser.</span>
+    <div class="notice-actions">
+      <a href="/login" class="btn btn-primary">Sign in</a>
+      <button type="button" class="btn-outline" id="nudge-dismiss">Not now</button>
+    </div>
+  </div>
+
+  <div class="notice warn no-print" id="stale-note" hidden>
+    <span>Showing your last saved copy. We couldn't refresh it just now.</span>
+    <button type="button" class="btn-outline" data-act="retry">Retry</button>
+  </div>
+
+  <div class="summary-strip no-print" id="summary-strip" hidden></div>
+
   <div class="filter-row">
-    <span class="result-count" id="result-count" aria-live="polite">Loading…</span>
-    <button type="button" class="clear-all-btn" id="clear-all-btn" hidden>Clear all saved listings</button>
+    <span class="result-count" id="result-count" aria-live="polite" tabindex="-1">Loading…</span>
+    <button type="button" class="clear-all-btn no-print" id="clear-all-btn" hidden>Clear all saved listings</button>
+  </div>
+
+  <div class="toolbar no-print" id="toolbar" role="group" aria-label="Filter and sort saved listings" hidden>
+    <div class="tb-search"><label for="f-q" class="sr-only">Search saved listings</label><input type="search" id="f-q" placeholder="Search title, area or notes" autocomplete="off"/></div>
+    <div><label for="f-sort" class="sr-only">Sort by</label>
+      <select id="f-sort">
+        <option value="saved">Recently saved</option>
+        <option value="price-asc">Price: low to high</option>
+        <option value="price-desc">Price: high to low</option>
+        <option value="area">Area (A–Z)</option>
+        <option value="manual">My order</option>
+      </select></div>
+    <div><label for="f-cat" class="sr-only">Category</label><select id="f-cat"></select></div>
+    <div><label for="f-county" class="sr-only">County</label><select id="f-county"></select></div>
+    <div><label for="f-avail" class="sr-only">Availability</label>
+      <select id="f-avail">
+        <option value="all">All availability</option>
+        <option value="available">Available only</option>
+        <option value="unavailable">No longer available</option>
+      </select></div>
+    <div data-org><label for="f-status" class="sr-only">Status</label>
+      <select id="f-status">
+        <option value="">Any status</option>
+        <option value="interested">Interested</option>
+        <option value="contacted">Contacted</option>
+        <option value="viewing">Viewing booked</option>
+        <option value="viewed">Viewed</option>
+        <option value="rejected">Rejected</option>
+      </select></div>
+    <div data-org><label for="f-folder" class="sr-only">Folder</label><select id="f-folder"></select></div>
+    <div class="toolbar-actions">
+      <div class="view-toggle" role="group" aria-label="View">
+        <button type="button" id="view-grid" aria-pressed="true">Grid</button>
+        <button type="button" id="view-map" aria-pressed="false">Map</button>
+      </div>
+      <button type="button" class="btn-outline" id="select-btn" aria-pressed="false" data-org>Select</button>
+      <button type="button" class="btn-outline" id="clear-filters-btn" hidden>Clear filters</button>
+    </div>
   </div>
 
   <div id="results">
+    <div id="state-box"></div>
     <div class="listings-grid" id="listings-grid" aria-busy="true">
       <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line xshort"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
       <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line xshort"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
       <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line xshort"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
     </div>
+    <div class="more-wrap" id="more-wrap" hidden><button type="button" class="btn-outline" data-act="more" id="more-btn">Show more</button></div>
+    <div id="map-wrap" hidden>
+      <div id="map" role="application" aria-label="Map of saved listings"></div>
+      <p class="map-note" id="map-note"></p>
+    </div>
+    <details class="unavail" id="unavail-wrap" hidden>
+      <summary id="unavail-summary">No longer available</summary>
+      <div class="unavail-actions no-print"><button type="button" class="btn-outline" data-act="remove-unavail">Remove all unavailable</button></div>
+      <div class="listings-grid" id="unavail-grid"></div>
+    </details>
   </div>
 
-  <!-- ── RECOMMENDED / RECENTLY LISTED ── -->
-  <section class="recommended-section" id="recommended-section" aria-labelledby="rec-title" hidden>
-    <div class="recommended-header">
-      <h2 id="rec-title">You may also like</h2>
-      <p>Recently listed properties across Kenya</p>
-    </div>
-    <div class="listings-grid" id="recommended-grid">
-      <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line xshort"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
-      <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line xshort"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
-      <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line xshort"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
-      <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line xshort"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div></div>
-    </div>
+  <!-- ── RECENTLY VIEWED ── -->
+  <section class="side-section no-print" id="recent-section" aria-labelledby="recent-title" hidden>
+    <div class="side-header"><h2 id="recent-title">Recently viewed</h2><p>Listings you opened lately that aren't on your shortlist</p></div>
+    <div class="listings-grid" id="recent-grid"></div>
+  </section>
+
+  <!-- ── RECOMMENDED ── -->
+  <section class="side-section no-print" id="recommended-section" aria-labelledby="rec-title" hidden>
+    <div class="side-header"><h2 id="rec-title">You may also like</h2><p id="rec-sub">Recently listed properties across Kenya</p></div>
+    <div class="listings-grid" id="recommended-grid"></div>
   </section>
 </div>
 
@@ -403,11 +608,22 @@
   </div>
 </footer>
 
-<!-- ── CLEAR ALL CONFIRM MODAL ── -->
+<!-- ── BULK BAR ── -->
+<div class="bulk-bar no-print" id="bulk-bar" role="region" aria-label="Selected listings actions" hidden>
+  <span class="count" id="bulk-count">0 selected</span>
+  <button type="button" class="btn-outline" id="bulk-all">Select all</button>
+  <button type="button" class="btn-outline" id="bulk-compare">Compare</button>
+  <button type="button" class="btn-outline" id="bulk-share">Share</button>
+  <button type="button" class="btn-outline" id="bulk-folder">Move to folder</button>
+  <button type="button" class="btn-danger" id="bulk-remove">Remove</button>
+  <button type="button" class="btn-outline" id="bulk-done">Done</button>
+</div>
+
+<!-- ── CLEAR ALL MODAL ── -->
 <div class="modal-overlay" id="clear-modal">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="clear-modal-title">
     <h2 id="clear-modal-title">Clear your whole shortlist?</h2>
-    <p>This removes every saved listing. This can't be undone, though you can always save them again later.</p>
+    <p id="clear-modal-text">This removes every saved listing. This can't be undone, though you can always save them again later.</p>
     <div class="modal-actions">
       <button type="button" class="btn-outline" id="clear-cancel-btn">Cancel</button>
       <button type="button" class="btn-danger" id="clear-confirm-btn">Clear all</button>
@@ -415,9 +631,69 @@
   </div>
 </div>
 
+<!-- ── EDIT MODAL (status, folder, viewing, note) ── -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
+    <h2 id="edit-modal-title">Notes &amp; status</h2>
+    <p class="modal-sub" id="edit-modal-sub"></p>
+    <div class="form-row"><label for="em-status">Status</label>
+      <select id="em-status">
+        <option value="">No status</option>
+        <option value="interested">Interested</option>
+        <option value="contacted">Contacted</option>
+        <option value="viewing">Viewing booked</option>
+        <option value="viewed">Viewed</option>
+        <option value="rejected">Rejected</option>
+      </select></div>
+    <div class="form-row"><label for="em-folder">Folder</label><input id="em-folder" list="folder-list" maxlength="40" placeholder="e.g. Kisumu, Under 20K, For my sister" autocomplete="off"/><datalist id="folder-list"></datalist></div>
+    <div class="form-row"><label for="em-view">Viewing date and time</label><input id="em-view" type="datetime-local"/></div>
+    <div class="form-row"><label for="em-note">Private note (only you see this)</label><textarea id="em-note" rows="4" maxlength="500" placeholder="e.g. Ask about deposit. Check the water supply."></textarea></div>
+    <div class="modal-actions">
+      <button type="button" class="btn-outline" id="em-cancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="em-save">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── FOLDER MODAL (bulk) ── -->
+<div class="modal-overlay" id="folder-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="folder-modal-title">
+    <h2 id="folder-modal-title">Move to folder</h2>
+    <p class="modal-sub" id="folder-modal-sub"></p>
+    <div class="form-row"><label for="fm-folder">Folder name</label><input id="fm-folder" list="folder-list" maxlength="40" placeholder="Leave empty to remove from folders" autocomplete="off"/></div>
+    <div class="modal-actions">
+      <button type="button" class="btn-outline" id="fm-cancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="fm-save">Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SHARE MODAL ── -->
+<div class="modal-overlay" id="share-modal">
+  <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="sh-title">
+    <h2 id="sh-title">Share</h2>
+    <div class="form-row"><label for="sh-text" class="sr-only">Message to share</label><textarea id="sh-text" rows="7" readonly></textarea></div>
+    <div class="modal-actions">
+      <a class="btn btn-primary" id="sh-wa" target="_blank" rel="noopener" href="#">Send on WhatsApp</a>
+      <button type="button" class="btn-outline" id="sh-copy">Copy</button>
+      <button type="button" class="btn-outline" id="sh-native" hidden>More options</button>
+      <button type="button" class="btn-outline" id="sh-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── COMPARE MODAL ── -->
+<div class="modal-overlay" id="compare-modal">
+  <div class="modal xwide" role="dialog" aria-modal="true" aria-labelledby="cmp-title">
+    <h2 id="cmp-title">Compare listings</h2>
+    <div class="compare-scroll" id="compare-body"></div>
+    <div class="modal-actions"><button type="button" class="btn-outline" id="cmp-close">Close</button></div>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<!-- ── MOBILE TAB BAR (same markup and behaviour as index.html/listings.html; Saved is active) ── -->
+<!-- ── MOBILE TAB BAR ── -->
 <nav class="nk-tabbar" aria-label="Primary">
   <a href="/" class="nk-tab">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home
@@ -437,209 +713,546 @@
   </a>
 </nav>
 
-<!-- Supabase client, then the shared module. NOT deferred: inline scripts ignore `defer`, so the page script
-     below would otherwise run before nk-shared.js has defined anything (see index.html / listings.html). -->
 <script src="/nk-shared.js"></script>
 <script>
 (function () {
 'use strict';
 
-/* ─── helpers (same names/shapes as index.html and listings.html) ─── */
+/* ════════════════════════════════════════════════════════════
+   CONFIG
+   ════════════════════════════════════════════════════════════ */
+const SAVED_KEY = 'nk_saved_listings';              // written by saved-listings.js (heart buttons)
+const META_KEY = 'nk_saved_meta_v1';                // notes / status / folder / viewing / order / price snapshot (per device)
+const CACHE_KEY = 'nk_saved_cache_v1';              // last shortlist, for instant render
+const THEME_KEY = 'nk_theme';
+const NUDGE_KEY = 'nk_signin_nudge_dismissed';
+const PAGE_SIZE = 12;
+const NUDGE_AFTER = 3;
+const LISTING_SELECT = '*, listing_photos(*), profiles(verification_status)';
+/* Columns that may hold the seller's phone. Add or reorder to match your `listings` table. */
+const CONTACT_FIELDS = ['whatsapp_number', 'whatsapp', 'contact_phone', 'phone', 'phone_number', 'seller_phone', 'contact_number'];
+const STATUS_LABEL = { interested: 'Interested', contacted: 'Contacted', viewing: 'Viewing booked', viewed: 'Viewed', rejected: 'Rejected' };
+const FREQ_TXT = { month: 'per month', night: 'per night', week: 'per week', term: 'per term', once: 'for sale' };
+
+/* ════════════════════════════════════════════════════════════
+   HELPERS
+   ════════════════════════════════════════════════════════════ */
 const $ = id => document.getElementById(id);
 const qsa = (sel, root) => Array.from((root || document).querySelectorAll(sel));
 const pad = n => String(n).padStart(6, '0');
+const p2 = n => String(n).padStart(2, '0');
 const listingHref = l => '/listing?id=' + pad(l.listing_number);
+const absUrl = l => location.origin + listingHref(l);
+const fmtNum = n => Number(n || 0).toLocaleString('en-KE');
+const plainPrice = l => 'KES ' + fmtNum(l.price) + (NK_FREQ_LABEL[l.price_frequency] || '');
 
-const SAVED_KEY = 'nk_saved_listings';
 let currentUser = null;
 let savedRows = [];
 let recommendedRows = [];
+let recentRows = [];
+let loadError = false;
+let loaded = false;
+let shareMode = false;
+let sharedNums = [];
+let mutating = 0;
+let metaKey = META_KEY + ':anon';
+let meta = { items: {}, order: [] };
+let renderedIds = [];
+let currentAvailIds = [];
+let unavailPref = null;
+let editingId = null;
+let shareCtx = { title: '', text: '' };
+let recToken = 0;
+let refreshing = false;
+let lastRefresh = 0;
+let rt = null;
+let rtTimer = null;
+const photoIdx = {};
 
-function getLocalSavedIds() {
-  try { const raw = localStorage.getItem(SAVED_KEY); return raw ? JSON.parse(raw) : []; } catch (e) { return []; }
-}
-function setLocalSavedIds(ids) { try { localStorage.setItem(SAVED_KEY, JSON.stringify(ids)); } catch (e) {} }
-function removeLocalSaved(id) { setLocalSavedIds(getLocalSavedIds().filter(x => x !== id)); }
+const ui = { q: '', cat: '', county: '', avail: 'all', status: '', folder: '', sort: 'saved', view: 'grid', select: false, selected: new Set(), limit: PAGE_SIZE };
 
+/* ── toast (supports an action button, e.g. Undo) ── */
 let toastTimer;
-function toast(msg, kind) {
+function toast(msg, kind, action) {
   const t = $('toast'); if (!t) return;
-  t.textContent = msg; t.className = 'toast show' + (kind === 'error' ? ' error' : '');
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 4200);
-}
-
-function toggleMobileMenu() {
-  const open = $('mobile-nav').classList.toggle('open');
-  $('mobile-menu-btn').setAttribute('aria-expanded', String(open));
-  document.body.style.overflow = open ? 'hidden' : '';
-}
-
-function nkPopulateFooterCounties() {
-  $('footer-counties').innerHTML = NK_COUNTIES.map(c => nkAreaCountFor(c)
-    ? `<a href="${escHtml(nkBuildListingsUrl({ county: c }))}">${escHtml(nkCountyLabel(c))}</a>` : '').join('');
-}
-
-/* ── load ── */
-async function loadFromAccount() {
-  const { data, error } = await db
-    .from('saved_listings')
-    .select('listing_id, created_at, listings(*, listing_photos(*), profiles(verification_status))')
-    .eq('user_id', currentUser.id)
-    .order('created_at', { ascending: false });
-  if (error) { console.error('Load saved listings error:', error.message); savedRows = []; return; }
-  savedRows = (data || []).filter(r => r.listings).map(r => ({ listing_id: r.listing_id, created_at: r.created_at, listing: r.listings }));
-}
-async function loadFromLocalStorage() {
-  const ids = getLocalSavedIds();
-  if (!ids.length) { savedRows = []; return; }
-  const { data, error } = await db.from('listings').select('*, listing_photos(*), profiles(verification_status)').in('id', ids);
-  if (error) { console.error('Load saved listings error:', error.message); savedRows = []; return; }
-  savedRows = ids.slice().reverse().map(id => (data || []).find(l => l.id === id)).filter(Boolean).map(l => ({ listing_id: l.id, created_at: null, listing: l }));
-}
-
-/* ── mutate ── */
-async function removeSaved(listingId, btnEl) {
-  if (btnEl) btnEl.classList.add('removing');
-  if (currentUser) {
-    const { error } = await db.from('saved_listings').delete().eq('user_id', currentUser.id).eq('listing_id', listingId);
-    if (error) { toast('Could not remove — please try again', 'error'); if (btnEl) btnEl.classList.remove('removing'); return; }
-  } else {
-    removeLocalSaved(listingId);
+  t.textContent = msg;
+  if (action) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'toast-action'; b.textContent = action.label;
+    b.addEventListener('click', () => { t.classList.remove('show'); clearTimeout(toastTimer); action.fn(); });
+    t.appendChild(b);
   }
-  savedRows = savedRows.filter(r => r.listing_id !== listingId);
-  render();
-  toast('Removed from shortlist');
-  loadRecommended();
+  t.className = 'toast show' + (kind === 'error' ? ' error' : '') + (action ? ' has-action' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), action ? 7000 : 4200);
 }
-async function addToSaved(listingId, btnEl) {
-  if (btnEl) { btnEl.classList.add('added'); btnEl.disabled = true; }
-  const listing = recommendedRows.find(l => l.id === listingId);
-  if (currentUser) {
-    const { error } = await db.from('saved_listings').insert({ user_id: currentUser.id, listing_id: listingId });
-    if (error) { toast('Could not save — please try again', 'error'); if (btnEl) { btnEl.classList.remove('added'); btnEl.disabled = false; } return; }
-  } else {
-    const ids = getLocalSavedIds();
-    if (!ids.includes(listingId)) { ids.push(listingId); setLocalSavedIds(ids); }
-  }
-  if (listing) savedRows.unshift({ listing_id: listingId, created_at: currentUser ? new Date().toISOString() : null, listing });
-  recommendedRows = recommendedRows.filter(l => l.id !== listingId);
-  render(); renderRecommended();
-  toast('Saved to your shortlist');
-}
-async function confirmClearAll() {
-  closeClearModal();
-  if (currentUser) {
-    const { error } = await db.from('saved_listings').delete().eq('user_id', currentUser.id);
-    if (error) { toast('Could not clear shortlist', 'error'); return; }
-  } else {
-    setLocalSavedIds([]);
-  }
-  savedRows = [];
-  render();
-  toast('Shortlist cleared');
-  loadRecommended();
-}
-async function doSignOut() { await db.auth.signOut(); window.location.reload(); }
 
-function openClearModal() { nkOpenModal($('clear-modal')); }
-function closeClearModal() { nkCloseModal($('clear-modal')); }
+/* ── event tracking (item 37). Needs the nk_events table; silently ignored if it doesn't exist. ── */
+function sessionId() { try { return localStorage.getItem('nk_sid') || null; } catch (e) { return null; } }
+function track(event, extra) {
+  try {
+    const x = extra || {};
+    db.from('nk_events').insert({
+      event, listing_id: x.listing_id || null, user_id: currentUser ? currentUser.id : null,
+      session_id: sessionId(), path: location.pathname, meta: x
+    }).then(() => {}, () => {});
+  } catch (e) {}
+}
 
-/* ── formatting helpers ── */
-function nkFormatPriceLike(price, freq) { return formatPrice({ price, price_frequency: freq, category: 'apartment' }); }
+/* ── local saved ids (same storage as saved-listings.js; tolerant of string ids or {id} objects) ── */
+function idOf(x) { return (x && typeof x === 'object') ? (x.id || x.listing_id || x.listingId) : x; }
+function getLocalRaw() { try { const r = JSON.parse(localStorage.getItem(SAVED_KEY) || '[]'); return Array.isArray(r) ? r : []; } catch (e) { return []; } }
+function getLocalSavedIds() { return getLocalRaw().map(idOf).filter(Boolean); }
+function setLocalRaw(a) { try { localStorage.setItem(SAVED_KEY, JSON.stringify(a)); } catch (e) {} }
+function removeLocalSaved(id) { setLocalRaw(getLocalRaw().filter(x => idOf(x) !== id)); }
+function addLocalSaved(id) {
+  const raw = getLocalRaw();
+  if (raw.some(x => idOf(x) === id)) return;
+  raw.push(raw.some(x => x && typeof x === 'object') ? { id, savedAt: Date.now() } : id);
+  setLocalRaw(raw);
+}
+
+/* ── per-device metadata (notes, status, folder, viewing date, manual order, price snapshot) ── */
+function readMeta(key) {
+  try {
+    const m = JSON.parse(localStorage.getItem(key) || 'null');
+    if (m && typeof m === 'object') return { items: m.items || {}, order: Array.isArray(m.order) ? m.order : [] };
+  } catch (e) {}
+  return { items: {}, order: [] };
+}
+function saveMeta() { try { localStorage.setItem(metaKey, JSON.stringify(meta)); } catch (e) {} }
+const getMi = id => (shareMode ? {} : (meta.items[id] || {}));
+function mi(id) { return meta.items[id] || (meta.items[id] = {}); }
+
+/* ── cache (item 29) ── */
+const cacheKey = () => CACHE_KEY + ':' + (currentUser ? currentUser.id : 'anon');
+function writeCache() {
+  if (shareMode) return;
+  try { localStorage.setItem(cacheKey(), JSON.stringify({ t: Date.now(), rows: savedRows.slice(0, 40) })); } catch (e) {}
+}
+function readCache() {
+  try { const c = JSON.parse(localStorage.getItem(cacheKey()) || 'null'); if (c && Array.isArray(c.rows)) return c; } catch (e) {}
+  return null;
+}
+function clearAllCaches() {
+  try { Object.keys(localStorage).filter(k => k.indexOf(CACHE_KEY) === 0).forEach(k => localStorage.removeItem(k)); } catch (e) {}
+}
+
+/* ── listing state ── */
+const isAvailable = l => l.status === 'active' && !l.is_disabled && !l.recycle_bin;
+const isOccupied = l => l.status === 'occupied' && !l.is_disabled && !l.recycle_bin;
+const isUnavailable = l => !!(l.is_disabled || l.recycle_bin || (l.status !== 'active' && l.status !== 'occupied'));
+const occLabelOf = l => (l.price_frequency === 'once' ? 'Sold' : 'Occupied');
 function nkListingCounty(l) {
   if (!l) return 'Kenya';
   if (l.county) return nkCountyLabel(l.county);
   return nkCountyLabel(NK_AREA_TO_COUNTY_GUESS[l.area] || '') || 'Kenya';
 }
-
-/* ── cards ── */
-function buildCard(row) {
-  const l = row.listing;
-  const d = l.details || {};
-  const cover = nkCardCoverPhoto(l);
-  const imgHtml = cover
-    ? `<img src="${escHtml(nkImgSrc(cover.url, 360))}" alt="${escHtml(l.title)}" loading="lazy" decoding="async" width="360" height="180"/>`
-    : `<div class="card-img-placeholder"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="font-size:11px">No photo</span></div>`;
-  const isOccupied = l.status === 'occupied' && !l.is_disabled && !l.recycle_bin;
-  const unavailable = l.is_disabled || l.recycle_bin || (l.status !== 'active' && l.status !== 'occupied');
-  const occLabel = l.price_frequency === 'once' ? 'Sold' : 'Occupied';
-  const savedDate = row.created_at
-    ? `Saved ${new Date(row.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}`
-    : 'Saved on this device';
-  const catLabel = (NK_CATEGORIES[l.category] || {}).label || l.category;
-  const safeCat = escHtml(l.category);
-  return `
-    <div class="card ${(unavailable || isOccupied) ? 'unavailable' : ''}" data-listing-id="${escHtml(l.id)}">
-      <a class="card-img-link" href="${unavailable ? 'javascript:void(0)' : listingHref(l)}" ${unavailable ? 'aria-disabled="true" tabindex="-1"' : ''}>
-        <div class="card-img">
-          ${imgHtml}
-          ${l.is_admin_verified && !unavailable && !isOccupied ? '<span class="badge-featured">Reviewed by Nyumba254</span>' : ''}
-          ${unavailable ? `<div class="badge-unavailable">${l.is_disabled ? (l.disabled_reason ? 'Disabled by admin' : 'No longer available') : 'No longer available'}</div>` : ''}
-          ${isOccupied ? `<div class="badge-unavailable">${escHtml(occLabel)} — not available</div>` : ''}
-        </div>
-      </a>
-      <button type="button" class="remove-heart-btn" aria-label="Remove ${escHtml(l.title)} from shortlist" data-remove="${escHtml(l.id)}">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-      </button>
-      <div class="card-body">
-        <div class="card-top-row">
-          <div class="card-area">${escHtml(l.area)} ${nkBuildVerifiedBadge(l)}</div>
-          <span class="card-cat-pill ${safeCat}">${escHtml(catLabel)}</span>
-        </div>
-        <div class="card-title">${escHtml(l.title)}</div>
-        <div class="card-sub">${escHtml(l.address || l.area || nkListingCounty(l))}</div>
-        <div class="card-price">${nkFormatPriceLike(l.price, l.price_frequency)}</div>
-        <div class="card-meta">
-          ${d.bedrooms !== undefined && d.bedrooms !== null && d.bedrooms !== '' ? `<div class="card-meta-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4v16M22 4v16M2 12h20M2 8h4a2 2 0 012 2v2H2V8zM16 8h4a2 2 0 012 2v2h-6V8z"/></svg>${d.bedrooms == 0 ? 'Studio' : escHtml(d.bedrooms) + ' bed'}</div>` : ''}
-          ${d.bathrooms ? `<div class="card-meta-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l1-1a2 2 0 012.83 0l6.17 6.17a1 1 0 010 1.41L17 14M3 20h18M5 20v-4a3 3 0 013-3h1"/></svg>${escHtml(d.bathrooms)} bath</div>` : ''}
-          ${d.size_sqm ? `<div class="card-meta-item"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="1"/></svg>${escHtml(d.size_sqm)}m²</div>` : ''}
-        </div>
-        <div class="card-saved-date">${escHtml(savedDate)}</div>
-        ${unavailable
-          ? `<span class="card-view-btn disabled-btn">No longer available</span>`
-          : (isOccupied
-              ? `<a class="card-view-btn" href="${listingHref(l)}" style="background:var(--text-3)" data-listing-id="${escHtml(l.id)}">View listing (${occLabel.toLowerCase()})</a>`
-              : `<a class="card-view-btn" href="${listingHref(l)}" data-listing-id="${escHtml(l.id)}">View listing</a>`)}
-      </div>
-    </div>`;
+const countyKeyOf = l => l.county || NK_AREA_TO_COUNTY_GUESS[l.area] || '';
+function nkFormatPriceLike(price, freq) { return formatPrice({ price, price_frequency: freq, category: 'apartment' }); }
+function photosOf(l) {
+  const p = (l.listing_photos || []).slice().sort((a, b) => (a.position || 0) - (b.position || 0));
+  const ci = p.findIndex(x => x.is_cover);
+  if (ci > 0) p.unshift(p.splice(ci, 1)[0]);
+  return p;
 }
-function buildRecommendedCard(l) {
+function agoText(iso) {
+  if (!iso) return '';
+  const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (isNaN(d)) return '';
+  if (d <= 0) return 'Listed today';
+  if (d === 1) return 'Listed yesterday';
+  if (d < 30) return 'Listed ' + d + ' days ago';
+  const mo = Math.floor(d / 30);
+  return mo < 12 ? 'Listed ' + mo + ' mo ago' : 'Listed over a year ago';
+}
+function hasAm(l, key) {
   const d = l.details || {};
-  const cover = nkCardCoverPhoto(l);
-  const imgHtml = cover
-    ? `<img src="${escHtml(nkImgSrc(cover.url, 360))}" alt="${escHtml(l.title)}" loading="lazy" decoding="async" width="360" height="180"/>`
-    : `<div class="card-img-placeholder"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="font-size:11px">No photo</span></div>`;
-  const catLabel = (NK_CATEGORIES[l.category] || {}).label || l.category;
-  const safeCat = escHtml(l.category);
-  return `
-    <div class="card" data-listing-id="${escHtml(l.id)}">
-      <a class="card-img-link" href="${listingHref(l)}">
-        <div class="card-img">
-          ${imgHtml}
-          ${l.is_admin_verified ? '<span class="badge-featured">Reviewed by Nyumba254</span>' : ''}
-        </div>
-      </a>
-      <button type="button" class="add-heart-btn" aria-label="Save ${escHtml(l.title)} to shortlist" data-add="${escHtml(l.id)}">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-      </button>
-      <div class="card-body">
-        <div class="card-top-row">
-          <div class="card-area">${escHtml(l.area)} ${nkBuildVerifiedBadge(l)}</div>
-          <span class="card-cat-pill ${safeCat}">${escHtml(catLabel)}</span>
-        </div>
-        <div class="card-title">${escHtml(l.title)}</div>
-        <div class="card-sub">${escHtml(l.address || l.area || nkListingCounty(l))}</div>
-        <div class="card-price">${nkFormatPriceLike(l.price, l.price_frequency)}</div>
-        <div class="card-meta">
-          ${d.bedrooms !== undefined && d.bedrooms !== null && d.bedrooms !== '' ? `<div class="card-meta-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4v16M22 4v16M2 12h20M2 8h4a2 2 0 012 2v2H2V8zM16 8h4a2 2 0 012 2v2h-6V8z"/></svg>${d.bedrooms == 0 ? 'Studio' : escHtml(d.bedrooms) + ' bed'}</div>` : ''}
-          ${d.bathrooms ? `<div class="card-meta-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l1-1a2 2 0 012.83 0l6.17 6.17a1 1 0 010 1.41L17 14M3 20h18M5 20v-4a3 3 0 013-3h1"/></svg>${escHtml(d.bathrooms)} bath</div>` : ''}
-          ${d.size_sqm ? `<div class="card-meta-item"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="1"/></svg>${escHtml(d.size_sqm)}m²</div>` : ''}
-        </div>
-        <a class="card-view-btn" href="${listingHref(l)}" style="margin-top:10px" data-listing-id="${escHtml(l.id)}">View listing</a>
-      </div>
-    </div>`;
+  if (l[key] === true || d[key] === true) return true;
+  const a = d.amenities || l.amenities;
+  return Array.isArray(a) && (a.includes(key) || a.includes(key.replace(/^has_/, '')));
+}
+function contactPhone(l) {
+  const d = l.details || {};
+  for (const k of CONTACT_FIELDS) {
+    const v = l[k] || d[k];
+    if (v) { const n = nkNormalizePhone(v); if (n) return n; }
+  }
+  return '';
+}
+function waLink(phone, l) {
+  const msg = 'Hi, I\'m interested in "' + l.title + '" (' + absUrl(l) + ') that I found on Nyumba254.';
+  return 'https://wa.me/' + phone.replace(/\D/g, '') + '?text=' + encodeURIComponent(msg);
+}
+function fmtViewing(v) {
+  const d = new Date(v); if (isNaN(d)) return '';
+  return d.toLocaleString('en-KE', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+function calUrl(l, viewAt) {
+  const s = new Date(viewAt); if (isNaN(s)) return '';
+  const e = new Date(s.getTime() + 3600000);
+  const f = d => d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + 'T' + p2(d.getHours()) + p2(d.getMinutes()) + '00';
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent('Viewing: ' + l.title) +
+    '&dates=' + f(s) + '/' + f(e) + '&details=' + encodeURIComponent(absUrl(l)) + '&location=' + encodeURIComponent(l.address || l.area || '');
+}
+function topSeq() { return savedRows.reduce((m, r) => Math.min(m, r.seq == null ? 0 : r.seq), 0) - 1; }
+function mode(arr) {
+  const c = {}; let best = null, n = 0;
+  arr.forEach(x => { if (x == null || x === '') return; c[x] = (c[x] || 0) + 1; if (c[x] > n) { n = c[x]; best = x; } });
+  return best;
 }
 
+/* ════════════════════════════════════════════════════════════
+   THEME (item 33)
+   ════════════════════════════════════════════════════════════ */
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  const b = $('theme-btn');
+  if (b) { b.textContent = t === 'dark' ? 'Light mode' : 'Dark mode'; b.setAttribute('aria-label', t === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'); }
+  const m = document.querySelector('meta[name="theme-color"]');
+  if (m) m.setAttribute('content', t === 'dark' ? '#0f1512' : '#0F6E56');
+}
+function toggleTheme() {
+  const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
+  applyTheme(t);
+}
+
+/* ════════════════════════════════════════════════════════════
+   LOAD
+   ════════════════════════════════════════════════════════════ */
+function assignSeq() { savedRows.forEach((r, i) => { r.seq = i; }); }
+
+async function loadFromAccount() {
+  const { data, error } = await db.from('saved_listings')
+    .select('listing_id, created_at, listings(' + LISTING_SELECT + ')')
+    .eq('user_id', currentUser.id)
+    .order('created_at', { ascending: false });
+  if (error) { console.error('Load saved listings error:', error.message); return false; }
+  savedRows = (data || []).filter(r => r.listings).map(r => ({ listing_id: r.listing_id, created_at: r.created_at, listing: r.listings }));
+  assignSeq();
+  return true;
+}
+async function loadFromLocalStorage() {
+  const ids = getLocalSavedIds();
+  if (!ids.length) { savedRows = []; return true; }
+  const { data, error } = await db.from('listings').select(LISTING_SELECT).in('id', ids);
+  if (error) { console.error('Load saved listings error:', error.message); return false; }
+  savedRows = ids.slice().reverse().map(id => (data || []).find(l => l.id === id)).filter(Boolean).map(l => ({ listing_id: l.id, created_at: null, listing: l }));
+  assignSeq();
+  return true;
+}
+async function loadShared(nums) {
+  const { data, error } = await db.from('listings').select(LISTING_SELECT).in('listing_number', nums);
+  if (error) { console.error('Load shared listings error:', error.message); return false; }
+  savedRows = nums.map(n => (data || []).find(l => Number(l.listing_number) === n)).filter(Boolean).map(l => ({ listing_id: l.id, created_at: null, listing: l }));
+  assignSeq();
+  return true;
+}
+const loadOwn = () => (currentUser ? loadFromAccount() : loadFromLocalStorage());
+
+/* Item 1: merge anonymous saves into the account on sign-in. Nothing is deleted locally unless it was saved (or is a dead listing). */
+async function mergeLocalIntoAccount() {
+  const ids = getLocalSavedIds();
+  if (!ids.length) return 0;
+  const { data: ex, error: e1 } = await db.from('saved_listings').select('listing_id').eq('user_id', currentUser.id);
+  if (e1) return 0;
+  const have = new Set((ex || []).map(r => r.listing_id));
+  const rows = ids.filter(id => !have.has(id)).map(id => ({ user_id: currentUser.id, listing_id: id }));
+  const keep = []; let ok = 0;
+  if (rows.length) {
+    const { error } = await db.from('saved_listings').insert(rows);
+    if (!error) ok = rows.length;
+    else {
+      for (const r of rows) {
+        const { error: e } = await db.from('saved_listings').insert(r);
+        if (!e) ok++;
+        else if (e.code !== '23503' && e.code !== '23505') keep.push(r.listing_id);   // keep only on real failures (network, RLS)
+      }
+    }
+  }
+  setLocalRaw(getLocalRaw().filter(x => keep.includes(idOf(x))));
+  // carry notes/status/folder over from the anonymous shortlist
+  const anon = readMeta(META_KEY + ':anon');
+  const mine = readMeta(metaKey);
+  Object.keys(anon.items).forEach(id => { if (!mine.items[id]) mine.items[id] = anon.items[id]; });
+  anon.order.forEach(id => { if (!mine.order.includes(id)) mine.order.push(id); });
+  meta = mine; saveMeta();
+  try { localStorage.removeItem(META_KEY + ':anon'); } catch (e) {}
+  if (ok) track('saved_merge', { count: ok });
+  return ok;
+}
+
+function ensureSnapshots() {
+  if (shareMode) return;
+  let dirty = false;
+  savedRows.forEach(r => {
+    const m = mi(r.listing_id);
+    if (m.price === undefined) { m.price = Number(r.listing.price) || 0; m.freq = r.listing.price_frequency || ''; dirty = true; }
+  });
+  if (dirty) saveMeta();
+}
+function pruneMeta() {
+  if (shareMode) return;
+  const ids = new Set(savedRows.map(r => r.listing_id));
+  Object.keys(meta.items).forEach(id => { if (!ids.has(id)) delete meta.items[id]; });
+  meta.order = meta.order.filter(id => ids.has(id));
+  saveMeta();
+}
+function priceDiff(l, id) {
+  const m = getMi(id);
+  if (!m.price || m.freq !== (l.price_frequency || '')) return 0;
+  return (Number(l.price) || 0) - Number(m.price);
+}
+
+async function silentRefresh(force) {
+  if (refreshing || shareMode || mutating > 0 || !loaded) return;
+  if (!force && Date.now() - lastRefresh < 15000) return;
+  refreshing = true;
+  const before = savedRows.map(r => r.listing_id).sort().join();
+  const ok = await loadOwn();
+  refreshing = false; lastRefresh = Date.now();
+  if (!ok) return;
+  loadError = false; $('stale-note').hidden = true;
+  ensureSnapshots(); pruneMeta(); writeCache();
+  render();
+  if (before !== savedRows.map(r => r.listing_id).sort().join()) { loadRecommended(); loadRecent(); scheduleRealtime(); }
+}
+async function retryLoad() {
+  if (shareMode) return;
+  $('listings-grid').setAttribute('aria-busy', 'true');
+  const ok = await loadOwn();
+  loadError = !ok; lastRefresh = Date.now();
+  if (ok) { $('stale-note').hidden = true; ensureSnapshots(); pruneMeta(); writeCache(); loadRecommended(); loadRecent(); scheduleRealtime(); }
+  render();
+}
+
+/* ════════════════════════════════════════════════════════════
+   MUTATIONS (optimistic, with rollback and undo: items 3, 31)
+   ════════════════════════════════════════════════════════════ */
+function nextCardId(id) {
+  const i = renderedIds.indexOf(id);
+  if (i < 0) return null;
+  return renderedIds[i + 1] || renderedIds[i - 1] || null;
+}
+function focusAfterRemove(nextId) {
+  let el = null;
+  if (nextId) {
+    const card = document.querySelector('.card[data-listing-id="' + (window.CSS && CSS.escape ? CSS.escape(nextId) : nextId) + '"]');
+    if (card) el = card.querySelector('[data-act="remove"]') || card.querySelector('a,button');
+  }
+  if (!el) el = $('result-count');
+  if (el && el.focus) el.focus();
+}
+
+async function removeMany(ids) {
+  if (shareMode || !ids.length) return;
+  const set = new Set(ids);
+  const rows = savedRows.filter(r => set.has(r.listing_id));
+  if (!rows.length) return;
+  const nextId = ids.length === 1 ? nextCardId(ids[0]) : null;
+  const snapshot = savedRows.slice();
+  mutating++;
+  savedRows = savedRows.filter(r => !set.has(r.listing_id));
+  ids.forEach(i => ui.selected.delete(i));
+  render(); focusAfterRemove(nextId);
+  let err = null;
+  if (currentUser) {
+    const { error } = await db.from('saved_listings').delete().eq('user_id', currentUser.id).in('listing_id', rows.map(r => r.listing_id));
+    err = error;
+  } else {
+    rows.forEach(r => removeLocalSaved(r.listing_id));
+  }
+  mutating--;
+  if (err) {
+    console.error('Remove error:', err.message);
+    savedRows = snapshot; render();
+    toast('Could not remove. Please try again.', 'error');
+    return;
+  }
+  writeCache();
+  track('saved_remove', { count: rows.length, listing_id: rows.length === 1 ? rows[0].listing_id : null });
+  toast(rows.length === 1 ? 'Removed from shortlist' : 'Removed ' + rows.length + ' listings', '', { label: 'Undo', fn: () => restoreRows(rows) });
+  loadRecommended(); scheduleRealtime();
+}
+async function restoreRows(rows) {
+  const fresh = rows.filter(r => !savedRows.some(x => x.listing_id === r.listing_id));
+  if (!fresh.length) return;
+  mutating++;
+  savedRows.push(...fresh); render();
+  let err = null;
+  if (currentUser) {
+    const withDate = fresh.map(r => Object.assign({ user_id: currentUser.id, listing_id: r.listing_id }, r.created_at ? { created_at: r.created_at } : {}));
+    let res = await db.from('saved_listings').insert(withDate);
+    if (res.error) res = await db.from('saved_listings').insert(fresh.map(r => ({ user_id: currentUser.id, listing_id: r.listing_id })));
+    err = res.error;
+  } else {
+    fresh.forEach(r => addLocalSaved(r.listing_id));
+  }
+  mutating--;
+  if (err) {
+    savedRows = savedRows.filter(r => !fresh.includes(r)); render();
+    toast('Could not undo. Please save the listing again.', 'error');
+    return;
+  }
+  writeCache(); track('saved_undo', { count: fresh.length });
+  toast(fresh.length === 1 ? 'Restored to your shortlist' : 'Restored ' + fresh.length + ' listings');
+  loadRecommended(); scheduleRealtime();
+}
+function findCandidate(id) { return recommendedRows.find(l => l.id === id) || recentRows.find(l => l.id === id); }
+async function addToSaved(id, btnEl) {
+  if (shareMode) return;
+  const listing = findCandidate(id);
+  if (!listing || savedRows.some(r => r.listing_id === id)) return;
+  if (btnEl) { btnEl.classList.add('added'); btnEl.disabled = true; }
+  const row = { listing_id: id, created_at: currentUser ? new Date().toISOString() : null, listing, seq: topSeq() };
+  mutating++;
+  savedRows.push(row);
+  recommendedRows = recommendedRows.filter(l => l.id !== id);
+  recentRows = recentRows.filter(l => l.id !== id);
+  render(); renderRecommended(); renderRecent();
+  let err = null;
+  if (currentUser) {
+    const { error } = await db.from('saved_listings').insert({ user_id: currentUser.id, listing_id: id });
+    err = error;
+  } else {
+    addLocalSaved(id);
+  }
+  mutating--;
+  if (err) {
+    console.error('Save error:', err.message);
+    savedRows = savedRows.filter(r => r !== row);
+    recommendedRows.unshift(listing);
+    render(); renderRecommended(); renderRecent();
+    toast('Could not save. Please try again.', 'error');
+    return;
+  }
+  ensureSnapshots(); writeCache(); track('saved_add', { listing_id: id });
+  toast('Saved to your shortlist'); scheduleRealtime();
+}
+async function confirmClearAll() {
+  closeClearModal();
+  const snapshot = savedRows.slice();
+  mutating++;
+  let err = null;
+  if (currentUser) {
+    const { error } = await db.from('saved_listings').delete().eq('user_id', currentUser.id);
+    err = error;
+  } else {
+    setLocalRaw([]);
+  }
+  mutating--;
+  if (err) { toast('Could not clear shortlist', 'error'); return; }
+  savedRows = []; ui.selected.clear();
+  writeCache(); render();
+  track('saved_clear', { count: snapshot.length });
+  toast('Shortlist cleared', '', { label: 'Undo', fn: () => restoreRows(snapshot) });
+  loadRecommended(); scheduleRealtime();
+}
+function removeUnavailable() {
+  const ids = savedRows.filter(r => !isAvailable(r.listing)).map(r => r.listing_id);
+  if (ids.length) removeMany(ids);
+}
+async function doSignOut() {
+  await db.auth.signOut();
+  clearAllCaches();
+  window.location.reload();
+}
+
+async function saveAllShared() {
+  const rows = savedRows.slice();
+  if (!rows.length) return;
+  let added = 0;
+  if (currentUser) {
+    const { data: ex } = await db.from('saved_listings').select('listing_id').eq('user_id', currentUser.id);
+    const have = new Set((ex || []).map(r => r.listing_id));
+    const toAdd = rows.filter(r => !have.has(r.listing_id)).map(r => ({ user_id: currentUser.id, listing_id: r.listing_id }));
+    if (toAdd.length) {
+      const { error } = await db.from('saved_listings').insert(toAdd);
+      if (error) { toast('Could not save these listings. Please try again.', 'error'); return; }
+    }
+    added = toAdd.length;
+  } else {
+    rows.forEach(r => addLocalSaved(r.listing_id));
+    added = rows.length;
+  }
+  track('shared_saved_all', { count: added });
+  clearAllCaches();
+  window.location.href = '/saved';
+}
+
+/* ════════════════════════════════════════════════════════════
+   FILTER / SORT
+   ════════════════════════════════════════════════════════════ */
+const filtersActive = () => !!(ui.q || ui.cat || ui.county || ui.status || ui.folder || ui.avail !== 'all');
+function matches(row) {
+  const l = row.listing, m = getMi(row.listing_id);
+  if (ui.cat && l.category !== ui.cat) return false;
+  if (ui.county && countyKeyOf(l) !== ui.county) return false;
+  if (ui.status && (m.status || '') !== ui.status) return false;
+  if (ui.folder && (m.folder || '') !== ui.folder) return false;
+  if (ui.q) {
+    const hay = [l.title, l.area, l.address, l.county, m.note, m.folder].join(' ').toLowerCase();
+    if (!ui.q.split(/\s+/).every(t => hay.includes(t))) return false;
+  }
+  return true;
+}
+function normalizeOrder() {
+  const ids = savedRows.slice().sort((a, b) => a.seq - b.seq).map(r => r.listing_id);
+  const set = new Set(ids);
+  const kept = meta.order.filter(x => set.has(x));
+  const have = new Set(kept);
+  ids.forEach(x => { if (!have.has(x)) kept.push(x); });
+  meta.order = kept;
+}
+function sortRows(rows) {
+  const a = rows.slice();
+  const price = r => Number(r.listing.price) || 0;
+  switch (ui.sort) {
+    case 'price-asc': a.sort((x, y) => price(x) - price(y)); break;
+    case 'price-desc': a.sort((x, y) => price(y) - price(x)); break;
+    case 'area': a.sort((x, y) => String(x.listing.area || '').localeCompare(String(y.listing.area || ''))); break;
+    case 'manual': {
+      normalizeOrder();
+      const pos = id => meta.order.indexOf(id);
+      a.sort((x, y) => pos(x.listing_id) - pos(y.listing_id));
+      break;
+    }
+    default: a.sort((x, y) => x.seq - y.seq);
+  }
+  return a;
+}
+function setOptions(sel, html, value) {
+  if (sel.dataset.sig !== html) { sel.innerHTML = html; sel.dataset.sig = html; }
+  sel.value = value;
+  if (sel.value !== value) sel.value = '';
+}
+function updateToolbarOptions() {
+  const cats = [...new Set(savedRows.map(r => r.listing.category).filter(Boolean))];
+  setOptions($('f-cat'), '<option value="">All categories</option>' + cats.map(c => `<option value="${escHtml(c)}">${escHtml((NK_CATEGORIES[c] || {}).label || c)}</option>`).join(''), ui.cat);
+  const counties = [...new Set(savedRows.map(r => countyKeyOf(r.listing)).filter(Boolean))].sort();
+  setOptions($('f-county'), '<option value="">All counties</option>' + counties.map(c => `<option value="${escHtml(c)}">${escHtml(nkCountyLabel(c))}</option>`).join(''), ui.county);
+  const folders = allFolders();
+  setOptions($('f-folder'), '<option value="">All folders</option>' + folders.map(f => `<option value="${escHtml(f)}">${escHtml(f)}</option>`).join(''), ui.folder);
+  $('folder-list').innerHTML = folders.map(f => `<option value="${escHtml(f)}"></option>`).join('');
+  $('f-sort').value = ui.sort;
+  $('f-avail').value = ui.avail;
+  $('f-status').value = ui.status;
+}
+function allFolders() {
+  const s = new Set();
+  savedRows.forEach(r => { const f = getMi(r.listing_id).folder; if (f) s.add(f); });
+  return [...s].sort((a, b) => a.localeCompare(b));
+}
+function clearFilters() {
+  ui.q = ''; ui.cat = ''; ui.county = ''; ui.status = ''; ui.folder = ''; ui.avail = 'all'; ui.limit = PAGE_SIZE;
+  $('f-q').value = '';
+  render();
+}
+
+/* ════════════════════════════════════════════════════════════
+   RENDER
+   ════════════════════════════════════════════════════════════ */
 function nkSyncSavedBadges(count) {
   ['nav-count-badge', 'nav-count-badge-mobile'].forEach(id => {
     const badge = $(id); if (!badge) return;
@@ -649,44 +1262,591 @@ function nkSyncSavedBadges(count) {
   if (tabBadge) { tabBadge.textContent = count; tabBadge.classList.toggle('visible', count > 0); }
 }
 
-function render() {
-  const grid = $('listings-grid');
-  const count = savedRows.length;
-  grid.setAttribute('aria-busy', 'false');
-  $('result-count').innerHTML = `<strong>${count}</strong> listing${count !== 1 ? 's' : ''} saved`;
-  $('clear-all-btn').hidden = !count;
-  nkSyncSavedBadges(count);
-  if (!count) {
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-      <h2>No saved listings yet</h2>
-      <p>Tap the heart icon on any listing to save it here and come back to it later.</p>
-      <a href="/listings" class="btn btn-primary" style="display:inline-flex">Browse listings</a>
-    </div>`;
-    return;
+function buildCard(row, opts) {
+  const o = opts || {};
+  const l = row.listing, id = row.listing_id, d = l.details || {}, m = getMi(id);
+  const un = !isAvailable(l) && !isOccupied(l);
+  const occ = isOccupied(l);
+  const off = un || occ;
+  const photos = photosOf(l);
+  const pi = Math.min(photoIdx[id] || 0, Math.max(photos.length - 1, 0));
+  const cover = photos[pi] || null;
+  const safeTitle = escHtml(l.title);
+  const imgHtml = cover
+    ? `<img src="${escHtml(nkImgSrc(cover.url, 360))}" alt="${safeTitle}" loading="lazy" decoding="async" width="360" height="180" draggable="false"/>`
+    : `<div class="card-img-placeholder"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="font-size:11px">No photo</span></div>`;
+  const overlay = un
+    ? '<div class="badge-unavailable">No longer available</div>'
+    : (occ ? `<div class="badge-unavailable">${escHtml(occLabelOf(l))} — not available</div>` : '');
+  const verifiedTag = l.is_admin_verified && !off ? '<span class="badge-featured">Reviewed by Nyumba254</span>' : '';
+  const mediaInner = `<div class="card-img">${imgHtml}${verifiedTag}${overlay}</div>`;
+  const media = un
+    ? `<div class="card-img-link">${mediaInner}</div>`
+    : `<a class="card-img-link" href="${listingHref(l)}" data-view-id="${escHtml(id)}" draggable="false" aria-label="Open ${safeTitle}">${mediaInner}</a>`;
+
+  const canEdit = !shareMode;
+  const removeBtn = canEdit
+    ? `<button type="button" class="remove-heart-btn" data-act="remove" aria-label="Remove ${safeTitle} from shortlist"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>`
+    : '';
+  const photoNav = (photos.length > 1 && !off)
+    ? `<button type="button" class="photo-nav prev" data-act="photo-prev" aria-label="Previous photo">‹</button><button type="button" class="photo-nav next" data-act="photo-next" aria-label="Next photo">›</button><span class="photo-count" aria-hidden="true">${pi + 1}/${photos.length}</span>`
+    : '';
+  const selBox = (ui.select && canEdit)
+    ? `<label class="sel-box"><input type="checkbox" class="sel-input" ${ui.selected.has(id) ? 'checked' : ''}/><span class="sr-only">Select ${safeTitle}</span></label>`
+    : '';
+
+  const catLabel = (NK_CATEGORIES[l.category] || {}).label || l.category;
+  const savedDate = row.created_at
+    ? 'Saved ' + new Date(row.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })
+    : (shareMode ? '' : 'Saved on this device');
+  const ago = agoText(l.created_at);
+
+  // chips: price change, status, folder, viewing
+  const chips = [];
+  const diff = priceDiff(l, id);
+  if (!off && diff < 0) chips.push(`<span class="chip drop" title="Compared with the price when you first saw this listing here">▼ Price dropped by KES ${fmtNum(Math.abs(diff))}</span>`);
+  if (!off && diff > 0) chips.push(`<span class="chip rise" title="Compared with the price when you first saw this listing here">▲ Price up by KES ${fmtNum(diff)}</span>`);
+  if (m.status && STATUS_LABEL[m.status]) chips.push(`<span class="chip status ${escHtml(m.status)}">${escHtml(STATUS_LABEL[m.status])}</span>`);
+  if (m.folder) chips.push(`<span class="chip folder">📁 ${escHtml(m.folder)}</span>`);
+  if (m.viewAt && fmtViewing(m.viewAt)) {
+    const past = new Date(m.viewAt).getTime() < Date.now();
+    const cu = calUrl(l, m.viewAt);
+    chips.push(`<span class="chip viewing">${past ? 'Viewing was ' : 'Viewing '}${escHtml(fmtViewing(m.viewAt))}</span>` +
+      (!past && cu ? `<a class="chip" href="${escHtml(cu)}" target="_blank" rel="noopener" data-act="cal">Add reminder</a>` : ''));
   }
-  grid.innerHTML = savedRows.map(buildCard).join('');
+
+  const ams = NK_AMENITIES.filter(a => hasAm(l, a.key));
+  const amHtml = ams.length
+    ? `<div class="chip-row">${ams.slice(0, 3).map(a => `<span class="chip">${escHtml(a.label)}</span>`).join('')}${ams.length > 3 ? `<span class="chip">+${ams.length - 3}</span>` : ''}</div>`
+    : '';
+
+  const meta3 = [
+    (d.bedrooms !== undefined && d.bedrooms !== null && d.bedrooms !== '') ? `<div class="card-meta-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4v16M22 4v16M2 12h20M2 8h4a2 2 0 012 2v2H2V8zM16 8h4a2 2 0 012 2v2h-6V8z"/></svg>${d.bedrooms == 0 ? 'Studio' : escHtml(d.bedrooms) + ' bed'}</div>` : '',
+    d.bathrooms ? `<div class="card-meta-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l1-1a2 2 0 012.83 0l6.17 6.17a1 1 0 010 1.41L17 14M3 20h18M5 20v-4a3 3 0 013-3h1"/></svg>${escHtml(d.bathrooms)} bath</div>` : '',
+    d.size_sqm ? `<div class="card-meta-item"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="1"/></svg>${escHtml(d.size_sqm)}m²</div>` : ''
+  ].join('');
+
+  // action buttons
+  const acts = [];
+  if (!off) {
+    const ph = contactPhone(l);
+    if (ph) {
+      acts.push(`<a class="act-btn wa" data-act="wa" target="_blank" rel="noopener" href="${escHtml(waLink(ph, l))}">WhatsApp</a>`);
+      acts.push(`<a class="act-btn" data-act="call" href="tel:${escHtml(ph)}">Call</a>`);
+    } else {
+      acts.push(`<a class="act-btn" data-act="contact" href="${listingHref(l)}">Contact seller</a>`);
+    }
+  }
+  acts.push('<button type="button" class="act-btn" data-act="share">Share</button>');
+  if (canEdit) {
+    acts.push('<button type="button" class="act-btn" data-act="edit">Notes &amp; status</button>');
+    if (!off && m.status !== 'viewed') acts.push('<button type="button" class="act-btn" data-act="viewed">Mark viewed</button>');
+  }
+  if (off) {
+    acts.push(`<a class="act-btn" data-act="similar" href="${escHtml(nkBuildListingsUrl({ category: l.category, county: l.county || '', freq: l.price_frequency || '' }))}">Find similar</a>`);
+  }
+
+  const reorder = (o.manual && canEdit)
+    ? `<div class="card-reorder"><button type="button" class="act-btn" data-act="move-up" aria-label="Move ${safeTitle} earlier" ${o.first ? 'disabled' : ''}>◀ Earlier</button><button type="button" class="act-btn" data-act="move-down" aria-label="Move ${safeTitle} later" ${o.last ? 'disabled' : ''}>Later ▶</button></div>`
+    : '';
+
+  const viewBtn = un
+    ? '<span class="card-view-btn disabled-btn">No longer available</span>'
+    : `<a class="card-view-btn" href="${listingHref(l)}" data-view-id="${escHtml(id)}"${occ ? ' style="background:var(--text-3)"' : ''}>${occ ? 'View listing (' + escHtml(occLabelOf(l).toLowerCase()) + ')' : 'View listing'}</a>`;
+
+  return `
+    <div class="card${off ? ' unavailable' : ''}${ui.selected.has(id) && ui.select ? ' selected' : ''}" data-listing-id="${escHtml(id)}"${o.manual ? ' draggable="true"' : ''}>
+      <div class="card-media">${media}${removeBtn}${photoNav}${selBox}</div>
+      <div class="card-body">
+        ${reorder}
+        <div class="card-top-row">
+          <div class="card-area">${escHtml(l.area)} ${nkBuildVerifiedBadge(l)}</div>
+          <span class="card-cat-pill ${escHtml(l.category)}">${escHtml(catLabel)}</span>
+        </div>
+        <div class="card-title">${safeTitle}</div>
+        <div class="card-sub">${escHtml(l.address || l.area || nkListingCounty(l))}</div>
+        <div class="card-price">${nkFormatPriceLike(l.price, l.price_frequency)}</div>
+        ${chips.length ? `<div class="chip-row">${chips.join('')}</div>` : ''}
+        ${amHtml}
+        <div class="card-meta">${meta3 || '<div class="card-meta-item">Details on the listing page</div>'}</div>
+        ${m.note ? `<div class="card-note">${escHtml(m.note)}</div>` : ''}
+        <div class="card-saved-date">${escHtml([savedDate, ago].filter(Boolean).join(' · '))}</div>
+        <div class="card-actions">${acts.join('')}</div>
+        ${viewBtn}
+      </div>
+    </div>`;
 }
 
+function buildRecommendedCard(l) {
+  const d = l.details || {};
+  const cover = nkCardCoverPhoto(l);
+  const safeTitle = escHtml(l.title);
+  const imgHtml = cover
+    ? `<img src="${escHtml(nkImgSrc(cover.url, 360))}" alt="${safeTitle}" loading="lazy" decoding="async" width="360" height="180"/>`
+    : `<div class="card-img-placeholder"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="font-size:11px">No photo</span></div>`;
+  const catLabel = (NK_CATEGORIES[l.category] || {}).label || l.category;
+  return `
+    <div class="card" data-listing-id="${escHtml(l.id)}">
+      <div class="card-media">
+        <a class="card-img-link" href="${listingHref(l)}" data-view-id="${escHtml(l.id)}" aria-label="Open ${safeTitle}">
+          <div class="card-img">${imgHtml}${l.is_admin_verified ? '<span class="badge-featured">Reviewed by Nyumba254</span>' : ''}</div>
+        </a>
+        <button type="button" class="add-heart-btn" data-add="${escHtml(l.id)}" aria-label="Save ${safeTitle} to shortlist">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="card-top-row">
+          <div class="card-area">${escHtml(l.area)} ${nkBuildVerifiedBadge(l)}</div>
+          <span class="card-cat-pill ${escHtml(l.category)}">${escHtml(catLabel)}</span>
+        </div>
+        <div class="card-title">${safeTitle}</div>
+        <div class="card-sub">${escHtml(l.address || l.area || nkListingCounty(l))}</div>
+        <div class="card-price">${nkFormatPriceLike(l.price, l.price_frequency)}</div>
+        <div class="card-meta">
+          ${(d.bedrooms !== undefined && d.bedrooms !== null && d.bedrooms !== '') ? `<div class="card-meta-item">${d.bedrooms == 0 ? 'Studio' : escHtml(d.bedrooms) + ' bed'}</div>` : ''}
+          ${d.bathrooms ? `<div class="card-meta-item">${escHtml(d.bathrooms)} bath</div>` : ''}
+          ${d.size_sqm ? `<div class="card-meta-item">${escHtml(d.size_sqm)}m²</div>` : ''}
+          ${agoText(l.created_at) ? `<div class="card-meta-item">${escHtml(agoText(l.created_at))}</div>` : ''}
+        </div>
+        <a class="card-view-btn" href="${listingHref(l)}" data-view-id="${escHtml(l.id)}">View listing</a>
+      </div>
+    </div>`;
+}
+
+const short = n => (n >= 1e6 ? (n / 1e6).toFixed(n % 1e6 === 0 ? 0 : 1).replace(/\.0$/, '') + 'M' : fmtNum(n));
+function renderSummary() {
+  const box = $('summary-strip');
+  if (!savedRows.length) { box.hidden = true; return; }
+  const av = savedRows.filter(r => isAvailable(r.listing));
+  const chip = (a, b) => `<div class="sum-chip"><strong>${escHtml(a)}</strong><span>${escHtml(b)}</span></div>`;
+  const out = [chip(String(av.length), 'available now')];
+  const un = savedRows.length - av.length;
+  if (un) out.push(chip(String(un), 'no longer available'));
+  const byFreq = {};
+  av.forEach(r => { const p = Number(r.listing.price) || 0; if (p > 0) (byFreq[r.listing.price_frequency || 'month'] = byFreq[r.listing.price_frequency || 'month'] || []).push(p); });
+  Object.entries(byFreq).sort((a, b) => b[1].length - a[1].length).slice(0, 3).forEach(([f, arr]) => {
+    const min = Math.min(...arr), max = Math.max(...arr), avg = Math.round(arr.reduce((s, x) => s + x, 0) / arr.length);
+    out.push(chip('KES ' + (min === max ? short(min) : short(min) + '–' + short(max)), (FREQ_TXT[f] || '') + ' · avg ' + short(avg)));
+  });
+  const cc = {};
+  av.forEach(r => { const c = countyKeyOf(r.listing); if (c) cc[c] = (cc[c] || 0) + 1; });
+  const top = Object.entries(cc).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  if (top.length) out.push(chip(top.map(([c, n]) => nkCountyLabel(c).replace(/\s*\(.*\)/, '') + ' ' + n).join(' · '), 'by county'));
+  if (!shareMode) {
+    const next = savedRows.map(r => getMi(r.listing_id).viewAt).filter(v => v && new Date(v).getTime() > Date.now()).sort()[0];
+    if (next) out.push(chip(fmtViewing(next), 'next viewing'));
+  }
+  box.innerHTML = out.join('');
+  box.hidden = false;
+}
+
+function renderNudge() {
+  let dismissed = false;
+  try { dismissed = sessionStorage.getItem(NUDGE_KEY) === '1'; } catch (e) {}
+  const show = !currentUser && !shareMode && savedRows.length >= NUDGE_AFTER && !dismissed;
+  $('nudge').hidden = !show;
+  if (show) $('nudge-text').innerHTML = `<strong>Don't lose your shortlist.</strong> You've saved ${savedRows.length} listings on this device only. Sign in to keep them on every phone and browser.`;
+}
+
+function stateHtml(kind) {
+  if (kind === 'error') {
+    return `<div class="empty-state"><svg class="big" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <h2>Couldn't load your shortlist</h2><p>Check your connection and try again. Your saved listings are safe.</p>
+      <div class="empty-actions"><button type="button" class="btn btn-primary" data-act="retry">Try again</button></div></div>`;
+  }
+  if (kind === 'nomatch') {
+    return `<div class="empty-state"><svg class="big" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <h2>No saved listings match</h2><p>Try a different search or clear the filters.</p>
+      <div class="empty-actions"><button type="button" class="btn btn-primary" data-act="clear-filters">Clear filters</button></div></div>`;
+  }
+  // empty (item 27)
+  let recent = [];
+  try { recent = nkGetRecentSearches().slice(0, 5); } catch (e) {}
+  const popular = [['Kilimani', 'Nairobi'], ['Nyali', 'Mombasa'], ['Milimani', 'Kisumu'], ['Westlands', 'Nairobi'], ['Bamburi', 'Mombasa']];
+  return `<div class="empty-state"><svg class="big" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+    <h2>No saved listings yet</h2><p>Tap the heart on any listing to save it here and compare it later.</p>
+    <div class="empty-actions"><a href="/listings" class="btn btn-primary">Browse listings</a></div>
+    ${recent.length ? `<div class="quick-block"><h3>Pick up where you left off</h3><div class="quick-links">${recent.map(s => `<a class="quick-link" href="${escHtml(nkBuildListingsUrl(s.filters || {}))}">${escHtml(s.label)}</a>`).join('')}</div></div>` : ''}
+    <div class="quick-block"><h3>Popular areas</h3><div class="quick-links">${popular.map(([a, c]) => `<a class="quick-link" href="${escHtml(nkBuildListingsUrl({ county: c, area: a }))}">${escHtml(a)}</a>`).join('')}</div></div></div>`;
+}
+
+function render() {
+  const grid = $('listings-grid');
+  grid.setAttribute('aria-busy', 'false');
+  const total = savedRows.length;
+  nkSyncSavedBadges(shareMode ? getLocalSavedIds().length : total);
+  const box = $('state-box');
+  const setCount = html => { $('result-count').innerHTML = html; };
+
+  $('share-all-btn').hidden = !total || shareMode;
+  $('print-btn').hidden = !total;
+  $('clear-all-btn').hidden = !total || shareMode;
+  $('toolbar').hidden = !total;
+  qsa('[data-org]').forEach(el => { el.hidden = shareMode; });
+  $('stale-note').hidden = !(loadError && total);
+  renderSummary(); renderNudge();
+
+  if (!total) {
+    ui.select = false; ui.selected.clear(); updateBulkBar();
+    grid.hidden = true; $('unavail-wrap').hidden = true; $('more-wrap').hidden = true; $('map-wrap').hidden = true;
+    box.hidden = false;
+    box.innerHTML = stateHtml(loadError ? 'error' : 'empty');
+    setCount(loadError ? 'Could not load' : '<strong>0</strong> listings saved');
+    renderedIds = []; currentAvailIds = [];
+    return;
+  }
+
+  updateToolbarOptions();
+  const filtered = savedRows.filter(matches);
+  const wantAvail = ui.avail !== 'unavailable', wantUn = ui.avail !== 'available';
+  const avail = wantAvail ? sortRows(filtered.filter(r => isAvailable(r.listing))) : [];
+  const un = wantUn ? sortRows(filtered.filter(r => !isAvailable(r.listing))) : [];
+  $('clear-filters-btn').hidden = !filtersActive();
+
+  const shown = filtered.length;
+  setCount(filtersActive()
+    ? `Showing <strong>${shown}</strong> of <strong>${total}</strong> saved listing${total !== 1 ? 's' : ''}`
+    : `<strong>${total}</strong> listing${total !== 1 ? 's' : ''} saved`);
+
+  if (!avail.length && !un.length) {
+    grid.hidden = true; $('unavail-wrap').hidden = true; $('more-wrap').hidden = true; $('map-wrap').hidden = true;
+    box.hidden = false; box.innerHTML = stateHtml('nomatch');
+    renderedIds = []; currentAvailIds = [];
+    return;
+  }
+  box.hidden = true; box.innerHTML = '';
+
+  const manual = ui.sort === 'manual' && !filtersActive() && !ui.select && !shareMode;
+  const mapMode = ui.view === 'map';
+  $('view-grid').setAttribute('aria-pressed', String(!mapMode));
+  $('view-map').setAttribute('aria-pressed', String(mapMode));
+  $('select-btn').setAttribute('aria-pressed', String(ui.select));
+  $('select-btn').textContent = ui.select ? 'Done selecting' : 'Select';
+
+  currentAvailIds = avail.map(r => r.listing_id);
+  const visible = avail.slice(0, ui.limit);
+  grid.hidden = mapMode || !avail.length;
+  grid.innerHTML = visible.map((r, i) => buildCard(r, { manual, first: i === 0, last: i === visible.length - 1 })).join('');
+  $('more-wrap').hidden = mapMode || avail.length <= ui.limit;
+  $('more-btn').textContent = `Show more (${avail.length - ui.limit} left)`;
+
+  const uw = $('unavail-wrap');
+  uw.hidden = mapMode || !un.length;
+  if (un.length) {
+    $('unavail-summary').textContent = `No longer available (${un.length})`;
+    uw.open = unavailPref !== null ? unavailPref : (!avail.length || ui.avail === 'unavailable');
+    $('unavail-grid').innerHTML = un.map(r => buildCard(r, {})).join('');
+  }
+  renderedIds = mapMode ? [] : visible.map(r => r.listing_id).concat(un.map(r => r.listing_id));
+
+  $('map-wrap').hidden = !mapMode;
+  if (mapMode) renderMap(avail);
+  updateBulkBar();
+}
+
+/* ── recommendations (item 25) and recently viewed (item 26) ── */
 async function loadRecommended() {
-  const excludeIds = savedRows.map(r => r.listing_id);
-  const fetchLimit = excludeIds.length + 8;
-  const { data, error } = await db.from('listings').select('*, listing_photos(*), profiles(verification_status)')
-    .eq('status', 'active').eq('is_disabled', false).eq('recycle_bin', false)
-    .order('created_at', { ascending: false }).order('id')
-    .limit(fetchLimit);
-  if (error) { console.error('Load recommended error:', error.message); recommendedRows = []; renderRecommended(); return; }
-  recommendedRows = (data || []).filter(l => !excludeIds.includes(l.id)).slice(0, 8);
+  const my = ++recToken;
+  const excl = new Set(savedRows.map(r => r.listing_id));
+  const av = savedRows.filter(r => isAvailable(r.listing)).map(r => r.listing);
+  const base = () => db.from('listings').select(LISTING_SELECT).eq('status', 'active').eq('is_disabled', false).eq('recycle_bin', false);
+  let rows = [], basis = '';
+  if (av.length) {
+    const cat = mode(av.map(l => l.category)), county = mode(av.map(l => l.county));
+    const freq = mode(av.map(l => l.price_frequency));
+    const prices = av.filter(l => l.price_frequency === freq).map(l => Number(l.price)).filter(n => n > 0).sort((a, b) => a - b);
+    let q = base();
+    if (cat) q = q.eq('category', cat);
+    if (county) q = q.eq('county', county);
+    if (prices.length && freq) {
+      const med = prices[Math.floor(prices.length / 2)];
+      q = q.eq('price_frequency', freq).gte('price', Math.round(med * 0.75)).lte('price', Math.round(med * 1.25));
+      basis = `${(NK_CATEGORIES[cat] || {}).label || 'Listings'}${county ? ' in ' + nkCountyLabel(county) : ''} near KES ${fmtNum(med)}${NK_FREQ_LABEL[freq] || ''}`;
+    }
+    const { data, error } = await q.order('created_at', { ascending: false }).order('id').limit(excl.size + 12);
+    if (my !== recToken) return;
+    if (!error) rows = (data || []).filter(l => !excl.has(l.id)).slice(0, 8);
+  }
+  let similar = rows.length >= 4;
+  if (!similar) {
+    const { data, error } = await base().order('created_at', { ascending: false }).order('id').limit(excl.size + 8);
+    if (my !== recToken) return;
+    if (error) { console.error('Load recommended error:', error.message); recommendedRows = []; renderRecommended(); return; }
+    rows = (data || []).filter(l => !excl.has(l.id)).slice(0, 8);
+  }
+  recommendedRows = rows;
+  $('rec-sub').textContent = similar && basis ? 'Similar to your shortlist: ' + basis : 'Recently listed properties across Kenya';
   renderRecommended();
 }
 function renderRecommended() {
   const section = $('recommended-section');
-  section.hidden = !recommendedRows.length;
-  if (!recommendedRows.length) return;
+  section.hidden = !recommendedRows.length || shareMode;
+  if (section.hidden) return;
   $('recommended-grid').innerHTML = recommendedRows.map(buildRecommendedCard).join('');
 }
+async function loadRecent() {
+  if (shareMode) return;
+  let list = [];
+  try { list = await nkFetchRecentlyViewed(); } catch (e) {}
+  const excl = new Set(savedRows.map(r => r.listing_id));
+  recentRows = list.filter(l => !excl.has(l.id) && isAvailable(l)).slice(0, 8);
+  renderRecent();
+}
+function renderRecent() {
+  const section = $('recent-section');
+  section.hidden = !recentRows.length || shareMode;
+  if (section.hidden) return;
+  $('recent-grid').innerHTML = recentRows.map(buildRecommendedCard).join('');
+}
 
-/* ── chrome shared with index.html / listings.html ── */
+/* ── map (item 15) ── */
+let map = null, mapLayer = null;
+function loadLeaflet() {
+  return new Promise((res, rej) => {
+    if (window.L) return res();
+    const css = document.createElement('link');
+    css.rel = 'stylesheet'; css.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
+    document.head.appendChild(css);
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+    s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+}
+function coordsOf(l, id) {
+  const d = l.details || {};
+  const lat = parseFloat(l.latitude ?? l.lat ?? d.latitude ?? d.lat);
+  const lng = parseFloat(l.longitude ?? l.lng ?? l.lon ?? d.longitude ?? d.lng);
+  if (isFinite(lat) && isFinite(lng)) return { lat, lng, exact: true };
+  const c = (typeof NK_COUNTY_COORDS !== 'undefined') && NK_COUNTY_COORDS[countyKeyOf(l)];
+  if (!c) return null;
+  let h = 0;
+  for (const ch of String(id)) h = (h * 31 + ch.charCodeAt(0)) | 0;
+  return { lat: c[0] + (((h >> 8) & 255) / 255 - .5) * .06, lng: c[1] + ((h & 255) / 255 - .5) * .06, exact: false };
+}
+async function renderMap(rows) {
+  try { await loadLeaflet(); } catch (e) { toast('Could not load the map. Check your connection.', 'error'); ui.view = 'grid'; render(); return; }
+  if (ui.view !== 'map') return;
+  if (!map) {
+    map = L.map('map', { scrollWheelZoom: false }).setView([-0.5, 37.5], 6);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap contributors' }).addTo(map);
+    mapLayer = L.layerGroup().addTo(map);
+  }
+  mapLayer.clearLayers();
+  const pts = []; let approx = 0;
+  rows.forEach(r => {
+    const l = r.listing, c = coordsOf(l, r.listing_id);
+    if (!c) return;
+    if (!c.exact) approx++;
+    L.circleMarker([c.lat, c.lng], { radius: 10, color: '#085041', weight: 2, fillColor: '#1D9E75', fillOpacity: .9 }).addTo(mapLayer)
+      .bindPopup(`<strong>${escHtml(l.title)}</strong><br>${escHtml(plainPrice(l))}<br>${escHtml(l.area || '')}<br><a href="${listingHref(l)}">View listing</a>`);
+    pts.push([c.lat, c.lng]);
+  });
+  map.invalidateSize();
+  if (pts.length) map.fitBounds(pts, { padding: [40, 40], maxZoom: 14 });
+  $('map-note').textContent = pts.length
+    ? (approx ? `${approx} pin${approx > 1 ? 's are' : ' is'} placed near the middle of the listing's county, not the exact address.` : 'Pins show the listed locations.')
+    : 'None of these listings have a location to show on the map.';
+}
+
+/* ════════════════════════════════════════════════════════════
+   NOTES / STATUS / FOLDER / VIEWING (items 9, 10, 11, 18)
+   ════════════════════════════════════════════════════════════ */
+function openEdit(id) {
+  if (shareMode) return;
+  const row = savedRows.find(r => r.listing_id === id); if (!row) return;
+  editingId = id;
+  const m = getMi(id);
+  $('edit-modal-sub').textContent = row.listing.title;
+  $('em-status').value = m.status || '';
+  $('em-folder').value = m.folder || '';
+  $('em-view').value = m.viewAt || '';
+  $('em-note').value = m.note || '';
+  nkOpenModal($('edit-modal'));
+}
+function saveEdit() {
+  const id = editingId; if (!id) return;
+  const m = mi(id);
+  m.status = $('em-status').value;
+  m.folder = $('em-folder').value.trim().slice(0, 40);
+  m.viewAt = $('em-view').value;
+  m.note = $('em-note').value.trim().slice(0, 500);
+  if (m.viewAt && !m.status) m.status = 'viewing';
+  saveMeta();
+  nkCloseModal($('edit-modal'));
+  editingId = null;
+  render();
+  toast('Changes saved');
+  track('saved_edit', { listing_id: id });
+}
+function markViewed(id) {
+  const m = mi(id); m.status = 'viewed'; saveMeta();
+  render(); toast('Marked as viewed');
+  track('saved_viewed', { listing_id: id });
+}
+
+/* ════════════════════════════════════════════════════════════
+   ORDER (item 13)
+   ════════════════════════════════════════════════════════════ */
+function moveOrder(id, dir) {
+  normalizeOrder();
+  const vis = currentAvailIds;
+  const i = vis.indexOf(id), j = i + dir;
+  if (i < 0 || j < 0 || j >= vis.length) return;
+  const a = meta.order.indexOf(vis[i]), b = meta.order.indexOf(vis[j]);
+  [meta.order[a], meta.order[b]] = [meta.order[b], meta.order[a]];
+  saveMeta(); render();
+  const card = document.querySelector('.card[data-listing-id="' + (window.CSS && CSS.escape ? CSS.escape(id) : id) + '"]');
+  const btn = card && card.querySelector(dir < 0 ? '[data-act="move-up"]' : '[data-act="move-down"]');
+  if (btn && !btn.disabled) btn.focus(); else if (card) { const other = card.querySelector('[data-act="move-up"]:not(:disabled),[data-act="move-down"]:not(:disabled)'); if (other) other.focus(); }
+}
+function dropBefore(dragged, target) {
+  normalizeOrder();
+  meta.order.splice(meta.order.indexOf(dragged), 1);
+  meta.order.splice(meta.order.indexOf(target), 0, dragged);
+  saveMeta(); render();
+}
+
+/* ════════════════════════════════════════════════════════════
+   PHOTOS (item 17)
+   ════════════════════════════════════════════════════════════ */
+function cyclePhoto(card, id, dir) {
+  const row = savedRows.find(r => r.listing_id === id); if (!row) return;
+  const ph = photosOf(row.listing); if (ph.length < 2) return;
+  const n = ((photoIdx[id] || 0) + dir + ph.length) % ph.length;
+  photoIdx[id] = n;
+  const img = card.querySelector('.card-img img'); if (img) img.src = nkImgSrc(ph[n].url, 360);
+  const c = card.querySelector('.photo-count'); if (c) c.textContent = (n + 1) + '/' + ph.length;
+}
+
+/* ════════════════════════════════════════════════════════════
+   SHARE / COPY / PRINT (items 19, 20, 21)
+   ════════════════════════════════════════════════════════════ */
+function openShare(title, text) {
+  shareCtx = { title, text };
+  $('sh-title').textContent = title;
+  $('sh-text').value = text;
+  $('sh-wa').href = 'https://wa.me/?text=' + encodeURIComponent(text);
+  $('sh-native').hidden = !navigator.share;
+  nkOpenModal($('share-modal'));
+}
+function shareListing(id) {
+  const row = savedRows.find(r => r.listing_id === id); if (!row) return;
+  const l = row.listing;
+  openShare('Share this listing', `${l.title}\n${plainPrice(l)} · ${[l.area, nkListingCounty(l)].filter(Boolean).join(', ')}\n${absUrl(l)}`);
+  track('share_listing', { listing_id: id });
+}
+function shareRows(rows, title) {
+  rows = rows.filter(r => r.listing);
+  if (!rows.length) { toast('Nothing to share yet'); return; }
+  const nums = rows.map(r => r.listing.listing_number).filter(n => n != null && n !== '').slice(0, 30).map(pad);
+  const url = nums.length ? location.origin + '/saved?share=' + nums.join(',') : location.origin + '/saved';
+  const lines = rows.slice(0, 30).map((r, i) => `${i + 1}. ${r.listing.title} — ${plainPrice(r.listing)} (${r.listing.area || nkListingCounty(r.listing)})\n   ${absUrl(r.listing)}`);
+  openShare(title, `My Nyumba254 shortlist (${Math.min(rows.length, 30)} listing${rows.length > 1 ? 's' : ''}):\n\n${lines.join('\n')}\n\nOpen the whole list: ${url}`);
+  track('share_shortlist', { count: rows.length });
+}
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); return true; }
+  catch (e) { const ta = $('sh-text'); ta.select(); try { return document.execCommand('copy'); } catch (_) { return false; } }
+}
+
+/* ════════════════════════════════════════════════════════════
+   COMPARE (item 14)
+   ════════════════════════════════════════════════════════════ */
+function openCompare() {
+  const rows = savedRows.filter(r => ui.selected.has(r.listing_id)).slice(0, 3);
+  if (rows.length < 2) { toast('Select 2 or 3 listings to compare'); return; }
+  const L = rows.map(r => r.listing);
+  const def = [
+    ['Photo', l => { const c = nkCardCoverPhoto(l); return c ? `<img src="${escHtml(nkImgSrc(c.url, 300))}" alt="${escHtml(l.title)}" loading="lazy"/>` : '—'; }],
+    ['Listing', l => `<a href="${listingHref(l)}">${escHtml(l.title)}</a>`],
+    ['Price', l => escHtml(plainPrice(l))],
+    ['Type', l => escHtml((NK_CATEGORIES[l.category] || {}).label || l.category)],
+    ['Location', l => escHtml([l.area, nkListingCounty(l)].filter(Boolean).join(', '))],
+    ['Bedrooms', l => { const b = (l.details || {}).bedrooms; return (b === undefined || b === null || b === '') ? '—' : (b == 0 ? 'Studio' : escHtml(b)); }],
+    ['Bathrooms', l => escHtml((l.details || {}).bathrooms || '—')],
+    ['Size', l => ((l.details || {}).size_sqm ? escHtml(l.details.size_sqm) + ' m²' : '—')],
+    ['Verified seller', l => (l.profiles && l.profiles.verification_status === 'verified' ? 'Yes' : 'No')],
+    ['Reviewed by Nyumba254', l => (l.is_admin_verified ? 'Yes' : 'No')],
+    ['Availability', l => (isAvailable(l) ? 'Available' : (isOccupied(l) ? occLabelOf(l) : 'Not available'))],
+    ['Listed', l => escHtml(agoText(l.created_at) || '—')]
+  ];
+  NK_AMENITIES.forEach(a => { if (L.some(l => hasAm(l, a.key))) def.push([a.label, l => (hasAm(l, a.key) ? 'Yes' : '—')]); });
+  $('compare-body').innerHTML = `<table class="compare-table"><thead><tr><th></th>${L.map((l, i) => `<th scope="col">Option ${i + 1}</th>`).join('')}</tr></thead><tbody>` +
+    def.map(([label, fn]) => `<tr><th scope="row">${escHtml(label)}</th>${L.map(l => `<td>${fn(l)}</td>`).join('')}</tr>`).join('') + '</tbody></table>';
+  nkOpenModal($('compare-modal'));
+  track('compare', { count: rows.length });
+}
+
+/* ════════════════════════════════════════════════════════════
+   BULK SELECT (item 12)
+   ════════════════════════════════════════════════════════════ */
+function updateBulkBar() {
+  const bar = $('bulk-bar');
+  const on = ui.select && !shareMode && savedRows.length > 0;
+  bar.hidden = !on;
+  document.body.classList.toggle('has-bulk', on);
+  const n = ui.selected.size;
+  $('bulk-count').textContent = n + ' selected';
+  $('bulk-compare').disabled = n < 2 || n > 3;
+  $('bulk-compare').title = n > 3 ? 'Compare works with up to 3 listings' : '';
+  ['bulk-share', 'bulk-folder', 'bulk-remove'].forEach(id => { $(id).disabled = n === 0; });
+  document.documentElement.style.setProperty('--nk-stack', on ? (bar.offsetHeight || 60) + 'px' : '0px');
+}
+function toggleSelectMode() {
+  ui.select = !ui.select;
+  if (!ui.select) ui.selected.clear();
+  if (ui.select && ui.sort === 'manual') { ui.sort = 'saved'; }
+  render();
+}
+
+/* ════════════════════════════════════════════════════════════
+   REALTIME + LIVE UPDATES (item 24)
+   ════════════════════════════════════════════════════════════ */
+function scheduleRealtime() { clearTimeout(rtTimer); rtTimer = setTimeout(startRealtime, 600); }
+function stopRealtime() { if (rt) { try { db.removeChannel(rt); } catch (e) {} rt = null; } }
+function startRealtime() {
+  stopRealtime();
+  if (shareMode) return;
+  const ids = savedRows.map(r => r.listing_id).slice(0, 50);
+  if (!ids.length) return;
+  try {
+    rt = db.channel('saved-' + Math.random().toString(36).slice(2))
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'listings', filter: 'id=in.(' + ids.join(',') + ')' }, payload => onListingUpdate(payload && payload.new))
+      .subscribe();
+  } catch (e) { rt = null; }
+}
+function onListingUpdate(n) {
+  if (!n || !n.id) return;
+  const row = savedRows.find(r => r.listing_id === n.id); if (!row) return;
+  const before = row.listing, wasAvail = isAvailable(before), oldPrice = Number(before.price);
+  Object.keys(n).forEach(k => { if (!Array.isArray(n[k]) || k === 'amenities') before[k] = n[k]; });
+  if (wasAvail && !isAvailable(before)) toast('"' + before.title + '" is no longer available');
+  else if (Number(before.price) !== oldPrice) toast('Price changed on "' + before.title + '"');
+  writeCache(); render(); renderSummary();
+}
+
+/* ════════════════════════════════════════════════════════════
+   CHROME
+   ════════════════════════════════════════════════════════════ */
+function toggleMobileMenu() {
+  const open = $('mobile-nav').classList.toggle('open');
+  $('mobile-menu-btn').setAttribute('aria-expanded', String(open));
+  document.body.style.overflow = open ? 'hidden' : '';
+}
+function nkPopulateFooterCounties() {
+  $('footer-counties').innerHTML = NK_COUNTIES.map(c => nkAreaCountFor(c)
+    ? `<a href="${escHtml(nkBuildListingsUrl({ county: c }))}">${escHtml(nkCountyLabel(c))}</a>` : '').join('');
+}
+function openClearModal() {
+  const n = savedRows.length;
+  $('clear-modal-title').textContent = `Clear all ${n} saved listing${n !== 1 ? 's' : ''}?`;
+  $('clear-modal-text').textContent = `This removes ${n === 1 ? 'your saved listing' : 'all ' + n + ' saved listings'} from your shortlist. You can undo right after, or save them again later.`;
+  nkOpenModal($('clear-modal'));
+}
+function closeClearModal() { nkCloseModal($('clear-modal')); }
+
 function initTabbarMeasure() {
   const tb = document.querySelector('.nk-tabbar'); if (!tb) return;
   const sync = () => {
@@ -699,7 +1859,7 @@ function initTabbarMeasure() {
   window.matchMedia('(max-width: 768px)').addEventListener('change', sync);
 }
 function liftChatWidget() {
-  const ours = new Set(['toast', 'clear-modal', 'main-nav', 'mobile-nav']);
+  const ours = new Set(['toast', 'clear-modal', 'edit-modal', 'folder-modal', 'share-modal', 'compare-modal', 'bulk-bar', 'main-nav', 'mobile-nav']);
   const scan = () => {
     Array.from(document.body.children).forEach(el => {
       if (el.classList.contains('nk-chat-fab') || ours.has(el.id) || el.classList.contains('nk-tabbar') || el.tagName === 'SCRIPT') return;
@@ -714,6 +1874,34 @@ function liftChatWidget() {
   setTimeout(scan, 1500); setTimeout(scan, 4000);
 }
 
+/* ════════════════════════════════════════════════════════════
+   EVENTS
+   ════════════════════════════════════════════════════════════ */
+function handleAct(a, e) {
+  const act = a.dataset.act, card = a.closest('.card'), id = card ? card.dataset.listingId : null;
+  switch (act) {
+    case 'remove': removeMany([id]); break;
+    case 'share': shareListing(id); break;
+    case 'edit': openEdit(id); break;
+    case 'viewed': markViewed(id); break;
+    case 'wa': case 'call': case 'contact': case 'similar': case 'cal': track('saved_' + act, { listing_id: id }); return;   // let the link open
+    case 'photo-prev': e.preventDefault(); cyclePhoto(card, id, -1); break;
+    case 'photo-next': e.preventDefault(); cyclePhoto(card, id, 1); break;
+    case 'move-up': moveOrder(id, -1); break;
+    case 'move-down': moveOrder(id, 1); break;
+    case 'remove-unavail': removeUnavailable(); break;
+    case 'retry': retryLoad(); break;
+    case 'clear-filters': clearFilters(); break;
+    case 'more': ui.limit += PAGE_SIZE; render(); break;
+  }
+}
+function onViewClick(id) {
+  nkTrackRecentViewed(id);
+  const row = savedRows.find(r => r.listing_id === id);
+  if (row && !shareMode) { const m = mi(id); m.price = Number(row.listing.price) || 0; m.freq = row.listing.price_frequency || ''; saveMeta(); }
+  track('saved_open', { listing_id: id });
+}
+
 function bindEvents() {
   $('mobile-menu-btn').addEventListener('click', toggleMobileMenu);
   document.addEventListener('click', e => {
@@ -721,31 +1909,133 @@ function bindEvents() {
     if (n.classList.contains('open') && !n.contains(e.target) && !$('mobile-menu-btn').contains(e.target)) {
       n.classList.remove('open'); document.body.style.overflow = ''; $('mobile-menu-btn').setAttribute('aria-expanded', 'false');
     }
+    if (e.target.classList && e.target.classList.contains('modal-overlay')) nkCloseModal(e.target);
   });
   $('sign-out-btn').addEventListener('click', doSignOut);
+  $('theme-btn').addEventListener('click', toggleTheme);
+  $('print-btn').addEventListener('click', () => { track('print'); window.print(); });
+  $('share-all-btn').addEventListener('click', () => shareRows(savedRows.filter(r => isAvailable(r.listing)).length ? savedRows.filter(r => isAvailable(r.listing)) : savedRows, 'Share your shortlist'));
   $('clear-all-btn').addEventListener('click', openClearModal);
   $('clear-cancel-btn').addEventListener('click', closeClearModal);
   $('clear-confirm-btn').addEventListener('click', confirmClearAll);
-  document.addEventListener('click', e => { if (e.target.id === 'clear-modal') closeClearModal(); });
+  $('nudge-dismiss').addEventListener('click', () => { try { sessionStorage.setItem(NUDGE_KEY, '1'); } catch (e) {} $('nudge').hidden = true; });
+  $('share-save-all').addEventListener('click', saveAllShared);
+  $('stale-note').addEventListener('click', e => { if (e.target.closest('[data-act="retry"]')) retryLoad(); });
 
-  // results area: delegated (no inline handlers, matches listings.html's pattern; also tracks "recently viewed")
-  $('results').addEventListener('click', e => {
-    let el;
-    if ((el = e.target.closest('[data-remove]'))) return removeSaved(el.dataset.remove, el);
-    if ((el = e.target.closest('.card-view-btn[data-listing-id]'))) return nkTrackRecentViewed(el.dataset.listingId);
+  // toolbar
+  const reset = () => { ui.limit = PAGE_SIZE; render(); };
+  $('f-q').addEventListener('input', nkDebounce(e => { ui.q = e.target.value.trim().toLowerCase(); reset(); }, 180));
+  $('f-sort').addEventListener('change', e => { ui.sort = e.target.value; if (ui.sort === 'manual') { ui.select = false; ui.selected.clear(); toast('Drag cards, or use the Earlier and Later buttons, to reorder.'); } reset(); });
+  $('f-cat').addEventListener('change', e => { ui.cat = e.target.value; reset(); });
+  $('f-county').addEventListener('change', e => { ui.county = e.target.value; reset(); });
+  $('f-avail').addEventListener('change', e => { ui.avail = e.target.value; reset(); });
+  $('f-status').addEventListener('change', e => { ui.status = e.target.value; reset(); });
+  $('f-folder').addEventListener('change', e => { ui.folder = e.target.value; reset(); });
+  $('clear-filters-btn').addEventListener('click', clearFilters);
+  $('view-grid').addEventListener('click', () => { ui.view = 'grid'; render(); });
+  $('view-map').addEventListener('click', () => { ui.view = 'map'; render(); track('map_view'); });
+  $('select-btn').addEventListener('click', toggleSelectMode);
+  $('unavail-summary').addEventListener('click', () => { unavailPref = !$('unavail-wrap').open; });
+
+  // bulk bar
+  $('bulk-done').addEventListener('click', toggleSelectMode);
+  $('bulk-all').addEventListener('click', () => { currentAvailIds.forEach(i => ui.selected.add(i)); render(); });
+  $('bulk-compare').addEventListener('click', openCompare);
+  $('bulk-remove').addEventListener('click', () => { const ids = [...ui.selected]; if (ids.length) removeMany(ids); });
+  $('bulk-share').addEventListener('click', () => shareRows(savedRows.filter(r => ui.selected.has(r.listing_id)), 'Share selected listings'));
+  $('bulk-folder').addEventListener('click', () => { $('folder-modal-sub').textContent = ui.selected.size + ' listing' + (ui.selected.size !== 1 ? 's' : '') + ' selected'; $('fm-folder').value = ''; nkOpenModal($('folder-modal')); });
+  $('fm-cancel').addEventListener('click', () => nkCloseModal($('folder-modal')));
+  $('fm-save').addEventListener('click', () => {
+    const f = $('fm-folder').value.trim().slice(0, 40);
+    ui.selected.forEach(id => { mi(id).folder = f; });
+    saveMeta(); nkCloseModal($('folder-modal')); render();
+    toast(f ? 'Moved to "' + f + '"' : 'Removed from folders');
   });
-  $('recommended-grid').addEventListener('click', e => {
-    let el;
-    if ((el = e.target.closest('[data-add]'))) return addToSaved(el.dataset.add, el);
-    if ((el = e.target.closest('[data-listing-id]'))) return nkTrackRecentViewed(el.dataset.listingId);
+
+  // modals
+  $('em-cancel').addEventListener('click', () => nkCloseModal($('edit-modal')));
+  $('em-save').addEventListener('click', saveEdit);
+  $('sh-close').addEventListener('click', () => nkCloseModal($('share-modal')));
+  $('sh-copy').addEventListener('click', async () => { toast((await copyText(shareCtx.text)) ? 'Copied to clipboard' : 'Could not copy. Select the text and copy it manually.', ''); });
+  $('sh-native').addEventListener('click', () => { if (navigator.share) navigator.share({ title: shareCtx.title, text: shareCtx.text }).catch(() => {}); });
+  $('sh-wa').addEventListener('click', () => track('share_whatsapp'));
+  $('cmp-close').addEventListener('click', () => nkCloseModal($('compare-modal')));
+
+  // results (delegated)
+  const results = $('results');
+  results.addEventListener('click', e => {
+    const a = e.target.closest('[data-act]');
+    if (a) return handleAct(a, e);
+    const v = e.target.closest('[data-view-id]');
+    if (v) onViewClick(v.dataset.viewId);
   });
+  results.addEventListener('change', e => {
+    const box = e.target.closest('.sel-input'); if (!box) return;
+    const card = box.closest('.card'), id = card.dataset.listingId;
+    if (box.checked) ui.selected.add(id); else ui.selected.delete(id);
+    card.classList.toggle('selected', box.checked);
+    updateBulkBar();
+  });
+  // swipe between photos
+  let tx = null, tcard = null;
+  results.addEventListener('touchstart', e => { const m = e.target.closest('.card-media'); if (!m || e.touches.length !== 1) { tx = null; return; } tx = e.touches[0].clientX; tcard = m.closest('.card'); }, { passive: true });
+  results.addEventListener('touchend', e => { if (tx === null || !tcard) return; const dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx) > 45) cyclePhoto(tcard, tcard.dataset.listingId, dx < 0 ? 1 : -1); tx = null; }, { passive: true });
+  // drag to reorder
+  let dragId = null;
+  results.addEventListener('dragstart', e => {
+    const c = e.target.closest && e.target.closest('.card[draggable="true"]'); if (!c) return;
+    dragId = c.dataset.listingId; e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/plain', dragId); } catch (_) {}
+    c.classList.add('dragging');
+  });
+  results.addEventListener('dragover', e => {
+    if (!dragId) return;
+    const c = e.target.closest('.card[draggable="true"]');
+    if (c && c.dataset.listingId !== dragId) { e.preventDefault(); qsa('.drag-over').forEach(x => x.classList.remove('drag-over')); c.classList.add('drag-over'); }
+  });
+  results.addEventListener('drop', e => {
+    if (!dragId) return;
+    const c = e.target.closest('.card[draggable="true"]'); if (!c) return;
+    e.preventDefault();
+    const target = c.dataset.listingId, d = dragId; dragId = null;
+    if (target !== d) dropBefore(d, target);
+  });
+  results.addEventListener('dragend', () => { dragId = null; qsa('.dragging,.drag-over').forEach(x => x.classList.remove('dragging', 'drag-over')); });
+
+  // suggestion grids
+  const side = e => {
+    const add = e.target.closest('[data-add]'); if (add) return addToSaved(add.dataset.add, add);
+    const v = e.target.closest('[data-view-id]'); if (v) nkTrackRecentViewed(v.dataset.viewId);
+  };
+  $('recommended-grid').addEventListener('click', side);
+  $('recent-grid').addEventListener('click', side);
 
   $('nk-datasaver-off').addEventListener('click', nkToggleDataSaver);
-  window.addEventListener('pageshow', e => { if (e.persisted) { render(); renderRecommended(); } });
+  window.addEventListener('pageshow', e => { if (e.persisted) { render(); silentRefresh(true); } });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) silentRefresh(); });
+  window.addEventListener('focus', () => silentRefresh());
+  window.addEventListener('storage', e => {
+    if (!e.key) return;
+    if (e.key === SAVED_KEY) silentRefresh(true);
+    else if (e.key === metaKey) { meta = readMeta(metaKey); render(); }
+    else if (e.key === THEME_KEY && (e.newValue === 'light' || e.newValue === 'dark')) applyTheme(e.newValue);
+  });
+  setInterval(() => { if (!document.hidden) silentRefresh(); }, 120000);
+
+  // print: show everything, then restore
+  window.addEventListener('beforeprint', () => {
+    $('print-meta').textContent = new Date().toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' }) + ' · ' + savedRows.length + ' listing' + (savedRows.length !== 1 ? 's' : '');
+    ui._prevLimit = ui.limit; ui._prevView = ui.view; ui.limit = 1e9; ui.view = 'grid'; render(); $('unavail-wrap').open = true;
+  });
+  window.addEventListener('afterprint', () => { ui.limit = ui._prevLimit || PAGE_SIZE; ui.view = ui._prevView || 'grid'; render(); });
 }
 
+/* ════════════════════════════════════════════════════════════
+   INIT
+   ════════════════════════════════════════════════════════════ */
 async function nkSavedInit() {
   $('footer-year').textContent = new Date().getFullYear();
+  applyTheme(document.documentElement.getAttribute('data-theme') || 'dark');
   nkPopulateFooterCounties();
   nkInitDataSaver();
   bindEvents();
@@ -754,21 +2044,46 @@ async function nkSavedInit() {
 
   const { data } = await nkSessionPromise;
   currentUser = (data && data.session && data.session.user) || null;
+  metaKey = META_KEY + ':' + (currentUser ? currentUser.id : 'anon');
+  meta = readMeta(metaKey);
 
   nkInitAccountNav(['nav-account-link', 'mobile-account-link']);
   if (currentUser) $('tab-account-link').setAttribute('href', '/dashboard');
 
-  if (currentUser) {
-    $('sync-banner-signedin').hidden = false;
-    $('signed-in-email').textContent = currentUser.email || '';
-    await loadFromAccount();
+  // shared read-only shortlist: /saved?share=000123,000456
+  const sp = new URLSearchParams(location.search).get('share');
+  if (sp) sharedNums = sp.split(',').map(s => Number(s)).filter(n => Number.isFinite(n) && n > 0).slice(0, 60);
+  shareMode = sharedNums.length > 0;
+
+  let ok;
+  if (shareMode) {
+    $('page-title').textContent = 'Shared shortlist';
+    $('page-sub').textContent = 'A shortlist someone sent you. Nothing here changes your own saved listings.';
+    ok = await loadShared(sharedNums);
+    $('share-banner').hidden = false;
+    $('share-banner-text').textContent = savedRows.length + ' listing' + (savedRows.length !== 1 ? 's' : '') + ' shared with you.';
   } else {
-    $('sync-banner-anon').hidden = false;
-    await loadFromLocalStorage();
+    let merged = 0;
+    if (currentUser) {
+      $('sync-banner-signedin').hidden = false;
+      $('signed-in-email').textContent = currentUser.email || '';
+      merged = await mergeLocalIntoAccount();
+    } else {
+      $('sync-banner-anon').hidden = false;
+    }
+    const cached = readCache();
+    if (cached && cached.rows.length) { savedRows = cached.rows; render(); }     // instant paint, refreshed below
+    ok = await loadOwn();
+    if (merged) toast('Added ' + merged + ' listing' + (merged !== 1 ? 's' : '') + ' from this device to your account');
   }
+
+  loaded = true; lastRefresh = Date.now();
+  loadError = !ok;
+  if (ok) { ensureSnapshots(); pruneMeta(); writeCache(); }
   render();
-  loadRecommended();
+  loadRecommended(); loadRecent(); scheduleRealtime();
   nkTrackPageView();
+  track(shareMode ? 'shared_view' : 'saved_view', { count: savedRows.length });
 }
 
 document.addEventListener('DOMContentLoaded', nkSavedInit);
