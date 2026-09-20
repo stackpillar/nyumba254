@@ -14,7 +14,6 @@ const SHELL_CACHE = `nyumba254-shell-${VERSION}`;
 const ASSET_CACHE = `nyumba254-assets-${VERSION}`;
 
 const PRECACHE = [
-  '/offline.html',
   '/manifest.webmanifest',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
@@ -28,10 +27,21 @@ const NEVER_CACHE = [
   '/api/'
 ];
 
+async function cacheOfflinePage(cache) {
+  // Cloudflare may redirect /offline.html to /offline, and a redirected
+  // response can't be used for a page navigation, so store a clean copy.
+  const res = await fetch('/offline.html');
+  if (!res.ok) throw new Error('offline page not available');
+  const html = await res.text();
+  await cache.put('/offline.html', new Response(html, {
+    headers: { 'Content-Type': 'text/html; charset=utf-8' }
+  }));
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(SHELL_CACHE)
-      .then((cache) => cache.addAll(PRECACHE))
+      .then((cache) => Promise.all([cache.addAll(PRECACHE), cacheOfflinePage(cache)]))
       .then(() => self.skipWaiting())
   );
 });
