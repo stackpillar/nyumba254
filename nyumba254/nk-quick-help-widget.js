@@ -4,20 +4,19 @@
  * ONE FILE. Drop this on every page with a single tag, right before
  * </body>:
  *
- *   <script src="/js/nk-quick-help-widget.js" defer></script>
- *
- * (Path above assumes you host it at /js/ — put it wherever your other
- * shared JS lives and adjust the src accordingly.)
+ *   <script src="/nk-quick-help-widget.js" defer></script>
  *
  * The script injects its own <style>, its own markup, loads the
  * Supabase JS SDK and the Inter/Playfair fonts automatically if the
- * page hasn't already loaded them, and is safe to include even if a
- * page's own <script> block also creates a Supabase client called
- * `db` — the widget will reuse that client instead of opening a
- * second connection.
+ * page hasn't already loaded them, and reuses the page's own Supabase
+ * client (`db`) when there is one instead of opening a second connection.
  *
- * Config you may want to touch is in NK_QH_CONFIG below (Gemini key,
- * model). Everything else works out of the box.
+ * LAYOUT CONTRACT (new): the launcher and panel sit above whatever the
+ * page publishes in two CSS variables, so they never cover a mobile tab
+ * bar or a compare bar:
+ *     --nk-tabbar-h   height of the fixed bottom tab bar (0px if none)
+ *     --nk-stack      extra height of any bar stacked above it (0px if none)
+ * Pages that don't define them get the original 24px offset.
  * ────────────────────────────────────────────────────────────────
  */
 (function () {
@@ -42,14 +41,20 @@
   // resuming the old thread or the message box.
   const NK_QH_SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
+  // Matched as WHOLE WORDS/PHRASES. (Plain substring matching made "sue"
+  // fire on "issue" and sent every "I have an issue…" straight to a human.)
   const ESCALATION_KEYWORDS = [
     'refund', 'scam', 'scammed', 'fraud', 'not working', "isn't working",
     'lawyer', 'legal', 'police', 'urgent', 'emergency', 'complaint',
     'sue', 'stolen', 'hacked', 'unsafe', 'threat',
   ];
+  const nkQhEscapeRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const ESCALATION_RE = new RegExp('(^|[^a-z0-9])(' + ESCALATION_KEYWORDS.map(nkQhEscapeRe).join('|') + ')($|[^a-z0-9])', 'i');
 
+  // 'a person' and bare 'human' were removed: they matched ordinary sentences
+  // ("is a person selling this?"). "real person", "talk to a human" etc. still work.
   const AGENT_REQUEST_KEYWORDS = [
-    'real person', 'a person', 'human', 'an agent', 'live agent', 'live chat',
+    'real person', 'live agent', 'live chat', 'an agent',
     'someone from the team', 'someone on the team', 'talk to the team', 'speak to the team',
     'talk to someone', 'speak to someone', 'talk to a human', 'speak to a human',
     'customer service', 'customer support', 'representative', 'connect me',
@@ -72,7 +77,8 @@ WHAT NYUMBA254 IS
 ===========================
 - Categories: Apartment, House, Boarding House, Airbnb / Holiday Rental, and Shops & Offices.
 - Listing frequencies buyers can filter by: Monthly, Nightly, Weekly, Per term, or One-time (for sales).
-- Search works by county and area, with a frequency filter.
+- Search works by county and area, and can also be narrowed by price, bedrooms, category and frequency. Buyers can type things like "2 bedroom Kilimani under 50k", use "Near me", switch to a map view, and compare up to 3 listings side by side.
+- If nothing matches, buyers can set up an alert for their search and the team will contact them (by phone/WhatsApp or email) when a matching listing is posted.
 - 0% commission — whatever a seller agrees with a buyer is entirely theirs.
 - Buyers pay nothing, ever, at any point.
 - No agents or middlemen — sellers and buyers deal directly.
@@ -167,6 +173,8 @@ A: "Of course — connecting you with our team now."`;
   }
 
   function nkQhEnsureFonts() {
+    // Every Nyumba254 page already loads Inter + Playfair; don't fetch a second copy.
+    if (document.querySelector('link[href*="fonts.googleapis.com"][href*="Inter"]')) return;
     if (!document.getElementById('nk-qh-font-preconnect')) {
       const pre = document.createElement('link');
       pre.id = 'nk-qh-font-preconnect';
@@ -212,14 +220,18 @@ A: "Of course — connecting you with our team now."`;
   const NK_QH_CSS = `
 :root{
   --qh-green:#0F6E56; --qh-green-dark:#085041; --qh-green-mid:#1D9E75; --qh-green-light:#E1F5EE;
-  --qh-gold:#BA7517; --qh-gold-light:#FAEEDA; --qh-red:#C53030; --qh-red-light:#FFF5F5;
-  --qh-text:#1a1a18; --qh-text-2:#4a4a46; --qh-text-3:#888780;
+  --qh-gold:#8F550B; --qh-gold-light:#FAEEDA; --qh-red:#C53030; --qh-red-light:#FFF5F5;
+  --qh-text:#1a1a18; --qh-text-2:#4a4a46; --qh-text-3:#6b6a63;
   --qh-border:#e0ded8; --qh-surface:#f7f6f2; --qh-white:#fff;
 }
-#nk-qh-root, #nk-qh-root *{box-sizing:border-box;font-family:'Inter',sans-serif;}
+#nk-qh-root, #nk-qh-root *{box-sizing:border-box;font-family:'Inter',system-ui,sans-serif;}
+#nk-qh-root button:focus-visible, #nk-qh-root textarea:focus-visible, #nk-qh-root a:focus-visible{outline:2px solid var(--qh-green);outline-offset:2px;}
 
+/* Everything sits above the page's bottom stack (tab bar + compare bar). */
 #nk-qh-launcher{
-  position:fixed;bottom:24px;right:24px;z-index:2000;
+  position:fixed;right:24px;
+  bottom:calc(var(--nk-tabbar-h, 0px) + var(--nk-stack, 0px) + 24px);
+  z-index:2000;
   width:58px;height:58px;border-radius:50%;border:none;cursor:pointer;
   background:var(--qh-green);box-shadow:0 6px 20px rgba(15,110,86,0.4);
   display:flex;align-items:center;justify-content:center;
@@ -229,21 +241,34 @@ A: "Of course — connecting you with our team now."`;
 #nk-qh-launcher svg{width:26px;height:26px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;}
 #nk-qh-launcher .nk-qh-pulse{
   position:absolute;inset:0;border-radius:50%;border:2px solid var(--qh-green-mid);
-  animation:nkQhPulse 2.4s ease-out infinite;
+  animation:nkQhPulse 2.4s ease-out infinite;pointer-events:none;
 }
 @keyframes nkQhPulse{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.55);opacity:0}}
 #nk-qh-launcher .nk-qh-dot{
   position:absolute;top:-2px;right:-2px;width:14px;height:14px;border-radius:50%;
   background:var(--qh-gold);border:2px solid #fff;
 }
+/* A page modal, drawer or sheet is open: get out of its way. */
+body.nk-modal-open #nk-qh-launcher{display:none;}
 
 #nk-qh-panel{
-  position:fixed;bottom:92px;right:24px;z-index:2000;
-  width:372px;height:min(640px,80vh);max-height:min(640px,80vh);
+  position:fixed;right:24px;
+  bottom:calc(var(--nk-tabbar-h, 0px) + var(--nk-stack, 0px) + 92px);
+  z-index:2000;
+  width:372px;
+  height:min(640px, calc(100vh - var(--nk-tabbar-h, 0px) - var(--nk-stack, 0px) - 112px));
+  max-height:calc(100vh - var(--nk-tabbar-h, 0px) - var(--nk-stack, 0px) - 112px);
+  min-height:300px;
   background:var(--qh-white);border-radius:18px;overflow:hidden;
   box-shadow:0 20px 60px rgba(0,0,0,0.22);
   display:none;flex-direction:column;
   animation:nkQhUp .22s ease;
+}
+@supports (height:1dvh){
+  #nk-qh-panel{
+    height:min(640px, calc(100dvh - var(--nk-tabbar-h, 0px) - var(--nk-stack, 0px) - 112px));
+    max-height:calc(100dvh - var(--nk-tabbar-h, 0px) - var(--nk-stack, 0px) - 112px);
+  }
 }
 #nk-qh-panel.open{display:flex;}
 @keyframes nkQhUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
@@ -259,16 +284,16 @@ A: "Of course — connecting you with our team now."`;
 .nk-qh-avatar svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;}
 .nk-qh-head-text{flex:1;min-width:0;}
 .nk-qh-head-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:6px;}
-.nk-qh-head-status{font-size:11.5px;color:rgba(255,255,255,0.75);display:flex;align-items:center;gap:5px;margin-top:1px;}
+.nk-qh-head-status{font-size:11.5px;color:rgba(255,255,255,0.82);display:flex;align-items:center;gap:5px;margin-top:1px;}
 .nk-qh-head-status .dot{width:6px;height:6px;border-radius:50%;background:#5DE2B4;flex-shrink:0;}
 .nk-qh-head-status .dot.live{background:#FFD166;animation:nkQhLiveBlink 1.3s ease-in-out infinite;}
 @keyframes nkQhLiveBlink{0%,100%{opacity:1}50%{opacity:.3}}
 .nk-qh-head-actions{display:flex;align-items:center;gap:4px;flex-shrink:0;}
-.nk-qh-head-btn{background:rgba(255,255,255,0.12);border:none;width:28px;height:28px;border-radius:8px;color:#fff;font-size:15px;cursor:pointer;flex-shrink:0;transition:background .15s;display:flex;align-items:center;justify-content:center;}
+.nk-qh-head-btn{background:rgba(255,255,255,0.12);border:none;width:32px;height:32px;border-radius:8px;color:#fff;font-size:15px;cursor:pointer;flex-shrink:0;transition:background .15s;display:flex;align-items:center;justify-content:center;}
 .nk-qh-head-btn:hover{background:rgba(255,255,255,0.24);}
 .nk-qh-head-btn svg{width:15px;height:15px;stroke:#fff;fill:none;stroke-width:2;}
 
-.nk-qh-body{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:10px;background:var(--qh-surface);scroll-behavior:smooth;}
+.nk-qh-body{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:10px;background:var(--qh-surface);scroll-behavior:smooth;overscroll-behavior:contain;}
 .nk-qh-body::-webkit-scrollbar{width:4px;}
 .nk-qh-body::-webkit-scrollbar-thumb{background:var(--qh-border);border-radius:2px;}
 
@@ -299,10 +324,10 @@ A: "Of course — connecting you with our team now."`;
 
 .nk-qh-escalate{
   align-self:flex-start;display:flex;align-items:flex-start;gap:8px;
-  background:var(--qh-gold-light);border:1px solid #F0CE8F;color:#7A4E0A;
+  background:var(--qh-gold-light);border:1px solid #F0CE8F;color:#6b3f06;
   border-radius:12px;padding:10px 13px;font-size:12.5px;line-height:1.5;max-width:92%;
 }
-.nk-qh-escalate svg{width:14px;height:14px;stroke:#BA7517;fill:none;stroke-width:2;flex-shrink:0;margin-top:1px;}
+.nk-qh-escalate svg{width:14px;height:14px;stroke:#8F550B;fill:none;stroke-width:2;flex-shrink:0;margin-top:1px;}
 .nk-qh-escalate-btn{
   margin-top:8px;display:inline-flex;align-items:center;gap:6px;
   background:#0F6E56;color:#fff;font-size:12px;font-weight:600;
@@ -320,8 +345,8 @@ A: "Of course — connecting you with our team now."`;
   display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;
   padding:8px 12px;border-radius:8px;border:none;cursor:pointer;text-decoration:none;
 }
-.nk-qh-invite-btn.wa{background:#25D366;color:#fff;}
-.nk-qh-invite-btn.wa:hover{background:#128C3E;}
+.nk-qh-invite-btn.wa{background:#128C3E;color:#fff;}
+.nk-qh-invite-btn.wa:hover{background:#0d6e30;}
 .nk-qh-invite-btn.copy{background:var(--qh-surface);color:var(--qh-text-2);border:1.5px solid var(--qh-border);}
 .nk-qh-invite-btn.copy:hover{border-color:var(--qh-green);color:var(--qh-green);}
 
@@ -349,7 +374,7 @@ A: "Of course — connecting you with our team now."`;
   border-radius:20px;padding:3px 10px;
 }
 .nk-qh-history-newbtn{
-  display:block;width:100%;margin-top:auto;padding:13px;border-radius:24px;
+  display:block;width:100%;margin-top:auto;padding:13px;border-radius:24px;border:none;cursor:pointer;
   background:var(--qh-text);color:#fff;font-size:14px;font-weight:600;
   transition:background .15s;flex-shrink:0;
 }
@@ -380,8 +405,23 @@ A: "Of course — connecting you with our team now."`;
 
 .nk-qh-foot-note{text-align:center;font-size:10.5px;color:var(--qh-text-3);padding:6px 0 2px;background:#fff;}
 
+/* Phones: bigger touch targets, 16px input (stops iOS zooming on focus), and a smaller offset. */
+@media (max-width:768px){
+  #nk-qh-launcher{right:16px;bottom:calc(var(--nk-tabbar-h, 0px) + var(--nk-stack, 0px) + 16px);}
+  #nk-qh-panel{right:16px;bottom:calc(var(--nk-tabbar-h, 0px) + var(--nk-stack, 0px) + 84px);}
+  .nk-qh-head-btn{width:40px;height:40px;}
+  .nk-qh-chip{min-height:40px;display:inline-flex;align-items:center;}
+  #nk-qh-send{width:44px;height:44px;}
+  #nk-qh-input{font-size:16px;}
+  .nk-qh-history-item{padding:16px 18px;}
+}
 @media (max-width:420px){
-  #nk-qh-panel{width:calc(100vw - 20px);right:10px;bottom:84px;height:78vh;max-height:78vh;}
+  #nk-qh-panel{width:calc(100vw - 20px);right:10px;}
+}
+@media (prefers-reduced-motion:reduce){
+  #nk-qh-launcher .nk-qh-pulse, .nk-qh-head-status .dot.live, .nk-qh-typing-bub span{animation:none;}
+  #nk-qh-panel{animation:none;}
+  .nk-qh-body{scroll-behavior:auto;}
 }
 `;
 
@@ -389,40 +429,40 @@ A: "Of course — connecting you with our team now."`;
   // 3. MARKUP
   // ═══════════════════════════════════════════════════════════════
   const NK_QH_HTML = `
-<button id="nk-qh-launcher" aria-label="Open Quick Help">
+<button id="nk-qh-launcher" type="button" aria-label="Open Quick Help" aria-expanded="false" aria-controls="nk-qh-panel">
   <span class="nk-qh-pulse"></span>
   <span class="nk-qh-dot" id="nk-qh-dot" style="display:none"></span>
-  <svg id="nk-qh-icon-open" viewBox="0 0 24 24"><path d="M8 10h8M8 14h5M21 12c0 4.97-4.03 9-9 9-1.4 0-2.72-.32-3.9-.88L3 21l1.02-3.9A8.96 8.96 0 013 12c0-4.97 4.03-9 9-9s9 4.03 9 9z"/></svg>
-  <svg id="nk-qh-icon-close" viewBox="0 0 24 24" style="display:none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  <svg id="nk-qh-icon-open" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 10h8M8 14h5M21 12c0 4.97-4.03 9-9 9-1.4 0-2.72-.32-3.9-.88L3 21l1.02-3.9A8.96 8.96 0 013 12c0-4.97 4.03-9 9-9s9 4.03 9 9z"/></svg>
+  <svg id="nk-qh-icon-close" viewBox="0 0 24 24" style="display:none" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 </button>
 
-<div id="nk-qh-panel">
+<div id="nk-qh-panel" role="dialog" aria-label="Quick Help chat">
   <div class="nk-qh-head">
     <div class="nk-qh-avatar">
-      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     </div>
     <div class="nk-qh-head-text">
-      <div class="nk-qh-head-title">Quick Help <span style="font-weight:400;opacity:.7">· Nia</span></div>
+      <div class="nk-qh-head-title">Quick Help <span style="font-weight:400;opacity:.85">· Nia</span></div>
       <div class="nk-qh-head-status"><span class="dot" id="nk-qh-status-dot"></span><span id="nk-qh-status-text">Nyumba254's assistant — online</span></div>
     </div>
     <div class="nk-qh-head-actions">
-      <button class="nk-qh-head-btn" id="nk-qh-menu-btn" aria-label="Back to conversations" title="Back to conversations">
-        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      <button type="button" class="nk-qh-head-btn" id="nk-qh-menu-btn" aria-label="Back to conversations" title="Back to conversations">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
-      <button class="nk-qh-head-btn" id="nk-qh-close-btn" aria-label="Close">✕</button>
+      <button type="button" class="nk-qh-head-btn" id="nk-qh-close-btn" aria-label="Close Quick Help">✕</button>
     </div>
   </div>
 
-  <div class="nk-qh-body" id="nk-qh-body"></div>
+  <div class="nk-qh-body" id="nk-qh-body" role="log" aria-live="polite" aria-relevant="additions"></div>
 
-  <div class="nk-qh-typing" id="nk-qh-typing" style="padding:0 14px 8px;">
+  <div class="nk-qh-typing" id="nk-qh-typing" style="padding:0 14px 8px;" aria-hidden="true">
     <div class="nk-qh-typing-bub"><span></span><span></span><span></span></div>
   </div>
 
   <div class="nk-qh-inputbar">
-    <textarea id="nk-qh-input" rows="1" placeholder="Type your question…"></textarea>
-    <button id="nk-qh-send" disabled aria-label="Send">
-      <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    <textarea id="nk-qh-input" rows="1" placeholder="Type your question…" aria-label="Your message"></textarea>
+    <button type="button" id="nk-qh-send" disabled aria-label="Send">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
     </button>
   </div>
   <div class="nk-qh-foot-note" id="nk-qh-foot-note">Nia is an assistant, not a person — she'll bring in the team if needed</div>
@@ -449,7 +489,7 @@ A: "Of course — connecting you with our team now."`;
   function nkQhInit() {
     let open = false;
     let started = false;
-    let mode = 'bot';              // 'bot' | 'report' | 'live'
+    let mode = 'bot';              // 'bot' | 'report' | 'live' | 'ended'
     let conversationHistory = [];  // [{role:'user'|'model', text}]
 
     // ── 24-hour idle expiry ─────────────────────────────────────
@@ -461,24 +501,26 @@ A: "Of course — connecting you with our team now."`;
     }
 
     function nkQhBuildMenu() {
+      // Absolute, extensionless routes so links work from any page, including
+      // nested routes like /listings/kisumu/apartments.
       const sections = [
         {
           label: 'Browsing & listings',
           chips: [
-            { label: '🏠 Browse listings', type: 'nav', href: 'listings' },
-            { label: '📋 List my property', type: 'nav', href: 'post-listing.html' },
+            { label: '🏠 Browse listings', type: 'nav', href: '/listings' },
+            { label: '📋 List my property', type: 'nav', href: '/post-listing' },
             { label: '💰 Pricing & plans', type: 'ask', q: 'What does it cost to list?' },
             { label: '⭐ Standard vs Featured?', type: 'ask', q: "What's the difference between a Standard and Featured listing?" },
             { label: '📍 Areas we cover', type: 'ask', q: 'What areas do you cover?' },
             { label: '🗂️ Edit or remove my listing', type: 'ask', q: "Can I edit or remove my listing after it's posted?" },
-            { label: 'ℹ️ How it works', type: 'nav', href: 'how-it-works.html' },
+            { label: 'ℹ️ How it works', type: 'nav', href: '/how-it-works' },
           ],
         },
         {
           label: 'My account',
           chips: [
-            { label: '❤️ My saved listings', type: 'nav', href: 'saved.html' },
-            { label: '👤 Seller login / dashboard', type: 'nav', href: 'login.html' },
+            { label: '❤️ My saved listings', type: 'nav', href: '/saved' },
+            { label: '👤 Seller login / dashboard', type: 'nav', href: '/login' },
             { label: '🆓 Do buyers pay anything?', type: 'ask', q: 'Do buyers ever have to pay to use Nyumba254?' },
             { label: '💬 Track a reply to my enquiry', type: 'ask', q: 'How do I check replies to my enquiry?' },
             { label: '📲 M-Pesa payment issue', type: 'ask', q: 'My M-Pesa payment is not reflecting' },
@@ -498,22 +540,23 @@ A: "Of course — connecting you with our team now."`;
           label: 'Something else',
           chips: [
             { label: '📨 Invite a friend', type: 'invite' },
-            { label: '📖 FAQ', type: 'nav', href: 'faq.html' },
-            { label: '✉️ Contact us', type: 'nav', href: 'contact.html' },
-            { label: '📄 Terms & Privacy', type: 'nav', href: 'terms.html' },
+            { label: '📖 FAQ', type: 'nav', href: '/faq' },
+            { label: '✉️ Contact us', type: 'nav', href: '/contact' },
+            { label: '📄 Terms & Privacy', type: 'nav', href: '/terms' },
             { label: '🙋 Talk to a real person', type: 'escalate' },
           ],
         },
       ];
 
-      // Contextual chip: if the page has a global `listing` object loaded
+      // Contextual chip: if the page has a `listing` object loaded
       // (listing.html), offer a shortcut that pre-fills the question.
+      // `typeof` (not window.listing) so it also sees top-level let/const.
       try {
-        if (typeof window.listing !== 'undefined' && window.listing && window.listing.title) {
+        if (typeof listing !== 'undefined' && listing && listing.title) {
           sections[0].chips.unshift({
             label: '❓ Ask about this listing',
             type: 'ask',
-            q: `I have a question about the listing "${window.listing.title}".`,
+            q: `I have a question about the listing "${listing.title}".`,
           });
         }
       } catch (e) { /* listing not defined on this page — fine */ }
@@ -621,7 +664,7 @@ A: "Of course — connecting you with our team now."`;
             label === 'Talk to a real person' ? { type: 'escalate' } :
             label === 'Choose a different topic' ? { type: 'menu' } :
             label === 'Report a listing' ? { type: 'report', reason: 'fake_listing', label } :
-            label === 'Seller login / dashboard' ? { type: 'nav', href: 'login.html', label } :
+            label === 'Seller login / dashboard' ? { type: 'nav', href: '/login', label } :
             { type: 'ask', q: label }
           );
           chipsWrap.appendChild(btn);
@@ -637,7 +680,7 @@ A: "Of course — connecting you with our team now."`;
       const card = document.createElement('div');
       card.className = 'nk-qh-escalate';
       card.innerHTML = `
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         <div>
           This one needs a human touch.
           <br><button type="button" class="nk-qh-escalate-btn" id="nk-qh-escalate-cta">Talk to the team</button>
@@ -648,7 +691,8 @@ A: "Of course — connecting you with our team now."`;
     }
 
     function addInviteCard() {
-      const origin = window.location.origin + window.location.pathname.replace(/[^/]*$/, 'index.html');
+      // Was origin + pathname-with-index.html, which produced /index.html. The site root is the link to share.
+      const origin = window.location.origin + '/';
       const shareText = `🏠 Check out Nyumba254 — find or list apartments, shops, and offices across Kenya. No agents, no commission: ${origin}`;
       const waHref = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
 
@@ -658,7 +702,7 @@ A: "Of course — connecting you with our team now."`;
         <p>Know someone hunting for a place, or with a property to list? Share Nyumba254 with them 👇</p>
         <div class="nk-qh-invite-actions">
           <a class="nk-qh-invite-btn wa" href="${waHref}" target="_blank" rel="noopener">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M17.5 14.4c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51-.17-.01-.37-.01-.57-.01-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.07 2.87 1.21 3.07.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.62.71.23 1.36.2 1.87.12.57-.08 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="white" aria-hidden="true"><path d="M17.5 14.4c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51-.17-.01-.37-.01-.57-.01-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.07 2.87 1.21 3.07.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.62.71.23 1.36.2 1.87.12.57-.08 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35"/></svg>
             Share on WhatsApp
           </a>
           <button type="button" class="nk-qh-invite-btn copy" id="nk-qh-copy-invite">Copy link</button>
@@ -668,12 +712,7 @@ A: "Of course — connecting you with our team now."`;
       scrollBottom();
     }
 
-    function copyInviteLink(btn, rawLink) {
-      // Force plain text no matter what's passed in — strips any HTML tags
-      // and decodes entities so nothing but a bare URL ever hits the clipboard.
-      const tmp = document.createElement('div');
-      tmp.innerHTML = rawLink;
-      const link = (tmp.textContent || tmp.innerText || rawLink).trim();
+    function copyInviteLink(btn, link) {
       const done = (ok) => {
         const orig = btn.textContent;
         btn.textContent = ok ? 'Copied ✓' : 'Copy failed';
@@ -707,7 +746,7 @@ A: "Of course — connecting you with our team now."`;
         showTyping();
         setTimeout(() => {
           hideTyping();
-          addBotBubble(`Opening ${chip.label.replace(/^\W+\s*/, '')}…`, null, false);
+          addBotBubble(`Opening ${(chip.label || '').replace(/^\W+\s*/, '')}…`, null, false);
           setTimeout(() => { window.location.href = chip.href; }, 450);
         }, 350);
         return;
@@ -797,8 +836,7 @@ A: "Of course — connecting you with our team now."`;
     }
 
     function needsEscalation(text) {
-      const q = text.toLowerCase();
-      return ESCALATION_KEYWORDS.some(k => q.includes(k));
+      return ESCALATION_RE.test(text || '');
     }
 
     async function getAnswer(raw) {
@@ -905,9 +943,17 @@ A: "Of course — connecting you with our team now."`;
     let _client = null;
     async function getClient() {
       if (_client) return _client;
-      // Reuse an existing client already on the page (many Nyumba254
-      // pages declare `const db = supabase.createClient(...)` at top level).
-      if (typeof window.db !== 'undefined' && window.db && window.db.from) {
+      // Reuse the page's own client. Nyumba254 pages declare `const db = createClient(...)`
+      // (via nk-shared.js), and a top-level const is NOT a window property, so
+      // `window.db` was always undefined and the widget opened a second client.
+      // A bare `typeof db` reads the shared global scope correctly.
+      try {
+        if (typeof db !== 'undefined' && db && typeof db.from === 'function') {
+          _client = db;
+          return _client;
+        }
+      } catch (e) { /* no page client: fall through */ }
+      if (window.db && typeof window.db.from === 'function') {
         _client = window.db;
         return _client;
       }
@@ -1165,9 +1211,9 @@ A: "Of course — connecting you with our team now."`;
       touchLastActive();
     }
 
-    // Manual "＋ New conversation" button — per your screenshot, this always
-    // jumps straight to the topic menu (list of helps), same as a first-ever
-    // visit. The old conversation stays in history, marked Ended.
+    // Manual "＋ New conversation" button: always jumps straight to the topic
+    // menu, same as a first-ever visit. The old conversation stays in history,
+    // marked Ended.
     function startNewConversation() {
       endSession();
       renderStart();
@@ -1175,8 +1221,7 @@ A: "Of course — connecting you with our team now."`;
 
     // The screen you land on when you open the widget with no conversation
     // in progress — a scrollable list of past conversations (Started ..,
-    // Ended tag if closed) with a "New conversation" button at the bottom,
-    // matching the Zendesk-style pattern in your screenshot.
+    // Ended tag if closed) with a "New conversation" button at the bottom.
     function renderHistoryScreen() {
       const list = loadConversationHistory();
       if (!list.length) { renderStart(); return; }
@@ -1190,6 +1235,8 @@ A: "Of course — connecting you with our team now."`;
       list.forEach(conv => {
         const item = document.createElement('div');
         item.className = 'nk-qh-history-item';
+        item.tabIndex = 0;
+        item.setAttribute('role', 'button');
         const dt = new Date(conv.started_at);
         const dateLabel = dt.toLocaleDateString('en-KE', { day: '2-digit', month: 'short' });
         const timeLabel = dt.toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' });
@@ -1203,6 +1250,7 @@ A: "Of course — connecting you with our team now."`;
         `;
         item.querySelector('.nk-qh-history-preview').textContent = conv.preview || 'Quick Help conversation';
         item.onclick = () => openConversation(conv);
+        item.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openConversation(conv); } };
         listWrap.appendChild(item);
       });
 
@@ -1281,6 +1329,8 @@ A: "Of course — connecting you with our team now."`;
       panel.classList.toggle('open', open);
       iconOpen.style.display = open ? 'none' : 'block';
       iconClose.style.display = open ? 'block' : 'none';
+      launcher.setAttribute('aria-expanded', String(open));
+      launcher.setAttribute('aria-label', open ? 'Close Quick Help' : 'Open Quick Help');
       if (open) dot.style.display = 'none';
       if (open) {
         const lastActive = getLastActiveAt();
@@ -1296,17 +1346,25 @@ A: "Of course — connecting you with our team now."`;
         }
         touchLastActive();
       }
-      if (open) { scrollBottom(); input.focus(); }
+      if (open) {
+        scrollBottom();
+        // On touch devices, auto-focusing the box would raise the keyboard over the topic menu.
+        if (!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches) && inputBar.style.display !== 'none') input.focus();
+      }
     }
 
     // ── wire up events ─────────────────────────────────────────
     launcher.addEventListener('click', toggle);
-    document.getElementById('nk-qh-close-btn').addEventListener('click', toggle);
+    document.getElementById('nk-qh-close-btn').addEventListener('click', () => { toggle(); launcher.focus(); });
     document.getElementById('nk-qh-menu-btn').addEventListener('click', renderHistoryScreen);
     sendBtn.addEventListener('click', send);
     input.addEventListener('input', () => resize(input));
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+    });
+    // Escape closes the panel when focus is inside it.
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && open && panel.contains(document.activeElement)) { toggle(); launcher.focus(); }
     });
 
     // Small public API in case a page wants to open the widget
@@ -1328,6 +1386,7 @@ A: "Of course — connecting you with our team now."`;
     nkQhInit();
     // Warm the Supabase SDK in the background so live chat / reports
     // open instantly on first click, without blocking widget render.
+    // (Skipped when the page already has its own client: nothing to load.)
     nkQhEnsureSupabaseSdk().catch(err => console.warn('Nia: Supabase SDK failed to preload', err));
   }
 
