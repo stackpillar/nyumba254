@@ -448,7 +448,7 @@
 <div class="sync-banner anon no-print" id="sync-banner-anon" hidden>
   <div class="sync-banner-text">
     <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-    <span>Your shortlist is automatically synced across devices. <strong id="shortlist-link-display">Link copied!</strong></span>
+    <span>Your shortlist syncs across devices with this link — no account needed.</span>
   </div>
   <button type="button" class="btn-outline" id="copy-shortlist-link">📋 Copy link</button>
   <button type="button" class="btn-outline" id="email-shortlist">✉️ Email to me</button>
@@ -853,6 +853,7 @@ async function syncShortlistToServer() {
       token: shortlistToken,
       listings,
       accessed_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
     });
   } catch (e) {
     console.error('Sync to server failed:', e.message);
@@ -1024,11 +1025,39 @@ async function loadShared(nums) {
   assignSeq();
   return true;
 }
+
+/* Merge this device's local saves with the server-side anonymous shortlist, rather than letting
+   whichever source loaded last silently overwrite the other. Local-only listings (saved via the
+   heart button on another page, not yet synced from this device) are fetched and appended to
+   whatever the server already has, so two devices never clobber each other's saves. */
+async function loadAnonymousMerged() {
+  const localIds = getLocalSavedIds();
+  const serverOk = await loadFromAnonymousShortlist();   // sets savedRows + shortlistMode from server
+  const serverRows = serverOk ? savedRows.slice() : [];
+  const serverIds = new Set(serverRows.map(r => r.listing_id));
+  const missingIds = localIds.filter(id => !serverIds.has(id));
+  if (!missingIds.length) {
+    if (!serverOk) return false;
+    savedRows = serverRows; assignSeq();
+    return true;
+  }
+  const { data, error } = await db.from('listings').select(LISTING_SELECT).in('id', missingIds);
+  if (error) {
+    console.error('Merge local into shortlist error:', error.message);
+    if (!serverOk) return false;
+    savedRows = serverRows; assignSeq();
+    return true;
+  }
+  const localOnlyRows = missingIds.map(id => (data || []).find(l => l.id === id)).filter(Boolean)
+    .map(l => ({ listing_id: l.id, created_at: null, listing: l }));
+  savedRows = serverRows.concat(localOnlyRows);
+  assignSeq();
+  shortlistMode = true;   // we now hold data that should be pushed back to the server
+  return true;
+}
 const loadOwn = async () => {
   if (currentUser) return loadFromAccount();
-  const hasLocal = getLocalSavedIds().length > 0;
-  if (hasLocal) return loadFromLocalStorage();
-  return loadFromAnonymousShortlist();  // Try server first if no local
+  return loadAnonymousMerged();
 };
 
 /* Item 1: merge anonymous saves into the account on sign-in. Nothing is deleted locally unless it was saved (or is a dead listing). */
@@ -1095,6 +1124,7 @@ async function silentRefresh(force) {
   if (!ok) return;
   loadError = false; $('stale-note').hidden = true;
   ensureSnapshots(); pruneMeta(); writeCache();
+  if (!currentUser && shortlistMode) syncShortlistToServer();
   render();
   if (before !== savedRows.map(r => r.listing_id).sort().join()) { loadRecommended(); loadRecent(); scheduleRealtime(); }
 }
@@ -1103,7 +1133,11 @@ async function retryLoad() {
   $('listings-grid').setAttribute('aria-busy', 'true');
   const ok = await loadOwn();
   loadError = !ok; lastRefresh = Date.now();
-  if (ok) { $('stale-note').hidden = true; ensureSnapshots(); pruneMeta(); writeCache(); loadRecommended(); loadRecent(); scheduleRealtime(); }
+  if (ok) {
+    $('stale-note').hidden = true; ensureSnapshots(); pruneMeta(); writeCache();
+    if (!currentUser && shortlistMode) syncShortlistToServer();
+    loadRecommended(); loadRecent(); scheduleRealtime();
+  }
   render();
 }
 
