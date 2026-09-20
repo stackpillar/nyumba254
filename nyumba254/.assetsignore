@@ -1,0 +1,10 @@
+.wrangler
+node_modules
+.git
+.gitignore
+.vscode
+supabase
+src
+wrangler.toml
+package.json
+package-lock.json
