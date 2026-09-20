@@ -141,6 +141,9 @@
     .card-cat-pill.apartment, .card-cat-pill.house, .card-cat-pill.boarding { background: var(--green-light); color: var(--green-dark); border-color: var(--green-mid); }
     .card-cat-pill.airbnb { background: var(--gold-light); color: var(--gold); border-color: var(--gold); }
     .card-cat-pill.commercial { background: var(--surface); color: var(--text-2); border-color: var(--text-3); }
+    .card-area { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .card-verified-badge { display: inline-flex; align-items: center; gap: 3px; background: var(--green-light); color: var(--green-dark); font-size: 9.5px; font-weight: 700; padding: 1px 7px 1px 5px; border-radius: 20px; text-transform: none; letter-spacing: 0; }
+    .card-verified-badge svg { width: 9px; height: 9px; stroke: var(--green-dark); fill: none; stroke-width: 2.6; }
     .card-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 3px; line-height: 1.35; }
     .card-sub { font-size: 12px; color: var(--text-3); margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .card-price { font-size: 17px; font-weight: 700; color: var(--green-dark); margin-bottom: 10px; }
@@ -480,7 +483,7 @@ function nkPopulateFooterCounties() {
 async function loadFromAccount() {
   const { data, error } = await db
     .from('saved_listings')
-    .select('listing_id, created_at, listings(*, listing_photos(*), listing_units(*), profiles(verification_status))')
+    .select('listing_id, created_at, listings(*, listing_photos(*), profiles(verification_status))')
     .eq('user_id', currentUser.id)
     .order('created_at', { ascending: false });
   if (error) { console.error('Load saved listings error:', error.message); savedRows = []; return; }
@@ -489,7 +492,7 @@ async function loadFromAccount() {
 async function loadFromLocalStorage() {
   const ids = getLocalSavedIds();
   if (!ids.length) { savedRows = []; return; }
-  const { data, error } = await db.from('listings').select('*, listing_photos(*), listing_units(*), profiles(verification_status)').in('id', ids);
+  const { data, error } = await db.from('listings').select('*, listing_photos(*), profiles(verification_status)').in('id', ids);
   if (error) { console.error('Load saved listings error:', error.message); savedRows = []; return; }
   savedRows = ids.slice().reverse().map(id => (data || []).find(l => l.id === id)).filter(Boolean).map(l => ({ listing_id: l.id, created_at: null, listing: l }));
 }
@@ -668,7 +671,7 @@ function render() {
 async function loadRecommended() {
   const excludeIds = savedRows.map(r => r.listing_id);
   const fetchLimit = excludeIds.length + 8;
-  const { data, error } = await db.from('listings').select('*, listing_photos(*), listing_units(*), profiles(verification_status)')
+  const { data, error } = await db.from('listings').select('*, listing_photos(*), profiles(verification_status)')
     .eq('status', 'active').eq('is_disabled', false).eq('recycle_bin', false)
     .order('created_at', { ascending: false }).order('id')
     .limit(fetchLimit);
