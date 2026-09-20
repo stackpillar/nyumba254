@@ -319,11 +319,6 @@
     .nk-recently-viewed.has-items { display: block; }
     .categories:focus-visible, .listings-grid:focus-visible, .areas:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
 
-    /* Third-party floating chat/help widget: detected by JS and kept in the shared bottom stack (phones only). */
-    @media (max-width: 768px) {
-      .nk-chat-fab { bottom: calc(var(--nk-tabbar-h) + var(--nk-stack) + 14px) !important; }
-      body.nk-modal-open .nk-chat-fab { display: none !important; }
-    }
 
     @media (max-width: 1024px) {
       .footer-top { grid-template-columns: 2fr 1fr 1fr; }
@@ -1074,18 +1069,6 @@ function initTabbarMeasure() {
   if ('ResizeObserver' in window) new ResizeObserver(sync).observe(tb);
   window.addEventListener('resize', sync); window.addEventListener('load', sync); window.matchMedia('(max-width: 768px)').addEventListener('change', sync);
 }
-/* Chat / help widgets are separate scripts that pin themselves bottom-right and cover the tab bar on phones. */
-function liftFloatingWidget() {
-  const ours = new Set(['toast', 'main-nav', 'mobile-nav']);
-  const scan = () => Array.from(document.body.children).forEach(el => {
-    if (el.classList.contains('nk-chat-fab') || ours.has(el.id) || el.classList.contains('nk-tabbar') || el.tagName === 'SCRIPT' || el.tagName === 'MAIN' || el.tagName === 'FOOTER' || el.tagName === 'NAV') return;
-    const cs = getComputedStyle(el);
-    if (cs.position !== 'fixed' || cs.bottom === 'auto' || cs.right === 'auto') return;
-    if (/chat|help|support/i.test((el.textContent + ' ' + (el.getAttribute('aria-label') || '') + ' ' + el.id + ' ' + el.className).slice(0, 400))) el.classList.add('nk-chat-fab');
-  });
-  scan(); new MutationObserver(nkDebounce(scan, 150)).observe(document.body, { childList: true }); setTimeout(scan, 1500); setTimeout(scan, 4000);
-}
-
 function bindEvents() {
   // hero
   initIntentTabs();
@@ -1130,7 +1113,7 @@ function boot() {
   nkInitAccountNav(['nav-account-link', 'mobile-account-link']);
   nkSessionPromise.then(({ data }) => { if (data && data.session) $('tab-account-link').setAttribute('href', '/dashboard'); });
   nkTrackPageView();
-  initReveal(); initScrolledNav(); initHeroSlideshow(); initTabbarMeasure(); liftFloatingWidget();
+  initReveal(); initScrolledNav(); initHeroSlideshow(); initTabbarMeasure();
   refreshScrollHints();
 }
 boot();

@@ -818,6 +818,16 @@ function addLocalSaved(id) {
 }
 
 /* ── per-device metadata (notes, status, folder, viewing date, manual order, price snapshot) ── */
+function readMeta(key) {
+  try {
+    const m = JSON.parse(localStorage.getItem(key) || 'null');
+    if (m && typeof m === 'object') return { items: m.items || {}, order: Array.isArray(m.order) ? m.order : [] };
+  } catch (e) {}
+  return { items: {}, order: [] };
+}
+function saveMeta() { try { localStorage.setItem(metaKey, JSON.stringify(meta)); } catch (e) {} }
+const getMi = id => (shareMode ? {} : (meta.items[id] || {}));
+function mi(id) { return meta.items[id] || (meta.items[id] = {}); }
 
 /* ── Anonymous shortlist token ── */
 function getOrCreateShortlistToken() {
@@ -1210,7 +1220,9 @@ async function addToSaved(id, btnEl) {
     toast('Could not save. Please try again.', 'error');
     return;
   }
-  ensureSnapshots(); writeCache(); track('saved_add', { listing_id: id });
+  ensureSnapshots(); writeCache();
+  if (shortlistMode) syncShortlistToServer();
+  track('saved_add', { listing_id: id });
   toast('Saved to your shortlist'); scheduleRealtime();
 }
 async function confirmClearAll() {
@@ -1227,7 +1239,9 @@ async function confirmClearAll() {
   mutating--;
   if (err) { toast('Could not clear shortlist', 'error'); return; }
   savedRows = []; ui.selected.clear();
-  writeCache(); render();
+  writeCache();
+  if (shortlistMode) syncShortlistToServer();
+  render();
   track('saved_clear', { count: snapshot.length });
   toast('Shortlist cleared', '', { label: 'Undo', fn: () => restoreRows(snapshot) });
   loadRecommended(); scheduleRealtime();
@@ -2083,7 +2097,9 @@ function bindEvents() {
   $('fm-save').addEventListener('click', () => {
     const f = $('fm-folder').value.trim().slice(0, 40);
     ui.selected.forEach(id => { mi(id).folder = f; });
-    saveMeta(); nkCloseModal($('folder-modal')); render();
+    saveMeta();
+    if (shortlistMode) syncShortlistToServer();
+    nkCloseModal($('folder-modal')); render();
     toast(f ? 'Moved to "' + f + '"' : 'Removed from folders');
   });
 

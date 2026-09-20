@@ -4,7 +4,7 @@
  * ONE FILE. Drop this on every page with a single tag, right before
  * </body>:
  *
- *   <script src="/nk-quick-help-widget.js" defer></script>
+ *   <script src="/nk-quick-help-widget.js" defer><\/script>   (a normal script tag)
  *
  * The script injects its own <style>, its own markup, loads the
  * Supabase JS SDK and the Inter/Playfair fonts automatically if the
