@@ -142,6 +142,8 @@
   .ni-copy-btn{background:var(--green);color:#fff;border:none;border-radius:8px;padding:0 16px;font-size:13px;font-weight:600;cursor:pointer}
   .ni-copy-btn:hover{background:var(--green-dark)}
 </style>
+  <link rel="stylesheet" href="/theme.css"/>
+  <script src="/theme.js"></script>
 </head>
 <body>
   <div id="ni-app">

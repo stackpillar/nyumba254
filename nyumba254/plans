@@ -149,6 +149,8 @@
     .fee-table th:nth-child(3), .fee-table td:nth-child(3){display:none}
   }
 </style>
+  <link rel="stylesheet" href="/theme.css"/>
+  <script src="/theme.js"></script>
 </head>
 <body>
 

@@ -116,6 +116,8 @@
     .kyc-page{border-radius:0;border:none}
   }
 </style>
+  <link rel="stylesheet" href="/theme.css"/>
+  <script src="/theme.js"></script>
 </head>
 <body>
 

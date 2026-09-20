@@ -523,6 +523,8 @@
     @media (max-width: 480px) { .footer-top { grid-template-columns: 1fr; } }
     @media (max-width: 1024px) and (min-width: 769px) { .footer-top { grid-template-columns: 2fr 1fr 1fr; } .footer-top > :nth-child(n+4) { display: none; } }
   </style>
+  <link rel="stylesheet" href="/theme.css"/>
+  <script src="/theme.js"></script>
 </head>
 <body>
 

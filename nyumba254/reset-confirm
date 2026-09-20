@@ -156,6 +156,8 @@
     }
     .btn-green-link:hover{background:var(--green-dark)}
   </style>
+  <link rel="stylesheet" href="/theme.css"/>
+  <script src="/theme.js"></script>
 </head>
 <body>
 

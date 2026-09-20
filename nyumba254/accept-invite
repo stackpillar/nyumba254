@@ -50,6 +50,8 @@
     #spin-screen{display:flex;align-items:center;justify-content:center;padding:20px 0}
     #spin-screen .spinner{display:block;width:26px;height:26px;border:3px solid var(--border);border-top-color:var(--green)}
   </style>
+  <link rel="stylesheet" href="/theme.css"/>
+  <script src="/theme.js"></script>
 </head>
 <body>
 

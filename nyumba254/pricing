@@ -420,6 +420,8 @@
       * { transition-duration: 0.01ms !important; }
     }
   </style>
+  <link rel="stylesheet" href="/theme.css"/>
+  <script src="/theme.js"></script>
 </head>
 <body>
 

@@ -1,0 +1,78 @@
+/* theme.css — Nyumba254 shared dark mode.
+   Loaded on every page by add-theme.js. Change colours HERE and every page follows.
+   Palette is the same one saved.html already uses, so all pages match. */
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0F1512;  --white: #0F1512;  --card: #151D19;  --surface: #1B2520;
+  --text: #ECEFEC;  --text-2: #C3CBC6;  --text-3: #98A39C;
+  --border: #2B3832;  --shadow: rgba(0,0,0,.5);
+  --green-light: #123A2E;  --green-border: #245a49;
+  --accent: #5FD3AE;  --accent-strong: #8FE6C8;
+  --gold: #E0A245;  --gold-light: #3A2C12;
+  --danger: #F07272;  --danger-bg: #3A1B1B;
+}
+
+/* ── Base ── */
+html[data-theme="dark"] body { background: var(--bg); color: var(--text); }
+html[data-theme="dark"] input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=color]):not([type=submit]):not([type=button]),
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea { background-color: var(--surface); color: var(--text); border-color: var(--border); }
+html[data-theme="dark"] option { background: var(--card); color: var(--text); }
+html[data-theme="dark"] ::placeholder { color: var(--text-3); opacity: 1; }
+
+/* ── White surfaces → dark surfaces (:where keeps hover/active states working) ── */
+html[data-theme="dark"] :where(.card, .skeleton, .area-card, .step-card, .review-card, .pill, .pill-select,
+  .quicklink, .scroll-hint, .nk-tabbar, .nk-search-dropdown, .search-box, .modal) { background-color: var(--card); }
+html[data-theme="dark"] :where(.skeleton-img, .skeleton-line) {
+  background: linear-gradient(90deg, var(--surface) 25%, var(--border) 50%, var(--surface) 75%); background-size: 200% 100%;
+}
+html[data-theme="dark"] .pill-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2398A39C' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+}
+
+/* ── Green text that was dark-on-white → light-on-dark ── */
+html[data-theme="dark"] .logo,
+html[data-theme="dark"] .card-price,
+html[data-theme="dark"] .quicklink,
+html[data-theme="dark"] .card-verified-badge,
+html[data-theme="dark"] .trust-item { color: var(--accent-strong); }
+html[data-theme="dark"] .see-all,
+html[data-theme="dark"] .card-area,
+html[data-theme="dark"] .step-num,
+html[data-theme="dark"] .nk-tab.active { color: var(--accent); }
+html[data-theme="dark"] .btn-outline { color: var(--accent); border-color: var(--accent); }
+html[data-theme="dark"] .trust-item svg { stroke: var(--accent); }
+html[data-theme="dark"] .trust-bar { border-color: var(--green-border); }
+html[data-theme="dark"] .quicklink,
+html[data-theme="dark"] .area-card.tier1 { border-color: var(--green-border); }
+
+/* ── Category cards and badges that were light-tinted ── */
+html[data-theme="dark"] .cat-card.airbnb { background: var(--card); }
+html[data-theme="dark"] .cat-card.boarding .cat-title,
+html[data-theme="dark"] .cat-card.airbnb .cat-title { color: var(--accent-strong); }
+html[data-theme="dark"] .cat-card.boarding .cat-icon { background: var(--card); }
+html[data-theme="dark"] .cat-card.boarding .cat-icon svg,
+html[data-theme="dark"] .cat-card.airbnb .cat-icon svg { stroke: var(--accent-strong); }
+html[data-theme="dark"] .cat-card.commercial { background: #1F2A25; border-color: var(--border); }
+html[data-theme="dark"] .badge-cat.boarding { background: var(--green-light); color: var(--accent-strong); }
+html[data-theme="dark"] .badge-cat.airbnb { background: var(--card); color: var(--accent-strong); }
+html[data-theme="dark"] .badge-cat.commercial { background: var(--border); color: var(--text); }
+
+/* ── Chrome ── */
+html[data-theme="dark"] footer { background: #141A17; }
+html[data-theme="dark"] .nk-tab-badge { border-color: var(--bg); }
+html[data-theme="dark"] .toast.error { background: #C53030; }
+
+/* ── Floating toggle (created by theme.js when a page has no toggle of its own) ── */
+.nk-theme-fab {
+  position: fixed; left: 14px; bottom: calc(var(--nk-tabbar-h, 0px) + 14px); z-index: 90;
+  width: 44px; height: 44px; padding: 0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: #fff; color: #1a1a18; border: 1px solid #e0ded8;
+  box-shadow: 0 4px 16px rgba(0,0,0,.18); cursor: pointer;
+}
+.nk-theme-fab svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+html[data-theme="dark"] .nk-theme-fab { background: var(--card); color: var(--text); border-color: var(--border); }
+body.nk-modal-open .nk-theme-fab { display: none; }
+@media print { .nk-theme-fab { display: none !important; } }
