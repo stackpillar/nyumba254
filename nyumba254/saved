@@ -474,14 +474,6 @@
     </div>
   </div>
 
-  <div class="notice nudge no-print" id="nudge" hidden>
-    <span id="nudge-text"><strong>Don't lose your shortlist.</strong> You've saved several listings on this device only. Sign in to keep them on every phone and browser.</span>
-    <div class="notice-actions">
-      <a href="/login" class="btn btn-primary">Sign in</a>
-      <button type="button" class="btn-outline" id="nudge-dismiss">Not now</button>
-    </div>
-  </div>
-
   <div class="notice warn no-print" id="stale-note" hidden>
     <span>Showing your last saved copy. We couldn't refresh it just now.</span>
     <button type="button" class="btn-outline" data-act="retry">Retry</button>
@@ -727,9 +719,7 @@ const META_KEY = 'nk_saved_meta_v1';                // notes / status / folder /
 const CACHE_KEY = 'nk_saved_cache_v1';              // last shortlist, for instant render
 const SHORTLIST_TOKEN_KEY = 'nk_shortlist_token';   // anonymous shortlist token
 const THEME_KEY = 'nk_theme';
-const NUDGE_KEY = 'nk_signin_nudge_dismissed';
 const PAGE_SIZE = 12;
-const NUDGE_AFTER = 3;
 const LISTING_SELECT = '*, listing_photos(*), profiles(verification_status)';
 /* Columns that may hold the seller's phone. Add or reorder to match your `listings` table. */
 const CONTACT_FIELDS = ['whatsapp_number', 'whatsapp', 'contact_phone', 'phone', 'phone_number', 'seller_phone', 'contact_number'];
@@ -1538,14 +1528,6 @@ function renderSummary() {
   box.hidden = false;
 }
 
-function renderNudge() {
-  let dismissed = false;
-  try { dismissed = sessionStorage.getItem(NUDGE_KEY) === '1'; } catch (e) {}
-  const show = !currentUser && !shareMode && savedRows.length >= NUDGE_AFTER && !dismissed;
-  $('nudge').hidden = !show;
-  if (show) $('nudge-text').innerHTML = `<strong>Don't lose your shortlist.</strong> You've saved ${savedRows.length} listings on this device only. Sign in to keep them on every phone and browser.`;
-}
-
 function stateHtml(kind) {
   if (kind === 'error') {
     return `<div class="empty-state"><svg class="big" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -1582,7 +1564,7 @@ function render() {
   $('toolbar').hidden = !total;
   qsa('[data-org]').forEach(el => { el.hidden = shareMode; });
   $('stale-note').hidden = !(loadError && total);
-  renderSummary(); renderNudge();
+  renderSummary();
 
   if (!total) {
     ui.select = false; ui.selected.clear(); updateBulkBar();
@@ -2067,7 +2049,6 @@ function bindEvents() {
   $('clear-all-btn').addEventListener('click', openClearModal);
   $('clear-cancel-btn').addEventListener('click', closeClearModal);
   $('clear-confirm-btn').addEventListener('click', confirmClearAll);
-  $('nudge-dismiss').addEventListener('click', () => { try { sessionStorage.setItem(NUDGE_KEY, '1'); } catch (e) {} $('nudge').hidden = true; });
   $('share-save-all').addEventListener('click', saveAllShared);
   $('stale-note').addEventListener('click', e => { if (e.target.closest('[data-act="retry"]')) retryLoad(); });
 
