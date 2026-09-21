@@ -1,841 +1,402 @@
 /* ════════════════════════════════════════════════════
-   NYUMBA254 — "DOORBELL" GLOBAL CHAT WIDGET 🔔
-   One floating widget, shared across every page, listing
-   ALL of a buyer's conversations across every listing
-   they've messaged. Include on every page:
+   NYUMBA254 · "DOORBELL" FLOATING CHAT WIDGET 🔔  (v2)
+   One compact widget on every page, listing all of a buyer's
+   conversations. The full inbox (inbox.html) has more room and
+   more tools; both run on the same engine, nk-chat-core.js.
+   Include on every page, exactly as before:
      <script src="global-chat-widget.js"></script>
+   (it loads nk-chat-core.js from the same folder by itself)
 ════════════════════════════════════════════════════ */
 (function () {
-  const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
-  const EDGE_URL = `${SUPABASE_URL}/functions/v1`;
-  const gdb = window.db || supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  window.db = window.db || gdb;
+  'use strict';
+  if (window.__nkGcw) return; window.__nkGcw = true;
 
-  const STYLE = `
-    #gcw-btn{position:fixed;bottom:24px;right:24px;z-index:1500;height:52px;padding:0 20px 0 16px;border-radius:30px;background:#0F6E56;display:none;align-items:center;gap:9px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.25);transition:transform .15s,background .15s}
-    #gcw-btn:hover{background:#085041;transform:translateY(-2px)}
-    #gcw-btn svg{flex-shrink:0}
-    #gcw-btn-label{color:#fff;font-size:14px;font-weight:600;font-family:'Inter',sans-serif;white-space:nowrap}
-    #gcw-badge{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;padding:0 5px;background:#C53030;color:#fff;font-size:11px;font-weight:700;border-radius:20px;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
-    @keyframes gcw-pop{from{transform:scale(0)}to{transform:scale(1)}}
-    #gcw-panel{position:fixed;bottom:96px;right:24px;z-index:1500;width:360px;max-width:calc(100vw - 32px);height:540px;max-height:calc(100vh - 110px);background:#fff;border:1px solid #e0ded8;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.22);display:none;flex-direction:column;overflow:hidden;font-family:'Inter',sans-serif}
+  /* Calls that arrive before the engine has loaded (for example from listing.html) wait in a queue. */
+  const queue = []; let api = null;
+  const later = fn => (...a) => { api ? fn(...a) : queue.push(() => fn(...a)); };
+  window.NKGlobalChat = window.NKGlobalChat || {};
+  Object.assign(window.NKGlobalChat, {
+    refresh: later(() => api.refresh()), open: later((id, t) => api.open(id, t)), registerAndOpen: later((id, t) => api.open(id, t)),
+    openBookViewing: later(id => api.openViewing(id)), openSaved: () => window.open('/inbox?tab=saved', '_blank', 'noopener'),
+    getResumeLink: () => (window.NKChatCore ? window.NKChatCore.buildResumeLink() : null)
+  });
+
+  const me = document.currentScript, base = me && me.src ? new URL('.', me.src).href : '/';
+  function loadCore(cb) {
+    if (window.NKChatCore) return cb();
+    const s = document.createElement('script'); s.src = base + 'nk-chat-core.js'; s.onload = cb;
+    s.onerror = () => console.error('Nyumba254 chat: nk-chat-core.js could not be loaded from ' + base);
+    document.head.appendChild(s);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => loadCore(start)); else loadCore(start);
+
+  function start() {
+    const core = window.NKChatCore, esc = core.esc, $ = id => document.getElementById(id), qsa = (s, r) => [...(r || document).querySelectorAll(s)];
+    const wide = () => matchMedia('(max-width:600px)').matches, touch = () => matchMedia('(pointer:coarse)').matches;
+
+    const CSS = `
+    #gcw-btn,#gcw-panel,.gcw-ov{--g:var(--green,#0F6E56);--gd:var(--green-dark,#085041);--gl:var(--green-light,#E1F5EE);--bg:var(--surface,#f7f6f2);--cd:var(--white,#fff);--bd:var(--border,#e0ded8);--tx:var(--text,#1a1a18);--t2:var(--text-2,#4a4a46);--t3:var(--text-3,#6b6a63);--rd:var(--danger,#C53030);font-family:'Inter',system-ui,sans-serif}
+    #gcw-btn,#gcw-panel{--fab:calc(var(--nk-tabbar-h,0px) + var(--nk-stack,0px) + 20px + env(safe-area-inset-bottom,0px))}
+    #gcw-btn{position:fixed;right:20px;bottom:var(--fab);z-index:1500;height:52px;padding:0 20px 0 16px;border:0;border-radius:30px;background:var(--g);color:#fff;display:none;align-items:center;gap:9px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.25);transition:transform .15s,background .15s;font-size:14px;font-weight:600}
+    #gcw-btn:hover{background:var(--gd);transform:translateY(-2px)}
+    #gcw-btn svg{flex-shrink:0;stroke:#fff;fill:none;stroke-width:2}
+    #gcw-badge{position:absolute;top:-5px;right:-5px;min-width:21px;height:21px;padding:0 5px;background:var(--rd);color:#fff;font-size:11px;font-weight:700;border-radius:20px;display:none;align-items:center;justify-content:center;border:2px solid var(--cd)}
+    @keyframes gcw-pop{from{transform:scale(.8)}to{transform:scale(1)}}
+    #gcw-panel{position:fixed;right:20px;bottom:calc(var(--fab) + 64px);z-index:1500;width:380px;max-width:calc(100vw - 24px);height:560px;max-height:calc(100vh - 150px);max-height:calc(100dvh - 150px);background:var(--cd);color:var(--tx);border:1px solid var(--bd);border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.22);display:none;flex-direction:column;overflow:hidden}
     #gcw-panel.open{display:flex}
-    #gcw-head{background:#0F6E56;color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;position:relative}
-    #gcw-head button{background:none;border:none;color:#fff;cursor:pointer;padding:4px;opacity:.85}
-    #gcw-head button:hover{opacity:1}
+    #gcw-panel:focus{outline:none}
+    #gcw-head,#gcw-thead{background:var(--g);color:#fff;padding:8px 8px 8px 16px;display:flex;align-items:center;gap:6px;flex-shrink:0;position:relative;min-height:56px}
+    #gcw-thead{padding-left:6px}
+    .gcw-ib{background:none;border:0;color:#fff;cursor:pointer;min-width:44px;height:44px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;opacity:.92;flex-shrink:0}
+    .gcw-ib:hover{background:rgba(255,255,255,.16);opacity:1}
+    .gcw-ib svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2}
+    .gcw-pill{background:rgba(255,255,255,.16);border:0;color:#fff;cursor:pointer;height:36px;padding:0 12px;border-radius:20px;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;font-family:inherit;flex-shrink:0}
+    .gcw-pill:hover{background:rgba(255,255,255,.28)}
+    .gcw-pill svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
     #gcw-title-wrap{flex:1;min-width:0}
-    #gcw-title{font-size:14px;font-weight:700;line-height:1.3}
-    #gcw-subtitle{font-size:11px;opacity:.8;line-height:1.3}
-    @media(max-width:480px){#gcw-subtitle{display:none}#gcw-head{padding:10px 16px}}
-    #gcw-list{flex:1;min-height:0;overflow-y:auto;background:#f7f6f2}
-    .gcw-convo{display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid #e0ded8;cursor:pointer;transition:background .1s}
-    .gcw-convo:hover{background:#fff}
-    .gcw-convo-img{width:44px;height:44px;border-radius:8px;background:#e0ded8;object-fit:cover;flex-shrink:0}
-    .gcw-convo-body{flex:1;min-width:0}
-    .gcw-convo-title{font-size:13px;font-weight:600;color:#1a1a18;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .gcw-convo-last{font-size:12px;color:#888780;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
-    .gcw-convo-badge{background:#C53030;color:#fff;font-size:10px;font-weight:700;border-radius:10px;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;padding:0 5px;flex-shrink:0;align-self:center}
-    #gcw-empty{padding:40px 20px;text-align:center;color:#888780;font-size:13px}
+    #gcw-title{font-size:15px;font-weight:700;line-height:1.3}
+    #gcw-subtitle{font-size:12px;opacity:.85;line-height:1.3}
+    #gcw-net{display:none;background:#FFF7E6;color:#7a4f00;font-size:12.5px;padding:7px 14px;border-bottom:1px solid #F3D9A0;flex-shrink:0}
+    #gcw-net.show{display:block}
+    #gcw-list{flex:1;min-height:0;overflow-y:auto;background:var(--bg);overscroll-behavior:contain}
+    .gcw-convo{display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:12px 14px;border:0;border-bottom:1px solid var(--bd);background:transparent;color:inherit;cursor:pointer;font-family:inherit;min-height:68px}
+    .gcw-convo:hover{background:var(--cd)}
+    .gcw-thumb{width:46px;height:46px;border-radius:9px;background:var(--bd);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--gd)}
+    .gcw-thumb img{width:100%;height:100%;object-fit:cover}
+    .gcw-cb{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+    .gcw-ct{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px}
+    .gcw-ct svg{flex-shrink:0;width:13px;height:13px;color:var(--g)}
+    .gcw-cl{font-size:13px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .gcw-cm{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+    .gcw-cw{font-size:11.5px;color:var(--t3)}
+    .gcw-cbadge{background:var(--rd);color:#fff;font-size:11px;font-weight:700;border-radius:10px;min-width:20px;height:20px;display:flex;align-items:center;justify-content:center;padding:0 5px}
+    .gcw-state{padding:36px 22px;text-align:center;color:var(--t3);font-size:14px;line-height:1.55}
+    .gcw-state button{margin-top:12px}
+    .gcw-btn{background:var(--g);color:#fff;border:0;border-radius:10px;min-height:44px;padding:0 18px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+    .gcw-btn:hover{background:var(--gd)}.gcw-btn:disabled{opacity:.6;cursor:not-allowed}
+    .gcw-btn.ghost{background:var(--bg);color:var(--t2)}.gcw-btn.ghost:hover{background:var(--bd)}
+    .gcw-sk{height:46px;margin:14px;border-radius:9px;background:linear-gradient(90deg,var(--bd) 25%,var(--bg) 50%,var(--bd) 75%);background-size:200% 100%;animation:gcw-sh 1.3s infinite}
+    @keyframes gcw-sh{to{background-position:-200% 0}}
     #gcw-thread{display:none;flex-direction:column;flex:1;min-height:0}
     #gcw-thread.open{display:flex}
-    #gcw-thread-head{background:#0F6E56;color:#fff;padding:12px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0}
-    #gcw-thread-head button.back{background:none;border:none;color:#fff;cursor:pointer;padding:2px;flex-shrink:0}
-    #gcw-thread-info{flex:1;min-width:0}
-    #gcw-thread-name{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px}
-    .gcw-verified-badge{display:inline-flex;flex-shrink:0;color:#7CE0C0}
-    #gcw-thread-link{font-size:11px;color:rgba(255,255,255,.85);text-decoration:underline}
-    #gcw-messages{flex:1;min-height:0;overflow-y:auto;padding:14px;background:#f7f6f2;display:flex;flex-direction:column;gap:8px}
-    .gcw-row{display:flex;gap:6px;align-items:flex-end;width:100%}
-    .gcw-row>div:last-child{max-width:78%;width:max-content;display:flex;flex-direction:column}
+    #gcw-tname{display:flex;align-items:center;gap:5px;font-size:14.5px;font-weight:600;min-width:0}
+    #gcw-tname span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    #gcw-tname svg{flex-shrink:0;color:#7CE0C0;width:14px;height:14px}
+    #gcw-presence{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.85)}
+    #gcw-dot{width:7px;height:7px;border-radius:50%;background:#b8b8b0;flex-shrink:0}
+    #gcw-dot.online{background:#2ecc71}#gcw-dot.typing{background:#F0B429}
+    #gcw-tinfo{flex:1;min-width:0}
+    .gcw-lcard{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--gl);border-bottom:1px solid var(--bd);flex-shrink:0;text-decoration:none;color:inherit;min-height:56px}
+    a.gcw-lcard:hover{background:var(--cd)}
+    .gcw-lcard .gcw-thumb{width:40px;height:40px;border-radius:8px}
+    .gcw-lc-t{flex:1;min-width:0;display:flex;flex-direction:column}
+    .gcw-lc-t b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .gcw-lc-t span{font-size:12px;color:var(--gd);font-weight:600}
+    .gcw-lc-go{font-size:12px;color:var(--gd);font-weight:700;white-space:nowrap}
+    #gcw-safety{display:none;align-items:flex-start;gap:8px;padding:8px 12px;background:#FFF7E6;border-bottom:1px solid #F3D9A0;font-size:12.5px;color:#7a4f00;line-height:1.45;flex-shrink:0}
+    #gcw-safety.show{display:flex}
+    #gcw-safety p{flex:1}
+    #gcw-safety button{background:none;border:0;color:inherit;font-weight:700;cursor:pointer;font-family:inherit;font-size:12.5px;text-decoration:underline;min-height:32px;padding:0 4px}
+    #gcw-msgs-wrap{position:relative;flex:1;min-height:0;display:flex;flex-direction:column}
+    #gcw-messages{flex:1;min-height:0;overflow-y:auto;padding:14px 12px;background:var(--bg);display:flex;flex-direction:column;gap:2px;overscroll-behavior:contain}
+    #gcw-newpill{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);display:none;background:var(--g);color:#fff;border:0;border-radius:20px;padding:0 16px;min-height:36px;font-size:12.5px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25);cursor:pointer;font-family:inherit}
+    #gcw-newpill.show{display:block}
+    .gcw-empty-thread{margin:auto;text-align:center;color:var(--t3);font-size:13.5px;line-height:1.6;padding:20px 24px}
+    .gcw-empty-thread b{display:block;color:var(--tx);font-size:15px;margin-bottom:4px}
+    .gcw-day{text-align:center;font-size:11.5px;color:var(--t3);padding:10px 0 6px;font-weight:600}
+    .gcw-row{display:flex;gap:6px;align-items:flex-end;width:100%;margin-top:2px}
+    .gcw-row.first{margin-top:8px}
     .gcw-row.mine{flex-direction:row-reverse}
-    .gcw-av{width:24px;height:24px;border-radius:50%;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#E1F5EE;color:#085041}
-    .gcw-row.mine .gcw-av{background:#0F6E56;color:#fff}
-    .gcw-bubble{width:fit-content;max-width:100%;padding:8px 12px;border-radius:14px;font-size:13px;line-height:1.5;background:#fff;border:1px solid #e0ded8;border-bottom-left-radius:4px;overflow-wrap:break-word;white-space:pre-wrap}
-    .gcw-row.mine .gcw-bubble{background:#0F6E56;color:#fff;border:none;border-bottom-right-radius:4px}
-    .gcw-time{font-size:10px;color:#888780;margin-top:2px}
-    .gcw-row.mine .gcw-time{text-align:right}
-    #gcw-input-row{display:flex;gap:8px;padding:10px 12px;background:#fff;border-top:1px solid #e0ded8;flex-shrink:0}
-    #gcw-input{flex:1;resize:none;border:1.5px solid #e0ded8;border-radius:10px;padding:8px 12px;font-size:13px;outline:none;min-height:38px;max-height:100px;line-height:1.5;background:#f7f6f2;font-family:inherit}
-    #gcw-input:focus{border-color:#0F6E56;background:#fff}
-    #gcw-send{width:36px;height:36px;border-radius:50%;background:#0F6E56;color:#fff;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;flex-shrink:0}
-    #gcw-send:disabled{opacity:.5;cursor:not-allowed}
-    @media(max-width:480px){#gcw-panel{right:16px;bottom:88px;width:calc(100vw - 32px);height:calc(100vh - 130px);max-height:calc(100vh - 130px)}#gcw-btn{right:16px;bottom:16px}}
-    @media(max-width:380px){#gcw-btn-label{display:none}#gcw-btn{padding:0;width:52px;justify-content:center}}
-    .gcw-thread-subbar{padding:6px 14px;background:#E1F5EE;border-bottom:1px solid #e0ded8;flex-shrink:0}
-    @media(max-width:480px){.gcw-thread-subbar{padding:4px 12px}#gcw-thread-head{padding:6px 14px}}
-    #gcw-book-viewing-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:9px;background:#fff;color:#085041;border:1.5px solid #0F6E56;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s}
-    #gcw-book-viewing-btn:hover{background:#E1F5EE}
-    #gcw-viewing-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2200;align-items:center;justify-content:center;padding:20px;font-family:'Inter',sans-serif}
-    #gcw-viewing-overlay.open{display:flex}
-    #gcw-viewing-modal{background:#fff;border-radius:16px;max-width:420px;width:100%;padding:26px 24px;box-shadow:0 8px 32px rgba(0,0,0,.18)}
-    #gcw-viewing-modal h3{font-size:18px;font-weight:700;color:#1a1a18;margin-bottom:4px}
-    #gcw-viewing-modal p.gcw-v-sub{font-size:12.5px;color:#888780;margin-bottom:18px;line-height:1.5}
-    .gcw-v-field{margin-bottom:14px}
-    .gcw-v-field label{display:block;font-size:11.5px;font-weight:700;color:#4a4a46;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
-    .gcw-v-field input,.gcw-v-field textarea,.gcw-v-field select{width:100%;padding:10px 13px;border:1.5px solid #e0ded8;border-radius:10px;font-size:13.5px;color:#1a1a18;background:#f7f6f2;outline:none;font-family:inherit;transition:border-color .15s,background .15s}
-    .gcw-v-field input:focus,.gcw-v-field textarea:focus,.gcw-v-field select:focus{border-color:#0F6E56;background:#fff}
-    .gcw-v-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .gcw-v-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
-    #gcw-viewing-modal .gcw-v-cancel{background:#f7f6f2;color:#4a4a46;padding:10px 18px;border-radius:8px;font-size:13px;border:none;cursor:pointer;font-family:inherit}
-    #gcw-viewing-modal .gcw-v-submit{background:#0F6E56;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:inherit}
-    #gcw-viewing-modal .gcw-v-submit:hover{background:#085041}
-    #gcw-viewing-modal .gcw-v-submit:disabled{opacity:.6;cursor:not-allowed}
-
-    /* ── Quick replies: single row, scrolls horizontally, never stacks/masks the thread ── */
-    #gcw-quick-replies{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:8px 12px;background:#fff;border-top:1px solid #e0ded8;mask-image:linear-gradient(to right,#000 92%,transparent 100%);-webkit-mask-image:linear-gradient(to right,#000 92%,transparent 100%)}
-    #gcw-quick-replies::-webkit-scrollbar{display:none}
-    #gcw-quick-replies:empty{display:none;padding:0;border:none;mask-image:none;-webkit-mask-image:none}
-    .gcw-chip{flex-shrink:0;background:#E1F5EE;color:#085041;border:1px solid #bfe6d8;border-radius:16px;padding:6px 12px;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;transition:background .15s;font-family:inherit}
+    .gcw-av{width:26px;height:26px;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--gl);color:var(--gd)}
+    .gcw-row.mine .gcw-av{background:var(--g);color:#fff}
+    .gcw-av.gcw-avsp{visibility:hidden}
+    .gcw-col{max-width:80%;display:flex;flex-direction:column;min-width:0}
+    .gcw-row.mine .gcw-col{align-items:flex-end}
+    .gcw-bubble{width:fit-content;max-width:100%;padding:8px 12px;border-radius:14px;font-size:14px;line-height:1.5;background:var(--cd);border:1px solid var(--bd);border-bottom-left-radius:4px;overflow-wrap:anywhere;white-space:pre-wrap}
+    .gcw-row.mine .gcw-bubble{background:var(--g);color:#fff;border:0;border-bottom-left-radius:14px;border-bottom-right-radius:4px}
+    .gcw-row.failed .gcw-bubble{background:var(--rd);opacity:.9}
+    .gcw-bubble mark{background:#FFE58A;color:inherit}
+    .gcw-time{font-size:11px;color:var(--t3);margin-top:2px;display:inline-flex;align-items:center;gap:3px}
+    .gcw-tick svg{stroke:#9a9a94;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-1px}
+    .gcw-tick.read svg{stroke:#34B7F1}
+    .gcw-ai{font-size:11px;color:var(--t3);margin-top:3px;font-style:italic}
+    .gcw-retry{background:none;border:0;color:var(--rd);font-size:12px;font-weight:700;cursor:pointer;padding:6px 0;min-height:32px;font-family:inherit;text-decoration:underline}
+    .gcw-queued{font-size:11.5px;color:#7a4f00;margin-top:2px}
+    #gcw-quick{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:8px 12px;background:var(--cd);border-top:1px solid var(--bd);flex-shrink:0;mask-image:linear-gradient(to right,#000 92%,transparent);-webkit-mask-image:linear-gradient(to right,#000 92%,transparent)}
+    #gcw-quick::-webkit-scrollbar{display:none}
+    #gcw-quick:empty{display:none}
+    .gcw-chip{flex-shrink:0;background:var(--gl);color:var(--gd);border:1px solid rgba(15,110,86,.25);border-radius:18px;padding:0 13px;min-height:36px;font-size:12.5px;font-weight:600;white-space:nowrap;cursor:pointer;font-family:inherit}
     .gcw-chip:hover{background:#c9ecdd}
-    /* ── Read receipts ── */
-    .gcw-tick{stroke:#9a9a94;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;margin-left:3px;vertical-align:-1px}
-    .gcw-tick.read{stroke:#34B7F1}
-    .gcw-time{display:inline-flex;align-items:center}
-    .gcw-date-sep{text-align:center;font-size:10px;color:#888780;padding:6px 0;font-weight:600}
-    /* ── Thread subbar buttons (booking / invite / browse) ── */
-    .gcw-subbar-row{display:flex;gap:8px}
-    .gcw-subbar-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:7px 6px;background:#fff;color:#085041;border:1.5px solid #0F6E56;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s;white-space:nowrap}
-    .gcw-subbar-btn:hover{background:#E1F5EE}
-    .gcw-subbar-btn.ghost{color:#4a4a46;border-color:#e0ded8}
-    .gcw-subbar-btn.ghost:hover{background:#f7f6f2}
-    #gcw-resume-btn{background:rgba(255,255,255,.16);border:none;color:#fff;cursor:pointer;padding:6px 10px;border-radius:20px;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;font-family:inherit;margin-right:2px}
-    #gcw-resume-btn:hover{background:rgba(255,255,255,.28)}
-    #gcw-resume-label{white-space:nowrap}
-    #gcw-fullpage-btn{background:rgba(255,255,255,.16);border:none;color:#fff;cursor:pointer;padding:6px 10px;border-radius:20px;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;font-family:inherit;margin-right:2px}
-    #gcw-fullpage-btn:hover{background:rgba(255,255,255,.28)}
-    #gcw-fullpage-label{white-space:nowrap}
-    @media(max-width:380px){#gcw-resume-label,#gcw-fullpage-label{display:none}#gcw-resume-btn,#gcw-fullpage-btn{padding:6px;border-radius:50%}}
-    /* ── First-time hint bubble pointing at the sync button ──
-       Anchored to a small wrapper around just the Sync button (not the
-       whole #gcw-head, which wraps to 3 lines of title text and pushed
-       this out of place). top:100% here means "right under the button". */
-    #gcw-resume-hint{display:none;position:absolute;top:calc(100% + 8px);right:-40px;background:#1a1a18;color:#fff;font-size:11.5px;line-height:1.4;padding:9px 11px;border-radius:9px;width:180px;box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:1600}
-    #gcw-resume-hint.show{display:block}
-    #gcw-resume-hint::after{content:'';position:absolute;bottom:100%;right:44px;border:5px solid transparent;border-bottom-color:#1a1a18}
-    @media(max-width:380px){#gcw-resume-hint{right:-10px;width:160px}#gcw-resume-hint::after{right:14px}}
-    /* ── Resume-on-another-device modal ── */
-    .gcw-resume-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2300;align-items:center;justify-content:center;padding:20px;font-family:'Inter',sans-serif}
-    .gcw-resume-overlay.open{display:flex}
-    #gcw-resume-modal{background:#fff;border-radius:16px;max-width:420px;width:100%;padding:24px 22px;box-shadow:0 8px 32px rgba(0,0,0,.18)}
-    #gcw-resume-modal h3{font-size:16px;font-weight:700;color:#1a1a18;margin-bottom:4px}
-    .gcw-resume-sub{font-size:12.5px;color:#888780;margin-bottom:16px;line-height:1.5}
-    .gcw-resume-link-row{display:flex;gap:8px;margin-bottom:16px}
-    #gcw-resume-link-input{flex:1;padding:10px 12px;border:1.5px solid #e0ded8;border-radius:8px;font-size:12.5px;color:#4a4a46;background:#f7f6f2}
-    #gcw-resume-copy-btn{background:#0F6E56;color:#fff;border:none;border-radius:8px;padding:0 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
-    #gcw-resume-copy-btn:hover{background:#085041}
-    .gcw-resume-actions{display:flex;justify-content:flex-end}
-    #gcw-resume-close-btn{background:#f7f6f2;color:#4a4a46;border:none;padding:9px 18px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit}
-  `;
-  const styleEl = document.createElement('style');
-  styleEl.textContent = STYLE;
-  document.head.appendChild(styleEl);
-
-  document.body.insertAdjacentHTML('beforeend', `
-    <div id="gcw-btn"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="white" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span id="gcw-btn-label">Chats</span><span id="gcw-badge" style="display:none">0</span></div>
-    <div id="gcw-panel">
-      <div id="gcw-head">
-        <div id="gcw-title-wrap">
-          <div id="gcw-title">🔔 Doorbell</div>
-          <div id="gcw-subtitle">Your conversations with sellers</div>
-        </div>
-        <button id="gcw-fullpage-btn" aria-label="Open full chat in a new tab" title="Open full chat in a new tab"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg><span id="gcw-fullpage-label">Full chat</span></button>
-        <div id="gcw-resume-btn-wrap" style="position:relative">
-          <button id="gcw-resume-btn" aria-label="Continue on another device" title="Continue on another device"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg><span id="gcw-resume-label">Sync</span></button>
-          <div id="gcw-resume-hint">Tap "Sync" to open these chats on another phone or computer</div>
-        </div>
-        <button id="gcw-close" aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-      </div>
-      <div id="gcw-list"><div id="gcw-empty">No conversations yet</div></div>
-      <div id="gcw-thread">
-        <div id="gcw-thread-head">
-          <button class="back" id="gcw-back" aria-label="Back"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
-          <div id="gcw-thread-info" style="display:flex;align-items:center;gap:6px;min-width:0">
-            <div id="gcw-thread-name" style="flex-shrink:1;min-width:0">Seller</div>
-            <span id="gcw-presence-dot" style="width:6px;height:6px;border-radius:50%;background:#9a9a94;flex-shrink:0"></span>
-            <span id="gcw-presence-text" style="font-size:10px;color:rgba(255,255,255,.75);white-space:nowrap;flex-shrink:0">Offline</span>
-            <a id="gcw-thread-link" href="#" style="margin-left:auto;flex-shrink:0;white-space:nowrap">View listing →</a>
-          </div>
-        </div>
-        <div class="gcw-thread-subbar">
-          <div class="gcw-subbar-row">
-            <button id="gcw-book-viewing-btn" class="gcw-subbar-btn" type="button">
-              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              Book a viewing
-            </button>
-          </div>
-        </div>
-        <div id="gcw-messages"></div>
-        <div id="gcw-quick-replies"></div>
-        <div id="gcw-input-row">
-          <textarea id="gcw-input" placeholder="Type a message…" rows="1"></textarea>
-          <button id="gcw-send"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="white" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
-        </div>
-      </div>
-    </div>
-  `);
-
-  document.body.insertAdjacentHTML('beforeend', `
-    <div id="gcw-viewing-overlay">
-      <div id="gcw-viewing-modal" role="dialog" aria-modal="true" aria-labelledby="gcw-viewing-title">
-        <h3 id="gcw-viewing-title">Book a viewing</h3>
-        <p class="gcw-v-sub">Request a time to view this property — the seller will confirm.</p>
-        <div class="gcw-v-row2">
-          <div class="gcw-v-field">
-            <label>Date <span style="color:#C53030">*</span></label>
-            <input type="date" id="gcw-v-date"/>
-          </div>
-          <div class="gcw-v-field">
-            <label>Time <span style="color:#C53030">*</span></label>
-            <select id="gcw-v-time">
-              <option value="">Select time</option>
-              <option value="Morning (8am–11am)">Morning (8am–11am)</option>
-              <option value="Midday (11am–2pm)">Midday (11am–2pm)</option>
-              <option value="Afternoon (2pm–5pm)">Afternoon (2pm–5pm)</option>
-              <option value="Evening (5pm–7pm)">Evening (5pm–7pm)</option>
-            </select>
-          </div>
-        </div>
-        <div class="gcw-v-field">
-          <label>Full name <span style="color:#C53030">*</span></label>
-          <input type="text" id="gcw-v-name" placeholder="Your full name"/>
-        </div>
-        <div class="gcw-v-field">
-          <label>Phone <span style="color:#C53030">*</span></label>
-          <input type="tel" id="gcw-v-phone" placeholder="07XX XXX XXX"/>
-        </div>
-        <div class="gcw-v-field">
-          <label>Notes <span style="text-transform:none;font-weight:400;color:#888780">optional</span></label>
-          <textarea id="gcw-v-notes" rows="2" placeholder="Anything the seller should know…"></textarea>
-        </div>
-        <div class="gcw-v-actions">
-          <button class="gcw-v-cancel" type="button" id="gcw-v-cancel">Cancel</button>
-          <button class="gcw-v-submit" type="button" id="gcw-v-submit">Request viewing</button>
-        </div>
-      </div>
-    </div>
-  `);
-
-  document.body.insertAdjacentHTML('beforeend', `
-    <div id="gcw-resume-overlay" class="gcw-resume-overlay">
-      <div id="gcw-resume-modal" role="dialog" aria-modal="true" aria-labelledby="gcw-resume-title">
-        <h3 id="gcw-resume-title">Continue on another device</h3>
-        <p class="gcw-resume-sub">This link opens all of your Nyumba254 conversations on any phone or computer — nothing is lost, nothing is shared publicly.</p>
-        <div class="gcw-resume-link-row">
-          <input type="text" id="gcw-resume-link-input" readonly placeholder="Send a message first to get your link"/>
-          <button id="gcw-resume-copy-btn" type="button">Copy</button>
-        </div>
-        <div class="gcw-resume-actions">
-          <button id="gcw-resume-close-btn" type="button">Done</button>
-        </div>
-      </div>
-    </div>
-  `);
-
-  let viewingContext = { listingId: null, buyerToken: null };
-  let viewingSubmitting = false;
-
-  function openBookViewing(listingId, buyerToken) {
-    listingId = String(listingId);
-    buyerToken = buyerToken || localStorage.getItem('nk_buyer_' + listingId) || null;
-    viewingContext = { listingId, buyerToken };
-    document.getElementById('gcw-v-date').value = '';
-    document.getElementById('gcw-v-date').min = new Date().toISOString().split('T')[0];
-    document.getElementById('gcw-v-time').value = '';
-    document.getElementById('gcw-v-name').value = localStorage.getItem('nk_buyer_name_' + listingId) || '';
-    document.getElementById('gcw-v-phone').value = localStorage.getItem('nk_buyer_phone_' + listingId) || '';
-    document.getElementById('gcw-v-notes').value = '';
-    document.getElementById('gcw-viewing-overlay').classList.add('open');
-  }
-  function closeBookViewing() { document.getElementById('gcw-viewing-overlay').classList.remove('open'); }
-
-  async function submitBookViewing() {
-    if (viewingSubmitting) return;
-    const { listingId } = viewingContext;
-    if (!listingId) return;
-    const date = document.getElementById('gcw-v-date').value;
-    const time = document.getElementById('gcw-v-time').value;
-    const name = document.getElementById('gcw-v-name').value.trim();
-    const phone = document.getElementById('gcw-v-phone').value.trim();
-    const notes = document.getElementById('gcw-v-notes').value.trim();
-    if (!date || !time || !name || !phone) { alert('Please fill in date, time, name and phone.'); return; }
-
-    viewingSubmitting = true;
-    const submitBtn = document.getElementById('gcw-v-submit');
-    submitBtn.disabled = true; submitBtn.textContent = 'Sending…';
-
-    let buyerToken = viewingContext.buyerToken || localStorage.getItem('nk_buyer_' + listingId);
-    if (!buyerToken) {
-      buyerToken = (crypto.randomUUID ? crypto.randomUUID() : Date.now()+'-'+Math.random().toString(36).slice(2));
-      localStorage.setItem('nk_buyer_' + listingId, buyerToken);
+    #gcw-inrow{display:flex;align-items:flex-end;gap:8px;padding:10px 12px;background:var(--cd);border-top:1px solid var(--bd);flex-shrink:0}
+    #gcw-input{flex:1;resize:none;border:1.5px solid var(--bd);border-radius:12px;padding:10px 13px;font-size:16px;outline:none;min-height:44px;max-height:110px;line-height:1.4;background:var(--bg);color:var(--tx);font-family:inherit}
+    #gcw-input:focus{border-color:var(--g);background:var(--cd)}
+    #gcw-send{width:44px;height:44px;border-radius:50%;background:var(--g);color:#fff;display:flex;align-items:center;justify-content:center;border:0;cursor:pointer;flex-shrink:0}
+    #gcw-send svg{width:17px;height:17px;stroke:#fff;fill:none;stroke-width:2}
+    #gcw-send:disabled{opacity:.5;cursor:not-allowed}
+    #gcw-hint{display:none;position:absolute;top:calc(100% + 6px);right:52px;background:#1a1a18;color:#fff;font-size:12px;line-height:1.4;padding:9px 11px;border-radius:9px;width:190px;box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:5}
+    #gcw-hint.show{display:block}
+    #gcw-hint::after{content:'';position:absolute;bottom:100%;right:52px;border:5px solid transparent;border-bottom-color:#1a1a18}
+    .gcw-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2300;align-items:center;justify-content:center;padding:14px;overscroll-behavior:contain}
+    .gcw-ov.open{display:flex}
+    .gcw-modal{background:var(--cd);color:var(--tx);border-radius:16px;max-width:430px;width:100%;max-height:92vh;max-height:92dvh;overflow-y:auto;padding:22px 20px;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+    .gcw-modal h3{font-size:18px;font-weight:700;margin-bottom:4px}
+    .gcw-sub{font-size:13px;color:var(--t3);margin-bottom:16px;line-height:1.5}
+    .gcw-f{margin-bottom:13px}
+    .gcw-f label{display:block;font-size:12.5px;font-weight:600;color:var(--t2);margin-bottom:5px}
+    .gcw-f input,.gcw-f textarea,.gcw-f select{width:100%;min-height:46px;padding:10px 13px;border:1.5px solid var(--bd);border-radius:10px;font-size:16px;color:var(--tx);background:var(--bg);outline:none;font-family:inherit}
+    .gcw-f textarea{min-height:64px;resize:vertical}
+    .gcw-f input:focus,.gcw-f textarea:focus,.gcw-f select:focus{border-color:var(--g);background:var(--cd)}
+    .gcw-f [aria-invalid="true"]{border-color:var(--rd)}
+    .gcw-err{color:var(--rd);font-size:12.5px;margin-top:4px}.gcw-err:empty{display:none}
+    .gcw-banner{background:#FFF5F5;color:var(--rd);border:1px solid #f0caca;border-radius:10px;padding:9px 12px;font-size:13px;margin-bottom:12px}.gcw-banner:empty{display:none}
+    .gcw-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .gcw-acts{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
+    .gcw-linkrow{display:flex;gap:8px;margin-bottom:12px}
+    #gcw-rlink{flex:1;min-width:0;padding:10px 12px;border:1.5px solid var(--bd);border-radius:10px;font-size:13px;color:var(--t2);background:var(--bg)}
+    .gcw-warn{font-size:12.5px;color:#7a4f00;background:#FFF7E6;border:1px solid #F3D9A0;border-radius:10px;padding:9px 12px;margin-bottom:14px;line-height:1.5}
+    @media(max-width:600px){
+      #gcw-btn{right:14px}
+      #gcw-panel{left:10px;right:10px;width:auto;max-width:none;bottom:calc(var(--fab) + 62px);height:min(72vh,540px);height:min(72dvh,540px);max-height:calc(100vh - var(--nk-tabbar-h,0px) - var(--nk-stack,0px) - 150px);max-height:calc(100dvh - var(--nk-tabbar-h,0px) - var(--nk-stack,0px) - 150px)}
+      .gcw-col{max-width:84%}
     }
-    localStorage.setItem('nk_buyer_name_' + listingId, name);
-    localStorage.setItem('nk_buyer_phone_' + listingId, phone);
+    @media(max-width:400px){#gcw-btn-label,.gcw-pill span{display:none}#gcw-btn{padding:0;width:52px;justify-content:center}.gcw-pill{width:44px;height:44px;padding:0;justify-content:center;border-radius:50%}#gcw-hint{right:0;width:170px}#gcw-hint::after{right:14px}}
+    @media(prefers-reduced-motion:reduce){#gcw-btn,.gcw-sk{transition:none;animation:none}}`;
 
-    const vId = (crypto.randomUUID ? crypto.randomUUID() : Date.now()+'-'+Math.random().toString(36).slice(2));
-    const { error: vErr } = await gdb.from('viewing_requests').insert({
-      id: vId, listing_id: listingId, buyer_token: buyerToken,
-      buyer_name: name, buyer_phone: phone,
-      requested_date: date, requested_time: time, notes: notes || null,
-    });
-    if (vErr) {
-      viewingSubmitting = false;
-      submitBtn.disabled = false; submitBtn.textContent = 'Request viewing';
-      alert('Could not send your viewing request: ' + (vErr.message || 'unknown error') + ' — please try again.');
-      return;
-    }
-
-    const summary = `📅 Viewing requested\nDate: ${date}\nTime: ${time}${notes ? `\nNotes: ${notes}` : ''}`;
-    await gdb.from('messages').insert({
-      listing_id: listingId, buyer_token: buyerToken,
-      buyer_name: name, buyer_phone: phone,
-      sender: 'buyer', content: summary
-    });
-
-    fetch(`${EDGE_URL}/send-notification-email`, { method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`},
-      body: JSON.stringify({ type:'viewing_request', listingId, buyerName:name, buyerPhone:phone, date, time, notes }) }).catch(()=>{});
-
-    viewingSubmitting = false;
-    submitBtn.disabled = false; submitBtn.textContent = 'Request viewing';
-    closeBookViewing();
-    updateBookButtonLabel(listingId, buyerToken);
-    loadConversations().then(() => openConversation(listingId, buyerToken));
-  }
-
-  let conversations = [];
-  let activeListingId = null;
-  let activeBuyerToken = null;
-  let activeMessages  = [];
-  let channels = {};
-  let panelOpen = false;
-  let threadOpen = false;
-  let loadPromise = null;
-  let gcwPresenceChannel = null, gcwTypingTimeout = null, gcwLastTypingSentAt = 0;
-  let gcwLastAiTriggerAt = {}; // per "listingId:buyerToken" — rate-limits the AI concierge trigger
-
-  function gcwSetPresenceUI(state) {
-    const dot = document.getElementById('gcw-presence-dot'), txt = document.getElementById('gcw-presence-text');
-    if (!dot || !txt) return;
-    if (state === 'online') { dot.style.background = '#2ecc71'; txt.textContent = 'Online now'; }
-    else { dot.style.background = '#9a9a94'; txt.textContent = 'Offline'; }
-  }
-  function gcwSellerCurrentlyOnline() {
-    if (!gcwPresenceChannel) return false;
-    return Object.keys(gcwPresenceChannel.presenceState()).some(k => k.startsWith('seller-'));
-  }
-  function gcwShowTypingIndicator() {
-    const txt = document.getElementById('gcw-presence-text'), dot = document.getElementById('gcw-presence-dot');
-    if (!txt) return;
-    txt.textContent = 'Typing…'; dot.style.background = '#F0B429';
-    clearTimeout(gcwTypingTimeout);
-    gcwTypingTimeout = setTimeout(() => gcwSetPresenceUI(gcwSellerCurrentlyOnline() ? 'online' : 'offline'), 2500);
-  }
-  function gcwBroadcastTyping() {
-    if (!gcwPresenceChannel || !activeListingId) return;
-    const now = Date.now();
-    if (now - gcwLastTypingSentAt < 2000) return;
-    gcwLastTypingSentAt = now;
-    gcwPresenceChannel.send({ type: 'broadcast', event: 'typing', payload: { from: 'buyer' } });
-  }
-  function gcwJoinPresence(listingId, buyerToken) {
-    gcwLeavePresence();
-    gcwPresenceChannel = gdb.channel(`presence-${listingId}`, { config: { presence: { key: 'buyer-' + buyerToken } } });
-    gcwPresenceChannel
-      .on('presence', { event: 'sync' }, () => gcwSetPresenceUI(gcwSellerCurrentlyOnline() ? 'online' : 'offline'))
-      .on('broadcast', { event: 'typing' }, ({ payload }) => { if (payload?.from === 'seller') gcwShowTypingIndicator(); })
-      .subscribe(async (status) => { if (status === 'SUBSCRIBED') await gcwPresenceChannel.track({ online: true, at: Date.now() }); });
-  }
-  function gcwLeavePresence() {
-    if (gcwPresenceChannel) { gdb.removeChannel(gcwPresenceChannel); gcwPresenceChannel = null; }
-    clearTimeout(gcwTypingTimeout);
-  }
-
-  function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-  function escAttrGCW(s) { return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-
-  /* ── Quick replies ── */
-  const QUICK_REPLIES_GENERAL = [
-    'Is this still available?',
-    'Can you share more photos?',
-    'Is the price negotiable?',
-    "What's included in the rent?",
-    'Is a deposit required?',
-    'How far is it from town?'
-  ];
-  let lastKnownBooked = false;
-  function renderQuickReplies() {
-    const box = document.getElementById('gcw-quick-replies');
-    if (!box || !activeListingId) { if (box) box.innerHTML = ''; return; }
-    const bookingChip = lastKnownBooked ? 'Can we reschedule the viewing?' : "I'd like to book a viewing";
-    const chips = [...QUICK_REPLIES_GENERAL, bookingChip];
-    box.innerHTML = chips.map(c => `<button type="button" class="gcw-chip" data-txt="${escAttrGCW(c)}">${escHtml(c)}</button>`).join('');
-    box.querySelectorAll('.gcw-chip').forEach(btn => btn.addEventListener('click', () => onQuickReplyClick(btn.dataset.txt)));
-  }
-  function onQuickReplyClick(text) {
-    if (/book a viewing/i.test(text) && !/reschedule/i.test(text) && activeListingId) { openBookViewing(activeListingId, activeBuyerToken); return; }
-    sendMessage(text);
-  }
-
-  /* ── Booking button label (switches to "Book another viewing" once a
-     viewing request already exists for this listing+buyer, per the
-     database — not a fragile localStorage guess). ── */
-  async function updateBookButtonLabel(listingId, buyerToken) {
-    const btn = document.getElementById('gcw-book-viewing-btn');
-    if (!btn) return;
-    buyerToken = buyerToken || localStorage.getItem('nk_buyer_' + listingId);
-    let booked = false;
-    if (buyerToken) {
-      const { count } = await gdb.from('viewing_requests').select('id', { count: 'exact', head: true })
-        .eq('listing_id', listingId).eq('buyer_token', buyerToken);
-      booked = (count || 0) > 0;
-    }
-    lastKnownBooked = booked;
-    renderQuickReplies();
-    btn.innerHTML = booked
-      ? `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Book another viewing`
-      : `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Book a viewing`;
-  }
-
-  /* ── Read receipts ──
-     "Read" (blue) requires the seller's last-read timestamp for the thread.
-     If your get_buyer_conversations RPC doesn't yet return
-     seller_last_read_at, ticks simply stay grey (delivered). See note at
-     the bottom of this file for the backend addition. */
-  function tickSvg(isRead) {
-    return `<svg class="gcw-tick${isRead ? ' read' : ''}" viewBox="0 0 16 11" width="15" height="10"><path d="M1 5.5l3 3 5-6"/><path d="M6 5.5l3 3 5-6"/></svg>`;
-  }
-  function messageIsRead(m) {
-    return !!m.read_at;
-  }
-
-  /* ── Continue on another device (resume link) ── */
-  function buildResumeLink() {
-    // Same schema as inbox.html's version — a link built here must restore
-    // cleanly there too, and vice versa. Carries per-listing name/phone,
-    // the buyer's global profile (if this device also visited inbox.html
-    // and filled in "My details"), and saved listings.
-    const pairs = scanLocalConversations().map(p => ({
-      listingId: p.listingId,
-      buyerToken: p.buyerToken,
-      name: localStorage.getItem('nk_buyer_name_' + p.listingId) || '',
-      phone: localStorage.getItem('nk_buyer_phone_' + p.listingId) || '',
-    }));
-    const profile = {
-      name: localStorage.getItem('nk_profile_name') || '',
-      email: localStorage.getItem('nk_profile_email') || '',
-      phone: localStorage.getItem('nk_profile_phone') || '',
-      notify: localStorage.getItem('nk_profile_notify') !== '0',
+    const st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
+    const I = {
+      chat: '<svg viewBox="0 0 24 24" width="22" height="22"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
+      x: '<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+      back: '<svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>',
+      cal: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+      out: '<svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
+      phone: '<svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
+      send: '<svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>',
+      ver: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 2.4 3.3-.5.5 3.3L21 9.5 18.4 12 21 14.5l-2.8 2.3-.5 3.3-3.3-.5L12 22l-2.4-2.4-3.3.5-.5-3.3L3 14.5 5.6 12 3 9.5l2.8-2.3.5-3.3 3.3.5z"/></svg>'
     };
-    let saved = [];
-    try { saved = JSON.parse(localStorage.getItem('nk_saved_listings') || '[]'); } catch (e) {}
-    const hasProfile = profile.name || profile.email || profile.phone;
-    if (!pairs.length && !saved.length && !hasProfile) return null;
-    const payload = JSON.stringify({ v: 2, c: pairs, p: profile, s: saved });
-    const encoded = encodeURIComponent(btoa(unescape(encodeURIComponent(payload))));
-    const url = new URL(window.location.origin + window.location.pathname);
-    url.searchParams.set('nk_resume', encoded);
-    return url.toString();
-  }
-  function importResumeParam() {
-    const params = new URLSearchParams(window.location.search);
-    const encoded = params.get('nk_resume');
-    if (!encoded) return;
-    try {
-      const raw = decodeURIComponent(escape(atob(decodeURIComponent(encoded))));
-      let data = null;
-      try { data = JSON.parse(raw); } catch (e) { data = null; }
-      if (data && data.v === 2) {
-        (data.c || []).forEach(p => {
-          if (!p.listingId || !p.buyerToken) return;
-          localStorage.setItem('nk_buyer_' + p.listingId, p.buyerToken);
-          if (p.name) localStorage.setItem('nk_buyer_name_' + p.listingId, p.name);
-          if (p.phone) localStorage.setItem('nk_buyer_phone_' + p.listingId, p.phone);
-        });
-        if (data.p) {
-          if (data.p.name) localStorage.setItem('nk_profile_name', data.p.name);
-          if (data.p.email) localStorage.setItem('nk_profile_email', data.p.email);
-          if (data.p.phone) localStorage.setItem('nk_profile_phone', data.p.phone);
-          localStorage.setItem('nk_profile_notify', data.p.notify === false ? '0' : '1');
-        }
-        if (Array.isArray(data.s) && data.s.length) {
-          let existing = [];
-          try { existing = JSON.parse(localStorage.getItem('nk_saved_listings') || '[]'); } catch (e) {}
-          const merged = Array.from(new Set([...existing, ...data.s]));
-          localStorage.setItem('nk_saved_listings', JSON.stringify(merged));
-        }
-      } else {
-        // Legacy links from before this fix.
-        raw.split(',').forEach(pair => {
-          const idx = pair.indexOf(':');
-          if (idx < 0) return;
-          const lid = pair.slice(0, idx), token = pair.slice(idx + 1);
-          if (lid && token) localStorage.setItem('nk_buyer_' + lid, token);
-        });
-      }
-      const cleanUrl = new URL(window.location.href);
-      cleanUrl.searchParams.delete('nk_resume');
-      window.history.replaceState({}, '', cleanUrl.toString());
-    } catch (e) { console.error('Failed to import resume link:', e); }
-  }
-  function openResumeModal() {
-    const link = buildResumeLink();
-    document.getElementById('gcw-resume-link-input').value = link || '';
-    document.getElementById('gcw-resume-overlay').classList.add('open');
-  }
-  function closeResumeModal() { document.getElementById('gcw-resume-overlay').classList.remove('open'); }
 
-  /* ── Invite a friend / Browse more ── */
-  function shareActiveListingWithFriend() {
-    if (!activeListingId) return;
-    const convo = conversations.find(c => c.listingId === activeListingId);
-    const title = convo?.title || 'this property';
-    const linkEl = document.getElementById('gcw-thread-link');
-    const href = linkEl?.getAttribute('href');
-    const listingUrl = href && href !== '#' ? `${location.origin}/${href}` : location.href;
-    const text = `Check out "${title}" on Nyumba254: ${listingUrl}`;
-    if (navigator.share) navigator.share({ title, text, url: listingUrl }).catch(() => {});
-    else window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
-  }
-  function browseMoreListings() { window.open('/listings', '_blank', 'noopener'); }
-
-  function scanLocalConversations() {
-    const out = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      const m = key.match(/^nk_buyer_(?!name_|phone_)(.+)$/);
-      if (!m) continue;
-      const token = localStorage.getItem(key);
-      if (token) out.push({ listingId: m[1], buyerToken: token });
-    }
-    return out;
-  }
-
-  // Deduplicated: concurrent calls (e.g. registerAndOpen firing right after
-  // handleBuyerThread) share the same in-flight request instead of racing.
-  function loadConversations() {
-    if (loadPromise) return loadPromise;
-    loadPromise = (async () => {
-      const pairs = scanLocalConversations();
-      if (!pairs.length) { conversations = []; renderList(); updateGlobalVisibility(); return; }
-
-      const { data, error } = await gdb.rpc('get_buyer_conversations', {
-        p_pairs: pairs.map(p => ({ listing_id: p.listingId, buyer_token: p.buyerToken }))
-      });
-      if (error) { console.error('get_buyer_conversations error:', error); return; }
-
-      conversations = (data || []).map(row => ({
-        listingId: String(row.listing_id),
-        buyerToken: row.buyer_token,
-        title: row.listing_title || 'Listing',
-        coverUrl: row.cover_url || '',
-        sellerName: row.seller_name || 'Seller',
-        sellerVerified: row.seller_verified === true,
-        lastMessage: row.last_message || '',
-        lastAt: row.last_message_at,
-        unread: row.unread_count || 0,
-      })).sort((a,b) => new Date(b.lastAt||0) - new Date(a.lastAt||0));
-
-      renderList();
-      updateGlobalVisibility();
-      subscribeAll();
-    })();
-    loadPromise.finally(() => { loadPromise = null; });
-    return loadPromise;
-  }
-
-  function totalUnread() { return conversations.reduce((s,c) => s + c.unread, 0); }
-
-  function updateGlobalVisibility() {
-    document.getElementById('gcw-btn').style.display = conversations.length ? 'flex' : 'none';
-    const badge = document.getElementById('gcw-badge');
-    const n = totalUnread();
-    if (n > 0 && !panelOpen) { badge.textContent = n > 9 ? '9+' : n; badge.style.display = 'flex'; }
-    else badge.style.display = 'none';
-  }
-
-  function renderList() {
-    const list = document.getElementById('gcw-list');
-    if (!conversations.length) { list.innerHTML = '<div id="gcw-empty">No conversations yet</div>'; return; }
-    list.innerHTML = conversations.map(c => `
-      <div class="gcw-convo" data-listing="${c.listingId}">
-        ${c.coverUrl ? `<img class="gcw-convo-img" src="${c.coverUrl}"/>` : `<div class="gcw-convo-img"></div>`}
-        <div class="gcw-convo-body">
-          <div class="gcw-convo-title">${escHtml(c.title)}${c.sellerVerified ? ' <svg style="display:inline;vertical-align:-2px;color:#0F6E56" viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 2l2.4 2.4 3.3-.5.5 3.3L21 9.5 18.4 12 21 14.5l-2.8 2.3-.5 3.3-3.3-.5L12 22l-2.4-2.4-3.3.5-.5-3.3L3 14.5 5.6 12 3 9.5l2.8-2.3.5-3.3 3.3.5z"/></svg>' : ''}</div>
-          <div class="gcw-convo-last">${escHtml(c.lastMessage || 'No messages yet')}</div>
+    document.body.insertAdjacentHTML('beforeend', `
+    <button type="button" id="gcw-btn" aria-label="Open your chats with sellers" aria-haspopup="dialog" aria-expanded="false">${I.chat}<span id="gcw-btn-label">Chats</span><span id="gcw-badge" aria-hidden="true"></span></button>
+    <div id="gcw-panel" role="dialog" aria-label="Your chats with sellers" tabindex="-1">
+      <div id="gcw-head">
+        <div id="gcw-title-wrap"><div id="gcw-title">🔔 Doorbell</div><div id="gcw-subtitle">Your conversations with sellers</div></div>
+        <button type="button" class="gcw-pill" id="gcw-full" aria-label="Open the full chat in a new tab">${I.out}<span>Full chat</span></button>
+        <span style="position:relative;display:inline-flex"><button type="button" class="gcw-pill" id="gcw-sync" aria-label="Continue on another device">${I.phone}<span>Sync</span></button><div id="gcw-hint" role="status">Tap Sync to open these chats on another phone or computer</div></span>
+        <button type="button" class="gcw-ib" id="gcw-close" aria-label="Close chats">${I.x}</button>
+      </div>
+      <div id="gcw-net" role="status">You're offline. Messages will send when you're back online.</div>
+      <div id="gcw-list" aria-live="polite"></div>
+      <div id="gcw-thread">
+        <div id="gcw-thead">
+          <button type="button" class="gcw-ib" id="gcw-back" aria-label="Back to all chats">${I.back}</button>
+          <div id="gcw-tinfo"><div id="gcw-tname"></div><div id="gcw-presence"><span id="gcw-dot"></span><span id="gcw-ptxt">Connecting…</span></div></div>
+          <button type="button" class="gcw-ib" id="gcw-book" aria-label="Book a viewing" title="Book a viewing">${I.cal}</button>
+          <button type="button" class="gcw-ib" id="gcw-close2" aria-label="Close chats">${I.x}</button>
         </div>
-        ${c.unread ? `<div class="gcw-convo-badge">${c.unread>9?'9+':c.unread}</div>` : ''}
-      </div>`).join('');
-    list.querySelectorAll('.gcw-convo').forEach(el => {
-      el.addEventListener('click', () => openConversation(el.dataset.listing));
-    });
-  }
+        <div id="gcw-lcard"></div>
+        <div id="gcw-safety" role="note"><p id="gcw-safety-t">Never pay before you have viewed the property. Nyumba254 never asks buyers for money.</p><button type="button" id="gcw-report" data-a="ask">Report</button><button type="button" id="gcw-safety-x" aria-label="Dismiss safety note">✕</button></div>
+        <div id="gcw-msgs-wrap"><div id="gcw-messages" role="log" aria-live="polite" aria-label="Messages"></div><button type="button" id="gcw-newpill">New message ↓</button></div>
+        <div id="gcw-quick"></div>
+        <div id="gcw-inrow"><textarea id="gcw-input" placeholder="Type a message…" rows="1" aria-label="Message"></textarea><button type="button" id="gcw-send" aria-label="Send message">${I.send}</button></div>
+      </div>
+    </div>
+    <div class="gcw-ov" id="gcw-vov"><div class="gcw-modal" role="dialog" aria-modal="true" aria-labelledby="gcw-vt">
+      <h3 id="gcw-vt">Book a viewing</h3><p class="gcw-sub">Request a time to see this property. The seller confirms in your chat.</p>
+      <div class="gcw-banner" id="gcw-verr" role="alert"></div>
+      <div class="gcw-two"><div class="gcw-f"><label for="gcw-vdate">Date</label><input type="date" id="gcw-vdate"/><div class="gcw-err" id="gcw-vdate-e"></div></div>
+      <div class="gcw-f"><label for="gcw-vtime">Time</label><select id="gcw-vtime"><option value="">Select time</option><option>Morning (8am–11am)</option><option>Midday (11am–2pm)</option><option>Afternoon (2pm–5pm)</option><option>Evening (5pm–7pm)</option></select><div class="gcw-err" id="gcw-vtime-e"></div></div></div>
+      <div class="gcw-f"><label for="gcw-vname">Full name</label><input type="text" id="gcw-vname" autocomplete="name"/><div class="gcw-err" id="gcw-vname-e"></div></div>
+      <div class="gcw-f"><label for="gcw-vphone">Phone</label><input type="tel" id="gcw-vphone" inputmode="tel" autocomplete="tel" placeholder="07XX XXX XXX"/><div class="gcw-err" id="gcw-vphone-e"></div></div>
+      <div class="gcw-f"><label for="gcw-vnotes">Notes (optional)</label><textarea id="gcw-vnotes" rows="2" placeholder="Anything the seller should know"></textarea></div>
+      <div class="gcw-acts"><button type="button" class="gcw-btn ghost" id="gcw-vcancel">Cancel</button><button type="button" class="gcw-btn" id="gcw-vsend">Request viewing</button></div>
+    </div></div>
+    <div class="gcw-ov" id="gcw-rov"><div class="gcw-modal" role="dialog" aria-modal="true" aria-labelledby="gcw-rt">
+      <h3 id="gcw-rt">Continue on another device</h3>
+      <p class="gcw-sub">This link opens all your Nyumba254 chats on any phone or computer.</p>
+      <div class="gcw-warn">Anyone who has this link can read your chats. Send it only to yourself and never post it publicly.</div>
+      <div class="gcw-linkrow"><input type="text" id="gcw-rlink" readonly placeholder="Send a message first to get your link" aria-label="Your link"/><button type="button" class="gcw-btn" id="gcw-rcopy">Copy</button></div>
+      <div class="gcw-acts"><button type="button" class="gcw-btn ghost" id="gcw-rclose">Done</button></div>
+    </div></div>`);
 
-  // ── FIX: this used to leave the PREVIOUS conversation's messages on
-  // screen while the new one was still fetching, which is what caused
-  // messages/headers to look mixed or "bled together" when switching
-  // threads. Now it clears state and shows a loading placeholder
-  // immediately, and can open instantly from localStorage even before
-  // the full conversation list has finished loading. ──
-  async function openConversation(listingId, knownBuyerToken) {
-    listingId = String(listingId);
-    let convo = conversations.find(c => c.listingId === listingId);
+    let panelOpen = false, threadOpen = false, lastFocus = null, viewingFor = null;
+    const panel = $('gcw-panel'), btn = $('gcw-btn');
+    const vis = () => panelOpen && threadOpen && !document.hidden;
+    const sync = () => core.setViewing(vis());
+    const atBottom = () => { const b = $('gcw-messages'); return b.scrollHeight - b.scrollTop - b.clientHeight < 90; };
+    const toBottom = () => { const b = $('gcw-messages'); b.scrollTop = b.scrollHeight; $('gcw-newpill').classList.remove('show'); };
+    const activeConvo = () => { const a = core.active(); return a ? core.convos().find(c => c.listingId === a.listingId) : null; };
 
-    const buyerToken = convo?.buyerToken || knownBuyerToken || localStorage.getItem('nk_buyer_' + listingId);
-    if (!buyerToken) return; // no conversation exists for this listing on this device
+    /* ── FAB + badge ── */
+    function renderBadge() {
+      const n = core.unread(), b = $('gcw-badge'), has = core.convos().length > 0;
+      btn.style.display = (has || panelOpen) ? 'flex' : 'none';
+      if (n > 0 && !panelOpen) { b.textContent = n > 9 ? '9+' : n; b.style.display = 'flex'; } else b.style.display = 'none';
+      btn.setAttribute('aria-label', n > 0 && !panelOpen ? `Open your chats, ${n} unread` : 'Open your chats with sellers');
+      core.setTitleBadge(n);
+    }
 
-    if (!convo) {
-      convo = {
-        listingId, buyerToken,
-        title: localStorage.getItem('nk_last_listing_title_' + listingId) || 'Listing',
-        sellerName: 'Seller', lastMessage: '', lastAt: null, unread: 0, coverUrl: ''
+    /* ── conversation list ── */
+    function renderList() {
+      const list = $('gcw-list'), cs = core.convos();
+      if (!cs.length && core.loading()) { list.innerHTML = '<div class="gcw-sk"></div><div class="gcw-sk"></div><div class="gcw-sk"></div>'; return; }
+      if (!cs.length && core.loadError()) { list.innerHTML = '<div class="gcw-state">We could not load your chats.<br><button type="button" class="gcw-btn" data-a="reload">Try again</button></div>'; return; }
+      if (!cs.length) { list.innerHTML = '<div class="gcw-state">No conversations yet. When you message a seller, the chat appears here.</div>'; return; }
+      list.innerHTML = cs.map(c => `<button type="button" class="gcw-convo" data-l="${esc(c.listingId)}"><span class="gcw-thumb">${c.coverUrl ? `<img src="${esc(c.coverUrl)}" alt="" loading="lazy"/>` : esc(core.initials(c.sellerName))}</span><span class="gcw-cb"><span class="gcw-ct"><span style="overflow:hidden;text-overflow:ellipsis">${esc(c.title)}</span>${c.sellerVerified ? I.ver : ''}</span><span class="gcw-cl">${esc(c.lastMessage || 'No messages yet')}</span></span><span class="gcw-cm"><span class="gcw-cw">${esc(core.whenLabel(c.lastAt))}</span>${c.unread ? `<span class="gcw-cbadge">${c.unread > 9 ? '9+' : c.unread}</span>` : ''}</span></button>`).join('');
+    }
+
+    /* ── thread ── */
+    function renderHead() {
+      const c = activeConvo(); if (!c) return;
+      $('gcw-tname').innerHTML = `<span>${esc(c.sellerName)}</span>${c.sellerVerified ? I.ver : ''}`;
+      const l = core.listing(), price = core.priceLabel(l), num = l && l.listing_number != null ? String(l.listing_number).padStart(6, '0') : null;
+      const inner = `<span class="gcw-thumb">${c.coverUrl ? `<img src="${esc(c.coverUrl)}" alt=""/>` : esc(core.initials(c.title))}</span><span class="gcw-lc-t"><b>${esc((l && l.title) || c.title)}</b><span>${esc(price || (l && l.area) || '')}</span></span>${num ? '<span class="gcw-lc-go">View →</span>' : ''}`;
+      $('gcw-lcard').innerHTML = num ? `<a class="gcw-lcard" href="/listing?id=${num}">${inner}</a>` : `<div class="gcw-lcard">${inner}</div>`;
+    }
+    function renderPresence() {
+      const s = core.presence(), t = { connecting: 'Connecting…', online: 'Online now', away: 'Away', typing: 'Typing…' }[s] || 'Away';
+      $('gcw-ptxt').textContent = t; $('gcw-dot').className = s === 'online' ? 'online' : s === 'typing' ? 'typing' : '';
+    }
+    function renderQuick() {
+      const box = $('gcw-quick'), ms = core.messages(), mine = ms.filter(m => m.sender === 'buyer').length;
+      if (!core.active() || mine >= 2) { box.innerHTML = ''; return; }
+      const booked = core.booked(core.active().listingId), chips = core.ui.QUICK.map(t => (booked && /book a viewing/i.test(t)) ? 'Can we reschedule the viewing?' : t);
+      box.innerHTML = chips.map(t => `<button type="button" class="gcw-chip" data-q="${esc(t)}">${esc(t)}</button>`).join('');
+    }
+    function renderMessages(state) {
+      const box = $('gcw-messages'), ms = core.messages(), c = activeConvo(), peer = core.initials(c && c.sellerName);
+      if (state && state.loading) { box.innerHTML = '<div class="gcw-empty-thread">Loading messages…</div>'; return; }
+      if (state && state.error) { box.innerHTML = '<div class="gcw-empty-thread"><b>Could not load this chat</b><button type="button" class="gcw-btn" data-a="reopen">Try again</button></div>'; return; }
+      if (!ms.length) { box.innerHTML = '<div class="gcw-empty-thread"><b>Say hello 👋</b>Ask if it is still available, about the deposit, or when you can view it.</div>'; renderQuick(); return; }
+      let html = '', prev = null;
+      ms.forEach(m => { if (!prev || core.dayLabel(prev.created_at) !== core.dayLabel(m.created_at)) html += core.ui.dayHtml(m.created_at, 'gcw'); html += core.ui.rowHtml(m, prev, 'gcw', peer); prev = m; });
+      box.innerHTML = html; toBottom(); renderQuick();
+    }
+    function appendMessage(m, incoming) {
+      const box = $('gcw-messages'), ms = core.messages(), i = ms.indexOf(m), prev = i > 0 ? ms[i - 1] : null, c = activeConvo();
+      const wasBottom = atBottom(); if (box.querySelector('.gcw-empty-thread')) box.innerHTML = '';
+      let html = ''; if (!prev || core.dayLabel(prev.created_at) !== core.dayLabel(m.created_at)) html += core.ui.dayHtml(m.created_at, 'gcw');
+      html += core.ui.rowHtml(m, prev, 'gcw', core.initials(c && c.sellerName)); box.insertAdjacentHTML('beforeend', html);
+      if (m.sender === 'buyer' || wasBottom) toBottom(); else if (incoming) $('gcw-newpill').classList.add('show');
+      renderQuick();
+    }
+    function updateMessage(m) {
+      const ms = core.messages(), i = ms.indexOf(m), prev = i > 0 ? ms[i - 1] : null, c = activeConvo(), k = m.localId || m.id;
+      const el = qsa('#gcw-messages .gcw-row').find(r => r.dataset.k === String(k)); if (!el) return;
+      const t = document.createElement('div'); t.innerHTML = core.ui.rowHtml(m, prev, 'gcw', core.initials(c && c.sellerName)); el.replaceWith(t.firstElementChild);
+    }
+    function showThread() {
+      threadOpen = true; $('gcw-thread').classList.add('open'); $('gcw-list').style.display = 'none';
+      $('gcw-title-wrap').parentElement.style.display = 'none';
+      $('gcw-safety').classList.toggle('show', !core.ls.get('nk_chat_safety_seen'));
+      $('gcw-safety-t').textContent = 'Never pay before you have viewed the property. Nyumba254 never asks buyers for money.'; $('gcw-report').style.display = '';
+      renderHead(); renderPresence(); sync();
+    }
+    function hideThread() {
+      threadOpen = false; $('gcw-thread').classList.remove('open'); $('gcw-list').style.display = ''; $('gcw-head').style.display = '';
+      core.closeThread(); sync(); renderList();
+    }
+    async function openConvo(id, token) {
+      if (!panelOpen) setPanel(true);
+      const opening = core.openThread(id, token);      // the thread pane opens at once and fills in as messages arrive
+      if (core.active()) showThread();
+      await opening;
+    }
+
+    /* ── panel ── */
+    function setPanel(open) {
+      if (open === panelOpen) return; panelOpen = open;
+      panel.classList.toggle('open', open); btn.setAttribute('aria-expanded', String(open)); core.setPolling(open);
+      if (open) {
+        lastFocus = document.activeElement; renderList(); panel.focus({ preventScroll: true });
+        const h = $('gcw-hint'); if (core.convos().length && core.hasResumeData() && !core.ls.get('nk_resume_hint_seen')) h.classList.add('show');
+      } else { $('gcw-hint').classList.remove('show'); core.ls.set('nk_resume_hint_seen', '1'); if (lastFocus && lastFocus.focus && document.contains(lastFocus)) lastFocus.focus(); else btn.focus(); }
+      renderBadge(); sync();
+    }
+    /* keep the header on screen when the phone keyboard opens */
+    if (window.visualViewport) {
+      const fit = () => {
+        if (!panelOpen || !wide()) { panel.style.bottom = ''; panel.style.maxHeight = ''; return; }
+        const vv = window.visualViewport, kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+        if (kb > 100) { panel.style.bottom = (kb + 8) + 'px'; panel.style.maxHeight = (vv.height - 16) + 'px'; } else { panel.style.bottom = ''; panel.style.maxHeight = ''; }
       };
-      conversations.unshift(convo);
+      visualViewport.addEventListener('resize', fit); visualViewport.addEventListener('scroll', fit);
     }
 
-    // Reset immediately — no stale messages or stale header from the
-    // previously open thread survive into this one.
-    activeListingId = listingId;
-    activeBuyerToken = buyerToken;
-    activeMessages = [];
-    threadOpen = true;
-    if (!panelOpen) togglePanel();
-    document.getElementById('gcw-thread').classList.add('open');
-    updateBookButtonLabel(listingId, buyerToken);
-    gcwJoinPresence(listingId, buyerToken);
-    // The list is a normal (always-rendered) flex child of #gcw-panel — if
-    // it isn't hidden here, it keeps sharing flex space with the thread,
-    // which is what was squeezing the input bar off-screen as messages grew.
-    document.getElementById('gcw-list').style.display = 'none';
-    const verifiedBadge = convo.sellerVerified
-      ? `<svg class="gcw-verified-badge" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 2l2.4 2.4 3.3-.5.5 3.3L21 9.5 18.4 12 21 14.5l-2.8 2.3-.5 3.3-3.3-.5L12 22l-2.4-2.4-3.3.5-.5-3.3L3 14.5 5.6 12 3 9.5l2.8-2.3.5-3.3 3.3.5z"/><path d="M9 12l2 2 4-4" stroke="#0F6E56" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`
-      : '';
-    document.getElementById('gcw-thread-name').innerHTML = `<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(convo.sellerName)}</span>${verifiedBadge}`;
-    // href is set below once we know the listing's public-facing number —
-    // linking with the raw UUID here is what caused "listing not found".
-    document.getElementById('gcw-thread-link').href = '#';
-    document.getElementById('gcw-messages').innerHTML =
-      '<div style="text-align:center;font-size:12px;color:#888780;padding:16px">Loading messages…</div>';
-
-    const [{ data, error }, { data: listingRow }] = await Promise.all([
-      gdb.from('messages').select('*')
-        .eq('listing_id', listingId).eq('buyer_token', buyerToken)
-        .order('created_at', { ascending: true }),
-      gdb.from('listings').select('listing_number').eq('id', listingId).single()
-    ]);
-
-    // Guard against a race: only apply results if the user hasn't since
-    // navigated to a different thread while this fetch was in flight.
-    if (activeListingId !== listingId) return;
-
-    // listing.html's URL param is the zero-padded listing_number, not the UUID
-    if (listingRow?.listing_number != null) {
-      document.getElementById('gcw-thread-link').href =
-        `listing?id=${String(listingRow.listing_number).padStart(6, '0')}`;
+    /* ── viewing modal ── */
+    const setErr = (id, m) => { const e = $(id + '-e'), i = $(id); if (e) e.textContent = m || ''; if (i) i.setAttribute('aria-invalid', m ? 'true' : 'false'); };
+    function openViewing(listingId) {
+      viewingFor = String(listingId || (core.active() && core.active().listingId) || ''); if (!viewingFor) return;
+      const p = core.Profile.forListing(viewingFor), t = new Date();
+      ['gcw-vdate', 'gcw-vtime', 'gcw-vname', 'gcw-vphone'].forEach(i => setErr(i, '')); $('gcw-verr').textContent = '';
+      $('gcw-vdate').min = core.localISO(t); t.setDate(t.getDate() + 1); $('gcw-vdate').value = core.localISO(t); $('gcw-vtime').value = '';
+      $('gcw-vname').value = p.name; $('gcw-vphone').value = p.phone; $('gcw-vnotes').value = '';
+      $('gcw-vov').classList.add('open'); if (!touch()) setTimeout(() => $('gcw-vdate').focus(), 50);
+    }
+    const closeViewing = () => $('gcw-vov').classList.remove('open');
+    async function sendViewing() {
+      ['gcw-vdate', 'gcw-vtime', 'gcw-vname', 'gcw-vphone'].forEach(i => setErr(i, '')); $('gcw-verr').textContent = '';
+      const b = $('gcw-vsend'); b.disabled = true; b.textContent = 'Sending…';
+      const r = await core.requestViewing({ listingId: viewingFor, date: $('gcw-vdate').value, time: $('gcw-vtime').value, name: $('gcw-vname').value, phone: $('gcw-vphone').value, notes: $('gcw-vnotes').value });
+      b.disabled = false; b.textContent = 'Request viewing';
+      if (!r.ok) { if (r.field) { setErr('gcw-v' + r.field, r.error); const f = $('gcw-v' + r.field); if (f) f.focus(); } else $('gcw-verr').textContent = r.error; return; }
+      closeViewing(); if (r.warning) alert(r.warning);
+      if (!threadOpen) await openConvo(viewingFor, r.token);
     }
 
-    if (!error) {
-      activeMessages = data || [];
-      renderThread();
-      await gdb.rpc('mark_thread_read', { p_listing_id: listingId, p_buyer_token: buyerToken });
-      convo.unread = 0;
-      renderList();
-      updateGlobalVisibility();
-      subscribeAll();
-    }
+    /* ── resume link ── */
+    function openResume() { $('gcw-rlink').value = core.buildResumeLink() || ''; $('gcw-rov').classList.add('open'); }
 
-    // Refresh the full list quietly in the background so titles, seller
-    // names, and cover photos catch up without blocking the open.
-    loadConversations();
-  }
+    /* ── send ── */
+    function sendText(t) { const m = core.send(t); if (m && !touch()) $('gcw-input').focus(); return m; }
+    function sendInput() { const i = $('gcw-input'), v = i.value; if (!v.trim()) return; i.value = ''; i.style.height = 'auto'; sendText(v); }
 
-  function closeThread() {
-    threadOpen = false;
-    activeListingId = null;
-    activeBuyerToken = null;
-    activeMessages = [];
-    document.getElementById('gcw-thread').classList.remove('open');
-    document.getElementById('gcw-list').style.display = 'block';
-    gcwLeavePresence();
-  }
-
-  function renderThread() {
-    const box = document.getElementById('gcw-messages');
-    if (!activeMessages.length) { box.innerHTML = '<div style="text-align:center;font-size:12px;color:#888780;padding:16px">No messages yet</div>'; renderQuickReplies(); return; }
-    let lastDate = '';
-    box.innerHTML = activeMessages.map(m => {
-      const mine = m.sender === 'buyer';
-      const d = new Date(m.created_at);
-      const dateStr = d.toLocaleDateString('en-KE',{weekday:'short',day:'numeric',month:'short'});
-      const time = d.toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'});
-      const sep = dateStr !== lastDate ? `<div class="gcw-date-sep">${dateStr}</div>` : ''; lastDate = dateStr;
-      // Strip the internal "🤖 [Automated reply]" marker the edge function
-      // stores for the seller's own dashboard — buyers only ever see plain
-      // seller-labeled text here, indistinguishable from a human reply.
-      const bodyText = (m.content || m.message || '').replace(/^🤖\s*\[Automated reply\]\s*/, '');
-      const ticks = mine ? tickSvg(messageIsRead(m)) : '';
-      return `${sep}<div class="gcw-row ${mine?'mine':''}">
-        <div class="gcw-av">${mine?'You':'S'}</div>
-        <div><div class="gcw-bubble">${escHtml(bodyText)}</div><div class="gcw-time">${time}${ticks}</div></div>
-      </div>`;
-    }).join('');
-    box.scrollTop = box.scrollHeight;
-    renderQuickReplies();
-  }
-
-  // Fire-and-forget: asks ai-concierge-reply for an instant answer grounded
-  // in this listing's own facts. The function itself checks whether this
-  // seller has the Elite AI Concierge turned on and quietly no-ops
-  // ({skipped:true}) if not — nothing here needs to know or care. When it
-  // does reply, it inserts straight into `messages` as sender:'seller' with
-  // is_ai_reply:true, which the realtime subscription in subscribeAll()
-  // already listens for and renders automatically — no extra wiring needed
-  // beyond calling this.
-  async function triggerAiConcierge(listingId, buyerToken, message) {
-    // Rate limit: a buyer sending several messages in quick succession should
-    // not spawn one AI reply per message — wait at least 4s between calls
-    // for the same conversation.
-    const rlKey = listingId + ':' + buyerToken;
-    const now = Date.now();
-    if (gcwLastAiTriggerAt[rlKey] && now - gcwLastAiTriggerAt[rlKey] < 4000) return;
-    gcwLastAiTriggerAt[rlKey] = now;
-    try {
-      const buyerName = localStorage.getItem('nk_buyer_name_' + listingId) || '';
-      await fetch(`${EDGE_URL}/ai-concierge-reply`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
-        body: JSON.stringify({ listingId, buyerToken, buyerName, buyerMessage: message }),
-      });
-    } catch (e) {
-      console.error('AI concierge trigger failed (non-fatal):', e);
-    }
-  }
-
-  async function sendMessage(overrideText) {
-    const input = document.getElementById('gcw-input');
-    const fromChip = typeof overrideText === 'string';
-    const text = (fromChip ? overrideText : input.value).trim();
-    if (!text || !activeListingId || !activeBuyerToken) return;
-    const sendBtn = document.getElementById('gcw-send');
-    sendBtn.disabled = true;
-    if (!fromChip) { input.value = ''; input.style.height = 'auto'; }
-
-    const { data, error } = await gdb.from('messages').insert({
-      listing_id: activeListingId, buyer_token: activeBuyerToken,
-      buyer_name: localStorage.getItem('nk_buyer_name_' + activeListingId) || '',
-      buyer_phone: localStorage.getItem('nk_buyer_phone_' + activeListingId) || null,
-      sender: 'buyer', content: text
-    }).select().single();
-
-    sendBtn.disabled = false;
-    if (error) { alert('Could not send message, please try again.'); return; }
-
-    activeMessages.push(data);
-    renderThread();
-    const convo = conversations.find(c => c.listingId === activeListingId);
-    if (convo) { convo.lastMessage = text; convo.lastAt = data.created_at; renderList(); }
-
-    triggerAiConcierge(activeListingId, activeBuyerToken, text);
-  }
-
-  function subscribeAll() {
-    conversations.forEach(c => {
-      if (channels[c.listingId]) return;
-      channels[c.listingId] = gdb.channel(`gcw-messages-${c.listingId}`)
-        .on('postgres_changes', { event:'INSERT', schema:'public', table:'messages', filter:`listing_id=eq.${c.listingId}` }, (payload) => {
-          const row = payload.new;
-          if (row.buyer_token !== c.buyerToken) return;
-          if (row.sender !== 'seller') return; // buyer's own inserts are already appended locally
-          c.lastMessage = row.content || row.message || '';
-          c.lastAt = row.created_at;
-          if (threadOpen && activeListingId === c.listingId) {
-            if (!activeMessages.some(m => m.id === row.id)) {
-              activeMessages.push(row);
-              renderThread();
-            }
-            gdb.rpc('mark_thread_read', { p_listing_id: c.listingId, p_buyer_token: c.buyerToken });
-          } else {
-            c.unread += 1;
-            pulseButton();
-          }
-          renderList();
-          updateGlobalVisibility();
-        }).subscribe();
+    /* ═════ wire it up ═════ */
+    btn.addEventListener('click', () => setPanel(!panelOpen));
+    $('gcw-close').addEventListener('click', () => setPanel(false)); $('gcw-close2').addEventListener('click', () => setPanel(false));
+    $('gcw-back').addEventListener('click', hideThread);
+    $('gcw-full').addEventListener('click', () => { const a = core.active(); window.open(a ? '/inbox?open=' + encodeURIComponent(a.listingId) : '/inbox', '_blank', 'noopener'); });
+    $('gcw-sync').addEventListener('click', () => { $('gcw-hint').classList.remove('show'); core.ls.set('nk_resume_hint_seen', '1'); openResume(); });
+    $('gcw-book').addEventListener('click', () => openViewing());
+    $('gcw-send').addEventListener('click', sendInput);
+    $('gcw-input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendInput(); } });
+    $('gcw-input').addEventListener('input', function () { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 110) + 'px'; core.typing(); });
+    $('gcw-newpill').addEventListener('click', toBottom);
+    $('gcw-messages').addEventListener('scroll', () => { if (atBottom()) $('gcw-newpill').classList.remove('show'); }, { passive: true });
+    $('gcw-list').addEventListener('click', e => { const c = e.target.closest('.gcw-convo'); if (c) return openConvo(c.dataset.l); if (e.target.closest('[data-a="reload"]')) core.fetchConversations(); });
+    $('gcw-messages').addEventListener('click', e => { const r = e.target.closest('[data-retry]'); if (r) core.retry(r.dataset.retry); const o = e.target.closest('[data-a="reopen"]'); if (o) { const a = core.active(); if (a) core.openThread(a.listingId, a.token); } });
+    $('gcw-quick').addEventListener('click', e => { const c = e.target.closest('.gcw-chip'); if (!c) return; const t = c.dataset.q; if (/book a viewing/i.test(t)) return openViewing(); sendText(t); });
+    $('gcw-safety-x').addEventListener('click', () => { core.ls.set('nk_chat_safety_seen', '1'); $('gcw-safety').classList.remove('show'); });
+    $('gcw-report').addEventListener('click', async function () {
+      const a = core.active(); if (!a) return;
+      if (this.dataset.a === 'ask') { $('gcw-safety-t').textContent = 'Send a report about this seller to Nyumba254?'; this.textContent = 'Yes, report'; this.dataset.a = 'go'; return; }
+      this.disabled = true; const r = await core.report(a.listingId, 'Reported from the chat widget'); this.disabled = false; this.dataset.a = 'ask'; this.textContent = 'Report';
+      $('gcw-safety-t').textContent = r.ok ? "Thank you. We've received your report." : 'The report could not be sent. Please try again.';
     });
-  }
-
-  function pulseButton() {
-    const btn = document.getElementById('gcw-btn');
-    btn.style.animation = 'none';
-    requestAnimationFrame(() => { btn.style.animation = 'gcw-pop .3s ease'; });
-  }
-
-  function togglePanel() {
-    panelOpen = !panelOpen;
-    document.getElementById('gcw-panel').classList.toggle('open', panelOpen);
-    updateGlobalVisibility();
-    const hint = document.getElementById('gcw-resume-hint');
-    if (panelOpen && conversations.length && !localStorage.getItem('nk_resume_hint_seen')) {
-      hint.classList.add('show');
-    } else if (!panelOpen && hint.classList.contains('show')) {
-      hint.classList.remove('show');
-      localStorage.setItem('nk_resume_hint_seen', '1');
-    }
-  }
-
-  document.getElementById('gcw-btn').addEventListener('click', togglePanel);
-  document.getElementById('gcw-close').addEventListener('click', togglePanel);
-  document.getElementById('gcw-back').addEventListener('click', closeThread);
-  document.getElementById('gcw-send').addEventListener('click', sendMessage);
-  document.getElementById('gcw-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-  });
-  document.getElementById('gcw-input').addEventListener('input', function(){
-    this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,100)+'px';
-    gcwBroadcastTyping();
-  });
-  document.getElementById('gcw-v-cancel').addEventListener('click', closeBookViewing);
-  document.getElementById('gcw-v-submit').addEventListener('click', submitBookViewing);
-  document.getElementById('gcw-viewing-overlay').addEventListener('click', (e) => { if (e.target.id === 'gcw-viewing-overlay') closeBookViewing(); });
-  document.getElementById('gcw-book-viewing-btn').addEventListener('click', () => { if (activeListingId) openBookViewing(activeListingId, activeBuyerToken); });
-
-  document.getElementById('gcw-fullpage-btn').addEventListener('click', () => {
-    const url = activeListingId ? `/inbox?open=${encodeURIComponent(activeListingId)}` : '/inbox';
-    window.open(url, '_blank', 'noopener');
-  });
-  // Saved listings live in inbox.html's dedicated Saved tab — the floating
-  // widget just deep-links there instead of duplicating that whole panel.
-  window.NKGlobalChat = window.NKGlobalChat || {};
-  window.NKGlobalChat.openSaved = function() { window.open('/inbox?tab=saved', '_blank', 'noopener'); };
-  document.getElementById('gcw-resume-btn').addEventListener('click', () => {
-    document.getElementById('gcw-resume-hint').classList.remove('show');
-    localStorage.setItem('nk_resume_hint_seen', '1');
-    openResumeModal();
-  });
-  document.getElementById('gcw-resume-close-btn').addEventListener('click', closeResumeModal);
-  document.getElementById('gcw-resume-copy-btn').addEventListener('click', () => {
-    const input = document.getElementById('gcw-resume-link-input');
-    if (!input.value) return;
-    navigator.clipboard.writeText(input.value).then(() => {
-      const btn = document.getElementById('gcw-resume-copy-btn');
-      const orig = btn.textContent; btn.textContent = 'Copied!';
-      setTimeout(() => { btn.textContent = orig; }, 1800);
+    $('gcw-vcancel').addEventListener('click', closeViewing); $('gcw-vsend').addEventListener('click', sendViewing);
+    $('gcw-vov').addEventListener('click', e => { if (e.target.id === 'gcw-vov') closeViewing(); });
+    $('gcw-rclose').addEventListener('click', () => $('gcw-rov').classList.remove('open'));
+    $('gcw-rov').addEventListener('click', e => { if (e.target.id === 'gcw-rov') $('gcw-rov').classList.remove('open'); });
+    $('gcw-rcopy').addEventListener('click', () => { const i = $('gcw-rlink'); if (!i.value) return; (navigator.clipboard ? navigator.clipboard.writeText(i.value) : Promise.reject()).then(() => { const b = $('gcw-rcopy'), o = b.textContent; b.textContent = 'Copied'; setTimeout(() => { b.textContent = o; }, 1800); }, () => { i.select(); }); });
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Escape') return;
+      if ($('gcw-vov').classList.contains('open')) return closeViewing();
+      if ($('gcw-rov').classList.contains('open')) return $('gcw-rov').classList.remove('open');
+      if (panelOpen) setPanel(false);
     });
-  });
-  document.getElementById('gcw-resume-overlay').addEventListener('click', (e) => { if (e.target.id === 'gcw-resume-overlay') closeResumeModal(); });
+    document.addEventListener('visibilitychange', sync);
 
-  // Public API — call this from listing.html the instant a buyer sends a
-  // new enquiry, so the widget shows it immediately without waiting.
-  window.NKGlobalChat = {
-    refresh: loadConversations,
-    open: openConversation,
-    registerAndOpen: function(listingId, buyerToken) { openConversation(listingId, buyerToken); },
-    openBookViewing: openBookViewing,
-    getResumeLink: buildResumeLink,
-  };
+    core.on('convos', () => { renderBadge(); if (panelOpen && !threadOpen) renderList(); if (threadOpen) renderHead(); });
+    core.on('thread', ev => {
+      if (ev.type === 'reset') renderMessages(ev); else if (ev.type === 'append') appendMessage(ev.message, ev.incoming); else if (ev.type === 'update') updateMessage(ev.message);
+      if (ev.type === 'reset') renderHead();
+    });
+    core.on('presence', renderPresence);
+    core.on('viewing', renderQuick);
+    core.on('incoming', () => { btn.style.animation = 'none'; requestAnimationFrame(() => { btn.style.animation = 'gcw-pop .3s ease'; }); });
+    core.on('net', ev => $('gcw-net').classList.toggle('show', !ev.online));
+    if (!core.isOnline()) $('gcw-net').classList.add('show');
 
-  // Import a handed-off conversation from another device (via the resume
-  // link) before the first load, then keep ticks fresh while open.
-  importResumeParam();
-  loadConversations();
-  setInterval(() => { if (panelOpen) loadConversations(); }, 20000);
+    api = { refresh: () => core.fetchConversations(), open: (id, t) => openConvo(id, t), openViewing: id => { if (!panelOpen) setPanel(true); openViewing(id); } };
+    core.init(); renderBadge();
+    while (queue.length) queue.shift()();
+  }
 })();

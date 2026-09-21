@@ -419,7 +419,7 @@ a.lncard:hover{border-color:var(--green);background:var(--green-light)}
       <div class="nf-banner" id="vw-banner" role="alert"></div>
       <div class="nf-row2">
         <div class="nf-field"><label for="vw-date">Preferred date</label><input type="date" id="vw-date"/><div class="nf-err" id="vw-date-e" role="alert"></div></div>
-        <div class="nf-field"><label for="vw-slot">Time</label><select id="vw-slot"><option value="in the morning (8am to 12pm)">Morning, 8am to 12pm</option><option value="in the afternoon (12pm to 4pm)">Afternoon, 12pm to 4pm</option><option value="in the evening (4pm to 7pm)">Evening, 4pm to 7pm</option><option value="at any time that suits you">Any time</option></select></div>
+        <div class="nf-field"><label for="vw-slot">Time</label><select id="vw-slot"><option value="Morning (8am–11am)">Morning, 8am to 11am</option><option value="Midday (11am–2pm)">Midday, 11am to 2pm</option><option value="Afternoon (2pm–5pm)">Afternoon, 2pm to 5pm</option><option value="Evening (5pm–7pm)">Evening, 5pm to 7pm</option></select></div>
       </div>
       <div class="nf-field"><label for="vw-name">Full name</label><input type="text" id="vw-name" autocomplete="name"/><div class="nf-err" id="vw-name-e" role="alert"></div></div>
       <div class="nf-field" id="vw-phone-f"><label for="vw-phone">Phone</label><input type="tel" id="vw-phone" inputmode="tel" autocomplete="tel" placeholder="07XX XXX XXX"/><div class="nf-err" id="vw-phone-e" role="alert"></div></div>
@@ -762,7 +762,7 @@ function sidebarHtml(){
       <div id="q-fields"${known?' hidden':''}>
         <div class="nf-field"><label for="q-name">Full name</label><input id="q-name" type="text" autocomplete="name"/><div class="nf-err" id="q-name-e" role="alert"></div></div>
         ${hidden?'':`<div class="nf-field"><label for="q-phone">Phone</label><input id="q-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="07XX XXX XXX"/><div class="nf-err" id="q-phone-e" role="alert"></div></div>`}
-        <details class="more"><summary>Add email (optional)</summary><div class="nf-field"><label for="q-email">Email</label><input id="q-email" type="email" autocomplete="email"/><div class="nf-err" id="q-email-e" role="alert"></div></div></details>
+        <details class="more"><summary>Add email (optional)</summary><div class="nf-field"><label for="q-email">Email</label><input id="q-email" type="email" autocomplete="email"/><div class="nf-err" id="q-email-e" role="alert"></div></div><label class="nf-check" for="q-notify"><input type="checkbox" id="q-notify" checked/>Email me when the seller replies</label></details>
       </div>
       <div class="nf-field"><label for="q-msg">Message</label><div class="qchips" role="group" aria-label="Quick messages">${QMSG.map((m,i)=>`<button type="button" class="qchip" data-act="qmsg" data-i="${i}">${escHtml(m)}</button>`).join('')}</div><textarea id="q-msg" maxlength="1000"></textarea></div>
       <div class="hp" aria-hidden="true"><label for="q-web">Leave empty</label><input id="q-web" tabindex="-1" autocomplete="off"/></div>
@@ -1087,6 +1087,8 @@ async function postEnquiry(x,kind){
   const h={'Content-Type':'application/json',apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY};
   fetch(`${EDGE_URL}/send-notification-email`,{method:'POST',headers:h,body:JSON.stringify({type:'new_buyer_enquiry',buyerName:x.name,buyerPhone:x.phone,buyerEmail:x.email||null,message:x.message,listingId:P.id,listingTitle:P.title})}).catch(()=>{});
   fetch(`${EDGE_URL}/send-sms-alert`,{method:'POST',headers:h,body:JSON.stringify({type:'new_enquiry',listingId:P.id,buyerName:x.name,messagePreview:x.message,listingTitle:P.title})}).catch(()=>{});
+  lss('nk_last_listing_title_'+P.id,P.title);   // lets the chat widget name this conversation instantly
+  if(x.email&&x.notify!==false){try{db.from('buyer_contacts').upsert({buyer_token:token,full_name:x.name,email:x.email,phone:x.phone||null,notify_email:true,updated_at:new Date().toISOString()},{onConflict:'buyer_token'}).then(()=>{},()=>{})}catch(e){}}
   track(kind==='viewing'?'viewing_request':'message_sent');
   return {error:null};
 }
@@ -1103,7 +1105,7 @@ async function sendEnquiry(){
   if(needNet())return;
   const unit=$('q-unit')&&$('q-unit').value;if(unit)message=`Interested in: ${unit}. ${message}`;
   const btn=$('q-send');btn.disabled=true;btn.innerHTML='<span class="spin"></span>Sending…';
-  let r;try{r=await postEnquiry({name,phone,email,message},'form')}catch(e){r={error:e}}
+  let r;try{r=await postEnquiry({name,phone,email,message,notify:!$('q-notify')||$('q-notify').checked},'form')}catch(e){r={error:e}}
   btn.disabled=false;btn.textContent='Send message';
   if(r.error){if(isNetErr(r.error))showNet("You're offline. Your message is kept, so try again when you're back online.");$('q-banner').textContent=enquiryFailure(r.error);return}
   showSent(false);   // the chat opens only when the buyer taps "Open conversation", so two layers never compete
@@ -1133,12 +1135,13 @@ async function sendViewing(){
   if($('vw-web').value){done();return}
   if(cooling()){$('vw-banner').textContent=COOLDOWN;return}
   if(needNet())return;
-  const when=new Date(date+'T00:00:00').toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long'});
-  const message=`Viewing request for "${P.title}" (ref ${shortRef()}): ${when}, ${slot}.${note?' Note: '+note+'.':''} Please confirm if this works.`;
+  const when=new Date(date+'T00:00:00').toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const message=`📅 Viewing requested\nDate: ${when}\nTime: ${slot}${note?`\nNotes: ${note}`:''}`;   // same wording the chat widget uses
   const btn=$('vw-send');btn.disabled=true;btn.innerHTML='<span class="spin"></span>Sending…';
   let r;try{r=await postEnquiry({name,phone,email:'',message},'viewing')}catch(e){r={error:e}}
   btn.disabled=false;btn.textContent='Send request';
   if(r.error){if(isNetErr(r.error))showNet("You're offline. Your request is kept, so try again when you're back online.");$('vw-banner').textContent=enquiryFailure(r.error);return}
+  try{await db.from('viewing_requests').insert({id:uuid(),listing_id:P.id,buyer_token:lsg('nk_buyer_'+P.id),buyer_name:name,buyer_phone:phone,requested_date:date,requested_time:slot,notes:note||null})}catch(e){}   // so the seller side and "Book another viewing" see it too
   done();
 }
 
@@ -1219,7 +1222,7 @@ document.addEventListener('click',e=>{
     case 'qmsg':{$('q-msg').value=baseMsg()+' '+QMSG[Number(t.dataset.i)];$('q-msg').focus({preventScroll:true});break}
     case 'again':{$('sent').hidden=true;$('enq').hidden=false;$('q-msg').value=baseMsg()+' ';if(!coarse())$('q-msg').focus({preventScroll:true});break}
     case 'edit-contact':{$('q-fields').hidden=false;$('q-sum').hidden=true;$('q-name').focus({preventScroll:true});break}
-    case 'chat':if(typeof NKGlobalChat!=='undefined')NKGlobalChat.registerAndOpen(P.id);break;
+    case 'chat':if(typeof NKGlobalChat!=='undefined')NKGlobalChat.registerAndOpen(P.id,lsg('nk_buyer_'+P.id));break;
     case 'viewing':track('viewing_open',{src:t.dataset.src||'unknown'});openViewing();break;case 'send-viewing':sendViewing();break;
     case 'verinfo':track('verify_info');openVerify(t.dataset.v==='1');break;case 'retry-net':retryNet();break;
     case 'pick':openContactSheet(t.dataset.label);break;
@@ -1266,6 +1269,7 @@ function tabbar(){const tb=document.querySelector('.nk-tabbar');if(!tb)return;
   tabbarSync();if('ResizeObserver' in window)new ResizeObserver(tabbarSync).observe(tb);
   addEventListener('resize',()=>{tabbarSync();measureCta()});addEventListener('load',()=>{tabbarSync();measureCta()});matchMedia('(max-width:900px)').addEventListener('change',()=>{tabbarSync();measureCta()})}
 function liftChat(){const skip=new Set(['toast','main-nav','mobile-nav','ctabar','lb','scrolltop-btn']);const scan=()=>[...document.body.children].forEach(el=>{
+  if(/^gcw-/.test(el.id)&&el.id!=='gcw-btn')return;   // the chat panel and its dialogs position themselves
   if(el.classList.contains('nk-chat-fab')||skip.has(el.id)||/^(SCRIPT|MAIN|FOOTER|NAV)$/.test(el.tagName)||/notify-modal-overlay|nk-sheet-overlay|nk-tabbar|ctabar/.test(el.className))return;
   const cs=getComputedStyle(el);if(cs.position!=='fixed'||cs.bottom==='auto'||cs.right==='auto')return;
   if(/chat|help|support/i.test((el.textContent+' '+(el.getAttribute('aria-label')||'')+' '+el.id+' '+el.className).slice(0,400)))el.classList.add('nk-chat-fab')});
