@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Post a Listing — Nyumba254</title>
+<meta name="robots" content="noindex,follow"/>
+<meta name="theme-color" content="#0F6E56"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+<link rel="icon" href="/favicon.ico" sizes="any"/><link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96"/><link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--green:#0F6E56;--green-light:#E1F5EE;--green-mid:#1D9E75;--green-dark:#085041;--red:#C53030;--red-light:#FFF5F5;--text:#1a1a18;--text-2:#4a4a46;--text-3:#6b6a63;--border:#e0ded8;--surface:#f7f6f2;--white:#fff;--radius:10px;--radius-lg:16px}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;color:var(--text);background:var(--surface);font-size:15px;line-height:1.6}
+a{text-decoration:none;color:inherit}button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}input,select,textarea{font-family:inherit}
+[hidden]{display:none!important}:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.skip-link{position:absolute;left:-9999px;top:0;background:var(--green);color:#fff;padding:10px 18px;z-index:100001}.skip-link:focus{left:0}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:64px;background:var(--white);border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:10px;font-family:'Playfair Display',serif;font-size:20px;color:var(--green-dark)}
+.logo img{height:40px;width:40px;border-radius:22%;box-shadow:0 0 0 1px rgba(0,0,0,.08)}
+.nav-right{display:flex;align-items:center;gap:8px}.nav-link{font-size:14px;color:var(--text-2);padding:8px 14px;border-radius:var(--radius);min-height:40px;display:inline-flex;align-items:center}.nav-link:hover{background:var(--surface)}
+.page-wrap{max-width:860px;margin:0 auto;padding:36px 24px 60px}
+.kicker{text-align:center;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--green-dark);margin-bottom:8px}
+.page-title{text-align:center;font-family:'Playfair Display',serif;font-size:30px;margin-bottom:6px}
+.page-sub{text-align:center;font-size:13.5px;color:var(--text-3);margin-bottom:22px}
+.badge-strip{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px}
+.badge-pill{font-size:12px;font-weight:600;color:var(--text-2);background:#fff;border:1px solid var(--border);padding:6px 13px;border-radius:20px}
+.save-status{text-align:center;font-size:11.5px;color:var(--text-3);margin-bottom:14px;min-height:18px}
+.steps-bar{display:flex;background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 24px 14px}
+.step-item{display:flex;flex-direction:column;align-items:center;gap:8px;flex:1}
+.step-dot{width:44px;height:44px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;transition:all .25s}
+.step-dot svg{width:19px;height:19px;stroke:var(--text-3);fill:none;stroke-width:2}
+.step-dot.active{background:var(--green-dark)}.step-dot.active svg{stroke:#fff}.step-dot.done{background:var(--green-light)}.step-dot.done svg{stroke:var(--green)}
+.step-label{font-size:12.5px;color:var(--text-3);font-weight:500}.step-label.active{color:var(--green-dark);font-weight:700}.step-label.done{color:var(--green);font-weight:600}
+.track{height:4px;background:var(--border);border-radius:3px;margin:14px 0 20px;overflow:hidden}.track div{height:100%;background:var(--green);transition:width .3s}
+.form-card{background:#fff;border-radius:var(--radius-lg);border:1px solid var(--border);padding:30px;margin-bottom:18px}
+.form-card h2{font-size:18px;font-weight:600;margin-bottom:6px}.form-card h2 .opt{font-size:12px;font-weight:400;color:var(--text-3)}
+.hint{font-size:13px;color:var(--text-3);margin-bottom:22px}
+.field{margin-bottom:18px}.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:6px}.field label .req{color:var(--red)}.field label .opt{font-size:11.5px;font-weight:400;color:var(--text-3)}
+.field input,.field select,.field textarea{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:14px;background:var(--surface);outline:none;transition:border-color .15s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--green);background:#fff}
+.field [aria-invalid="true"]{border-color:var(--red);background:var(--red-light)}
+.field textarea{resize:vertical;min-height:100px;line-height:1.6}.field select:disabled{opacity:.6}
+.field-hint{font-size:12px;color:var(--text-3);margin-top:5px}.field-error{font-size:12px;color:var(--red);margin-top:5px}.field-error:empty{display:none}
+.row{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.linkbtn{font-size:12.5px;font-weight:600;color:var(--green);min-height:32px;padding:0 2px}.linkbtn:hover{text-decoration:underline}
+.cat-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.cat-option{border:2px solid var(--border);border-radius:var(--radius-lg);padding:18px 14px;cursor:pointer;background:#fff;position:relative;text-align:left;width:100%}
+.cat-option:hover{border-color:var(--green-mid)}.cat-option[aria-checked="true"]{border-color:var(--green);background:var(--green-light)}
+.cat-option .tick{position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;display:none;align-items:center;justify-content:center;font-size:12px}.cat-option[aria-checked="true"] .tick{display:flex}
+.cat-ico{width:38px;height:38px;border-radius:9px;background:var(--surface);display:flex;align-items:center;justify-content:center;margin-bottom:10px}.cat-ico svg{width:18px;height:18px;stroke:var(--text-2);fill:none;stroke-width:1.8}
+.cat-option[aria-checked="true"] .cat-ico svg{stroke:var(--green)}
+.cat-title{font-size:14.5px;font-weight:700}.cat-desc{font-size:12px;color:var(--text-3);line-height:1.4}
+.map-frame{border-radius:var(--radius-lg);overflow:hidden;border:1.5px solid var(--border);margin-top:10px}#location-map{height:280px;background:var(--surface)}
+.map-tools{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-alt{padding:12px;border-radius:var(--radius);font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border:1.5px solid var(--border);background:#fff;color:var(--text-2)}
+.btn-alt:hover{border-color:var(--green);color:var(--green-dark);background:var(--green-light)}.btn-alt.dark{background:var(--green-dark);color:#fff;border-color:var(--green-dark)}.btn-alt.dark:hover{background:var(--green)}
+.pin-status{font-size:12.5px;margin-top:8px;color:var(--text-3)}.pin-status.ok{color:var(--green-dark);font-weight:600}
+.photo-drop{border:2px dashed var(--border);border-radius:var(--radius-lg);padding:32px 24px;text-align:center;cursor:pointer;background:var(--surface);display:block}
+.photo-drop:hover,.photo-drop.drag{border-color:var(--green);background:var(--green-light)}.photo-drop p{font-size:14px;margin-bottom:4px}.photo-drop span{font-size:12px;color:var(--text-3)}
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-top:16px}
+.thumb{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:1.5px solid var(--border)}.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb .rm{position:absolute;top:4px;right:4px;width:28px;height:28px;background:rgba(0,0,0,.65);color:#fff;border-radius:50%;font-size:16px}
+.thumb .cv{position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,.6);color:#fff;font-size:11px;padding:3px 8px;border-radius:4px}.thumb .cv.on{background:var(--green)}
+.thumb.bad{border-color:var(--red)}.thumb .fail{position:absolute;inset:0;background:rgba(197,48,48,.75);color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;text-align:center;padding:4px}
+.prog{margin-top:10px;height:4px;background:var(--border);border-radius:2px;overflow:hidden}.prog div{height:100%;background:var(--green);width:0;transition:width .3s}
+.notice{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;font-size:12.5px;color:var(--text-2);line-height:1.6;margin-top:14px}
+.amenity-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.amenity-chip{display:flex;align-items:center;gap:8px;padding:11px 12px;border:1.5px solid var(--border);border-radius:var(--radius);cursor:pointer;font-size:13.5px;color:var(--text-2);background:var(--surface);min-height:44px}
+.amenity-chip.checked{border-color:var(--green);background:var(--green-light);color:var(--green-dark);font-weight:600}.amenity-chip input{width:16px;height:16px;accent-color:var(--green)}
+.amenity-chip .x{margin-left:auto;font-weight:700;color:var(--text-3);min-width:28px;min-height:28px}
+.tier-row{border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:12px;background:var(--surface)}
+.tier-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:13px;font-weight:700;color:var(--green-dark)}
+.tier-rm{width:30px;height:30px;border-radius:50%;background:#fff;border:1.5px solid var(--border);font-size:15px}.tier-rm:hover{border-color:var(--red);color:var(--red)}
+.tier-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px}
+.tier-row label{display:block;font-size:11.5px;font-weight:600;color:var(--text-2);margin-bottom:5px}
+.tier-row input,.tier-row select{width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;background:#fff;outline:none}
+.btn-add{width:100%;padding:12px;border-radius:var(--radius);border:1.5px dashed var(--green);background:var(--green-light);color:var(--green-dark);font-size:14px;font-weight:600;min-height:44px}
+.form-actions{display:flex;gap:12px;justify-content:space-between;align-items:center;margin-top:22px}
+.btn-back{padding:11px 22px;border-radius:var(--radius);border:1.5px solid var(--border);background:#fff;font-size:14px;font-weight:500;color:var(--text-2);min-height:44px}
+.btn-next,.btn-submit{padding:11px 28px;border-radius:var(--radius);background:var(--green);color:#fff;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;min-height:44px}
+.btn-next:hover,.btn-submit:hover{background:var(--green-dark)}.btn-submit{font-size:15px;padding:13px 30px}.btn-next:disabled,.btn-submit:disabled{opacity:.6;cursor:not-allowed}
+.review-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--green-dark);margin:18px 0 6px;display:flex;justify-content:space-between;align-items:center}.review-title:first-child{margin-top:0}
+.sum{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);font-size:14px}.sum span:first-child{color:var(--text-2);flex-shrink:0}.sum strong{text-align:right;overflow-wrap:anywhere}
+.rev-photos{display:flex;gap:8px;overflow-x:auto;padding:6px 0}.rev-photos img{width:64px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0}
+.box{border-radius:var(--radius);padding:14px 16px;font-size:13px;line-height:1.6;margin-bottom:16px;background:var(--surface);border:1px solid var(--border);color:var(--text-2)}.box.ok{background:var(--green-light);border-color:var(--green-mid);color:var(--green-dark)}
+.success-screen{text-align:center;padding:50px 24px}
+.success-icon{width:72px;height:72px;background:var(--green-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 22px}.success-icon svg{width:36px;height:36px;stroke:var(--green);fill:none;stroke-width:2.5}
+.success-screen h2{font-family:'Playfair Display',serif;font-size:28px;margin-bottom:10px}.success-screen>p{font-size:15px;color:var(--text-2);max-width:460px;margin:0 auto 20px}
+.next-list{text-align:left;max-width:440px;margin:0 auto 24px;font-size:14px;color:var(--text-2)}.next-list li{margin:0 0 8px 18px}
+.success-actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}.success-actions a,.success-actions button{padding:11px 22px;border-radius:var(--radius);font-size:14px;font-weight:600;border:1.5px solid var(--border);min-height:44px;display:inline-flex;align-items:center}.success-actions .p{background:var(--green);color:#fff;border-color:var(--green)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,80px);z-index:9999;background:var(--text);color:#fff;padding:12px 20px;border-radius:var(--radius);font-size:14px;opacity:0;transition:all .3s;max-width:min(92vw,380px);text-align:center;pointer-events:none}
+.toast.show{transform:translate(-50%,0);opacity:1}.toast.error{background:var(--red)}.toast.success{background:var(--green-dark)}
+.overlay{position:fixed;inset:0;background:rgba(15,15,12,.6);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px}.overlay.show{display:flex}
+.modal{background:#fff;border-radius:var(--radius-lg);max-width:420px;width:100%;padding:28px;text-align:center}.modal h2{margin-bottom:8px}.modal p{font-size:13px;color:var(--text-3);margin-bottom:18px}.modal .acts{display:flex;gap:10px}.modal .acts button{flex:1;justify-content:center}
+@media(max-width:768px){nav{padding:0 16px}.page-wrap{padding:22px 16px 40px}.form-card{padding:20px 16px}.grid-2,.grid-3{grid-template-columns:1fr}.cat-grid{grid-template-columns:1fr 1fr}.steps-bar{padding:14px 8px 10px}.step-label{display:none}.tier-grid{grid-template-columns:1fr 1fr}
+.field input,.field select,.field textarea,.tier-row input,.tier-row select{font-size:16px}
+.form-actions{position:sticky;bottom:0;background:var(--surface);padding:12px 0 calc(12px + env(safe-area-inset-bottom,0px));margin:16px 0 0;z-index:20;border-top:1px solid var(--border)}.toast{bottom:90px}}
+@media(max-width:480px){.cat-grid{grid-template-columns:1fr}}
+</style>
+<link rel="stylesheet" href="/theme.css"/><script src="/theme.js"></script>
+<link rel="manifest" href="/manifest.webmanifest"><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script></head>
+<body>
+<a href="#main" class="skip-link">Skip to form</a>
+<nav aria-label="Main">
+  <a href="/" class="logo"><img src="/logo-icon.png" alt="" width="40" height="40"/>Nyumba254</a>
+  <div class="nav-right"><a href="https://wa.me/254739348560" target="_blank" rel="noopener" class="nav-link">Need help?</a><a href="/listings" class="nav-link">Browse listings</a></div>
+</nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<main class="page-wrap" id="main">
+  <div class="kicker" id="page-kicker">Getting started takes just a few minutes</div>
+  <h1 class="page-title">List your property</h1>
+  <p class="page-sub">Reviewed by our team before going live, with buyer enquiries handled right here on Nyumba254.</p>
+  <div class="badge-strip"><span class="badge-pill">Reviewed before going live</span><span class="badge-pill">Photos required</span><span class="badge-pill">Draft auto-saves</span></div>
+  <div class="save-status" id="save-status" aria-live="polite"></div>
+
+  <div id="flow">
+  <div class="steps-bar" id="steps-bar" role="list" aria-label="Progress"></div>
+  <div class="track"><div id="track"></div></div>
+  <div id="plan-banner" hidden></div>
+
+  <!-- 1 TYPE -->
+  <section id="step-1" aria-labelledby="h-1">
+    <div class="form-card">
+      <h2 id="h-1" tabindex="-1">What type of property are you listing?</h2>
+      <p class="hint">Choose the closest match so the next steps ask for the right details.</p>
+      <div class="cat-grid" role="radiogroup" aria-label="Property type" id="cat-grid"></div>
+    </div>
+  </section>
+
+  <!-- 2 BASICS -->
+  <section id="step-2" hidden aria-labelledby="h-2">
+    <div class="form-card">
+      <h2 id="h-2" tabindex="-1">General information</h2>
+      <p class="hint">The core details buyers use to decide whether the property fits.</p>
+      <div class="field"><div class="row"><label for="title">Property title <span class="req">*</span></label><button type="button" class="linkbtn" data-act="suggest-title">Suggest a title</button></div>
+        <input id="title" maxlength="120" placeholder="e.g. 2 bedroom apartment in Kilimani" autocomplete="off"/><div class="field-hint">Specific titles get more enquiries.</div><div class="field-error" id="e-title" role="alert"></div></div>
+      <div class="field"><label for="description">Description <span class="req">*</span></label>
+        <textarea id="description" rows="5" maxlength="2000" placeholder="Room sizes, security, water and power, house rules, nearby landmarks…"></textarea>
+        <div class="row"><div class="field-hint">Don't add phone numbers or links; contact details come in the last step.</div><div class="field-hint" id="desc-count">0 / 30 minimum</div></div><div class="field-error" id="e-description" role="alert"></div></div>
+      <div class="grid-2">
+        <div class="field"><div class="row"><label for="county">County <span class="req">*</span></label><button type="button" class="linkbtn" data-act="locate">Use my location</button></div><select id="county"></select><div class="field-error" id="e-county" role="alert"></div></div>
+        <div class="field"><label for="area">Area <span class="req">*</span></label><select id="area" disabled></select><div class="field-error" id="e-area" role="alert"></div></div>
+      </div>
+      <div class="field" id="area-custom-f" hidden><label for="area_custom">Type your area <span class="req">*</span></label><input id="area_custom" placeholder="e.g. Nyahera" maxlength="60"/><div class="field-error" id="e-area_custom" role="alert"></div></div>
+      <div class="field"><label for="address">Address or landmark <span class="req">*</span></label><input id="address" placeholder="e.g. Ngong Road, off Argwings Kodhek Road" maxlength="140"/><div class="field-hint">This appears on your listing card and page, so use a street or landmark rather than a house number.</div><div class="field-error" id="e-address" role="alert"></div></div>
+      <div class="field">
+        <label>Exact pin <span class="opt">optional</span></label>
+        <div class="field-hint" style="margin:-2px 0 8px">The map moves to your area as you fill in the address. Add an exact pin if you want buyers to find the property more easily. An exact pin is visible to everyone.</div>
+        <div class="map-tools"><button type="button" class="btn-alt dark" data-act="drop-pin">Pin exact location here</button><button type="button" class="btn-alt" data-act="gps">Use my GPS (be at the property)</button></div>
+        <div class="map-frame"><div id="location-map" role="application" aria-label="Map"></div></div>
+        <div class="pin-status" id="pin-status"></div>
+        <button type="button" class="linkbtn" id="clear-pin" data-act="clear-pin" hidden>Remove pin</button>
+      </div>
+      <div class="grid-2" id="price-row">
+        <div class="field" id="price-f"><label for="price" id="price-label">Price (KES) <span class="req">*</span></label><input id="price" inputmode="numeric" autocomplete="off" placeholder="e.g. 25,000"/><div class="field-hint" id="price-hint"></div><div class="field-error" id="e-price" role="alert"></div></div>
+        <div class="field" id="freq-f"><label for="price_frequency">Payment frequency <span class="req">*</span></label><select id="price_frequency"></select></div>
+        <div class="field" id="lease-f" hidden><label for="comm_lease_type">Lease or sale <span class="req">*</span></label><select id="comm_lease_type"><option value="lease">Lease (monthly rent)</option><option value="sale">For sale</option></select></div>
+      </div>
+      <div class="grid-3">
+        <div class="field" id="deposit-f"><label for="deposit">Deposit <span class="opt">optional</span></label><select id="deposit"><option value="">Not specified</option><option value="0">No deposit</option><option value="1">1 month</option><option value="2">2 months</option><option value="3">3 months</option><option value="4">4 months</option><option value="5">5 months</option><option value="6">6 months</option></select></div>
+        <div class="field"><label for="available_from">Available from <span class="opt">optional</span></label><input type="date" id="available_from"/></div>
+        <div class="field"><label for="listed_by">Listed by <span class="opt">optional</span></label><select id="listed_by"><option value="">Select</option><option value="owner">Owner</option><option value="caretaker">Caretaker</option></select></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 DETAILS -->
+  <section id="step-3" hidden aria-labelledby="h-3">
+    <div class="form-card" data-group="standard">
+      <h2 id="h-3" tabindex="-1"><span id="details-title">Property details</span></h2>
+      <p class="hint">Structured details make the listing easier to review and match.</p>
+      <div class="grid-2">
+        <div class="field"><label for="std_bedrooms">Bedrooms <span class="req">*</span></label><select id="std_bedrooms"><option value="">Select</option><option value="0">Bedsitter / studio</option><option value="1">1 bedroom</option><option value="2">2 bedrooms</option><option value="3">3 bedrooms</option><option value="4">4 bedrooms</option><option value="5">5+ bedrooms</option></select><div class="field-error" id="e-std_bedrooms" role="alert"></div></div>
+        <div class="field"><label for="std_bathrooms">Bathrooms <span class="req">*</span></label><input type="number" id="std_bathrooms" min="0" max="20" inputmode="numeric"/><div class="field-error" id="e-std_bathrooms" role="alert"></div></div>
+        <div class="field"><label for="std_size">Floor area <span class="opt">optional, m²</span></label><input type="number" id="std_size" min="0" inputmode="numeric"/></div>
+        <div class="field"><label for="std_furnished">Furnished <span class="req">*</span></label><select id="std_furnished"><option value="">Select…</option><option value="yes">Fully furnished</option><option value="partial">Partly furnished</option><option value="no">Unfurnished</option></select><div class="field-error" id="e-std_furnished" role="alert"></div></div>
+        <div class="field"><label for="std_parking">Parking <span class="req">*</span></label><select id="std_parking"><option value="">Select…</option><option value="private">Private parking</option><option value="shared">Shared compound parking</option><option value="street">Street parking only</option><option value="none">No parking</option></select><div class="field-error" id="e-std_parking" role="alert"></div></div>
+        <div class="field"><label for="std_security">Security <span class="req">*</span></label><select id="std_security"><option value="">Select…</option><option value="gated_guard_cctv">Gated, guarded and CCTV</option><option value="gated_guard">Gated with guard</option><option value="gated_cctv">Gated with CCTV, no guard</option><option value="gated">Gated, no guard</option><option value="cctv">CCTV only</option><option value="none">No dedicated security</option></select><div class="field-error" id="e-std_security" role="alert"></div></div>
+      </div>
+      <div class="field" style="margin-top:18px"><label for="std_rules">House rules <span class="opt">optional, one per line</span></label><textarea id="std_rules" rows="3" maxlength="500" placeholder="No loud music&#10;Visitors leave by 10PM"></textarea></div>
+      <div class="field" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)"><label style="display:flex;gap:10px;align-items:flex-start;font-weight:400"><input type="checkbox" id="std_has_units" style="width:18px;height:18px;margin-top:3px;accent-color:var(--green)"/>This property has several similar units I want to track separately (for example a block with several doors)</label></div>
+      <div id="std-units" hidden><div id="tiers-standard"></div><button type="button" class="btn-add" data-act="add-tier">+ Add unit type</button></div>
+    </div>
+    <div class="form-card" data-group="boarding" hidden>
+      <h2>Boarding house details</h2><p class="hint">Add each room type with its own price and availability. The starting price and total spaces are worked out from these.</p>
+      <div class="grid-2">
+        <div class="field"><label for="board_gender">Residents allowed <span class="req">*</span></label><select id="board_gender"><option value="mixed">Mixed</option><option value="male">Male only</option><option value="female">Female only</option></select></div>
+        <div class="field"><label for="board_institution">Nearest institution <span class="opt">optional</span></label><input id="board_institution" placeholder="e.g. Maseno University, 15 min walk" maxlength="100"/></div>
+      </div>
+      <div id="tiers-boarding"></div><button type="button" class="btn-add" data-act="add-tier">+ Add room type</button>
+    </div>
+    <div class="form-card" data-group="airbnb" hidden>
+      <h2>Holiday rental details</h2><p class="hint">Guests care most about capacity, house rules and check-in.</p>
+      <div class="grid-3">
+        <div class="field"><label for="air_guests">Guests <span class="req">*</span></label><input type="number" id="air_guests" min="1" inputmode="numeric"/><div class="field-error" id="e-air_guests" role="alert"></div></div>
+        <div class="field"><label for="air_bedrooms">Bedrooms <span class="req">*</span></label><input type="number" id="air_bedrooms" min="0" inputmode="numeric"/><div class="field-error" id="e-air_bedrooms" role="alert"></div></div>
+        <div class="field"><label for="air_bathrooms">Bathrooms <span class="req">*</span></label><input type="number" id="air_bathrooms" min="0" inputmode="numeric"/><div class="field-error" id="e-air_bathrooms" role="alert"></div></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label for="air_min_stay">Minimum stay <span class="req">*</span></label><select id="air_min_stay"><option value="1">1 night</option><option value="2">2 nights</option><option value="3">3 nights</option><option value="7">1 week</option></select></div>
+        <div class="field"><label for="air_checkin">Check-in / check-out <span class="opt">optional</span></label><input id="air_checkin" placeholder="Check-in 2PM, check-out 10AM" maxlength="80"/></div>
+      </div>
+      <div class="field"><label for="air_rules">House rules <span class="opt">optional</span></label><textarea id="air_rules" rows="3" maxlength="500" placeholder="One rule per line, e.g.&#10;No parties&#10;Quiet after 10PM"></textarea></div>
+    </div>
+    <div class="form-card" data-group="commercial" hidden>
+      <h2>Shop / office details</h2><p class="hint">Business tenants care about space, access and fit-out.</p>
+      <div class="grid-2">
+        <div class="field"><label for="comm_type">Property type <span class="req">*</span></label><select id="comm_type"><option value="">Select…</option><option value="shop">Retail shop</option><option value="office">Office space</option><option value="warehouse">Warehouse / godown</option><option value="showroom">Showroom</option></select><div class="field-error" id="e-comm_type" role="alert"></div></div>
+        <div class="field"><label for="comm_size">Floor area (m²) <span class="req">*</span></label><input type="number" id="comm_size" min="1" inputmode="numeric"/><div class="field-error" id="e-comm_size" role="alert"></div></div>
+        <div class="field"><label for="comm_parking">Parking <span class="req">*</span></label><select id="comm_parking"><option value="">Select…</option><option value="private">Private parking</option><option value="shared">Shared compound parking</option><option value="street">Street parking only</option><option value="none">No parking</option></select><div class="field-error" id="e-comm_parking" role="alert"></div></div>
+        <div class="field"><label for="comm_condition">Fit-out <span class="req">*</span></label><select id="comm_condition"><option value="">Select…</option><option value="shell">Shell / bare</option><option value="fitted">Fitted, ready to use</option></select><div class="field-error" id="e-comm_condition" role="alert"></div></div>
+        <div class="field"><label for="comm_units">Number of units <span class="opt">optional</span></label><input type="number" id="comm_units" min="1" inputmode="numeric"/></div>
+        <div class="field"><label for="comm_frontage">Frontage <span class="opt">optional</span></label><input id="comm_frontage" maxlength="100" placeholder="Main road frontage"/></div>
+      </div>
+    </div>
+    <div class="form-card">
+      <h2>Amenities</h2><p class="hint">Select everything that applies.</p>
+      <div class="amenity-grid" id="amenity-grid"></div>
+      <div style="display:flex;gap:10px;margin-top:14px"><input id="custom-am" class="field" style="flex:1;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--surface);font-size:14px" placeholder="Something else? e.g. Borehole water" maxlength="40" aria-label="Custom amenity"/><button type="button" class="btn-add" style="width:auto;padding:0 18px" data-act="add-am">Add</button></div>
+      <div class="amenity-grid" id="custom-grid" style="margin-top:10px"></div>
+    </div>
+  </section>
+
+  <!-- 4 PHOTOS -->
+  <section id="step-4" hidden aria-labelledby="h-4">
+    <div class="form-card">
+      <h2 id="h-4" tabindex="-1">Photos</h2><p class="hint">Clear, current photos get reviewed faster. Add at least 5 if you can: living area, bedroom, bathroom, kitchen and the outside.</p>
+      <div class="row" style="margin-bottom:8px"><strong style="font-size:13px">Property photos</strong><span id="photo-count" style="font-size:12px;color:var(--text-3)">0 / 10</span></div>
+      <label class="photo-drop" id="drop" for="file-input"><p><strong>+ Add photos</strong></p><span>Tap, browse or drag and drop. JPG, PNG or WebP up to 25 MB each. We resize them for you.<br>Tap “Set cover” on any photo to choose the cover.</span></label>
+      <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp" multiple class="sr-only"/>
+      <button type="button" class="btn-alt" style="width:100%;margin-top:10px" data-act="camera">Take a photo</button>
+      <input type="file" id="camera-input" accept="image/*" capture="environment" class="sr-only"/>
+      <div class="prog" id="prog" hidden><div id="prog-bar"></div></div>
+      <div class="photo-grid" id="photo-grid"></div><div class="field-error" id="photo-skip" role="alert"></div>
+      <div class="notice" id="photo-notice">Add at least one photo to continue.</div>
+    </div>
+    <div class="form-card">
+      <h2>Video walkthrough <span class="opt">optional</span></h2><p class="hint">A short video builds trust faster than photos alone.</p>
+      <div class="field"><label for="video_url">Video link</label><input type="url" id="video_url" placeholder="TikTok, Instagram, YouTube, Vimeo or a direct video link"/><div class="field-error" id="e-video_url" role="alert"></div></div>
+      <div class="field" id="video-file-f" style="padding-top:14px;border-top:1px dashed var(--border)"><label>Or upload a short video <span class="opt">up to 60 seconds</span></label>
+        <div class="map-tools"><button type="button" class="btn-alt" data-act="vid-up">Upload video</button><button type="button" class="btn-alt" data-act="vid-rec">Record video</button></div>
+        <input type="file" id="vid-up" accept="video/*" class="sr-only"/><input type="file" id="vid-rec" accept="video/*" capture="environment" class="sr-only"/>
+        <div class="field-hint" id="video-hint">Longer video? Email it to <a href="mailto:hellonyumba254@gmail.com" style="color:var(--green-dark);font-weight:600">hellonyumba254@gmail.com</a> and we'll add it for you.</div>
+        <div class="field-hint" id="video-status" aria-live="polite"></div></div>
+    </div>
+  </section>
+
+  <!-- 5 CONTACT + REVIEW -->
+  <section id="step-5" hidden aria-labelledby="h-5">
+    <div class="form-card">
+      <h2 id="h-5" tabindex="-1">Contact information</h2><p class="hint">Used to verify the listing and pass on buyer enquiries.</p>
+      <div class="box" id="guest-note" hidden>We'll create your free Nyumba254 seller account from these details. After you submit, we'll email you a link to set a password so you can track this listing and reply to buyers.</div>
+      <div class="field"><label for="contact_name">Full name <span class="req">*</span></label><input id="contact_name" autocomplete="name"/><div class="field-error" id="e-contact_name" role="alert"></div></div>
+      <div class="grid-2">
+        <div class="field"><label for="phone">Phone <span class="req">*</span></label><input type="tel" id="phone" inputmode="tel" autocomplete="tel" placeholder="0712 345 678"/><div class="field-error" id="e-phone" role="alert"></div></div>
+        <div class="field"><label for="whatsapp">WhatsApp <span class="opt">blank if same as phone</span></label><input type="tel" id="whatsapp" inputmode="tel"/><div class="field-error" id="e-whatsapp" role="alert"></div></div>
+      </div>
+      <div class="field"><label for="contact_email">Email <span class="req">*</span></label><input type="email" id="contact_email" autocomplete="email" placeholder="name@example.com"/><div class="field-error" id="e-contact_email" role="alert"></div>
+        <div class="field-error" id="email-exists" hidden style="color:var(--green-dark)">You already have a Nyumba254 account with this email. <button type="button" class="linkbtn" data-act="signin">Sign in to continue</button> (your progress is saved) or use a different email.</div></div>
+      <label style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--text-2);cursor:pointer"><input type="checkbox" id="contact_hidden" style="width:18px;height:18px;margin-top:2px;accent-color:var(--green)"/>Keep buyer contact on Nyumba254 chat only (hides Call and WhatsApp). This helps prevent scams.</label>
+    </div>
+    <div class="form-card">
+      <h2>Review your listing</h2><p class="hint">Check everything before submitting. You can edit after posting too.</p>
+      <div id="fee-box"></div><div id="review"></div>
+      <div class="field" style="margin-top:20px"><label style="display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:13px;color:var(--text-2);cursor:pointer"><input type="checkbox" id="agree" style="width:18px;height:18px;margin-top:1px;accent-color:var(--green)"/><span>I agree to the <a href="/terms" target="_blank" rel="noopener" style="color:var(--green);font-weight:600;text-decoration:underline">Terms</a> and <a href="/privacy" target="_blank" rel="noopener" style="color:var(--green);font-weight:600;text-decoration:underline">Privacy Policy</a>, and confirm the information is accurate. <span style="color:var(--red)">*</span></span></label><div class="field-error" id="e-agree" role="alert"></div></div>
+      <div class="field-error" id="submit-error" role="alert" style="margin-top:14px;font-size:13px"></div>
+    </div>
+  </section>
+
+  <div class="form-actions" id="actions"><button type="button" class="btn-back" id="btn-back" data-act="back">Back</button>
+    <div style="display:flex;align-items:center;gap:12px"><span id="step-count" style="font-size:13px;color:var(--text-3)"></span>
+    <button type="button" class="btn-next" id="btn-next" data-act="next">Continue</button><button type="button" class="btn-submit" id="btn-submit" data-act="submit" hidden>Submit for review</button></div></div>
+  </div>
+
+  <section class="success-screen" id="success" hidden aria-live="polite">
+    <div class="success-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+    <h2 id="s-head">Listing submitted</h2><p id="s-msg"></p>
+    <ul class="next-list"><li>Our team reviews your listing, usually within a few hours.</li><li>You'll be notified when it goes live.</li><li id="s-pay"></li></ul>
+    <div class="success-actions" id="s-actions"></div>
+  </section>
+</main>
+
+<div class="overlay" id="resume" role="dialog" aria-modal="true" aria-labelledby="rs-t">
+  <div class="modal"><h2 id="rs-t">Welcome back</h2><p id="rs-text"></p><div class="acts"><button class="btn-back" data-act="fresh">Start fresh</button><button class="btn-next" data-act="resume">Continue draft</button></div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/nk-shared.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function(){'use strict';
+const $=id=>document.getElementById(id),qsa=(s,r)=>[...(r||document).querySelectorAll(s)];
+const esc=escHtml,val=id=>{const e=$(id);return e?e.value.trim():''},chk=id=>!!($(id)&&$(id).checked);
+const money=n=>'KES '+Number(n||0).toLocaleString('en-KE');
+const uuid=()=>crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2);
+
+/* ═══ CONFIG ═══ */
+const STEPS=[['Type','<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>'],['Basics','<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>'],['Details','<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>'],['Photos','<path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/>'],['Contact','<path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/>']];
+const CAT_INFO={apartment:['Flats, units and compounds','<rect x="4" y="3" width="16" height="18" rx="1"/><line x1="9" y1="17" x2="15" y2="17"/><line x1="9" y1="7" x2="9" y2="7.01"/><line x1="15" y1="7" x2="15" y2="7.01"/>'],house:['Standalone homes and yards','<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'],boarding:['Student rooms and bed spaces','<rect x="2" y="7" width="20" height="13" rx="1"/><path d="M2 11h20M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/>'],airbnb:['Short stays and furnished rentals','<polygon points="12 2 15 8.3 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 9 8.3 12 2"/>'],commercial:['Retail shops, offices and business spaces','<path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/>']};
+const FREQS={standard:[['month','Per month'],['once','One-time (for sale)']],boarding:[['month','Per month'],['term','Per term'],['semester','Per semester']],airbnb:[['night','Per night'],['week','Per week']]};
+const PRICE_HINT={standard:'Digits only. Choose the payment frequency alongside it.',airbnb:'The nightly or weekly rate shown to guests.',commercial:'Monthly lease rate, or the asking price if for sale.'};
+const LABEL={furnished:{yes:'Fully furnished',partial:'Partly furnished',no:'Unfurnished'},parking:{private:'Private',shared:'Shared compound',street:'Street only',none:'None'},security:{gated_guard_cctv:'Gated, guarded and CCTV',gated_guard:'Gated with guard',gated_cctv:'Gated with CCTV',gated:'Gated, no guard',cctv:'CCTV only',none:'None'}};
+const FREQ_SUFFIX={month:'/month',once:'',night:'/night',term:'/term',semester:'/semester',week:'/week'};
+const FIELD_IDS=['title','description','county','area','area_custom','address','price','price_frequency','comm_lease_type','deposit','available_from','listed_by','std_bathrooms','std_bedrooms','std_size','std_furnished','std_parking','std_security','board_gender','board_institution','air_guests','air_bedrooms','air_bathrooms','air_min_stay','air_checkin','air_rules','std_rules','comm_type','comm_size','comm_parking','comm_condition','comm_units','comm_frontage','video_url','contact_name','phone','whatsapp','contact_email'];
+const PS={sale_standard_pct:.1,rent_standard_pct:3,standard_min_fee:500,standard_max_fee:18000,standard_fee_per_unit:50,trial_days:14,bnb_basic_price:700,enforce_verification_general:0,unverified_listing_limit:2};
+const DRAFT_KEY='nk_post_listing_draft_v3';
+
+/* ═══ STATE ═══ */
+const S={step:1,max:1,cat:'apartment',amen:new Set(),custom:[],tiers:[],seq:0,pin:null,photos:[],cover:0,video:null,user:null,userName:'',first:true,cov:{rental:false,bnb:false},ready:false,busy:false,guestBlocked:false,
+  sub:{listingId:null,urls:{},unitsDone:false,photosDone:false,videoLinked:false}};
+const group=()=>(NK_CATEGORIES[S.cat]||{}).group;
+let toastT;function toast(m,k){const t=$('toast');t.textContent=m;t.className='toast show '+(k||'');clearTimeout(toastT);toastT=setTimeout(()=>t.className='toast',4200)}
+
+/* ═══ FIELD HELPERS ═══ */
+function fail(id,msg){const e=$('e-'+id),i=$(id);if(e)e.textContent=msg||'';if(i)i.setAttribute('aria-invalid',msg?'true':'false');return !msg}
+function clearErrors(root){qsa('.field-error',root).forEach(e=>{if(e.id.startsWith('e-'))e.textContent=''});qsa('[aria-invalid]',root).forEach(i=>i.setAttribute('aria-invalid','false'))}
+const digits=v=>String(v||'').replace(/\D/g,'');
+const priceVal=()=>parseInt(digits($('price').value),10)||0;
+function fmtPrice(el){const d=digits(el.value);const fromEnd=el.value.length-(el.selectionEnd??el.value.length);el.value=d?Number(d).toLocaleString('en-KE'):'';const p=Math.max(0,el.value.length-fromEnd);try{el.setSelectionRange(p,p)}catch(e){}}
+const freq=()=>group()==='commercial'?(val('comm_lease_type')==='sale'?'once':'month'):val('price_frequency');
+
+/* ═══ STEP BAR + NAVIGATION ═══ */
+function renderBar(){
+  $('steps-bar').innerHTML=STEPS.map(([n,ic],i)=>{const k=i+1,cls=k<S.step?'done':k===S.step?'active':'';const can=k<=S.max&&k!==S.step;
+    return `<div class="step-item" role="listitem"><button type="button" class="step-dot ${cls}" ${can?`data-act="go" data-n="${k}"`:'disabled'} aria-label="Step ${k}: ${n}${k<S.step?' (completed)':''}" ${k===S.step?'aria-current="step"':''}><svg viewBox="0 0 24 24" aria-hidden="true">${ic}</svg></button><div class="step-label ${cls}">${n}</div></div>`}).join('');
+  $('track').style.width=(S.step/5*100)+'%';$('step-count').textContent=`Step ${S.step} of 5 · ${STEPS[S.step-1][0]}`;
+  $('btn-back').hidden=S.step===1;$('btn-next').hidden=S.step===5;$('btn-submit').hidden=S.step!==5;
+}
+function show(n,push){
+  qsa('#flow section').forEach(s=>s.hidden=s.id!=='step-'+n);S.step=n;S.max=Math.max(S.max,n);renderBar();
+  if(n===5)renderReview();
+  if(map)setTimeout(()=>{map.invalidateSize();if(n===2)followAddress()},150);
+  window.scrollTo({top:0,behavior:'smooth'});const h=$('h-'+n);if(h)h.focus({preventScroll:true});
+  if(push)history.pushState({step:n},'');
+  saveDraftNow();
+}
+function go(n){
+  if(n<S.step)return show(n,true);
+  if(n===S.step+1){if(!validate(S.step))return;return show(n,true)}
+}
+window.addEventListener('popstate',e=>{const n=(e.state&&e.state.step)||1;if(n!==S.step&&$('success').hidden)show(Math.min(n,S.max),false)});
+
+/* ═══ VALIDATION ═══ */
+const PHONE_IN_TEXT=/(?:\+254|\b254|\b0)[\s-]?[17]\d{2}[\s-]?\d{3}[\s-]?\d{3}\b|https?:\/\/|www\./i;
+function validate(step,quiet){
+  let ok=true;const chkf=(id,test,msg)=>{const good=test(val(id));if(!quiet)fail(id,good?'':msg);else if(!good)ok=false;if(!good)ok=false;return good};
+  if(step===2){
+    chkf('title',v=>v.length>=6,'Enter a title of at least 6 characters');
+    chkf('description',v=>v.length>=30&&!PHONE_IN_TEXT.test(v),val('description').length<30?'Write at least 30 characters so buyers know what to expect':'Remove the phone number or link ("'+((val('description').match(PHONE_IN_TEXT)||[''])[0].trim())+'"). Contact details are collected in the last step');
+    chkf('county',v=>!!v,'Choose a county');
+    chkf('area',v=>!!v,'Choose an area');
+    if(val('area')==='__other__')chkf('area_custom',v=>v.length>1,'Type your area');
+    chkf('address',v=>v.length>2,'Enter a street, road or landmark');
+    if(group()!=='boarding')chkf('price',()=>priceVal()>0,'Enter a price');
+    
+  }
+  if(step===3){
+    const g=group(),n=id=>parseFloat(val(id))>=0&&val(id)!=='';
+    if(g==='standard'){chkf('std_bedrooms',v=>v!=='','Select bedrooms');chkf('std_bathrooms',()=>n('std_bathrooms'),'Enter bathrooms');chkf('std_furnished',v=>!!v,'Select furnishing');chkf('std_parking',v=>!!v,'Select parking');chkf('std_security',v=>!!v,'Select security')}
+    if(g==='airbnb'){chkf('air_guests',()=>parseInt(val('air_guests'))>=1,'Enter guest capacity');chkf('air_bedrooms',()=>n('air_bedrooms'),'Enter bedrooms');chkf('air_bathrooms',()=>n('air_bathrooms'),'Enter bathrooms')}
+    if(g==='commercial'){chkf('comm_type',v=>!!v,'Select a type');chkf('comm_size',()=>parseFloat(val('comm_size'))>0,'Enter floor area');chkf('comm_parking',v=>!!v,'Select parking');chkf('comm_condition',v=>!!v,'Select fit-out')}
+    if(g==='boarding'||unitsOn()){const part=S.tiers.filter(t=>(t.label.trim()||t.price||t.qty)&&!(t.label.trim()&&parseFloat(t.price)>0&&parseInt(t.qty)>=1));if(part.length){ok=false;if(!quiet)toast('One type is only partly filled. Complete or remove it.','error')}else if(!validTiers().length){ok=false;if(!quiet)toast('Add at least one complete '+(g==='boarding'?'room':'unit')+' type: name, price and how many','error')}}
+  }
+  if(step===4){if(!S.photos.length&&!S.sub.photosDone){ok=false;if(!quiet)toast('Add at least one photo to continue','error')}
+    const u=val('video_url');if(u&&!/^https?:\/\//i.test(u)){ok=false;if(!quiet)fail('video_url','Enter a full link starting with https://')}}
+  if(!ok&&!quiet){const bad=document.querySelector(`#step-${step} [aria-invalid="true"]`);if(bad){bad.scrollIntoView({block:'center',behavior:'smooth'});bad.focus({preventScroll:true})}}
+  return ok;
+}
+
+/* ═══ LOCATION DATA + MAP ═══ */
+let map=null,marker=null;
+function fillCounties(){$('county').innerHTML='<option value="">Select county</option>'+NK_COUNTIES.map(c=>`<option value="${esc(c)}">${esc(nkCountyLabel(c))}</option>`).join('')}
+function fillAreas(county){const a=NK_AREAS_BY_COUNTY[county]||[],s=$('area');s.disabled=!county;
+  s.innerHTML=county?'<option value="">Select area</option>'+a.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('')+'<option value="__other__">Other: my area isn\'t listed</option>':'<option value="">Select a county first</option>';areaChanged()}
+function areaChanged(){const o=val('area')==='__other__';$('area-custom-f').hidden=!o;if(!o)$('area_custom').value=''}
+const areaName=()=>val('area')==='__other__'?val('area_custom'):val('area');
+function setPin(lat,lng,zoom){
+  S.pin={lat,lng};
+  if(map){
+    if(!marker){marker=L.marker([lat,lng],{draggable:true}).addTo(map);
+      marker.on('dragend',()=>{const p=marker.getLatLng();S.pin={lat:p.lat,lng:p.lng};pinText();saveDraft()})}
+    else marker.setLatLng([lat,lng]);
+    if(zoom)map.setView([lat,lng],zoom);
+  }
+  pinText();saveDraft();
+}
+function pinText(){
+  const e=$('pin-status');e.className='pin-status'+(S.pin?' ok':'');
+  e.textContent=S.pin?`Exact pin set (${S.pin.lat.toFixed(5)}, ${S.pin.lng.toFixed(5)}). Drag it to fine-tune.`
+    :'No exact pin. Buyers will see the approximate area. Move the map to the spot and tap "Pin exact location here".';
+  $('clear-pin').hidden=!S.pin;
+}
+function clearPin(){S.pin=null;if(marker){marker.remove();marker=null}pinText();saveDraft()}
+function dropPin(){
+  if(!map)return toast('The map is not available. Use GPS instead.','error');
+  const c=map.getCenter();setPin(c.lat,c.lng,Math.max(map.getZoom(),16));toast('Pin placed. Drag it to the exact spot.','success');
+}
+function initMap(){
+  if(!window.L){$('location-map').innerHTML='<p style="padding:24px;font-size:13px;color:var(--text-3);text-align:center">The map could not load. You can still continue; buyers will see the approximate area.</p>';pinText();return}
+  map=L.map('location-map',{scrollWheelZoom:false}).setView([-0.5,37.5],6);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap contributors',maxZoom:19}).addTo(map);
+  map.on('click',e=>setPin(e.latlng.lat,e.latlng.lng));
+  pinText();
+}
+/* map follows the address; never moves under a seller who already pinned */
+const geoCache=new Map();let geoSeq=0;
+async function geocodeQuery(q){
+  if(geoCache.has(q))return geoCache.get(q);
+  const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=ke&q='+encodeURIComponent(q));
+  const j=await r.json(),hit=j&&j[0]?{lat:parseFloat(j[0].lat),lng:parseFloat(j[0].lon)}:null;
+  geoCache.set(q,hit);return hit;
+}
+async function areaCentroid(county,area){
+  try{const {data}=await db.from('area_centroids').select('lat,lng').eq('county',county).eq('area',area).maybeSingle();
+    if(data)return {lat:Number(data.lat),lng:Number(data.lng)}}catch(e){}return null;
+}
+async function followAddress(){
+  if(!map||S.pin)return;
+  const county=val('county'),area=areaName(),addr=val('address');if(!county)return;
+  const seq=++geoSeq;let hit=null,zoom=10;
+  try{
+    if(addr.length>2){hit=await geocodeQuery([addr,area,county,'Kenya'].filter(Boolean).join(', '));if(hit)zoom=16}
+    if(!hit&&area){hit=await areaCentroid(county,area)||await geocodeQuery(`${area}, ${county}, Kenya`);if(hit)zoom=14}
+  }catch(e){}
+  if(seq!==geoSeq||S.pin)return;
+  if(hit)map.setView([hit.lat,hit.lng],zoom);
+  else{const c=NK_COUNTY_COORDS[county];if(c)map.setView(c,10)}
+}
+const followSoon=nkDebounce(followAddress,900);
+function gps(){
+  if(!navigator.geolocation)return toast('GPS is not available on this device','error');toast('Requesting your location…');
+  navigator.geolocation.getCurrentPosition(p=>{setPin(p.coords.latitude,p.coords.longitude,16);toast('Location pinned','success')},()=>toast('Could not get your location. Tap the map to place the pin instead.','error'),{enableHighAccuracy:true,timeout:10000});
+}
+function suggestTitle(){
+  const g=group(),cat=NK_CATEGORIES[S.cat].label,a=areaName(),bed=val('std_bedrooms')||val('air_bedrooms');
+  const b=bed===''?'':(bed==='0'?'Studio ':bed+' bedroom ');const t=`${g==='standard'||g==='airbnb'?b:''}${cat}${a?' in '+a:''}`.trim();
+  $('title').value=t.charAt(0).toUpperCase()+t.slice(1);fail('title','');saveDraft();
+}
+
+/* ═══ CATEGORY UI ═══ */
+function renderCats(){
+  $('cat-grid').innerHTML=Object.entries(NK_CATEGORIES).map(([k,v])=>`<button type="button" class="cat-option" role="radio" aria-checked="${k===S.cat}" tabindex="${k===S.cat?0:-1}" data-act="cat" data-k="${k}"><span class="tick" aria-hidden="true">✓</span><span class="cat-ico"><svg viewBox="0 0 24 24" aria-hidden="true">${CAT_INFO[k][1]}</svg></span><span class="cat-title">${esc(v.label)}</span><br><span class="cat-desc">${esc(CAT_INFO[k][0])}</span></button>`).join('');
+}
+function pickCat(k){
+  const prevGroup=group();S.cat=k;renderCats();
+  if(prevGroup!==group()){S.tiers=[];S.seq=0;if(group()==='boarding')addTier(true)}
+  applyCat();checkPlan();saveDraft();
+}
+function applyCat(){
+  const g=group(),m=NK_CATEGORIES[S.cat];
+  qsa('[data-group]').forEach(c=>c.hidden=c.dataset.group!==g);
+  $('details-title').textContent=g==='standard'?m.label+' details':'Property details';
+  qsa('#step-3 .form-card:first-child').forEach(()=>{});
+  $('std_bedrooms').closest('.field').hidden=false;
+  $('price-f').hidden=g==='boarding';$('freq-f').hidden=g==='commercial';$('lease-f').hidden=g!=='commercial';
+  $('deposit-f').hidden=g==='airbnb'||(g==='commercial');$('deposit-f').hidden=!(g==='standard'||g==='boarding'||g==='commercial')||freq()==='once';
+  if(FREQS[g]){const cur=val('price_frequency');$('price_frequency').innerHTML=FREQS[g].map(([v,l])=>`<option value="${v}">${l}</option>`).join('');$('price_frequency').value=FREQS[g].some(f=>f[0]===cur)?cur:FREQS[g][0][0]}
+  $('price-hint').textContent=PRICE_HINT[g]||'Digits only.';
+  $('price-label').innerHTML=(g==='airbnb'?'Rate (KES)':'Price (KES)')+' <span class="req">*</span>';
+  if(g==='standard')$('std-units').hidden=!unitsOn();
+  renderTiers();updateKicker();
+}
+
+/* ═══ TIERS ═══ */
+const unitsOn=()=>group()==='standard'&&chk('std_has_units');
+function addTier(silent){S.tiers.push({id:++S.seq,label:'',cap:'',price:'',qty:''});renderTiers();if(!silent)saveDraft()}
+function validTiers(){return S.tiers.filter(t=>t.label.trim()&&parseFloat(t.price)>0&&parseInt(t.qty)>=1)}
+function renderTiers(){
+  const g=group();const mount=g==='boarding'?$('tiers-boarding'):g==='standard'?$('tiers-standard'):null;if(!mount)return;
+  if(!S.tiers.length&&(g==='boarding'||unitsOn()))addTier(true);
+  const std=g==='standard',caps=std?[['','Select'],['0','Studio'],['1','1 bedroom'],['2','2 bedrooms'],['3','3 bedrooms'],['4','4 bedrooms'],['5','5+ bedrooms']]:[['','Select'],['1','1 person'],['2','2 people'],['3','3 people'],['4','4 people']];
+  mount.innerHTML=S.tiers.map((t,i)=>`<div class="tier-row"><div class="tier-head"><span>${std?'Unit':'Room'} type ${i+1}</span>${S.tiers.length>1?`<button type="button" class="tier-rm" data-act="rm-tier" data-id="${t.id}" aria-label="Remove type ${i+1}">×</button>`:''}</div>
+    <div class="tier-grid"><div><label for="t${t.id}l">Name</label><input id="t${t.id}l" data-t="${t.id}" data-k="label" value="${esc(t.label)}" maxlength="40" placeholder="${std?'2-Bedroom':'Single room'}"/></div>
+    <div><label for="t${t.id}c">${std?'Bedrooms':'Sleeps'}</label><select id="t${t.id}c" data-t="${t.id}" data-k="cap">${caps.map(([v,l])=>`<option value="${v}"${t.cap===v?' selected':''}>${l}</option>`).join('')}</select></div>
+    <div><label for="t${t.id}p">Price (KES)</label><input id="t${t.id}p" type="number" min="0" inputmode="numeric" data-t="${t.id}" data-k="price" value="${esc(t.price)}"/></div>
+    <div><label for="t${t.id}q">${std?'Number of units':'Spaces open'}</label><input id="t${t.id}q" type="number" min="0" inputmode="numeric" data-t="${t.id}" data-k="qty" value="${esc(t.qty)}"/></div></div></div>`).join('');
+}
+const boardingPrice=()=>{const p=validTiers().map(t=>parseFloat(t.price));return p.length?Math.min(...p):0};
+
+/* ═══ AMENITIES ═══ */
+function renderAmenities(){
+  $('amenity-grid').innerHTML=NK_AMENITIES.map(a=>`<label class="amenity-chip${S.amen.has(a.key)?' checked':''}"><input type="checkbox" data-am="${a.key}"${S.amen.has(a.key)?' checked':''}/>${esc(a.label)}</label>`).join('');
+  $('custom-grid').innerHTML=S.custom.map(l=>`<div class="amenity-chip checked">${esc(l)}<button type="button" class="x" data-act="rm-am" data-l="${esc(l)}" aria-label="Remove ${esc(l)}">×</button></div>`).join('');
+}
+function addCustomAm(){const v=val('custom-am');if(!v)return;
+  if(S.custom.some(a=>a.toLowerCase()===v.toLowerCase())||NK_AMENITIES.some(a=>a.label.toLowerCase()===v.toLowerCase()))return toast('That amenity is already added','error');
+  S.custom.push(v);$('custom-am').value='';renderAmenities();saveDraft()}
+
+/* ═══ PHOTOS (one canvas pass: resize + watermark; failures reported, never silent) ═══ */
+async function processImage(file){
+  let bmp;try{bmp=await createImageBitmap(file,{imageOrientation:'from-image'})}catch(e){bmp=await new Promise((ok,no)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=no;im.src=URL.createObjectURL(file)})}
+  const MAX=1800,r=Math.min(1,MAX/Math.max(bmp.width,bmp.height)),w=Math.round(bmp.width*r),h=Math.round(bmp.height*r);
+  const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(bmp,0,0,w,h);
+  const fs=Math.max(16,Math.round(w*.028));x.font=`italic 500 ${fs}px 'Playfair Display',Georgia,serif`;x.textAlign='right';x.textBaseline='bottom';x.shadowColor='rgba(0,0,0,.45)';x.shadowBlur=fs*.6;x.fillStyle='rgba(255,255,255,.55)';x.fillText('Nyumba254',w-fs*.9,h-fs*.9);
+  const blob=await new Promise(res=>c.toBlob(res,'image/jpeg',.85));if(!blob)throw new Error('encode');
+  return new File([blob],file.name.replace(/\.\w+$/,'')+'.jpg',{type:'image/jpeg'});
+}
+async function addPhotos(files){
+  const list=[...files];let room=10-S.photos.length;if(room<=0)return toast('Maximum 10 photos','error');
+  const prog=$('prog'),bar=$('prog-bar');prog.hidden=false;let done=0,skipped=[];
+  for(const f of list.slice(0,room)){
+    bar.style.width=Math.round(done/Math.min(list.length,room)*100)+'%';
+    if(!/^image\/(jpeg|png|webp)$/.test(f.type)){skipped.push(f.name+' (use JPG, PNG or WebP; iPhone: Settings > Camera > Formats > Most Compatible)');done++;continue}
+    if(f.size>25*1024*1024){skipped.push(f.name+' (over 25 MB)');done++;continue}
+    try{const p=await processImage(f);S.photos.push({file:p,url:URL.createObjectURL(p)})}catch(e){skipped.push(f.name+' (could not be read)')}
+    done++;
+  }
+  bar.style.width='100%';setTimeout(()=>{prog.hidden=true;bar.style.width='0'},400);
+  if(list.length>room)skipped.push((list.length-room)+' photo(s) over the limit of 10');
+  $('photo-skip').textContent=skipped.length?'Skipped: '+skipped.join('; '):'';
+  renderPhotos();
+}
+function renderPhotos(){
+  $('photo-count').textContent=`${S.photos.length} / 10`;$('photo-notice').hidden=S.photos.length>=5;
+  $('photo-notice').textContent=S.photos.length?`${S.photos.length} added. Listings with 5 or more photos get noticeably more enquiries.`:'Add at least one photo to continue.';$('photo-notice').hidden=S.photos.length>=5;
+  $('photo-grid').innerHTML=S.photos.map((p,i)=>`<div class="thumb${p.failed?' bad':''}"><img src="${p.url}" alt="Photo ${i+1}"/>${p.failed?'<div class="fail">Upload failed</div>':''}<button type="button" class="rm" data-act="rm-photo" data-i="${i}" aria-label="Remove photo ${i+1}">×</button>${i===S.cover?'<span class="cv on">Cover</span>':`<button type="button" class="cv" data-act="cover" data-i="${i}">Set cover</button>`}</div>`).join('');
+}
+function rmPhoto(i){URL.revokeObjectURL(S.photos[i].url);S.photos.splice(i,1);if(S.cover>=S.photos.length)S.cover=0;else if(S.cover>i)S.cover--;renderPhotos()}
+async function uploadPhotos(listingId){
+  const prog=$('prog'),bar=$('prog-bar');prog.hidden=false;let bad=0;
+  for(let i=0;i<S.photos.length;i++){
+    if(!S.photos[i].uploadedUrl){
+      $('btn-submit').textContent=`Uploading photo ${i+1} of ${S.photos.length}…`;const path=`${listingId}/${Date.now()}-${i}.jpg`;
+      const {error}=await db.storage.from('listing-photos').upload(path,S.photos[i].file,{cacheControl:'3600',upsert:false});
+      if(error){S.photos[i].failed=true;bad++}else{S.photos[i].failed=false;S.photos[i].uploadedUrl=db.storage.from('listing-photos').getPublicUrl(path).data.publicUrl}
+    }
+    bar.style.width=Math.round((i+1)/S.photos.length*100)+'%';
+  }
+  prog.hidden=true;renderPhotos();return bad;
+}
+
+/* ═══ VIDEO ═══ */
+function videoLength(f){return new Promise((ok,no)=>{const v=document.createElement('video');v.preload='metadata';v.muted=true;v.src=URL.createObjectURL(f);const t=setTimeout(()=>{URL.revokeObjectURL(v.src);no()},8000);v.onloadedmetadata=()=>{clearTimeout(t);URL.revokeObjectURL(v.src);ok(v.duration)};v.onerror=()=>{clearTimeout(t);no()}})}
+async function pickVideo(f){
+  const st=$('video-status');if(!f){S.video=null;st.textContent='';return}
+  st.textContent='Checking video…';
+  try{const d=await videoLength(f);
+    if(d>60||f.size>100*1024*1024){S.video=null;st.textContent=d>60?`That video is ${Math.round(d)} seconds; the limit is 60. Email longer videos to hellonyumba254@gmail.com.`:'That file is too large (100 MB max).';return}
+    S.video=f;st.textContent=`Ready: ${f.name} (${Math.round(d)}s)`;
+  }catch(e){S.video=null;st.textContent='We could not read that video. Try a different file.'}
+}
+async function uploadVideo(listingId){
+  if(!S.video||!S.user)return;const st=$('video-status');st.textContent='Uploading video…';
+  try{const {data:{session}}=await db.auth.getSession();const fd=new FormData();fd.append('video',S.video);fd.append('listingId',listingId);fd.append('sellerId',S.user.id);fd.append('title',val('title')||'Nyumba254 listing video');
+    const r=await fetch(`${EDGE_URL}/upload-listing-video`,{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+session.access_token},body:fd}),j=await r.json();
+    if(!r.ok||j.error)throw new Error('x');st.textContent='Video received, pending review.';
+  }catch(e){st.textContent='Video upload failed. Your listing was still submitted; add the video from your dashboard.'}
+}
+
+/* ═══ PRICING (estimate only; nothing is charged here) ═══ */
+async function loadSettings(){const {data}=await db.from('platform_settings').select('key,value').in('key',Object.keys(PS));(data||[]).forEach(r=>{PS[r.key]=Number(r.value)})}
+function fee(price,type){price=Math.max(0,Number(price)||0);const pct=Number(PS[type==='rent'?'rent_standard_pct':'sale_standard_pct'])||0;return Math.round(Math.max(Number(PS.standard_min_fee)||0,Math.min(Number(PS.standard_max_fee)||Infinity,price*pct/100)))}
+function updateKicker(){const k=$('page-kicker');k.textContent=S.first?`Your first listing is free for ${PS.trial_days} days`:S.cat==='airbnb'?'Holiday rentals run on a monthly BNB plan':'Getting started takes just a few minutes'}
+function feeBox(){
+  const g=group();let h;
+  if(S.first)h=`<div class="box ok"><strong>This listing is free.</strong> It's your first on Nyumba254, so it stays live for ${PS.trial_days} days at no cost. No payment is needed now.</div>`;
+  else if(S.cat==='airbnb')h=`<div class="box">Holiday rentals run on a monthly BNB plan rather than a one-time fee. After approval, activate a plan from your dashboard (from ${money(PS.bnb_basic_price)}/month) to keep this listing bookable.</div>`;
+  else{let est;
+    if(g==='boarding'){const v=validTiers();est=fee(v.reduce((s,t)=>s+parseFloat(t.price)*parseInt(t.qty),0),'rent')+v.reduce((s,t)=>s+parseInt(t.qty),0)*(Number(PS.standard_fee_per_unit)||0)}
+    else est=fee(priceVal(),freq()==='once'?'sale':'rent');
+    h=`<div class="box"><strong>Estimated listing fee: ${money(est)}</strong><br/>You won't be charged now. It's billed from your dashboard after our team approves the listing.</div>`}
+  $('fee-box').innerHTML=h;
+}
+
+/* ═══ ACCOUNT CHECKS ═══ */
+async function checkGate(){
+  if(!S.user)return {blocked:false};
+  const {data:p}=await db.from('profiles').select('verification_status,verification_enforced').eq('id',S.user.id).maybeSingle();
+  const enforced=Number(PS.enforce_verification_general)===1||!!(p&&p.verification_enforced);
+  if(!enforced||(p&&p.verification_status==='verified'))return {blocked:false};
+  const limit=Number(PS.unverified_listing_limit)||2;
+  const {count}=await db.from('listings').select('*',{count:'exact',head:true}).eq('seller_id',S.user.id).eq('recycle_bin',false).in('status',['active','pending','scheduled','approved_unpaid','approved_unpaid_bnb']);
+  return {blocked:(count||0)>=limit,limit};
+}
+async function loadAccount(){
+  if(!S.user){S.first=true;return}
+  const {count}=await db.from('listings').select('*',{count:'exact',head:true}).eq('seller_id',S.user.id);S.first=(count||0)===0;
+  const {data:p}=await db.from('profiles').select('has_bnb_capacity,has_rental_capacity,bnb_expires_at,subscription_expires_at,subscription_plan,subscription_tier').eq('id',S.user.id).maybeSingle();if(!p)return;
+  const live=!p.subscription_expires_at||new Date(p.subscription_expires_at)>new Date(),paid=!!p.subscription_tier&&p.subscription_tier!=='none',elite=paid&&p.subscription_plan==='elite'&&live;
+  S.cov={rental:(!!p.has_rental_capacity&&paid&&live)||elite,bnb:(!!p.has_bnb_capacity&&p.bnb_expires_at&&new Date(p.bnb_expires_at)>new Date())||elite};
+}
+function checkPlan(){
+  const el=$('plan-banner'),need=S.cat==='airbnb'?'bnb':'rental';
+  if(S.cov[need]||(!S.cov.rental&&!S.cov.bnb)){el.hidden=true;return}
+  el.hidden=false;el.className='box';el.style.marginBottom='16px';
+  el.textContent=`Your active plan covers ${S.cov.bnb&&S.cov.rental?'sale, rental and Airbnb':S.cov.bnb?'Airbnb':'sale and rental'} listings, so this ${need==='bnb'?'holiday rental':'sale or rental'} won't be free under it. You can still post it and pay for this one separately.`;
+}
+async function checkGuestEmail(){
+  if(S.user)return;const email=val('contact_email'),w=$('email-exists');
+  if(!/\S+@\S+\.\S+/.test(email)){w.hidden=true;S.guestBlocked=false;return}
+  try{const r=await fetch(`${EDGE_URL}/guest-listing-submit`,{method:'POST',headers:{'Content-Type':'application/json',apikey:SUPABASE_KEY},body:JSON.stringify({action:'check_email',email})});
+    const j=await r.json();S.guestBlocked=!!j.registered;w.hidden=!S.guestBlocked}catch(e){S.guestBlocked=false}
+}
+function signIn(){saveDraftNow();location.href='/login?next=post-listing&reason=existing_account&email='+encodeURIComponent(val('contact_email'))}
+
+/* ═══ REVIEW ═══ */
+function detailRows(){
+  const g=group(),r=[],add=(k,v)=>{if(v!==''&&v!=null)r.push([k,v])};
+  if(g==='standard'){const b=val('std_bedrooms');add('Bedrooms',b===''?'':b==='0'?'Studio':b);add('Bathrooms',val('std_bathrooms'));add('Floor area',val('std_size')&&val('std_size')+' m²');add('Furnishing',LABEL.furnished[val('std_furnished')]);add('Parking',LABEL.parking[val('std_parking')]);add('Security',LABEL.security[val('std_security')])}
+  if(g==='boarding'){add('Residents',nkTitleCase(val('board_gender')));add('Institution',val('board_institution'))}
+  if(g==='airbnb'){add('Guests',val('air_guests'));add('Bedrooms',val('air_bedrooms'));add('Bathrooms',val('air_bathrooms'));add('Minimum stay',val('air_min_stay')+' night(s)');add('Check-in',val('air_checkin'))}
+  if(g==='commercial'){add('Type',nkTitleCase(val('comm_type')));add('Floor area',val('comm_size')&&val('comm_size')+' m²');add('Parking',LABEL.parking[val('comm_parking')]);add('Fit-out',val('comm_condition')==='fitted'?'Fitted':'Shell / bare');add('Units',val('comm_units'))}
+  if(g==='boarding'||unitsOn())validTiers().forEach(t=>add(t.label,`${money(t.price)}${FREQ_SUFFIX[freq()]||''}, ${t.qty} ${g==='boarding'?'open':'unit(s)'}`));
+  return r;
+}
+function renderReview(){
+  const g=group(),sec=(t,n,rows)=>`<div class="review-title"><span>${t}</span><button type="button" class="linkbtn" data-act="go" data-n="${n}">Edit</button></div>`+rows.map(([k,v])=>`<div class="sum"><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join('');
+  const price=g==='boarding'?'From '+money(boardingPrice()):money(priceVal());
+  const am=[...NK_AMENITIES.filter(a=>S.amen.has(a.key)).map(a=>a.label),...S.custom].join(', ')||'None selected';
+  $('review').innerHTML=sec('Property',2,[['Type',NK_CATEGORIES[S.cat].label],['Title',val('title')],['Price',price+(FREQ_SUFFIX[freq()]||'')],['Location',[areaName(),nkCountyLabel(val('county'))].filter(Boolean).join(', ')],['Address',val('address')],['Map pin',S.pin?'Exact pin set':'Approximate area only']])+
+    sec('Details',3,[...detailRows(),['Amenities',am]])+
+    `<div class="review-title"><span>Photos</span><button type="button" class="linkbtn" data-act="go" data-n="4">Edit</button></div><div class="rev-photos">${S.photos.map((p,i)=>`<img src="${p.url}" alt="Photo ${i+1}"/>`).join('')||'<span style="font-size:13px;color:var(--text-3)">No photos</span>'}</div>`+
+    sec('Contact',5,[['Name',val('contact_name')||'-'],['Phone',val('phone')||'-'],['Email',val('contact_email')||'-'],['Buyers reach you via',chk('contact_hidden')?'Nyumba254 chat only':'Chat, call and WhatsApp']]);
+  feeBox();
+}
+
+/* ═══ DRAFT (localStorage + server for signed-in sellers) ═══ */
+let dTimer,sTimer;
+function collect(){const f={};FIELD_IDS.forEach(id=>{f[id]=val(id)});f.std_has_units=chk('std_has_units');f.contact_hidden=chk('contact_hidden');
+  return {step:S.step,sub:{listingId:S.sub.listingId,unitsDone:S.sub.unitsDone,photosDone:S.sub.photosDone,videoLinked:S.sub.videoLinked},cat:S.cat,amen:[...S.amen],custom:S.custom,tiers:S.tiers,seq:S.seq,pin:S.pin,fields:f,savedAt:Date.now()}}
+const sane=d=>d&&d.fields&&String(d.fields.title||'').length<200&&!/<!DOCTYPE|<html|<script/i.test(d.fields.title||'');
+const hasContent=d=>{const f=d.fields||{};return !!(f.title||f.description||f.price)};
+function saveDraft(){if(!S.ready||S.busy)return;clearTimeout(dTimer);dTimer=setTimeout(saveDraftNow,600);
+  if(S.user){clearTimeout(sTimer);sTimer=setTimeout(()=>db.from('listing_drafts').upsert({seller_id:S.user.id,draft_data:collect(),updated_at:new Date().toISOString()},{onConflict:'seller_id'}).then(()=>{},()=>{}),4000)}}
+function saveDraftNow(){if(!S.ready)return;const d=collect();if(!sane(d))return;try{localStorage.setItem(DRAFT_KEY,JSON.stringify(d));$('save-status').textContent='Draft saved'}catch(e){}}
+async function clearDraft(){clearTimeout(dTimer);clearTimeout(sTimer);try{localStorage.removeItem(DRAFT_KEY)}catch(e){}if(S.user)try{await db.from('listing_drafts').delete().eq('seller_id',S.user.id)}catch(e){}}
+let pending=null;
+async function findDraft(){
+  let local=null;try{local=JSON.parse(localStorage.getItem(DRAFT_KEY)||'null')}catch(e){}let server=null;
+  if(S.user){try{const {data}=await db.from('listing_drafts').select('draft_data,updated_at').eq('seller_id',S.user.id).maybeSingle();if(data&&data.draft_data)server={...data.draft_data,savedAt:new Date(data.updated_at).getTime()}}catch(e){}}
+  const d=local&&server?(server.savedAt>=local.savedAt?server:local):(local||server);
+  if(!d||!sane(d)||!hasContent(d))return;pending=d;
+  const mins=Math.floor((Date.now()-d.savedAt)/6e4),ago=mins<1?'a moment ago':mins<60?mins+' minute(s) ago':mins<1440?Math.floor(mins/60)+' hour(s) ago':Math.floor(mins/1440)+' day(s) ago';
+  const t=String(d.fields.title||'');$('rs-text').textContent=`We saved your progress from ${ago}${t?` ("${t.slice(0,60)}${t.length>60?'…':''}")`:''}. Photos need to be added again. Continue where you left off?`;$('resume').classList.add('show');
+}
+function applyDraft(d){
+  if(d.sub&&d.sub.listingId)Object.assign(S.sub,{listingId:d.sub.listingId,unitsDone:!!d.sub.unitsDone,photosDone:!!d.sub.photosDone,videoLinked:!!d.sub.videoLinked});
+  S.cat=NK_CATEGORIES[d.cat]?d.cat:'apartment';renderCats();S.amen=new Set((d.amen||[]).filter(k=>NK_AMENITIES.some(a=>a.key===k)));S.custom=Array.isArray(d.custom)?d.custom:[];
+  S.tiers=Array.isArray(d.tiers)?d.tiers:[];S.seq=Math.max(d.seq||0,...S.tiers.map(t=>t.id||0));
+  const f=d.fields||{};if(f.county){$('county').value=f.county;fillAreas(f.county)}
+  $('std_has_units').checked=!!f.std_has_units;$('contact_hidden').checked=!!f.contact_hidden;
+  applyCat();
+  FIELD_IDS.forEach(id=>{if(id==='county'||(S.user&&id==='contact_email'))return;const e=$(id);if(e&&f[id]!=null)e.value=f[id]});areaChanged();if($('price').value)fmtPrice($('price'));
+  renderAmenities();renderTiers();S.pin=d.pin||null;if(S.pin){setPin(S.pin.lat,S.pin.lng,15)}
+  $('desc-count').textContent=`${val('description').length} / 30 minimum`;
+  const n=Math.min(Math.max(d.step||1,1),4);S.max=n;show(n,false);history.replaceState({step:n},'');
+}
+
+/* ═══ SUBMIT ═══ */
+function payload(){
+  const g=group(),d={};
+  const num=id=>val(id)===''?null:val(id);
+  if(g==='standard')Object.assign(d,{bedrooms:num('std_bedrooms'),bathrooms:num('std_bathrooms'),size_sqm:num('std_size'),furnished:num('std_furnished'),parking:num('std_parking'),security:num('std_security'),house_rules:num('std_rules')});
+  if(g==='boarding')Object.assign(d,{total_beds:validTiers().reduce((s,t)=>s+parseInt(t.qty),0),gender:val('board_gender'),institution:num('board_institution'),room_types:validTiers().map(t=>({label:t.label.trim(),capacity:t.cap||null,price:parseFloat(t.price),quantity:parseInt(t.qty)}))});
+  if(g==='airbnb')Object.assign(d,{guests:num('air_guests'),bedrooms:num('air_bedrooms'),bathrooms:num('air_bathrooms'),min_stay:val('air_min_stay'),checkin:num('air_checkin'),house_rules:num('air_rules')});
+  if(g==='commercial')Object.assign(d,{property_type:num('comm_type'),size_sqm:num('comm_size'),lease_type:val('comm_lease_type'),parking:num('comm_parking'),frontage:num('comm_frontage'),condition:num('comm_condition'),units:num('comm_units')});
+  if(S.custom.length)d.custom_amenities=S.custom;
+  if(val('deposit')!==''&&freq()!=='once')d.deposit_months=Number(val('deposit'));if(val('available_from'))d.available_from=val('available_from');if(val('listed_by'))d.listed_by=val('listed_by');
+  if(val('area')==='__other__')d.custom_area=true;
+  const f=freq();
+  return {title:val('title'),description:val('description'),price:g==='boarding'?boardingPrice():priceVal(),price_frequency:f,price_type:f==='once'?'sale':'rent',category:S.cat,county:val('county'),area:areaName(),address:val('address'),
+    latitude:S.pin?S.pin.lat:null,longitude:S.pin?S.pin.lng:null,amenities:[...S.amen],details:d,contact_name:val('contact_name'),phone:nkNormalizePhone(val('phone')),whatsapp:nkNormalizePhone(val('whatsapp')||val('phone')),contact_email:val('contact_email'),contact_hidden:chk('contact_hidden'),
+    status:'pending',payment_status:S.first?'trial':'unpaid',trial_expires_at:S.first?new Date(Date.now()+(PS.trial_days||14)*864e5).toISOString():null,seller_id:S.user?S.user.id:null,views:0,is_live:false};
+}
+function unitTiers(){const g=group();
+  if(g==='boarding'||unitsOn())return validTiers();
+  return []}
+const okPhone=v=>{const p=nkNormalizePhone(v);return /^\+254\d{9}$/.test(p)||/^\+\d{9,15}$/.test(p)};
+async function submit(){
+  if(S.busy)return;$('submit-error').textContent='';
+  for(const s of [2,3,4]){if(!validate(s)){toast('Please fix the highlighted fields in step '+s,'error');return show(s,true)}}
+  const gate=await checkGate();
+  if(gate.blocked){toast(`Verify your account first: unverified sellers are limited to ${gate.limit} listing(s).`,'error');saveDraftNow();return setTimeout(()=>{location.href='/dashboard?verify=1&limit='+gate.limit},1200)}
+  let ok=true;
+  ok=fail('contact_name',val('contact_name').length>1?'':'Enter your full name')&&ok;
+  ok=fail('phone',okPhone(val('phone'))?'':'Enter a valid phone number, e.g. 0712 345 678')&&ok;
+  ok=fail('whatsapp',!val('whatsapp')||okPhone(val('whatsapp'))?'':'Enter a valid WhatsApp number or leave it blank')&&ok;
+  ok=fail('contact_email',/^\S+@\S+\.\S+$/.test(val('contact_email'))?'':'Enter a valid email')&&ok;
+  ok=fail('agree',chk('agree')?'':'You must agree to the Terms and Privacy Policy')&&ok;
+  if(!ok){const bad=document.querySelector('#step-5 [aria-invalid="true"], #e-agree:not(:empty)');if(bad)bad.scrollIntoView({block:'center',behavior:'smooth'});return}
+  if(!S.user){await checkGuestEmail();if(S.guestBlocked){$('email-exists').scrollIntoView({block:'center',behavior:'smooth'});return}}
+  S.busy=true;const btn=$('btn-submit');btn.disabled=true;btn.textContent='Submitting…';
+  try{
+    const data=payload(),units=unitTiers(),link=val('video_url');let id=S.sub.listingId;
+    if(S.user){
+      if(!id){const {data:row,error}=await db.from('listings').insert(data).select().single();if(error)throw error;id=S.sub.listingId=row.id;saveDraftNow()}
+      if(units.length&&!S.sub.unitsDone){const {error}=await db.from('listing_units').insert(units.map(t=>({listing_id:id,unit_label:t.label.trim(),bedrooms:group()==='standard'&&t.cap!==''?parseInt(t.cap):null,quantity_available:parseInt(t.qty),quantity_total:parseInt(t.qty),price:parseFloat(t.price)})));if(error)throw error;S.sub.unitsDone=true;saveDraftNow()}
+      if(!S.sub.photosDone){const bad=await uploadPhotos(id);
+        if(bad){$('submit-error').textContent=`${bad} photo(s) failed to upload (see the red thumbnails on the Photos step). Check your connection and tap "Retry upload"; the photos that worked won't be sent again.`;btn.textContent='Retry upload';btn.disabled=false;S.busy=false;$('submit-error').scrollIntoView({block:'center',behavior:'smooth'});return}
+        const {error}=await db.from('listing_photos').insert(S.photos.map((p,i)=>({listing_id:id,url:p.uploadedUrl,is_cover:i===S.cover,position:i})));if(error)throw error;S.sub.photosDone=true;saveDraftNow()}
+      if(link&&!S.sub.videoLinked){const {error}=await db.from('listing_videos').insert({listing_id:id,url:link,position:0});if(error)toast('Your video link could not be saved, but the listing was submitted.','error');S.sub.videoLinked=true}
+      fetch(`${EDGE_URL}/send-listing-email`,{method:'POST',headers:{'Content-Type':'application/json',apikey:SUPABASE_KEY},body:JSON.stringify({sellerEmail:S.user.email,sellerName:S.userName,listingTitle:data.title,listingId:id})}).catch(()=>{});
+      if(S.video)btn.textContent='Uploading video…';await uploadVideo(id);
+    }else{
+      const fd=new FormData();fd.append('payload',JSON.stringify({...data,listing_units:units.map(t=>({label:t.label,capacity:t.cap,price:t.price,quantity:t.qty})),video_url:link||null,cover_index:S.cover}));
+      S.photos.forEach(p=>fd.append('photos',p.file,p.file.name));
+      const r=await fetch(`${EDGE_URL}/guest-listing-submit`,{method:'POST',headers:{apikey:SUPABASE_KEY},body:fd}),j=await r.json();
+      if(!r.ok||j.error)throw new Error(j.error||'Could not submit the listing');id=S.sub.listingId=j.listingId;
+    }
+    await clearDraft();S.ready=false;done(!S.user);
+  }catch(err){
+    console.error(err);S.busy=false;btn.disabled=false;btn.textContent=S.sub.listingId?'Retry submit':'Submit for review';
+    $('submit-error').textContent='We could not finish submitting: '+(err.message||'unknown error')+'. Your details are saved. Tap the button to try again'+(S.sub.listingId?'; nothing will be duplicated.':'.');
+  }
+}
+function done(guest){
+  $('flow').hidden=true;$('success').hidden=false;
+  $('s-head').textContent=guest?'Check your email to finish setup':'Listing submitted';
+  $('s-msg').textContent=guest?"We saved your listing and created your free Nyumba254 account. Open the email we sent and set your password to send the listing for review.":'Your listing is saved and waiting for review.';
+  $('s-pay').textContent=guest?'Didn\'t get the email? Check spam, or contact us on WhatsApp and we\'ll resend it.':S.first?`Your first listing is free for ${PS.trial_days} days once it goes live.`:'After approval, you can pay the listing fee from your dashboard.';
+  $('s-actions').innerHTML=guest?`<a class="p" href="https://mail.google.com/mail/u/0/#search/nyumba254" target="_blank" rel="noopener">Open my email</a><a href="https://wa.me/254739348560" target="_blank" rel="noopener">Get help</a><a href="/">Back to home</a>`
+    :`<a class="p" href="/dashboard">View my listings</a><a href="/post-listing">Post another listing</a><a href="/">Back to home</a>`;
+  window.scrollTo({top:0,behavior:'smooth'});$('success').querySelector('h2').focus&&$('s-head').setAttribute('tabindex','-1');$('s-head').focus();
+}
+
+/* ═══ EVENTS ═══ */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-act]');if(!t)return;const a=t.dataset.act;
+  switch(a){
+    case 'cat':pickCat(t.dataset.k);break;case 'next':go(S.step+1);break;case 'back':go(S.step-1);break;case 'go':{const n=Number(t.dataset.n);if(n<S.step||n<=S.max){if(n>S.step&&!validate(S.step))break;show(n,true)}break}
+    case 'submit':submit();break;case 'suggest-title':suggestTitle();break;case 'gps':gps();break;case 'drop-pin':dropPin();break;case 'clear-pin':clearPin();break;
+    case 'locate':nkUseNearMe(c=>{$('county').value=c;fillAreas(c);followSoon();saveDraft();toast('County set to '+nkCountyLabel(c))},m=>toast(m,'error'));break;
+    case 'add-tier':addTier();break;case 'rm-tier':S.tiers=S.tiers.filter(x=>x.id!==Number(t.dataset.id));renderTiers();saveDraft();break;
+    case 'add-am':addCustomAm();break;case 'rm-am':S.custom=S.custom.filter(x=>x!==t.dataset.l);renderAmenities();saveDraft();break;
+    case 'rm-photo':rmPhoto(Number(t.dataset.i));break;case 'cover':S.cover=Number(t.dataset.i);renderPhotos();break;
+    case 'camera':$('camera-input').click();break;case 'vid-up':$('vid-up').click();break;case 'vid-rec':$('vid-rec').click();break;
+    case 'signin':signIn();break;
+    case 'resume':$('resume').classList.remove('show');if(pending)applyDraft(pending);pending=null;break;
+    case 'fresh':$('resume').classList.remove('show');pending=null;clearDraft();break;
+  }
+});
+$('cat-grid').addEventListener('keydown',e=>{if(!/Arrow/.test(e.key))return;const ks=Object.keys(NK_CATEGORIES),i=ks.indexOf(S.cat),n=ks[(i+(/Right|Down/.test(e.key)?1:-1)+ks.length)%ks.length];e.preventDefault();pickCat(n);const b=document.querySelector(`[data-k="${n}"]`);if(b)b.focus()});
+const flow=$('flow');
+flow.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.id==='price')fmtPrice(t);
+  if(t.id==='address'||t.id==='area_custom')followSoon();
+  if(t.id==='description')$('desc-count').textContent=`${t.value.trim().length} / 30 minimum`;
+  if(t.dataset.t){const r=S.tiers.find(x=>x.id===Number(t.dataset.t));if(r)r[t.dataset.k]=t.value}
+  if(t.getAttribute('aria-invalid')==='true'&&t.id)fail(t.id,'');
+  saveDraft();
+});
+flow.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.id==='county'){fillAreas(t.value);followSoon()}
+  if(t.id==='area'){areaChanged();followSoon()}
+  if(t.id==='std_has_units'){$('std-units').hidden=!t.checked;if(t.checked)renderTiers()}
+  if(t.id==='comm_lease_type'||t.id==='price_frequency'){$('deposit-f').hidden=freq()==='once'||group()==='airbnb';feeBox()}
+  if(t.dataset.t){const r=S.tiers.find(x=>x.id===Number(t.dataset.t));if(r)r[t.dataset.k]=t.value}
+  if(t.dataset.am){t.checked?S.amen.add(t.dataset.am):S.amen.delete(t.dataset.am);t.closest('.amenity-chip').classList.toggle('checked',t.checked)}
+  if(t.id==='file-input'||t.id==='camera-input'){addPhotos(t.files);t.value=''}
+  if(t.id==='vid-up'||t.id==='vid-rec'){pickVideo(t.files[0]);t.value=''}
+  if(t.id==='contact_email')checkGuestEmail();
+  saveDraft();
+});
+$('custom-am').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addCustomAm()}});
+/* Enter moves on only from single-line text inputs, never from buttons, selects or textareas */
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter'||e.target.tagName!=='INPUT'||!/^(text|tel|email|number|url|date)$/.test(e.target.type)||S.step>=5||S.busy)return;
+  if(e.target.id==='custom-am'||e.target.dataset.t)return;e.preventDefault();go(S.step+1);
+});
+const drop=$('drop');['dragenter','dragover'].forEach(v=>drop.addEventListener(v,e=>{e.preventDefault();drop.classList.add('drag')}));
+['dragleave','drop'].forEach(v=>drop.addEventListener(v,e=>{e.preventDefault();drop.classList.remove('drag')}));drop.addEventListener('drop',e=>addPhotos(e.dataTransfer.files));
+['dragover','drop'].forEach(v=>window.addEventListener(v,e=>e.preventDefault()));
+window.addEventListener('beforeunload',saveDraftNow);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')saveDraftNow()});
+
+/* ═══ INIT ═══ */
+async function init(){
+  $('available_from').min=new Date().toISOString().slice(0,10);fillCounties();fillAreas('');renderCats();renderAmenities();renderBar();initMap();applyCat();
+  history.replaceState({step:1},'');
+  const {data:{session}}=await db.auth.getSession();
+  if(session){S.user=session.user;
+    const {data:p}=await db.from('profiles').select('phone,full_name').eq('id',S.user.id).maybeSingle();
+    if(p&&p.phone)$('phone').value=p.phone.startsWith('254')?'0'+p.phone.slice(3):p.phone;
+    if(p&&p.full_name){$('contact_name').value=p.full_name;S.userName=p.full_name}$('contact_email').value=S.user.email||'';
+    
+  }else{$('guest-note').hidden=false;$('video-file-f').querySelector('label').innerHTML='Video upload <span class="opt">available after you sign in</span>';qsa('[data-act="vid-up"],[data-act="vid-rec"]').forEach(b=>b.disabled=true)}
+  await loadSettings();await loadAccount();updateKicker();checkPlan();
+  const gate=await checkGate();
+  if(gate.blocked){toast(`Unverified sellers are limited to ${gate.limit} listing(s). Verify your account to post more.`,'error');setTimeout(()=>{location.href='/dashboard?verify=1&limit='+gate.limit},1800);return}
+  await findDraft();S.ready=true;
+  setTimeout(()=>{if(map)map.invalidateSize()},300);
+}
+init();
+})();
+</script>
+</body>
+</html>
