@@ -17,7 +17,7 @@
   window.NKGlobalChat = window.NKGlobalChat || {};
   Object.assign(window.NKGlobalChat, {
     refresh: later(() => api.refresh()), open: later((id, t) => api.open(id, t)), registerAndOpen: later((id, t) => api.open(id, t)),
-    openBookViewing: later(id => api.openViewing(id)), openSaved: () => window.open('/inbox?tab=saved', '_blank', 'noopener'),
+    openBookViewing: later(id => api.openViewing(id)), openSaved: () => { location.href = '/inbox?tab=saved'; },
     getResumeLink: () => (window.NKChatCore ? window.NKChatCore.buildResumeLink() : null)
   });
 
@@ -128,6 +128,7 @@
     .gcw-tick svg{stroke:#9a9a94;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-1px}
     .gcw-tick.read svg{stroke:#34B7F1}
     .gcw-ai{font-size:11px;color:var(--t3);margin-top:3px;font-style:italic}
+    .gcw-scam{font-size:12px;line-height:1.45;color:#7a4f00;background:#FFF7E6;border:1px solid #F3D9A0;border-radius:10px;padding:7px 10px;margin-top:4px}
     .gcw-retry{background:none;border:0;color:var(--rd);font-size:12px;font-weight:700;cursor:pointer;padding:6px 0;min-height:32px;font-family:inherit;text-decoration:underline}
     .gcw-queued{font-size:11.5px;color:#7a4f00;margin-top:2px}
     #gcw-quick{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:8px 12px;background:var(--cd);border-top:1px solid var(--bd);flex-shrink:0;mask-image:linear-gradient(to right,#000 92%,transparent);-webkit-mask-image:linear-gradient(to right,#000 92%,transparent)}
@@ -365,7 +366,7 @@
     btn.addEventListener('click', () => setPanel(!panelOpen));
     $('gcw-close').addEventListener('click', () => setPanel(false)); $('gcw-close2').addEventListener('click', () => setPanel(false));
     $('gcw-back').addEventListener('click', hideThread);
-    $('gcw-full').addEventListener('click', () => { const a = core.active(); window.open(a ? '/inbox?open=' + encodeURIComponent(a.listingId) : '/inbox', '_blank', 'noopener'); });
+    $('gcw-full').addEventListener('click', () => { const a = core.active(); location.href = a ? '/inbox?open=' + encodeURIComponent(a.listingId) : '/inbox'; });
     $('gcw-sync').addEventListener('click', () => { $('gcw-hint').classList.remove('show'); core.ls.set('nk_resume_hint_seen', '1'); openResume(); });
     $('gcw-book').addEventListener('click', () => openViewing());
     $('gcw-send').addEventListener('click', sendInput);

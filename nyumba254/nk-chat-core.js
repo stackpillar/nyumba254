@@ -37,10 +37,14 @@
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2));
   const clean = t => String(t || '').replace(AI_MARK, '');
+  let LANG = 'en';
+  const setLang = l => { LANG = l === 'sw' ? 'sw' : 'en'; };
+  const LOC = () => (LANG === 'sw' ? 'sw-KE' : 'en-KE');
+  const WORDS = () => (LANG === 'sw' ? { today: 'Leo', yest: 'Jana' } : { today: 'Today', yest: 'Yesterday' });
   const sameDay = (a, b) => a.toDateString() === b.toDateString();
-  const dayLabel = iso => { const d = new Date(iso), t = new Date(), y = new Date(); y.setDate(t.getDate() - 1); return sameDay(d, t) ? 'Today' : sameDay(d, y) ? 'Yesterday' : d.toLocaleDateString('en-KE', { weekday: 'short', day: 'numeric', month: 'short' }); };
-  const timeLabel = iso => new Date(iso).toLocaleTimeString('en-KE', { hour: 'numeric', minute: '2-digit' });
-  const whenLabel = iso => { if (!iso) return ''; const d = new Date(iso), t = new Date(), y = new Date(); y.setDate(t.getDate() - 1); return sameDay(d, t) ? timeLabel(iso) : sameDay(d, y) ? 'Yesterday' : d.toLocaleDateString('en-KE', { day: 'numeric', month: 'short' }); };
+  const dayLabel = iso => { const d = new Date(iso), t = new Date(), y = new Date(); y.setDate(t.getDate() - 1); return sameDay(d, t) ? WORDS().today : sameDay(d, y) ? WORDS().yest : d.toLocaleDateString(LOC(), { weekday: 'short', day: 'numeric', month: 'short' }); };
+  const timeLabel = iso => new Date(iso).toLocaleTimeString(LOC(), { hour: 'numeric', minute: '2-digit' });
+  const whenLabel = iso => { if (!iso) return ''; const d = new Date(iso), t = new Date(), y = new Date(); y.setDate(t.getDate() - 1); return sameDay(d, t) ? timeLabel(iso) : sameDay(d, y) ? WORDS().yest : d.toLocaleDateString(LOC(), { day: 'numeric', month: 'short' }); };
   const initials = n => (String(n || 'Seller').split(/\s+/).filter(Boolean).map(x => x[0]).join('').toUpperCase().slice(0, 2)) || 'S';
   const FREQ = { month: '/mo', night: '/night', week: '/week', term: '/term', semester: '/semester', once: '' };
   const priceLabel = l => (l && Number(l.price) > 0) ? 'KES ' + Number(l.price).toLocaleString('en-KE') + (FREQ[l.price_frequency] || '') : '';
@@ -55,7 +59,7 @@
   const emit = (e, d) => (H[e] || []).slice().forEach(f => { try { f(d); } catch (err) { console.error('NKChatCore handler:', err); } });
 
   /* ── state ── */
-  const S = { convos: [], loading: false, loadError: false, active: null, messages: [], listing: null, presence: 'connecting', viewing: false, polling: false, booked: {}, net: navigator.onLine !== false };
+  const S = { convos: [], loading: false, loadError: false, active: null, messages: [], listing: null, listingGone: false, hasMore: false, unreadAtOpen: 0, viewings: {}, presence: 'connecting', viewing: false, polling: false, booked: {}, net: navigator.onLine !== false };
   let inflight = null, started = false, outbox = [];
   const CACHE = 'nk_chat_cache_v1', OB = 'nk_chat_outbox_v1';
 
@@ -93,6 +97,13 @@
     const rows = tokens.map(t => ({ buyer_token: t, full_name: p.name || null, email: p.email || null, phone: p.phone || null, notify_email: p.notify !== false, updated_at: new Date().toISOString() }));
     try { const { error } = await getClient().from('buyer_contacts').upsert(rows, { onConflict: 'buyer_token' }); return { ok: !error, error }; } catch (e) { return { ok: false, error: e }; }
   }
+
+  /* ═════ archived chats: kept on this device only ═════ */
+  const Archive = {
+    all() { try { const a = JSON.parse(ls.get('nk_chat_archived') || '[]'); return new Set(Array.isArray(a) ? a.map(String) : []); } catch (e) { return new Set(); } },
+    has(id) { return Archive.all().has(String(id)); },
+    set(id, on) { const s = Archive.all(); if (on) s.add(String(id)); else s.delete(String(id)); ls.set('nk_chat_archived', JSON.stringify([...s])); }
+  };
 
   /* ═════ saved listings (same key saved-listings.js and saved.html use) ═════ */
   const savedIds = () => { try { const a = JSON.parse(ls.get('nk_saved_listings') || '[]'); return Array.isArray(a) ? a.filter(x => ID_RE.test(String(x))) : []; } catch (e) { return []; } };
@@ -147,10 +158,26 @@
       S.loadError = false;
       S.convos = (res.data || []).map(mapConvo).sort(byRecent);
       if (S.active && S.viewing) { const c = convoFor(S.active.listingId, S.active.token); if (c) c.unread = 0; }
-      saveCache(); emit('convos'); ensureRealtime();
+      saveCache(); emit('convos'); ensureRealtime(); loadViewings();
     })().catch(e => { console.error('fetchConversations:', e); S.loading = false; }).finally(() => { inflight = null; });
     return inflight;
   }
+
+  /* ═════ viewing requests of every chat, in one query ═════ */
+  async function loadViewings() {
+    const tokens = [...tokenSet()].slice(0, 100); if (!tokens.length) { S.viewings = {}; return; }
+    try {
+      const { data, error } = await getClient().from('viewing_requests').select('*').in('buyer_token', tokens);
+      if (error || !Array.isArray(data)) return;
+      const ok = new Set(scanPairs().map(p => p.listingId + '|' + p.buyerToken)), map = {};
+      data.forEach(v => { if (ok.has(String(v.listing_id) + '|' + v.buyer_token)) (map[String(v.listing_id)] = map[String(v.listing_id)] || []).push(v); });
+      Object.values(map).forEach(a => a.sort((x, y) => String(x.requested_date).localeCompare(String(y.requested_date))));
+      S.viewings = map; emit('viewing', {});
+    } catch (e) {}
+  }
+  const viewingRows = id => S.viewings[String(id)] || [];
+  const nextViewing = id => { const today = localISO(new Date()); return viewingRows(id).find(v => String(v.requested_date) >= today) || null; };
+  const isBooked = id => !!S.booked[id] || viewingRows(id).length > 0;
 
   /* ═════ realtime: ONE channel filtered to this browser's own tokens ═════ */
   let chan = null, chanKey = '';
@@ -180,8 +207,8 @@
     if (row.sender === 'seller') {
       if (isActive) {
         if (!S.messages.some(m => m.id && m.id === msg.id)) { S.messages.push(msg); emit('thread', { type: 'append', message: msg, incoming: true }); }
-        if (S.viewing) markRead(); else { c.unread++; emit('incoming', { convo: c }); }
-      } else { c.unread++; emit('incoming', { convo: c }); }
+        if (S.viewing) markRead(); else { c.unread++; emit('incoming', { convo: c, message: msg }); }
+      } else { c.unread++; emit('incoming', { convo: c, message: msg }); }
     } else if (isActive && !S.messages.some(m => m.id && m.id === msg.id) && !S.messages.some(m => !m.id && m.content === msg.content && m.status === 'sending')) {
       S.messages.push(msg); emit('thread', { type: 'append', message: msg });   // sent from another of the buyer's devices
     }
@@ -213,31 +240,53 @@
   function typing() { if (!pch || !S.active) return; const n = Date.now(); if (n - lastTyping < 2000) return; lastTyping = n; try { pch.send({ type: 'broadcast', event: 'typing', payload: { from: 'buyer' } }); } catch (e) {} }
 
   /* ═════ opening a thread ═════ */
+  const PAGE = 50;
+  const LIST_EXT = 'listing_number,title,price,price_frequency,area,county,category,status,address,latitude,longitude,details,profiles(verification_status),listing_photos(url,is_cover,position)';
+  const LIST_BASE = 'listing_number,title,price,price_frequency,area,status';
+  const byTime = (a, b) => new Date(a.created_at) - new Date(b.created_at);
+  async function fetchMessages(listingId, token, before) {
+    let q = getClient().from('messages').select('*').eq('listing_id', listingId).eq('buyer_token', token).order('created_at', { ascending: false }).limit(PAGE + 1);
+    if (before) q = q.lt('created_at', before);
+    const r = await q; if (r.error) return r;
+    const rows = (r.data || []).slice(0, PAGE); return { data: rows.sort(byTime), more: (r.data || []).length > PAGE, error: null };
+  }
+  async function fetchListing(listingId) {
+    let l = await getClient().from('listings').select(LIST_EXT).eq('id', listingId).maybeSingle();
+    if (l.error) l = await getClient().from('listings').select(LIST_BASE).eq('id', listingId).maybeSingle();
+    return l;
+  }
   async function openThread(listingId, tokenHint) {
     listingId = String(listingId);
     let c = convoFor(listingId);
     const token = (c && c.buyerToken) || tokenHint || ls.get('nk_buyer_' + listingId);
     if (!token || !TOKEN_RE.test(token)) return false;
     if (!c) { c = { listingId, buyerToken: token, title: ls.get('nk_last_listing_title_' + listingId) || 'Listing', coverUrl: '', sellerName: 'Seller', sellerVerified: false, lastMessage: '', lastAt: null, unread: 0 }; S.convos.unshift(c); emit('convos'); }
+    S.unreadAtOpen = c.unread || 0; S.hasMore = false; S.listingGone = false;
     S.active = { listingId, token }; S.messages = []; S.listing = null;
     emit('thread', { type: 'reset', loading: true });
     joinPresence(); checkBooked(listingId, token);
     let m, l;
-    try { [m, l] = await Promise.all([
-      getClient().from('messages').select('*').eq('listing_id', listingId).eq('buyer_token', token).order('created_at', { ascending: true }),
-      getClient().from('listings').select('listing_number,title,price,price_frequency,area,status').eq('id', listingId).maybeSingle()
-    ]); } catch (e) { m = { error: e }; l = {}; }
+    try { [m, l] = await Promise.all([fetchMessages(listingId, token), fetchListing(listingId)]); } catch (e) { m = { error: e }; l = {}; }
     if (!S.active || S.active.listingId !== listingId) return false;                 // the buyer moved to another thread meanwhile
     if (m.error) { emit('thread', { type: 'reset', error: true }); emit('error', { kind: 'thread' }); return false; }
-    S.messages = (m.data || []).map(normalize);
+    S.messages = (m.data || []).map(normalize); S.hasMore = !!m.more;
     outbox.filter(x => x.listingId === listingId && x.token === token && !S.messages.includes(x)).forEach(x => S.messages.push(x));
     if (l && l.data) { S.listing = l.data; if (l.data.title && (c.title === 'Listing' || !c.title)) c.title = l.data.title; ls.set('nk_last_listing_title_' + listingId, l.data.title || ''); }
+    else if (l && !l.error) S.listingGone = true;                                    // the listing is not visible any more (sold, removed or hidden)
     emit('thread', { type: 'reset' }); emit('convos');
     if (S.viewing) markRead();
     fetchConversations();
     return true;
   }
-  function closeThread() { leavePresence(); S.active = null; S.messages = []; S.listing = null; emit('thread', { type: 'closed' }); }
+  async function loadEarlier() {
+    if (!S.active || !S.hasMore) return 0;
+    const { listingId, token } = S.active, first = S.messages.find(m => m.id && m.created_at); if (!first) return 0;
+    const r = await fetchMessages(listingId, token, first.created_at);
+    if (!S.active || S.active.listingId !== listingId || r.error) return 0;
+    const have = new Set(S.messages.map(m => m.id).filter(Boolean)), add = (r.data || []).map(normalize).filter(m => !have.has(m.id));
+    S.messages = add.concat(S.messages); S.hasMore = !!r.more; emit('thread', { type: 'prepend', count: add.length }); return add.length;
+  }
+  function closeThread() { leavePresence(); S.active = null; S.messages = []; S.listing = null; S.listingGone = false; S.unreadAtOpen = 0; S.hasMore = false; emit('thread', { type: 'closed' }); }
   async function markRead() {
     if (!S.active) return; const { listingId, token } = S.active, c = convoFor(listingId, token);
     if (c && c.unread) { c.unread = 0; emit('convos'); }
@@ -287,6 +336,16 @@
   window.addEventListener('online', () => { S.net = true; emit('net', { online: true }); flush(); fetchConversations(); });
   window.addEventListener('offline', () => { S.net = false; emit('net', { online: false }); });
 
+  /* ═════ call or WhatsApp the seller: the same rate-limited reveal the listing page uses ═════ */
+  const contactCache = {};
+  async function revealContact(listingId, channel) {
+    if (contactCache[listingId]) return { phone: contactCache[listingId] };
+    if (navigator.onLine === false) return { error: 'offline' };
+    let r; try { r = await getClient().rpc('reveal_seller_contact', { p_listing_id: listingId, p_device_id: ls.get('nk_sid') || '', p_channel: channel }); } catch (e) { r = { error: e }; }
+    if (r.error) return { error: 'unavailable' }; if (!r.data) return { error: 'limit' };
+    contactCache[listingId] = r.data; return { phone: r.data };
+  }
+
   /* ═════ viewing requests ═════ */
   async function checkBooked(listingId, token) {
     token = token || ls.get('nk_buyer_' + listingId); if (!token) return false;
@@ -306,13 +365,13 @@
     const { error: vErr } = await getClient().from('viewing_requests').insert({ id: uuid(), listing_id: listingId, buyer_token: token, buyer_name: name, buyer_phone: phone, requested_date: v.date, requested_time: v.time, notes: notes || null });
     if (vErr) return { ok: false, error: 'Could not send your request. Please try again.' };
     const when = new Date(v.date + 'T00:00:00').toLocaleDateString('en-KE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    const summary = '📅 Viewing requested\nDate: ' + when + '\nTime: ' + v.time + (notes ? '\nNotes: ' + notes : '');
+    const summary = (v.reschedule ? '📅 Change of viewing time requested\nNew date: ' : '📅 Viewing requested\nDate: ') + when + '\nTime: ' + v.time + (notes ? '\nNotes: ' + notes : '');
     let warning = null;
     const { error: mErr } = await getClient().from('messages').insert({ listing_id: listingId, buyer_token: token, buyer_name: name, buyer_phone: phone, sender: 'buyer', content: summary });
     if (mErr) warning = 'Your request was saved, but the chat message did not send.';
     fetch(EDGE + '/send-notification-email', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }, body: JSON.stringify({ type: 'viewing_request', listingId, buyerName: name, buyerPhone: phone, date: v.date, time: v.time, notes }) }).catch(() => {});
     S.booked[listingId] = true; emit('viewing', { listingId });
-    await fetchConversations();
+    await fetchConversations(); await loadViewings();
     if (S.active && S.active.listingId === listingId) openThread(listingId, token);
     return { ok: true, warning, token };
   }
@@ -343,13 +402,17 @@
   const escRe = s => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   function highlight(text, term) { const e = esc(text); if (!term) return e; return e.replace(new RegExp('(' + escRe(esc(term)) + ')', 'ig'), '<mark>$1</mark>'); }
   const dayHtml = (iso, p) => '<div class="' + p + '-day">' + esc(dayLabel(iso)) + '</div>';
-  function rowHtml(m, prev, p, peer, term) {
+  const SCAM = /(m-?pesa|paybill|pay bill|till (number|no)|buy ?goods|reservation fee|booking fee|send (me |us )?(the )?(money|deposit|cash)|(pay|deposit)[^.!?\n]{0,25}(first|before (viewing|you view|seeing)|upfront|in advance))/i;
+  const LBL = { ai: 'Automated reply, written from the listing details', retry: 'Not sent. Tap to retry', queued: 'Waiting for a connection…', scam: 'Be careful: the seller mentioned a payment. Never pay before you have viewed the property, and never send money to a number you found only in chat.' };
+  function rowHtml(m, prev, p, peer, term, labels) {
+    const T = Object.assign({}, LBL, labels || {});
     const mine = m.sender === 'buyer', gap = prev ? new Date(m.created_at) - new Date(prev.created_at) : Infinity;
     const first = !prev || prev.sender !== m.sender || gap > 300000 || dayLabel(prev.created_at) !== dayLabel(m.created_at), k = m.localId || m.id || '';
     const av = first ? '<div class="' + p + '-av" aria-hidden="true">' + (mine ? 'You' : esc(peer || 'S')) + '</div>' : '<div class="' + p + '-av ' + p + '-avsp" aria-hidden="true"></div>';
-    const ai = m.ai ? '<div class="' + p + '-ai">Automated reply, written from the listing details</div>' : '';
-    const st = m.status === 'failed' ? '<button type="button" class="' + p + '-retry" data-retry="' + esc(k) + '">Not sent. Tap to retry</button>' : m.status === 'queued' ? '<div class="' + p + '-queued">Waiting for a connection…</div>' : '';
-    return '<div class="' + p + '-row' + (mine ? ' mine' : '') + (first ? ' first' : '') + (m.status === 'failed' ? ' failed' : '') + '" data-k="' + esc(k) + '">' + av + '<div class="' + p + '-col"><div class="' + p + '-bubble">' + highlight(m.content, term) + '</div>' + ai + '<div class="' + p + '-time">' + esc(timeLabel(m.created_at)) + (mine ? tickHtml(m, p) : '') + '</div>' + st + '</div></div>';
+    const ai = m.ai ? '<div class="' + p + '-ai">' + esc(T.ai) + '</div>' : '';
+    const scam = (!mine && SCAM.test(m.content)) ? '<div class="' + p + '-scam" role="note">' + esc(T.scam) + '</div>' : '';
+    const st = m.status === 'failed' ? '<button type="button" class="' + p + '-retry" data-retry="' + esc(k) + '">' + esc(T.retry) + '</button>' : m.status === 'queued' ? '<div class="' + p + '-queued">' + esc(T.queued) + '</div>' : '';
+    return '<div class="' + p + '-row' + (mine ? ' mine' : '') + (first ? ' first' : '') + (m.status === 'failed' ? ' failed' : '') + '" data-k="' + esc(k) + '">' + av + '<div class="' + p + '-col"><div class="' + p + '-bubble">' + highlight(m.content, term) + '</div>' + ai + scam + '<div class="' + p + '-time">' + esc(timeLabel(m.created_at)) + (mine ? tickHtml(m, p) : '') + '</div>' + st + '</div></div>';
   }
   const QUICK = ['Is this still available?', "I'd like to book a viewing", 'Is a deposit required?', 'Is the price negotiable?', "What's included in the rent?", 'Can you share more photos?', 'How far is it from town?'];
 
@@ -366,9 +429,10 @@
 
   window.NKChatCore = {
     version: '2.0', on, init, getClient, esc, uuid, ls, Profile, saveContacts, savedIds, setSaved, normPhone, okPhone, prettyPhone, priceLabel, localISO, initials, dayLabel, timeLabel, whenLabel,
-    convos: () => S.convos, unread: totalUnread, loading: () => S.loading, loadError: () => S.loadError, active: () => S.active, messages: () => S.messages, listing: () => S.listing, presence: () => S.presence, isOnline: () => S.net, booked: id => !!S.booked[id],
+    setLang, Archive, revealContact, loadEarlier, loadViewings, viewingRows, nextViewing, hasMore: () => S.hasMore, listingGone: () => S.listingGone, unreadAtOpen: () => S.unreadAtOpen,
+    convos: () => S.convos, unread: totalUnread, loading: () => S.loading, loadError: () => S.loadError, active: () => S.active, messages: () => S.messages, listing: () => S.listing, presence: () => S.presence, isOnline: () => S.net, booked: isBooked,
     fetchConversations, openThread, closeThread, markRead, setViewing, setPolling, send, retry, typing, requestViewing, checkBooked, report,
     buildResumeLink, hasResumeData, importResume, scanPairs, setTitleBadge,
-    ui: { rowHtml, dayHtml, tickHtml, highlight, QUICK }
+    ui: { rowHtml, dayHtml, tickHtml, highlight, QUICK, scamTest: t => SCAM.test(t) }
   };
 })();

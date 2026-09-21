@@ -25,45 +25,63 @@
   [hidden]{display:none!important}
   .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-
   #ni-app{display:flex;flex-direction:column;height:100vh;height:100dvh}
 
   /* ── Header ── */
-  #ni-header{flex-shrink:0;background:var(--green);color:#fff;display:flex;align-items:center;gap:12px;padding:10px 20px;padding-top:calc(10px + env(safe-area-inset-top,0px));min-height:60px}
+  #ni-header{flex-shrink:0;background:var(--green);color:#fff;display:flex;align-items:center;gap:10px;padding:10px 20px;padding-top:calc(10px + env(safe-area-inset-top,0px));min-height:60px}
   #ni-back{display:flex;align-items:center;gap:5px;font-size:13.5px;font-weight:600;text-decoration:none;color:rgba(255,255,255,.92);flex-shrink:0;white-space:nowrap;min-height:44px}
   #ni-back:hover{color:#fff}
   #ni-back svg{width:15px;height:15px}
   #ni-title-wrap{flex:1;min-width:0}
   #ni-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;line-height:1.2}
   #ni-subtitle{font-size:12.5px;opacity:.88;margin-top:1px}
+  #ni-nav{display:none;gap:4px}
+  #ni-nav a{color:rgba(255,255,255,.92);text-decoration:none;font-size:13.5px;font-weight:600;padding:0 12px;min-height:40px;display:inline-flex;align-items:center;border-radius:20px}
+  #ni-nav a:hover{background:rgba(255,255,255,.16);color:#fff}
+  @media(min-width:1000px){#ni-nav{display:flex}}
   .ni-hbtn{flex-shrink:0;background:rgba(255,255,255,.16);border:0;color:#fff;padding:0 14px;height:40px;border-radius:20px;display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600}
   .ni-hbtn:hover{background:rgba(255,255,255,.28)}
   .ni-hbtn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0}
-  @media(max-width:640px){#ni-header{padding-left:12px;padding-right:12px;gap:8px}.ni-hbtn span{display:none}.ni-hbtn{width:44px;height:44px;padding:0;justify-content:center;border-radius:50%}#ni-back span{display:none}#ni-title{font-size:19px}}
-
+  @media(max-width:640px){#ni-header{padding-left:12px;padding-right:12px;gap:6px}.ni-hbtn.icon span{display:none}.ni-hbtn.icon{width:44px;height:44px;padding:0;justify-content:center;border-radius:50%}#ni-back span{display:none}#ni-title{font-size:19px}#ni-subtitle{display:none}#ni-lang{padding:0 12px}}
   #ni-net{display:none;background:var(--amber-bg);color:var(--amber);border-bottom:1px solid var(--amber-border);font-size:13px;padding:8px 16px;text-align:center;flex-shrink:0}
   #ni-net.show{display:block}
 
-  /* ── Body: two panes on desktop, one on mobile ── */
+  /* ── Body: 1 pane on phones, 2 on computers, 3 on wide screens ── */
   #ni-body{flex:1;display:flex;min-height:0}
   #ni-sidebar{width:370px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid var(--border);background:var(--surface);min-height:0}
   #ni-tabs{display:flex;gap:6px;padding:10px 12px 0;flex-shrink:0}
   .ni-tab{flex:1;min-height:44px;border:1.5px solid var(--border);border-radius:10px;background:var(--surface);color:var(--ink-2);font-size:13.5px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px}
   .ni-tab[aria-selected="true"]{background:var(--green);border-color:var(--green);color:#fff}
   .ni-count{background:var(--alert);color:#fff;border-radius:10px;font-size:11px;padding:1px 7px;min-width:19px;text-align:center}
-  #ni-search-row{padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+  #ni-search-row{padding:10px 12px 6px;flex-shrink:0}
   #ni-search{width:100%;min-height:44px;padding:9px 13px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;background:var(--app-bg);color:var(--ink);outline:none}
   #ni-search:focus{border-color:var(--green);background:#fff}
-  #ni-list,#ni-saved{flex:1;overflow-y:auto;min-height:0;overscroll-behavior:contain}
-  .ni-state{padding:40px 22px;text-align:center;color:var(--muted);font-size:14px;line-height:1.55}
-  .ni-btn{background:var(--green);color:#fff;border:0;border-radius:10px;min-height:44px;padding:0 20px;font-size:14px;font-weight:600}
-  .ni-btn:hover{background:var(--green-dark)}.ni-btn:disabled{opacity:.6;cursor:not-allowed}
+  #ni-filters{display:flex;gap:6px;overflow-x:auto;padding:4px 12px 10px;flex-shrink:0;scrollbar-width:none;border-bottom:1px solid var(--border)}
+  #ni-filters::-webkit-scrollbar{display:none}
+  .ni-fchip{flex-shrink:0;min-height:36px;padding:0 13px;border-radius:18px;border:1.5px solid var(--border);background:var(--surface);color:var(--ink-2);font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+  .ni-fchip[aria-pressed="true"]{background:var(--tint);border-color:var(--green);color:var(--green-dark)}
+  .ni-fchip .ni-count{font-size:10.5px}
+  #ni-notif{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--tint);border-bottom:1px solid var(--tint-border);flex-shrink:0;font-size:13px;color:var(--green-dark)}
+  #ni-notif p{flex:1;margin:0;font-weight:600;line-height:1.35}
+  #ni-notif button{min-height:36px;border-radius:18px;border:0;padding:0 14px;font-size:12.5px;font-weight:700}
+  #ni-notif .yes{background:var(--green);color:#fff}#ni-notif .no{background:transparent;color:var(--green-dark)}
+  #ni-list,#ni-saved{flex:1;overflow-y:auto;min-height:0;overscroll-behavior:contain;position:relative}
+  #ni-saved{display:flex;flex-direction:column}
+  #ni-ptr{display:none;text-align:center;font-size:12.5px;color:var(--green-dark);background:var(--tint);padding:8px;flex-shrink:0}
+  #ni-ptr.show{display:block}
+  .ni-state{padding:44px 24px;text-align:center;color:var(--muted);font-size:14px;line-height:1.55}
+  .ni-state h4{margin:0 0 6px;font-size:16px;color:var(--ink)}
+  .ni-btn{background:var(--green);color:#fff;border:0;border-radius:10px;min-height:44px;padding:0 20px;font-size:14px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+  .ni-btn:hover{background:var(--green-dark)}.ni-btn:disabled{opacity:.55;cursor:not-allowed}
   .ni-btn.ghost{background:var(--app-bg);color:var(--ink-2)}.ni-btn.ghost:hover{background:var(--border)}
-  .ni-state .ni-btn{margin-top:12px}
+  .ni-state .ni-btn{margin-top:14px}
   .ni-sk{height:48px;margin:14px;border-radius:10px;background:linear-gradient(90deg,var(--border) 25%,var(--app-bg) 50%,var(--border) 75%);background-size:200% 100%;animation:ni-sh 1.3s infinite}
   @keyframes ni-sh{to{background-position:-200% 0}}
 
-  .ni-convo{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 15px;border:0;border-bottom:1px solid var(--border);background:transparent;color:inherit;min-height:72px}
+  .ni-swipe{position:relative;overflow:hidden;border-bottom:1px solid var(--border);background:var(--green-dark)}
+  .ni-swipe-bg{position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-end;padding-right:22px;color:#fff;font-size:13px;font-weight:700}
+  .ni-convo{position:relative;display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 15px;border:0;background:var(--surface);color:inherit;min-height:76px;touch-action:pan-y;transition:transform .18s ease}
+  .ni-convo.dragging{transition:none}
   .ni-convo:hover,.ni-convo[aria-current="true"]{background:var(--app-bg)}
   .ni-thumb{width:48px;height:48px;border-radius:10px;background:var(--border);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--green-dark)}
   .ni-thumb img{width:100%;height:100%;object-fit:cover}
@@ -72,32 +90,53 @@
   .ni-ct span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ni-ct svg{width:13px;height:13px;color:var(--green);flex-shrink:0}
   .ni-cl{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ni-draft{color:var(--alert);font-weight:600}
+  .ni-vtag{align-self:flex-start;font-size:11.5px;font-weight:600;color:var(--green-dark);background:var(--tint);border-radius:10px;padding:1px 8px}
   .ni-cm{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
   .ni-cw{font-size:11.5px;color:var(--muted)}
   .ni-badge{background:var(--alert);color:#fff;font-size:11px;font-weight:700;border-radius:10px;min-width:20px;height:20px;padding:0 5px;display:flex;align-items:center;justify-content:center}
+  .ni-arch{position:absolute;right:8px;bottom:8px;width:36px;height:36px;border-radius:50%;border:0;background:var(--surface);color:var(--muted);display:none;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+  .ni-arch svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2}
+  .ni-arch:hover{color:var(--green-dark);background:var(--tint)}
+  @media(hover:hover){.ni-swipe:hover .ni-arch,.ni-swipe:focus-within .ni-arch{display:flex}}
 
-  .ni-saved-row{display:flex;align-items:center;gap:6px;padding:6px 6px 6px 15px;border-bottom:1px solid var(--border);min-height:72px}
+  /* saved tab */
+  #ni-saved-tools{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+  #ni-saved-sort{flex:1;min-height:44px;border:1.5px solid var(--border);border-radius:10px;padding:0 10px;font-size:14px;background:var(--surface);color:var(--ink)}
+  #ni-cmp-btn{min-height:44px;padding:0 14px;font-size:13px}
+  #ni-saved-list{flex:1;overflow-y:auto;min-height:0}
+  .ni-saved-row{display:flex;align-items:center;gap:6px;padding:6px 6px 6px 8px;border-bottom:1px solid var(--border);min-height:76px}
   .ni-saved-row:hover{background:var(--app-bg)}
+  .ni-cmp{width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .ni-cmp input{width:20px;height:20px;accent-color:var(--green)}
   .ni-saved-link{display:flex;align-items:center;gap:12px;flex:1;min-width:0;text-decoration:none;color:inherit;min-height:56px}
   .ni-saved-body{flex:1;min-width:0}
-  .ni-saved-title{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .ni-saved-sub{font-size:12.5px;color:var(--muted);margin-top:2px}
-  .ni-saved-price{font-size:13px;font-weight:700;color:var(--green-dark);margin-top:3px}
+  .ni-saved-title{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+  .ni-saved-sub{font-size:12.5px;color:var(--muted);margin-top:2px;display:block}
+  .ni-saved-price{font-size:13px;font-weight:700;color:var(--green-dark);margin-top:3px;display:block}
+  .ni-sold{display:inline-block;font-size:11px;font-weight:700;color:#fff;background:var(--alert);border-radius:10px;padding:1px 8px;margin-left:6px}
   .ni-saved-rm{border:0;background:none;color:var(--muted);font-size:17px;width:44px;height:44px;border-radius:50%;flex-shrink:0}
   .ni-saved-rm:hover{background:var(--border);color:var(--ink)}
+  .ni-cmp-table{width:100%;border-collapse:collapse;font-size:13.5px}
+  .ni-cmp-table th,.ni-cmp-table td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--border);vertical-align:top}
+  .ni-cmp-table th{color:var(--muted);font-weight:600;width:96px}
+  .ni-cmp-table td.best{background:var(--tint);font-weight:700;color:var(--green-dark)}
+  .ni-cmp-scroll{overflow-x:auto}
 
   /* ── Thread pane ── */
   #ni-thread-pane{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--app-bg)}
-  #ni-thread-empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14.5px;padding:20px;text-align:center}
+  #ni-thread-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);font-size:14.5px;padding:20px;text-align:center;gap:6px}
+  #ni-thread-empty small{font-size:12.5px}
   #ni-thread{display:none;flex-direction:column;flex:1;min-height:0}
   #ni-thread.open{display:flex}
-  #ni-thead{background:var(--green);color:#fff;padding:8px 10px 8px 8px;display:flex;align-items:center;gap:6px;flex-shrink:0;min-height:60px}
+  #ni-thead{position:relative;background:var(--green);color:#fff;padding:8px 8px 8px 8px;display:flex;align-items:center;gap:4px;flex-shrink:0;min-height:60px}
   .ni-ib{background:none;border:0;color:#fff;min-width:44px;height:44px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.92}
   .ni-ib:hover,.ni-hpill:hover{background:rgba(255,255,255,.18);opacity:1}
   .ni-ib svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2}
   .ni-hpill{background:rgba(255,255,255,.14);border:0;color:#fff;height:40px;padding:0 14px;border-radius:20px;display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;flex-shrink:0}
   .ni-hpill svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
   #ni-back-btn{display:none}
+  #ni-details-btn{display:none}
   #ni-tinfo{flex:1;min-width:0;padding-left:6px}
   #ni-tname{font-size:15.5px;font-weight:600;display:flex;align-items:center;gap:5px;min-width:0}
   #ni-tname span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -105,12 +144,25 @@
   #ni-presence{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.88);margin-top:1px}
   #ni-dot{width:7px;height:7px;border-radius:50%;background:#b8b8b0;flex-shrink:0}
   #ni-dot.online{background:#2ecc71}#ni-dot.typing{background:#F0B429}
+  #ni-menu{position:absolute;right:8px;top:calc(100% - 4px);z-index:30;min-width:230px;background:var(--surface);color:var(--ink);border:1px solid var(--border);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.2);padding:6px;display:none}
+  #ni-menu.open{display:block}
+  #ni-menu button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:none;min-height:46px;padding:0 12px;border-radius:8px;font-size:14px;color:inherit}
+  #ni-menu button:hover,#ni-menu button:focus-visible{background:var(--app-bg)}
+  #ni-menu svg{width:18px;height:18px;stroke:var(--green-dark);fill:none;stroke-width:2;flex-shrink:0}
+  #ni-menu hr{border:0;border-top:1px solid var(--border);margin:4px 0}
+  #ni-menu .danger{color:var(--alert)}#ni-menu .danger svg{stroke:var(--alert)}
   #ni-searchbar{display:none;align-items:center;gap:8px;padding:8px 14px;background:var(--tint);border-bottom:1px solid var(--border);flex-shrink:0}
   #ni-searchbar.show{display:flex}
   #ni-tsearch{flex:1;min-height:40px;padding:6px 12px;border:1.5px solid var(--tint-border);border-radius:9px;font-size:16px;outline:none;background:#fff;color:var(--ink)}
   #ni-tcount{font-size:12px;color:var(--green-dark);white-space:nowrap}
   #ni-tsearch-x{border:0;background:none;color:var(--green-dark);font-size:18px;width:40px;height:40px}
-
+  #ni-gone{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 16px;background:#FFF5F5;border-bottom:1px solid #f0caca;color:var(--alert);font-size:13.5px;font-weight:600;flex-shrink:0}
+  #ni-gone p{margin:0;flex:1 1 200px}
+  #ni-gone a{color:var(--alert);text-decoration:underline;font-weight:700;min-height:36px;display:inline-flex;align-items:center}
+  #ni-vstrip{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+  #ni-vstrip-t{flex:1 1 200px;font-size:13.5px;font-weight:600;color:var(--green-dark)}
+  #ni-vstrip button{min-height:36px;border-radius:18px;border:1.5px solid var(--green);background:var(--surface);color:var(--green-dark);font-size:12.5px;font-weight:700;padding:0 13px}
+  #ni-vstrip button:hover{background:var(--tint)}
   .ni-lcard{display:flex;align-items:center;gap:12px;padding:9px 16px;background:var(--tint);border-bottom:1px solid var(--border);flex-shrink:0;text-decoration:none;color:inherit;min-height:60px}
   a.ni-lcard:hover{background:var(--surface)}
   .ni-lcard .ni-thumb{width:42px;height:42px;border-radius:8px}
@@ -118,7 +170,6 @@
   .ni-lc-t b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .ni-lc-t span{font-size:12.5px;color:var(--green-dark);font-weight:600}
   .ni-lc-go{font-size:12.5px;font-weight:700;color:var(--green-dark);white-space:nowrap}
-
   #ni-safety{display:none;align-items:center;gap:8px;padding:8px 16px;background:var(--amber-bg);border-bottom:1px solid var(--amber-border);font-size:13px;color:var(--amber);line-height:1.45;flex-shrink:0}
   #ni-safety.show{display:flex}
   #ni-safety p{flex:1;margin:0}
@@ -128,10 +179,20 @@
   #ni-messages{flex:1;min-height:0;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:2px;overscroll-behavior:contain}
   #ni-newpill{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:none;background:var(--green);color:#fff;border:0;border-radius:20px;padding:0 18px;min-height:38px;font-size:13px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25)}
   #ni-newpill.show{display:block}
+  #ni-typing{position:absolute;left:18px;bottom:8px;display:none;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:7px 12px;font-size:12px;color:var(--muted);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+  #ni-typing.show{display:flex}
+  .ni-dots{display:inline-flex;gap:3px}
+  .ni-dots i{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:ni-bounce 1s infinite}
+  .ni-dots i:nth-child(2){animation-delay:.15s}.ni-dots i:nth-child(3){animation-delay:.3s}
+  @keyframes ni-bounce{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-4px);opacity:1}}
+  .ni-earlier{align-self:center;min-height:38px;border-radius:19px;border:1.5px solid var(--border);background:var(--surface);color:var(--green-dark);font-size:13px;font-weight:600;padding:0 16px;margin-bottom:8px}
+  .ni-earlier:hover{background:var(--tint)}
   .ni-empty-thread{margin:auto;text-align:center;color:var(--muted);font-size:14px;line-height:1.6;padding:24px}
   .ni-empty-thread b{display:block;color:var(--ink);font-size:16px;margin-bottom:4px}
   .ni-empty-thread .ni-btn{margin-top:12px}
   .ni-day{text-align:center;font-size:12px;color:var(--muted);padding:12px 0 6px;font-weight:600}
+  .ni-newline{display:flex;align-items:center;gap:10px;margin:12px 0 6px;color:var(--alert);font-size:12px;font-weight:700}
+  .ni-newline::before,.ni-newline::after{content:'';flex:1;height:1px;background:var(--alert);opacity:.4}
   .ni-row{display:flex;gap:7px;align-items:flex-end;width:100%;margin-top:2px}
   .ni-row.first{margin-top:9px}
   .ni-row.mine{flex-direction:row-reverse}
@@ -148,6 +209,7 @@
   .ni-tick svg{stroke:#9a9a94;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-1px}
   .ni-tick.read svg{stroke:#34B7F1}
   .ni-ai{font-size:11.5px;color:var(--muted);margin-top:3px;font-style:italic}
+  .ni-scam{font-size:12.5px;line-height:1.45;color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:10px;padding:8px 11px;margin-top:5px}
   .ni-retry{background:none;border:0;color:var(--alert);font-size:12.5px;font-weight:700;text-decoration:underline;padding:6px 0;min-height:32px}
   .ni-queued{font-size:12px;color:var(--amber);margin-top:2px}
   @media(max-width:860px){.ni-col{max-width:82%}}
@@ -164,6 +226,28 @@
   #ni-send svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2}
   #ni-send:disabled{opacity:.5;cursor:not-allowed}
 
+  /* ── Listing details panel (wide screens) ── */
+  #ni-side{display:none;width:340px;flex-shrink:0;flex-direction:column;background:var(--surface);border-left:1px solid var(--border);overflow-y:auto;min-height:0}
+  @media(min-width:1200px){body.ni-open:not(.ni-side-off) #ni-side{display:flex}#ni-details-btn{display:inline-flex}}
+  .ni-side-main{aspect-ratio:4/3;background:var(--border);overflow:hidden}
+  .ni-side-main img{width:100%;height:100%;object-fit:cover}
+  .ni-side-thumbs{display:flex;gap:6px;padding:8px 12px}
+  .ni-side-thumbs button{flex:1;aspect-ratio:1;border:2px solid transparent;border-radius:8px;overflow:hidden;padding:0;background:var(--border);max-width:64px}
+  .ni-side-thumbs button[aria-current="true"]{border-color:var(--green)}
+  .ni-side-thumbs img{width:100%;height:100%;object-fit:cover}
+  .ni-side-body{padding:6px 16px 20px}
+  .ni-side-body h3{font-family:'Playfair Display',serif;font-size:19px;margin:6px 0 4px;line-height:1.25}
+  .ni-side-price{font-size:22px;font-weight:700;color:var(--green-dark);margin:4px 0}
+  .ni-side-loc{font-size:13.5px;color:var(--ink-2);margin-bottom:10px}
+  .ni-side-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .ni-tag{font-size:12px;font-weight:700;border-radius:12px;padding:3px 10px;background:var(--tint);color:var(--green-dark)}
+  .ni-tag.bad{background:#FFF5F5;color:var(--alert)}
+  .ni-side dl{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 14px}
+  .ni-side dl div{background:var(--app-bg);border-radius:10px;padding:8px 10px;min-width:0}
+  .ni-side dt{font-size:11.5px;color:var(--muted)}
+  .ni-side dd{margin:0;font-size:13.5px;font-weight:600;overflow-wrap:anywhere}
+  .ni-side .ni-btn{width:100%;margin-bottom:8px}
+
   @media(max-width:860px){
     #ni-sidebar{width:100%;border-right:0}
     body.ni-open #ni-sidebar{display:none}
@@ -173,10 +257,11 @@
     #ni-messages{padding:14px 12px}
   }
 
-  /* ── Modals ── */
+  /* ── Modals + toast ── */
   .ni-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:14px;overscroll-behavior:contain}
   .ni-overlay.open{display:flex}
   .ni-modal{background:var(--surface);border-radius:16px;max-width:450px;width:100%;max-height:92vh;max-height:92dvh;overflow-y:auto;padding:24px 22px;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+  .ni-modal.wide{max-width:720px}
   .ni-modal h3{font-size:19px;font-weight:700;margin:0 0 4px}
   .ni-sub{font-size:13px;color:var(--muted);margin:0 0 16px;line-height:1.5}
   .ni-field{margin-bottom:14px}
@@ -196,6 +281,9 @@
   .ni-linkrow{display:flex;gap:8px;margin-bottom:12px}
   #ni-sync-link{flex:1;min-width:0;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;color:var(--ink-2);background:var(--app-bg)}
   .ni-warn{font-size:13px;color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:10px;padding:10px 12px;margin-bottom:14px;line-height:1.5}
+  #ni-toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);z-index:400;background:#1a1a18;color:#fff;border-radius:12px;padding:10px 14px;font-size:14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;max-width:min(92vw,460px)}
+  #ni-toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+  #ni-toast button{background:none;border:0;color:#7CE0C0;font-weight:700;font-size:14px;min-height:36px;padding:0 6px}
 </style>
 <link rel="stylesheet" href="/theme.css"/>
 <script src="/theme.js"></script>
@@ -204,77 +292,105 @@
 <body>
 <div id="ni-app">
   <header id="ni-header">
-    <a id="ni-back" href="/listings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg><span>Browse listings</span></a>
-    <div id="ni-title-wrap"><div id="ni-title">Nyumba254</div><div id="ni-subtitle">Your conversations with sellers</div></div>
-    <button id="ni-profile-btn" class="ni-hbtn" type="button" aria-label="My details and notifications"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0116 0v1"/></svg><span>My details</span></button>
-    <button id="ni-sync-btn" class="ni-hbtn" type="button" aria-label="Continue on another device"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg><span>Sync device</span></button>
+    <a id="ni-back" href="/listings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg><span data-i18n="browse">Browse listings</span></a>
+    <div id="ni-title-wrap"><div id="ni-title">Nyumba254</div><div id="ni-subtitle" data-i18n="subtitle">Your conversations with sellers</div></div>
+    <nav id="ni-nav" aria-label="Site"><a href="/" data-i18n="nav_home">Home</a><a id="ni-acct" href="/login" data-i18n="nav_signin">Sign in</a></nav>
+    <button id="ni-lang" class="ni-hbtn" type="button" aria-label="Change language">Kiswahili</button>
+    <button id="ni-profile-btn" class="ni-hbtn icon" type="button" data-i18n-aria="details_aria" aria-label="My details and notifications"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0116 0v1"/></svg><span data-i18n="details">My details</span></button>
+    <button id="ni-sync-btn" class="ni-hbtn icon" type="button" data-i18n-aria="sync_aria" aria-label="Continue on another device"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg><span data-i18n="sync">Sync device</span></button>
   </header>
-  <div id="ni-net" role="status">You're offline. Messages you send will go out as soon as you're back online.</div>
+  <div id="ni-net" role="status" data-i18n="offline">You're offline. Messages you send will go out as soon as you're back online.</div>
 
   <div id="ni-body">
     <aside id="ni-sidebar" aria-label="Conversations">
       <div id="ni-tabs" role="tablist">
-        <button type="button" class="ni-tab" role="tab" id="ni-tab-chats" data-tab="chats" aria-selected="true">Chats <span id="ni-unread-count" class="ni-count" hidden>0</span></button>
-        <button type="button" class="ni-tab" role="tab" id="ni-tab-saved" data-tab="saved" aria-selected="false">Saved <span id="ni-saved-count" class="ni-count" hidden>0</span></button>
+        <button type="button" class="ni-tab" role="tab" id="ni-tab-chats" data-tab="chats" aria-selected="true"><span data-i18n="tab_chats">Chats</span> <span id="ni-unread-count" class="ni-count" hidden>0</span></button>
+        <button type="button" class="ni-tab" role="tab" id="ni-tab-saved" data-tab="saved" aria-selected="false"><span data-i18n="tab_saved">Saved</span> <span id="ni-saved-count" class="ni-count" hidden>0</span></button>
       </div>
-      <div id="ni-search-row"><label class="sr-only" for="ni-search">Search conversations</label><input id="ni-search" type="search" placeholder="Search conversations…" autocomplete="off"/></div>
+      <div id="ni-search-row"><label class="sr-only" for="ni-search" data-i18n="search_aria">Search conversations</label><input id="ni-search" type="search" data-i18n-ph="search_ph" placeholder="Search conversations…" autocomplete="off"/></div>
+      <div id="ni-filters" role="group" aria-label="Filter conversations"></div>
+      <div id="ni-notif" hidden><p data-i18n="notif_t">Get alerts when a seller replies</p><button type="button" class="yes" data-a="notif-yes" data-i18n="notif_yes">Turn on</button><button type="button" class="no" data-a="notif-no" data-i18n="notif_no">Not now</button></div>
+      <div id="ni-ptr" data-i18n="ptr">Pull down to refresh</div>
       <div id="ni-list" role="tabpanel" aria-labelledby="ni-tab-chats"></div>
-      <div id="ni-saved" role="tabpanel" aria-labelledby="ni-tab-saved" hidden></div>
+      <div id="ni-saved" role="tabpanel" aria-labelledby="ni-tab-saved" hidden>
+        <div id="ni-saved-tools"><label class="sr-only" for="ni-saved-sort" data-i18n="sort_aria">Sort saved listings</label><select id="ni-saved-sort"><option value="new" data-i18n="sort_new">Recently saved</option><option value="low" data-i18n="sort_low">Price: low to high</option><option value="high" data-i18n="sort_high">Price: high to low</option></select><button type="button" class="ni-btn" id="ni-cmp-btn" disabled data-i18n="compare">Compare</button></div>
+        <div id="ni-saved-list"></div>
+      </div>
     </aside>
 
     <main id="ni-thread-pane">
-      <div id="ni-thread-empty">Select a conversation from the list to read your messages.</div>
+      <div id="ni-thread-empty"><span data-i18n="pick">Select a conversation from the list to read your messages.</span><small data-i18n="hint_keys">Tip: press / to search and ↑ ↓ to switch chats</small></div>
       <div id="ni-thread">
         <div id="ni-thead">
-          <button class="ni-ib" id="ni-back-btn" type="button" aria-label="Back to all chats"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <button class="ni-ib" id="ni-back-btn" type="button" data-i18n-aria="back_aria" aria-label="Back to all chats"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
           <div id="ni-tinfo"><div id="ni-tname"></div><div id="ni-presence"><span id="ni-dot"></span><span id="ni-ptxt">Connecting…</span></div></div>
-          <button class="ni-ib" id="ni-tsearch-btn" type="button" aria-label="Search in this conversation"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
-          <button class="ni-hpill" id="ni-book-btn" type="button" aria-label="Book a viewing"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span id="ni-book-label">Book a viewing</span></button>
-          <button class="ni-hpill" id="ni-invite-btn" type="button" aria-label="Invite a friend to look at this listing"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg><span>Invite a friend</span></button>
+          <button class="ni-ib" id="ni-tsearch-btn" type="button" data-i18n-aria="tsearch_aria" aria-label="Search in this conversation"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
+          <button class="ni-hpill" id="ni-book-btn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span id="ni-book-label">Book a viewing</span></button>
+          <button class="ni-ib" id="ni-details-btn" type="button" data-i18n-aria="details_panel" aria-label="Show or hide listing details"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="15" y1="3" x2="15" y2="21"/></svg></button>
+          <button class="ni-ib" id="ni-more" type="button" aria-haspopup="menu" aria-expanded="false" data-i18n-aria="more" aria-label="More"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg></button>
+          <div id="ni-menu" role="menu" aria-label="Conversation actions">
+            <button type="button" role="menuitem" data-m="call"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.12 1.2 2 2 0 012.11 0h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0122 14.92z"/></svg><span data-i18n="m_call">Call seller</span></button>
+            <button type="button" role="menuitem" data-m="wa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg><span data-i18n="m_wa">WhatsApp seller</span></button>
+            <button type="button" role="menuitem" data-m="invite"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg><span data-i18n="m_invite">Invite a friend</span></button>
+            <hr>
+            <button type="button" role="menuitem" data-m="archive"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg><span id="ni-m-archive-t">Archive conversation</span></button>
+            <button type="button" role="menuitem" data-m="report" class="danger"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg><span data-i18n="m_report">Report seller</span></button>
+          </div>
         </div>
-        <div id="ni-searchbar"><input id="ni-tsearch" type="search" placeholder="Search this conversation…" aria-label="Search this conversation"/><span id="ni-tcount" aria-live="polite"></span><button id="ni-tsearch-x" type="button" aria-label="Close search">✕</button></div>
+        <div id="ni-searchbar"><input id="ni-tsearch" type="search" data-i18n-ph="tsearch_ph" placeholder="Search this conversation…" aria-label="Search this conversation"/><span id="ni-tcount" aria-live="polite"></span><button id="ni-tsearch-x" type="button" aria-label="Close search">✕</button></div>
+        <div id="ni-gone" hidden role="alert"></div>
+        <div id="ni-vstrip" hidden><span id="ni-vstrip-t"></span><button type="button" data-a="ics" data-i18n="v_cal">Add to calendar</button><button type="button" data-a="resched" data-i18n="v_change">Change time</button></div>
         <div id="ni-lcard"></div>
-        <div id="ni-safety" role="note"><p id="ni-safety-t">Never pay before viewing the property. Nyumba254 never asks buyers for money.</p><button type="button" id="ni-report" data-a="ask">Report</button><button type="button" id="ni-safety-x" aria-label="Dismiss safety note">✕</button></div>
-        <div id="ni-msgs-wrap"><div id="ni-messages" role="log" aria-live="polite" aria-label="Messages"></div><button type="button" id="ni-newpill">New message ↓</button></div>
+        <div id="ni-safety" role="note"><p id="ni-safety-t"></p><button type="button" id="ni-report" data-a="ask" data-i18n="report">Report</button><button type="button" id="ni-safety-x" aria-label="Dismiss safety note">✕</button></div>
+        <div id="ni-msgs-wrap"><div id="ni-messages" role="log" aria-live="polite" aria-label="Messages"></div><div id="ni-typing" role="status"><span class="ni-dots"><i></i><i></i><i></i></span><span id="ni-typing-t">Typing…</span></div><button type="button" id="ni-newpill" data-i18n="new_pill">New message ↓</button></div>
         <div id="ni-quick"></div>
-        <div id="ni-inrow"><label class="sr-only" for="ni-input">Message</label><textarea id="ni-input" placeholder="Type a message…" rows="1"></textarea><button id="ni-send" type="button" aria-label="Send message"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div>
+        <div id="ni-inrow"><label class="sr-only" for="ni-input" data-i18n="msg_aria">Message</label><textarea id="ni-input" data-i18n-ph="input_ph" placeholder="Type a message…" rows="1"></textarea><button id="ni-send" type="button" data-i18n-aria="send_aria" aria-label="Send message"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div>
       </div>
     </main>
+    <aside id="ni-side" aria-label="Listing details"></aside>
   </div>
 </div>
 
 <!-- Booking modal -->
 <div id="ni-vov" class="ni-overlay"><div class="ni-modal" role="dialog" aria-modal="true" aria-labelledby="ni-vt">
-  <h3 id="ni-vt">Book a viewing</h3><p class="ni-sub">Request a time to see this property. The seller confirms in your chat.</p>
+  <h3 id="ni-vt">Book a viewing</h3><p class="ni-sub" data-i18n="v_sub">Request a time to see this property. The seller confirms in your chat.</p>
   <div class="ni-banner" id="ni-verr" role="alert"></div>
   <div class="ni-two">
-    <div class="ni-field"><label for="ni-vdate">Date</label><input type="date" id="ni-vdate"/><div class="ni-err" id="ni-vdate-e" role="alert"></div></div>
-    <div class="ni-field"><label for="ni-vtime">Time</label><select id="ni-vtime"><option value="">Select time</option><option>Morning (8am–11am)</option><option>Midday (11am–2pm)</option><option>Afternoon (2pm–5pm)</option><option>Evening (5pm–7pm)</option></select><div class="ni-err" id="ni-vtime-e" role="alert"></div></div>
+    <div class="ni-field"><label for="ni-vdate" data-i18n="v_date">Date</label><input type="date" id="ni-vdate"/><div class="ni-err" id="ni-vdate-e" role="alert"></div></div>
+    <div class="ni-field"><label for="ni-vtime" data-i18n="v_time">Time</label><select id="ni-vtime"></select><div class="ni-err" id="ni-vtime-e" role="alert"></div></div>
   </div>
-  <div class="ni-field"><label for="ni-vname">Full name</label><input type="text" id="ni-vname" autocomplete="name"/><div class="ni-err" id="ni-vname-e" role="alert"></div></div>
-  <div class="ni-field"><label for="ni-vphone">Phone</label><input type="tel" id="ni-vphone" inputmode="tel" autocomplete="tel" placeholder="07XX XXX XXX"/><div class="ni-err" id="ni-vphone-e" role="alert"></div></div>
-  <div class="ni-field"><label for="ni-vnotes">Notes (optional)</label><textarea id="ni-vnotes" rows="2" placeholder="Anything the seller should know"></textarea></div>
-  <div class="ni-actions"><button class="ni-btn ghost" type="button" id="ni-vcancel">Cancel</button><button class="ni-btn" type="button" id="ni-vsend">Request viewing</button></div>
+  <div class="ni-field"><label for="ni-vname" data-i18n="v_name">Full name</label><input type="text" id="ni-vname" autocomplete="name"/><div class="ni-err" id="ni-vname-e" role="alert"></div></div>
+  <div class="ni-field"><label for="ni-vphone" data-i18n="v_phone">Phone</label><input type="tel" id="ni-vphone" inputmode="tel" autocomplete="tel" placeholder="07XX XXX XXX"/><div class="ni-err" id="ni-vphone-e" role="alert"></div></div>
+  <div class="ni-field"><label for="ni-vnotes" data-i18n="v_notes">Notes (optional)</label><textarea id="ni-vnotes" rows="2"></textarea></div>
+  <div class="ni-actions"><button class="ni-btn ghost" type="button" id="ni-vcancel" data-i18n="cancel">Cancel</button><button class="ni-btn" type="button" id="ni-vsend" data-i18n="v_send">Request viewing</button></div>
 </div></div>
 
 <!-- Profile modal -->
 <div id="ni-pov" class="ni-overlay"><div class="ni-modal" role="dialog" aria-modal="true" aria-labelledby="ni-pt">
-  <h3 id="ni-pt">My details</h3><p class="ni-sub">Add your name, email or phone so sellers can reach you, and so we can email you when a seller replies while you're away.</p>
-  <div class="ni-field"><label for="ni-p-name">Full name</label><input type="text" id="ni-p-name" autocomplete="name" placeholder="Your name"/></div>
+  <h3 id="ni-pt" data-i18n="details">My details</h3><p class="ni-sub" data-i18n="p_sub">Add your name, email or phone so sellers can reach you, and so we can email you when a seller replies while you're away.</p>
+  <div class="ni-field"><label for="ni-p-name" data-i18n="v_name">Full name</label><input type="text" id="ni-p-name" autocomplete="name"/></div>
   <div class="ni-field"><label for="ni-p-email">Email</label><input type="email" id="ni-p-email" autocomplete="email" placeholder="you@example.com"/><div class="ni-err" id="ni-p-email-e" role="alert"></div></div>
-  <div class="ni-field"><label for="ni-p-phone">Phone</label><input type="tel" id="ni-p-phone" inputmode="tel" autocomplete="tel" placeholder="07XX XXX XXX"/><div class="ni-err" id="ni-p-phone-e" role="alert"></div></div>
-  <label class="ni-toggle" for="ni-p-notify"><span>Email me when I get a reply</span><input type="checkbox" id="ni-p-notify" checked/></label>
-  <div class="ni-actions"><button class="ni-btn ghost" type="button" id="ni-pcancel">Close</button><button class="ni-btn" type="button" id="ni-psave">Save &amp; email me my link</button></div>
+  <div class="ni-field"><label for="ni-p-phone" data-i18n="v_phone">Phone</label><input type="tel" id="ni-p-phone" inputmode="tel" autocomplete="tel" placeholder="07XX XXX XXX"/><div class="ni-err" id="ni-p-phone-e" role="alert"></div></div>
+  <label class="ni-toggle" for="ni-p-notify"><span data-i18n="p_notify">Email me when I get a reply</span><input type="checkbox" id="ni-p-notify" checked/></label>
+  <div class="ni-actions"><button class="ni-btn ghost" type="button" id="ni-pcancel" data-i18n="close">Close</button><button class="ni-btn" type="button" id="ni-psave" data-i18n="p_save">Save &amp; email me my link</button></div>
   <p class="ni-status" id="ni-pstatus" role="status"></p>
 </div></div>
 
 <!-- Sync modal -->
 <div id="ni-sov" class="ni-overlay"><div class="ni-modal" role="dialog" aria-modal="true" aria-labelledby="ni-st">
-  <h3 id="ni-st">Continue on another device</h3><p class="ni-sub">This link opens all of your Nyumba254 chats and saved listings on any phone or computer.</p>
-  <div class="ni-warn">Anyone who has this link can read your chats. Send it only to yourself and never post it publicly.</div>
-  <div class="ni-linkrow"><input type="text" id="ni-sync-link" readonly placeholder="Send a message first to get your link" aria-label="Your link"/><button class="ni-btn" id="ni-sync-copy" type="button">Copy</button></div>
-  <div class="ni-actions"><button class="ni-btn ghost" id="ni-sync-close" type="button">Done</button></div>
+  <h3 id="ni-st" data-i18n="s_title">Continue on another device</h3><p class="ni-sub" data-i18n="s_sub">This link opens all of your Nyumba254 chats and saved listings on any phone or computer.</p>
+  <div class="ni-warn" data-i18n="s_warn">Anyone who has this link can read your chats. Send it only to yourself and never post it publicly.</div>
+  <div class="ni-linkrow"><input type="text" id="ni-sync-link" readonly aria-label="Your link"/><button class="ni-btn" id="ni-sync-copy" type="button" data-i18n="copy">Copy</button></div>
+  <div class="ni-actions"><button class="ni-btn ghost" id="ni-sync-close" type="button" data-i18n="done">Done</button></div>
 </div></div>
+
+<!-- Compare modal -->
+<div id="ni-cov" class="ni-overlay"><div class="ni-modal wide" role="dialog" aria-modal="true" aria-labelledby="ni-ct">
+  <h3 id="ni-ct" data-i18n="compare">Compare</h3><div class="ni-cmp-scroll" id="ni-cmp-body"></div>
+  <div class="ni-actions"><button class="ni-btn ghost" id="ni-cmp-close" type="button" data-i18n="close">Close</button></div>
+</div></div>
+
+<div id="ni-toast" role="status" aria-live="polite"><span id="ni-toast-t"></span><button type="button" id="ni-toast-a" hidden></button></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/nk-chat-core.js"></script>
@@ -285,81 +401,247 @@
   const EDGE = 'https://vliuuloyfhyxcsuchpss.supabase.co/functions/v1', KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
   const desk = () => matchMedia('(min-width:861px)').matches, touch = () => matchMedia('(pointer:coarse)').matches;
   const VER = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.4 2.4 3.3-.5.5 3.3L21 9.5 18.4 12 21 14.5l-2.8 2.3-.5 3.3-3.3-.5L12 22l-2.4-2.4-3.3.5-.5-3.3L3 14.5 5.6 12 3 9.5l2.8-2.3.5-3.3 3.3.5z"/></svg>';
-  let tab = 'chats', term = '', threadTerm = '', pushed = false, lastFocus = null;
+  const ICON_ARCH = '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>';
+
+  /* ═════ language: English and Kiswahili ═════ */
+  const D = {
+    en: {
+      browse: 'Browse listings', subtitle: 'Your conversations with sellers', nav_home: 'Home', nav_signin: 'Sign in', nav_account: 'My account', details: 'My details', details_aria: 'My details and notifications', sync: 'Sync device', sync_aria: 'Continue on another device',
+      offline: "You're offline. Messages you send will go out as soon as you're back online.", tab_chats: 'Chats', tab_saved: 'Saved', search_aria: 'Search conversations', search_ph: 'Search conversations…  ( / )',
+      notif_t: 'Get alerts when a seller replies', notif_yes: 'Turn on', notif_no: 'Not now', ptr: 'Pull down to refresh', ptr_go: 'Release to refresh',
+      sort_aria: 'Sort saved listings', sort_new: 'Recently saved', sort_low: 'Price: low to high', sort_high: 'Price: high to low', compare: 'Compare', compare_n: n => `Compare (${n})`,
+      pick: 'Select a conversation from the list to read your messages.', hint_keys: 'Tip: press / to search and ↑ ↓ to switch chats', back_aria: 'Back to all chats', tsearch_aria: 'Search in this conversation', tsearch_ph: 'Search this conversation…', details_panel: 'Show or hide listing details', more: 'More',
+      m_call: 'Call seller', m_wa: 'WhatsApp seller', m_invite: 'Invite a friend', m_archive: 'Archive conversation', m_unarchive: 'Move back to chats', m_report: 'Report seller',
+      safety: 'Never pay before viewing the property. Nyumba254 never asks buyers for money.', report: 'Report', report_ask: 'Send a report about this seller to Nyumba254?', report_yes: 'Yes, report', report_ok: "Thank you. We've received your report.", report_fail: 'The report could not be sent. Please try again.',
+      v_label: 'Viewing', v_cal: 'Add to calendar', v_change: 'Change time', v_title: 'Book a viewing', v_title_r: 'Change viewing time', v_sub: 'Request a time to see this property. The seller confirms in your chat.', v_date: 'Date', v_time: 'Time', v_select: 'Select time', v_name: 'Full name', v_phone: 'Phone', v_notes: 'Notes (optional)', cancel: 'Cancel', v_send: 'Request viewing', v_send_r: 'Send new time', book: 'Book a viewing', book_again: 'Book another viewing',
+      p_sub: "Add your name, email or phone so sellers can reach you, and so we can email you when a seller replies while you're away.", p_notify: 'Email me when I get a reply', p_save: 'Save & email me my link', close: 'Close', s_title: 'Continue on another device', s_sub: 'This link opens all of your Nyumba254 chats and saved listings on any phone or computer.', s_warn: 'Anyone who has this link can read your chats. Send it only to yourself and never post it publicly.', copy: 'Copy', copied: 'Copied', done: 'Done',
+      new_pill: 'New message ↓', msg_aria: 'Message', input_ph: 'Type a message…', send_aria: 'Send message', no_msgs: 'No messages yet', draft: 'Draft:',
+      f_all: 'All', f_unread: 'Unread', f_view: 'Viewings', f_arch: 'Archived', e_none_t: 'No conversations yet', e_none_d: 'Message a seller from any listing and the chat appears here. Sellers usually reply faster when you ask a specific question.', e_browse: 'Browse listings', e_filter: 'No conversations match.', e_load: 'We could not load your conversations.', retry: 'Try again',
+      s_none_t: 'No saved listings yet', s_none_d: 'Tap the heart on any listing to keep it here, then compare your favourites.', s_load: 'We could not load your saved listings.',
+      gone_sold: 'This property has been sold.', gone_occ: 'This property is no longer available.', gone_missing: 'This listing is no longer available.', gone_link: 'See similar listings',
+      empty_t: 'Say hello 👋', empty_d: 'Ask if it is still available, about the deposit, or when you can view it.', loading: 'Loading messages…', load_err: 'Could not load this chat', earlier: 'Load earlier messages', new_line: 'New messages',
+      ai: 'Automated reply, written from the listing details', retry_msg: 'Not sent. Tap to retry', queued: 'Waiting for a connection…', scam: 'Be careful: the seller mentioned a payment. Never pay before you have viewed the property, and never send money to a number you found only in chat.',
+      archived: 'Conversation archived', unarchived: 'Moved back to chats', undo: 'Undo', archive_short: 'Archive', unarchive_short: 'Restore', arch_aria: 'Archive conversation', unarch_aria: 'Move back to chats', sold: 'Sold', occupied: 'Occupied', remove_aria: 'Remove from saved',
+      gone_saved: n => `${n} saved listing${n > 1 ? 's are' : ' is'} no longer available.`, remove_them: 'Remove', c_price: 'Price', c_loc: 'Location', c_type: 'Type', c_bed: 'Bedrooms', c_bath: 'Bathrooms', c_size: 'Floor area', c_status: 'Status', price_req: 'Price on request', available: 'Available',
+      c_getting: 'Getting the seller’s contact…', c_offline: "You're offline. Connect to the internet to contact the seller.", c_unavail: 'The seller’s number is not available right now. Keep chatting here.', c_limit: 'You have reached the contact limit for now. Keep chatting here.', c_copied: 'number copied',
+      view_listing: 'View listing →', open_listing: 'Open full listing', open_maps: 'Open in Maps', matches: n => `${n} match${n > 1 ? 'es' : ''}`, no_match: 'No matches',
+      p_connecting: 'Connecting…', p_online: 'Online now', p_away: 'Away', p_typing: 'Typing…', typing_t: 'The seller is typing…',
+      f_beds: 'Bedrooms', f_baths: 'Bathrooms', f_area: 'Floor area', f_furn: 'Furnishing', f_res: 'Residents', f_inst: 'Nearest institution', f_guests: 'Guests', f_type: 'Type', f_stay: 'Minimum stay', studio: 'Studio', furn_yes: 'Furnished', furn_partial: 'Partly furnished', furn_no: 'Unfurnished', verified: 'Verified seller', unverified: 'Not yet verified',
+      invite_text: (title, url) => `Check out "${title}" on Nyumba254: ${url}`, wa_text: title => `Hello, I'm chatting with you about "${title}" on Nyumba254.`,
+      pn_saved: 'Saved.', pn_saved_mail: 'Saved. Check your email for your access link.', pn_saved_nochat: 'Saved. Start a chat first to get an emailed access link.', pn_sync_fail: ' (Your details are saved on this device; syncing to the server did not finish.)', bad_email: 'That email does not look right', bad_phone: 'Enter a valid phone number, e.g. 0712 345 678', saving: 'Saving…', sending: 'Sending…', loading_short: 'Loading…',
+      notif_title: (seller, title) => `${seller} · ${title}`
+    },
+    sw: {
+      browse: 'Vinjari matangazo', subtitle: 'Mazungumzo yako na wauzaji', nav_home: 'Nyumbani', nav_signin: 'Ingia', nav_account: 'Akaunti yangu', details: 'Taarifa zangu', details_aria: 'Taarifa zangu na arifa', sync: 'Unganisha kifaa', sync_aria: 'Endelea kwenye kifaa kingine',
+      offline: 'Huna mtandao. Ujumbe wako utatumwa mara mtandao utakaporudi.', tab_chats: 'Mazungumzo', tab_saved: 'Zilizohifadhiwa', search_aria: 'Tafuta mazungumzo', search_ph: 'Tafuta mazungumzo…  ( / )',
+      notif_t: 'Pata arifa muuzaji akijibu', notif_yes: 'Washa', notif_no: 'Sio sasa', ptr: 'Vuta chini ili kusasisha', ptr_go: 'Achia ili kusasisha',
+      sort_aria: 'Panga zilizohifadhiwa', sort_new: 'Zilizohifadhiwa hivi karibuni', sort_low: 'Bei: ndogo hadi kubwa', sort_high: 'Bei: kubwa hadi ndogo', compare: 'Linganisha', compare_n: n => `Linganisha (${n})`,
+      pick: 'Chagua mazungumzo kutoka kwenye orodha ili kusoma ujumbe wako.', hint_keys: 'Kidokezo: bonyeza / kutafuta na ↑ ↓ kubadilisha mazungumzo', back_aria: 'Rudi kwenye mazungumzo yote', tsearch_aria: 'Tafuta kwenye mazungumzo haya', tsearch_ph: 'Tafuta kwenye mazungumzo haya…', details_panel: 'Onyesha au ficha maelezo ya tangazo', more: 'Zaidi',
+      m_call: 'Piga simu kwa muuzaji', m_wa: 'WhatsApp muuzaji', m_invite: 'Mwalike rafiki', m_archive: 'Weka mazungumzo kando', m_unarchive: 'Rudisha kwenye mazungumzo', m_report: 'Ripoti muuzaji',
+      safety: 'Usilipe kabla ya kutazama mali. Nyumba254 haiombi wanunuzi pesa.', report: 'Ripoti', report_ask: 'Tuma ripoti kuhusu muuzaji huyu kwa Nyumba254?', report_yes: 'Ndiyo, ripoti', report_ok: 'Asante. Tumepokea ripoti yako.', report_fail: 'Ripoti haikutumwa. Tafadhali jaribu tena.',
+      v_label: 'Kutazama', v_cal: 'Ongeza kwenye kalenda', v_change: 'Badilisha muda', v_title: 'Panga kutazama', v_title_r: 'Badilisha muda wa kutazama', v_sub: 'Omba muda wa kuona mali hii. Muuzaji atathibitisha kwenye mazungumzo yenu.', v_date: 'Tarehe', v_time: 'Muda', v_select: 'Chagua muda', v_name: 'Jina kamili', v_phone: 'Simu', v_notes: 'Maelezo (si lazima)', cancel: 'Ghairi', v_send: 'Omba kutazama', v_send_r: 'Tuma muda mpya', book: 'Panga kutazama', book_again: 'Panga kutazama tena',
+      p_sub: 'Weka jina, barua pepe au simu ili wauzaji wakufikie, na ili tukutumie barua pepe muuzaji akijibu ukiwa mbali.', p_notify: 'Nitumie barua pepe nikipata jibu', p_save: 'Hifadhi na unitumie kiungo changu', close: 'Funga', s_title: 'Endelea kwenye kifaa kingine', s_sub: 'Kiungo hiki kinafungua mazungumzo yako yote ya Nyumba254 na matangazo uliyohifadhi kwenye simu au kompyuta yoyote.', s_warn: 'Yeyote mwenye kiungo hiki anaweza kusoma mazungumzo yako. Kitume kwako mwenyewe tu, kamwe usikichapishe hadharani.', copy: 'Nakili', copied: 'Imenakiliwa', done: 'Nimemaliza',
+      new_pill: 'Ujumbe mpya ↓', msg_aria: 'Ujumbe', input_ph: 'Andika ujumbe…', send_aria: 'Tuma ujumbe', no_msgs: 'Hakuna ujumbe bado', draft: 'Rasimu:',
+      f_all: 'Yote', f_unread: 'Hayajasomwa', f_view: 'Kutazama', f_arch: 'Kando', e_none_t: 'Hakuna mazungumzo bado', e_none_d: 'Tuma ujumbe kwa muuzaji kutoka tangazo lolote na mazungumzo yataonekana hapa. Wauzaji hujibu haraka ukiuliza swali mahususi.', e_browse: 'Vinjari matangazo', e_filter: 'Hakuna mazungumzo yanayolingana.', e_load: 'Hatukuweza kupakia mazungumzo yako.', retry: 'Jaribu tena',
+      s_none_t: 'Hakuna matangazo yaliyohifadhiwa', s_none_d: 'Gusa moyo kwenye tangazo lolote ili liwekwe hapa, kisha linganisha unayopenda.', s_load: 'Hatukuweza kupakia matangazo uliyohifadhi.',
+      gone_sold: 'Mali hii imeuzwa.', gone_occ: 'Mali hii haipatikani tena.', gone_missing: 'Tangazo hili halipatikani tena.', gone_link: 'Angalia matangazo yanayofanana',
+      empty_t: 'Sema hujambo 👋', empty_d: 'Uliza kama bado inapatikana, kuhusu amana, au lini unaweza kutazama.', loading: 'Inapakia ujumbe…', load_err: 'Hatukuweza kupakia mazungumzo haya', earlier: 'Pakia ujumbe wa awali', new_line: 'Ujumbe mpya',
+      ai: 'Jibu la kiotomatiki, kutoka kwa maelezo ya tangazo', retry_msg: 'Haikutumwa. Gusa ujaribu tena', queued: 'Inasubiri mtandao…', scam: 'Tahadhari: muuzaji alitaja malipo. Usilipe kabla ya kutazama mali, na usitume pesa kwa namba uliyoipata kwenye mazungumzo pekee.',
+      archived: 'Mazungumzo yamewekwa kando', unarchived: 'Yamerudishwa kwenye mazungumzo', undo: 'Tendua', archive_short: 'Weka kando', unarchive_short: 'Rudisha', arch_aria: 'Weka mazungumzo kando', unarch_aria: 'Rudisha kwenye mazungumzo', sold: 'Imeuzwa', occupied: 'Imechukuliwa', remove_aria: 'Ondoa kwenye zilizohifadhiwa',
+      gone_saved: n => `Tangazo ${n} lililohifadhiwa halipatikani tena.`, remove_them: 'Ondoa', c_price: 'Bei', c_loc: 'Mahali', c_type: 'Aina', c_bed: 'Vyumba vya kulala', c_bath: 'Bafu', c_size: 'Ukubwa', c_status: 'Hali', price_req: 'Bei ukiuliza', available: 'Inapatikana',
+      c_getting: 'Inapata mawasiliano ya muuzaji…', c_offline: 'Huna mtandao. Unganisha intaneti ili uwasiliane na muuzaji.', c_unavail: 'Namba ya muuzaji haipatikani sasa. Endeleeni kuzungumza hapa.', c_limit: 'Umefikia kikomo cha mawasiliano kwa sasa. Endeleeni kuzungumza hapa.', c_copied: 'namba imenakiliwa',
+      view_listing: 'Tazama tangazo →', open_listing: 'Fungua tangazo kamili', open_maps: 'Fungua kwenye Ramani', matches: n => `${n} yanayolingana`, no_match: 'Hakuna yanayolingana',
+      p_connecting: 'Inaunganisha…', p_online: 'Yupo mtandaoni', p_away: 'Hayupo', p_typing: 'Anaandika…', typing_t: 'Muuzaji anaandika…',
+      f_beds: 'Vyumba vya kulala', f_baths: 'Bafu', f_area: 'Ukubwa', f_furn: 'Samani', f_res: 'Wakazi', f_inst: 'Taasisi ya karibu', f_guests: 'Wageni', f_type: 'Aina', f_stay: 'Muda wa chini', studio: 'Studio', furn_yes: 'Ina samani', furn_partial: 'Samani kiasi', furn_no: 'Haina samani', verified: 'Muuzaji aliyethibitishwa', unverified: 'Hajathibitishwa bado',
+      invite_text: (title, url) => `Tazama "${title}" kwenye Nyumba254: ${url}`, wa_text: title => `Hujambo, nazungumza nawe kuhusu "${title}" kwenye Nyumba254.`,
+      pn_saved: 'Imehifadhiwa.', pn_saved_mail: 'Imehifadhiwa. Angalia barua pepe yako kwa kiungo chako.', pn_saved_nochat: 'Imehifadhiwa. Anza mazungumzo kwanza ili upate kiungo kwa barua pepe.', pn_sync_fail: ' (Taarifa zako zimehifadhiwa kwenye kifaa hiki; kuunganisha na seva hakukukamilika.)', bad_email: 'Barua pepe haionekani sahihi', bad_phone: 'Weka namba sahihi ya simu, mfano 0712 345 678', saving: 'Inahifadhi…', sending: 'Inatuma…', loading_short: 'Inapakia…',
+      notif_title: (seller, title) => `${seller} · ${title}`
+    }
+  };
+  let lang = core.ls.get('nk_lang') === 'sw' ? 'sw' : 'en';
+  const t = (k, ...a) => { const v = D[lang][k] !== undefined ? D[lang][k] : D.en[k]; return typeof v === 'function' ? v(...a) : (v === undefined ? k : v); };
+  const loc = () => (lang === 'sw' ? 'sw-KE' : 'en-KE');
+  const dateShort = iso => new Date(iso + 'T00:00:00').toLocaleDateString(loc(), { day: 'numeric', month: 'short' });
+  const dateLong = iso => new Date(iso + 'T00:00:00').toLocaleDateString(loc(), { weekday: 'short', day: 'numeric', month: 'short' });
+  const SLOTS = [['Morning (8am–11am)', 'Morning, 8am to 11am', 'Asubuhi, 8am hadi 11am'], ['Midday (11am–2pm)', 'Midday, 11am to 2pm', 'Mchana, 11am hadi 2pm'], ['Afternoon (2pm–5pm)', 'Afternoon, 2pm to 5pm', 'Alasiri, 2pm hadi 5pm'], ['Evening (5pm–7pm)', 'Evening, 5pm to 7pm', 'Jioni, 5pm hadi 7pm']];
+  const SLOT_HOURS = { 'Morning (8am–11am)': [8, 11], 'Midday (11am–2pm)': [11, 14], 'Afternoon (2pm–5pm)': [14, 17], 'Evening (5pm–7pm)': [17, 19] };
+  const slotName = v => { const s = SLOTS.find(x => x[0] === v); return s ? s[lang === 'sw' ? 2 : 1] : v; };
+
+  /* quick replies: a set for each kind of listing, in both languages */
+  const QRD = {
+    avail: ['Is this still available?', 'Je, bado inapatikana?'], view: ["I'd like to book a viewing", 'Ningependa kupanga kutazama'], view_r: ['Can we reschedule the viewing?', 'Je, tunaweza kubadilisha muda wa kutazama?'],
+    deposit: ['Is a deposit required?', 'Je, amana inahitajika?'], price: ['Is the price negotiable?', 'Je, bei inaweza kujadiliwa?'], incl: ["What's included in the rent?", 'Kodi inajumuisha nini?'], photos: ['Can you share more photos?', 'Unaweza kutuma picha zaidi?'], town: ['How far is it from town?', 'Ni umbali gani kutoka mjini?'],
+    campus: ['Is it near campus?', 'Je, iko karibu na chuo?'], meals: ['Are meals included?', 'Je, chakula kimejumuishwa?'], curfew: ['Is there a curfew?', 'Je, kuna muda wa kufunga geti?'], utils: ['Is there water and power all day?', 'Je, kuna maji na umeme wakati wote?'],
+    dates: ['Is it free on these dates?', 'Je, iko wazi tarehe hizi?'], clean: ['Is there a cleaning fee?', 'Je, kuna ada ya usafi?'], checkin: ['Is check-in flexible?', 'Je, muda wa kuingia unaweza kubadilika?'],
+    lease: ['Is the lease negotiable?', 'Je, mkataba unaweza kujadiliwa?'], parking: ['Is there parking?', 'Je, kuna maegesho?'], service: ['What is the service charge?', 'Ada ya huduma ni kiasi gani?']
+  };
+  const QSETS = { base: ['avail', 'view', 'deposit', 'price', 'incl', 'photos', 'town'], boarding: ['avail', 'view', 'campus', 'meals', 'curfew', 'utils', 'deposit', 'price'], airbnb: ['avail', 'dates', 'clean', 'checkin', 'price', 'photos'], commercial: ['avail', 'view', 'lease', 'parking', 'service', 'price', 'photos'] };
+
+  /* ═════ state ═════ */
+  let tab = 'chats', term = '', filter = 'all', threadTerm = '', pushed = false, lastFocus = null, newLineKey = null, newLineFor = null, draftT = null, sidePhoto = 0, savedData = [];
+  const cmpSel = new Set(), DK = 'nk_chat_draft_';
+  const getDraft = id => core.ls.get(DK + id) || '';
+  const setDraft = (id, v) => { if (v && v.trim()) core.ls.set(DK + id, v); else core.ls.del(DK + id); };
+  const isArch = id => core.Archive.has(id);
   const activeConvo = () => { const a = core.active(); return a ? core.convos().find(c => c.listingId === a.listingId) : null; };
   const vis = () => !!core.active() && !document.hidden;
   const atBottom = () => { const b = $('ni-messages'); return b.scrollHeight - b.scrollTop - b.clientHeight < 90; };
   const toBottom = () => { const b = $('ni-messages'); b.scrollTop = b.scrollHeight; $('ni-newpill').classList.remove('show'); };
   const setErr = (id, m) => { const e = $(id + '-e'), i = $(id); if (e) e.textContent = m || ''; if (i) i.setAttribute('aria-invalid', m ? 'true' : 'false'); };
+  const autosize = el => { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; };
+  const labels = () => ({ ai: t('ai'), retry: t('retry_msg'), queued: t('queued'), scam: t('scam') });
 
-  /* ── modals: open / close with focus handling and Escape ── */
+  /* ── toast ── */
+  let toastT;
+  const hideToast = () => $('ni-toast').classList.remove('show');
+  function toast(msg, label, fn) { $('ni-toast-t').textContent = msg; const b = $('ni-toast-a'); b.hidden = !label; b.textContent = label || ''; b.onclick = () => { if (fn) fn(); hideToast(); }; $('ni-toast').classList.add('show'); clearTimeout(toastT); toastT = setTimeout(hideToast, label ? 6000 : 3800); }
+
+  /* ── modals ── */
   function openModal(id, focusId) { lastFocus = document.activeElement; $(id).classList.add('open'); if (focusId && !touch()) setTimeout(() => { const f = $(focusId); if (f) f.focus(); }, 50); }
   function closeModal(id) { $(id).classList.remove('open'); if (lastFocus && lastFocus.focus && document.contains(lastFocus)) lastFocus.focus(); }
-  document.addEventListener('keydown', e => { if (e.key !== 'Escape') return; const o = qsa('.ni-overlay.open').pop(); if (o) closeModal(o.id); });
   qsa('.ni-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) closeModal(o.id); }));
 
-  /* ── header counts + title ── */
+  /* ═════ counts, filters, conversation list ═════ */
   function renderCounts() {
-    const n = core.unread(), b = $('ni-unread-count'); b.hidden = !n; b.textContent = n > 9 ? '9+' : n; core.setTitleBadge(n);
+    const n = core.convos().filter(c => !isArch(c.listingId)).reduce((s, c) => s + (c.unread || 0), 0), b = $('ni-unread-count'); b.hidden = !n; b.textContent = n > 9 ? '9+' : n; core.setTitleBadge(core.unread());
     const ids = core.savedIds(), s = $('ni-saved-count'); s.hidden = !ids.length; s.textContent = ids.length;
   }
-
-  /* ── conversation list ── */
+  function visibleConvos() {
+    const q = term.trim().toLowerCase();
+    return core.convos().filter(c => {
+      const arch = isArch(c.listingId); if (filter === 'archived' ? !arch : arch) return false;
+      if (filter === 'unread' && !c.unread) return false; if (filter === 'viewing' && !core.booked(c.listingId)) return false;
+      return !q || c.title.toLowerCase().includes(q) || c.sellerName.toLowerCase().includes(q) || (c.lastMessage || '').toLowerCase().includes(q);
+    });
+  }
+  function renderFilters() {
+    const all = core.convos(), unread = all.filter(c => !isArch(c.listingId) && c.unread).length, arch = all.filter(c => isArch(c.listingId)).length;
+    const chip = (k, label, n) => `<button type="button" class="ni-fchip" data-f="${k}" aria-pressed="${filter === k}">${esc(label)}${n ? ` <span class="ni-count">${n}</span>` : ''}</button>`;
+    $('ni-filters').innerHTML = chip('all', t('f_all')) + chip('unread', t('f_unread'), unread) + chip('viewing', t('f_view')) + (arch ? chip('archived', t('f_arch'), arch) : '');
+    $('ni-filters').hidden = !all.length;
+  }
+  function convoHtml(c) {
+    const a = core.active(), draft = getDraft(c.listingId), nv = core.nextViewing(c.listingId), arch = isArch(c.listingId), id = esc(c.listingId);
+    const last = draft ? `<span class="ni-draft">${esc(t('draft'))}</span> ${esc(draft)}` : esc(c.lastMessage || t('no_msgs'));
+    return `<div class="ni-swipe"><div class="ni-swipe-bg" aria-hidden="true">${esc(t(arch ? 'unarchive_short' : 'archive_short'))}</div><button type="button" class="ni-convo" data-l="${id}" aria-current="${!!a && a.listingId === c.listingId}"><span class="ni-thumb">${c.coverUrl ? `<img src="${esc(c.coverUrl)}" alt="" loading="lazy"/>` : esc(core.initials(c.sellerName))}</span><span class="ni-cb"><span class="ni-ct"><span>${esc(c.title)}</span>${c.sellerVerified ? VER : ''}</span><span class="ni-cl">${last}</span>${nv ? `<span class="ni-vtag">📅 ${esc(dateShort(nv.requested_date))}</span>` : ''}</span><span class="ni-cm"><span class="ni-cw">${esc(core.whenLabel(c.lastAt))}</span>${c.unread ? `<span class="ni-badge">${c.unread > 9 ? '9+' : c.unread}</span>` : ''}</span></button><button type="button" class="ni-arch" data-arch="${id}" aria-label="${esc(t(arch ? 'unarch_aria' : 'arch_aria'))}" title="${esc(t(arch ? 'unarch_aria' : 'arch_aria'))}">${ICON_ARCH}</button></div>`;
+  }
   function renderList() {
-    const list = $('ni-list'), all = core.convos(), t = term.trim().toLowerCase(), a = core.active();
+    const list = $('ni-list'), all = core.convos(); renderFilters();
     if (!all.length && core.loading()) { list.innerHTML = '<div class="ni-sk"></div><div class="ni-sk"></div><div class="ni-sk"></div><div class="ni-sk"></div>'; return; }
-    if (!all.length && core.loadError()) { list.innerHTML = '<div class="ni-state">We could not load your conversations.<br><button type="button" class="ni-btn" data-a="reload">Try again</button></div>'; return; }
-    if (!all.length) { list.innerHTML = '<div class="ni-state">No conversations yet. Messages you send to sellers will show up here.</div>'; return; }
-    const vis = t ? all.filter(c => c.title.toLowerCase().includes(t) || c.sellerName.toLowerCase().includes(t) || (c.lastMessage || '').toLowerCase().includes(t)) : all;
-    if (!vis.length) { list.innerHTML = '<div class="ni-state">No conversations match your search.</div>'; return; }
-    list.innerHTML = vis.map(c => `<button type="button" class="ni-convo" data-l="${esc(c.listingId)}" aria-current="${a && a.listingId === c.listingId}"><span class="ni-thumb">${c.coverUrl ? `<img src="${esc(c.coverUrl)}" alt="" loading="lazy"/>` : esc(core.initials(c.sellerName))}</span><span class="ni-cb"><span class="ni-ct"><span>${esc(c.title)}</span>${c.sellerVerified ? VER : ''}</span><span class="ni-cl">${esc(c.lastMessage || 'No messages yet')}</span></span><span class="ni-cm"><span class="ni-cw">${esc(core.whenLabel(c.lastAt))}</span>${c.unread ? `<span class="ni-badge">${c.unread > 9 ? '9+' : c.unread}</span>` : ''}</span></button>`).join('');
+    if (!all.length && core.loadError()) { list.innerHTML = `<div class="ni-state">${esc(t('e_load'))}<br><button type="button" class="ni-btn" data-a="reload">${esc(t('retry'))}</button></div>`; return; }
+    if (!all.length) { list.innerHTML = `<div class="ni-state"><h4>${esc(t('e_none_t'))}</h4>${esc(t('e_none_d'))}<br><a class="ni-btn" href="/listings">${esc(t('e_browse'))}</a></div>`; return; }
+    const v = visibleConvos(); if (!v.length) { list.innerHTML = `<div class="ni-state">${esc(t('e_filter'))}</div>`; return; }
+    list.innerHTML = v.map(convoHtml).join('');
+  }
+  function setArchived(id, on, silent) {
+    core.Archive.set(id, on); const a = core.active();
+    if (on && a && a.listingId === id) closeThread(false);
+    renderCounts(); renderList(); if (!silent) toast(t(on ? 'archived' : 'unarchived'), t('undo'), () => setArchived(id, !on, true));
   }
 
-  /* ── saved listings tab ── */
+  /* ═════ saved listings: sort, sold badges, compare ═════ */
   async function renderSaved() {
-    const panel = $('ni-saved'), ids = core.savedIds(); renderCounts();
-    if (!ids.length) { panel.innerHTML = '<div class="ni-state">No saved listings yet. Tap the heart on any listing to keep it here.</div>'; return; }
+    const panel = $('ni-saved-list'), ids = core.savedIds(); renderCounts(); $('ni-saved-tools').hidden = !ids.length;
+    if (!ids.length) { panel.innerHTML = `<div class="ni-state"><h4>${esc(t('s_none_t'))}</h4>${esc(t('s_none_d'))}<br><a class="ni-btn" href="/listings">${esc(t('e_browse'))}</a></div>`; return; }
     panel.innerHTML = '<div class="ni-sk"></div><div class="ni-sk"></div>';
-    let res; try { res = await core.getClient().from('listings').select('id,title,area,price,price_frequency,listing_number,listing_photos(*)').in('id', ids).eq('status', 'active'); } catch (e) { res = { error: e }; }
-    if (res.error || !res.data) { panel.innerHTML = '<div class="ni-state">We could not load your saved listings.<br><button type="button" class="ni-btn" data-a="reload-saved">Try again</button></div>'; return; }
-    const found = new Set(res.data.map(l => l.id)), gone = ids.filter(i => !found.has(i));
-    panel.innerHTML = res.data.map(l => {
-      const cover = (l.listing_photos || []).find(p => p.is_cover) || (l.listing_photos || [])[0];
-      return `<div class="ni-saved-row"><a class="ni-saved-link" href="/listing?id=${String(l.listing_number).padStart(6, '0')}"><span class="ni-thumb" style="width:52px;height:46px">${cover ? `<img src="${esc(cover.url)}" alt="" loading="lazy"/>` : ''}</span><span class="ni-saved-body"><span class="ni-saved-title" style="display:block">${esc(l.title || '')}</span><span class="ni-saved-sub" style="display:block">${esc(l.area || '')}</span><span class="ni-saved-price" style="display:block">${esc(core.priceLabel(l) || 'Price on request')}</span></span></a><button type="button" class="ni-saved-rm" data-rm="${esc(l.id)}" aria-label="Remove ${esc(l.title || 'listing')} from saved">✕</button></div>`;
-    }).join('') + (gone.length ? `<div class="ni-state" style="padding:20px">${gone.length} saved listing${gone.length > 1 ? 's are' : ' is'} no longer available.<br><button type="button" class="ni-btn ghost" data-a="clear-gone" data-ids="${esc(gone.join(','))}">Remove ${gone.length > 1 ? 'them' : 'it'}</button></div>` : '');
-    if (!res.data.length && !gone.length) panel.innerHTML = '<div class="ni-state">No saved listings yet.</div>';
+    let res; try { res = await core.getClient().from('listings').select('id,title,area,county,price,price_frequency,listing_number,category,details,status,listing_photos(*)').in('id', ids).in('status', ['active', 'occupied']); } catch (e) { res = { error: e }; }
+    if (res.error || !res.data) { panel.innerHTML = `<div class="ni-state">${esc(t('s_load'))}<br><button type="button" class="ni-btn" data-a="reload-saved">${esc(t('retry'))}</button></div>`; return; }
+    const found = new Set(res.data.map(l => l.id)), gone = ids.filter(i => !found.has(i)), mode = $('ni-saved-sort').value;
+    savedData = res.data.slice().sort((a, b) => mode === 'low' ? Number(a.price) - Number(b.price) : mode === 'high' ? Number(b.price) - Number(a.price) : ids.indexOf(b.id) - ids.indexOf(a.id));
+    [...cmpSel].forEach(i => { if (!found.has(i)) cmpSel.delete(i); }); updateCmpBtn();
+    panel.innerHTML = savedData.map(l => {
+      const cover = (l.listing_photos || []).find(p => p.is_cover) || (l.listing_photos || [])[0], sold = l.status === 'occupied';
+      return `<div class="ni-saved-row"><label class="ni-cmp"><input type="checkbox" data-cmp="${esc(l.id)}" ${cmpSel.has(l.id) ? 'checked' : ''} aria-label="${esc(t('compare'))}: ${esc(l.title || '')}"/></label><a class="ni-saved-link" href="/listing?id=${String(l.listing_number).padStart(6, '0')}"><span class="ni-thumb" style="width:52px;height:46px">${cover ? `<img src="${esc(cover.url)}" alt="" loading="lazy"/>` : ''}</span><span class="ni-saved-body"><span class="ni-saved-title">${esc(l.title || '')}</span><span class="ni-saved-sub">${esc(l.area || '')}${sold ? `<span class="ni-sold">${esc(t(l.price_frequency === 'once' ? 'sold' : 'occupied'))}</span>` : ''}</span><span class="ni-saved-price">${esc(core.priceLabel(l) || t('price_req'))}</span></span></a><button type="button" class="ni-saved-rm" data-rm="${esc(l.id)}" aria-label="${esc(t('remove_aria'))}">✕</button></div>`;
+    }).join('') + (gone.length ? `<div class="ni-state" style="padding:20px">${esc(t('gone_saved', gone.length))}<br><button type="button" class="ni-btn ghost" data-a="clear-gone" data-ids="${esc(gone.join(','))}">${esc(t('remove_them'))}</button></div>` : '');
+    if (!savedData.length && !gone.length) panel.innerHTML = `<div class="ni-state">${esc(t('s_none_t'))}</div>`;
   }
-  function switchTab(t) {
-    tab = t; qsa('.ni-tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
-    $('ni-search-row').hidden = t !== 'chats'; $('ni-list').hidden = t !== 'chats'; $('ni-saved').hidden = t !== 'saved';
-    if (t === 'saved') renderSaved();
+  function updateCmpBtn() { const n = cmpSel.size, b = $('ni-cmp-btn'); b.disabled = n < 2; b.textContent = n ? t('compare_n', n) : t('compare'); }
+  function openCompare() {
+    const items = savedData.filter(l => cmpSel.has(l.id)); if (items.length < 2) return;
+    const sameFreq = items.every(l => l.price_frequency === items[0].price_frequency), prices = items.map(l => Number(l.price) || 0), best = sameFreq && prices.some(p => p > 0) ? Math.min(...prices.filter(p => p > 0)) : null;
+    const row = (label, fn, hl) => `<tr><th scope="row">${esc(label)}</th>${items.map((l, i) => `<td${hl && hl(l, i) ? ' class="best"' : ''}>${fn(l)}</td>`).join('')}</tr>`;
+    $('ni-cmp-body').innerHTML = `<table class="ni-cmp-table"><thead><tr><th></th>${items.map(l => `<th scope="col" style="color:var(--ink)"><a href="/listing?id=${String(l.listing_number).padStart(6, '0')}">${esc(l.title || '')}</a></th>`).join('')}</tr></thead><tbody>` +
+      row(t('c_price'), l => esc(core.priceLabel(l) || t('price_req')), (l, i) => best !== null && prices[i] === best) + row(t('c_loc'), l => esc([l.area, l.county].filter(Boolean).join(', '))) + row(t('c_type'), l => esc(l.category || '-')) +
+      row(t('c_bed'), l => { const b = (l.details || {}).bedrooms; return b == null || b === '' ? '-' : Number(b) === 0 ? esc(t('studio')) : esc(b); }) + row(t('c_bath'), l => esc((l.details || {}).bathrooms || '-')) + row(t('c_size'), l => (l.details || {}).size_sqm ? esc(l.details.size_sqm) + ' m²' : '-') +
+      row(t('c_status'), l => esc(l.status === 'occupied' ? t(l.price_frequency === 'once' ? 'sold' : 'occupied') : t('available'))) + '</tbody></table>';
+    openModal('ni-cov', 'ni-cmp-close');
+  }
+  function switchTab(x) {
+    tab = x; qsa('.ni-tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === x)));
+    const chats = x === 'chats'; $('ni-search-row').hidden = !chats; $('ni-filters').hidden = !chats || !core.convos().length; $('ni-list').hidden = !chats; $('ni-saved').hidden = chats; renderNotif();
+    if (!chats) renderSaved();
   }
 
-  /* ── thread ── */
+  /* ═════ thread: header, banners, viewing strip, details panel ═════ */
   function renderHead() {
-    const c = activeConvo(); if (!c) return;
+    const c = activeConvo(), a = core.active(); if (!c || !a) return;
     $('ni-tname').innerHTML = `<span>${esc(c.sellerName)}</span>${c.sellerVerified ? VER : ''}`;
     const l = core.listing(), price = core.priceLabel(l), num = l && l.listing_number != null ? String(l.listing_number).padStart(6, '0') : null;
-    const inner = `<span class="ni-thumb">${c.coverUrl ? `<img src="${esc(c.coverUrl)}" alt=""/>` : esc(core.initials(c.title))}</span><span class="ni-lc-t"><b>${esc((l && l.title) || c.title)}</b><span>${esc(price || (l && l.area) || '')}</span></span>${num ? '<span class="ni-lc-go">View listing →</span>' : ''}`;
+    const inner = `<span class="ni-thumb">${c.coverUrl ? `<img src="${esc(c.coverUrl)}" alt=""/>` : esc(core.initials(c.title))}</span><span class="ni-lc-t"><b>${esc((l && l.title) || c.title)}</b><span>${esc(price || (l && l.area) || '')}</span></span>${num ? `<span class="ni-lc-go">${esc(t('view_listing'))}</span>` : ''}`;
     $('ni-lcard').innerHTML = num ? `<a class="ni-lcard" href="/listing?id=${num}">${inner}</a>` : `<div class="ni-lcard">${inner}</div>`;
-    const a = core.active(); $('ni-book-label').textContent = a && core.booked(a.listingId) ? 'Book another viewing' : 'Book a viewing';
+    $('ni-book-label').textContent = t(core.booked(a.listingId) ? 'book_again' : 'book'); $('ni-book-btn').setAttribute('aria-label', t(core.booked(a.listingId) ? 'book_again' : 'book'));
+    $('ni-m-archive-t').textContent = t(isArch(a.listingId) ? 'm_unarchive' : 'm_archive');
   }
-  function renderPresence() { const s = core.presence(); $('ni-ptxt').textContent = { connecting: 'Connecting…', online: 'Online now', away: 'Away', typing: 'Typing…' }[s] || 'Away'; $('ni-dot').className = s === 'online' ? 'online' : s === 'typing' ? 'typing' : ''; }
+  function renderPresence() { const s = core.presence(); $('ni-ptxt').textContent = t({ connecting: 'p_connecting', online: 'p_online', away: 'p_away', typing: 'p_typing' }[s] || 'p_away'); $('ni-dot').className = s === 'online' ? 'online' : s === 'typing' ? 'typing' : ''; $('ni-typing').classList.toggle('show', s === 'typing'); $('ni-typing-t').textContent = t('typing_t'); }
+  function renderGone() {
+    const l = core.listing(), el = $('ni-gone'); let msg = null;
+    if (core.listingGone()) msg = t('gone_missing'); else if (l && l.status && l.status !== 'active') msg = t(l.price_frequency === 'once' && l.status === 'occupied' ? 'gone_sold' : 'gone_occ');
+    if (!msg) { el.hidden = true; el.innerHTML = ''; return; }
+    const qs = l && l.category ? '?category=' + encodeURIComponent(l.category) + (l.county ? '&county=' + encodeURIComponent(l.county) : '') : '';
+    el.innerHTML = `<p>${esc(msg)}</p><a href="/listings${qs}">${esc(t('gone_link'))}</a>`; el.hidden = false;
+  }
+  function renderVStrip() {
+    const a = core.active(), el = $('ni-vstrip'), v = a && core.nextViewing(a.listingId);
+    if (!v) { el.hidden = true; return; } el.hidden = false; $('ni-vstrip-t').textContent = `📅 ${t('v_label')}: ${dateLong(v.requested_date)} · ${slotName(v.requested_time)}`;
+  }
+  function factsFor(l) {
+    const d = l.details || {}, c = l.category, f = [], add = (k, v) => { if (v !== undefined && v !== null && v !== '') f.push([t(k), String(v)]); };
+    if (c === 'boarding') { add('f_res', d.gender && d.gender.charAt(0).toUpperCase() + d.gender.slice(1)); add('f_inst', d.institution); }
+    else if (c === 'airbnb') { add('f_guests', d.guests); add('f_beds', d.bedrooms); add('f_baths', d.bathrooms); add('f_stay', d.min_stay); }
+    else if (c === 'commercial') { add('f_type', d.property_type); add('f_area', d.size_sqm && d.size_sqm + ' m²'); }
+    else { add('f_beds', d.bedrooms == null || d.bedrooms === '' ? '' : Number(d.bedrooms) === 0 ? t('studio') : d.bedrooms); add('f_baths', d.bathrooms); add('f_area', d.size_sqm && d.size_sqm + ' m²'); add('f_furn', d.furnished && t('furn_' + d.furnished)); }
+    return f;
+  }
+  function renderSide() {
+    const el = $('ni-side'), l = core.listing(), a = core.active(); if (!a || !l) { el.innerHTML = ''; return; }
+    const photos = (l.listing_photos || []).slice().sort((x, y) => (x.position || 0) - (y.position || 0)), cov = photos.find(p => p.is_cover); if (cov) { photos.splice(photos.indexOf(cov), 1); photos.unshift(cov); }
+    sidePhoto = Math.min(sidePhoto, Math.max(0, photos.length - 1));
+    const num = String(l.listing_number).padStart(6, '0'), ver = (l.profiles || {}).verification_status === 'verified', gone = l.status !== 'active';
+    const maps = isFinite(parseFloat(l.latitude)) && isFinite(parseFloat(l.longitude)) ? `https://www.google.com/maps/search/?api=1&query=${l.latitude},${l.longitude}` : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent([l.address, l.area, l.county, 'Kenya'].filter(Boolean).join(', '));
+    el.innerHTML = `<div class="ni-side-main">${photos[sidePhoto] ? `<img src="${esc(photos[sidePhoto].url)}" alt=""/>` : ''}</div>${photos.length > 1 ? `<div class="ni-side-thumbs">${photos.slice(0, 5).map((p, i) => `<button type="button" data-ph="${i}" aria-current="${i === sidePhoto}" aria-label="Photo ${i + 1}"><img src="${esc(p.url)}" alt="" loading="lazy"/></button>`).join('')}</div>` : ''}
+      <div class="ni-side-body"><h3>${esc(l.title)}</h3><div class="ni-side-price">${esc(core.priceLabel(l) || t('price_req'))}</div><div class="ni-side-loc">📍 ${esc([l.area, l.county].filter(Boolean).join(', '))}</div>
+      <div class="ni-side-tags"><span class="ni-tag${gone ? ' bad' : ''}">${esc(gone ? t(l.price_frequency === 'once' ? 'sold' : 'occupied') : t('available'))}</span><span class="ni-tag">${esc(t(ver ? 'verified' : 'unverified'))}</span></div>
+      <dl>${factsFor(l).map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>
+      <a class="ni-btn" href="/listing?id=${num}">${esc(t('open_listing'))}</a><a class="ni-btn ghost" href="${esc(maps)}" target="_blank" rel="noopener">${esc(t('open_maps'))}</a></div>`;
+  }
+
+  /* ═════ messages ═════ */
+  function computeNewLine() {
+    newLineKey = null; let n = core.unreadAtOpen(); if (n <= 0) return; const ms = core.messages();
+    for (let i = ms.length - 1; i >= 0; i--) if (ms[i].sender === 'seller') { n--; if (n === 0) { newLineKey = String(ms[i].localId || ms[i].id); break; } }
+  }
   function renderQuick() {
-    const box = $('ni-quick'), a = core.active(), mine = core.messages().filter(m => m.sender === 'buyer').length;
-    if (!a || mine >= 2) { box.innerHTML = ''; return; }
-    const booked = core.booked(a.listingId);
-    box.innerHTML = core.ui.QUICK.map(t => (booked && /book a viewing/i.test(t)) ? 'Can we reschedule the viewing?' : t).map(t => `<button type="button" class="ni-chip" data-q="${esc(t)}">${esc(t)}</button>`).join('');
+    const box = $('ni-quick'), a = core.active(), mine = core.messages().filter(m => m.sender === 'buyer').length; if (!a || mine >= 2) { box.innerHTML = ''; return; }
+    const l = core.listing(), set = QSETS[l && l.category] || QSETS.base, booked = core.booked(a.listingId);
+    box.innerHTML = set.map(id => { const key = id === 'view' && booked ? 'view_r' : id, txt = QRD[key][lang === 'sw' ? 1 : 0]; return `<button type="button" class="ni-chip" data-k="${id}" data-q="${esc(txt)}">${esc(txt)}</button>`; }).join('');
   }
-  function renderMessages(ev) {
+  function renderMessages(ev, keep) {
     const box = $('ni-messages'), ms = core.messages(), c = activeConvo(), peer = core.initials(c && c.sellerName);
-    if (ev && ev.loading) { box.innerHTML = '<div class="ni-empty-thread">Loading messages…</div>'; return; }
-    if (ev && ev.error) { box.innerHTML = '<div class="ni-empty-thread"><b>Could not load this chat</b><button type="button" class="ni-btn" data-a="reopen">Try again</button></div>'; return; }
-    if (!ms.length) { box.innerHTML = '<div class="ni-empty-thread"><b>Say hello 👋</b>Ask if it is still available, about the deposit, or when you can view it.</div>'; renderQuick(); return; }
-    let html = '', prev = null;
-    ms.forEach(m => { if (!prev || core.dayLabel(prev.created_at) !== core.dayLabel(m.created_at)) html += core.ui.dayHtml(m.created_at, 'ni'); html += core.ui.rowHtml(m, prev, 'ni', peer, threadTerm); prev = m; });
+    if (ev && ev.loading) { box.innerHTML = `<div class="ni-empty-thread">${esc(t('loading'))}</div>`; return; }
+    if (ev && ev.error) { box.innerHTML = `<div class="ni-empty-thread"><b>${esc(t('load_err'))}</b><button type="button" class="ni-btn" data-a="reopen">${esc(t('retry'))}</button></div>`; return; }
+    if (!ms.length) { box.innerHTML = `<div class="ni-empty-thread"><b>${esc(t('empty_t'))}</b>${esc(t('empty_d'))}</div>`; renderQuick(); return; }
+    const prevH = box.scrollHeight, prevTop = box.scrollTop, L = labels();
+    let html = core.hasMore() ? `<button type="button" class="ni-earlier" data-a="earlier">${esc(t('earlier'))}</button>` : '', prev = null;
+    ms.forEach(m => {
+      if (!prev || core.dayLabel(prev.created_at) !== core.dayLabel(m.created_at)) html += core.ui.dayHtml(m.created_at, 'ni');
+      if (newLineKey && String(m.localId || m.id) === newLineKey) html += `<div class="ni-newline" id="ni-newline"><span>${esc(t('new_line'))}</span></div>`;
+      html += core.ui.rowHtml(m, prev, 'ni', peer, threadTerm, L); prev = m;
+    });
     box.innerHTML = html;
-    if (threadTerm) { const marks = box.querySelectorAll('mark'); $('ni-tcount').textContent = marks.length ? `${marks.length} match${marks.length > 1 ? 'es' : ''}` : 'No matches'; if (marks[0]) marks[0].scrollIntoView({ block: 'center' }); } else { $('ni-tcount').textContent = ''; toBottom(); }
+    if (keep) box.scrollTop = prevTop + (box.scrollHeight - prevH);
+    else if (threadTerm) { const marks = box.querySelectorAll('mark'); $('ni-tcount').textContent = marks.length ? t('matches', marks.length) : t('no_match'); if (marks[0]) marks[0].scrollIntoView({ block: 'center' }); }
+    else if (newLineKey && $('ni-newline')) { $('ni-newline').scrollIntoView({ block: 'start' }); box.scrollTop = Math.max(0, box.scrollTop - 10); }
+    else toBottom();
     renderQuick();
   }
   function appendMessage(m, incoming) {
@@ -367,135 +649,234 @@
     const box = $('ni-messages'), ms = core.messages(), i = ms.indexOf(m), prev = i > 0 ? ms[i - 1] : null, c = activeConvo(), was = atBottom();
     if (box.querySelector('.ni-empty-thread')) box.innerHTML = '';
     let html = ''; if (!prev || core.dayLabel(prev.created_at) !== core.dayLabel(m.created_at)) html += core.ui.dayHtml(m.created_at, 'ni');
-    box.insertAdjacentHTML('beforeend', html + core.ui.rowHtml(m, prev, 'ni', core.initials(c && c.sellerName)));
+    box.insertAdjacentHTML('beforeend', html + core.ui.rowHtml(m, prev, 'ni', core.initials(c && c.sellerName), '', labels()));
     if (m.sender === 'buyer' || was) toBottom(); else if (incoming) $('ni-newpill').classList.add('show');
     renderQuick();
   }
   function updateMessage(m) {
     const ms = core.messages(), i = ms.indexOf(m), prev = i > 0 ? ms[i - 1] : null, c = activeConvo(), k = String(m.localId || m.id);
     const el = qsa('#ni-messages .ni-row').find(r => r.dataset.k === k); if (!el) return;
-    const t = document.createElement('div'); t.innerHTML = core.ui.rowHtml(m, prev, 'ni', core.initials(c && c.sellerName), threadTerm); el.replaceWith(t.firstElementChild);
+    const d = document.createElement('div'); d.innerHTML = core.ui.rowHtml(m, prev, 'ni', core.initials(c && c.sellerName), threadTerm, labels()); el.replaceWith(d.firstElementChild);
   }
+
+  /* ═════ open, close, send ═════ */
+  function saveCurrentDraft() { const a = core.active(); if (a) setDraft(a.listingId, $('ni-input').value); }
+  function resetSafety() { const b = $('ni-report'); $('ni-safety-t').textContent = t('safety'); b.dataset.a = 'ask'; b.textContent = t('report'); }
   async function openConvo(id, token, fromPop) {
+    id = String(id); saveCurrentDraft(); newLineKey = null; newLineFor = null;
     $('ni-thread').classList.add('open'); $('ni-thread-empty').style.display = 'none'; document.body.classList.add('ni-open');
     if (!desk() && !pushed && !fromPop) { history.pushState({ ni: 'thread' }, ''); pushed = true; }
-    $('ni-safety').classList.toggle('show', !core.ls.get('nk_chat_safety_seen')); $('ni-safety-t').textContent = 'Never pay before viewing the property. Nyumba254 never asks buyers for money.';
-    toggleThreadSearch(false, true);
-    const opening = core.openThread(id, token); core.setViewing(vis());   // the thread is active from this moment, so it counts as being read
+    $('ni-safety').classList.toggle('show', !core.ls.get('nk_chat_safety_seen')); resetSafety(); closeMenu(); toggleThreadSearch(false, true);
+    const inp = $('ni-input'); inp.value = getDraft(id); autosize(inp);
+    const opening = core.openThread(id, token); core.setViewing(vis()); renderHead(); renderPresence();
     const ok = await opening; if (!ok && !core.active()) return closeThread(true);
-    renderHead(); renderPresence(); renderList(); if (!touch()) $('ni-input').focus({ preventScroll: true });
+    renderHead(); renderPresence(); renderList(); renderCounts(); if (!touch()) inp.focus({ preventScroll: true });
   }
   function closeThread(fromPop) {
-    if (pushed && !fromPop) { pushed = false; history.back(); }
-    if (fromPop) pushed = false;
+    saveCurrentDraft(); if (pushed && !fromPop) { pushed = false; history.back(); } if (fromPop) pushed = false;
     document.body.classList.remove('ni-open'); $('ni-thread').classList.remove('open'); $('ni-thread-empty').style.display = 'flex';
-    toggleThreadSearch(false, true); core.closeThread(); core.setViewing(false); renderList();
+    newLineKey = null; newLineFor = null; closeMenu(); toggleThreadSearch(false, true); core.closeThread(); core.setViewing(false); $('ni-side').innerHTML = ''; renderList();
   }
   window.addEventListener('popstate', () => { if (core.active() && !desk()) closeThread(true); });
   function toggleThreadSearch(show, silent) {
     $('ni-searchbar').classList.toggle('show', show);
     if (!show) { threadTerm = ''; $('ni-tsearch').value = ''; $('ni-tcount').textContent = ''; if (!silent) renderMessages(); } else $('ni-tsearch').focus();
   }
+  function sendText(txt) { const m = core.send(txt); if (m && !touch()) $('ni-input').focus(); return m; }
+  function sendInput() { const i = $('ni-input'), v = i.value; if (!v.trim()) return; i.value = ''; autosize(i); const a = core.active(); if (a) setDraft(a.listingId, ''); sendText(v); renderList(); }
 
-  /* ── sending ── */
-  function sendText(t) { const m = core.send(t); if (m && !touch()) $('ni-input').focus(); return m; }
-  function sendInput() { const i = $('ni-input'), v = i.value; if (!v.trim()) return; i.value = ''; i.style.height = 'auto'; sendText(v); }
+  /* ═════ menu: call, WhatsApp, invite, archive, report ═════ */
+  const closeMenu = () => { $('ni-menu').classList.remove('open'); $('ni-more').setAttribute('aria-expanded', 'false'); };
+  function toggleMenu() { const open = !$('ni-menu').classList.contains('open'); $('ni-menu').classList.toggle('open', open); $('ni-more').setAttribute('aria-expanded', String(open)); if (open) { renderHead(); const f = $('ni-menu').querySelector('button'); if (f && !touch()) f.focus(); } }
+  async function doContact(ch) {
+    const a = core.active(); if (!a) return; closeMenu();
+    let win = null; if (ch === 'whatsapp') { win = window.open('about:blank', '_blank'); if (win) try { win.opener = null; } catch (e) {} }   // opened inside the tap, so Safari does not block it
+    toast(t('c_getting')); const r = await core.revealContact(a.listingId, ch);
+    if (r.error) { if (win) win.close(); toast(t(r.error === 'offline' ? 'c_offline' : r.error === 'limit' ? 'c_limit' : 'c_unavail')); return; }
+    const n = core.normPhone(r.phone), l = core.listing(), title = (l && l.title) || (activeConvo() || {}).title || '';
+    if (ch === 'whatsapp') { const url = `https://wa.me/${n.replace('+', '')}?text=${encodeURIComponent(t('wa_text', title))}`; if (win) { try { win.location.href = url; } catch (e) { location.href = url; } } else window.open(url, '_blank', 'noopener,noreferrer'); hideToast(); }
+    else if (touch()) { location.href = 'tel:' + n; hideToast(); }
+    else { try { navigator.clipboard.writeText(n); } catch (e) {} toast(`${core.prettyPhone(n)} · ${t('c_copied')}`); }
+  }
+  function invite() {
+    const l = core.listing(), c = activeConvo(); if (!c) return;
+    const url = l && l.listing_number != null ? `${location.origin}/listing?id=${String(l.listing_number).padStart(6, '0')}` : location.origin, title = (l && l.title) || c.title;
+    if (navigator.share) navigator.share({ title, text: t('invite_text', title, url), url }).catch(() => {}); else window.open('https://wa.me/?text=' + encodeURIComponent(t('invite_text', title, url)), '_blank', 'noopener');
+  }
+  function reportAsk() { $('ni-safety').classList.add('show'); const b = $('ni-report'); $('ni-safety-t').textContent = t('report_ask'); b.textContent = t('report_yes'); b.dataset.a = 'go'; b.focus(); }
+  function menuAction(m) {
+    const a = core.active(); closeMenu(); if (!a) return;
+    if (m === 'call') doContact('call'); else if (m === 'wa') doContact('whatsapp'); else if (m === 'invite') invite();
+    else if (m === 'archive') setArchived(a.listingId, !isArch(a.listingId)); else if (m === 'report') reportAsk();
+  }
 
-  /* ── viewing ── */
-  let viewingFor = null;
-  function openViewing() {
-    const a = core.active(); if (!a) return; viewingFor = a.listingId;
-    const p = core.Profile.forListing(viewingFor), t = new Date(); ['ni-vdate', 'ni-vtime', 'ni-vname', 'ni-vphone'].forEach(i => setErr(i, '')); $('ni-verr').textContent = '';
-    $('ni-vdate').min = core.localISO(t); t.setDate(t.getDate() + 1); $('ni-vdate').value = core.localISO(t); $('ni-vtime').value = ''; $('ni-vname').value = p.name; $('ni-vphone').value = p.phone; $('ni-vnotes').value = '';
-    openModal('ni-vov', 'ni-vdate');
+  /* ═════ viewing: request, change time, add to calendar ═════ */
+  let viewingFor = null, resched = false;
+  function openViewing(isResched) {
+    const a = core.active(); if (!a) return; viewingFor = a.listingId; resched = !!isResched && !!core.nextViewing(a.listingId);
+    const p = core.Profile.forListing(viewingFor), tm = new Date(), nv = core.nextViewing(viewingFor); ['ni-vdate', 'ni-vtime', 'ni-vname', 'ni-vphone'].forEach(i => setErr(i, '')); $('ni-verr').textContent = '';
+    $('ni-vt').textContent = t(resched ? 'v_title_r' : 'v_title'); $('ni-vsend').textContent = t(resched ? 'v_send_r' : 'v_send');
+    $('ni-vtime').innerHTML = `<option value="">${esc(t('v_select'))}</option>` + SLOTS.map(s => `<option value="${esc(s[0])}">${esc(s[lang === 'sw' ? 2 : 1])}</option>`).join('');
+    $('ni-vdate').min = core.localISO(tm); if (resched && nv) { $('ni-vdate').value = nv.requested_date; $('ni-vtime').value = nv.requested_time; } else { tm.setDate(tm.getDate() + 1); $('ni-vdate').value = core.localISO(tm); $('ni-vtime').value = ''; }
+    $('ni-vname').value = p.name; $('ni-vphone').value = p.phone; $('ni-vnotes').value = ''; openModal('ni-vov', 'ni-vdate');
   }
   async function sendViewing() {
     ['ni-vdate', 'ni-vtime', 'ni-vname', 'ni-vphone'].forEach(i => setErr(i, '')); $('ni-verr').textContent = '';
-    const b = $('ni-vsend'); b.disabled = true; b.textContent = 'Sending…';
-    const r = await core.requestViewing({ listingId: viewingFor, date: $('ni-vdate').value, time: $('ni-vtime').value, name: $('ni-vname').value, phone: $('ni-vphone').value, notes: $('ni-vnotes').value });
-    b.disabled = false; b.textContent = 'Request viewing';
+    const b = $('ni-vsend'), label = b.textContent; b.disabled = true; b.textContent = t('sending');
+    const r = await core.requestViewing({ listingId: viewingFor, date: $('ni-vdate').value, time: $('ni-vtime').value, name: $('ni-vname').value, phone: $('ni-vphone').value, notes: $('ni-vnotes').value, reschedule: resched });
+    b.disabled = false; b.textContent = label;
     if (!r.ok) { if (r.field) { setErr('ni-v' + r.field, r.error); const f = $('ni-v' + r.field); if (f) f.focus(); } else $('ni-verr').textContent = r.error; return; }
-    closeModal('ni-vov'); if (r.warning) $('ni-net').textContent = r.warning, $('ni-net').classList.add('show');
-    renderHead(); renderQuick();
+    closeModal('ni-vov'); if (r.warning) toast(r.warning); renderHead(); renderQuick(); renderVStrip(); renderList();
+  }
+  const icsText = s => String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+  function icsFor(v, l, c) {
+    const [s, e] = SLOT_HOURS[v.requested_time] || [9, 10], d = String(v.requested_date).replace(/-/g, ''), p = n => String(n).padStart(2, '0'), now = new Date(), stamp = now.getUTCFullYear() + p(now.getUTCMonth() + 1) + p(now.getUTCDate()) + 'T' + p(now.getUTCHours()) + p(now.getUTCMinutes()) + p(now.getUTCSeconds()) + 'Z';
+    const title = (l && l.title) || (c && c.title) || 'Property', url = l && l.listing_number != null ? location.origin + '/listing?id=' + String(l.listing_number).padStart(6, '0') : location.origin;
+    return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Nyumba254//Viewing//EN', 'CALSCALE:GREGORIAN', 'BEGIN:VEVENT', 'UID:' + (v.id || core.uuid()) + '@nyumba254.com', 'DTSTAMP:' + stamp, 'DTSTART:' + d + 'T' + p(s) + '0000', 'DTEND:' + d + 'T' + p(e) + '0000', 'SUMMARY:' + icsText('Viewing: ' + title), 'LOCATION:' + icsText([l && l.address, l && l.area, l && l.county].filter(Boolean).join(', ')), 'DESCRIPTION:' + icsText('Viewing arranged through Nyumba254. Confirm the time with the seller in your chat. ' + url), 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+  }
+  function downloadIcs() {
+    const a = core.active(), v = a && core.nextViewing(a.listingId); if (!v) return;
+    const blob = new Blob([icsFor(v, core.listing(), activeConvo())], { type: 'text/calendar;charset=utf-8' }), url = URL.createObjectURL(blob), link = document.createElement('a');
+    link.href = url; link.download = 'nyumba254-viewing.ics'; document.body.appendChild(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1500);
   }
 
-  /* ── profile ── */
-  function openProfile() {
-    const p = core.Profile.get(); $('ni-p-name').value = p.name; $('ni-p-email').value = p.email; $('ni-p-phone').value = p.phone; $('ni-p-notify').checked = p.notify;
-    setErr('ni-p-email', ''); setErr('ni-p-phone', ''); $('ni-pstatus').textContent = ''; openModal('ni-pov', 'ni-p-name');
-  }
+  /* ═════ profile, sync ═════ */
+  function openProfile() { const p = core.Profile.get(); $('ni-p-name').value = p.name; $('ni-p-email').value = p.email; $('ni-p-phone').value = p.phone; $('ni-p-notify').checked = p.notify; setErr('ni-p-email', ''); setErr('ni-p-phone', ''); $('ni-pstatus').textContent = ''; openModal('ni-pov', 'ni-p-name'); }
   async function saveProfile() {
     const name = $('ni-p-name').value.trim(), email = $('ni-p-email').value.trim(), phoneRaw = $('ni-p-phone').value.trim(), notify = $('ni-p-notify').checked, phone = phoneRaw ? core.normPhone(phoneRaw) : '';
     setErr('ni-p-email', ''); setErr('ni-p-phone', ''); let ok = true;
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setErr('ni-p-email', 'That email does not look right'); ok = false; }
-    if (phone && !core.okPhone(phone)) { setErr('ni-p-phone', 'Enter a valid phone number, e.g. 0712 345 678'); ok = false; }
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setErr('ni-p-email', t('bad_email')); ok = false; }
+    if (phone && !core.okPhone(phone)) { setErr('ni-p-phone', t('bad_phone')); ok = false; }
     if (!ok) return;
-    const b = $('ni-psave'), st = $('ni-pstatus'); b.disabled = true; b.textContent = 'Saving…';
+    const b = $('ni-psave'), st = $('ni-pstatus'), label = b.textContent; b.disabled = true; b.textContent = t('saving');
     core.Profile.set({ name, email, phone, notify }); const r = await core.saveContacts({ name, email, phone, notify });
     if (email) {
       const link = core.buildResumeLink();
-      if (link) { fetch(EDGE + '/send-notification-email', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: KEY, Authorization: 'Bearer ' + KEY }, body: JSON.stringify({ type: 'buyer_access_link', buyerEmail: email, buyerName: name, accessLink: link }) }).catch(() => {}); st.textContent = 'Saved. Check your email for your access link.'; }
-      else st.textContent = 'Saved. Start a chat first to get an emailed access link.';
-    } else st.textContent = 'Saved.';
-    if (!r.ok) st.textContent += ' (Your details are saved on this device; syncing to the server did not finish.)';
-    b.disabled = false; b.textContent = 'Save & email me my link'; setTimeout(() => { if ($('ni-pov').classList.contains('open')) closeModal('ni-pov'); }, 1600);
+      if (link) { fetch(EDGE + '/send-notification-email', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: KEY, Authorization: 'Bearer ' + KEY }, body: JSON.stringify({ type: 'buyer_access_link', buyerEmail: email, buyerName: name, accessLink: link }) }).catch(() => {}); st.textContent = t('pn_saved_mail'); }
+      else st.textContent = t('pn_saved_nochat');
+    } else st.textContent = t('pn_saved');
+    if (!r.ok) st.textContent += t('pn_sync_fail');
+    b.disabled = false; b.textContent = label; setTimeout(() => { if ($('ni-pov').classList.contains('open')) closeModal('ni-pov'); }, 1600);
+  }
+  function openSync() { $('ni-sync-link').value = core.buildResumeLink() || ''; openModal('ni-sov', 'ni-sync-copy'); }
+
+  /* ═════ browser notifications ═════ */
+  const notifOK = () => 'Notification' in window;
+  function renderNotif() { $('ni-notif').hidden = !(notifOK() && Notification.permission === 'default' && !core.ls.get('nk_notif_dismissed') && core.convos().length > 0 && tab === 'chats'); }
+  function notify(convo, message) {
+    if (!notifOK() || Notification.permission !== 'granted' || !document.hidden) return;
+    try { const n = new Notification(t('notif_title', convo.sellerName, convo.title), { body: message ? message.content : '', tag: 'nk-' + convo.listingId, icon: convo.coverUrl || undefined }); n.onclick = () => { window.focus(); openConvo(convo.listingId); n.close(); }; } catch (e) {}
   }
 
-  /* ── sync + invite ── */
-  function openSync() { $('ni-sync-link').value = core.buildResumeLink() || ''; openModal('ni-sov', 'ni-sync-copy'); }
-  function invite() {
-    const l = core.listing(), c = activeConvo(); if (!c) return;
-    const url = l && l.listing_number != null ? `${location.origin}/listing?id=${String(l.listing_number).padStart(6, '0')}` : location.origin;
-    const title = (l && l.title) || c.title, text = `Check out "${title}" on Nyumba254: ${url}`;
-    if (navigator.share) navigator.share({ title, text, url }).catch(() => {}); else window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener');
+  /* ═════ language ═════ */
+  function applyLang() {
+    document.documentElement.lang = lang; core.setLang(lang);
+    qsa('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
+    qsa('[data-i18n-ph]').forEach(e => { e.placeholder = t(e.dataset.i18nPh); });
+    qsa('[data-i18n-aria]').forEach(e => { e.setAttribute('aria-label', t(e.dataset.i18nAria)); });
+    $('ni-lang').textContent = lang === 'en' ? 'Kiswahili' : 'English'; $('ni-lang').setAttribute('aria-label', lang === 'en' ? 'Badilisha lugha kuwa Kiswahili' : 'Change language to English');
+    $('ni-m-archive-t').textContent = t('m_archive'); $('ni-book-label').textContent = t('book'); $('ni-safety-t').textContent = t('safety'); updateCmpBtn(); acctLabel();
+    renderList(); renderCounts(); renderNotif(); if (tab === 'saved') renderSaved();
+    if (core.active()) { renderHead(); renderPresence(); renderGone(); renderVStrip(); renderSide(); renderMessages(); resetSafety(); }
   }
+  function acctLabel() { const a = $('ni-acct'); a.textContent = t(a.dataset.in ? 'nav_account' : 'nav_signin'); }
+
+  /* ═════ touch gestures ═════ */
+  function bindGestures() {
+    const list = $('ni-list'); let sx = 0, sy = 0, el = null, dx = 0, locked = null, py = null;
+    list.addEventListener('touchstart', e => { const s = e.target.closest('.ni-convo'); if (!e.touches || e.touches.length !== 1) { el = null; py = null; return; } el = s || null; sx = e.touches[0].clientX; sy = e.touches[0].clientY; dx = 0; locked = null; py = list.scrollTop <= 0 ? sy : null; }, { passive: true });
+    list.addEventListener('touchmove', e => {
+      if (!e.touches || !e.touches[0]) return; const mx = e.touches[0].clientX - sx, my = e.touches[0].clientY - sy;
+      if (locked === null && (Math.abs(mx) > 8 || Math.abs(my) > 8)) locked = Math.abs(mx) > Math.abs(my) ? 'x' : 'y';
+      if (el && locked === 'x') { dx = Math.min(0, mx); el.classList.add('dragging'); el.style.transform = `translateX(${dx}px)`; }
+      else if (py !== null && locked === 'y' && my > 20) { $('ni-ptr').classList.add('show'); $('ni-ptr').textContent = my > 70 ? t('ptr_go') : t('ptr'); }
+    }, { passive: true });
+    list.addEventListener('touchend', e => {
+      const c = (e.changedTouches && e.changedTouches[0]) || {}, my = (c.clientY || 0) - sy; $('ni-ptr').classList.remove('show');
+      if (el) { el.classList.remove('dragging'); el.style.transform = ''; if (locked === 'x' && dx < -90) { const id = el.dataset.l; el = null; setArchived(id, !isArch(id)); return; } }
+      if (py !== null && locked === 'y' && my > 70) core.fetchConversations(); el = null; py = null;
+    }, { passive: true });
+    const pane = $('ni-thread-pane'); let bx = null, by = 0;
+    pane.addEventListener('touchstart', e => { const c = e.touches && e.touches[0]; bx = (c && c.clientX < 32 && !desk()) ? c.clientX : null; by = c ? c.clientY : 0; }, { passive: true });
+    pane.addEventListener('touchend', e => { if (bx === null) return; const c = (e.changedTouches && e.changedTouches[0]) || {}; if ((c.clientX || 0) - bx > 90 && Math.abs((c.clientY || 0) - by) < 60) closeThread(); bx = null; }, { passive: true });
+  }
+  function stepConvo(dir) { const v = visibleConvos(); if (!v.length) return; const a = core.active(); let i = a ? v.findIndex(c => c.listingId === a.listingId) : -1; i = Math.max(0, Math.min(v.length - 1, i < 0 ? (dir > 0 ? 0 : v.length - 1) : i + dir)); openConvo(v[i].listingId); }
 
   /* ═════ wire it up ═════ */
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { const o = qsa('.ni-overlay.open').pop(); if (o) return closeModal(o.id); if ($('ni-menu').classList.contains('open')) { closeMenu(); $('ni-more').focus(); } return; }
+    const tg = e.target, typing = tg && (/INPUT|TEXTAREA|SELECT/.test(tg.tagName) || tg.isContentEditable);
+    if (typing || e.ctrlKey || e.metaKey || e.altKey || qsa('.ni-overlay.open').length) return;
+    if (e.key === '/') { e.preventDefault(); switchTab('chats'); $('ni-search').focus(); }
+    else if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && desk() && tab === 'chats') { e.preventDefault(); stepConvo(e.key === 'ArrowDown' ? 1 : -1); }
+  });
+  document.addEventListener('click', e => { if ($('ni-menu').classList.contains('open') && !e.target.closest('#ni-menu') && !e.target.closest('#ni-more')) closeMenu(); });
   $('ni-tabs').addEventListener('click', e => { const b = e.target.closest('.ni-tab'); if (b) switchTab(b.dataset.tab); });
   $('ni-search').addEventListener('input', function () { term = this.value; renderList(); });
-  $('ni-list').addEventListener('click', e => { const c = e.target.closest('.ni-convo'); if (c) return openConvo(c.dataset.l); if (e.target.closest('[data-a="reload"]')) core.fetchConversations(); });
+  $('ni-filters').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (b) { filter = b.dataset.f; renderList(); } });
+  $('ni-list').addEventListener('click', e => {
+    const a = e.target.closest('[data-arch]'); if (a) return setArchived(a.dataset.arch, !isArch(a.dataset.arch));
+    const c = e.target.closest('.ni-convo'); if (c) return openConvo(c.dataset.l); if (e.target.closest('[data-a="reload"]')) core.fetchConversations();
+  });
+  $('ni-notif').addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (!b) return; if (b.dataset.a === 'notif-yes') Notification.requestPermission().then(renderNotif, renderNotif); else { core.ls.set('nk_notif_dismissed', '1'); renderNotif(); } });
   $('ni-saved').addEventListener('click', e => {
-    const rm = e.target.closest('[data-rm]'); if (rm) { core.setSaved(core.savedIds().filter(i => i !== rm.dataset.rm)); return renderSaved(); }
+    const rm = e.target.closest('[data-rm]'); if (rm) { core.setSaved(core.savedIds().filter(i => i !== rm.dataset.rm)); cmpSel.delete(rm.dataset.rm); return renderSaved(); }
     const g = e.target.closest('[data-a="clear-gone"]'); if (g) { const gone = g.dataset.ids.split(','); core.setSaved(core.savedIds().filter(i => !gone.includes(i))); return renderSaved(); }
     if (e.target.closest('[data-a="reload-saved"]')) renderSaved();
   });
-  $('ni-messages').addEventListener('click', e => { const r = e.target.closest('[data-retry]'); if (r) core.retry(r.dataset.retry); if (e.target.closest('[data-a="reopen"]')) { const a = core.active(); if (a) core.openThread(a.listingId, a.token); } });
+  $('ni-saved').addEventListener('change', e => { const c = e.target.closest('[data-cmp]'); if (!c) return; if (c.checked) { if (cmpSel.size >= 3) { c.checked = false; return toast(lang === 'sw' ? 'Unaweza kulinganisha hadi matangazo 3.' : 'You can compare up to 3 listings.'); } cmpSel.add(c.dataset.cmp); } else cmpSel.delete(c.dataset.cmp); updateCmpBtn(); });
+  $('ni-saved-sort').addEventListener('change', renderSaved); $('ni-cmp-btn').addEventListener('click', openCompare); $('ni-cmp-close').addEventListener('click', () => closeModal('ni-cov'));
+  $('ni-messages').addEventListener('click', e => {
+    const r = e.target.closest('[data-retry]'); if (r) return core.retry(r.dataset.retry);
+    if (e.target.closest('[data-a="reopen"]')) { const a = core.active(); if (a) core.openThread(a.listingId, a.token); }
+    const er = e.target.closest('[data-a="earlier"]'); if (er) { er.textContent = t('loading_short'); er.disabled = true; core.loadEarlier().then(() => { if (core.hasMore() === false) renderMessages(null, true); }); }
+  });
   $('ni-messages').addEventListener('scroll', () => { if (atBottom()) $('ni-newpill').classList.remove('show'); }, { passive: true });
   $('ni-newpill').addEventListener('click', toBottom);
-  $('ni-quick').addEventListener('click', e => { const c = e.target.closest('.ni-chip'); if (!c) return; const t = c.dataset.q; if (/book a viewing/i.test(t)) return openViewing(); sendText(t); });
+  $('ni-quick').addEventListener('click', e => { const c = e.target.closest('.ni-chip'); if (!c) return; if (c.dataset.k === 'view') return openViewing(!!core.booked((core.active() || {}).listingId)); sendText(c.dataset.q); });
   $('ni-send').addEventListener('click', sendInput);
   $('ni-input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendInput(); } });
-  $('ni-input').addEventListener('input', function () { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; core.typing(); });
+  $('ni-input').addEventListener('input', function () { autosize(this); core.typing(); clearTimeout(draftT); draftT = setTimeout(() => { const a = core.active(); if (a) { setDraft(a.listingId, this.value); renderList(); } }, 350); });
   $('ni-back-btn').addEventListener('click', () => closeThread());
   $('ni-tsearch-btn').addEventListener('click', () => toggleThreadSearch(!$('ni-searchbar').classList.contains('show')));
   $('ni-tsearch-x').addEventListener('click', () => toggleThreadSearch(false));
   $('ni-tsearch').addEventListener('input', function () { threadTerm = this.value.trim(); renderMessages(); });
-  $('ni-book-btn').addEventListener('click', openViewing); $('ni-invite-btn').addEventListener('click', invite);
+  $('ni-book-btn').addEventListener('click', () => openViewing(!!core.booked((core.active() || {}).listingId)));
+  $('ni-more').addEventListener('click', toggleMenu); $('ni-menu').addEventListener('click', e => { const b = e.target.closest('[data-m]'); if (b) menuAction(b.dataset.m); });
+  $('ni-vstrip').addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (!b) return; if (b.dataset.a === 'ics') downloadIcs(); else openViewing(true); });
+  $('ni-details-btn').addEventListener('click', () => { const off = document.body.classList.toggle('ni-side-off'); core.ls.set('nk_inbox_side', off ? '0' : '1'); });
+  $('ni-side').addEventListener('click', e => { const b = e.target.closest('[data-ph]'); if (b) { sidePhoto = Number(b.dataset.ph); renderSide(); } });
   $('ni-vcancel').addEventListener('click', () => closeModal('ni-vov')); $('ni-vsend').addEventListener('click', sendViewing);
   $('ni-profile-btn').addEventListener('click', openProfile); $('ni-pcancel').addEventListener('click', () => closeModal('ni-pov')); $('ni-psave').addEventListener('click', saveProfile);
   $('ni-sync-btn').addEventListener('click', openSync); $('ni-sync-close').addEventListener('click', () => closeModal('ni-sov'));
-  $('ni-sync-copy').addEventListener('click', () => { const i = $('ni-sync-link'); if (!i.value) return; (navigator.clipboard ? navigator.clipboard.writeText(i.value) : Promise.reject()).then(() => { const b = $('ni-sync-copy'), o = b.textContent; b.textContent = 'Copied'; setTimeout(() => { b.textContent = o; }, 1800); }, () => i.select()); });
+  $('ni-sync-copy').addEventListener('click', () => { const i = $('ni-sync-link'); if (!i.value) return; (navigator.clipboard ? navigator.clipboard.writeText(i.value) : Promise.reject()).then(() => { const b = $('ni-sync-copy'); b.textContent = t('copied'); setTimeout(() => { b.textContent = t('copy'); }, 1800); }, () => i.select()); });
   $('ni-safety-x').addEventListener('click', () => { core.ls.set('nk_chat_safety_seen', '1'); $('ni-safety').classList.remove('show'); });
   $('ni-report').addEventListener('click', async function () {
-    const a = core.active(); if (!a) return;
-    if (this.dataset.a === 'ask') { $('ni-safety-t').textContent = 'Send a report about this seller to Nyumba254?'; this.textContent = 'Yes, report'; this.dataset.a = 'go'; return; }
-    this.disabled = true; const r = await core.report(a.listingId, 'Reported from the inbox'); this.disabled = false; this.dataset.a = 'ask'; this.textContent = 'Report';
-    $('ni-safety-t').textContent = r.ok ? "Thank you. We've received your report." : 'The report could not be sent. Please try again.';
+    const a = core.active(); if (!a) return; if (this.dataset.a === 'ask') return reportAsk();
+    this.disabled = true; const r = await core.report(a.listingId, 'Reported from the inbox'); this.disabled = false; this.dataset.a = 'ask'; this.textContent = t('report'); $('ni-safety-t').textContent = t(r.ok ? 'report_ok' : 'report_fail');
   });
+  $('ni-lang').addEventListener('click', () => { lang = lang === 'en' ? 'sw' : 'en'; core.ls.set('nk_lang', lang); applyLang(); });
   document.addEventListener('visibilitychange', () => core.setViewing(vis()));
 
-  core.on('convos', () => { renderCounts(); if (tab === 'chats') renderList(); renderHead(); });
-  core.on('thread', ev => { if (ev.type === 'reset') { renderMessages(ev); renderHead(); } else if (ev.type === 'append') appendMessage(ev.message, ev.incoming); else if (ev.type === 'update') updateMessage(ev.message); });
-  core.on('presence', renderPresence); core.on('viewing', () => { renderHead(); renderQuick(); });
+  core.on('convos', () => { renderCounts(); if (tab === 'chats') renderList(); renderNotif(); if (core.active()) renderHead(); });
+  core.on('thread', ev => {
+    if (ev.type === 'reset') { const a = core.active(); if (!ev.loading && !ev.error && a && newLineFor !== a.listingId) { newLineFor = a.listingId; computeNewLine(); } renderMessages(ev); if (!ev.loading) { renderHead(); renderGone(); renderVStrip(); renderSide(); } }
+    else if (ev.type === 'append') appendMessage(ev.message, ev.incoming); else if (ev.type === 'update') updateMessage(ev.message); else if (ev.type === 'prepend') renderMessages(null, true);
+  });
+  core.on('presence', renderPresence);
+  core.on('viewing', () => { if (core.active()) { renderHead(); renderQuick(); renderVStrip(); } renderList(); });
+  core.on('incoming', ev => { const id = ev.convo.listingId; if (isArch(id)) { core.Archive.set(id, false); renderCounts(); renderList(); } notify(ev.convo, ev.message); });
   core.on('net', ev => $('ni-net').classList.toggle('show', !ev.online));
   if (!core.isOnline()) $('ni-net').classList.add('show');
+  if (core.ls.get('nk_inbox_side') === '0') document.body.classList.add('ni-side-off');
 
   /* ── start ── */
-  core.setPolling(true); core.init(); renderCounts(); renderList();
+  applyLang(); bindGestures(); core.setPolling(true); core.init(); renderCounts(); renderList();
+  try { core.getClient().auth.getSession().then(({ data }) => { if (data && data.session) { const a = $('ni-acct'); a.href = '/dashboard'; a.dataset.in = '1'; acctLabel(); } }, () => {}); } catch (e) {}
   const params = new URLSearchParams(location.search);
   if (params.get('tab') === 'saved') switchTab('saved');
   const open = params.get('open'); if (open) core.fetchConversations().then(() => openConvo(open));
-  window.NKInbox = { refresh: core.fetchConversations, open: openConvo, getResumeLink: core.buildResumeLink };
+  window.NKInbox = { refresh: core.fetchConversations, open: openConvo, getResumeLink: core.buildResumeLink, icsFor, setLang: l => { lang = l; applyLang(); } };
 })();
 </script>
 </body>
