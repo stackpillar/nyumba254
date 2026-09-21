@@ -157,7 +157,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
         <div class="field-hint" style="margin:-2px 0 8px">The map moves to your area as you fill in the address. Add an exact pin if you want buyers to find the property more easily. An exact pin is visible to everyone.</div>
         <div class="map-tools"><button type="button" class="btn-alt dark" data-act="drop-pin">Pin exact location here</button><button type="button" class="btn-alt" data-act="gps">Use my GPS (be at the property)</button></div>
         <div class="map-frame"><div id="location-map" role="application" aria-label="Map"></div></div>
-        <div class="pin-status" id="pin-status"></div><div id="pin-warn" role="note" hidden style="margin-top:10px;padding:11px 13px;border-radius:10px;background:#FFF7E6;border:1px solid #F3D9A0;color:#7a4f00;font-size:12.5px;line-height:1.55"><strong>Check your pin.</strong> It marks the spot on the map and buyers will see it on your listing. If you are not at the property right now, drag the pin to the exact spot or tap "Remove pin".</div>
+        <div class="pin-status" id="pin-status"></div>
         <button type="button" class="linkbtn" id="clear-pin" data-act="clear-pin" hidden>Remove pin</button>
       </div>
       <div class="grid-2" id="price-row">
@@ -397,7 +397,7 @@ function pinText(){
   const e=$('pin-status');e.className='pin-status'+(S.pin?' ok':'');
   e.textContent=S.pin?`Exact pin set (${S.pin.lat.toFixed(5)}, ${S.pin.lng.toFixed(5)}). Drag it to fine-tune.`
     :'No exact pin. Buyers will see the approximate area. Move the map to the spot and tap "Pin exact location here".';
-  $('clear-pin').hidden=!S.pin;if($('pin-warn'))$('pin-warn').hidden=!S.pin;
+  $('clear-pin').hidden=!S.pin;
 }
 function clearPin(){S.pin=null;if(marker){marker.remove();marker=null}pinText();saveDraft()}
 function dropPin(){
@@ -497,9 +497,9 @@ async function useMyLocation(){
     if(!val('address')){const road=a.road||a.pedestrian||a.footway||'',near=a.suburb||a.neighbourhood||'';
       const addr=[road,near&&near!==road?near:''].filter(Boolean).join(', ');if(addr)$('address').value=addr}
     ['county','area','area_custom','address'].forEach(i=>fail(i,''));
-    setPin(lat,lng,16);
+    if(map)map.setView([lat,lng],16);
     saveDraft();
-    toast(`Filled ${[area||cands[0],nkCountyLabel(county)].filter(Boolean).join(', ')} and pinned your location. Drag the pin if you are not at the property.`,'success');
+    toast(`Filled ${[area||cands[0],nkCountyLabel(county)].filter(Boolean).join(', ')}. Please check it. Tap "Pin exact location here" if you're at the property.`,'success');
   },()=>toast('Could not get your location. You can choose the county and area manually.','error'),{enableHighAccuracy:true,timeout:10000});
 }
 
