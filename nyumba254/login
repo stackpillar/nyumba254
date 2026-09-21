@@ -535,7 +535,7 @@
 
           <div class="form-group">
             <label class="field-label" for="reg-phone">
-              M-Pesa phone number
+              Phone number
               <span class="opt">for payments</span>
             </label>
             <div class="input-wrap">
