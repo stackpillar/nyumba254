@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.nyumba254.app",
+        "sha256_cert_fingerprints": ["55:99:6F:5A:46:5A:7F:74:5D:33:76:1E:44:CA:23:D6:BD:95:72:1F:9E:5D:6A:08:1F:D0:F8:DF:61:EC:07:A4"]
+      }
+    }]
