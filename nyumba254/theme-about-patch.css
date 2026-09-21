@@ -1,0 +1,34 @@
+/* ── 9. about.html (append to the END of theme.css, after section 8) ──
+   In dark mode --green and --green-dark are not redefined, so anything that used them as TEXT or STROKE
+   on a dark surface needs an accent colour instead. Panels that are always dark green (hero, mission,
+   "What we believe", CTA band) carry the .on-dark class or fixed light text and are left alone. */
+html[data-theme="dark"] { --blue: #7FB0FF; }
+
+/* headings, labels, links */
+html[data-theme="dark"] :is(.eyebrow:not(.on-dark), .timeline-year, .proof-reply-label,
+  .section-title em, .text-link, .section-body a) { color: var(--accent); }
+
+/* icons + timeline */
+html[data-theme="dark"] :is(.info-icon svg, .area-pill svg) { stroke: var(--accent); }
+html[data-theme="dark"] .info-icon.gold svg { stroke: var(--gold); }
+html[data-theme="dark"] .info-icon.blue { background: #16283F; }
+html[data-theme="dark"] .info-icon.blue svg { stroke: var(--blue); }
+html[data-theme="dark"] .timeline-dot { background: var(--accent); border-color: var(--accent); }
+
+/* stat blocks: one variable pair drives the top bar and the number */
+html[data-theme="dark"] .stat-block { --stat-accent: var(--accent); --stat-text: var(--accent-strong); }
+html[data-theme="dark"] .stat-block.s-gold { --stat-accent: var(--gold); --stat-text: var(--gold); }
+html[data-theme="dark"] .stat-block.s-blue { --stat-accent: var(--blue); --stat-text: var(--blue); }
+html[data-theme="dark"] .stat-block.s-mid  { --stat-accent: #3FBF95;     --stat-text: #3FBF95; }
+
+/* coverage pills + county panel */
+html[data-theme="dark"] .area-pill.tier1 { color: var(--accent-strong); border-color: var(--green-border); }
+html[data-theme="dark"] .area-pill:hover { color: var(--accent-strong); border-color: var(--accent); }
+html[data-theme="dark"] .cp-bar::before { background: var(--accent); }
+html[data-theme="dark"] .cp-list a:hover { background: var(--surface); }
+
+/* skeletons that use the shared .sk class (also fixes listing.html's loading blocks) */
+html[data-theme="dark"] .sk {
+  background: linear-gradient(90deg, var(--surface) 25%, var(--border) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+}
