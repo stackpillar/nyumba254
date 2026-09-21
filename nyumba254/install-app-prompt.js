@@ -11,8 +11,9 @@
  *   - for 7 days after "Not now", or 30 days after "Install app".
  *
  * The same script also adds a permanent "Get the app" button:
- *   - automatically at the end of the page's <footer>, or
- *   - wherever you put  <div data-nk-app-link></div>  (takes priority).
+ *   - wherever you put  <div data-nk-app-link></div>  (takes priority), or
+ *   - automatically under the footer's social icons (.footer-social), or
+ *   - as a fallback, at the end of the page's <footer>.
  * The button uses the same rules (Android browsers only, never inside the app),
  * but ignores the "Not now" snooze.
  *
@@ -104,6 +105,7 @@
 
   var LINK_CSS = [
     '.nk-ap-link-wrap{grid-column:1/-1;display:flex;justify-content:center;margin:18px 0 6px;padding:0 12px}',
+    '.nk-ap-link-wrap.nk-ap-left{grid-column:auto;justify-content:flex-start;margin:20px 0 0;padding:0}',
     '.nk-ap-link{box-sizing:border-box;display:inline-flex;align-items:center;gap:12px;max-width:100%;min-height:52px;',
     'padding:8px 18px 8px 10px;border-radius:14px;background:#0F6E56;color:#fff;text-decoration:none;',
     'border:1px solid rgba(255,255,255,.28);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;text-align:left}',
@@ -184,7 +186,8 @@
   function buildFooterLink() {
     if (document.getElementById('nk-app-link')) return;
     var slot = document.querySelector('[data-nk-app-link]');
-    var host = slot || document.querySelector('footer');
+    var social = slot ? null : document.querySelector('footer .footer-social');
+    var host = slot || (social && social.parentNode) || document.querySelector('footer');
     if (!host) return;
 
     var st = document.createElement('style');
@@ -201,7 +204,15 @@
         '<img src="' + ICON_URL + '" alt="" width="36" height="36">' +
         '<span><b>Get the Nyumba254 app</b><small>Android &middot; free &middot; about 3 MB</small></span>' +
       '</a>';
-    host.appendChild(wrap);
+    if (social) {
+      wrap.className += ' nk-ap-left';
+      host.insertBefore(wrap, social.nextSibling);
+    } else if (slot) {
+      wrap.className += ' nk-ap-left';
+      host.appendChild(wrap);
+    } else {
+      host.appendChild(wrap);
+    }
   }
 
   function startFooterLink() {
