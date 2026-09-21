@@ -31,6 +31,7 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => loadCore(start)); else loadCore(start);
 
   function start() {
+    const DOCK = 'right';   // 'right' or 'left': which edge the full-height chat panel slides in from on computers
     const core = window.NKChatCore, esc = core.esc, $ = id => document.getElementById(id), qsa = (s, r) => [...(r || document).querySelectorAll(s)];
     const wide = () => matchMedia('(max-width:600px)').matches, touch = () => matchMedia('(pointer:coarse)').matches;
 
@@ -42,7 +43,14 @@
     #gcw-btn svg{flex-shrink:0;stroke:#fff;fill:none;stroke-width:2}
     #gcw-badge{position:absolute;top:-5px;right:-5px;min-width:21px;height:21px;padding:0 5px;background:var(--rd);color:#fff;font-size:11px;font-weight:700;border-radius:20px;display:none;align-items:center;justify-content:center;border:2px solid var(--cd)}
     @keyframes gcw-pop{from{transform:scale(.8)}to{transform:scale(1)}}
-    #gcw-panel{position:fixed;right:20px;bottom:calc(var(--fab) + 64px);z-index:1500;width:380px;max-width:calc(100vw - 24px);height:560px;max-height:calc(100vh - 150px);max-height:calc(100dvh - 150px);background:var(--cd);color:var(--tx);border:1px solid var(--bd);border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.22);display:none;flex-direction:column;overflow:hidden}
+    #gcw-panel{position:fixed;top:0;bottom:0;right:0;z-index:1600;width:min(460px,100vw);height:100vh;height:100dvh;background:var(--cd);color:var(--tx);border-left:1px solid var(--bd);box-shadow:-10px 0 36px rgba(0,0,0,.2);display:none;flex-direction:column;overflow:hidden}
+    #gcw-panel.dock-left{right:auto;left:0;border-left:0;border-right:1px solid var(--bd);box-shadow:10px 0 36px rgba(0,0,0,.2)}
+    #gcw-panel.open{display:flex;animation:gcw-in .2s ease}
+    #gcw-panel.dock-left.open{animation-name:gcw-in-l}
+    @keyframes gcw-in{from{transform:translateX(28px);opacity:0}to{transform:none;opacity:1}}
+    @keyframes gcw-in-l{from{transform:translateX(-28px);opacity:0}to{transform:none;opacity:1}}
+    @keyframes gcw-up{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+    html.gcw-lock,html.gcw-lock body{overflow:hidden}
     #gcw-panel.open{display:flex}
     #gcw-panel:focus{outline:none}
     #gcw-head,#gcw-thead{background:var(--g);color:#fff;padding:8px 8px 8px 16px;display:flex;align-items:center;gap:6px;flex-shrink:0;position:relative;min-height:56px}
@@ -156,11 +164,14 @@
     .gcw-warn{font-size:12.5px;color:#7a4f00;background:#FFF7E6;border:1px solid #F3D9A0;border-radius:10px;padding:9px 12px;margin-bottom:14px;line-height:1.5}
     @media(max-width:600px){
       #gcw-btn{right:14px}
-      #gcw-panel{left:10px;right:10px;width:auto;max-width:none;bottom:calc(var(--fab) + 62px);height:min(72vh,540px);height:min(72dvh,540px);max-height:calc(100vh - var(--nk-tabbar-h,0px) - var(--nk-stack,0px) - 150px);max-height:calc(100dvh - var(--nk-tabbar-h,0px) - var(--nk-stack,0px) - 150px)}
+      #gcw-panel,#gcw-panel.dock-left{left:0;right:0;width:100%;border:0;box-shadow:none}
+      #gcw-panel.open,#gcw-panel.dock-left.open{animation-name:gcw-up}
+      #gcw-head,#gcw-thead{padding-top:calc(8px + env(safe-area-inset-top,0px))}
+      #gcw-inrow{padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
       .gcw-col{max-width:84%}
     }
     @media(max-width:400px){#gcw-btn-label,.gcw-pill span{display:none}#gcw-btn{padding:0;width:52px;justify-content:center}.gcw-pill{width:44px;height:44px;padding:0;justify-content:center;border-radius:50%}#gcw-hint{right:0;width:170px}#gcw-hint::after{right:14px}}
-    @media(prefers-reduced-motion:reduce){#gcw-btn,.gcw-sk{transition:none;animation:none}}`;
+    @media(prefers-reduced-motion:reduce){#gcw-btn,.gcw-sk,#gcw-panel.open{transition:none;animation:none}}`;
 
     const st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
     const I = {
@@ -193,7 +204,7 @@
           <button type="button" class="gcw-ib" id="gcw-close2" aria-label="Close chats">${I.x}</button>
         </div>
         <div id="gcw-lcard"></div>
-        <div id="gcw-safety" role="note"><p id="gcw-safety-t">Never pay before you have viewed the property. Nyumba254 never asks buyers for money.</p><button type="button" id="gcw-report" data-a="ask">Report</button><button type="button" id="gcw-safety-x" aria-label="Dismiss safety note">✕</button></div>
+        <div id="gcw-safety" role="note"><p id="gcw-safety-t">Never pay before viewing the property. Nyumba254 never asks buyers for money.</p><button type="button" id="gcw-report" data-a="ask">Report</button><button type="button" id="gcw-safety-x" aria-label="Dismiss safety note">✕</button></div>
         <div id="gcw-msgs-wrap"><div id="gcw-messages" role="log" aria-live="polite" aria-label="Messages"></div><button type="button" id="gcw-newpill">New message ↓</button></div>
         <div id="gcw-quick"></div>
         <div id="gcw-inrow"><textarea id="gcw-input" placeholder="Type a message…" rows="1" aria-label="Message"></textarea><button type="button" id="gcw-send" aria-label="Send message">${I.send}</button></div>
@@ -218,7 +229,7 @@
     </div></div>`);
 
     let panelOpen = false, threadOpen = false, lastFocus = null, viewingFor = null;
-    const panel = $('gcw-panel'), btn = $('gcw-btn');
+    const panel = $('gcw-panel'), btn = $('gcw-btn'); panel.classList.toggle('dock-left', DOCK === 'left');
     const vis = () => panelOpen && threadOpen && !document.hidden;
     const sync = () => core.setViewing(vis());
     const atBottom = () => { const b = $('gcw-messages'); return b.scrollHeight - b.scrollTop - b.clientHeight < 90; };
@@ -228,7 +239,7 @@
     /* ── FAB + badge ── */
     function renderBadge() {
       const n = core.unread(), b = $('gcw-badge'), has = core.convos().length > 0;
-      btn.style.display = (has || panelOpen) ? 'flex' : 'none';
+      btn.style.display = (has && !panelOpen) ? 'flex' : 'none';
       if (n > 0 && !panelOpen) { b.textContent = n > 9 ? '9+' : n; b.style.display = 'flex'; } else b.style.display = 'none';
       btn.setAttribute('aria-label', n > 0 && !panelOpen ? `Open your chats, ${n} unread` : 'Open your chats with sellers');
       core.setTitleBadge(n);
@@ -287,7 +298,7 @@
       threadOpen = true; $('gcw-thread').classList.add('open'); $('gcw-list').style.display = 'none';
       $('gcw-title-wrap').parentElement.style.display = 'none';
       $('gcw-safety').classList.toggle('show', !core.ls.get('nk_chat_safety_seen'));
-      $('gcw-safety-t').textContent = 'Never pay before you have viewed the property. Nyumba254 never asks buyers for money.'; $('gcw-report').style.display = '';
+      $('gcw-safety-t').textContent = 'Never pay before viewing the property. Nyumba254 never asks buyers for money.'; $('gcw-report').style.display = '';
       renderHead(); renderPresence(); sync();
     }
     function hideThread() {
@@ -305,21 +316,22 @@
     function setPanel(open) {
       if (open === panelOpen) return; panelOpen = open;
       panel.classList.toggle('open', open); btn.setAttribute('aria-expanded', String(open)); core.setPolling(open);
+      panel.setAttribute('aria-modal', open && wide() ? 'true' : 'false'); lockPage(); renderBadge(); fit();
       if (open) {
         lastFocus = document.activeElement; renderList(); panel.focus({ preventScroll: true });
         const h = $('gcw-hint'); if (core.convos().length && core.hasResumeData() && !core.ls.get('nk_resume_hint_seen')) h.classList.add('show');
-      } else { $('gcw-hint').classList.remove('show'); core.ls.set('nk_resume_hint_seen', '1'); if (lastFocus && lastFocus.focus && document.contains(lastFocus)) lastFocus.focus(); else btn.focus(); }
-      renderBadge(); sync();
+      } else { $('gcw-hint').classList.remove('show'); core.ls.set('nk_resume_hint_seen', '1'); if (lastFocus && lastFocus.focus && document.contains(lastFocus) && lastFocus.offsetParent !== null) lastFocus.focus(); else btn.focus(); }
+      sync();
     }
+    /* on a phone the panel covers the whole page, so the page behind must not scroll */
+    const lockPage = () => document.documentElement.classList.toggle('gcw-lock', panelOpen && wide());
+    matchMedia('(max-width:600px)').addEventListener('change', () => { lockPage(); fit(); panel.setAttribute('aria-modal', panelOpen && wide() ? 'true' : 'false'); });
     /* keep the header on screen when the phone keyboard opens */
-    if (window.visualViewport) {
-      const fit = () => {
-        if (!panelOpen || !wide()) { panel.style.bottom = ''; panel.style.maxHeight = ''; return; }
-        const vv = window.visualViewport, kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-        if (kb > 100) { panel.style.bottom = (kb + 8) + 'px'; panel.style.maxHeight = (vv.height - 16) + 'px'; } else { panel.style.bottom = ''; panel.style.maxHeight = ''; }
-      };
-      visualViewport.addEventListener('resize', fit); visualViewport.addEventListener('scroll', fit);
+    function fit() {
+      if (!panelOpen || !wide() || !window.visualViewport) { panel.style.height = ''; panel.style.top = ''; panel.style.bottom = ''; return; }
+      const vv = window.visualViewport; panel.style.height = vv.height + 'px'; panel.style.top = vv.offsetTop + 'px'; panel.style.bottom = 'auto';
     }
+    if (window.visualViewport) { visualViewport.addEventListener('resize', fit); visualViewport.addEventListener('scroll', fit); }
 
     /* ── viewing modal ── */
     const setErr = (id, m) => { const e = $(id + '-e'), i = $(id); if (e) e.textContent = m || ''; if (i) i.setAttribute('aria-invalid', m ? 'true' : 'false'); };

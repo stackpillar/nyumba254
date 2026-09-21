@@ -234,7 +234,7 @@
         </div>
         <div id="ni-searchbar"><input id="ni-tsearch" type="search" placeholder="Search this conversation…" aria-label="Search this conversation"/><span id="ni-tcount" aria-live="polite"></span><button id="ni-tsearch-x" type="button" aria-label="Close search">✕</button></div>
         <div id="ni-lcard"></div>
-        <div id="ni-safety" role="note"><p id="ni-safety-t">Never pay before you have viewed the property. Nyumba254 never asks buyers for money.</p><button type="button" id="ni-report" data-a="ask">Report</button><button type="button" id="ni-safety-x" aria-label="Dismiss safety note">✕</button></div>
+        <div id="ni-safety" role="note"><p id="ni-safety-t">Never pay before viewing the property. Nyumba254 never asks buyers for money.</p><button type="button" id="ni-report" data-a="ask">Report</button><button type="button" id="ni-safety-x" aria-label="Dismiss safety note">✕</button></div>
         <div id="ni-msgs-wrap"><div id="ni-messages" role="log" aria-live="polite" aria-label="Messages"></div><button type="button" id="ni-newpill">New message ↓</button></div>
         <div id="ni-quick"></div>
         <div id="ni-inrow"><label class="sr-only" for="ni-input">Message</label><textarea id="ni-input" placeholder="Type a message…" rows="1"></textarea><button id="ni-send" type="button" aria-label="Send message"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div>
@@ -379,7 +379,7 @@
   async function openConvo(id, token, fromPop) {
     $('ni-thread').classList.add('open'); $('ni-thread-empty').style.display = 'none'; document.body.classList.add('ni-open');
     if (!desk() && !pushed && !fromPop) { history.pushState({ ni: 'thread' }, ''); pushed = true; }
-    $('ni-safety').classList.toggle('show', !core.ls.get('nk_chat_safety_seen')); $('ni-safety-t').textContent = 'Never pay before you have viewed the property. Nyumba254 never asks buyers for money.';
+    $('ni-safety').classList.toggle('show', !core.ls.get('nk_chat_safety_seen')); $('ni-safety-t').textContent = 'Never pay before viewing the property. Nyumba254 never asks buyers for money.';
     toggleThreadSearch(false, true);
     const opening = core.openThread(id, token); core.setViewing(vis());   // the thread is active from this moment, so it counts as being read
     const ok = await opening; if (!ok && !core.active()) return closeThread(true);
