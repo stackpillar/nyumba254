@@ -10,6 +10,12 @@
  *   - inside Facebook/Instagram/TikTok in-app browsers (they block APK downloads),
  *   - for 7 days after "Not now", or 30 days after "Install app".
  *
+ * The same script also adds a permanent "Get the app" button:
+ *   - automatically at the end of the page's <footer>, or
+ *   - wherever you put  <div data-nk-app-link></div>  (takes priority).
+ * The button uses the same rules (Android browsers only, never inside the app),
+ * but ignores the "Not now" snooze.
+ *
  * Testing on any device: open the page with ?showappprompt=1
  * Later, when the Play Store version is live, change APP_URL below.
  */
@@ -54,12 +60,13 @@
     return inApp;
   }
 
-  function shouldShow() {
+  function shouldShow(ignoreSnooze) {
     if (forced) return true;
     var ua = navigator.userAgent || '';
     if (!/Android/i.test(ua)) return false;
     if (/FBAN|FBAV|FB_IAB|Instagram|TikTok|musical_ly|Snapchat|Twitter|Line\/|; wv\)/i.test(ua)) return false;
     if (isInsideApp()) return false;
+    if (ignoreSnooze) return true;
     var until = parseInt(safeGet(window.localStorage, STORE_KEY) || '0', 10);
     if (until && Date.now() < until) return false;
     return true;
@@ -93,6 +100,18 @@
     '.nk-ap-card:focus{outline:none}.nk-ap-btn:focus-visible{outline:3px solid #fff;outline-offset:2px}',
     '.nk-ap-note{margin:12px 0 0;font-size:.78rem;line-height:1.4;color:#9cc4b6}',
     '@media (prefers-reduced-motion:reduce){.nk-ap-backdrop,.nk-ap-card{transition:none}}'
+  ].join('');
+
+  var LINK_CSS = [
+    '.nk-ap-link-wrap{grid-column:1/-1;display:flex;justify-content:center;margin:18px 0 6px;padding:0 12px}',
+    '.nk-ap-link{box-sizing:border-box;display:inline-flex;align-items:center;gap:12px;max-width:100%;min-height:52px;',
+    'padding:8px 18px 8px 10px;border-radius:14px;background:#0F6E56;color:#fff;text-decoration:none;',
+    'border:1px solid rgba(255,255,255,.28);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;text-align:left}',
+    '.nk-ap-link:hover{background:#1D9E75}',
+    '.nk-ap-link:focus-visible{outline:3px solid #6FE0B8;outline-offset:2px}',
+    '.nk-ap-link img{width:36px;height:36px;border-radius:9px;flex:none;background:#085041;object-fit:cover}',
+    '.nk-ap-link b{display:block;font-size:.95rem;line-height:1.2;font-weight:700}',
+    '.nk-ap-link small{display:block;font-size:.75rem;line-height:1.3;color:#cfe9e0}'
   ].join('');
 
   function build() {
@@ -161,6 +180,37 @@
       });
     });
   }
+
+  function buildFooterLink() {
+    if (document.getElementById('nk-app-link')) return;
+    var slot = document.querySelector('[data-nk-app-link]');
+    var host = slot || document.querySelector('footer');
+    if (!host) return;
+
+    var st = document.createElement('style');
+    st.id = 'nk-app-link-css';
+    st.textContent = LINK_CSS;
+    document.head.appendChild(st);
+
+    var wrap = document.createElement('div');
+    wrap.id = 'nk-app-link';
+    wrap.className = 'nk-ap-link-wrap';
+    wrap.innerHTML =
+      '<a class="nk-ap-link" href="' + APP_URL + '"' +
+        (APP_FILE_NAME ? ' download="' + APP_FILE_NAME + '"' : '') + '>' +
+        '<img src="' + ICON_URL + '" alt="" width="36" height="36">' +
+        '<span><b>Get the Nyumba254 app</b><small>Android &middot; free &middot; about 3 MB</small></span>' +
+      '</a>';
+    host.appendChild(wrap);
+  }
+
+  function startFooterLink() {
+    if (!shouldShow(true)) return;
+    buildFooterLink();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', startFooterLink);
+  else startFooterLink();
 
   function start() {
     if (!shouldShow()) return;
