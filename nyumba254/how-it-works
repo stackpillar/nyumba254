@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <title>How It Works — Nyumba254</title>
   <meta name="description" content="A complete guide to Nyumba254 — how buyers find and message sellers, how sellers list and manage properties, pricing, safety, reviews, and how to manage or delete your account."/>
   <link rel="canonical" href="https://nyumba254.com/how-it-works"/>
@@ -18,10 +18,33 @@
   <meta name="twitter:image" content="https://nyumba254.com/hero-photo.jpg"/>
   <meta name="twitter:site" content="@Nyumba254"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="preconnect" href="https://vliuuloyfhyxcsuchpss.supabase.co"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
+  <meta name="theme-color" content="#0F6E56"/>
+
+  <!-- Static content: breadcrumb + FAQ structured data (the FAQ text below matches section 11 verbatim) -->
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://nyumba254.com/"},
+    {"@type":"ListItem","position":2,"name":"How it works","item":"https://nyumba254.com/how-it-works"}
+  ]}
+  </script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+    {"@type":"Question","name":"Do I need an account to message a seller?","acceptedAnswer":{"@type":"Answer","text":"No — you can send an enquiry as a guest. You'll get a private link to keep the conversation going. Creating a free account just makes it easier to track multiple conversations and get email notifications."}},
+    {"@type":"Question","name":"Is there a fee to browse or contact a seller?","acceptedAnswer":{"@type":"Answer","text":"Never. Browsing, searching, saving listings, and messaging sellers is completely free for buyers. Only sellers pay a listing fee, and only after their listing is approved."}},
+    {"@type":"Question","name":"How long does listing approval take?","acceptedAnswer":{"@type":"Answer","text":"Most listings are reviewed within a few hours. You'll get a notification the moment yours is approved and live, or if we need any changes first."}},
+    {"@type":"Question","name":"What if I never used up my free trial listing?","acceptedAnswer":{"@type":"Answer","text":"Your free trial applies to your very first listing only, in any category, and is used automatically the first time you post — no code or opt-in needed."}},
+    {"@type":"Question","name":"Can I change my listing's price or location after posting?","acceptedAnswer":{"@type":"Answer","text":"Yes, though changes to price, category, or location go through a brief admin check to keep listings accurate for buyers. Description, photos, and amenities update instantly."}},
+    {"@type":"Question","name":"What happens to my data if I delete my account?","acceptedAnswer":{"@type":"Answer","text":"Your listings, photos, and messages are permanently removed. Payment history is retained for a period as required by financial record-keeping rules."}},
+    {"@type":"Question","name":"How do I report a scam or a fake listing?","acceptedAnswer":{"@type":"Answer","text":"Tap Report on the listing page, or on a seller's profile, and describe what happened. Our team reviews every report — accounts confirmed to be scams or impersonations are suspended."}}
+  ]}
+  </script>
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -44,17 +67,32 @@
       --white:       #ffffff;
       --radius:      10px;
       --radius-lg:   16px;
+      --nav-h: 64px;
+      /* Bottom stack: mobile tab bar + toast/scroll-top all read this so nothing overlaps. */
+      --nk-tabbar-h: 0px; --nk-stack: 0px;
     }
     html { scroll-behavior: smooth; }
-    body { font-family: 'Inter', sans-serif; color: var(--text); background: var(--white); font-size: 15px; line-height: 1.7; }
+    body { font-family: 'Inter', sans-serif; color: var(--text); background: var(--white); font-size: 15px; line-height: 1.7; padding-bottom: var(--nk-tabbar-h); }
     a { text-decoration: none; color: inherit; }
-    button { font-family: inherit; cursor: pointer; border: none; }
+    button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+    [hidden] { display: none !important; }
+    :focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    .skip-link { position: absolute; left: -9999px; top: 0; background: var(--green); color: white; padding: 10px 18px; border-radius: 0 0 8px 0; z-index: 100001; font-size: 14px; font-weight: 600; }
+    .skip-link:focus { left: 0; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
+
+    /* ── Data saver banner (shared component, same markup/behaviour as every other page) ── */
+    .nk-datasaver-banner { display: none; align-items: center; justify-content: center; gap: 10px; background: #FFF7E6; color: #7a4f00; border-bottom: 1px solid #F3D9A0; font-size: 13px; padding: 9px 16px; text-align: center; flex-wrap: wrap; }
+    .nk-datasaver-banner.visible { display: flex; }
+    .nk-datasaver-banner button { border: 1px solid #7a4f00; color: #7a4f00; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+    .nk-datasaver-banner button:hover { background: #7a4f00; color: white; }
 
     /* ── Navbar ── */
     nav {
       position: sticky; top: 0; z-index: 100;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0 40px; height: 64px;
+      padding: 0 40px; height: var(--nav-h);
       background: var(--white); border-bottom: 1px solid var(--border);
     }
     .logo { display: flex; align-items: center; gap: 10px; font-family: 'Playfair Display', serif; font-size: 20px; color: var(--green-dark); }
@@ -62,17 +100,19 @@
     .logo-icon svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 2; stroke-linecap: round; }
     .logo-icon img { width:auto; height:100%; aspect-ratio:1/1; object-fit:cover; display:block; border-radius:22%; box-shadow:0 0 0 1px rgba(0,0,0,.08); }
     .nav-links { display: flex; align-items: center; gap: 6px; }
-    .nav-link { font-size: 14px; color: var(--text-2); padding: 8px 14px; border-radius: var(--radius); transition: background .15s; }
+    .nav-link { font-size: 14px; color: var(--text-2); padding: 8px 14px; border-radius: var(--radius); transition: background .15s; display: flex; align-items: center; gap: 6px; }
     .nav-link:hover { background: var(--surface); }
-    .nav-link.active { color: var(--green); font-weight: 500; }
+    .nav-link.active, .nav-link[aria-current="page"] { color: var(--green); font-weight: 500; }
+    .nav-link svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; }
     .nav-count { background: var(--green); color: white; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; min-width: 16px; text-align: center; }
     .btn-primary { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; padding: 9px 20px; border-radius: var(--radius); background: var(--green); color: white; transition: background .15s; }
     .btn-primary:hover { background: var(--green-dark); }
 
-    .mobile-menu-btn { display: none; background: none; border: none; cursor: pointer; padding: 6px; border-radius: 6px; }
+    .mobile-menu-btn { display: none; padding: 12px; border-radius: 6px; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; }
     .mobile-menu-btn svg { width: 22px; height: 22px; stroke: var(--text); fill: none; stroke-width: 2; display: block; }
     .mobile-nav {
       display: none; position: fixed; top: 64px; left: 0; right: 0;
+      max-height: calc(100dvh - 64px); overflow-y: auto; -webkit-overflow-scrolling: touch;
       background: var(--white); border-bottom: 1px solid var(--border);
       padding: 16px; z-index: 99; flex-direction: column; gap: 4px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.1);
@@ -80,7 +120,8 @@
     .mobile-nav.open { display: flex; }
     .mobile-nav a { font-size: 15px; color: var(--text-2); padding: 10px 14px; border-radius: var(--radius); }
     .mobile-nav a:hover { background: var(--surface); }
-    .mobile-nav .btn-primary { text-align: center; justify-content: center; margin-top: 8px; }
+    .mobile-nav a[aria-current="page"] { color: var(--green); font-weight: 600; }
+    .mobile-nav .btn-primary { text-align: center; justify-content: center; margin-top: 8px; color: #fff; }
     @media (max-width: 768px) { .nav-links { display: none; } .mobile-menu-btn { display: flex; } }
 
     /* ── Hero ── */
@@ -291,7 +332,7 @@
     /* ── FAQ accordion ── */
     .faq-list { margin-top: 40px; display: flex; flex-direction: column; gap: 10px; }
     .faq-item { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; background: var(--white); }
-    .faq-q { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 18px 22px; cursor: pointer; font-size: 14.5px; font-weight: 600; color: var(--text); }
+    .faq-q { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 18px 22px; cursor: pointer; font-size: 14.5px; font-weight: 600; color: var(--text); width: 100%; text-align: left; min-height: 44px; }
     .faq-q .chev { flex-shrink: 0; width: 18px; height: 18px; stroke: var(--text-3); fill: none; stroke-width: 2; transition: transform .2s; }
     .faq-item.open .faq-q .chev { transform: rotate(180deg); }
     .faq-a { max-height: 0; overflow: hidden; transition: max-height .25s ease; }
@@ -314,7 +355,7 @@
     .btn-ghost { padding: 13px 28px; background: transparent; color: white; font-size: 15px; font-weight: 500; border-radius: var(--radius); border: 1.5px solid rgba(255,255,255,0.35); transition: all .15s; }
     .btn-ghost:hover { border-color: white; }
 
-    /* ── Footer ── */
+    /* ── Footer (matches the shared footer component: h2 headings + bottom link row) ── */
     footer { background: var(--text); color: rgba(255,255,255,0.6); padding: 56px 32px 28px; }
     .footer-inner { max-width: 1200px; margin: 0 auto; }
     .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 48px; }
@@ -327,19 +368,35 @@
     .footer-social a { width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; transition: background .15s; }
     .footer-social a:hover { background: var(--green); }
     .footer-social svg { width: 15px; height: 15px; stroke: rgba(255,255,255,0.6); fill: none; stroke-width: 2; }
-    .footer-col h4 { font-size: 11px; font-weight: 700; color: white; margin-bottom: 16px; letter-spacing: .1em; text-transform: uppercase; }
-    .footer-col a { display: block; font-size: 13px; color: rgba(255,255,255,0.5); margin-bottom: 10px; transition: color .15s; }
+    .footer-col h2 { font-size: 11px; font-weight: 700; color: white; margin-bottom: 16px; letter-spacing: .1em; text-transform: uppercase; }
+    .footer-col a { display: block; font-size: 13px; color: rgba(255,255,255,0.55); margin-bottom: 10px; transition: color .15s; }
     .footer-col a:hover { color: white; }
     .footer-counties { column-count: 2; column-gap: 16px; max-height: 220px; overflow-y: auto; padding-right: 6px; }
-    .footer-counties a { margin-bottom: 8px; break-inside: avoid; }
+    .footer-counties a, .footer-counties .soon { margin-bottom: 8px; break-inside: avoid; }
+    .footer-counties .soon { display: block; font-size: 13px; color: rgba(255,255,255,0.3); }
     .footer-counties::-webkit-scrollbar { width: 5px; }
     .footer-counties::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
     .footer-divider { height: 1px; background: rgba(255,255,255,0.08); margin-bottom: 24px; }
     .footer-bottom { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-    .footer-bottom p { font-size: 12px; color: rgba(255,255,255,0.35); }
+    .footer-bottom p, .footer-bottom-links a { font-size: 12px; color: rgba(255,255,255,0.4); }
     .footer-bottom-links { display: flex; gap: 20px; }
-    .footer-bottom-links a { font-size: 12px; color: rgba(255,255,255,0.35); transition: color .15s; }
     .footer-bottom-links a:hover { color: white; }
+
+    /* ── Mobile tab bar (same markup/behaviour as index.html, listings.html, listing.html, saved.html) ── */
+    .nk-tabbar { display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 90; background: var(--white); border-top: 1px solid var(--border); padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px)); align-items: stretch; justify-content: space-around; box-shadow: 0 -4px 16px rgba(0,0,0,.06); }
+    .nk-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 10.5px; font-weight: 600; color: var(--text-3); padding: 4px 0; flex: 1; position: relative; min-height: 46px; }
+    .nk-tab svg { width: 21px; height: 21px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .nk-tab.active { color: var(--green); }
+    .nk-tab-postbtn { position: relative; top: -14px; color: var(--green); }
+    .nk-tab-postcircle { width: 42px; height: 42px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(15,110,86,.4); margin-bottom: 2px; }
+    .nk-tab-postcircle svg { width: 20px; height: 20px; stroke: #fff; }
+    .nk-tab-badge { position: absolute; top: 0; right: 22%; background: var(--green); color: #fff; font-size: 9px; font-weight: 800; min-width: 15px; height: 15px; border-radius: 10px; display: none; align-items: center; justify-content: center; padding: 0 3px; border: 1.5px solid #fff; }
+    .nk-tab-badge.visible { display: flex; }
+    @media (max-width: 768px) { .nk-tabbar { display: flex; } }
+
+    /* ── Toast (used only for small confirmations on this page, e.g. a copy action) ── */
+    .toast { position: fixed; left: 50%; bottom: calc(var(--nk-tabbar-h) + var(--nk-stack) + 20px); transform: translate(-50%, 24px); z-index: 100002; background: var(--green-dark); color: #fff; padding: 12px 20px; border-radius: var(--radius); font-size: 13.5px; font-weight: 500; box-shadow: 0 8px 24px rgba(0,0,0,.2); opacity: 0; pointer-events: none; transition: all .25s; max-width: min(92vw, 420px); text-align: center; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
     /* ── Responsive ── */
     @media (max-width: 1024px) {
@@ -386,32 +443,39 @@
 <link rel="manifest" href="/manifest.webmanifest"><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script></head>
 <body>
 
+<a href="#main-content" class="skip-link">Skip to content</a>
+
+<div class="nk-datasaver-banner" id="nk-datasaver-banner" role="status">
+  <span>You're on a slower connection. Data Saver is on so pages load faster.</span>
+  <button type="button" id="nk-datasaver-off">Turn off</button>
+</div>
+
 <!-- ── NAVBAR ── -->
-<nav>
+<nav aria-label="Main">
   <a href="/" class="logo">
-    <div class="logo-icon"><img src="/logo-icon.png" alt="Nyumba254"/></div>
+    <div class="logo-icon"><img src="/logo-icon.png" alt="" width="40" height="40"/></div>
     Nyumba254
   </a>
   <div class="nav-links">
     <a href="/listings" class="nav-link">Browse</a>
-    <a href="/how-it-works" class="nav-link active">How it works</a>
+    <a href="/how-it-works" class="nav-link active" aria-current="page">How it works</a>
     <a href="/about" class="nav-link">About us</a>
     <a href="/faq" class="nav-link">FAQ</a>
     <a href="/login" class="nav-link" id="nav-account-link">Sign in</a>
     <a href="/saved" class="nav-link">
-      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
       Saved <span class="nav-count" id="nav-count-badge" style="display:none">0</span>
     </a>
     <a href="/post-listing" class="btn-primary">List your property</a>
   </div>
-  <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Open menu" aria-expanded="false" id="mobile-menu-btn">
-    <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  <button type="button" class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-nav">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
   </button>
 </nav>
 
 <div class="mobile-nav" id="mobile-nav">
   <a href="/listings">Browse listings</a>
-  <a href="/how-it-works">How it works</a>
+  <a href="/how-it-works" aria-current="page">How it works</a>
   <a href="/about">About us</a>
   <a href="/faq">FAQ</a>
   <a href="/login" id="mobile-account-link">Sign in</a>
@@ -419,17 +483,19 @@
   <a href="/post-listing" class="btn-primary">List your property</a>
 </div>
 
+<main id="main-content">
+
 <!-- ── HERO ── -->
-<section class="hero">
-  <div class="hero-illustration" aria-hidden="true"><img src="hero-photo-4.jpg" alt=""/></div>
+<section class="hero" aria-labelledby="hero-title">
+  <div class="hero-illustration" aria-hidden="true"><img src="/hero-photo-4.jpg" alt=""/></div>
   <div class="hero-overlay" aria-hidden="true"></div>
   <div class="hero-content">
     <div class="hero-eyebrow">No agents · No commission · No confusion</div>
-    <h1>Everything you need to<br><em>know, in one place</em></h1>
+    <h1 id="hero-title">Everything you need to<br><em>know, in one place</em></h1>
     <p class="hero-sub">A complete, plain-language guide to Nyumba254 — how to search and message sellers, how to list and manage a property, how payments and reviews work, and how to manage your account.</p>
     <div class="hero-tabs" role="tablist" aria-label="Choose your path">
-      <button class="hero-tab active" id="tab-btn-buyer" role="tab" aria-selected="true" aria-controls="panel-buyer" onclick="switchTab('buyer')">I'm looking to rent or buy</button>
-      <button class="hero-tab" id="tab-btn-seller" role="tab" aria-selected="false" aria-controls="panel-seller" onclick="switchTab('seller')">I want to list my property</button>
+      <button type="button" class="hero-tab active" id="tab-btn-buyer" role="tab" aria-selected="true" aria-controls="panel-buyer" data-act="tab" data-tab="buyer">I'm looking to rent or buy</button>
+      <button type="button" class="hero-tab" id="tab-btn-seller" role="tab" aria-selected="false" aria-controls="panel-seller" data-act="tab" data-tab="seller">I want to list my property</button>
     </div>
     <div class="hero-links">
       <a href="#messaging" class="hero-link-pill">💬 Messaging &amp; viewings</a>
@@ -975,31 +1041,31 @@
   <h2 class="section-title">A few common questions</h2>
   <div class="faq-list">
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)"><span>Do I need an account to message a seller?</span><svg class="chev" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <button type="button" class="faq-q" data-act="faq" aria-expanded="false"><span>Do I need an account to message a seller?</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button>
       <div class="faq-a"><div class="faq-a-inner">No — you can send an enquiry as a guest. You'll get a private link to keep the conversation going. Creating a free account just makes it easier to track multiple conversations and get email notifications.</div></div>
     </div>
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)"><span>Is there a fee to browse or contact a seller?</span><svg class="chev" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <button type="button" class="faq-q" data-act="faq" aria-expanded="false"><span>Is there a fee to browse or contact a seller?</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button>
       <div class="faq-a"><div class="faq-a-inner">Never. Browsing, searching, saving listings, and messaging sellers is completely free for buyers. Only sellers pay a listing fee, and only after their listing is approved.</div></div>
     </div>
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)"><span>How long does listing approval take?</span><svg class="chev" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <button type="button" class="faq-q" data-act="faq" aria-expanded="false"><span>How long does listing approval take?</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button>
       <div class="faq-a"><div class="faq-a-inner">Most listings are reviewed within a few hours. You'll get a notification the moment yours is approved and live, or if we need any changes first.</div></div>
     </div>
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)"><span>What if I never used up my free trial listing?</span><svg class="chev" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <button type="button" class="faq-q" data-act="faq" aria-expanded="false"><span>What if I never used up my free trial listing?</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button>
       <div class="faq-a"><div class="faq-a-inner">Your free trial applies to your very first listing only, in any category, and is used automatically the first time you post — no code or opt-in needed.</div></div>
     </div>
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)"><span>Can I change my listing's price or location after posting?</span><svg class="chev" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <button type="button" class="faq-q" data-act="faq" aria-expanded="false"><span>Can I change my listing's price or location after posting?</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button>
       <div class="faq-a"><div class="faq-a-inner">Yes, though changes to price, category, or location go through a brief admin check to keep listings accurate for buyers. Description, photos, and amenities update instantly.</div></div>
     </div>
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)"><span>What happens to my data if I delete my account?</span><svg class="chev" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <button type="button" class="faq-q" data-act="faq" aria-expanded="false"><span>What happens to my data if I delete my account?</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button>
       <div class="faq-a"><div class="faq-a-inner">Your listings, photos, and messages are permanently removed. See <a href="#delete-account">Deleting your account</a> above for the full walkthrough, or our <a href="/privacy">Privacy Policy</a> for how long certain records (like payment history) are retained by law.</div></div>
     </div>
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)"><span>How do I report a scam or a fake listing?</span><svg class="chev" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <button type="button" class="faq-q" data-act="faq" aria-expanded="false"><span>How do I report a scam or a fake listing?</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button>
       <div class="faq-a"><div class="faq-a-inner">Tap "Report" on the listing page, or on a seller's profile, and describe what happened. Our team reviews every report — accounts confirmed to be scams or impersonations are suspended.</div></div>
     </div>
   </div>
@@ -1015,23 +1081,26 @@
   </div>
 </section>
 
+</main>
+
 <!-- ── FOOTER ── -->
 <footer>
   <div class="footer-inner">
     <div class="footer-top">
       <div>
-        <div class="footer-logo"><div class="footer-logo-icon"><img src="/logo-icon.png" alt="Nyumba254"/></div>Nyumba254</div>
+        <div class="footer-logo"><div class="footer-logo-icon"><img src="/logo-icon.png" alt="" width="40" height="40"/></div>Nyumba254</div>
         <p class="footer-tagline">The easiest way to find and list apartments, houses, boarding rooms, Airbnb rentals, and commercial spaces across Kenya — without agents or commissions.</p>
         <div class="footer-social">
-          <a href="https://wa.me/254739348560" target="_blank" rel="noopener" title="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></a>
-          <a href="https://www.instagram.com/nyumba.254" target="_blank" rel="noopener" title="Instagram"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
-          <a href="https://www.facebook.com/share/1EdzJKujSK/" target="_blank" rel="noopener" title="Facebook"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
-          <a href="https://www.tiktok.com/@nyumba.254" target="_blank" rel="noopener" title="TikTok"><svg viewBox="0 0 24 24"><path d="M9 12a4 4 0 104 4V4a5 5 0 005 5"/></svg></a>
-          <a href="https://x.com/Nyumba254" target="_blank" rel="noopener" title="X (Twitter)"><svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20"/></svg></a>
+          <a href="https://wa.me/254739348560" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></a>
+          <a href="https://www.instagram.com/nyumba.254?igsh=Z2VhNzJkMm1td2Jz" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+          <a href="https://www.facebook.com/share/1EdzJKujSK/" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
+          <a href="https://www.tiktok.com/@nyumba.254?_r=1&amp;_t=ZS-98w137YXueA" target="_blank" rel="noopener" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="M9 12a4 4 0 104 4V4a5 5 0 005 5"/></svg></a>
+          <a href="https://x.com/Nyumba254" target="_blank" rel="noopener" aria-label="X (Twitter)"><svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20"/></svg></a>
+          <a href="mailto:hello@nyumba254.co.ke" aria-label="Email"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></a>
         </div>
       </div>
       <div class="footer-col">
-        <h4>Browse</h4>
+        <h2>Browse</h2>
         <a href="/listings">All listings</a>
         <a href="/listings?category=apartment">Apartment</a>
         <a href="/listings?category=house">House</a>
@@ -1039,18 +1108,15 @@
         <a href="/listings?category=airbnb">Airbnb / Holiday Rental</a>
         <a href="/listings?category=commercial">Shops &amp; offices</a>
       </div>
+      <div class="footer-col"><h2>Counties</h2><div class="footer-counties" id="footer-counties"></div></div>
       <div class="footer-col">
-        <h4>Counties</h4>
-        <div class="footer-counties" id="footer-counties"></div>
-      </div>
-      <div class="footer-col">
-        <h4>Platform</h4>
+        <h2>Platform</h2>
         <a href="/post-listing">List a property</a>
         <a href="/how-it-works">How it works</a>
         <a href="/login">Seller login</a>
       </div>
       <div class="footer-col">
-        <h4>Company</h4>
+        <h2>Company</h2>
         <a href="/contact">Contact us</a>
         <a href="/terms">Terms of service</a>
         <a href="/privacy">Privacy policy</a>
@@ -1059,117 +1125,146 @@
     </div>
     <div class="footer-divider"></div>
     <div class="footer-bottom">
-      <p>© 2026 Nyumba254. All rights reserved. Built for Kenya.</p>
-      <div class="footer-bottom-links">
-        <a href="/terms">Terms</a>
-        <a href="/privacy">Privacy</a>
-        <a href="/contact">Contact</a>
-        <a href="/sitemap">Sitemap</a>
-      </div>
+      <p>© <span id="nk-footer-year">2026</span> Nyumba254. All rights reserved. Built for Kenya.</p>
+      <div class="footer-bottom-links"><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/contact">Contact</a><a href="/sitemap">Sitemap</a></div>
     </div>
   </div>
 </footer>
 
-<script>
-  function switchTab(tab) {
-    document.querySelectorAll('.hero-tab').forEach((btn, i) => {
-      const isActive = (i === 0 && tab === 'buyer') || (i === 1 && tab === 'seller');
-      btn.classList.toggle('active', isActive);
-      btn.setAttribute('aria-selected', String(isActive));
-    });
-    document.getElementById('panel-buyer').classList.toggle('active', tab === 'buyer');
-    document.getElementById('panel-seller').classList.toggle('active', tab === 'seller');
-  }
-  const tabParam = new URLSearchParams(window.location.search).get('tab');
-  if (tabParam === 'seller') switchTab('seller');
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  function toggleFaq(el) {
-    el.parentElement.classList.toggle('open');
-  }
+<!-- ── MOBILE TAB BAR (same markup/behaviour as every other page) ── -->
+<nav class="nk-tabbar" aria-label="Primary">
+  <a href="/" class="nk-tab">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home
+  </a>
+  <a href="/listings" class="nk-tab">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Browse
+  </a>
+  <a href="/post-listing" class="nk-tab nk-tab-postbtn">
+    <span class="nk-tab-postcircle"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>Post
+  </a>
+  <a href="/saved" class="nk-tab">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+    <span class="nk-tab-badge" id="nk-tab-saved-badge">0</span>Saved
+  </a>
+  <a href="/login" class="nk-tab" id="tab-account-link">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Account
+  </a>
+</nav>
 
-  function toggleMobileMenu() {
-    const nav = document.getElementById('mobile-nav');
-    const isOpen = nav.classList.toggle('open');
-    document.getElementById('mobile-menu-btn')?.setAttribute('aria-expanded', isOpen);
-  }
-  document.addEventListener('click', e => {
-    const nav = document.getElementById('mobile-nav');
-    const btn = document.querySelector('.mobile-menu-btn');
-    if (nav && nav.classList.contains('open') && !nav.contains(e.target) && !btn.contains(e.target)) nav.classList.remove('open');
-  });
-
-  const NK_COUNTIES = [
-    "Mombasa","Kwale","Kilifi","Tana River","Lamu","Taita-Taveta","Garissa","Wajir","Mandera",
-    "Marsabit","Isiolo","Meru","Tharaka-Nithi","Embu","Kitui","Machakos","Makueni","Nyandarua",
-    "Nyeri","Kirinyaga","Murang'a","Kiambu","Turkana","West Pokot","Samburu","Trans Nzoia",
-    "Uasin Gishu","Elgeyo-Marakwet","Nandi","Baringo","Laikipia","Nakuru","Narok","Kajiado",
-    "Kericho","Bomet","Kakamega","Vihiga","Bungoma","Busia","Siaya","Kisumu","Homa Bay",
-    "Migori","Kisii","Nyamira","Nairobi"
-  ].sort();
-  const NK_AREAS_BY_COUNTY = {
-    "Kisumu": ["Milimani"], "Nairobi": ["Westlands"], "Mombasa": ["Nyali"]
-  }; // presence-only check for footer county links; full lists live on listings.html
-  const NK_COUNTY_LABEL = {
-    "Uasin Gishu": "Uasin Gishu (Eldoret)", "Trans Nzoia": "Trans Nzoia (Kitale)", "Kiambu": "Kiambu (Thika)",
-    "Kilifi": "Kilifi (Malindi)", "Kwale": "Kwale (Diani)", "Taita-Taveta": "Taita-Taveta (Voi)",
-    "West Pokot": "West Pokot (Kapenguria)", "Vihiga": "Vihiga (Mbale)", "Nyandarua": "Nyandarua (Ol Kalou)",
-    "Turkana": "Turkana (Lodwar)", "Samburu": "Samburu (Maralal)", "Elgeyo-Marakwet": "Elgeyo-Marakwet (Iten)",
-    "Nandi": "Nandi (Kapsabet)", "Baringo": "Baringo (Kabarnet)", "Laikipia": "Laikipia (Nanyuki)",
-    "Tharaka-Nithi": "Tharaka-Nithi (Chuka)", "Kirinyaga": "Kirinyaga (Kerugoya)", "Makueni": "Makueni (Wote)"
-  };
-  function nkCountyLabel(c) { return NK_COUNTY_LABEL[c] || c; }
-  function renderFooterCounties() {
-    const el = document.getElementById('footer-counties');
-    if (!el) return;
-    el.innerHTML = NK_COUNTIES.map(c => `<a href="/listings?county=${encodeURIComponent(c)}">${nkCountyLabel(c)}</a>`).join('');
-  }
-  renderFooterCounties();
-</script>
-
+<!-- Supabase client (nk-shared.js creates `db`), then the shared module: real county/area data,
+     escHtml, nkTrackPageView, nkInitAccountNav, etc. — the same two-script pattern as every other page. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/nk-shared.js"></script>
 <script>
-  const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
-  const { createClient } = supabase;
-  const authStorage = {
-    getItem: (key) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).getItem(key),
-    setItem: (key, value) => (localStorage.getItem('ny_remember') === '0' ? sessionStorage : localStorage).setItem(key, value),
-    removeItem: (key) => { localStorage.removeItem(key); sessionStorage.removeItem(key); }
-  };
-  const db = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storage: authStorage, persistSession: true, autoRefreshToken: true } });
-  const nkSessionPromise = db.auth.getSession();
+(function () {
+'use strict';
+const $ = id => document.getElementById(id);
+const qsa = (sel, root) => Array.from((root || document).querySelectorAll(sel));
 
-  let sid = localStorage.getItem('nk_sid');
-  if (!sid) { sid = (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2)); localStorage.setItem('nk_sid', sid); }
-  db.from('page_views').insert({ path: location.pathname, referrer: document.referrer || null, user_agent: navigator.userAgent, session_id: sid });
-
-  window.NK_SETTINGS = { trial_days: 14, sale_standard_pct: 0.1, rent_standard_pct: 3, standard_min_fee: 500, standard_max_fee: 18000, standard_fee_per_unit: 50, bnb_basic_price: 700 };
-  function fmtKES(n) { return 'KES ' + Number(n).toLocaleString('en-KE'); }
-  function applyHiwPricing() {
-    const s = window.NK_SETTINGS;
-    const el = id => document.getElementById(id);
-    if (el('hiw-trial-days')) el('hiw-trial-days').textContent = s.trial_days;
-    if (el('hiw-standard-amount')) el('hiw-standard-amount').innerHTML = `${s.rent_standard_pct}%<span class="unit"> of rent, or ${s.sale_standard_pct}% of sale price</span>`;
-    if (el('hiw-standard-duration')) el('hiw-standard-duration').innerHTML = `Capped between ${fmtKES(s.standard_min_fee)} and ${fmtKES(s.standard_max_fee)}, plus ${fmtKES(s.standard_fee_per_unit)} per extra unit type on multi-unit properties. Billed only after your listing is approved.`;
-    if (el('hiw-bnb-amount')) el('hiw-bnb-amount').innerHTML = `${fmtKES(s.bnb_basic_price)}<span class="unit">/mo</span>`;
-  }
-  (async function loadHiwSettings() {
-    try {
-      const { data, error } = await db.from('platform_settings').select('key,value');
-      if (!error && data) data.forEach(row => { if (row.key in window.NK_SETTINGS) window.NK_SETTINGS[row.key] = Number(row.value); });
-    } catch (e) { console.error('loadHiwSettings exception:', e); }
-    applyHiwPricing();
-  })();
-
-  nkSessionPromise.then(({ data: { session } }) => {
-    if (!session) return;
-    const desktopLink = document.getElementById('nav-account-link');
-    const mobileLink = document.getElementById('mobile-account-link');
-    if (desktopLink) { desktopLink.textContent = 'My account'; desktopLink.href = '/dashboard'; desktopLink.style.fontWeight = '600'; desktopLink.style.color = 'var(--green)'; }
-    if (mobileLink) { mobileLink.textContent = 'My account'; mobileLink.href = '/dashboard'; }
+/* ═══ tabs (buyer / seller) — delegated, no inline onclick ═══ */
+function switchTab(tab) {
+  qsa('.hero-tab').forEach((btn, i) => {
+    const isActive = (i === 0 && tab === 'buyer') || (i === 1 && tab === 'seller');
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-selected', String(isActive));
   });
+  $('panel-buyer').classList.toggle('active', tab === 'buyer');
+  $('panel-seller').classList.toggle('active', tab === 'seller');
+}
+const tabParam = new URLSearchParams(window.location.search).get('tab');
+if (tabParam === 'seller') switchTab('seller');
+
+/* ═══ FAQ accordion — delegated ═══ */
+function toggleFaq(btn) {
+  const item = btn.closest('.faq-item');
+  const open = item.classList.toggle('open');
+  btn.setAttribute('aria-expanded', String(open));
+}
+
+/* ═══ mobile nav ═══ */
+function toggleMobileMenu() {
+  const nav = $('mobile-nav');
+  const isOpen = nav.classList.toggle('open');
+  $('mobile-menu-btn').setAttribute('aria-expanded', String(isOpen));
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+function closeMobileMenu() {
+  const nav = $('mobile-nav');
+  if (!nav.classList.contains('open')) return;
+  nav.classList.remove('open');
+  document.body.style.overflow = '';
+  $('mobile-menu-btn').setAttribute('aria-expanded', 'false');
+}
+
+/* ═══ delegated click handling (no inline onclick anywhere on this page) ═══ */
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]');
+  if (t) {
+    const a = t.dataset.act;
+    if (a === 'tab') { switchTab(t.dataset.tab); return; }
+    if (a === 'faq') { toggleFaq(t); return; }
+  }
+  if (e.target.closest('#mobile-menu-btn')) { toggleMobileMenu(); return; }
+  const nav = $('mobile-nav');
+  if (nav.classList.contains('open') && !nav.contains(e.target) && !$('mobile-menu-btn').contains(e.target)) closeMobileMenu();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMobileMenu(); });
+
+/* ═══ footer counties: real per-county listing presence from nk-shared.js (fixes the old 3-county stub) ═══ */
+function renderFooterCounties() {
+  $('footer-counties').innerHTML = NK_COUNTIES.map(c => nkAreaCountFor(c) > 0
+    ? `<a href="${escHtml(nkBuildListingsUrl({ county: c }))}">${escHtml(nkCountyLabel(c))}</a>`
+    : `<span class="soon">${escHtml(nkCountyLabel(c))}</span>`).join('');
+}
+
+/* ═══ pricing settings (platform_settings table), via the shared `db` client ═══ */
+const PS = { trial_days: 14, sale_standard_pct: 0.1, rent_standard_pct: 3, standard_min_fee: 500, standard_max_fee: 18000, standard_fee_per_unit: 50, bnb_basic_price: 700 };
+function fmtKES(n) { return 'KES ' + Number(n).toLocaleString('en-KE'); }
+function applyHiwPricing() {
+  $('hiw-trial-days').textContent = PS.trial_days;
+  $('hiw-standard-amount').innerHTML = `${PS.rent_standard_pct}%<span class="unit"> of rent, or ${PS.sale_standard_pct}% of sale price</span>`;
+  $('hiw-standard-duration').innerHTML = `Capped between ${fmtKES(PS.standard_min_fee)} and ${fmtKES(PS.standard_max_fee)}, plus ${fmtKES(PS.standard_fee_per_unit)} per extra unit type on multi-unit properties. Billed only after your listing is approved.`;
+  $('hiw-bnb-amount').innerHTML = `${fmtKES(PS.bnb_basic_price)}<span class="unit">/mo</span>`;
+}
+async function loadHiwSettings() {
+  try {
+    const { data, error } = await db.from('platform_settings').select('key,value');
+    if (!error && data) data.forEach(row => { if (row.key in PS) PS[row.key] = Number(row.value); });
+  } catch (e) {}
+  applyHiwPricing();
+}
+
+/* ═══ chrome shared with every other page ═══ */
+function initTabbarMeasure() {
+  const tb = document.querySelector('.nk-tabbar'); if (!tb) return;
+  const sync = () => document.documentElement.style.setProperty('--nk-tabbar-h', (getComputedStyle(tb).display === 'none' ? 0 : Math.ceil(tb.getBoundingClientRect().height)) + 'px');
+  sync();
+  if ('ResizeObserver' in window) new ResizeObserver(sync).observe(tb);
+  window.addEventListener('resize', sync); window.addEventListener('load', sync);
+  window.matchMedia('(max-width: 768px)').addEventListener('change', sync);
+}
+
+function boot() {
+  $('nk-footer-year').textContent = new Date().getFullYear();
+  renderFooterCounties();
+  nkInitDataSaver();
+  $('nk-datasaver-off').addEventListener('click', nkToggleDataSaver);
+  nkInitAccountNav(['nav-account-link', 'mobile-account-link']);
+  nkSessionPromise.then(({ data }) => { if (data && data.session) $('tab-account-link').setAttribute('href', '/dashboard'); });
+  nkTrackPageView();
+  loadHiwSettings();
+  initTabbarMeasure();
+}
+boot();
+})();
 </script>
-<script src="nav-badge.js"></script>
-<script src="nk-quick-help-widget.js" defer></script>
+<script src="/saved-listings.js"></script>
+<script>if (typeof NKSaved !== 'undefined') NKSaved.init();</script>
+<script src="/nav-badge.js"></script>
+<script src="/global-chat-widget.js"></script>
+<script src="/nk-quick-help-widget.js" defer></script>
+<script src="/install-app-prompt.js" defer></script>
 </body>
 </html>
