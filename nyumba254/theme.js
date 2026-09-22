@@ -116,6 +116,10 @@
       b.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
       b.title = dark ? 'Switch to light mode' : 'Switch to dark mode';
       if (b.classList.contains('nk-theme-fab') || b.classList.contains('nk-theme-navbtn')) b.innerHTML = dark ? SUN : MOON;
+      if (b.classList.contains('nk-theme-navrow')) {
+        var icon = b.querySelector('.nk-theme-navrow-icon'); if (icon) icon.innerHTML = dark ? SUN : MOON;
+        var label = b.querySelector('.nk-theme-navrow-label'); if (label) label.textContent = dark ? 'Light mode' : 'Dark mode';
+      }
     }
   }
   function apply(t) {
@@ -139,26 +143,42 @@
     if (t) set(isDark() ? 'light' : 'dark');
   });
 
-  // 3. Insert a toggle if the page has none of its own.
-  // Preferred spot: inside the navbar, next to Sign in / Saved, so it sits with the rest of
-  // the site chrome instead of floating over the page. Falls back to a small fixed button in
-  // the top-right corner (never bottom-left, which collides with the tab bar / chat widget).
+  // 3. Insert a toggle if the page has none of its own — placed so it's never a repeated,
+  // visible icon cluttering every page:
+  //   - Small icon in the top navbar: ONLY on the homepage. Every other page relies on that
+  //     one spot (the choice is remembered everywhere via localStorage, so one switch is enough).
+  //   - A labelled row tucked inside the hamburger's dropdown menu: on every page, but invisible
+  //     until the visitor opens that menu, so it never clutters the page itself.
+  //   - Fallback, only if a page has neither a navbar nor a hamburger menu: a small fixed
+  //     button, top-right (never bottom-left, which collides with the tab bar / chat widget).
+  function isHomePage() {
+    var p = location.pathname.replace(/\/+$/, '');
+    return p === '' || /\/index\.html?$/i.test(p) || p.split('/').pop() === '';
+  }
   function insertToggle() {
     if (document.querySelector('[data-theme-toggle]') || document.getElementById('theme-btn')) return;
-    var btn = document.createElement('button');
-    btn.type = 'button';
-    btn.setAttribute('data-theme-toggle', '');
-
-    // Inserted as a direct child of <nav> itself (not inside .nav-links), so it stays visible
-    // on mobile too — .nav-links is hidden below 768px on most pages, but <nav> never is.
     var nav = document.querySelector('nav#main-nav') || document.querySelector('nav');
-    var hamburger = nav && nav.querySelector('.mobile-menu-btn');
-    if (nav) {
-      btn.className = 'nk-theme-navbtn';
+    var mobileMenu = document.getElementById('mobile-nav') || document.querySelector('.mobile-nav');
+    var placed = false;
+
+    if (isHomePage() && nav) {
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'nk-theme-navbtn'; btn.setAttribute('data-theme-toggle', '');
+      var hamburger = nav.querySelector('.mobile-menu-btn');
       if (hamburger) nav.insertBefore(btn, hamburger); else nav.appendChild(btn);
-    } else {
-      btn.className = 'nk-theme-fab';
-      document.body.appendChild(btn);
+      placed = true;
+    }
+    if (mobileMenu) {
+      var row = document.createElement('button');
+      row.type = 'button'; row.className = 'nk-theme-navrow'; row.setAttribute('data-theme-toggle', '');
+      row.innerHTML = '<span class="nk-theme-navrow-icon" aria-hidden="true"></span><span class="nk-theme-navrow-label"></span>';
+      mobileMenu.appendChild(row);
+      placed = true;
+    }
+    if (!placed) {
+      var fab = document.createElement('button');
+      fab.type = 'button'; fab.className = 'nk-theme-fab'; fab.setAttribute('data-theme-toggle', '');
+      document.body.appendChild(fab);
     }
   }
   document.addEventListener('DOMContentLoaded', function () {
