@@ -106,8 +106,17 @@
   };
 
   /* ═════ saved listings (same key saved-listings.js and saved.html use) ═════ */
-  const savedIds = () => { try { const a = JSON.parse(ls.get('nk_saved_listings') || '[]'); return Array.isArray(a) ? a.filter(x => ID_RE.test(String(x))) : []; } catch (e) { return []; } };
-  const setSaved = ids => ls.set('nk_saved_listings', JSON.stringify(ids));
+  /* saved.html stores each entry either as a plain id string, or as {id, savedAt} (its own idOf() is tolerant of both).
+     These match that exactly, so the inbox Saved tab, resume links, and saved.html always agree on the same list. */
+  const savedIdOf = x => (x && typeof x === 'object') ? (x.id || x.listing_id || x.listingId) : x;
+  function savedRaw() { try { const a = JSON.parse(ls.get('nk_saved_listings') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+  const savedIds = () => savedRaw().map(savedIdOf).filter(x => x != null && ID_RE.test(String(x))).map(String);
+  function setSaved(ids) {
+    const want = new Set((ids || []).map(String)), raw = savedRaw(), objectStyle = raw.some(x => x && typeof x === 'object');
+    const kept = raw.filter(x => want.has(String(savedIdOf(x)))), have = new Set(kept.map(x => String(savedIdOf(x))));
+    (ids || []).forEach(id => { if (!have.has(String(id))) { kept.push(objectStyle ? { id, savedAt: Date.now() } : id); have.add(String(id)); } });
+    ls.set('nk_saved_listings', JSON.stringify(kept));
+  }
 
   /* ═════ resume link: data lives in the URL #fragment, which browsers never send to any server ═════ */
   const b64u = s => btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
