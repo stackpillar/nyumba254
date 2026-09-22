@@ -19,9 +19,9 @@
   function stored() {
     try { var t = localStorage.getItem(KEY); return (t === 'light' || t === 'dark') ? t : null; } catch (e) { return null; }
   }
-  function deviceTheme() {
-    return (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
-  }
+  // Light is ALWAYS the default. The device / system theme is deliberately ignored:
+  // a visitor only sees dark after pressing a toggle, and that choice is remembered.
+  var DEFAULT_THEME = 'light';
   function isDark() { return root.getAttribute('data-theme') === 'dark'; }
 
   /* ═════════ Visibility guard ═════════ */
@@ -115,7 +115,7 @@
       b.setAttribute('aria-pressed', String(dark));
       b.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
       b.title = dark ? 'Switch to light mode' : 'Switch to dark mode';
-      if (b.classList.contains('nk-theme-fab')) b.innerHTML = dark ? SUN : MOON;
+      if (b.classList.contains('nk-theme-fab') || b.classList.contains('nk-theme-navbtn')) b.innerHTML = dark ? SUN : MOON;
     }
   }
   function apply(t) {
@@ -130,8 +130,8 @@
     apply(t);
   }
 
-  // 1. Apply immediately (before first paint). To start everyone on light instead, replace deviceTheme() with 'light'.
-  apply(stored() || deviceTheme());
+  // 1. Apply immediately (before first paint): the saved choice, otherwise light.
+  apply(stored() || DEFAULT_THEME);
 
   // 2. Any [data-theme-toggle] element, on any page, flips the theme.
   document.addEventListener('click', function (e) {
@@ -139,15 +139,30 @@
     if (t) set(isDark() ? 'light' : 'dark');
   });
 
-  // 3. Floating toggle when a page has none, plus the guard's triggers.
-  document.addEventListener('DOMContentLoaded', function () {
-    if (!document.querySelector('[data-theme-toggle]') && !document.getElementById('theme-btn')) {
-      var fab = document.createElement('button');
-      fab.type = 'button';
-      fab.className = 'nk-theme-fab';
-      fab.setAttribute('data-theme-toggle', '');
-      document.body.appendChild(fab);
+  // 3. Insert a toggle if the page has none of its own.
+  // Preferred spot: inside the navbar, next to Sign in / Saved, so it sits with the rest of
+  // the site chrome instead of floating over the page. Falls back to a small fixed button in
+  // the top-right corner (never bottom-left, which collides with the tab bar / chat widget).
+  function insertToggle() {
+    if (document.querySelector('[data-theme-toggle]') || document.getElementById('theme-btn')) return;
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.setAttribute('data-theme-toggle', '');
+
+    // Inserted as a direct child of <nav> itself (not inside .nav-links), so it stays visible
+    // on mobile too — .nav-links is hidden below 768px on most pages, but <nav> never is.
+    var nav = document.querySelector('nav#main-nav') || document.querySelector('nav');
+    var hamburger = nav && nav.querySelector('.mobile-menu-btn');
+    if (nav) {
+      btn.className = 'nk-theme-navbtn';
+      if (hamburger) nav.insertBefore(btn, hamburger); else nav.appendChild(btn);
+    } else {
+      btn.className = 'nk-theme-fab';
+      document.body.appendChild(btn);
     }
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    insertToggle();
     paintButtons();
     if (AUTOFIX && window.MutationObserver) {
       // re-check after content renders (listing cards, modals, chat) or a class flips; waits until activity settles
@@ -159,14 +174,11 @@
   });
   window.addEventListener('load', function () { scheduleScan(0); });
 
-  // 4. Keep other open tabs, back/forward-cache pages and the device setting in sync.
+  // 4. Keep other open tabs and back/forward-cache pages in sync.
   window.addEventListener('storage', function (e) {
     if (e.key === KEY && (e.newValue === 'light' || e.newValue === 'dark')) apply(e.newValue);
   });
-  window.addEventListener('pageshow', function (e) { if (e.persisted) apply(stored() || deviceTheme()); });
-  try {
-    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { if (!stored()) apply(deviceTheme()); });
-  } catch (e) {}
+  window.addEventListener('pageshow', function (e) { if (e.persisted) apply(stored() || DEFAULT_THEME); });
 
   window.NKTheme = {
     get: function () { return isDark() ? 'dark' : 'light'; },
