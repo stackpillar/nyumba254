@@ -172,34 +172,24 @@ html[data-theme="dark"] [style*="background:#ffffff"],
 html[data-theme="dark"] [style*="background: rgb(255, 255, 255)"] { background: var(--card) !important; }
 
 /* ── 8. Theme toggle (created by theme.js when a page has no toggle of its own) ──
-   - .nk-theme-navbtn: small icon in the navbar, inserted ONLY on the homepage (desktop width).
-     Hidden below 768px — mobile uses the labelled row inside the hamburger menu instead, so
-     there's never two toggles competing for the same small header.
-   - .nk-theme-navrow: a labelled row inside the hamburger dropdown (.mobile-nav), on every
-     page. Invisible until that menu is opened, so it never clutters the page itself.
-   - .nk-theme-fab: fallback fixed button, only used if a page has neither a navbar nor a
-     hamburger menu. Top-right, never bottom-left (tab bar / scroll-top / chat widget live there). */
+   - .nk-theme-navbtn: small icon inserted into the navbar, before the hamburger button, on
+     every page — but only ever VISIBLE at mobile widths (media query below). On desktop it
+     stays hidden: the choice made on a phone is remembered site-wide via localStorage, so
+     desktop pages don't need their own visible switch cluttering the header.
+   - .nk-theme-fab: fallback fixed button, only used if a page has no navbar at all. Top-right,
+     never bottom-left (tab bar / scroll-top / chat widget already live there). */
 .nk-theme-navbtn {
-  width: 36px; height: 36px; padding: 0; border-radius: 50%; flex-shrink: 0;
-  display: inline-flex; align-items: center; justify-content: center; align-self: center;
+  display: none;
+  width: 34px; height: 34px; padding: 0; border-radius: 50%; flex-shrink: 0;
+  align-items: center; justify-content: center; align-self: center;
   background: transparent; color: #4a4a46; border: 1.5px solid #e0ded8;
-  cursor: pointer; margin-right: 6px; transition: background .15s, border-color .15s;
+  cursor: pointer; margin-right: 4px; transition: background .15s, border-color .15s;
 }
 .nk-theme-navbtn:hover { background: #f7f6f2; border-color: #0F6E56; }
-.nk-theme-navbtn svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.nk-theme-navbtn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 html[data-theme="dark"] .nk-theme-navbtn { color: var(--text-2); border-color: var(--border); }
 html[data-theme="dark"] .nk-theme-navbtn:hover { background: var(--surface); border-color: var(--accent); }
-@media (max-width: 768px) { .nk-theme-navbtn { display: none; } }
-
-.nk-theme-navrow {
-  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
-  font-family: inherit; font-size: 15px; color: #4a4a46; background: transparent;
-  padding: 12px 14px; border-radius: 10px; cursor: pointer; margin-top: 2px;
-}
-.nk-theme-navrow:hover { background: #f7f6f2; }
-.nk-theme-navrow-icon svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; display: block; }
-html[data-theme="dark"] .nk-theme-navrow { color: var(--text-2); }
-html[data-theme="dark"] .nk-theme-navrow:hover { background: var(--surface); }
+@media (max-width: 768px) { .nk-theme-navbtn { display: inline-flex; } }
 
 .nk-theme-fab {
   position: fixed; right: 14px; top: calc(env(safe-area-inset-top, 0px) + 12px); z-index: 90;
@@ -211,4 +201,4 @@ html[data-theme="dark"] .nk-theme-navrow:hover { background: var(--surface); }
 .nk-theme-fab svg { width: 19px; height: 19px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 html[data-theme="dark"] .nk-theme-fab { background: var(--card); color: var(--text); border-color: var(--border); }
 body.nk-modal-open .nk-theme-fab { display: none; }
-@media print { .nk-theme-navbtn, .nk-theme-navrow, .nk-theme-fab { display: none !important; } }
+@media print { .nk-theme-navbtn, .nk-theme-fab { display: none !important; } }
