@@ -2891,11 +2891,11 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
       ? countyBreakdown.map(([county,count])=>`<div class="quick-row"><span>${esc(county)}</span><span>${count}</span></div>`).join('')
       : '<div class="quick-row"><span>No active listings yet</span><span>—</span></div>';
 
-    await Promise.all(['apartment','house','boarding','airbnb','commercial'].map(async (cat) => {
+    for (const cat of ['apartment','house','boarding','airbnb','commercial']) {
       const {count} = await db.from('listings').select('*',{count:'exact',head:true}).eq('category',cat).eq('status','active').eq('recycle_bin',false);
       const el = document.getElementById('cat-'+cat);
       if (el) el.textContent = count||0;
-    }));
+    }
 
     loadPendingPreview();
     loadTabCounts();
@@ -2986,8 +2986,6 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
     const loadMoreWrap = document.getElementById('listings-load-more-wrap');
     if (!append) {
       listingsPage = 0;
-      selectedListingIds.clear();
-      renderBulkBar();
       const skelRow   = `<tr class="skeleton-row"><td colspan="10"><div class="skel"></div></td></tr>`;
       tbody.innerHTML  = skelRow.repeat(4);
       mobileEl.innerHTML = '';
@@ -3165,23 +3163,12 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
     document.getElementById('bulk-count').textContent = selectedListingIds.size + ' selected';
   }
 
-  function bulkApprove() {
+  async function bulkApprove() {
     const ids=[...selectedListingIds];
-    if(!ids.length) return;
-    openConfirm({
-      title:`Approve ${ids.length} selected listing(s)?`,
-      message:`Each listing goes through the same checks as approving one at a time — payment/plan coverage is verified individually, and sellers are notified.`,
-      confirmText:`Approve ${ids.length} listing(s)`, confirmClass:'approve',
-      onConfirm: async () => {
-        for(const id of ids) {
-          const l = _listings[id];
-          await doApprove(id, l?.title || '');
-        }
-        logAction('bulk_approve','listing','multiple',`${ids.length} listing(s)`);
-        toast(`${ids.length} listing(s) processed`,'success');
-        selectedListingIds.clear(); renderBulkBar(); loadAllListings(); loadOverview();
-      }
-    });
+    for(const id of ids) await db.from('listings').update({status:'active'}).eq('id',id);
+    logAction('bulk_approve','listing','multiple',`${ids.length} listing(s)`);
+    toast(`${ids.length} listing(s) approved`,'success');
+    selectedListingIds.clear(); loadAllListings(); loadOverview();
   }
   function bulkReject() {
     const ids=[...selectedListingIds];
@@ -3189,23 +3176,12 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
     openConfirm({
       title:`Reject ${ids.length} selected listing(s)?`,
       message:`These listings will be marked rejected and hidden from buyers.`,
-      requireReason:true, reasonLabel:'Reason for rejection (shown to sellers)',
       confirmText:`Reject ${ids.length} listing(s)`, confirmClass:'reject',
-      onConfirm: async (reason) => {
-        for(const id of ids) {
-          await db.from('listings').update({status:'rejected',disabled_reason:reason}).eq('id',id);
-          const l = _listings[id];
-          if (l?.profiles?.email) {
-            notifySeller('listing_rejected', {
-              listingId: id, listingTitle: l.title, reason,
-              sellerName: l.profiles.full_name, sellerEmail: l.profiles.email,
-            });
-          }
-          if (l?.seller_id) notifyInApp(l.seller_id, 'listing_rejected', 'Listing rejected', `"${l.title}" was rejected${reason?': '+reason:''}.`, '/dashboard.html');
-        }
+      onConfirm: async () => {
+        for(const id of ids) await db.from('listings').update({status:'rejected'}).eq('id',id);
         logAction('bulk_reject','listing','multiple',`${ids.length} listing(s)`);
         toast(`${ids.length} listing(s) rejected`,'');
-        selectedListingIds.clear(); renderBulkBar(); loadAllListings(); loadOverview();
+        selectedListingIds.clear(); loadAllListings(); loadOverview();
       }
     });
   }
@@ -3218,19 +3194,10 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
       confirmText:`Move ${ids.length} listing(s)`, confirmClass:'reject',
       onConfirm: async () => {
         const purge=new Date(Date.now()+SETTINGS.recycle_bin_days*24*60*60*1000).toISOString();
-        for(const id of ids) {
-          await db.from('listings').update({is_disabled:true,recycle_bin:true,disabled_reason:'Bulk action by admin',disabled_at:new Date().toISOString(),purge_at:purge}).eq('id',id);
-          const l = _listings[id];
-          if (l?.profiles?.email) {
-            notifySeller('listing_recycled', {
-              listingId: id, listingTitle: l.title, reason: 'Bulk action by admin',
-              sellerName: l.profiles.full_name, sellerEmail: l.profiles.email,
-            });
-          }
-        }
+        for(const id of ids) await db.from('listings').update({is_disabled:true,recycle_bin:true,disabled_reason:'Bulk action by admin',disabled_at:new Date().toISOString(),purge_at:purge}).eq('id',id);
         logAction('bulk_recycle','listing','multiple',`${ids.length} listing(s)`);
         toast(`${ids.length} listing(s) moved to recycle bin`,'success');
-        selectedListingIds.clear(); renderBulkBar(); loadAllListings(); loadOverview();
+        selectedListingIds.clear(); loadAllListings(); loadOverview();
       }
     });
   }
@@ -3383,26 +3350,13 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
     loadOverview(); if(currentView==='listings') loadAllListings();
   }
 
-  function featureListing(id) {
-    const l = _listings[id]; if(!l) return;
-    openConfirm({
-      title:'Feature this listing for free?',
-      message:`"${l.title}" will be featured without recording a payment. If the seller paid for this, use "Process upgrade" instead so it shows up in Payments/Revenue.`,
-      confirmText:'Feature for free', confirmClass:'approve',
-      onConfirm:()=>doFeatureListingFree(id)
-    });
-  }
-  async function doFeatureListingFree(id) {
+  async function featureListing(id) {
     const until=new Date(Date.now()+SETTINGS.featured_duration_days*24*60*60*1000).toISOString();
     const {error}=await db.from('listings').update({is_featured:true,featured_until:until}).eq('id',id);
     if(error){toast('Error featuring listing','error');return;}
-    logAction('feature_listing','listing',id,'Featured without a recorded payment (admin comp)');
-    const l=_listings[id];
-    if(l){
-      l.is_featured=true; l.featured_until=until;
-      if (l.seller_id) notifyInApp(l.seller_id, 'listing_approved', 'Listing featured', `"${l.title}" is now featured.`, '/dashboard.html');
-    }
-    toast('Listing featured ✓ (no payment recorded)','success');
+    logAction('feature_listing','listing',id,'');
+    toast('Listing featured ✓','success');
+    const l=_listings[id]; if(l){ l.is_featured=true; l.featured_until=until; }
     loadOverview(); if(currentView==='listings') loadAllListings();
   }
 
@@ -3498,17 +3452,11 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
 
   function extendListingDate(id) {
     const l = _listings[id]; if (!l) return;
-    openConfirm({
-      title:'Extend expiry date',
-      message:`Extend "${l.title}" by how many days?`,
-      requireReason:true, reasonLabel:'Number of days',
-      confirmText:'Extend', confirmClass:'approve',
-      onConfirm:(daysStr)=>{
-        const days = parseInt(daysStr, 10);
-        if (!days || days <= 0) { toast('Enter a valid number of days','error'); return; }
-        doExtendListing(id, days);
-      }
-    });
+    const input = prompt(`Extend "${l.title}" by how many days?`, '30');
+    if (input === null) return;
+    const days = parseInt(input, 10);
+    if (!days || days <= 0) { toast('Enter a valid number of days','error'); return; }
+    doExtendListing(id, days);
   }
   async function doExtendListing(id, days) {
     const l = _listings[id]; if (!l) return;
@@ -3527,10 +3475,6 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
     if (!data?.length) { toast('Blocked by RLS — check Supabase policy','error'); return; }
     logAction('extend_listing_date','listing',id,`+${days} day(s) → ${newExpiry}`);
     l.expiry_override = newExpiry;
-    if (l.profiles?.email) {
-      notifySeller('listing_extended', { listingId: id, listingTitle: l.title, days, newExpiry, sellerName: l.profiles.full_name, sellerEmail: l.profiles.email });
-    }
-    if (l.seller_id) notifyInApp(l.seller_id, 'listing_approved', 'Listing extended', `"${l.title}"'s expiry was extended by ${days} day(s).`, '/dashboard.html');
     toast(`Listing extended by ${days} day(s) ✓`,'success');
     if (currentView==='listings') loadAllListings();
     loadOverview();
@@ -3733,20 +3677,13 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
     toast('Listing restored ✓','success');
     loadRecycleBin(); loadOverview();
   }
-  function purgeExpired() {
-    openConfirm({
-      title:'Empty expired items?',
-      message:'Delete all recycle bin items past their 30-day limit? This cannot be undone.',
-      warningText:'⚠ Irreversible.',
-      confirmText:'Delete expired items', confirmClass:'reject',
-      onConfirm: async () => {
-        const {data}=await db.from('listings').select('id, listing_photos(*)').eq('recycle_bin',true).lt('purge_at',new Date().toISOString());
-        if(!data?.length){toast('Nothing to purge','');return;}
-        for(const row of data) await deleteListingCascade(row.id, row);
-        logAction('purge_expired','listing','bulk',`${data.length} listing(s)`);
-        toast(`${data.length} purged`,'success'); loadRecycleBin();
-      }
-    });
+  async function purgeExpired() {
+    if(!confirm('Delete all recycle bin items past their 30-day limit?')) return;
+    const {data}=await db.from('listings').select('id, listing_photos(*)').eq('recycle_bin',true).lt('purge_at',new Date().toISOString());
+    if(!data?.length){toast('Nothing to purge','');return;}
+    for(const row of data) await deleteListingCascade(row.id, row);
+    logAction('purge_expired','listing','bulk',`${data.length} listing(s)`);
+    toast(`${data.length} purged`,'success'); loadRecycleBin();
   }
 
   // ─── LISTING DETAIL MODAL ───
@@ -3787,7 +3724,6 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
       <div class="field"><label>Posted</label><div class="val">${fmtDate(l.created_at)}</div></div>
       ${l.description?`<div class="field"><label>Description</label><div class="val" style="font-size:13px;color:var(--text-2);line-height:1.6">${esc(l.description)}</div></div>`:''}`;
     document.getElementById('modal-footer').innerHTML = `
-      ${l.listing_number?`<button class="btn-modal cancel" onclick="window.open('/listing?id=${String(l.listing_number).padStart(6,'0')}','_blank','noopener,noreferrer')">View live ↗</button>`:''}
       ${l.status==='pending'?`<button class="btn-modal approve" onclick="approveListing('${l.id}');closeModal()">Approve</button><button class="btn-modal reject" onclick="rejectListing('${l.id}');closeModal()">Reject</button>`:''}
       ${l.payment_status==='trial'?`<button class="btn-modal approve" onclick="closeModal();openUpgradeModal('${l.id}')">Process upgrade</button>`:''}
       <button class="btn-modal cancel ${locked?'disabled':''}" ${locked?'disabled':`onclick="closeModal();extendListingDate('${l.id}')"`}>📅 Extend expiry</button>
@@ -6477,34 +6413,15 @@ async function toggleReviewPublish(id, isCurrentlyPublished) {
     URL.revokeObjectURL(url);
   }
   async function exportListingsCSV() {
-    let q = db.from('listings').select('id,listing_number,title,county,area,category,price,price_min,price_max,status,payment_status,is_featured,created_at,profiles(full_name,email,phone)');
-    if (currentTab==='pending')       q = q.eq('status','pending');
-    else if (currentTab==='active')   q = q.eq('status','active').eq('is_disabled',false);
-    else if (currentTab==='featured') q = q.eq('is_featured',true).eq('status','active').eq('is_disabled',false);
-    else if (currentTab==='trial')    q = q.eq('payment_status','trial');
-    else if (currentTab==='inactive') q = q.eq('is_disabled',true);
-    const county = document.getElementById('filter-county').value;
-    const area   = document.getElementById('filter-area').value;
-    const cat    = document.getElementById('filter-cat').value;
-    const search = document.getElementById('filter-search').value.trim();
-    if (filterSellerId) q = q.eq('seller_id', filterSellerId);
-    if (county) q = q.eq('county',county);
-    if (area)   q = q.eq('area',area);
-    if (cat)    q = q.eq('category',cat);
-    if (search) q = q.or(`title.ilike.%${search}%,area.ilike.%${search}%`);
-    const {data} = await q;
+    const {data} = await db.from('listings').select('id,listing_number,title,county,area,category,price,price_min,price_max,status,payment_status,is_featured,created_at');
     // Put the human-facing listing_number first, keep the UUID (id) further
     // right for anyone who specifically needs it — e.g. to cross-reference
     // with a Supabase table editor.
-    const rows = (data||[]).map(({ id, listing_number, profiles, ...rest }) => ({
+    const rows = (data||[]).map(({ id, listing_number, ...rest }) => ({
       listing_number: listing_number != null ? String(listing_number).padStart(6,'0') : '',
       ...rest,
-      seller_name: profiles?.full_name || '',
-      seller_email: profiles?.email || '',
-      seller_phone: profiles?.phone || '',
       id,
     }));
-    if (!rows.length) { toast('No listings match the current filters','error'); return; }
     exportCSV(rows, `nyumba254-listings-${Date.now()}.csv`);
   }
   async function exportPaymentsCSV() {
