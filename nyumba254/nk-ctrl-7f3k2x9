@@ -154,6 +154,15 @@
     .tab-btn:hover { color: var(--text); }
     .tab-btn.active { color: var(--green); border-bottom-color: var(--green); background: var(--green-light); }
     .tab-btn .count { display: inline-block; background: var(--surface); color: var(--text-3); font-size: 11px; padding: 1px 6px; border-radius: 8px; margin-left: 5px; }
+    .sortable-th { cursor: pointer; user-select: none; }
+    .sortable-th:hover { color: var(--text); }
+    .sort-arrow { font-size: 9px; margin-left: 2px; display: inline-block; width: 10px; }
+    .filter-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--green-light); color: var(--green-dark); font-size: 12px; font-weight: 600; padding: 5px 8px 5px 12px; border-radius: 20px; }
+    .filter-chip button { background: none; border: none; color: var(--green-dark); cursor: pointer; font-size: 13px; line-height: 1; padding: 2px; display: flex; }
+    .filter-chips-row { display: flex; gap: 8px; flex-wrap: wrap; padding: 12px 22px 0; }
+    .action-btn.recycle { background: transparent; color: var(--red); border: 1px solid var(--red-light); }
+    .action-btn.recycle:hover { background: var(--red); color: white; }
+    .action-btn.delete, .action-btn.recycle { margin-left: 6px; }
     .tab-btn.active .count { background: var(--green-light); color: var(--green-dark); }
 
     /* FILTERS */
@@ -999,6 +1008,7 @@
           </select>
           <input class="filter-search" id="filter-search" type="text" placeholder="Search title or area…" oninput="debouncedLoad()" aria-label="Search listings by title or area"/>
         </div>
+        <div class="filter-chips-row" id="listing-filter-chips" style="display:none"></div>
         <div id="seller-filter-banner" style="display:none;align-items:center;gap:10px;padding:10px 22px;background:var(--blue-light);border-bottom:1px solid var(--border);font-size:13px;color:var(--blue)">
           <span id="seller-filter-banner-text"></span>
           <button class="action-btn view" style="margin-left:auto" onclick="clearSellerFilter()">Clear filter ✕</button>
@@ -1011,7 +1021,7 @@
         </div>
         <div class="table-wrap mobile-hide">
           <table>
-            <thead><tr><th><input type="checkbox" onchange="toggleSelectAllListings(this.checked)"/></th><th>Property</th><th>Location</th><th>Price</th><th>Category</th><th>Status</th><th>Payment</th><th>Posted</th><th>Expires</th><th>Actions</th></tr></thead>
+            <thead><tr><th><input type="checkbox" onchange="toggleSelectAllListings(this.checked)"/></th><th>Property</th><th>Location</th><th class="sortable-th" onclick="setListingsSort('price')" data-tip="Click to sort">Price <span id="sort-arrow-price" class="sort-arrow"></span></th><th>Category</th><th>Status</th><th>Payment</th><th class="sortable-th" onclick="setListingsSort('created_at')" data-tip="Click to sort">Posted <span id="sort-arrow-created_at" class="sort-arrow"></span></th><th>Expires</th><th>Actions</th></tr></thead>
             <tbody id="all-listings-body"><tr class="skeleton-row"><td colspan="10"><div class="skel"></div></td></tr></tbody>
           </table>
         </div>
@@ -2504,6 +2514,7 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
   let currentTab  = 'all';
   const PAGE_SIZE = 50;
   let listingsPage = 0, usersPage = 0, paymentsPage = 0, reportsPage = 0, reviewsPage = 0;
+  let listingsSortBy = 'created_at', listingsSortDir = 'desc';
   let selectedListingIds = new Set();
   let selectedUserIds = new Set();
   let selectedReportIds = new Set();
@@ -2727,6 +2738,41 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
   }
   const debouncedLoad      = debounce(loadAllListings, 400);
   const debouncedLoadUsers = debounce(loadUsers, 400);
+
+  function renderListingFilterChips() {
+    const wrap = document.getElementById('listing-filter-chips');
+    if (!wrap) return;
+    const chips = [];
+    const county = document.getElementById('filter-county')?.value;
+    const area   = document.getElementById('filter-area')?.value;
+    const cat    = document.getElementById('filter-cat')?.value;
+    const search = document.getElementById('filter-search')?.value.trim();
+    if (county) chips.push({label:`County: ${county}`, clear:()=>{document.getElementById('filter-county').value='';onFilterCountyChange();}});
+    if (area)   chips.push({label:`Area: ${area}`, clear:()=>{document.getElementById('filter-area').value='';loadAllListings();}});
+    if (cat)    chips.push({label:`Category: ${cat}`, clear:()=>{document.getElementById('filter-cat').value='';loadAllListings();}});
+    if (search) chips.push({label:`Search: "${search}"`, clear:()=>{document.getElementById('filter-search').value='';loadAllListings();}});
+    if (!chips.length) { wrap.style.display='none'; wrap.innerHTML=''; return; }
+    wrap.style.display = 'flex';
+    wrap.innerHTML = chips.map((c,i)=>`<span class="filter-chip">${esc(c.label)}<button onclick="window.__clearListingChip(${i})" aria-label="Clear filter">\u2715</button></span>`).join('');
+    window.__clearListingChip = (i) => chips[i].clear();
+  }
+
+  function setListingsSort(col) {
+    if (listingsSortBy === col) {
+      listingsSortDir = listingsSortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      listingsSortBy = col;
+      listingsSortDir = col === 'price' ? 'asc' : 'desc';
+    }
+    loadAllListings();
+  }
+  function renderSortArrows() {
+    ['price','created_at'].forEach(col => {
+      const el = document.getElementById('sort-arrow-'+col);
+      if (!el) return;
+      el.textContent = (listingsSortBy === col) ? (listingsSortDir==='asc' ? '\u25B2' : '\u25BC') : '';
+    });
+  }
 
   const fmtPrice = n => 'KES ' + Number(n||0).toLocaleString('en-KE');
   const fmtDate  = d => new Date(d).toLocaleDateString('en-KE', { day:'numeric', month:'short', year:'numeric' });
@@ -3011,16 +3057,23 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
     if (area)   q = q.eq('area',area);
     if (cat)    q = q.eq('category',cat);
     if (search) q = q.or(`title.ilike.%${search}%,area.ilike.%${search}%`);
-    q = q.order('created_at',{ascending:false}).range(listingsPage*PAGE_SIZE, listingsPage*PAGE_SIZE+PAGE_SIZE-1);
+    q = q.order(listingsSortBy, {ascending: listingsSortDir==='asc'}).range(listingsPage*PAGE_SIZE, listingsPage*PAGE_SIZE+PAGE_SIZE-1);
 
     const {data, count, error} = await q;
     document.getElementById('listings-count').textContent = `${count||0} listings`;
+    renderListingFilterChips();
+    renderSortArrows();
 
     if (loadMoreBtn) { loadMoreBtn.disabled = false; loadMoreBtn.textContent = 'Load more'; }
 
     if (error || (!append && !data?.length)) {
-      tbody.innerHTML    = `<tr><td colspan="10"><div class="table-loading"><p>No listings found</p></div></td></tr>`;
-      mobileEl.innerHTML = `<div class="table-loading"><p>No listings found</p></div>`;
+      const emptyHtml = `<div class="table-loading" style="padding:48px 20px">
+        <svg viewBox="0 0 24 24" width="40" height="40" style="stroke:var(--border);fill:none;stroke-width:1.5;margin:0 auto 12px;display:block"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8M8 16h5"/></svg>
+        <p style="font-weight:600;color:var(--text-2);margin-bottom:4px">${error?'Something went wrong loading listings':'No listings found'}</p>
+        <p style="font-size:12px;color:var(--text-3)">${error?esc(error.message||''):'Try clearing your filters or search term.'}</p>
+      </div>`;
+      tbody.innerHTML    = `<tr><td colspan="10">${emptyHtml}</td></tr>`;
+      mobileEl.innerHTML = emptyHtml;
       return;
     }
     if (append && !data?.length) { loadMoreWrap.style.display = 'none'; return; }
@@ -3033,6 +3086,7 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
       const payClass = l.payment_status==='paid'?'paid':l.payment_status==='trial'?'trial':l.payment_status==='submitted'?'pending':'unpaid';
       const isTrial = l.payment_status==='trial';
       const locked = listingActionsLocked(l);
+      const urgent = l.status==='pending' ? ((Date.now() - new Date(l.created_at).getTime()) > 24*3600*1000) : (listingDaysLeft(l).cls === 'pending');
       const menuItems = [
         ...(l.status==='pending'?[
           {label:'✓ Approve', cls:'success', fn:`approveListing('${l.id}')`},
@@ -3056,7 +3110,7 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
         {label:'Move to recycle bin',   cls:'danger', fn:`recycleListing('${l.id}')`},
         {label:'Delete permanently',    cls:'danger', fn:`deleteListingPermanently('${l.id}')`},
       ];
-      return `<tr>
+      return `<tr class="${urgent?'row-urgent':''}">
         <td><input type="checkbox" class="listing-select-cb" data-id="${l.id}" onchange="toggleSelectListing('${l.id}',this.checked)" ${selectedListingIds.has(l.id)?'checked':''}/></td>
         <td><div class="listing-thumb">
           <div class="thumb-img">${thumb}</div>
@@ -3085,7 +3139,7 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
             ${(l.status==='active' && !l.is_disabled) ? aBtn('deactivate','Mark occupied/sold','reject',`markListingOccupied('${l.id}')`) : ''}
             ${(l.status==='occupied' && !l.is_disabled) ? aBtn('activate','Mark available again','approve',`unmarkListingOccupied('${l.id}')`) : ''}
             ${renderSocialButtons(l, locked)}
-            ${aBtn('recycle','Move to recycle bin','reject',`recycleListing('${l.id}')`)}
+            ${aBtn('recycle','Move to recycle bin','recycle',`recycleListing('${l.id}')`)}
             ${aBtn('delete','Delete permanently','delete',`deleteListingPermanently('${l.id}')`)}
           </div>
           ${mobileMenu(l.id, menuItems)}
@@ -3130,7 +3184,7 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
             : aBtn('deactivate','Deactivate','reject',`deactivateListing('${l.id}')`)}
           ${(l.status==='active' && !l.is_disabled) ? aBtn('deactivate','Occupied','reject',`markListingOccupied('${l.id}')`) : ''}
           ${(l.status==='occupied' && !l.is_disabled) ? aBtn('activate','Available','approve',`unmarkListingOccupied('${l.id}')`) : ''}
-          ${aBtn('recycle','Recycle','reject',`recycleListing('${l.id}')`)}
+          ${aBtn('recycle','Recycle','recycle',`recycleListing('${l.id}')`)}
           ${aBtn('delete','Delete','delete',`deleteListingPermanently('${l.id}')`)}
         </div>
       </div>`;
