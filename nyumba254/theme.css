@@ -172,10 +172,11 @@ html[data-theme="dark"] [style*="background:#ffffff"],
 html[data-theme="dark"] [style*="background: rgb(255, 255, 255)"] { background: var(--card) !important; }
 
 /* ── 8. Theme toggle (created by theme.js when a page has no toggle of its own) ──
-   - .nk-theme-navbtn: small icon inserted into the navbar, before the hamburger button, on
-     every page — but only ever VISIBLE at mobile widths (media query below). On desktop it
-     stays hidden: the choice made on a phone is remembered site-wide via localStorage, so
-     desktop pages don't need their own visible switch cluttering the header.
+   - .nk-theme-navbtn: small icon-only button in the navbar, before the hamburger, visible
+     only at mobile widths.
+   - .nk-theme-navbtn-desktop: labelled button ("Theme" → "Dark mode"/"Light mode"), same spot,
+     visible only at desktop widths — same pattern as saved.html's own visible theme button, so
+     desktop visitors get an equally obvious switch instead of none.
    - .nk-theme-fab: fallback fixed button, only used if a page has no navbar at all. Top-right,
      never bottom-left (tab bar / scroll-top / chat widget already live there). */
 .nk-theme-navbtn {
@@ -191,6 +192,19 @@ html[data-theme="dark"] .nk-theme-navbtn { color: var(--text-2); border-color: v
 html[data-theme="dark"] .nk-theme-navbtn:hover { background: var(--surface); border-color: var(--accent); }
 @media (max-width: 768px) { .nk-theme-navbtn { display: inline-flex; } }
 
+.nk-theme-navbtn-desktop {
+  display: none; align-items: center; gap: 6px; flex-shrink: 0;
+  font-family: inherit; font-size: 13.5px; font-weight: 600; white-space: nowrap;
+  padding: 8px 14px; border-radius: 8px; border: 1.5px solid #0F6E56; color: #0F6E56;
+  background: transparent; cursor: pointer; margin-right: 8px; align-self: center;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.nk-theme-navbtn-desktop:hover { background: #E1F5EE; }
+.nk-theme-navbtn-desktop svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+html[data-theme="dark"] .nk-theme-navbtn-desktop { border-color: var(--accent); color: var(--accent); }
+html[data-theme="dark"] .nk-theme-navbtn-desktop:hover { background: var(--surface); }
+@media (min-width: 769px) { .nk-theme-navbtn-desktop { display: inline-flex; } }
+
 .nk-theme-fab {
   position: fixed; right: 14px; top: calc(env(safe-area-inset-top, 0px) + 12px); z-index: 90;
   width: 40px; height: 40px; padding: 0; border-radius: 50%;
@@ -201,4 +215,32 @@ html[data-theme="dark"] .nk-theme-navbtn:hover { background: var(--surface); bor
 .nk-theme-fab svg { width: 19px; height: 19px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 html[data-theme="dark"] .nk-theme-fab { background: var(--card); color: var(--text); border-color: var(--border); }
 body.nk-modal-open .nk-theme-fab { display: none; }
-@media print { .nk-theme-navbtn, .nk-theme-fab { display: none !important; } }
+@media print { .nk-theme-navbtn, .nk-theme-navbtn-desktop, .nk-theme-fab, #nk-theme-notice { display: none !important; } }
+
+/* ── 9. One-time "here's how to switch theme" notice — shown at most once per device ── */
+#nk-theme-notice {
+  position: fixed; top: calc(env(safe-area-inset-top, 0px) + 74px); left: 50%;
+  transform: translateX(-50%) translateY(-10px);
+  z-index: 999999; width: calc(100vw - 32px); max-width: 380px;
+  background: #fff; color: #1a1a18; border: 1px solid #e0ded8; border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.2); padding: 14px 30px 14px 14px;
+  display: flex; gap: 10px; align-items: flex-start;
+  opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease;
+}
+#nk-theme-notice.show { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+#nk-theme-notice .nk-tn-icon { width: 18px; height: 18px; stroke: #0F6E56; fill: none; stroke-width: 2; flex-shrink: 0; margin-top: 1px; }
+#nk-theme-notice .nk-tn-body { flex: 1; font-size: 12.5px; line-height: 1.55; color: #4a4a46; }
+#nk-theme-notice .nk-tn-body strong { display: block; font-size: 13.5px; color: #1a1a18; margin-bottom: 3px; }
+#nk-theme-notice .nk-tn-actions { margin-top: 9px; }
+#nk-theme-notice .nk-tn-got-it { background: #0F6E56; color: #fff; border: none; font-size: 12px; font-weight: 600; padding: 6px 13px; border-radius: 7px; cursor: pointer; }
+#nk-theme-notice .nk-tn-got-it:hover { background: #085041; }
+#nk-theme-notice .nk-tn-close { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; background: none; border: none; color: #888780; font-size: 13px; cursor: pointer; border-radius: 50%; }
+#nk-theme-notice .nk-tn-close:hover { background: #f7f6f2; }
+html[data-theme="dark"] #nk-theme-notice { background: var(--card); color: var(--text); border-color: var(--border); }
+html[data-theme="dark"] #nk-theme-notice .nk-tn-icon { stroke: var(--accent); }
+html[data-theme="dark"] #nk-theme-notice .nk-tn-body { color: var(--text-2); }
+html[data-theme="dark"] #nk-theme-notice .nk-tn-body strong { color: var(--text); }
+html[data-theme="dark"] #nk-theme-notice .nk-tn-got-it { background: var(--accent); color: #0F1512; }
+html[data-theme="dark"] #nk-theme-notice .nk-tn-got-it:hover { background: var(--accent-strong); }
+html[data-theme="dark"] #nk-theme-notice .nk-tn-close { color: var(--text-3); }
+html[data-theme="dark"] #nk-theme-notice .nk-tn-close:hover { background: var(--surface); }

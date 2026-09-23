@@ -116,6 +116,7 @@
       b.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
       b.title = dark ? 'Switch to light mode' : 'Switch to dark mode';
       if (b.classList.contains('nk-theme-fab') || b.classList.contains('nk-theme-navbtn')) b.innerHTML = dark ? SUN : MOON;
+      if (b.classList.contains('nk-theme-navbtn-desktop')) b.innerHTML = (dark ? SUN : MOON) + '<span>' + (dark ? 'Light mode' : 'Dark mode') + '</span>';
     }
   }
   function apply(t) {
@@ -140,24 +141,66 @@
   });
 
   // 3. Insert a toggle if the page has none of its own.
-  // Sits in the navbar, before the hamburger button, but is only ever VISIBLE at mobile
-  // widths (see the media query in theme.css) — that's the version that worked well. On
-  // desktop it stays hidden everywhere; the choice made on a phone is remembered site-wide
-  // via localStorage, so desktop pages don't need their own visible switch.
+  // - Icon-only (.nk-theme-navbtn), before the hamburger, visible only at mobile widths — the
+  //   version that worked well already.
+  // - Labelled (.nk-theme-navbtn-desktop), same spot, visible only at desktop widths — the
+  //   same "Theme" → "Dark mode"/"Light mode" button saved.html already has, so desktop
+  //   visitors get an equally obvious way to switch instead of no switch at all.
+  // Both share data-theme-toggle, so the delegated click handler above (step 2) works for either.
   function insertToggle() {
     if (document.querySelector('[data-theme-toggle]') || document.getElementById('theme-btn')) return;
     var nav = document.querySelector('nav#main-nav') || document.querySelector('nav');
-    var btn = document.createElement('button');
-    btn.type = 'button'; btn.setAttribute('data-theme-toggle', '');
-    if (nav) {
-      btn.className = 'nk-theme-navbtn';
-      var hamburger = nav.querySelector('.mobile-menu-btn');
-      if (hamburger) nav.insertBefore(btn, hamburger); else nav.appendChild(btn);
-    } else {
-      btn.className = 'nk-theme-fab';
-      document.body.appendChild(btn);
+    if (!nav) {
+      var fab = document.createElement('button');
+      fab.type = 'button'; fab.className = 'nk-theme-fab'; fab.setAttribute('data-theme-toggle', '');
+      document.body.appendChild(fab);
+      return;
     }
+    var hamburger = nav.querySelector('.mobile-menu-btn');
+    var mini = document.createElement('button');
+    mini.type = 'button'; mini.className = 'nk-theme-navbtn'; mini.setAttribute('data-theme-toggle', '');
+    var full = document.createElement('button');
+    full.type = 'button'; full.className = 'nk-theme-navbtn-desktop'; full.setAttribute('data-theme-toggle', '');
+    if (hamburger) { nav.insertBefore(mini, hamburger); nav.insertBefore(full, hamburger); }
+    else { nav.appendChild(mini); nav.appendChild(full); }
   }
+
+  // 5. One-time notice, shown at most once ever per device (mobile and desktop alike),
+  // explaining that the site does not follow the visitor's system theme automatically and
+  // pointing at the toggle. Marked as seen the moment it's shown, so it can never reappear —
+  // even if the visitor navigates away before dismissing it.
+  var NOTICE_KEY = 'nk_theme_notice_seen';
+  function noticeSeen() { try { return localStorage.getItem(NOTICE_KEY) === '1'; } catch (e) { return true; } }
+  function markNoticeSeen() { try { localStorage.setItem(NOTICE_KEY, '1'); } catch (e) {} }
+  function showNoticeOnce() {
+    if (noticeSeen()) return;
+    markNoticeSeen();
+    var el = document.createElement('div');
+    el.id = 'nk-theme-notice';
+    el.setAttribute('role', 'status');
+    el.innerHTML =
+      '<svg class="nk-tn-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>' +
+      '<div class="nk-tn-body"><strong>Light &amp; dark mode</strong>' +
+      'This site doesn\u2019t follow your device\u2019s system theme automatically. Use the sun/moon button in the navigation bar to switch anytime.' +
+      '<div class="nk-tn-actions"><button type="button" class="nk-tn-got-it">Got it</button></div></div>' +
+      '<button type="button" class="nk-tn-close" aria-label="Dismiss">\u2715</button>';
+    document.body.appendChild(el);
+    requestAnimationFrame(function () { el.classList.add('show'); });
+    var closed = false;
+    function hide() {
+      if (closed) return; closed = true;
+      clearTimeout(autoTimer);
+      el.classList.remove('show');
+      setTimeout(function () { el.remove(); }, 300);
+      document.removeEventListener('click', onAnyToggleClick);
+    }
+    function onAnyToggleClick(e) { if (e.target && e.target.closest && e.target.closest('[data-theme-toggle]')) hide(); }
+    var autoTimer = setTimeout(hide, 9000);
+    el.querySelector('.nk-tn-got-it').addEventListener('click', hide);
+    el.querySelector('.nk-tn-close').addEventListener('click', hide);
+    document.addEventListener('click', onAnyToggleClick);
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     insertToggle();
     paintButtons();
@@ -168,6 +211,7 @@
     }
     scheduleScan(0);
     setTimeout(function () { scheduleScan(0); }, 1500);
+    setTimeout(showNoticeOnce, 900);
   });
   window.addEventListener('load', function () { scheduleScan(0); });
 
