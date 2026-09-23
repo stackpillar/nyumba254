@@ -2512,13 +2512,10 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
   let currentUser = null;
   let currentView = 'overview';
   let currentTab  = 'all';
-  const PAGE_SIZE = 200;
+  const PAGE_SIZE = 50;
   let listingsPage = 0, usersPage = 0, paymentsPage = 0, reportsPage = 0, reviewsPage = 0;
   let listingsSortBy = 'created_at', listingsSortDir = 'desc';
   let selectedListingIds = new Set();
-  let selectAllAcrossPagesActive = false;
-  let selectAllAcrossPagesTotal = 0;
-  const SELECT_ALL_MAX = 1000; // hard cap — a single bulk action can never touch more than this
   let selectedUserIds = new Set();
   let selectedReportIds = new Set();
   let editingListingId   = null;
@@ -3031,8 +3028,6 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
     if (!append) {
       listingsPage = 0;
       selectedListingIds.clear();
-      selectAllAcrossPagesActive = false;
-      selectAllAcrossPagesTotal = 0;
       renderBulkBar();
       const skelRow   = `<tr class="skeleton-row"><td colspan="10"><div class="skel"></div></td></tr>`;
       tbody.innerHTML  = skelRow.repeat(4);
@@ -3203,32 +3198,6 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
   }
   function loadMoreListings() { listingsPage++; loadAllListings(true); }
 
-  async function fetchAllMatchingListings() {
-    const listingsSelect = currentTab==='multiunit'
-      ? '*, profiles(full_name, email, subscription_tier, subscription_expires_at), listing_photos(*), listing_units!inner(*), social_posts(*)'
-      : '*, profiles(full_name, email, subscription_tier, subscription_expires_at), listing_photos(*), listing_units(*), social_posts(*)';
-    let q = db.from('listings').select(listingsSelect).eq('recycle_bin',false);
-    if (currentTab==='pending')       q = q.eq('status','pending');
-    else if (currentTab==='active')   q = q.eq('status','active').eq('is_disabled',false);
-    else if (currentTab==='featured') q = q.eq('is_featured',true).eq('status','active').eq('is_disabled',false);
-    else if (currentTab==='trial')    q = q.eq('payment_status','trial');
-    else if (currentTab==='inactive') q = q.eq('is_disabled',true);
-    const county = document.getElementById('filter-county').value;
-    const area   = document.getElementById('filter-area').value;
-    const cat    = document.getElementById('filter-cat').value;
-    const search = document.getElementById('filter-search').value.trim();
-    if (filterSellerId) q = q.eq('seller_id', filterSellerId);
-    if (county) q = q.eq('county',county);
-    if (area)   q = q.eq('area',area);
-    if (cat)    q = q.eq('category',cat);
-    if (search) q = q.or(`title.ilike.%${search}%,area.ilike.%${search}%`);
-    q = q.order('created_at',{ascending:false}).limit(SELECT_ALL_MAX);
-    const { data, error } = await q;
-    if (error) { toast('Could not load full matching set: '+error.message,'error'); return null; }
-    (data||[]).forEach(l => { _listings[l.id] = l; });
-    return data || [];
-  }
-
 
   function toggleSelectListing(id,checked) { if(checked) selectedListingIds.add(id); else selectedListingIds.delete(id); renderBulkBar(); }
   function toggleSelectAllListings(checked) {
@@ -3240,74 +3209,35 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
   }
   function renderBulkBar() {
     const bar = document.getElementById('bulk-bar');
-    if (!selectedListingIds.size && !selectAllAcrossPagesActive) { bar.classList.remove('show'); return; }
+    if (!selectedListingIds.size) { bar.classList.remove('show'); return; }
     bar.classList.add('show');
-    const totalCount = parseInt((document.getElementById('listings-count')?.textContent||'').replace(/\D/g,''),10) || 0;
-    const loadedCount = document.querySelectorAll('.listing-select-cb').length;
-    let countLabel = selectedListingIds.size + ' selected';
-    let selectAllHtml = '';
-    if (selectAllAcrossPagesActive) {
-      countLabel = `${Math.min(selectAllAcrossPagesTotal, SELECT_ALL_MAX)} selected (all matching filters)`;
-      selectAllHtml = ` <button class="action-btn view" onclick="clearSelectAllAcrossPages()">Clear</button>`;
-    } else if (loadedCount && selectedListingIds.size === loadedCount && totalCount > loadedCount) {
-      const cappedTotal = Math.min(totalCount, SELECT_ALL_MAX);
-      selectAllHtml = ` <button class="action-btn view" onclick="activateSelectAllAcrossPages(${totalCount})">Select all ${cappedTotal}${totalCount>SELECT_ALL_MAX?` (max ${SELECT_ALL_MAX} per action)`:''}</button>`;
-    }
-    document.getElementById('bulk-count').innerHTML = countLabel + selectAllHtml;
-  }
-  function activateSelectAllAcrossPages(total) {
-    selectAllAcrossPagesActive = true;
-    selectAllAcrossPagesTotal = total;
-    renderBulkBar();
-  }
-  function clearSelectAllAcrossPages() {
-    selectAllAcrossPagesActive = false;
-    selectAllAcrossPagesTotal = 0;
-    renderBulkBar();
+    document.getElementById('bulk-count').textContent = selectedListingIds.size + ' selected';
   }
 
-  async function bulkApprove() {
-    let ids = [...selectedListingIds];
-    if (selectAllAcrossPagesActive) {
-      toast('Loading all matching listings…','');
-      const rows = await fetchAllMatchingListings();
-      if (!rows) return;
-      ids = rows.map(r=>r.id);
-    }
+  function bulkApprove() {
+    const ids=[...selectedListingIds];
     if(!ids.length) return;
     openConfirm({
-      title:`Approve ${ids.length} listing(s)?`,
-      message: selectAllAcrossPagesActive
-        ? `This affects ALL ${ids.length} listings matching your current filters — not just what's visible on screen. Each still goes through the same per-listing payment/plan check, and sellers are notified.`
-        : `Each listing goes through the same checks as approving one at a time — payment/plan coverage is verified individually, and sellers are notified.`,
-      warningText: selectAllAcrossPagesActive ? `⚠ Acting on all ${ids.length} matching listings, including ones not currently visible.` : '',
+      title:`Approve ${ids.length} selected listing(s)?`,
+      message:`Each listing goes through the same checks as approving one at a time — payment/plan coverage is verified individually, and sellers are notified.`,
       confirmText:`Approve ${ids.length} listing(s)`, confirmClass:'approve',
       onConfirm: async () => {
         for(const id of ids) {
           const l = _listings[id];
           await doApprove(id, l?.title || '');
         }
-        logAction('bulk_approve','listing','multiple',`${ids.length} listing(s)${selectAllAcrossPagesActive?' (select-all-across-pages)':''}`);
+        logAction('bulk_approve','listing','multiple',`${ids.length} listing(s)`);
         toast(`${ids.length} listing(s) processed`,'success');
-        selectedListingIds.clear(); clearSelectAllAcrossPages(); loadAllListings(); loadOverview();
+        selectedListingIds.clear(); renderBulkBar(); loadAllListings(); loadOverview();
       }
     });
   }
-  async function bulkReject() {
-    let ids = [...selectedListingIds];
-    if (selectAllAcrossPagesActive) {
-      toast('Loading all matching listings…','');
-      const rows = await fetchAllMatchingListings();
-      if (!rows) return;
-      ids = rows.map(r=>r.id);
-    }
+  function bulkReject() {
+    const ids=[...selectedListingIds];
     if(!ids.length) return;
     openConfirm({
-      title:`Reject ${ids.length} listing(s)?`,
-      message: selectAllAcrossPagesActive
-        ? `This affects ALL ${ids.length} listings matching your current filters — not just what's visible on screen. They'll be marked rejected and hidden from buyers.`
-        : `These listings will be marked rejected and hidden from buyers.`,
-      warningText: selectAllAcrossPagesActive ? `⚠ Acting on all ${ids.length} matching listings, including ones not currently visible.` : '',
+      title:`Reject ${ids.length} selected listing(s)?`,
+      message:`These listings will be marked rejected and hidden from buyers.`,
       requireReason:true, reasonLabel:'Reason for rejection (shown to sellers)',
       confirmText:`Reject ${ids.length} listing(s)`, confirmClass:'reject',
       onConfirm: async (reason) => {
@@ -3322,9 +3252,9 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText, listi
           }
           if (l?.seller_id) notifyInApp(l.seller_id, 'listing_rejected', 'Listing rejected', `"${l.title}" was rejected${reason?': '+reason:''}.`, '/dashboard.html');
         }
-        logAction('bulk_reject','listing','multiple',`${ids.length} listing(s)${selectAllAcrossPagesActive?' (select-all-across-pages)':''}`);
+        logAction('bulk_reject','listing','multiple',`${ids.length} listing(s)`);
         toast(`${ids.length} listing(s) rejected`,'');
-        selectedListingIds.clear(); clearSelectAllAcrossPages(); loadAllListings(); loadOverview();
+        selectedListingIds.clear(); renderBulkBar(); loadAllListings(); loadOverview();
       }
     });
   }
