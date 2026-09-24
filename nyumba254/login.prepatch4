@@ -1131,6 +1131,5 @@
   }
 </script>
 <script src="nk-quick-help-widget.js" defer></script>
-<script>if (typeof db !== 'undefined') nkTrackPageView();</script>
 </body>
 </html>
