@@ -1470,6 +1470,5 @@
 
   init();
 </script>
-<script src="/nk-shared.js"></script>
 </body>
 </html>

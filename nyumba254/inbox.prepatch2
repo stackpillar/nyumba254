@@ -879,6 +879,5 @@
   window.NKInbox = { refresh: core.fetchConversations, open: openConvo, getResumeLink: core.buildResumeLink, icsFor, setLang: l => { lang = l; applyLang(); } };
 })();
 </script>
-<script src="/nk-shared.js"></script>
 </body>
 </html>
