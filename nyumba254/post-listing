@@ -141,9 +141,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <div class="form-card">
       <h2 id="h-2" tabindex="-1">General information</h2>
       <p class="hint">The core details buyers use to decide whether the property fits.</p>
-      <div class="field"><div class="row"><label for="title">Property title <span class="req">*</span></label><button type="button" class="linkbtn" id="ai-title-btn" data-act="ai-title">✨ Enhance with AI</button></div>
+      <div class="field"><div class="row"><label for="title">Property title <span class="req">*</span></label><button type="button" class="linkbtn" id="ai-title-btn" data-act="ai-title">✨ Enhance</button></div>
         <input id="title" maxlength="120" placeholder="e.g. 2 bedroom apartment in Kilimani" autocomplete="off"/><div class="field-hint">Specific titles get more enquiries. Enhance with AI polishes yours using the details you entered.</div><div class="field-hint" id="ai-note-title"></div><div class="field-error" id="e-title" role="alert"></div></div>
-      <div class="field"><div class="row"><label for="description">Description <span class="req">*</span></label><button type="button" class="linkbtn" id="ai-desc-btn" data-act="ai-desc">✨ Enhance with AI</button></div>
+      <div class="field"><div class="row"><label for="description">Description <span class="req">*</span></label><button type="button" class="linkbtn" id="ai-desc-btn" data-act="ai-desc">✨ Enhance</button></div>
         <textarea id="description" rows="5" maxlength="2000" placeholder="Room sizes, security, water and power, house rules, nearby landmarks…"></textarea>
         <div class="row"><div class="field-hint">Don't add phone numbers or links; contact details come in the last step.</div><div class="field-hint" id="desc-count">0 / 30 minimum</div></div><div class="field-hint" id="ai-note-description"></div><div class="field-error" id="e-description" role="alert"></div></div>
       <div class="grid-2">
