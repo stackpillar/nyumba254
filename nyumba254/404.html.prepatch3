@@ -638,12 +638,5 @@
 <script src="saved-listings.js"></script>
 <script>if (typeof NKSaved !== 'undefined') NKSaved.init();</script>
 <script src="nav-badge.js"></script>
-<script>
-try {
-  var sid = localStorage.getItem('nk_sid');
-  if (!sid) { sid = (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2)); localStorage.setItem('nk_sid', sid); }
-  db.from('page_views').insert({ path: location.pathname, referrer: document.referrer || null, user_agent: navigator.userAgent, session_id: sid }).then(function(){}, function(){});
-} catch (e) {}
-</script>
 </body>
 </html>

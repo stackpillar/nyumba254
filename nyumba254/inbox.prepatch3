@@ -880,6 +880,5 @@
 })();
 </script>
 <script src="/nk-shared.js"></script>
-<script>nkTrackPageView();</script>
 </body>
 </html>
