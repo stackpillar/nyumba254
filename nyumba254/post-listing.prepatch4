@@ -857,6 +857,5 @@ init();
 })();
 </script>
 <script src="/patch.js"></script>
-<script>if (typeof db !== 'undefined') nkTrackPageView();</script>
 </body>
 </html>
