@@ -11522,4 +11522,5 @@ init();
   }, true);
 })();
 </script></body>
+<script src="/patch.js"></script>
 </html>

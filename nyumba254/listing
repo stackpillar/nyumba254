@@ -501,7 +501,13 @@ const okPhone=p=>/^\+254\d{9}$/.test(p)||/^\+\d{9,15}$/.test(p),okMail=e=>/^[^\s
 const SEC={gated_guard_cctv:'Gated, guarded & CCTV',gated_guard:'Gated with guard',gated_cctv:'Gated with CCTV',gated:'Gated compound',cctv:'CCTV only',none:'None'};
 const PARK={private:'Private',shared:'Shared compound',street:'Street only',none:'None'};
 const FURN={yes:'Furnished',partial:'Partly furnished',no:'Unfurnished'};
-const QMSG=['Is it still available?','Can I view it today?','What is the deposit?','Is the price negotiable?'];
+const QMSG_BY=(m,fr)=>{
+  if(m.group==='airbnb')return['Is it available for my dates?','Can I get a discount for a longer stay?','What time is check-in?','Is there parking on site?'];
+  if(m.group==='boarding')return['Is a bed still open?','Can I view it today?','What is the deposit?','Is the room shared or private?'];
+  if(m.group==='commercial')return['Is it still available?','Can I view it today?','What are the lease terms?','Is the price negotiable?'];
+  if(fr==='once')return['Is it still available?','Can I view it today?','Is the price negotiable?','Do you have the title deed?'];
+  return['Is it still available?','Can I view it today?','What is the deposit?','Is the price negotiable?'];
+};
 const IC={chev:d=>`<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="${d?'15 18 9 12 15 6':'9 18 15 12 9 6'}"/></svg>`,
  call:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.12 1.2 2 2 0 012.11 0h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0122 14.92z"/></svg>',
  msg:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
@@ -599,7 +605,7 @@ async function load(){
     units=(P.listing_units||[]).slice().sort((a,b)=>String(a.id||'').localeCompare(String(b.id||''),undefined,{numeric:true}));
     render();seo();
     if(!preview){nkTrackRecentViewed(P.id);countView()}
-    loadSimilar();loadRating();checkThread();maybeReach();loadNeighbours();
+    loadSimilar();loadRating();loadReplySpeed();checkThread();maybeReach();loadNeighbours();
   }catch(e){console.error(e);unavailable('error')}
 }
 async function countView(){
@@ -764,7 +770,7 @@ function sidebarHtml(){
         ${hidden?'':`<div class="nf-field"><label for="q-phone">Phone</label><input id="q-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="07XX XXX XXX"/><div class="nf-err" id="q-phone-e" role="alert"></div></div>`}
         <details class="more"><summary>Add email (optional)</summary><div class="nf-field"><label for="q-email">Email</label><input id="q-email" type="email" autocomplete="email"/><div class="nf-err" id="q-email-e" role="alert"></div></div><label class="nf-check" for="q-notify"><input type="checkbox" id="q-notify" checked/>Email me when the seller replies</label></details>
       </div>
-      <div class="nf-field"><label for="q-msg">Message</label><div class="qchips" role="group" aria-label="Quick messages">${QMSG.map((m,i)=>`<button type="button" class="qchip" data-act="qmsg" data-i="${i}">${escHtml(m)}</button>`).join('')}</div><textarea id="q-msg" maxlength="1000"></textarea></div>
+      <div class="nf-field"><label for="q-msg">Message</label><div class="qchips" role="group" aria-label="Quick messages">${QMSG_BY(meta(),freq()).map((m,i)=>`<button type="button" class="qchip" data-act="qmsg" data-i="${i}">${escHtml(m)}</button>`).join('')}</div><textarea id="q-msg" maxlength="1000"></textarea></div>
       <div class="hp" aria-hidden="true"><label for="q-web">Leave empty</label><input id="q-web" tabindex="-1" autocomplete="off"/></div>
       <div class="sendrow"><button type="button" class="btn btn-primary" id="q-send" data-act="send">Send message</button><button type="button" class="btn btn-outline" data-act="viewing" data-src="form">${IC.cal}Request viewing</button></div></div>
     <p class="tip">${SAFETY}</p><button type="button" class="link report" data-act="report">Report this listing</button></div>`;
@@ -967,8 +973,20 @@ async function loadSimilar(){
 
 /* ═══ seller rating, enquiry count, thread state ═══ */
 let ratingText='';
-function updateRating(){qsa('.js-rate').forEach(e=>{e.textContent=ratingText})}
-async function loadRating(){
+function updateRating(){qsa('.js-rate').forEach(e=>{e.textContent=[ratingText,replyText].filter(Boolean).join(' · ')})}
+let replyText='';
+async function loadReplySpeed(){
+  if(!P.seller_id)return;
+  try{
+    const {data,error}=await db.from('enquiries').select('created_at,first_reply_at').eq('seller_id',P.seller_id).not('first_reply_at','is',null).order('created_at',{ascending:false}).limit(20);
+    if(error||!data||data.length<3)return;
+    const mins=data.map(e=>(new Date(e.first_reply_at)-new Date(e.created_at))/60000).filter(n=>n>0&&n<10080);
+    if(mins.length<3)return;
+    const med=mins.sort((a,b)=>a-b)[Math.floor(mins.length/2)];
+    replyText=med<60?`Typically replies within ${Math.round(med)} min`:med<1440?`Typically replies within ${Math.round(med/60)} hr`:`Typically replies within a day`;
+    updateRating();
+  }catch(e){}
+}
   if(!P.seller_id)return;
   try{const {data,error}=await db.from('reviews').select('rating').eq('review_type','seller').eq('target_seller_id',P.seller_id).eq('status','published');
     if(error||!data||!data.length)return;
@@ -1219,7 +1237,7 @@ document.addEventListener('click',e=>{
     case 'call':case 'wa':track(a==='call'?'call_tap':'whatsapp_tap',{src:t.dataset.src||'unknown'});reveal(a==='call'?'call':'whatsapp');break;
     case 'copynum':{const n=($('phone-panel')||{dataset:{}}).dataset.n||nkNormalizePhone(phoneRaw);navigator.clipboard.writeText(n).then(()=>toast('Number copied'),()=>toast('Could not copy the number','error'));break}
     case 'scroll':openContactSheet();break;case 'send':sendEnquiry();break;
-    case 'qmsg':{$('q-msg').value=baseMsg()+' '+QMSG[Number(t.dataset.i)];$('q-msg').focus({preventScroll:true});break}
+    case 'qmsg':{$('q-msg').value=baseMsg()+' '+QMSG_BY(meta(),freq())[Number(t.dataset.i)];$('q-msg').focus({preventScroll:true});break}
     case 'again':{$('sent').hidden=true;$('enq').hidden=false;$('q-msg').value=baseMsg()+' ';if(!coarse())$('q-msg').focus({preventScroll:true});break}
     case 'edit-contact':{$('q-fields').hidden=false;$('q-sum').hidden=true;$('q-name').focus({preventScroll:true});break}
     case 'chat':if(typeof NKGlobalChat!=='undefined')NKGlobalChat.registerAndOpen(P.id,lsg('nk_buyer_'+P.id));break;
@@ -1290,5 +1308,6 @@ nkTrackPageView();tabbar();liftChat();tabActions();load();
 <script>if(typeof NKSaved!=='undefined')NKSaved.init();</script>
 <script src="/nav-badge.js"></script>
 <script src="/global-chat-widget.js"></script>
+<script src="/patch.js"></script>
 </body>
 </html>
