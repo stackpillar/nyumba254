@@ -987,6 +987,7 @@ async function loadReplySpeed(){
     updateRating();
   }catch(e){}
 }
+async function loadRating(){
   if(!P.seller_id)return;
   try{const {data,error}=await db.from('reviews').select('rating').eq('review_type','seller').eq('target_seller_id',P.seller_id).eq('status','published');
     if(error||!data||!data.length)return;
