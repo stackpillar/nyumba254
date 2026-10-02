@@ -140,7 +140,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   <section id="step-2" hidden aria-labelledby="h-2">
     <div class="form-card">
       <h2 id="h-2" tabindex="-1">General information</h2>
-      <p class="hint">The core details buyers use to decide whether the property fits.</p>
+      <p class="hint">The core detail<s buyers use to decide whether the property fits.</p>
       <div class="field"><div class="row"><label for="title">Property title <span class="req">*</span></label><button type="button" class="linkbtn" id="ai-title-btn" data-act="ai-title">✨ Enhance</button></div>
         <input id="title" maxlength="120" placeholder="e.g. 2 bedroom apartment in Kilimani" autocomplete="off"/><div class="field-hint">Specific titles get more enquiries. Enhance with AI polishes yours using the details you entered.</div><div class="field-hint" id="ai-note-title"></div><div class="field-error" id="e-title" role="alert"></div></div>
       <div class="field"><div class="row"><label for="description">Description <span class="req">*</span></label><button type="button" class="linkbtn" id="ai-desc-btn" data-act="ai-desc">✨ Enhance</button></div>
@@ -289,6 +289,16 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   </section>
 </main>
 
+<div class="overlay" id="signin-modal" role="dialog" aria-modal="true" aria-labelledby="si-t">
+  <div class="modal">
+    <h2 id="si-t">Sign in to continue</h2>
+    <p>This email already has a Nyumba254 account. Sign in and your listing and photos stay right here.</p>
+    <div class="field" style="text-align:left"><label for="si-email">Email</label><input type="email" id="si-email" autocomplete="email"/></div>
+    <div class="field" style="text-align:left"><label for="si-pass">Password</label><input type="password" id="si-pass" autocomplete="current-password"/><div class="field-error" id="si-err" role="alert"></div></div>
+    <div class="acts"><button type="button" class="btn-back" data-act="si-close">Not now</button><button type="button" class="btn-next" id="si-go" data-act="si-submit">Sign in</button></div>
+    <button type="button" class="linkbtn" style="margin-top:12px" data-act="si-reset">Forgot password?</button>
+  </div>
+</div>
 <div class="overlay" id="resume" role="dialog" aria-modal="true" aria-labelledby="rs-t">
   <div class="modal"><h2 id="rs-t">Welcome back</h2><p id="rs-text"></p><div class="acts"><button class="btn-back" data-act="fresh">Start fresh</button><button class="btn-next" data-act="resume">Continue draft</button></div></div>
 </div>
@@ -585,7 +595,7 @@ async function addPhotos(files){
 function renderPhotos(){
   $('photo-count').textContent=`${S.photos.length} / 10`;$('photo-notice').hidden=S.photos.length>=5;
   $('photo-notice').textContent=S.photos.length?`${S.photos.length} added. Listings with 5 or more photos get noticeably more enquiries.`:'Add at least one photo to continue.';$('photo-notice').hidden=S.photos.length>=5;
-  $('photo-grid').innerHTML=S.photos.map((p,i)=>`<div class="thumb${p.failed?' bad':''}"><img src="${p.url}" alt="Photo ${i+1}"/>${p.failed?'<div class="fail">Upload failed</div>':''}<button type="button" class="rm" data-act="rm-photo" data-i="${i}" aria-label="Remove photo ${i+1}">×</button>${i===S.cover?'<span class="cv on">Cover</span>':`<button type="button" class="cv" data-act="cover" data-i="${i}">Set cover</button>`}</div>`).join('');
+  $('photo-grid').innerHTML=S.photos.map((p,i)=>`<div class="thumb${p.failed?' bad':''}"><img src="${p.url}" alt="Photo ${i+1}"/>${p.failed?'<div class="fail">Upload failed</div>':''}<button type="button" class="rm" data-act="rm-photo" data-i="${i}" aria-label="Remove photo ${i+1}">×</button>${i===S.cover?'<span class="cv on">Cover</span>':`<button type="button" class="cv" data-act="cover" data-i="${i}">Set cover</button>`}</div>`).join('');savePhotosDB();
 }
 function rmPhoto(i){URL.revokeObjectURL(S.photos[i].url);S.photos.splice(i,1);if(S.cover>=S.photos.length)S.cover=0;else if(S.cover>i)S.cover--;renderPhotos()}
 async function uploadPhotos(listingId){
@@ -661,7 +671,7 @@ async function checkGuestEmail(){
   if(S.user)return;const email=val('contact_email'),w=$('email-exists');
   if(!/\S+@\S+\.\S+/.test(email)){w.hidden=true;S.guestBlocked=false;return}
   try{const r=await fetch(`${EDGE_URL}/guest-listing-submit`,{method:'POST',headers:{'Content-Type':'application/json',apikey:SUPABASE_KEY},body:JSON.stringify({action:'check_email',email})});
-    const j=await r.json();S.guestBlocked=!!j.registered;w.hidden=!S.guestBlocked}catch(e){S.guestBlocked=false}
+    const j=await r.json();S.guestBlocked=!!j.registered;w.hidden=!S.guestBlocked;if(S.guestBlocked&&S.step===5&&!$('signin-modal').classList.contains('show'))openSignIn()}catch(e){S.guestBlocked=false}
 }
 function signIn(){saveDraftNow();location.href='/login?next=post-listing&reason=existing_account&email='+encodeURIComponent(val('contact_email'))}
 
@@ -695,7 +705,7 @@ const hasContent=d=>{const f=d.fields||{};return !!(f.title||f.description||f.pr
 function saveDraft(){if(!S.ready||S.busy)return;clearTimeout(dTimer);dTimer=setTimeout(saveDraftNow,600);
   if(S.user){clearTimeout(sTimer);sTimer=setTimeout(()=>db.from('listing_drafts').upsert({seller_id:S.user.id,draft_data:collect(),updated_at:new Date().toISOString()},{onConflict:'seller_id'}).then(()=>{},()=>{}),4000)}}
 function saveDraftNow(){if(!S.ready)return;const d=collect();if(!sane(d))return;try{localStorage.setItem(DRAFT_KEY,JSON.stringify(d));$('save-status').textContent='Draft saved'}catch(e){}}
-async function clearDraft(){clearTimeout(dTimer);clearTimeout(sTimer);try{localStorage.removeItem(DRAFT_KEY)}catch(e){}if(S.user)try{await db.from('listing_drafts').delete().eq('seller_id',S.user.id)}catch(e){}}
+async function clearDraft(){clearTimeout(dTimer);clearTimeout(sTimer);clearPhotosDB();try{localStorage.removeItem(DRAFT_KEY)}catch(e){}if(S.user)try{await db.from('listing_drafts').delete().eq('seller_id',S.user.id)}catch(e){}}
 let pending=null;
 async function findDraft(){
   let local=null;try{local=JSON.parse(localStorage.getItem(DRAFT_KEY)||'null')}catch(e){}let server=null;
@@ -703,7 +713,7 @@ async function findDraft(){
   const d=local&&server?(server.savedAt>=local.savedAt?server:local):(local||server);
   if(!d||!sane(d)||!hasContent(d))return;pending=d;
   const mins=Math.floor((Date.now()-d.savedAt)/6e4),ago=mins<1?'a moment ago':mins<60?mins+' minute(s) ago':mins<1440?Math.floor(mins/60)+' hour(s) ago':Math.floor(mins/1440)+' day(s) ago';
-  const t=String(d.fields.title||'');$('rs-text').textContent=`We saved your progress from ${ago}${t?` ("${t.slice(0,60)}${t.length>60?'…':''}")`:''}. Photos need to be added again. Continue where you left off?`;$('resume').classList.add('show');
+  const t=String(d.fields.title||'');$('rs-text').textContent=`We saved your progress from ${ago}${t?` ("${t.slice(0,60)}${t.length>60?'…':''}")`:''}. Continue where you left off?`;$('resume').classList.add('show');
 }
 function applyDraft(d){
   if(d.sub&&d.sub.listingId)Object.assign(S.sub,{listingId:d.sub.listingId,unitsDone:!!d.sub.unitsDone,photosDone:!!d.sub.photosDone,videoLinked:!!d.sub.videoLinked});
@@ -715,7 +725,8 @@ function applyDraft(d){
   FIELD_IDS.forEach(id=>{if(id==='county'||(S.user&&id==='contact_email'))return;const e=$(id);if(e&&f[id]!=null)e.value=f[id]});areaChanged();if($('price').value)fmtPrice($('price'));
   renderAmenities();renderTiers();S.pin=d.pin||null;if(S.pin){setPin(S.pin.lat,S.pin.lng,15)}
   $('desc-count').textContent=`${val('description').length} / 30 minimum`;
-  const n=Math.min(Math.max(d.step||1,1),4);S.max=n;show(n,false);history.replaceState({step:n},'');
+  loadPhotosDB().then(rec=>{if(!rec||!rec.items.length)return;S.photos=rec.items.map(i=>{const f=new File([i.blob],i.name,{type:'image/jpeg'});return {file:f,url:URL.createObjectURL(f),uploadedUrl:i.uploadedUrl||undefined}});S.cover=Math.min(rec.cover||0,S.photos.length-1);renderPhotos()});
+const n=Math.min(Math.max(d.step||1,1),4);S.max=n;show(n,false);history.replaceState({step:n},'');
 }
 
 /* ═══ SUBMIT ═══ */
@@ -750,7 +761,7 @@ async function submit(){
   ok=fail('contact_email',/^\S+@\S+\.\S+$/.test(val('contact_email'))?'':'Enter a valid email')&&ok;
   ok=fail('agree',chk('agree')?'':'You must agree to the Terms and Privacy Policy')&&ok;
   if(!ok){const bad=document.querySelector('#step-5 [aria-invalid="true"], #e-agree:not(:empty)');if(bad)bad.scrollIntoView({block:'center',behavior:'smooth'});return}
-  if(!S.user){await checkGuestEmail();if(S.guestBlocked){$('email-exists').scrollIntoView({block:'center',behavior:'smooth'});return}}
+  if(!S.user){await checkGuestEmail();if(S.guestBlocked){openSignIn();return}}
   S.busy=true;const btn=$('btn-submit');btn.disabled=true;btn.textContent='Submitting…';
   try{
     const data=payload(),units=unitTiers(),link=val('video_url');let id=S.sub.listingId;
@@ -785,6 +796,49 @@ function done(guest){
   window.scrollTo({top:0,behavior:'smooth'});$('success').querySelector('h2').focus&&$('s-head').setAttribute('tabindex','-1');$('s-head').focus();
 }
 
+/* ═══ INLINE SIGN-IN ═══ */
+function openSignIn(){$('si-email').value=val('contact_email');$('si-pass').value='';$('si-err').textContent='';$('signin-modal').classList.add('show');setTimeout(()=>$('si-pass').focus(),50)}
+async function doSignIn(){
+  const email=$('si-email').value.trim(),pass=$('si-pass').value;
+  if(!email||!pass){$('si-err').textContent='Enter your email and password';return}
+  const b=$('si-go');b.disabled=true;b.textContent='Signing in…';$('si-err').textContent='';
+  try{
+    const {data,error}=await db.auth.signInWithPassword({email,password:pass});if(error)throw error;
+    S.user=data.user;S.guestBlocked=false;
+    const {data:p}=await db.from('profiles').select('phone,full_name').eq('id',S.user.id).maybeSingle();
+    if(p&&p.full_name){S.userName=p.full_name;if(!val('contact_name'))$('contact_name').value=p.full_name}
+    if(p&&p.phone&&!val('phone'))$('phone').value=p.phone.startsWith('254')?'0'+p.phone.slice(3):p.phone;
+    $('contact_email').value=S.user.email||email;
+    $('email-exists').hidden=true;$('guest-note').hidden=true;
+    $('video-file-f').querySelector('label').innerHTML='Or upload a short video <span class="opt">up to 60 seconds</span>';
+    qsa('[data-act="vid-up"],[data-act="vid-rec"]').forEach(x=>x.disabled=false);
+    await loadAccount();updateKicker();checkPlan();
+    const gate=await checkGate();$('signin-modal').classList.remove('show');
+    if(gate.blocked){toast(`Unverified sellers are limited to ${gate.limit} listing(s).`,'error');saveDraftNow();setTimeout(()=>{location.href='/dashboard?verify=1&limit='+gate.limit},1200);return}
+    toast('Signed in. Your listing is ready to submit.','success');if(S.step===5)renderReview();
+  }catch(e){$('si-err').textContent=/invalid/i.test(e.message||'')?'Wrong email or password':'Could not sign in. Try again.'}
+  finally{b.disabled=false;b.textContent='Sign in'}
+}
+async function resetPassword(){
+  const email=$('si-email').value.trim();if(!/\S+@\S+\.\S+/.test(email)){$('si-err').textContent='Enter your email first';return}
+  saveDraftNow();const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo:location.origin+'/post-listing'});
+  $('si-err').textContent=error?'Could not send reset email':'Reset link sent. Check your email.';
+}
+$('si-pass').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doSignIn()}});
+
+/* ═══ DRAFT PHOTOS (IndexedDB) ═══ */
+function pdb(){return new Promise((ok,no)=>{const r=indexedDB.open('nk_draft_photos',1);r.onupgradeneeded=()=>r.result.createObjectStore('photos');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)})}
+async function savePhotosDB(){
+  try{const d=await pdb(),tx=d.transaction('photos','readwrite'),st=tx.objectStore('photos');st.clear();
+    if(S.photos.length)st.put({savedAt:Date.now(),cover:S.cover,items:S.photos.map(p=>({blob:p.file,name:p.file.name,uploadedUrl:p.uploadedUrl||null}))},'current');
+    await new Promise((ok,no)=>{tx.oncomplete=ok;tx.onerror=()=>no(tx.error)})}catch(e){}
+}
+async function loadPhotosDB(){
+  try{const d=await pdb();const rec=await new Promise((ok,no)=>{const r=d.transaction('photos').objectStore('photos').get('current');r.onsuccess=()=>ok(r.result||null);r.onerror=()=>no(r.error)});
+    if(rec&&Date.now()-rec.savedAt>6048e5){clearPhotosDB();return null}return rec}catch(e){return null}
+}
+async function clearPhotosDB(){try{const d=await pdb();d.transaction('photos','readwrite').objectStore('photos').clear()}catch(e){}}
+
 /* ═══ EVENTS ═══ */
 document.addEventListener('click',e=>{
   const t=e.target.closest('[data-act]');if(!t)return;const a=t.dataset.act;
@@ -796,7 +850,7 @@ document.addEventListener('click',e=>{
     case 'add-am':addCustomAm();break;case 'rm-am':S.custom=S.custom.filter(x=>x!==t.dataset.l);renderAmenities();saveDraft();break;
     case 'rm-photo':rmPhoto(Number(t.dataset.i));break;case 'cover':S.cover=Number(t.dataset.i);renderPhotos();break;
     case 'camera':$('camera-input').click();break;case 'vid-up':$('vid-up').click();break;case 'vid-rec':$('vid-rec').click();break;
-    case 'signin':signIn();break;case 'ai-title':aiEnhance('title');break;case 'ai-desc':aiEnhance('description');break;case 'ai-undo':aiUndo(t.dataset.f);break;
+    case 'signin':openSignIn();break;case 'si-submit':doSignIn();break;case 'si-close':$('signin-modal').classList.remove('show');break;case 'si-reset':resetPassword();break;case 'ai-title':aiEnhance('title');break;case 'ai-desc':aiEnhance('description');break;case 'ai-undo':aiUndo(t.dataset.f);break;
     case 'resume':$('resume').classList.remove('show');if(pending)applyDraft(pending);pending=null;break;
     case 'fresh':$('resume').classList.remove('show');pending=null;clearDraft();break;
   }
