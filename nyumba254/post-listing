@@ -783,6 +783,7 @@ async function submit(){
     await clearDraft();S.ready=false;done(!S.user);
   }catch(err){
     console.error(err);S.busy=false;btn.disabled=false;btn.textContent=S.sub.listingId?'Retry submit':'Submit for review';
+if(!S.user&&/already (been )?registered|already exists/i.test(err.message||'')){S.guestBlocked=true;$('email-exists').hidden=false;$('submit-error').textContent='';openSignIn();return}
     $('submit-error').textContent='We could not finish submitting: '+(err.message||'unknown error')+'. Your details are saved. Tap the button to try again'+(S.sub.listingId?'; nothing will be duplicated.':'.');
   }
 }
@@ -860,6 +861,7 @@ const flow=$('flow');
 flow.addEventListener('input',e=>{
   const t=e.target;
   if(t.id==='price')fmtPrice(t);
+  if(S.step===5&&/^(contact_name|phone|whatsapp|contact_email)$/.test(t.id))renderReview();
   if(t.id==='address'||t.id==='area_custom')followSoon();
   if(t.id==='description')$('desc-count').textContent=`${t.value.trim().length} / 30 minimum`;
   if(t.dataset.t){const r=S.tiers.find(x=>x.id===Number(t.dataset.t));if(r)r[t.dataset.k]=t.value}
