@@ -440,7 +440,7 @@
         </div>
 
         <!-- Google sign-in temporarily hidden — pending custom domain subscription. Filled by JS from one shared template so re-enabling it later is a one-line change. -->
-        <div style="display:none" id="google-slot-login"></div>
+        <div id="google-slot-login"></div>
 
         <form id="login-form" novalidate onsubmit="event.preventDefault(); doLogin(); return false;">
           <div class="form-group">
@@ -502,7 +502,7 @@
         </div>
 
         <!-- Google sign-in temporarily hidden — pending custom domain subscription. Filled by JS from one shared template. -->
-        <div style="display:none" id="google-slot-register"></div>
+        <div id="google-slot-register"></div>
 
         <form id="register-form" novalidate onsubmit="event.preventDefault(); doRegister(); return false;">
           <div class="form-row">
