@@ -191,3 +191,11 @@
     try { addCommuteNote(); } catch (e) { console.warn('nk-commute patch failed', e); }
   });
 })();
+/* Load dashboard-only code */
+(function () {
+  if (!(document.getElementById('page-overview') && document.getElementById('app-shell'))) return;
+  var s = document.createElement('script');
+  s.src = '/dashboard-patch.js?v=1';
+  s.async = true;
+  document.body.appendChild(s);
+})();
