@@ -18,7 +18,7 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --green:#0F6E56;--green-light:#E1F5EE;--green-mid:#1D9E75;--green-dark:#085041;
-      --gold:#BA7517;--gold-light:#FAEEDA;--text:#1a1a18;--text-2:#4a4a46;--text-3:#6b6a64;--border:#e0ded8
+      --gold:#BA7517;--gold-light:#FAEEDA;--text:#1a1a18;--text-2:#4a4a46;--text-3:#6b6a64;--border:#e0ded8;
       --border:#e0ded8;--surface:#f7f6f2;--white:#ffffff;--red:#c0392b;--red-light:#fdecea;
       --amber:#d97706;--amber-light:#fef3c7;--purple:#7c3aed;--sidebar-w:240px;--topbar-h:64px;
       --radius:10px;--radius-lg:16px;--shadow:0 1px 3px rgba(0,0,0,0.07),0 4px 12px rgba(0,0,0,0.05);
@@ -34,7 +34,7 @@
     }
     [data-theme="sandstone"] {
       --green:#8a5a2c;--green-light:#f4e9da;--green-mid:#b17a3f;--green-dark:#5f3c17;
-      --gold:#b8860b;--gold-light:#faf1de;--text:#2b241c;--text-2:#5c5142;--text-3:#948a76;
+      --gold:#b8860b;--gold-light:#faf1de;--text:#2b241c;--text-2:#5c5142;--text-3:#756c58;
       --border:#e6d9c2;--surface:#faf5ea;--white:#fffdf8;--red:#b5432f;--red-light:#f7e3dc;
       --amber:#c2790f;--amber-light:#f7ecd6;--purple:#7c5cb0;
       --shadow:0 1px 3px rgba(90,60,20,0.09),0 4px 12px rgba(90,60,20,0.07);
@@ -1407,6 +1407,15 @@
     [data-theme="dark"] .chat-date-divider span{background:var(--border)}
     [data-theme="dark"] .rl-toolbar input[type=text],[data-theme="dark"] .scw-input-bar textarea:focus{background:var(--white)}
     @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+    #payment-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+    #page-payments .card{overflow-x:auto !important}
+    .payments-table{min-width:640px}
+    @media(pointer:coarse){
+      .icon-btn,.modal-close{width:44px;height:44px}
+      .lc-btn{min-height:44px}
+      .hamburger{padding:12px}
+      .filter-pill{padding:10px 16px}
+    }
   </style>
 <link rel="manifest" href="/manifest.webmanifest"><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script></head>
 <body>
@@ -1548,7 +1557,7 @@
         </div>
       </div>
       <div class="topbar-right">
-              <button class="theme-switch-btn" onclick="openCmdPalette()" title="Quick search & jump to anything (⌘K)" aria-label="Quick search">
+              <button class="theme-switch-btn" onclick="openCmdPalette()" title="Search & jump to anything (⌘K or Ctrl+K)" aria-label="Search and jump to anything">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               </button>
               <div class="notif-bell-wrap" id="notif-bell-wrap" style="position:relative">
@@ -1620,11 +1629,11 @@
       </div>
       <div class="card" id="action-center-card" style="display:none;padding:16px 20px;margin-bottom:20px;border:1.5px solid var(--amber);background:var(--amber-light)"></div>
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-label">Active listings</div><div class="stat-val" id="stat-active">—</div><div class="stat-delta" id="stat-active-delta">of your total listings</div><div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div></div>
-        <div class="stat-card gold"><div class="stat-label">Total enquiries</div><div class="stat-val" id="stat-enquiries">—</div><div class="stat-delta" id="stat-enquiries-delta">buyers reached out</div><div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div></div>
-        <div class="stat-card amber"><div class="stat-label">Unread messages</div><div class="stat-val" id="stat-new-enq">—</div><div class="stat-delta" id="stat-new-enq-delta">unread conversations</div><div class="stat-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div></div>
-        <div class="stat-card blue"><div class="stat-label">Total paid</div><div class="stat-val" id="stat-paid">—</div><div class="stat-delta" id="stat-paid-delta">listing fees</div><div class="stat-icon"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div></div>
-        <div class="stat-card purple"><div class="stat-label">Total views</div><div class="stat-val" id="stat-views">—</div><div class="stat-delta" id="stat-views-delta">across all listings</div><div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div></div>
+        <div class="stat-card" style="cursor:pointer" onclick="showPage('listings');filterListings('active')"><div class="stat-label">Active listings</div><div class="stat-val" id="stat-active">—</div><div class="stat-delta" id="stat-active-delta">of your total listings</div><div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div></div>
+        <div class="stat-card gold" style="cursor:pointer" onclick="showAllMessages()"><div class="stat-label">Total enquiries</div><div class="stat-val" id="stat-enquiries">—</div><div class="stat-delta" id="stat-enquiries-delta">buyers reached out</div><div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div></div>
+        <div class="stat-card amber" style="cursor:pointer" onclick="showAllMessages()"><div class="stat-label">Unread messages</div><div class="stat-val" id="stat-new-enq">—</div><div class="stat-delta" id="stat-new-enq-delta">unread conversations</div><div class="stat-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div></div>
+        <div class="stat-card blue" style="cursor:pointer" onclick="showPage('payments')"><div class="stat-label">Total paid</div><div class="stat-val" id="stat-paid">—</div><div class="stat-delta" id="stat-paid-delta">listing fees</div><div class="stat-icon"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div></div>
+        <div class="stat-card purple" style="cursor:pointer" onclick="showPage('listings')"><div class="stat-label">Total views</div><div class="stat-val" id="stat-views">—</div><div class="stat-delta" id="stat-views-delta">across all listings</div><div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div></div>
       </div>
       <div class="card" id="week-momentum-card" style="display:none;padding:14px 20px;margin-bottom:20px;background:var(--green-light);border:1px solid var(--green)"></div>
       <div class="card" id="smart-insight-card" style="display:none;padding:14px 20px;margin-bottom:20px;background:var(--gold-light);border:1px solid var(--gold)"></div>
@@ -1788,7 +1797,7 @@
           <button class="btn btn-outline btn-sm" onclick="exportSellerPaymentsCSV()">⬇️ CSV</button>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px" id="payment-summary"></div>
+      <div id="payment-summary"></div>
       <div class="card" style="overflow:hidden">
         <table class="payments-table">
           <thead><tr><th>Date</th><th>Listing</th><th>Reference</th><th>Amount</th><th>Status</th><th>Receipt</th></tr></thead>
@@ -1833,7 +1842,7 @@
         </div>
         <h3 style="font-size:16px;margin-bottom:8px">Rent Ledger is an Elite feature</h3>
         <p style="font-size:13px;color:var(--text-3);max-width:380px;margin:0 auto 18px;line-height:1.6">A full rent roll for units you manage long-term: automatic overdue detection, lease expiry alerts, tenant history, and downloadable reports.</p>
-        <a href="/plans" class="btn btn-primary" style="background:#7c3aed;text-decoration:none">Upgrade to Elite</a>
+        <button class="btn btn-primary" style="background:#7c3aed" onclick="joinEliteWaitlist()">Notify me when Elite opens</button>
       </div>
       <div id="rent-ledger-content" style="display:none">
         <div id="rl-lease-alerts" class="rl-lease-alert" style="display:none"></div>
@@ -3119,12 +3128,12 @@ async function init(){
 
     scwLoaded=true;
     scwInit();
-    try{ Tour.maybeStart(); }catch(tourErr){ console.error('Tour error (non-fatal):',tourErr); }
+    try{ tourOffer(); }catch(tourErr){ console.error('Tour error (non-fatal):',tourErr); }
   }catch(err){
     if(err && err.message==='account_deleted') return; // handleDeletedAccount() is already redirecting
     console.error('Init error:',err);
     document.getElementById('loading-screen').innerHTML =
-      '<p style="color:white;max-width:320px;text-align:center">Something went wrong loading your dashboard. Please refresh the page.<br><span style="opacity:.6;font-size:11px">'+escHtml(err.message||String(err))+'</span></p>';
+      '<p style="color:white;max-width:320px;text-align:center">Something went wrong loading your dashboard.<br><span style="opacity:.6;font-size:11px">'+escHtml(err.message||String(err))+'</span></p><div style="display:flex;gap:10px"><button class="btn btn-primary" onclick="location.reload()">Try again</button><button class="btn btn-outline" style="color:white;border-color:rgba(255,255,255,.4)" onclick="doSignOut()">Sign out</button></div>';
   }
 }
 
@@ -3682,7 +3691,7 @@ async function inviteTeamMember(){
 }
 
 async function removeTeamMember(id){
-  if(!confirm('Remove this teammate?'))return;
+  if(!await lcConfirm({title:'Remove teammate?',message:'They will lose access immediately.',confirmLabel:'Remove',danger:true}))return;
   const{error}=await db.from('team_members').delete().eq('id',id);
   if(error){showToast('Could not remove: '+error.message,'error');return;}
   showToast('Removed','success');
@@ -5513,9 +5522,9 @@ async function moveOutTenant(){
   loadRentalUnits();
 }
 
-function openDeleteRentalUnitFlow(id){
+async function openDeleteRentalUnitFlow(id){
   const label=(rentalUnitsCache.find(u=>String(u.id)===String(id))||{}).unit_label||'this unit';
-  if(!confirm(`Delete rental unit "${label}"? This removes its tenant and payment history too.`))return;
+  if(!await lcConfirm({title:'Delete rental unit?',message:`<strong>${escHtml(label)}</strong> and its tenant and payment history will be removed.`,confirmLabel:'Delete',danger:true}))return;
   deleteRentalUnit(id);
 }
 async function deleteRentalUnit(id){
@@ -10282,11 +10291,11 @@ function closeModal(id){document.getElementById(id).classList.remove('open');doc
   const observer=new MutationObserver(()=>scwSyncOverlayVisibility());
   watchTargets.filter(Boolean).forEach(el=>observer.observe(el,{attributes:true,attributeFilter:['class','style']}));
 })();
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(typeof lcConfirmResolver!=='undefined'&&lcConfirmResolver){lcConfirmResolve(false);return;}document.querySelectorAll('.modal-overlay.open').forEach(m=>{m.classList.remove('open');document.body.style.overflow='';});scwSyncOverlayVisibility();}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(typeof lcConfirmResolver!=='undefined'&&lcConfirmResolver){lcConfirmResolve(false);return;}const open=document.querySelectorAll('.modal-overlay.open');if(open.length)closeModal(open[open.length-1].id);}});
 document.querySelectorAll('.modal-overlay').forEach(ov=>ov.addEventListener('click',e=>{if(e.target===ov)closeModal(ov.id);}));
 async function doSignOut(){clearInterval(msgPollTimer);clearInterval(listingStatusPollTimer);clearInterval(notifPollTimer);document.removeEventListener('visibilitychange',handleVisibilityChange);if(messagesChannel){messagesChannel.unsubscribe();messagesChannel=null;}if(notifBellChannel){notifBellChannel.unsubscribe();notifBellChannel=null;}dashLeaveAllPresence();scwCleanup();await db.auth.signOut();window.location.href='/login';}
 let toastTimer;
-function showToast(msg,type='success'){const t=document.getElementById('toast'),m=document.getElementById('toast-msg');clearTimeout(toastTimer);t.className='toast '+type;m.textContent=msg;t.classList.add('show');toastTimer=setTimeout(()=>t.classList.remove('show'),3500);}
+function showToast(msg,type='success'){const t=document.getElementById('toast'),m=document.getElementById('toast-msg');clearTimeout(toastTimer);t.className='toast '+type;m.textContent=msg;t.classList.add('show');toastTimer=setTimeout(()=>t.classList.remove('show'),type==='error'?7000:3500);}
 function timeAgo(iso){if(!iso)return'';const d=(Date.now()-new Date(iso))/1000;if(d<60)return'just now';if(d<3600)return`${Math.floor(d/60)}m ago`;if(d<86400)return`${Math.floor(d/3600)}h ago`;if(d<604800)return`${Math.floor(d/86400)}d ago`;return new Date(iso).toLocaleDateString('en-KE',{day:'numeric',month:'short'});}
 function fmtKES(n,suffix=''){return `KES ${Number(n||0).toLocaleString('en-KE')}${suffix}`;}
 function escHtml(s){if(s===null||s===undefined||s==='')return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -10475,7 +10484,7 @@ const SCW_TOPICS=[
 const SCW_TREE={
   payments:[
     {label:'My listing still shows trial/pending after paying',a:'Confirmed M-Pesa payments usually reflect within 2–5 minutes. If it\'s been longer, share your M-Pesa reference code and we\'ll trace it.'},
-    {label:'How do I pay for a listing?',a:'Go to <strong>My listings</strong>, open a listing that\'s on a free trial, and tap <strong>Upgrade now</strong> on the trial banner — it opens an M-Pesa prompt on your phone.'},
+    {label:'How do I pay for a listing?',a:'Go to <strong>My listings</strong> and tap <strong>Pay now</strong> on an approved listing. Pay via M-Pesa to Paybill 522522 (account 1298476615), then enter the 10-character M-Pesa code. We verify it within minutes.'},
     {label:'I was charged twice',handoff:true},
     {label:'Something else about payments',handoff:true},
   ],
@@ -10498,7 +10507,7 @@ const SCW_TREE={
     {label:'Something else about pricing',handoff:true},
   ],
   messages:[
-    {label:"A buyer's message isn't showing up",a:'New messages sync automatically every 30 seconds. If it\'s still missing after that, share the buyer\'s name and listing.'},
+    {label:"A buyer's message isn't showing up",a:'New messages appear instantly. If one is missing, refresh the page, and if it\'s still missing, share the buyer\'s name and listing.'},
     {label:'How do I reply to a buyer?',a:'Open <strong>Messages</strong> on the main dashboard, pick the conversation, and type in the reply box — or tap WhatsApp on that thread.'},
     {label:'Something else about messages',handoff:true},
   ],
@@ -11532,6 +11541,22 @@ const RLTour = (() => {
 
   return { maybeStart, next, back, skip, restart };
 })();
+async function joinEliteWaitlist(){
+  try{localStorage.setItem('ny_elite_waitlist_'+currentUser.id,'1');}catch(e){}
+  notifyAdmin('elite_waitlist',{sellerName:currentProfile?.full_name||currentUser?.email,sellerEmail:currentUser?.email});
+  showToast("You're on the list — we'll notify you here and by email when Elite opens.",'success');
+}
+function tourOffer(){
+  const key=`ny_tour_v4_seen_${currentUser.id}`;
+  if(localStorage.getItem(key)||document.getElementById('tour-offer'))return;
+  const d=document.createElement('div');
+  d.id='tour-offer';
+  d.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(88px + env(safe-area-inset-bottom));z-index:395;background:var(--white);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow-lg);padding:14px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;max-width:calc(100vw - 24px)';
+  d.innerHTML='<span style="font-size:13px;font-weight:600">👋 New here? Take a quick tour.</span><button class="btn btn-primary btn-sm" id="tour-offer-yes">Start tour</button><button class="btn btn-outline btn-sm" id="tour-offer-no">Not now</button>';
+  document.body.appendChild(d);
+  d.querySelector('#tour-offer-yes').onclick=()=>{d.remove();Tour.restart();};
+  d.querySelector('#tour-offer-no').onclick=()=>{d.remove();localStorage.setItem(key,'1');};
+}
 window.addEventListener('popstate',()=>{const n=location.hash.slice(1);if(n&&document.getElementById('page-'+n)){window.__navFromHash=true;showPage(n);window.__navFromHash=false;}});
 init();
 </script>
