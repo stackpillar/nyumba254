@@ -726,7 +726,7 @@ function applyDraft(d){
   renderAmenities();renderTiers();S.pin=d.pin||null;if(S.pin){setPin(S.pin.lat,S.pin.lng,15)}
   $('desc-count').textContent=`${val('description').length} / 30 minimum`;
   loadPhotosDB().then(rec=>{if(!rec||!rec.items.length)return;S.photos=rec.items.map(i=>{const f=new File([i.blob],i.name,{type:'image/jpeg'});return {file:f,url:URL.createObjectURL(f),uploadedUrl:i.uploadedUrl||undefined}});S.cover=Math.min(rec.cover||0,S.photos.length-1);renderPhotos()});
-const n=Math.min(Math.max(d.step||1,1),4);S.max=n;show(n,false);history.replaceState({step:n},'');
+const n=Math.min(Math.max(d.step||1,1),5);S.max=n;show(n,false);history.replaceState({step:n},'');
 }
 
 /* ═══ SUBMIT ═══ */

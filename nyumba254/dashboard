@@ -18,7 +18,7 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --green:#0F6E56;--green-light:#E1F5EE;--green-mid:#1D9E75;--green-dark:#085041;
-      --gold:#BA7517;--gold-light:#FAEEDA;--text:#1a1a18;--text-2:#4a4a46;--text-3:#888780;
+      --gold:#BA7517;--gold-light:#FAEEDA;--text:#1a1a18;--text-2:#4a4a46;--text-3:#6b6a64;--border:#e0ded8
       --border:#e0ded8;--surface:#f7f6f2;--white:#ffffff;--red:#c0392b;--red-light:#fdecea;
       --amber:#d97706;--amber-light:#fef3c7;--purple:#7c3aed;--sidebar-w:240px;--topbar-h:64px;
       --radius:10px;--radius-lg:16px;--shadow:0 1px 3px rgba(0,0,0,0.07),0 4px 12px rgba(0,0,0,0.05);
@@ -1397,6 +1397,16 @@
     .lc-loadmore{display:flex;justify-content:center;padding:16px 0 4px}
     .lc-loadmore button{font-size:12.5px;font-weight:700;border:1.5px solid var(--border);background:var(--white);color:var(--text-2);border-radius:22px;padding:9px 20px;cursor:pointer}
     .lc-loadmore button:hover{border-color:var(--green);color:var(--green)}
+    [data-theme="dark"] .icon-btn,[data-theme="dark"] .filter-pill,[data-theme="dark"] .filter-search,
+    [data-theme="dark"] .rl-tab,[data-theme="dark"] .rl-kanban-card,[data-theme="dark"] .notif-cat-tab,
+    [data-theme="dark"] .qr-chip-off,[data-theme="dark"] .lc-select-toggle,[data-theme="dark"] .scw-topic-btn,
+    [data-theme="dark"] .scw-option-btn,[data-theme="dark"] .scw-search-input,[data-theme="dark"] .scw-back-btn{background:var(--white);color:var(--text-2)}
+    [data-theme="dark"] .chat-pane{background:var(--surface)}
+    [data-theme="dark"] .thread-list-head{background:var(--white)}
+    [data-theme="dark"] .listings-table tr:hover td{background:var(--surface)}
+    [data-theme="dark"] .chat-date-divider span{background:var(--border)}
+    [data-theme="dark"] .rl-toolbar input[type=text],[data-theme="dark"] .scw-input-bar textarea:focus{background:var(--white)}
+    @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
   </style>
 <link rel="manifest" href="/manifest.webmanifest"><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script></head>
 <body>
@@ -1608,6 +1618,7 @@
           </div>
         </div>
       </div>
+      <div class="card" id="action-center-card" style="display:none;padding:16px 20px;margin-bottom:20px;border:1.5px solid var(--amber);background:var(--amber-light)"></div>
       <div class="stat-grid">
         <div class="stat-card"><div class="stat-label">Active listings</div><div class="stat-val" id="stat-active">—</div><div class="stat-delta" id="stat-active-delta">of your total listings</div><div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div></div>
         <div class="stat-card gold"><div class="stat-label">Total enquiries</div><div class="stat-val" id="stat-enquiries">—</div><div class="stat-delta" id="stat-enquiries-delta">buyers reached out</div><div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div></div>
@@ -1663,8 +1674,7 @@
               <button type="button" class="lc-search-clear" onclick="lcClearSearch()" aria-label="Clear search">✕</button>
             </div>
             <button type="button" class="lc-select-toggle" id="lc-select-toggle-btn" onclick="toggleBulkSelectMode()" aria-pressed="false" title="Select several listings at once">☑ Select</button>
-            <button type="button" class="lc-select-toggle" id="lc-more-tools-btn" onclick="toggleMoreTools(this)" aria-expanded="false" title="More tools: filters, sorting, view options">⚙ More tools</button>
-            <span id="lc-more-tools-group" style="display:none;gap:8px;align-items:center;flex-wrap:wrap">
+            <span id="lc-more-tools-group" style="display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap">
               <button type="button" class="lc-select-toggle" id="lc-filters-btn" onclick="openAttrFilters(this)" aria-haspopup="dialog" title="Filter by price, bedrooms and features">⛃ Filters</button>
               <button type="button" class="lc-select-toggle" id="lc-view-btn" onclick="openViewMenu(this)" aria-haspopup="menu" title="Sort, layout, density and export options">⚙ View</button>
               <button type="button" class="lc-kbd-hint" onclick="lcShowShortcuts()" title="Keyboard shortcuts"><kbd>⌘K</kbd> shortcuts</button>
@@ -1939,7 +1949,7 @@
     <!-- SETTINGS -->
     <div class="page" id="page-settings">
       <div class="section-head" style="margin-bottom:12px"><h2>Account settings</h2></div>
-      <div id="settings-quicknav" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;position:sticky;top:0;background:var(--surface);padding:8px 0;z-index:10">
+      <div id="settings-quicknav" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;position:sticky;top:var(--topbar-h);background:var(--surface);padding:8px 0;z-index:10">
         <button type="button" class="filter-pill" onclick="settingsJumpTo('settings-profile-anchor')">👤 Profile</button>
         <button type="button" class="filter-pill" onclick="settingsJumpTo('verification-settings-section')">🛡️ Verification</button>
         <button type="button" class="filter-pill" onclick="settingsJumpTo('settings-contact-privacy-section')">🔒 Privacy</button>
@@ -3066,8 +3076,8 @@ async function init(){
     currentUser=session.user;
     document.getElementById('topbar-date').textContent=new Date().toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
     await resolveEffectiveSeller();
-    await loadPlatformVerifySettings();
-    await loadProfile();
+    await Promise.all([loadPlatformVerifySettings(), loadProfile()]);
+    updateVerifyWarningBanner();
     if(currentProfile?.role==='admin'){
       document.getElementById('loading-screen').style.display='none';
       document.getElementById('admin-blocked-screen').style.display='flex';
@@ -3099,7 +3109,7 @@ async function init(){
       setTimeout(()=>openKycModal(),400);
       history.replaceState(null,'',location.pathname);
     }
-    const lastPage=sessionStorage.getItem('ny_last_page');
+    const lastPage=location.hash.slice(1)||sessionStorage.getItem('ny_last_page');
     if(lastPage&&lastPage!=='overview'&&document.getElementById('page-'+lastPage)){showPage(lastPage);}
     retryQueuedNotifications(); // flush any emails that failed to send last session
     msgPollTimer=setInterval(pollNewMessages,MSG_POLL_MS);
@@ -3180,7 +3190,7 @@ async function init(){
     // Only listing-related notifications navigate — straight to that listing.
     // Everything else just marks read and stays put.
     if (n && LISTING_NOTIF_TYPES.has(n.type) && n.link && n.link !== '#') {
-      window.location.href = n.link;
+      { const s = safeInternalLink(n.link); if (s) window.location.href = s; }
     }
   }
   async function markAllNotifsRead() {
@@ -3432,7 +3442,7 @@ async function init(){
     document.getElementById('notif-card-' + id)?.classList.add('notif-card-highlight');
     // Only listing-related notifications navigate, straight to the listing.
     if (n && LISTING_NOTIF_TYPES.has(n.type) && n.link) {
-      window.location.href = n.link;
+      { const s = safeInternalLink(n.link); if (s) window.location.href = s; }
     }
   }
 
@@ -3462,6 +3472,18 @@ async function updateOwnerProfile(patch){
     if(!isTeamMember) currentProfile=ownerProfile;
   }
   return error;
+}
+
+async function compressImage(file,maxDim=1600,quality=0.82){
+  if(!file.type.startsWith('image/')||file.size<400*1024)return file;
+  try{
+    const bmp=await createImageBitmap(file,{imageOrientation:'from-image'});
+    const s=Math.min(1,maxDim/Math.max(bmp.width,bmp.height));
+    const c=document.createElement('canvas');c.width=Math.round(bmp.width*s);c.height=Math.round(bmp.height*s);
+    c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);
+    const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',quality));
+    return blob&&blob.size<file.size?new File([blob],file.name.replace(/\.\w+$/,'')+'.jpg',{type:'image/jpeg'}):file;
+  }catch(e){return file;}
 }
 
 // If the profile row is gone (e.g. the account was deleted from another
@@ -4005,8 +4027,8 @@ function exportBnbBookingsCSV(){
     const balance=(Number(b.total_amount)||0)-(Number(b.amount_paid)||0);
     rows.push([b._property,b.guest_name,b.guest_phone||'',b.guest_email||'',b.check_in,b.check_out,nights,b.source,Number(b.total_amount)||0,Number(b.amount_paid)||0,balance,b.payment_status,b.cleaning_status||'pending']);
   });
-  const csv=rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
-  rlDownloadBlob(`Nyumba254-BNB-Bookings-${new Date().toISOString().slice(0,10)}.csv`,csv,'text/csv');
+  const csv=rows.map(r=>r.map(v=>csvCell(v)).join(',')).join('\n');
+  rlDownloadBlob(`Nyumba254-BNB-Bookings-${localDateKey()}.csv`,csv,'text/csv');
   showToast('CSV exported ✓','success');
 }
 
@@ -4202,7 +4224,7 @@ function renderBnbProperties(){
             ?`<button class="btn btn-primary btn-sm" style="background:#7c3aed" onclick="openRenewBnbPropertyModal('${p.id}')">🔄 Renew to reactivate</button>`
             :`<button class="btn btn-outline btn-sm" onclick="openBnbPublicBookingModal('${p.id}')">${p.is_publicly_bookable?'🌐 Public booking: ON':'🌐 Public booking'}</button>`}
           ${(p.is_publicly_bookable&&!expired)?`<a class="btn btn-outline btn-sm" href="https://book.nyumba254.com/property.html?id=${p.id}" target="_blank" rel="noopener">↗ View book page</a>`:''}
-          <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteBnbProperty('${p.id}','${escAttr(p.property_label)}')">Delete</button>
+          <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteBnbProperty('${p.id}')">Delete</button>
         </div>
         ${(!p.listing_id && !(Array.isArray(p.photos)&&p.photos.length))?`<div style="margin-top:8px;font-size:11px;color:var(--red)">⚠️ No photos yet — add at least one before turning on public booking.</div>`:''}
       </div>
@@ -4266,7 +4288,7 @@ function renderBnbCalendar(){
   for(let i=0;i<90;i++){const d=new Date(start);d.setDate(d.getDate()+i);days.push(d);}
   const rows=bnbPropertiesCache.map(p=>{
     const cells=days.map(d=>{
-      const iso=d.toISOString().slice(0,10);
+      const iso=localDateKey(d);
       const booking=(p.bnb_bookings||[]).find(b=>b.status!=='cancelled'&&b.check_in<=iso&&iso<b.check_out);
       const color=booking?(booking.payment_status==='paid'?'#16a34a':booking.payment_status==='partial'?'var(--amber)':'var(--red)'):'var(--border)';
       const title=booking?`${escAttr(booking.guest_name)} (${booking.payment_status})`:'Available';
@@ -4285,7 +4307,7 @@ function renderBnbCalendar(){
 }
 
 // ── Analytics: revenue trend, ADR, occupancy rate, channel mix ──
-function bnbLast6Months(){const out=[];const d=new Date();d.setDate(1);for(let i=5;i>=0;i--){const m=new Date(d.getFullYear(),d.getMonth()-i,1);out.push(m.toISOString().slice(0,7));}return out;}
+function bnbLast6Months(){return lastNMonths(6);}
 function renderBnbAnalytics(){
   const wrap=document.getElementById('bnb-tab-analytics');
   if(!wrap)return;
@@ -4303,7 +4325,7 @@ function renderBnbAnalytics(){
   const totalRevenue=allBookings.reduce((s,b)=>s+(Number(b.amount_paid)||0),0);
   const adr=totalNights>0?Math.round(totalRevenue/totalNights):0;
 
-  const today=new Date().toISOString().slice(0,10);
+  const today=localDateKey();
   const last30Start=new Date(Date.now()-30*86400000).toISOString().slice(0,10);
   let bookedNightsLast30=0;
   bnbPropertiesCache.forEach(p=>{
@@ -4412,7 +4434,7 @@ function exportBnbGuestsCSV(){
   if(!bnbGuestsCache.length){showToast('No guests to export','error');return;}
   const rows=[['Guest','Phone','Email','Stays','Total spent (KES)','Last stay']];
   bnbGuestsCache.forEach(g=>rows.push([g.name,g.phone||'',g.email||'',g.stays,g.totalSpent,g.lastStay]));
-  const csv=rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const csv=rows.map(r=>r.map(v=>csvCell(v)).join(',')).join('\n');
   rlDownloadBlob(`Nyumba254-BNB-Guests-${new Date().toISOString().slice(0,10)}.csv`,csv,'text/csv');
   showToast('CSV exported ✓','success');
 }
@@ -4645,7 +4667,7 @@ async function saveBnbProperty(){
     btn.textContent='Uploading photos…';
     const urls=[...bpExistingPhotos];
     for(let i=0;i<bpPendingPhotos.length;i++){
-      const file=bpPendingPhotos[i].file;
+      const file=await compressImage(bpPendingPhotos[i].file);
       const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
       const path=`${effectiveSellerId}/${row.id}/${Date.now()}_${i}.${ext}`;
       const{error:upErr}=await db.storage.from(BNB_PROPERTY_PHOTOS_BUCKET).upload(path,file);
@@ -4716,7 +4738,8 @@ async function saveBnbPublicBooking(){
   showToast(isBookable?'Public booking turned ON ✓ — live at book.nyumba254.com':'Public booking turned off','success');
   loadBnbLedger();
 }
-async function deleteBnbProperty(id,label){
+async function deleteBnbProperty(id){
+  const label=(bnbPropertiesCache.find(p=>String(p.id)===String(id))||{}).property_label||'this property';
   if(!confirm(`Delete "${label}"? This also removes its booking history.`))return;
   const{error}=await db.from('bnb_properties').delete().eq('id',id);
   if(error){showToast('Could not delete: '+error.message,'error');return;}
@@ -4724,6 +4747,25 @@ async function deleteBnbProperty(id,label){
   loadBnbLedger();
 }
 
+function renderActionCenter(){
+  const el=document.getElementById('action-center-card');if(!el)return;
+  lcBuildStats();
+  const items=[];
+  const plural=(n,w)=>`${n} ${w}${n!==1?'s':''}`;
+  const unread=threads.reduce((s,t)=>s+(t.unread_count||0),0);
+  if(unread)items.push({icon:'💬',text:`${plural(unread,'unread message')}`,go:"showAllMessages()"});
+  const unpaid=allListings.filter(lcIsUnpaid).length;
+  if(unpaid)items.push({icon:'💳',text:`${plural(unpaid,'listing')} awaiting payment`,go:"showPage('listings');filterListings('unpaid')"});
+  const noPhoto=allListings.filter(l=>lcPhotoCount(l)<=1&&!lcHasIssue(l)).length;
+  if(noPhoto)items.push({icon:'📷',text:`${plural(noPhoto,'listing')} missing photos`,go:"showPage('listings');filterListings('view:nophotos')"});
+  const stale=allListings.filter(l=>lcMatchesFilter(l,'view:stale')).length;
+  if(stale)items.push({icon:'🕸️',text:`${plural(stale,'listing')} going stale`,go:"showPage('listings');filterListings('view:stale')"});
+  const reviews=allReviews.filter(r=>!r.response_text).length;
+  if(reviews)items.push({icon:'⭐',text:`${plural(reviews,'review')} awaiting your response`,go:"showPage('reviews')"});
+  if(!items.length){el.style.display='none';return;}
+  el.style.display='block';
+  el.innerHTML=`<div style="font-weight:700;font-size:13.5px;margin-bottom:10px;color:var(--amber)">⚡ Needs you today</div><div style="display:flex;flex-wrap:wrap;gap:8px">${items.map(i=>`<button type="button" class="btn btn-outline btn-sm" style="background:var(--white)" onclick="${i.go}">${i.icon} ${i.text} →</button>`).join('')}</div>`;
+}
 function bnbPropertyIsExpired(p){
   if(!p.plan_expires_at)return false;
   return new Date(p.plan_expires_at) < new Date();
@@ -5128,16 +5170,11 @@ function rentAmountForMonth(tenant,monthKey){
   const p=(tenant.rent_payments||[]).find(rp=>rp.period_month && rp.period_month.slice(0,7)===monthKey);
   return p?Number(p.amount)||0:0;
 }
-function last6Months(){
-  const out=[];const d=new Date();d.setDate(1);
-  for(let i=5;i>=0;i--){const m=new Date(d.getFullYear(),d.getMonth()-i,1);out.push(m.toISOString().slice(0,7));}
-  return out;
-}
-function last12Months(){
-  const out=[];const d=new Date();d.setDate(1);
-  for(let i=11;i>=0;i--){const m=new Date(d.getFullYear(),d.getMonth()-i,1);out.push(m.toISOString().slice(0,7));}
-  return out;
-}
+function localMonthKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+function localDateKey(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function lastNMonths(n){const out=[];const d=new Date();for(let i=n-1;i>=0;i--){out.push(localMonthKey(new Date(d.getFullYear(),d.getMonth()-i,1)));}return out;}
+function last6Months(){return lastNMonths(6);}
+function last12Months(){return lastNMonths(12);}
 
 // Rent owed for a specific overdue month, including any configured late fee —
 // used everywhere "overdue amount" is shown so the number a seller sees
@@ -5248,7 +5285,7 @@ function renderRentalUnits(){
           ${tenant?`<button class="btn btn-outline btn-sm" onclick="openTenantDetailModal('${u.id}','${tenant.id}')">View history</button>`:''}
           ${tenant&&tenant.email?`<button class="btn btn-outline btn-sm" onclick="sendStagedReminder('${u.id}','${tenant.id}')">🔔 Remind tenant</button>`:''}
           <button class="btn btn-outline btn-sm" onclick="openEscalationModal('${u.id}')">📈 Escalation</button>
-          <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="openDeleteRentalUnitFlow('${u.id}','${escAttr(u.unit_label)}')">Delete</button>
+          <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="openDeleteRentalUnitFlow('${u.id}')">Delete</button>
         </div>
       </div>
       ${(()=>{const esc=rlNextEscalationInfo(u);return esc?`<div style="margin-top:8px"><span class="rl-badge-pill escalation">📈 +${u.escalation_percent}% in ${esc.daysLeft<0?'overdue':esc.daysLeft+'d'} → KES ${esc.newRent.toLocaleString('en-KE')}${esc.daysLeft<=0?` <button class="btn btn-outline btn-sm" style="margin-left:6px;padding:2px 8px" onclick="applyEscalationNow('${u.id}')">Apply now</button>`:''}</span></div>`:'';})()}
@@ -5476,7 +5513,8 @@ async function moveOutTenant(){
   loadRentalUnits();
 }
 
-function openDeleteRentalUnitFlow(id,label){
+function openDeleteRentalUnitFlow(id){
+  const label=(rentalUnitsCache.find(u=>String(u.id)===String(id))||{}).unit_label||'this unit';
   if(!confirm(`Delete rental unit "${label}"? This removes its tenant and payment history too.`))return;
   deleteRentalUnit(id);
 }
@@ -5501,7 +5539,7 @@ async function sendRentReminder(unitId,tenantId){
 
 // ── Exports — CSV (raw data) + PDF (formatted rent-roll report) ──
 function rlDownloadBlob(filename,content,mime){
-  const blob=new Blob([content],{type:mime});
+  const blob=new Blob([mime==='text/csv'?'\uFEFF'+content:content],{type:mime});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -5514,7 +5552,7 @@ function exportRentLedgerCSV(){
     const t=rlActiveTenant(u);
     rows.push([u.unit_label,t?t.full_name:'(vacant)',u.monthly_rent,...months.map(m=>t?rentStatusForMonth(t,m):'—')]);
   });
-  const csv=rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const csv=rows.map(r=>r.map(v=>csvCell(v)).join(',')).join('\n');
   rlDownloadBlob(`Nyumba254-Rent-Ledger-${currentMonthKey()}.csv`,csv,'text/csv');
   showToast('CSV exported ✓','success');
 }
@@ -6088,7 +6126,7 @@ function renderBnbDemandTip(){
 }
 
 function diDownloadBlob(filename,content,mime){
-  const blob=new Blob([content],{type:mime});
+  const blob=new Blob([mime==='text/csv'?'\uFEFF'+content:content],{type:mime});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -6101,7 +6139,7 @@ function exportDemandCSV(){
     const supply=d.supplyCounts[area]||0;
     rows.push([area,count,supply,supply>0?(count/supply).toFixed(2):count]);
   });
-  const csv=rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const csv=rows.map(r=>r.map(v=>csvCell(v)).join(',')).join('\n');
   diDownloadBlob(`Nyumba254-Demand-Insights-${d.rangeDays}d.csv`,csv,'text/csv');
   showToast('CSV exported ✓','success');
 }
@@ -6784,13 +6822,17 @@ async function pollNewMessages(){
 }
 
 function updateNavBadges(){
-  document.getElementById('nav-badge-listings').textContent=allListings.length;
+  lcBuildStats();
+  const attnCount=allListings.filter(lcNeedsAttention).length;
+  const lb=document.getElementById('nav-badge-listings');
+  lb.textContent=attnCount;lb.style.display=attnCount?'inline-block':'none';lb.classList.add('red');
   const totalUnread=threads.reduce((s,t)=>s+(t.unread_count||0),0);
   const msgBadge=document.getElementById('nav-badge-messages');msgBadge.textContent=totalUnread;msgBadge.style.display=totalUnread>0?'inline-block':'none';
   const enqBadge=document.getElementById('nav-badge-enquiries');enqBadge.textContent=totalUnread;enqBadge.style.display=totalUnread>0?'inline-block':'none';
   const unrespondedReviews=allReviews.filter(r=>!r.response_text).length;
   const revBadge=document.getElementById('nav-badge-reviews');
   if(revBadge){revBadge.textContent=unrespondedReviews;revBadge.style.display=unrespondedReviews>0?'inline-block':'none';}
+  document.title=(totalUnread>0?`(${totalUnread}) `:'')+'Dashboard — Nyumba254';
   updateMarkAllBtn();
 }
 
@@ -6850,13 +6892,13 @@ function renderOverview(){
   document.getElementById('stat-views').textContent=views.toLocaleString('en-KE');
   const avgViewsPerListing=allListings.length?Math.round(views/allListings.length):0;
   document.getElementById('stat-views-delta').textContent=`~${avgViewsPerListing} views per listing`;
-  renderActivityFeed();renderChart();renderQuickListings();loadDemandMatches();renderPerformanceSummary();renderGettingStarted();renderWeekMomentum();renderSmartInsight();
+  renderActivityFeed();renderChart();renderQuickListings();loadDemandMatches();renderPerformanceSummary();renderGettingStarted();renderWeekMomentum();renderSmartInsight();renderActionCenter();
 }
 
 function renderActivityFeed(){
   const items=[];
   threads.slice(0,6).forEach(t=>{const lb=[...t.messages].reverse().find(m=>m.sender==='buyer');if(!lb)return;const isFirstContact=String(lb.id).startsWith('enq-');items.push({type:isFirstContact?'enquiry':'message',time:lb.created_at,html:isFirstContact?`<strong>${escHtml(t.buyer_name)}</strong> enquired about <strong>${escHtml(t.listing_title)}</strong>`:`<strong>${escHtml(t.buyer_name)}</strong> sent a message about <strong>${escHtml(t.listing_title)}</strong>`,action:()=>{showAllMessages();openThread(t.key);}});});
-  allListings.slice(0,3).forEach(l=>items.push({type:'listing',time:l.created_at,html:`You posted <strong>${escHtml(l.title)}</strong> in ${l.area}`,action:()=>showPage('listings')}));
+  allListings.slice(0,3).forEach(l=>items.push({type:'listing',time:l.created_at,html:`You posted <strong>${escHtml(l.title)}</strong> in ${escHtml(l.area)}`,action:()=>showPage('listings')}));
   allPayments.slice(0,2).forEach(p=>items.push({type:'payment',time:p.created_at,html:`Payment of <strong>KES ${Number(p.amount||0).toLocaleString('en-KE')}</strong> recorded`,action:()=>showPage('payments')}));
   items.sort((a,b)=>new Date(b.time)-new Date(a.time));
   const icons={enquiry:`<svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/></svg>`,message:`<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>`,listing:`<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>`,payment:`<svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>`};
@@ -6965,7 +7007,7 @@ function renderPerformanceSummary(){
 function renderQuickListings(){
   const el=document.getElementById('quick-listings');
   if(!allListings.length){el.innerHTML=`<div style="text-align:center;padding:20px 0;color:var(--text-3);font-size:13px">No listings yet. <a href="/post-listing" style="color:var(--green);font-weight:500">Post one →</a></div>`;return;}
-  el.innerHTML=allListings.slice(0,5).map(l=>{const cover=(l.listing_photos||[]).find(p=>p.is_cover)||(l.listing_photos||[])[0];const img=cover?`<img src="${cover.url}" alt=""/>`:`<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;const d=getListingStatusDisplay(l);const trialDays=getTrialDaysLeft(l);const trialTxt=trialDays!==null?` · Trial: ${trialDays}d left`:'';const hasUnitTypes=(l.listing_units&&l.listing_units.length>0);const priceTxt=hasUnitTypes?muPriceRangeText(l):`KES ${Number(l.price).toLocaleString('en-KE')}${NK_DASH_FREQ_SUFFIX[l.price_frequency||(l.price_type==='rent'?'month':'once')]||''}`;return `<div class="quick-listing"><div class="quick-img">${img}</div><div style="flex:1;min-width:0"><div class="quick-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(l.title)}</div><div class="quick-meta" style="${l.is_disabled?'color:var(--red)':''}">${l.area} · ${d.label}${trialTxt}</div></div><div class="quick-price">${priceTxt}</div></div>`;}).join('');
+  el.innerHTML=allListings.slice(0,5).map(l=>{const cover=(l.listing_photos||[]).find(p=>p.is_cover)||(l.listing_photos||[])[0];const img=cover?`<img src="${escAttr(cover.url)}" alt=""/>`:`<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;const d=getListingStatusDisplay(l);const trialDays=getTrialDaysLeft(l);const trialTxt=trialDays!==null?` · Trial: ${trialDays}d left`:'';const hasUnitTypes=(l.listing_units&&l.listing_units.length>0);const priceTxt=hasUnitTypes?muPriceRangeText(l):`KES ${Number(l.price).toLocaleString('en-KE')}${NK_DASH_FREQ_SUFFIX[l.price_frequency||(l.price_type==='rent'?'month':'once')]||''}`;return `<div class="quick-listing"><div class="quick-img">${img}</div><div style="flex:1;min-width:0"><div class="quick-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(l.title)}</div><div class="quick-meta" style="${l.is_disabled?'color:var(--red)':''}">${escHtml(l.area)} · ${d.label}${trialTxt}</div></div><div class="quick-price">${priceTxt}</div></div>`;}).join('');
 }
 
 function debounce(fn,ms){let t;return function(...args){clearTimeout(t);t=setTimeout(()=>fn.apply(this,args),ms);};}
@@ -7083,7 +7125,7 @@ async function handleEditPhotoUpload(fileList) {
   if (!l) return;
   l.listing_photos = l.listing_photos || [];
   for (let i = 0; i < files.length; i++) {
-    const file = files[i];
+    const file = await compressImage(files[i]);
     statusEl.textContent = `Uploading ${i+1}/${files.length}…`;
     const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
     const path = `${editPhotosListingId}/${Date.now()}_${i}.${ext}`;
@@ -7107,7 +7149,8 @@ async function deleteEditPhoto(photoId) {
   const photo = (l.listing_photos||[]).find(p=>p.id===photoId); if (!photo) return;
   if (!confirm('Delete this photo?')) return;
   const path = storagePathFromPublicUrl(photo.url);
-  if (path) await db.storage.from(LISTING_PHOTOS_BUCKET).remove([path]);
+  const { count: sharedCount } = await db.from('listing_photos').select('id',{count:'exact',head:true}).eq('url', photo.url).neq('id', photoId);
+if (path && !sharedCount) await db.storage.from(LISTING_PHOTOS_BUCKET).remove([path]);
   const { error } = await db.from('listing_photos').delete().eq('id', photoId);
   if (error) { showToast('Error deleting photo: '+error.message,'error'); return; }
   l.listing_photos = (l.listing_photos||[]).filter(p=>p.id!==photoId);
@@ -7164,7 +7207,7 @@ async function submitPayListing(){
   btn.disabled=false;btn.textContent='Submit for verification';
   if(error){showToast('Could not submit: '+error.message,'error');return;}
   const listingUpdate={payment_status:'pending_verification'};
-  if(plan==='featured')listingUpdate.is_featured=true;
+  // is_featured is now set by admin/server after the payment is verified
   await db.from('listings').update(listingUpdate).eq('id',payListingTargetId);
   if(l)l.payment_status='pending_verification';
   closeModal('modal-pay-listing');
@@ -7203,15 +7246,17 @@ async function reactivateListing(id){
   if(listingActionBusy.has(id))return;
   const l=allListings.find(l=>l.id===id);
   if(l&&l.is_disabled){showToast('Disabled by admin. Contact admin.','error');return;}
-  if(!confirm(`Resume "${l?.title||'this listing'}"? It won't go live immediately — it will be sent back to our team for a quick re-approval first, just like a new listing.`))return;
+  const wasPaused=l&&l.status==='paused';
+  const nextStatus=wasPaused?'active':'pending';
+  if(!confirm(wasPaused?`Resume "${l?.title||'this listing'}"? It will go live again immediately.`:`Resume "${l?.title||'this listing'}"? It will be sent back to our team for a quick re-approval first.`))return;
   listingActionBusy.add(id);
   try{
-    const{error}=await db.from('listings').update({status:'pending',occupied_at:null}).eq('id',id);
+    const{error}=await db.from('listings').update({status:nextStatus,occupied_at:null}).eq('id',id);
     if(error){showToast('Could not reactivate: '+error.message,'error');return;}
-    if(l){l.status='pending';l.occupied_at=null;}
+    if(l){l.status=nextStatus;l.occupied_at=null;}
     renderListingsTable();renderOverview();
-    showToast('Listing resubmitted for admin approval ✓','success');
-    if(l)notifyAdmin('listing_pending',{listingId:id,listingTitle:l.title,sellerName:currentProfile?.full_name||currentUser?.email,sellerEmail:currentUser?.email});
+    showToast(wasPaused?'Listing is live again ✓':'Listing resubmitted for admin approval ✓','success');
+    if(l&&!wasPaused)notifyAdmin('listing_pending',{listingId:id,listingTitle:l.title,sellerName:currentProfile?.full_name||currentUser?.email,sellerEmail:currentUser?.email});
   } finally {
     listingActionBusy.delete(id);
   }
@@ -9149,7 +9194,7 @@ function exportListingsCSV(selectedOnly){
     const s=lcS(l.id);
     out.push([lcNum(l),l.title,getListingStatusDisplay(l).label,l.area||'',l.sub_area||'',Number(l.price)||0,l.price_type||'',lcPhotoCount(l),l.views||0,s.msgs,s.unread,s.enquiries,s.unanswered,lcHealth(l).score,lcDaysLive(l),new Date(l.created_at).toLocaleDateString('en-KE'),lcListingUrl(l)]);
   });
-  const csv=out.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const csv=out.map(r=>r.map(v=>csvCell(v)).join(',')).join('\n');
   rlDownloadBlob(`Nyumba254-Listings-${new Date().toISOString().slice(0,10)}.csv`,csv,'text/csv');
   showToast('CSV exported ✓','success');
   closeActionMenu();
@@ -9207,7 +9252,7 @@ function renderManageUnitsModal(){
           <button class="btn btn-primary btn-sm" ${available<=0?'disabled':''} onclick="muToggleOccupyForm(${u.id})">Mark one occupied</button>
           <button class="btn btn-outline btn-sm" ${available>=total?'disabled':''} onclick="muMarkAvailable(${u.id})">Mark one available</button>
           <button class="btn btn-outline btn-sm" onclick="muOpenEditForm(${u.id})">Edit</button>
-          <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="muDeleteUnit(${u.id},'${escAttr(u.unit_label)}')">Delete</button>
+          <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="muDeleteUnit(${u.id})">Delete</button>
         </div>
         <div class="mu-occupy-form mu-edit-form" id="mu-edit-form-${u.id}">
           <div class="mu-occupy-grid">
@@ -9294,7 +9339,8 @@ async function muSaveEditedUnit(unitId,label,price,total){
   await openManageUnitsModal(muActiveListingId);
   renderListingsTable();renderQuickListings();
 }
-async function muDeleteUnit(unitId,label){
+async function muDeleteUnit(unitId){
+  const label=(muUnits.find(u=>u.id===unitId)||{}).unit_label||'this unit type';
   if(!await lcConfirm({title:'Delete unit type?',message:`Delete unit type <strong>${escHtml(label)}</strong>? This cannot be undone.`,confirmLabel:'Delete',danger:true}))return;
   const{error}=await db.from('listing_units').delete().eq('id',unitId);
   if(error){showToast('Could not delete: '+error.message,'error');return;}
@@ -9653,7 +9699,7 @@ function renderThreadList(){
   document.getElementById('msg-thread-count').textContent=`${filtered.length} conversation${filtered.length!==1?'s':''}`;
   const el=document.getElementById('thread-items');
   if(!filtered.length){el.innerHTML=`<div style="padding:40px 20px;text-align:center;color:var(--text-3);font-size:13px">${q||threadListingFilter?'No matching conversations.':'No messages yet. When buyers contact you, conversations appear here.'}</div>`;return;}
-  el.innerHTML=filtered.map(t=>{const lm=t.messages[t.messages.length-1];const prev=lm?(lm.sender==='seller'?'You: ':'')+(lm.content||lm.message||''):'';const ini=t.buyer_name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()||'?';const isA=activeThread&&activeThread.key===t.key;const isU=(t.unread_count||0)>0;return `<div class="thread-item${isA?' active':''}${isU?' unread':''}" onclick="openThread('${t.key}')" role="button" tabindex="0" aria-label="Conversation with ${escAttr(t.buyer_name)}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><div class="thread-avatar">${ini}</div><div class="thread-meta"><div class="thread-name">${escHtml(t.buyer_name)}</div><div class="thread-listing-ref">${escHtml(t.listing_title)}${t.listing_area?' · '+t.listing_area:''}</div><div class="thread-preview">${escHtml(prev)}</div></div><div class="thread-time">${timeAgo(t.last_at)}</div></div>`;}).join('');
+  el.innerHTML=filtered.map(t=>{const lm=t.messages[t.messages.length-1];const prev=lm?(lm.sender==='seller'?'You: ':'')+(lm.content||lm.message||''):'';const ini=t.buyer_name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()||'?';const isA=activeThread&&activeThread.key===t.key;const isU=(t.unread_count||0)>0;return `<div class="thread-item${isA?' active':''}${isU?' unread':''}" onclick="openThread('${t.key}')" role="button" tabindex="0" aria-label="Conversation with ${escAttr(t.buyer_name)}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><div class="thread-avatar">${ini}</div><div class="thread-meta"><div class="thread-name">${escHtml(t.buyer_name)}</div><div class="thread-listing-ref">${escHtml(t.listing_title)}${t.listing_area?' · '+escHtml(t.listing_area):''}</div><div class="thread-preview">${escHtml(prev)}</div></div><div class="thread-time">${timeAgo(t.last_at)}</div></div>`;}).join('');
 }
 
 /* ── Presence: seller online across the WHOLE dashboard, not just an open
@@ -9756,8 +9802,8 @@ function renderChatPane(t){
   const waLink=t.buyer_phone?`<a href="https://wa.me/${formatWaPhone(t.buyer_phone)}" target="_blank" class="btn btn-sm" style="background:#25D366;color:white;text-decoration:none">WhatsApp</a>`:'';
   const listing=allListings.find(l=>l.id===t.listing_id);
   const liveLink=listing?`<a href="/listing?id=${String(listing.listing_number).padStart(6,'0')}" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none">View listing</a>`:'';
-  document.getElementById('chat-header').innerHTML=`<button class="mobile-back-btn" onclick="showThreadListMobile()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="chat-header-avatar">${ini}</div><div class="chat-header-info"><div class="chat-header-name">${escHtml(t.buyer_name)}</div><div class="chat-header-sub" title="${escAttr(t.listing_title)}">${t.buyer_phone||'No phone'} · Re: ${escHtml(truncateWords(t.listing_title,6))}</div><div style="font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:5px;margin-top:2px"><span id="chat-presence-dot" style="width:6px;height:6px;border-radius:50%;background:#9a9a94;flex-shrink:0"></span><span id="chat-presence-text">Buyer offline</span></div></div><div class="chat-header-actions">${waLink}${liveLink}</div>`;
-  document.getElementById('chat-wa-hint').innerHTML=t.buyer_phone?'Replies also sent via WhatsApp if number is available.':'Buyer will see your reply when they revisit the listing.';
+  document.getElementById('chat-header').innerHTML=`<button class="mobile-back-btn" onclick="showThreadListMobile()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="chat-header-avatar">${ini}</div><div class="chat-header-info"><div class="chat-header-name">${escHtml(t.buyer_name)}</div><div class="chat-header-sub" title="${escAttr(t.listing_title)}">${escHtml(t.buyer_phone||'No phone')} · Re: ${escHtml(truncateWords(t.listing_title,6))}</div><div style="font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:5px;margin-top:2px"><span id="chat-presence-dot" style="width:6px;height:6px;border-radius:50%;background:#9a9a94;flex-shrink:0"></span><span id="chat-presence-text">Buyer offline</span></div></div><div class="chat-header-actions">${waLink}${liveLink}</div>`;
+  document.getElementById('chat-wa-hint').innerHTML=t.buyer_phone?"Your reply appears in the buyer's chat. Use the WhatsApp button above to message them directly.":'Buyer will see your reply when they revisit the listing.';
   renderChatMessages(t);
   setTimeout(()=>{const mc=document.getElementById('chat-messages');mc.scrollTop=mc.scrollHeight;},50);
   dashSetPresenceUI(dashBuyerOnlineByListing[t.listing_id]?'online':'offline');
@@ -9883,17 +9929,11 @@ function updateMarkAllBtn(){
   const btn=document.getElementById('btn-mark-all-read');
   if(!btn)return;
   const totalUnread=threads.reduce((s,t)=>s+(t.unread_count||0),0);
-  if(totalUnread>0){
-    btn.textContent='Mark all read';
-    btn.onclick=markAllThreadsRead;
-    btn.disabled=false;
-  }else{
-    btn.textContent='Mark all unread';
-    btn.onclick=markAllThreadsUnread;
-    btn.disabled=!threads.length;
-  }
+  btn.style.display=totalUnread>0?'':'none';
+  btn.textContent='Mark all read';
+  btn.onclick=markAllThreadsRead;
+  btn.disabled=false;
 }
-
 function filterEnquiries(f,el){enquiryFilter=f;document.querySelectorAll('#page-enquiries .filter-pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');renderEnquiries();}
 
 function buildEnquiryFeed(){
@@ -9946,7 +9986,7 @@ function renderEnquiries(){
         <div class="enquiry-head">
           <span class="enquiry-name">${escHtml(i.buyer_name||'Unknown buyer')}</span>
           ${i.unread?'<span class="enquiry-new-badge">New</span>':''}
-          <span class="enquiry-phone">${i.buyer_phone||''}</span>
+          <span class="enquiry-phone">${escHtml(i.buyer_phone||'')}</span>
           <span class="enquiry-time">${timeAgo(i.created_at)}</span>
         </div>
         <div class="enquiry-listing-ref">${escHtml(i.listing_title||'Listing')}${i.listing_area?' · '+escHtml(i.listing_area):''}</div>
@@ -9962,8 +10002,10 @@ function renderEnquiries(){
 }
 
 function formatWaPhone(p){
-  const clean=(p||'').replace(/[\s+]/g,'');
-  return /^0\d{9}$/.test(clean) ? '254'+clean.slice(1) : clean;
+  const clean=String(p||'').replace(/\D/g,'');
+  if(/^0[17]\d{8}$/.test(clean)) return '254'+clean.slice(1);
+  if(/^[17]\d{8}$/.test(clean)) return '254'+clean;
+  return clean;
 }
 async function markEnqThreadRead(key){const t=threads.find(x=>x.key===key);if(!t)return;await markThreadRead(t);renderEnquiries();}
 function sendReply(){const text=document.getElementById('reply-text').value.trim();if(!text){showToast('Please type a reply first','error');return;}if(replyTargetEnquiry?.buyer_phone){window.open(`https://wa.me/${formatWaPhone(replyTargetEnquiry.buyer_phone)}?text=${encodeURIComponent(text)}`,'_blank');}else{showToast('No phone number available','error');return;}closeModal('modal-reply');showToast('Opened WhatsApp with your reply','success');}
@@ -10063,8 +10105,8 @@ function exportSellerPaymentsCSV(){
     const isPaid=p.status==='confirmed'||p.status==='paid';
     csvRows.push([new Date(p.created_at).toLocaleDateString('en-KE'),p.listings?.title||'—',p.reference||p.mpesa_ref||'—',Number(p.amount||0),isPaid?'Paid':(p.status||'pending')]);
   });
-  const csv=csvRows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob=new Blob([csv],{type:'text/csv'});
+  const csv=csvRows.map(r=>r.map(v=>csvCell(v)).join(',')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download=`Nyumba254-Payments-${new Date().toISOString().slice(0,10)}.csv`;document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -10172,7 +10214,7 @@ async function generateBrochure(id){
 }
 
 const pageTitles={overview:'Overview',listings:'My listings',messages:'Messages',enquiries:'Enquiries',reviews:'Reviews',payments:'Payments',settings:'Settings','rent-ledger':'Rent & Tenant Ledger','demand-heatmap':'Demand Insights',notifications:'Notifications'};
-function showPage(name){sessionStorage.setItem('ny_last_page',name);document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');const navEl=document.getElementById('nav-'+name);if(navEl)navEl.classList.add('active');document.getElementById('topbar-title').textContent=pageTitles[name]||name;if(name==='overview')renderOverview();if(name==='listings')renderListingsTable();if(name==='messages'){showThreadListMobile();renderThreadList();}if(name==='enquiries')renderEnquiries();if(name==='reviews')renderReviews();if(name==='payments')renderPayments();if(name==='rent-ledger'){ if(isBnbLedgerMode()) loadBnbLedger(); else loadRentalUnits(); }if(name==='demand-heatmap')loadDemandInsights();if(name==='notifications')renderNotificationsPage();closeSidebar();
+function showPage(name){if(!document.getElementById('page-'+name))name='overview';sessionStorage.setItem('ny_last_page',name);if(!window.__navFromHash&&!document.getElementById('tour-overlay').classList.contains('open')&&location.hash!=='#'+name)history.pushState(null,'','#'+name);document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');const navEl=document.getElementById('nav-'+name);if(navEl)navEl.classList.add('active');document.getElementById('topbar-title').textContent=pageTitles[name]||name;if(name==='overview')renderOverview();if(name==='listings')renderListingsTable();if(name==='messages'){showThreadListMobile();renderThreadList();}if(name==='enquiries')renderEnquiries();if(name==='reviews')renderReviews();if(name==='payments')renderPayments();if(name==='rent-ledger'){ if(isBnbLedgerMode()) loadBnbLedger(); else loadRentalUnits(); }if(name==='demand-heatmap')loadDemandInsights();if(name==='notifications')renderNotificationsPage();closeSidebar();
   const scwFabEl=document.getElementById('scw-fab');
   if(scwFabEl){
     if(name==='messages'){
@@ -10240,7 +10282,7 @@ function closeModal(id){document.getElementById(id).classList.remove('open');doc
   const observer=new MutationObserver(()=>scwSyncOverlayVisibility());
   watchTargets.filter(Boolean).forEach(el=>observer.observe(el,{attributes:true,attributeFilter:['class','style']}));
 })();
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal-overlay.open').forEach(m=>{m.classList.remove('open');document.body.style.overflow='';});scwSyncOverlayVisibility();}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(typeof lcConfirmResolver!=='undefined'&&lcConfirmResolver){lcConfirmResolve(false);return;}document.querySelectorAll('.modal-overlay.open').forEach(m=>{m.classList.remove('open');document.body.style.overflow='';});scwSyncOverlayVisibility();}});
 document.querySelectorAll('.modal-overlay').forEach(ov=>ov.addEventListener('click',e=>{if(e.target===ov)closeModal(ov.id);}));
 async function doSignOut(){clearInterval(msgPollTimer);clearInterval(listingStatusPollTimer);clearInterval(notifPollTimer);document.removeEventListener('visibilitychange',handleVisibilityChange);if(messagesChannel){messagesChannel.unsubscribe();messagesChannel=null;}if(notifBellChannel){notifBellChannel.unsubscribe();notifBellChannel=null;}dashLeaveAllPresence();scwCleanup();await db.auth.signOut();window.location.href='/login';}
 let toastTimer;
@@ -10248,7 +10290,9 @@ function showToast(msg,type='success'){const t=document.getElementById('toast'),
 function timeAgo(iso){if(!iso)return'';const d=(Date.now()-new Date(iso))/1000;if(d<60)return'just now';if(d<3600)return`${Math.floor(d/60)}m ago`;if(d<86400)return`${Math.floor(d/3600)}h ago`;if(d<604800)return`${Math.floor(d/86400)}d ago`;return new Date(iso).toLocaleDateString('en-KE',{day:'numeric',month:'short'});}
 function fmtKES(n,suffix=''){return `KES ${Number(n||0).toLocaleString('en-KE')}${suffix}`;}
 function escHtml(s){if(s===null||s===undefined||s==='')return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function escAttr(s){if(s===null||s===undefined||s==='')return'';return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function escAttr(s){if(s===null||s===undefined||s==='')return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function safeInternalLink(l){try{const u=new URL(l,location.origin);return u.origin===location.origin?u.pathname+u.search+u.hash:null;}catch(e){return null;}}
+function csvCell(v){if(typeof v==='number')return String(v);let s=String(v??'');if(/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}
 function truncateWords(s,maxWords){
   if(!s)return'';
   const words=String(s).trim().split(/\s+/);
@@ -10731,15 +10775,14 @@ function scwRenderHomeFaq(){
   try{
     if(typeof SCW_FAQ==='undefined'){el.innerHTML='<div class="scw-empty-mini" style="color:var(--red)">Widget error: SCW_FAQ is not defined — the script likely failed to load fully. Check the browser console for a red error.</div>';return;}
     if(!SCW_FAQ.length){el.innerHTML='<div class="scw-empty-mini">No quick answers configured yet.</div>';return;}
-    el.innerHTML=SCW_FAQ.slice(0,3).map(f=>`<div class="scw-mini-faq" onclick="scwOpenHelpAndExpand('${escAttr(f.q)}')" role="button" tabindex="0" aria-label="${escAttr(f.q)}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><strong>${escHtml(f.q)}</strong>${escHtml(f.a.replace(/<[^>]+>/g,'').slice(0,70))}…</div>`).join('');
+    el.innerHTML=SCW_FAQ.slice(0,3).map((f,i)=>`<div class="scw-mini-faq" onclick="scwOpenHelpAndExpand(${i})" role="button" tabindex="0" aria-label="${escAttr(f.q)}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><strong>${escHtml(f.q)}</strong>${escHtml(f.a.replace(/<[^>]+>/g,'').slice(0,70))}…</div>`).join('');
   }catch(err){
     console.error('scwRenderHomeFaq error:',err);
     el.innerHTML=`<div class="scw-empty-mini" style="color:var(--red)">Widget error: ${escHtml(err.message||String(err))}</div>`;
   }
 }
-function scwOpenHelpAndExpand(question){
+function scwOpenHelpAndExpand(idx){
   scwSetTab('help');
-  const idx=SCW_FAQ.findIndex(f=>f.q===question);
   if(idx>=0)setTimeout(()=>{document.getElementById('scw-faq-'+idx)?.classList.add('open');document.getElementById('scw-faq-'+idx)?.scrollIntoView({block:'nearest'});},50);
 }
 function scwShowTopicPicker(from){
@@ -11214,7 +11257,7 @@ const Tour = (() => {
     start();
   }
   function restart(){
-    if(currentUser) localStorage.removeItem(`ny_tour_seen_${currentUser.id}`);
+    if(currentUser){ storageKey = `ny_tour_v4_seen_${currentUser.id}`; localStorage.removeItem(storageKey); }
     idx = 0;
     start();
   }
@@ -11489,6 +11532,7 @@ const RLTour = (() => {
 
   return { maybeStart, next, back, skip, restart };
 })();
+window.addEventListener('popstate',()=>{const n=location.hash.slice(1);if(n&&document.getElementById('page-'+n)){window.__navFromHash=true;showPage(n);window.__navFromHash=false;}});
 init();
 </script>
 <script>
@@ -11505,7 +11549,7 @@ init();
   },1200);
 })();
 </script>
-<audio id="scw-notify-sound" preload="auto" src="assets/notify.mp3"></audio>
+<audio id="scw-notify-sound" preload="auto" src="/assets/notify.mp3"></audio>
 <script id="coming-soon-patch">
 (function(){
   var SELS = ['a[href^="/plans"]','#nav-premium-upgrade','#premium-upgrade-btn','#elite-upgrade-btn','[data-act="upgrade"]'];
@@ -11518,9 +11562,9 @@ init();
     if(!el) return;
     e.preventDefault();
     e.stopImmediatePropagation();
-    showToast('Coming soon','');
+    showToast("Paid plans open soon — we'll notify you here and by email.",'');
   }, true);
 })();
-</script></body>
-<script src="/patch.js"></script>
+</script><script src="/patch.js"></script>
+</body>
 </html>
