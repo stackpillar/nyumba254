@@ -1911,7 +1911,7 @@
         </div>
         <h3 style="font-size:16px;margin-bottom:8px">Demand Insights is an Elite feature</h3>
         <p style="font-size:13px;color:var(--text-3);max-width:380px;margin:0 auto 18px;line-height:1.6">Platform-wide buyer demand by area, category, and price type — with supply comparisons and downloadable reports — so you know exactly where to list next.</p>
-        <a href="/plans" class="btn btn-primary" style="background:#7c3aed;text-decoration:none">Upgrade to Elite</a>
+        <button class="btn btn-primary" style="background:#7c3aed" onclick="joinEliteWaitlist()">Notify me when Elite opens</button>
       </div>
       <div id="demand-content" style="display:none">
         <div class="di-tabs">
