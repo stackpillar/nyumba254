@@ -19,7 +19,7 @@
     :root {
       --green:#0F6E56;--green-light:#E1F5EE;--green-mid:#1D9E75;--green-dark:#085041;
       --gold:#BA7517;--gold-light:#FAEEDA;--text:#1a1a18;--text-2:#4a4a46;--text-3:#6b6a64;--border:#e0ded8;
-      --border:#e0ded8;--surface:#f7f6f2;--white:#ffffff;--red:#c0392b;--red-light:#fdecea;
+      --surface:#f7f6f2;--white:#ffffff;--red:#c0392b;--red-light:#fdecea;
       --amber:#d97706;--amber-light:#fef3c7;--purple:#7c3aed;--sidebar-w:240px;--topbar-h:64px;
       --radius:10px;--radius-lg:16px;--shadow:0 1px 3px rgba(0,0,0,0.07),0 4px 12px rgba(0,0,0,0.05);
       --shadow-lg:0 8px 32px rgba(0,0,0,0.12);
@@ -1416,7 +1416,9 @@
       .hamburger{padding:12px}
       .filter-pill{padding:10px 16px}
     }
-  </style>
+      #modal-lc-confirm{z-index:650}
+    .st-hide{display:none !important}
+    </style>
 <link rel="manifest" href="/manifest.webmanifest"><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script></head>
 <body>
 
@@ -1736,7 +1738,7 @@
             </div>
           </div>
           <div id="thread-filter-chip" style="display:none;padding:8px 14px 0"></div>
-          <div class="thread-search"><input type="text" placeholder="Search conversations…" id="thread-search-input" oninput="renderThreadList()"/></div>
+          <div class="thread-search"><input type="text" aria-label="Search conversations" placeholder="Search conversations…" id="thread-search-input" oninput="renderThreadList()"/></div>
           <div id="thread-items" style="flex:1;overflow-y:auto"><div style="padding:30px 20px;text-align:center;color:var(--text-3);font-size:13px">Loading…</div></div>
         </div>
         <div class="chat-pane" id="chat-pane">
@@ -1744,13 +1746,13 @@
           <div id="chat-active" style="display:none;flex-direction:column;flex:1;overflow:hidden">
             <div class="chat-header" id="chat-header"></div>
             <div class="chat-messages" id="chat-messages" onscroll="handleChatScroll()"></div>
-<button id="chat-scroll-btn" onclick="scrollChatToBottom(true)" style="display:none;position:absolute;bottom:90px;right:26px;width:38px;height:38px;border-radius:50%;background:var(--white);border:1px solid var(--border);box-shadow:var(--shadow);z-index:5;align-items:center;justify-content:center;cursor:pointer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--text-2)" stroke-width="2"><polyline points="19 12 12 19 5 12"/><line x1="12" y1="19" x2="12" y2="5"/></svg></button>
+<button id="chat-scroll-btn" onclick="scrollChatToBottom(true)" aria-label="Scroll to latest message" style="display:none;position:absolute;bottom:90px;right:26px;width:38px;height:38px;border-radius:50%;background:var(--white);border:1px solid var(--border);box-shadow:var(--shadow);z-index:5;align-items:center;justify-content:center;cursor:pointer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--text-2)" stroke-width="2"><polyline points="19 12 12 19 5 12"/><line x1="12" y1="19" x2="12" y2="5"/></svg></button>
             <div class="chat-wa-hint" id="chat-wa-hint"></div>
             <div class="chat-quickreply-bar" id="chat-quickreply-bar" style="display:none"></div>
             <div class="chat-input-bar">
               <div class="chat-quick-btn" id="chat-quickreply-toggle" onclick="toggleQuickReplyBar()" title="Quick replies" role="button" tabindex="0" aria-label="Quick replies"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="13" y2="13"/></svg></div>
-              <textarea id="chat-reply-input" placeholder="Type your reply…" rows="1" onkeydown="handleChatKeydown(event)" oninput="autoResizeTextarea(this);dashBroadcastTyping()"></textarea>
-              <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatReply()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+              <textarea id="chat-reply-input" aria-label="Type your reply" placeholder="Type your reply…" rows="1" onkeydown="handleChatKeydown(event)" oninput="autoResizeTextarea(this);dashBroadcastTyping()"></textarea>
+              <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatReply()" aria-label="Send reply"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
             </div>
           </div>
         </div>
@@ -1973,7 +1975,7 @@
           <div class="profile-avatar-row"><div class="profile-avatar-lg" id="settings-avatar">?</div><div class="profile-avatar-info"><strong id="settings-fullname">—</strong><span id="settings-email-display">—</span></div></div>
           <p style="font-size:13px;color:var(--text-3);margin-bottom:18px;line-height:1.6">Edit your name, phone number, email address, and password from your dedicated profile page.</p>
           <a href="/profile" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;text-decoration:none"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="15" height="15"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit profile &amp; password</a>
-          <button class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:10px" onclick="Tour.restart()">🔄 Replay dashboard tour</button>
+          <button class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:10px" onclick="window.__tourShort=false;Tour.restart()">🔄 Replay dashboard tour</button>
         </div>
         <div style="display:flex;flex-direction:column;gap:20px">
           <div class="settings-section" id="settings-notifications-section">
@@ -2020,7 +2022,8 @@
           <div class="settings-section" id="settings-premium-section">
             <h3><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Premium</h3>
             <p style="font-size:12.5px;color:var(--text-3);margin-bottom:14px;line-height:1.6">Unlock managed chat, a Pro badge, scheduled publishing, video tours, printable brochures, and more.</p>
-            <div style="overflow-x:auto;margin-bottom:16px;border:1px solid var(--border);border-radius:10px">
+            <button type="button" class="btn btn-outline btn-sm" style="margin-bottom:12px" onclick="var w=document.getElementById('plan-compare-wrap');w.style.display=w.style.display==='none'?'block':'none'">Compare Premium vs Elite</button>
+            <div id="plan-compare-wrap" style="display:none;overflow-x:auto;margin-bottom:16px;border:1px solid var(--border);border-radius:10px">
               <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:340px">
                 <thead>
                   <tr style="background:var(--surface)">
@@ -2322,10 +2325,14 @@
       <div style="background:var(--surface);border-radius:10px;padding:14px;font-size:13px;color:var(--text-2);margin-bottom:14px">
         <strong id="pay-listing-amount-display">KES —</strong> via M-Pesa Paybill<br>
         <span style="font-size:12px;color:var(--text-3)">Paybill 522522 · Account 1298476615</span>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button type="button" class="btn btn-outline btn-sm" onclick="copyPayDetail('522522','Paybill number')">Copy Paybill</button><button type="button" class="btn btn-outline btn-sm" onclick="copyPayDetail('1298476615','Account number')">Copy account no.</button></div>
       </div>
       <div class="field">
         <label>M-Pesa transaction code</label>
         <input type="text" id="pay-listing-ref" placeholder="e.g. QFT7H8K2LM" maxlength="10" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"/>
+        <div style="margin-top:12px"><label style="display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:6px">Or paste the whole M-Pesa SMS and we'll find the code</label>
+        <textarea id="pay-sms-paste" rows="3" placeholder="QFT7H8K2LM Confirmed. Ksh1,200.00 sent to…" oninput="parsePaySms(this.value)" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:12.5px;font-family:inherit;resize:vertical;background:var(--white);color:var(--text)"></textarea>
+        <div id="pay-sms-note" style="font-size:12px;margin-top:6px;min-height:16px"></div></div>
       </div>
       <p style="font-size:12px;color:var(--text-3);margin-top:14px;text-align:center">Manage many listings? <a href="/plans" style="color:var(--green);font-weight:700">A subscription may work out cheaper →</a></p>
     </div>
@@ -3818,7 +3825,7 @@ async function requestPlanCategorySwitch(){
   const p = ownerProfile || currentProfile;
   const current = p?.has_bnb_capacity ? 'bnb' : 'rental';
   const target = p?.has_bnb_capacity ? 'rental' : 'bnb';
-  if(!confirm(`Request ${target==='bnb'?'Airbnb/BNB':'rental'} listing capacity in addition to what you already have? This opens a support ticket for our team to confirm pricing before it's activated.`)) return;
+  if(!await lcConfirm({title:'Request a plan change?',message:`Request ${target==='bnb'?'Airbnb/BNB':'rental'} listing capacity on top of what you have. This opens a support ticket so our team can confirm pricing first. Nothing is charged yet.`,confirmLabel:'Send request'})) return;
   const sessionKey = `seller_${currentUser.id}_plan_switch_${Date.now()}`;
   const { data, error } = await db.from('chat_sessions').insert({
     session_key: sessionKey, session_type:'seller', seller_id: currentUser.id, visitor_name: scwSellerName,
@@ -3874,7 +3881,7 @@ async function syncProBadge(sub){
 function goToPremiumSettings(e){
   if(e) e.preventDefault();
   showPage('settings');
-  setTimeout(()=>document.getElementById('settings-premium-section')?.scrollIntoView({behavior:'smooth',block:'start'}),80);
+  setTimeout(()=>settingsJumpTo('settings-premium-section'),80);
 }
 function bnbSubscriptionInfo(){
   const p = ownerProfile || currentProfile;
@@ -4749,7 +4756,7 @@ async function saveBnbPublicBooking(){
 }
 async function deleteBnbProperty(id){
   const label=(bnbPropertiesCache.find(p=>String(p.id)===String(id))||{}).property_label||'this property';
-  if(!confirm(`Delete "${label}"? This also removes its booking history.`))return;
+  if(!await lcConfirm({title:'Delete property?',message:`<strong>${escHtml(label)}</strong> and its booking history will be removed.`,confirmLabel:'Delete',danger:true}))return;
   const{error}=await db.from('bnb_properties').delete().eq('id',id);
   if(error){showToast('Could not delete: '+error.message,'error');return;}
   showToast('Property deleted','success');
@@ -4788,7 +4795,7 @@ async function bnbAutoExpireProperties(){
   }
 }
 let rbpActivePropertyId=null;
-function openRenewBnbPropertyModal(propertyId){
+function openRenewBnbPropertyModal(propertyId){const _s=document.getElementById('pay-sms-paste');if(_s){_s.value='';parsePaySms('');}
   const p=bnbPropertiesCache.find(x=>String(x.id)===String(propertyId));
   if(!p){showToast('Property not found','error');return;}
   rbpActivePropertyId=propertyId;
@@ -4909,7 +4916,7 @@ async function bnbPatchPropertyBookings(propertyId){
 }
 
 async function confirmBnbBookingPayment(bookingId){
-  if(!confirm('Confirm this M-Pesa payment cleared and finalize the booking?'))return;
+  if(!await lcConfirm({title:'Confirm payment?',message:'Confirm this M-Pesa payment cleared and finalise the booking?',confirmLabel:'Confirm payment'}))return;
   const{error}=await db.from('bnb_bookings').update({payment_status:'paid',status:'confirmed'}).eq('id',bookingId);
   if(error){showToast('Could not confirm: '+error.message,'error');return;}
   showToast('Booking confirmed ✓','success');
@@ -5043,7 +5050,7 @@ async function sendAllOverdueReminders(){
     if(overdue) targets.push({unit:u,tenant:t});
   });
   if(!targets.length){ showToast('No overdue tenants with an email on file','error'); return; }
-  if(!confirm(`Send an overdue-rent reminder to ${targets.length} tenant(s)?`)) return;
+  if(!await lcConfirm({title:'Send reminders?',message:`An overdue-rent reminder will be emailed to <strong>${targets.length} tenant(s)</strong>.`,confirmLabel:'Send reminders'})) return;
   const btn=document.getElementById('btn-remind-overdue');
   if(btn){btn.disabled=true;btn.textContent='Sending…';}
   for(const {unit,tenant} of targets){
@@ -5498,7 +5505,7 @@ async function uploadTenantDocument(unitId,tenantId){
 }
 
 async function deleteTenantDocument(docId,unitId,tenantId){
-  if(!confirm('Delete this document?'))return;
+  if(!await lcConfirm({title:'Delete document?',message:'This document will be permanently removed.',confirmLabel:'Delete',danger:true}))return;
   const{data:row}=await db.from('tenant_documents').select('file_path').eq('id',docId).maybeSingle();
   const{error}=await db.from('tenant_documents').delete().eq('id',docId);
   if(error){showToast('Could not delete: '+error.message,'error');return;}
@@ -5509,7 +5516,7 @@ async function deleteTenantDocument(docId,unitId,tenantId){
 
 async function moveOutTenant(){
   if(!tdActiveTenantId)return;
-  if(!confirm('Mark this tenant as moved out? The unit will become vacant and ready for a new tenant.'))return;
+  if(!await lcConfirm({title:'Mark as moved out?',message:'The unit will become vacant and ready for a new tenant.',confirmLabel:'Mark moved out'}))return;
   const{error}=await db.from('tenants').update({status:'past',move_out_date:new Date().toISOString().slice(0,10)}).eq('id',tdActiveTenantId);
   if(error){showToast('Could not update: '+error.message,'error');return;}
   closeModal('modal-tenant-detail');
@@ -5937,7 +5944,7 @@ function rlNextEscalationInfo(u){
 async function applyEscalationNow(unitId){
   const u=rentalUnitsCache.find(x=>String(x.id)===String(unitId));if(!u)return;
   const info=rlNextEscalationInfo(u);if(!info)return;
-  if(!confirm(`Apply the scheduled increase? Rent will change from KES ${Number(u.monthly_rent).toLocaleString('en-KE')} to KES ${info.newRent.toLocaleString('en-KE')}.`))return;
+  if(!await lcConfirm({title:'Apply rent increase?',message:`Rent will change from <strong>KES ${Number(u.monthly_rent).toLocaleString('en-KE')}</strong> to <strong>KES ${info.newRent.toLocaleString('en-KE')}</strong>.`,confirmLabel:'Apply increase'}))return;
   const{error}=await db.from('rental_units').update({monthly_rent:info.newRent,last_escalation_date:new Date().toISOString().slice(0,10)}).eq('id',unitId);
   if(error){showToast('Could not update: '+error.message,'error');return;}
   showToast('Rent escalation applied ✓','success');
@@ -7156,7 +7163,7 @@ async function handleEditPhotoUpload(fileList) {
 async function deleteEditPhoto(photoId) {
   const l = allListings.find(x=>x.id===editPhotosListingId); if (!l) return;
   const photo = (l.listing_photos||[]).find(p=>p.id===photoId); if (!photo) return;
-  if (!confirm('Delete this photo?')) return;
+  if (!await lcConfirm({title:'Delete photo?',message:'This photo will be removed from the listing.',confirmLabel:'Delete',danger:true})) return;
   const path = storagePathFromPublicUrl(photo.url);
   const { count: sharedCount } = await db.from('listing_photos').select('id',{count:'exact',head:true}).eq('url', photo.url).neq('id', photoId);
 if (path && !sharedCount) await db.storage.from(LISTING_PHOTOS_BUCKET).remove([path]);
@@ -7182,7 +7189,7 @@ async function setEditCoverPhoto(photoId) {
   showToast('Cover photo updated ✓','success');
   renderListingsTable();renderQuickListings();
 }
-function openPayListingModal(id){
+function openPayListingModal(id){const _s=document.getElementById('pay-sms-paste');if(_s){_s.value='';parsePaySms('');}
   const l=allListings.find(x=>x.id===id);if(!l)return;
   payListingTargetId=id;
   const isBnbListing = l.category==='airbnb';
@@ -7257,7 +7264,7 @@ async function reactivateListing(id){
   if(l&&l.is_disabled){showToast('Disabled by admin. Contact admin.','error');return;}
   const wasPaused=l&&l.status==='paused';
   const nextStatus=wasPaused?'active':'pending';
-  if(!confirm(wasPaused?`Resume "${l?.title||'this listing'}"? It will go live again immediately.`:`Resume "${l?.title||'this listing'}"? It will be sent back to our team for a quick re-approval first.`))return;
+  if(!await lcConfirm({title:'Resume listing?',message:wasPaused?`<strong>${escHtml(l?.title||'This listing')}</strong> will go live again immediately.`:`<strong>${escHtml(l?.title||'This listing')}</strong> will be sent back to our team for a quick re-approval first.`,confirmLabel:'Resume'}))return;
   listingActionBusy.add(id);
   try{
     const{error}=await db.from('listings').update({status:nextStatus,occupied_at:null}).eq('id',id);
@@ -9680,7 +9687,7 @@ const QUICK_REPLIES=[
   {label:'🤝 Thank you',text:"Thank you for reaching out and for your interest in this property — it was a pleasure assisting you."},
 ];
 
-function toggleQuickReplyBar(){
+function toggleQuickReplyBarOld(){
   const bar=document.getElementById('chat-quickreply-bar');
   if(!bar)return;
   const show=bar.style.display==='none';
@@ -9689,7 +9696,7 @@ function toggleQuickReplyBar(){
   }
   bar.style.display=show?'flex':'none';
 }
-function insertQuickReply(i){
+function insertQuickReplyOld(i){
   const q=QUICK_REPLIES[i];if(!q)return;
   const input=document.getElementById('chat-reply-input');
   if(!input)return;
@@ -9916,7 +9923,7 @@ async function markAllThreadsRead(){
 
 async function markAllThreadsUnread(){
   if(!threads.length){showToast('No conversations yet','error');return;}
-  if(!confirm('Mark every conversation as unread again?'))return;
+  if(!await lcConfirm({title:'Mark all as unread?',message:'Every conversation will be marked unread again.',confirmLabel:'Mark unread'}))return;
   const btn=document.getElementById('btn-mark-all-read');
   if(btn){btn.disabled=true;btn.textContent='Updating…';}
 
@@ -10234,7 +10241,7 @@ function showPage(name){if(!document.getElementById('page-'+name))name='overview
     }
   }
 }
-function settingsJumpTo(id){
+function settingsJumpToOld(id){
   const el=document.getElementById(id);
   if(!el)return;
   el.scrollIntoView({behavior:'smooth',block:'start'});
@@ -11216,9 +11223,7 @@ const Tour = (() => {
     { selector:'#nav-messages', page:'listings', title:'Messages', desc:'Tap "Messages" to see every conversation with buyers in one place.', click:true },
     { selector:'#thread-list', page:'messages', title:'Your inbox', desc:'All your buyer conversations live here, newest first. A green dot marks unread ones.' },
     { selector:'#chat-pane', page:'messages', title:'Chat with buyers', desc:'Open a conversation to reply directly, or via WhatsApp if the buyer shared their number. Tap the message icon by the input box any time for ready-made professional replies.' },
-    { selector:'#nav-enquiries', page:'messages', title:'Enquiries', desc:'Tap "Enquiries" for a simple feed of every buyer enquiry — handy for a quick daily check.', click:true },
-    { selector:'#enquiry-list', page:'enquiries', title:'Enquiry feed', desc:'See every enquiry at a glance and jump into the full conversation with one tap.' },
-    { selector:'#nav-reviews', page:'enquiries', title:'Reviews', desc:'Tap "Reviews" to see what buyers are saying about you.', click:true },
+    { selector:'#nav-reviews', page:'messages', title:'Reviews', desc:'Tap "Reviews" to see what buyers are saying about you.', click:true },
     { selector:'#reviews-list', page:'reviews', title:'Buyer reviews', desc:'Respond to reviews to build trust — your reply appears publicly once posted.' },
     { selector:'#nav-payments', page:'reviews', title:'Payments', desc:'Tap "Payments" to see your listing fee history.', click:true },
     { selector:'#payment-summary', page:'payments', title:'Payment history', desc:'Track what you\'ve paid, download receipts, and export everything to CSV.' },
@@ -11283,7 +11288,8 @@ const Tour = (() => {
     const step = STEPS[idx];
     if(!step){ finish(); return; }
 
-    if(step.page && currentPageName() !== step.page) showPage(step.page);
+    if(window.__tourShort && !['Welcome to your dashboard','Your key numbers','Post a listing','My listings','Messages','Settings',"That's it!"].includes(step.title)){ idx += dir; showStep(dir); return; }
+    if(!window.__tourShort && step.page && currentPageName() !== step.page) showPage(step.page);
 
     requestAnimationFrame(() => {
       const target = resolveTarget(step);
@@ -11302,7 +11308,7 @@ const Tour = (() => {
     advancedThisStep = false;
     detachClickListener();
 
-    document.getElementById('tour-step-label').textContent = `Step ${idx+1} of ${STEPS.length}`;
+    document.getElementById('tour-step-label').textContent = window.__tourShort ? 'Quick tour' : `Step ${idx+1} of ${STEPS.length}`;
     document.getElementById('tour-progress-fill').style.width = Math.round(((idx+1)/STEPS.length)*100) + '%';
     document.getElementById('tour-title').textContent = step.title;
     document.getElementById('tour-desc').textContent = step.desc;
@@ -11554,9 +11560,118 @@ function tourOffer(){
   d.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(88px + env(safe-area-inset-bottom));z-index:395;background:var(--white);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow-lg);padding:14px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;max-width:calc(100vw - 24px)';
   d.innerHTML='<span style="font-size:13px;font-weight:600">👋 New here? Take a quick tour.</span><button class="btn btn-primary btn-sm" id="tour-offer-yes">Start tour</button><button class="btn btn-outline btn-sm" id="tour-offer-no">Not now</button>';
   document.body.appendChild(d);
-  d.querySelector('#tour-offer-yes').onclick=()=>{d.remove();Tour.restart();};
+  d.querySelector('#tour-offer-yes').onclick=()=>{d.remove();window.__tourShort=true;Tour.restart();};
   d.querySelector('#tour-offer-no').onclick=()=>{d.remove();localStorage.setItem(key,'1');};
 }
+/* ── Pay modal helpers ── */
+function copyPayDetail(val,label){
+  navigator.clipboard.writeText(val).then(()=>showToast(label+' copied ✓','success')).catch(()=>showToast(label+': '+val,''));
+}
+function parsePaySms(text){
+  const note=document.getElementById('pay-sms-note');
+  const refInput=document.getElementById('pay-listing-ref');
+  text=text||'';
+  if(!note||!refInput)return;
+  if(!text.trim()){note.textContent='';return;}
+  const m=text.match(/\b(?=[A-Z0-9]*\d)(?=[A-Z0-9]*[A-Z])[A-Z0-9]{10}\b/);
+  if(!m){note.style.color='var(--red)';note.textContent="Couldn't find a 10-character code in that message — type it above instead.";return;}
+  refInput.value=m[0];
+  const a=text.match(/Ksh\.?\s?([\d,]+(?:\.\d+)?)/i);
+  const paid=a?parseFloat(a[1].replace(/,/g,'')):null;
+  const expected=parseFloat((document.getElementById('pay-listing-amount-display')?.textContent||'').replace(/[^\d.]/g,''))||0;
+  if(paid!==null&&expected&&Math.round(paid)<Math.round(expected)){
+    note.style.color='var(--red)';
+    note.textContent=`Code ${m[0]} found, but the SMS shows KES ${paid.toLocaleString('en-KE')} and this costs KES ${expected.toLocaleString('en-KE')}.`;
+    return;
+  }
+  note.style.color='var(--green-dark)';
+  note.textContent=`Code ${m[0]} found${paid!==null?' · KES '+paid.toLocaleString('en-KE'):''} ✓`;
+}
+
+/* ── Editable quick replies (saved per device) ── */
+function qrKey(){return 'ny_custom_qr_'+(currentUser?.id||'');}
+function qrCustom(){try{return JSON.parse(localStorage.getItem(qrKey())||'[]');}catch(e){return[];}}
+function qrSaveCustom(a){try{localStorage.setItem(qrKey(),JSON.stringify(a.slice(0,20)));}catch(e){}}
+function qrAll(){return [...QUICK_REPLIES,...qrCustom().map(q=>({...q,custom:true}))];}
+function qrFill(text){
+  const t=activeThread;
+  const l=t?allListings.find(x=>String(x.id)===String(t.listing_id)):null;
+  const price=l?(lcHasUnits(l)?muPriceRangeText(l):fmtKES(l.price,l.price_type==='rent'?'/mo':'')):'';
+  const first=t?(t.buyer_name||'').split(' ')[0]:'';
+  return String(text)
+    .replace(/\{listing_title\}/g,l?l.title:(t?t.listing_title:''))
+    .replace(/\{price\}/g,price)
+    .replace(/\{buyer_name\}/g,first)
+    .replace(/\{area\}/g,l?(l.area||''):'');
+}
+function renderQuickReplyBar(){
+  const bar=document.getElementById('chat-quickreply-bar');
+  if(!bar)return;
+  bar.innerHTML=qrAll().map((q,i)=>`<div class="qr-chip" onclick="insertQuickReply(${i})">${escHtml(q.label)}${q.custom?`<span onclick="event.stopPropagation();deleteCustomQuickReply(${i-QUICK_REPLIES.length})" title="Delete" style="margin-left:6px;opacity:.6">✕</span>`:''}</div>`).join('')
+    +`<div class="qr-chip" style="border-style:dashed;background:transparent" onclick="saveCustomQuickReply()">＋ Save my message</div>`;
+}
+function toggleQuickReplyBar(){
+  const bar=document.getElementById('chat-quickreply-bar');
+  if(!bar)return;
+  const show=bar.style.display==='none';
+  if(show)renderQuickReplyBar();
+  bar.style.display=show?'flex':'none';
+}
+function insertQuickReply(i){
+  const q=qrAll()[i];if(!q)return;
+  const input=document.getElementById('chat-reply-input');
+  if(!input)return;
+  input.value=qrFill(q.text);
+  autoResizeTextarea(input);
+  input.focus();
+  document.getElementById('chat-quickreply-bar').style.display='none';
+}
+function saveCustomQuickReply(){
+  const input=document.getElementById('chat-reply-input');
+  const text=(input?.value||'').trim();
+  if(!text){showToast('Type your message in the box first, then tap Save','error');return;}
+  const label=text.split(/\s+/).slice(0,3).join(' ').slice(0,28);
+  const list=qrCustom();
+  list.push({label,text});
+  qrSaveCustom(list);
+  renderQuickReplyBar();
+  showToast('Saved ✓ — tip: use {listing_title}, {price}, {buyer_name} or {area} to auto-fill','success');
+}
+function deleteCustomQuickReply(idx){
+  const list=qrCustom();
+  list.splice(idx,1);
+  qrSaveCustom(list);
+  renderQuickReplyBar();
+}
+
+/* ── Settings tabs ── */
+const SETTINGS_TABS={
+  'settings-profile-anchor':'profile','settings-contact-privacy-section':'profile',
+  'verification-settings-section':'verification',
+  'settings-notifications-section':'notifications','settings-sms-section':'notifications','settings-concierge-section':'notifications',
+  'settings-premium-section':'plan','settings-bnb-section':'plan','settings-elite-section':'plan','settings-rm-section':'plan',
+  'settings-team-section':'team'
+};
+function settingsApplyTab(tab,activeId){
+  Object.entries(SETTINGS_TABS).forEach(([id,t])=>document.getElementById(id)?.classList.toggle('st-hide',t!==tab));
+  document.querySelectorAll('#settings-quicknav .filter-pill').forEach(b=>{
+    const m=(b.getAttribute('onclick')||'').match(/'([^']+)'/);
+    b.classList.toggle('active',!!m&&m[1]===activeId);
+  });
+  const grid=document.querySelector('#page-settings .settings-grid');
+  if(grid)grid.style.gridTemplateColumns=tab==='profile'?'':'minmax(0,760px)';
+}
+function settingsJumpTo(id){
+  const tab=SETTINGS_TABS[id];
+  if(tab)settingsApplyTab(tab,id);
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+  el.style.transition='box-shadow .3s';
+  el.style.boxShadow='0 0 0 3px var(--green)';
+  setTimeout(()=>{el.style.boxShadow='';},1500);
+}
+settingsApplyTab('profile','settings-profile-anchor');
 window.addEventListener('popstate',()=>{const n=location.hash.slice(1);if(n&&document.getElementById('page-'+n)){window.__navFromHash=true;showPage(n);window.__navFromHash=false;}});
 init();
 </script>
