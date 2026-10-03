@@ -13,6 +13,8 @@
 (function () {
   'use strict';
   if (window.__nyPatchLoaded) return;
+  // Dashboard only: do nothing on any other page that happens to load this file
+  if (!document.getElementById('page-overview') || !document.getElementById('app-shell')) return;
   window.__nyPatchLoaded = true;
 
   const $ = (id) => document.getElementById(id);
@@ -681,13 +683,4 @@
 
   // new inbound messages should keep chips/tab badge fresh
   window.addEventListener('focus', () => safe(() => { if (leadsReady) loadViewings().then(renderToday); }));
-})();
-
-/* Load dashboard-only code */
-(function () {
-  if (!(document.getElementById('page-overview') && document.getElementById('app-shell'))) return;
-  var s = document.createElement('script');
-  s.src = '/dashboard-patch.js?v=1';
-  s.defer = true;
-  document.body.appendChild(s);
 })();
