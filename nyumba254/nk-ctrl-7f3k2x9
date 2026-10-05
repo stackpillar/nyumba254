@@ -470,7 +470,7 @@ let B={};
 const NAV=[
   {g:'Overview',i:[['overview','Dashboard','grid']]},
   {g:'Marketplace',i:[['listings','Listings','home','pending'],['recycle','Recycle bin','trash'],['payments','Payments','card','payments']]},
-  {g:'People',i:[['sellers','Sellers','users'],['verification','Verification','shield','verification'],['premium','Premium sellers','star'],['enquiries','Enquiries','msg','enquiries'],['support','Support chat','life','support']]},
+  {g:'People',i:[['sellers','Sellers','users'],['verification','Verification','shield','verification'],['premium','Premium sellers','star'],['enquiries','Enquiries','msg','enquiries'],['concierge','Concierge inbox','msg','concierge'],['support','Support chat','life','support']]},
   {g:'Trust & safety',i:[['reports','Reports','flag','reports'],['reviews','Reviews','star','reviews'],['reveals','Contact reveals','phone']]},
   {g:'Insights',i:[['analytics','Site visits','chart'],['activity','Activity log','clock']]},
   {g:'Platform',i:[['updates','Platform updates','bell'],['settings','Settings','gear']]},
@@ -487,13 +487,13 @@ function toggleTheme(){const d=document.documentElement.dataset.theme==='dark';i
 async function signOut(){await db.auth.signOut();location.reload();}
 async function refreshBadges(){
   const cnt=(t,f)=>f(db.from(t).select('*',{count:'exact',head:true})).then(r=>r.count||0,()=>0);
-  const[pend,pay,ver,rep,rev,eq,mq,chat]=await Promise.all([
+  const[pend,pay,ver,rep,rev,eq,mq,chat,conc]=await Promise.all([
     cnt('listings',q=>q.eq('status','pending').eq('recycle_bin',false)),cnt('payments',q=>q.in('status',['pending','pending_verification'])),
     cnt('profiles',q=>q.neq('role','admin').eq('verification_status','pending')),cnt('reports',q=>q.eq('status','open')),
     cnt('reviews',q=>q.eq('review_type','platform').is('response_text',null)),cnt('enquiries',q=>q.is('admin_read_at',null)),
     cnt('messages',q=>q.eq('sender','buyer').is('admin_read_at',null)),
-    db.from('chat_sessions').select('unread_admin').eq('is_resolved',false).then(r=>(r.data||[]).reduce((s,x)=>s+(x.unread_admin||0),0),()=>0)]);
-  B={pending:pend,payments:pay,verification:ver,reports:rep,reviews:rev,enquiries:eq+mq,support:chat};
+    db.from('chat_sessions').select('unread_admin').eq('is_resolved',false).then(r=>(r.data||[]).reduce((s,x)=>s+(x.unread_admin||0),0),()=>0),conciergeUnread()]);
+  B={pending:pend,payments:pay,verification:ver,reports:rep,reviews:rev,enquiries:eq+mq,support:chat,concierge:conc};
   $$('[data-b]').forEach(el=>{const n=B[el.dataset.b]||0;el.textContent=n>99?'99+':n;el.classList.toggle('z',!n);});
   const tot=pend+pay+ver+rep+chat;document.title=(tot?`(${tot}) `:'')+'Admin — Nyumba254';
   return B;
@@ -516,7 +516,7 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){ui.closeMenu();return;}
   if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();cmdk();return;}
   if(/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)||e.target.isContentEditable||e.metaKey||e.ctrlKey||e.altKey||ov().children.length||!S.user)return;
-  if(gp&&Date.now()-gp<1200){gp=0;const m={o:'overview',l:'listings',p:'payments',s:'sellers',v:'verification',r:'reports',e:'enquiries',c:'support',u:'updates'}[e.key];if(m){e.preventDefault();go(m);}return;}
+  if(gp&&Date.now()-gp<1200){gp=0;const m={o:'overview',l:'listings',p:'payments',s:'sellers',v:'verification',r:'reports',e:'enquiries',c:'support',k:'concierge',u:'updates'}[e.key];if(m){e.preventDefault();go(m);}return;}
   if(e.key==='g'){gp=Date.now();return;}
   if(e.key==='/'){const s=$('.search input');if(s){e.preventDefault();s.focus();}return;}
   if(e.key==='?'){helpModal();return;}
@@ -1205,6 +1205,116 @@ VIEWS.analytics={title:'Site visits',mount(el,p){
     columns:[{label:'Page',render:r=>esc(r.path)},{label:'Referrer',render:r=>esc(r.referrer||'Direct')},{label:'Device',render:r=>`<small style="display:block;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.user_agent||'')}</small>`},{label:'Time',render:r=>dtt(r.created_at)}],
     empty:['No visits recorded','Add the tracking snippet to your public pages.']
   }).mount(el);
+}};
+/* ═════════ CONCIERGE INBOX (managed chat: admin replies to buyers as the seller) ═════════ */
+async function conciergeScope(){
+  const{data:sellers}=await db.from('profiles').select('id,full_name,email,phone,concierge_enabled_at').eq('concierge_enabled',true).order('concierge_enabled_at',{ascending:false});
+  const ids=(sellers||[]).map(s=>s.id);if(!ids.length)return{sellers:[],listings:[]};
+  const{data:listings}=await db.from('listings').select('id,title,area,sub_area,price,price_type,is_multi_unit,listing_number,seller_id,listing_units(price)').in('seller_id',ids);
+  return{sellers:sellers||[],listings:listings||[]};
+}
+async function conciergeUnread(){
+  try{
+    const{listings}=await conciergeScope();const ids=listings.map(l=>l.id);if(!ids.length)return 0;
+    const[a,b]=await Promise.all([db.from('enquiries').select('id',{count:'exact',head:true}).in('listing_id',ids).is('admin_read_at',null),db.from('messages').select('id',{count:'exact',head:true}).in('listing_id',ids).eq('sender','buyer').is('admin_read_at',null)]);
+    return(a.count||0)+(b.count||0);
+  }catch{return 0;}
+}
+async function notifyBuyerIfOffline(buyerToken,listingTitle,text,listingId){
+  if(!buyerToken)return;
+  try{
+    const{data:c}=await db.from('buyer_contacts').select('email,full_name,notify_email').eq('buyer_token',buyerToken).maybeSingle();
+    if(!c?.email||c.notify_email===false)return;
+    const enc=encodeURIComponent(btoa(unescape(encodeURIComponent(`${listingId||''}:${buyerToken}`))));
+    await notifyByEmail('buyer_new_message_alert',{buyerEmail:c.email,buyerName:c.full_name,sellerName:'the seller',listingTitle,messagePreview:(text||'').slice(0,150),accessLink:`${location.origin}/inbox.html?nk_resume=${enc}`});
+  }catch(e){console.error(e);}
+}
+const CC_QR=[
+  {id:'available',label:'✅ Still available',match:['available','still there','taken','still open','vacant'],body:c=>`Hi ${c.f}! Yes, ${c.t} is still available. Let me know if you'd like to arrange a viewing.`},
+  {id:'price',label:'💰 Price & fees',match:['price','how much','cost','rent is','fee'],body:c=>`Hi ${c.f}! ${c.t} is ${c.p}. ${c.n}`},
+  {id:'location',label:'📍 Location',match:['where','location','directions','area','nearby'],body:c=>`Hi ${c.f}! It's located in ${c.a}${c.s?', '+c.s:''}. Happy to share directions closer to your visit.`},
+  {id:'viewing',label:'📅 Book a viewing',match:['view','see it','visit','come see','when can i'],body:c=>`Hi ${c.f}! We'd love to show you around. What day and time works best for you this week?`},
+  {id:'thanks',label:'🙏 Thank you',match:['thank','asante'],body:c=>`You're most welcome, ${c.f}! Let us know if you have any other questions.`},
+  {id:'followup',label:'👋 Follow-up',match:[],body:c=>`Hi ${c.f}, just checking in — are you still interested in ${c.t}? Happy to answer any questions.`}];
+VIEWS.concierge={title:'Concierge inbox',async mount(el,p,ctx){
+  let sellers=[],lmap={},threads=[],active=null,sf='all',q='',chans=[],pres=null,online=false,typingT=0,typingSent=0;
+  el.innerHTML=`<div class="grid4" style="margin-bottom:12px" id="cst"></div><div class="card chat" style="height:calc(100vh - 220px)"><div class="cl"><div style="padding:10px;border-bottom:1px solid var(--bd)"><input class="in" id="cq" placeholder="Search buyer, listing or seller…"><div id="csc" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div></div><div id="cli"><div style="padding:20px"><div class="sk"></div></div></div></div><div class="ct" id="ct"><div class="empty" style="margin:auto"><h4>Select a conversation</h4><p>Replies appear to the buyer as coming from the seller.</p></div></div></div>`;
+  const ctxOf=t=>{const l=t.listing||{};return{f:(t.buyerName||'there').split(' ')[0],t:l.title||'the listing',p:(l.listing_units||[]).length?`priced from ${priceOf(l)}`:priceOf(l),n:l.price_type==='rent'?"That's the monthly rent.":"That's the asking price.",a:l.area||'the area',s:l.sub_area||''};};
+  const suggest=t=>{const last=[...t.msgs].reverse().find(m=>m.sender==='buyer'),tx=(last?.content||'').toLowerCase();const tpl=CC_QR.find(x=>x.match.some(k=>tx.includes(k)))||CC_QR.find(x=>x.id==='followup');return{tpl,body:tpl.body(ctxOf(t))};};
+  async function load(){
+    const sc=await conciergeScope();sellers=sc.sellers;lmap=Object.fromEntries(sc.listings.map(l=>[l.id,l]));
+    const ids=sc.listings.map(l=>l.id);
+    if(!ids.length){threads=[];paint();return;}
+    const cut=new Date(Date.now()-120*864e5).toISOString();
+    const[e,m]=await Promise.all([db.from('enquiries').select('*').in('listing_id',ids).gte('created_at',cut).order('created_at',{ascending:false}).limit(400),db.from('messages').select('*').in('listing_id',ids).gte('created_at',cut).order('created_at',{ascending:true}).limit(1000)]);
+    const map=new Map(),mk=(k,x,name)=>({key:k,listingId:x.listing_id,listing:lmap[x.listing_id],sellerId:lmap[x.listing_id]?.seller_id,token:x.buyer_token||null,phone:x.buyer_phone||'',buyerName:x.buyer_name||name,msgs:[],last:x.created_at});
+    (e.data||[]).forEach(x=>{const k=`${x.listing_id}__${x.buyer_phone||x.buyer_token||x.id}`;if(!map.has(k)){const t=mk(k,x,'Unknown buyer');t.msgs.push({id:'enq-'+x.id,sender:'buyer',content:x.message||'',created_at:x.created_at,read:x.admin_read_at,tbl:'enquiries',raw:x.id});map.set(k,t);}});
+    (m.data||[]).forEach(x=>{const k=`${x.listing_id}__${x.buyer_phone||x.buyer_token||''}`;let t=map.get(k);if(!t){t=mk(k,x,'Buyer');map.set(k,t);}if(!t.msgs.some(y=>y.id===x.id))t.msgs.push({id:x.id,sender:x.sender,content:x.content||x.message,created_at:x.created_at,read:x.admin_read_at,tbl:'messages',raw:x.id,byAdmin:!!x.sent_by_admin_id});if(new Date(x.created_at)>new Date(t.last))t.last=x.created_at;});
+    threads=[...map.values()].map(t=>{t.msgs.sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));t.unread=t.msgs.filter(x=>x.sender==='buyer'&&!x.read).length;t.sellerName=sellers.find(s=>s.id===t.sellerId)?.full_name||'Seller';return t;}).sort((a,b)=>new Date(b.last)-new Date(a.last));
+    paint();subscribe(ids);
+  }
+  const vis=()=>threads.filter(t=>(sf==='all'||t.sellerId===sf)&&(!q||`${t.buyerName} ${t.listing?.title} ${t.sellerName}`.toLowerCase().includes(q)));
+  function paint(){
+    const un=threads.reduce((s,t)=>s+t.unread,0);
+    $('#cst',el).innerHTML=[['Unread messages',un],['Conversations',threads.length],['Sellers on concierge',sellers.length]].map(([l,v])=>`<div class="card kpi"><small>${l}</small><b>${v}</b></div>`).join('');
+    $('#csc',el).innerHTML=`<button class="btn sm ${sf==='all'?'ok':''}" data-s="all">All sellers</button>`+sellers.map(s=>`<button class="btn sm ${sf===s.id?'ok':''}" data-s="${s.id}">${esc((s.full_name||'Seller').split(' ')[0])}</button>`).join('');
+    const r=vis();
+    $('#cli',el).innerHTML=!sellers.length?'<div class="empty"><h4>No concierge sellers</h4><p>Sellers with managed chat turned on appear here.</p></div>':r.length?r.map(t=>{const l=t.msgs[t.msgs.length-1];return `<div class="ci ${t.unread?'un':''} ${active?.key===t.key?'on':''}" data-k="${esc(t.key)}"><div style="display:flex;justify-content:space-between"><b>${esc(t.buyerName)}</b><small>${ago(t.last)}</small></div><small style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.sender==='seller'?'You: ':''}${esc(l.content||'')}</small><small>${esc(t.sellerName)} · ${esc(t.listing?.title||'Listing')}</small></div>`;}).join(''):'<div class="empty">No conversations found</div>';
+  }
+  function setPresence(state){const d=$('#pd',el),x=$('#pt',el);if(!d)return;d.style.background=state==='typing'?'#F0B429':state==='online'?'#2ecc71':'#9a9a94';x.textContent=state==='typing'?'Buyer is typing…':state==='online'?'Buyer online now':'Buyer offline';}
+  function join(listingId){
+    leave();pres=db.channel(`presence-${listingId}`,{config:{presence:{key:'seller-admin-'+S.user.id}}});
+    pres.on('presence',{event:'sync'},()=>{online=Object.keys(pres.presenceState()).some(k=>k.startsWith('buyer-'));setPresence(online?'online':'offline');})
+      .on('broadcast',{event:'typing'},({payload})=>{if(payload?.from==='buyer'){setPresence('typing');clearTimeout(typingT);typingT=setTimeout(()=>setPresence(online?'online':'offline'),2500);}})
+      .subscribe(async s=>{if(s==='SUBSCRIBED')await pres.track({online:true,at:Date.now()});});
+  }
+  function leave(){if(pres){db.removeChannel(pres);pres=null;}clearTimeout(typingT);online=false;}
+  function thread(){
+    const t=active,l=t.listing,s=suggest(t);
+    const wa=t.phone?`<a class="btn sm" target="_blank" rel="noopener" href="https://wa.me/${t.phone.replace(/[\s+]/g,'').replace(/^0/,'254')}">WhatsApp</a>`:'';
+    $('#ct',el).innerHTML=`<div style="padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;gap:10px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:0"><b>${esc(t.buyerName)}</b><br><small>${esc(t.sellerName)} · ${esc(l?.title||'Listing')}${t.phone?' · '+esc(t.phone):''}</small><br><small><span id="pd" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#9a9a94;margin-right:5px"></span><span id="pt">Buyer offline</span></small></div>${wa}${l&&numOf(l)?`<a class="btn sm" target="_blank" rel="noopener" href="/listing?id=${numOf(l)}">View listing</a>`:''}</div>
+    <div class="msgs" id="ms">${t.msgs.map(m=>`<div class="m ${m.sender==='seller'?'me':''}" style="${m.sender==='seller'?'':'align-self:flex-start'}">${esc(m.content||'')}<small>${m.sender==='seller'?(m.byAdmin?'You (as seller)':'Seller'):esc(t.buyerName)} · ${dtt(m.created_at)}</small></div>`).join('')}</div>
+    ${t.msgs.some(m=>m.sender==='buyer')?`<div style="margin:0 12px 8px;padding:10px 12px;background:var(--goldl);border-radius:10px"><small style="color:var(--gold);font-weight:700">💡 Suggested reply — ${esc(s.tpl.label.replace(/^\S+\s/,''))}</small><p style="margin:4px 0 8px;color:var(--tx2)">${esc(s.body)}</p><button class="btn sm ok" data-q="${s.tpl.id}">⚡ Send this</button> <button class="btn sm" data-e="${s.tpl.id}">✎ Edit first</button></div>`:''}
+    <div style="display:flex;gap:6px;flex-wrap:wrap;padding:0 12px 8px">${CC_QR.map(x=>`<button class="btn sm" data-q="${x.id}">${x.label}</button>`).join('')}</div>
+    <div class="reply"><textarea id="rt" rows="1" placeholder="Type a reply as the seller… (Enter to send)"></textarea><button class="btn pri" id="sn">Send</button></div>`;
+    const ms=$('#ms',el);ms.scrollTop=ms.scrollHeight;setPresence(online?'online':'offline');
+    const rt=$('#rt',el);rt.oninput=()=>{const n=Date.now();if(pres&&n-typingSent>2000){typingSent=n;pres.send({type:'broadcast',event:'typing',payload:{from:'seller'}});}};
+    rt.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send(rt.value);}};$('#sn',el).onclick=()=>send(rt.value);
+  }
+  async function send(text){
+    text=(text||'').trim();if(!text||!active)return;const t=active;
+    const{data,error}=await db.from('messages').insert({listing_id:t.listingId,buyer_token:t.token,buyer_name:t.buyerName,buyer_phone:t.phone||null,sender:'seller',content:text,sent_by_admin_id:S.user.id}).select().single();
+    if(error)return ui.toast('Could not send: '+error.message,'err');
+    if(!t.msgs.some(m=>m.id===data.id))t.msgs.push({id:data.id,sender:'seller',content:text,created_at:data.created_at,read:null,tbl:'messages',raw:data.id,byAdmin:true});
+    t.last=data.created_at;threads=[t,...threads.filter(x=>x!==t)];
+    logAction('concierge_reply','listing',t.listingId,'Replied to '+t.buyerName);notifyBuyerIfOffline(t.token,t.listing?.title,text,t.listingId);
+    paint();thread();$('#rt',el)?.focus();
+  }
+  async function open(key){
+    const t=threads.find(x=>x.key===key);if(!t)return;active=t;join(t.listingId);thread();paint();
+    if(t.unread){const n=new Date().toISOString(),b=t.msgs.filter(m=>m.sender==='buyer'&&!m.read);
+      const ei=b.filter(m=>m.tbl==='enquiries').map(m=>m.raw),mi=b.filter(m=>m.tbl==='messages').map(m=>m.raw);
+      if(ei.length)await db.from('enquiries').update({admin_read_at:n}).in('id',ei);if(mi.length)await db.from('messages').update({admin_read_at:n}).in('id',mi);
+      b.forEach(m=>m.read=n);t.unread=0;paint();refreshBadges();}
+  }
+  function subscribe(ids){
+    chans.forEach(c=>db.removeChannel(c));chans=[];
+    chans.push(db.channel('cc-inbox-'+Date.now()).on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:`listing_id=in.(${ids.join(',')})`},pl=>{
+      const m=pl.new,k=`${m.listing_id}__${m.buyer_phone||m.buyer_token||''}`;let t=threads.find(x=>x.key===k);
+      const rec={id:m.id,sender:m.sender,content:m.content||m.message,created_at:m.created_at,read:m.admin_read_at,tbl:'messages',raw:m.id,byAdmin:!!m.sent_by_admin_id};
+      if(t){if(t.msgs.some(x=>x.id===m.id))return;t.msgs.push(rec);t.last=m.created_at;if(m.sender==='buyer')t.unread++;threads=[t,...threads.filter(x=>x!==t)];}
+      else{const l=lmap[m.listing_id];if(!l)return;t={key:k,listingId:m.listing_id,listing:l,sellerId:l.seller_id,token:m.buyer_token||null,phone:m.buyer_phone||'',buyerName:m.buyer_name||'Buyer',msgs:[rec],last:m.created_at,unread:m.sender==='buyer'?1:0,sellerName:sellers.find(s=>s.id===l.seller_id)?.full_name||'Seller'};threads.unshift(t);}
+      paint();if(active?.key===k)thread();if(m.sender==='buyer')ui.toast('New buyer message — '+t.buyerName,'ok');refreshBadges();}).subscribe());
+  }
+  el.onclick=e=>{
+    const c=e.target.closest('.ci');if(c)return open(c.dataset.k);
+    const s=e.target.closest('[data-s]');if(s){sf=s.dataset.s;paint();return;}
+    const qk=e.target.closest('[data-q]');if(qk&&active){const x=CC_QR.find(y=>y.id===qk.dataset.q);send(x.body(ctxOf(active)));return;}
+    const ed=e.target.closest('[data-e]');if(ed&&active){const x=CC_QR.find(y=>y.id===ed.dataset.e);const t=$('#rt',el);t.value=x.body(ctxOf(active));t.focus();}
+  };
+  $('#cq',el).oninput=debounce(e=>{q=e.target.value.toLowerCase();paint();},200);
+  ctx.cleanup.push(()=>{chans.forEach(c=>db.removeChannel(c));leave();});
+  await load();
 }};
 /* ═════════ OVERVIEW ═════════ */
 VIEWS.overview={title:'Dashboard',async mount(el){
