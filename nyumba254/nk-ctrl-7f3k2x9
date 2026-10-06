@@ -118,6 +118,7 @@ tbody tr:last-child td{border-bottom:0}
 #toasts{position:fixed;right:20px;bottom:20px;z-index:800;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
 .toast{background:var(--tx);color:var(--bg);padding:10px 16px;border-radius:10px;display:flex;gap:14px;align-items:center;max-width:380px;box-shadow:var(--sh);animation:pop .15s}
 .toast.err{background:var(--red);color:#fff}.toast.ok{background:var(--gd);color:#fff}.toast .tl{font-weight:700;text-decoration:underline}
+.pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-bottom:8px}.pg .p{position:relative;border-radius:8px;overflow:hidden;border:2px solid var(--bd);aspect-ratio:1}.pg .p.cv{border-color:var(--gold)}.pg img{width:100%;height:100%;object-fit:cover;display:block}.pg .pt{position:absolute;bottom:0;left:0;right:0;display:flex;background:rgba(0,0,0,.62)}.pg .pt button{flex:1;color:#fff;padding:3px}
 /* kv + misc */
 .kv{display:grid;grid-template-columns:130px 1fr;gap:6px 12px;margin-bottom:16px}.kv dt{color:var(--tx3);font-size:12.5px}.kv dd{font-weight:500;word-break:break-word}
 .sec{font:700 12px Inter;color:var(--tx3);margin:18px 0 8px}
@@ -133,16 +134,16 @@ tbody tr:last-child td{border-bottom:0}
 .rq{max-width:880px}.rq .mb{display:grid;grid-template-columns:1.1fr 1fr;gap:20px}.rq .hero{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;background:var(--sf)}
 .cmd{max-width:560px;padding:0;align-self:start;margin-top:12vh}.cmd input{width:100%;border:0;border-bottom:1px solid var(--bd);padding:16px 18px;outline:0;background:none;font-size:15px}
 .cmd .res{max-height:50vh;overflow-y:auto;padding:6px}.cmd .res button{display:flex;width:100%;text-align:left;padding:9px 12px;border-radius:8px;gap:10px;align-items:center}.cmd .res button.on,.cmd .res button:hover{background:var(--gl)}.cmd .res small{margin-left:auto}
-.chat{display:grid;grid-template-columns:330px 1fr;height:calc(100vh - 130px);min-height:480px;overflow:hidden}
-.chat .cl{border-right:1px solid var(--bd);overflow-y:auto}.chat .ct{display:flex;flex-direction:column;min-width:0}
+.chat{display:grid;grid-template-columns:330px minmax(0,1fr);grid-template-rows:minmax(0,1fr);height:calc(100vh - 130px);min-height:480px;overflow:hidden}
+.chat .cl{border-right:1px solid var(--bd);overflow-y:auto;min-height:0}.chat .ct{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}
 .ci{padding:11px 14px;border-bottom:1px solid var(--bd);cursor:pointer}.ci:hover,.ci.on{background:var(--hl)}.ci.un b::after{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--red);margin-left:6px}
-.msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;background:var(--sf)}
+.msgs{flex:1 1 0;min-height:90px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;background:var(--sf)}
 .m{max-width:78%;padding:8px 12px;border-radius:14px;background:var(--bg);border:1px solid var(--bd);white-space:pre-wrap;word-break:break-word}.m.me{align-self:flex-end;background:var(--g);color:#fff;border-color:var(--g)}.m small{display:block;opacity:.7;margin-top:2px;color:inherit}
-.reply{display:flex;gap:8px;padding:10px;border-top:1px solid var(--bd)}.reply textarea{flex:1;min-height:40px;max-height:110px;resize:none;border:1.5px solid var(--bd);border-radius:10px;padding:9px 12px;background:var(--bg);outline:0}
+.reply{display:flex;gap:8px;padding:10px;border-top:1px solid var(--bd);flex-shrink:0;background:var(--bg)}.reply textarea{flex:1;min-height:40px;max-height:110px;resize:none;border:1.5px solid var(--bd);border-radius:10px;padding:9px 12px;background:var(--bg);outline:0}
 @media(max-width:900px){
 .app{grid-template-columns:1fr}#sb{position:fixed;left:0;top:0;width:274px;transform:translateX(-100%);transition:transform .2s}#sb.open{transform:none}
 #burger{display:inline-flex}.top{padding:0 12px}.cmdbtn{min-width:0}.cmdbtn span,.cmdbtn kbd{display:none}#view{padding:14px}
-.two,.rq .mb{grid-template-columns:1fr}.chat{grid-template-columns:1fr;height:auto}.chat .cl{max-height:240px;border-right:0;border-bottom:1px solid var(--bd)}.chat .ct{height:60vh}
+.two,.rq .mb{grid-template-columns:1fr}.chat{grid-template-columns:1fr;grid-template-rows:auto auto;height:auto}.chat .cl{max-height:240px;border-right:0;border-bottom:1px solid var(--bd)}.chat .ct{height:60vh}
 .g2{grid-template-columns:1fr}.fld input,.fld select,.fld textarea{font-size:16px}
 thead{display:none}table,tbody,tr{display:block}tr{border-bottom:8px solid var(--sf);padding:6px}
 td{display:flex;justify-content:space-between;gap:14px;border:0!important;padding:6px 10px;text-align:right}
@@ -642,7 +643,7 @@ const LA={
   async extend(l){
     const d=await ui.ask({title:'Extend expiry',message:`Add days to <b>${esc(l.title)}</b>.`,label:'Number of days',type:'number',confirm:'Extend'});if(d===null)return false;
     const days=parseInt(d,10);if(!days||days<=0)throw new Error('Enter a valid number of days');
-    const dead=/Expired|—/.test(expiryOf(l).replace(/<[^>]+>/g,'')),dur=(l.is_featured?S.cfg.featured_duration_days:S.cfg.standard_duration_days)*864e5;
+    const dead=/expired|—/i.test(expiryOf(l).replace(/<[^>]+>/g,'')),dur=(l.is_featured?S.cfg.featured_duration_days:S.cfg.standard_duration_days)*864e5;
     const base=dead?new Date():new Date(l.expiry_override||(l.payment_status==='trial'?l.trial_expires_at:new Date(l.created_at).getTime()+dur));
     const ne=new Date(Math.max(base.getTime(),Date.now())+days*864e5).toISOString();
     await LA.set(l,{expiry_override:ne},`Extended by ${days} day(s)`,'extend_listing_date');
@@ -744,15 +745,16 @@ async function openListing(l,T){
   const[{data:posts},{data:logs}]=await Promise.all([db.from('social_posts').select('platform,status,created_at').eq('listing_id',l.id).eq('status','posted'),db.from('admin_logs').select('*').eq('target_id',String(l.id)).order('created_at',{ascending:false}).limit(5)]);
   const photos=l.listing_photos||[],pr=l.profiles||{};
   const d=ui.drawer(l.title,`
-    ${photos.length?`<div class="strip">${photos.map(p=>`<img src="${esc(p.url)}" alt="" loading="lazy">`).join('')}</div>`:'<div class="intro" style="color:var(--red)">No photos uploaded.</div>'}
+    <div class="sec" style="margin-top:0">Photos</div><div id="ph"></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${bd(l.status)}${l.is_disabled?bd(l.recycle_bin?'recycle bin':'disabled','bad'):''}${l.is_featured?bd('featured','warn'):''}${bd(l.payment_status||'unpaid')}${l.is_multi_unit?bd('multi-unit','pur'):''}</div>
     <dl class="kv"><dt>Price</dt><dd>${esc(priceOf(l))}</dd><dt>Category</dt><dd>${esc(CAT[l.category]||l.category)}</dd><dt>Location</dt><dd>${esc(locOf(l))}${l.sub_area?' — '+esc(l.sub_area):''}</dd><dt>Bedrooms</dt><dd>${l.bedrooms==0?'Studio':esc(l.bedrooms??l.details?.bedrooms??'—')}</dd><dt>Plan</dt><dd>${l.payment_status==='trial'?S.cfg.trial_days+'-day free trial':l.is_featured?'Featured':'Standard'} · fee ${KES(upgradeAmount(l,l.is_featured?'featured':'basic'))}</dd><dt>Expires</dt><dd>${expiryOf(l)}</dd><dt>Posted</dt><dd>${dt(l.created_at)}</dd><dt>Listing no.</dt><dd>${numOf(l)||'—'}</dd></dl>
     ${(l.listing_units||[]).length?`<div class="sec">Unit types</div>${l.listing_units.map(u=>`<div class="row"><span>${esc(u.unit_label)}</span><span>${KES(u.price)} · ${u.quantity_available??0}/${u.quantity_total??'—'} free</span></div>`).join('')}`:''}
     <div class="sec">Seller</div><dl class="kv"><dt>Name</dt><dd>${esc(pr.full_name||'—')}</dd><dt>Email</dt><dd>${esc(pr.email||'—')}</dd><dt>Phone</dt><dd>${esc(pr.phone||'—')}</dd></dl>
     ${l.description?`<div class="sec">Description</div><p style="white-space:pre-wrap;color:var(--tx2)">${esc(l.description)}</p>`:''}
-    <div class="sec">Social</div><p>${(posts||[]).length?(posts||[]).map(p=>bd(p.platform+' · '+dt(p.created_at),'ok')).join(' '):'<small>Not posted yet</small>'}</p>
+    <div class="sec">Video walkthrough</div><div id="vd"><small>Loading…</small></div><div class="sec">Social</div><p>${(posts||[]).length?(posts||[]).map(p=>bd(p.platform+' · '+dt(p.created_at),'ok')).join(' '):'<small>Not posted yet</small>'}</p>
     <div class="sec">Recent admin activity</div>${(logs||[]).length?logs.map(x=>`<div class="row"><span>${esc(String(x.action).replace(/_/g,' '))}${x.details?' — '+esc(x.details):''}</span><small>${ago(x.created_at)}</small></div>`).join(''):'<small>None</small>'}`,
     `${numOf(l)?`<a class="btn" href="/listing?id=${numOf(l)}" target="_blank" rel="noopener">View live</a>`:''}${l.seller_id?`<button class="btn" data-go>Seller’s listings</button>`:''}<button class="btn" data-ed>Edit</button>${l.status==='pending'?'<button class="btn bad" data-rj>Reject</button><button class="btn pri" data-ap>Approve</button>':''}`);
+  photoSection(l,d,T);videoSection(l,d);
   const act=async f=>{try{const res=await f();if(res!==false){d.close();T.reload();refreshBadges();}}catch(e){ui.toast(e.message,'err');}};
   const q=s=>$(s,d.foot);
   q('[data-ap]')&&(q('[data-ap]').onclick=()=>act(()=>LA.approveFlow(l)));q('[data-rj]')&&(q('[data-rj]').onclick=()=>act(()=>LA.rejectFlow(l)));
@@ -901,6 +903,68 @@ VIEWS.payments={title:'Payments',mount(el,p){
     refetchOnFilter:true,empty:['No payments','Nothing matches these filters.']
   }).mount(el);
 }};
+
+/* ───── listing photos + video (inside the listing drawer) ───── */
+const photoPath=u=>{const m='/storage/v1/object/public/listing-photos/',i=(u||'').indexOf(m);return i<0?null:u.slice(i+m.length);};
+function photoSection(l,d,T){
+  const host=$('#ph',d.el);l.listing_photos=l.listing_photos||[];
+  const paint=()=>{const ph=l.listing_photos;
+    host.innerHTML=(ph.length?`<div class="pg">${ph.map(p=>`<div class="p ${p.is_cover?'cv':''}"><img src="${esc(p.url)}" alt="" loading="lazy">${p.is_cover?'<span class="bd warn" style="position:absolute;top:4px;left:4px">cover</span>':''}<div class="pt">${p.is_cover?'':`<button data-cv="${p.id}" title="Set as cover" aria-label="Set as cover">★</button>`}<button data-dl="${p.id}" title="Delete photo" aria-label="Delete photo">🗑</button></div></div>`).join('')}</div>`:'<p style="color:var(--red);margin-bottom:8px">No photos uploaded.</p>')+`<input type="file" id="pu" accept="image/*" multiple hidden><button class="btn sm" data-add>+ Add photos</button> <small id="ps"></small>`;};
+  paint();
+  host.onclick=async e=>{
+    try{
+      if(e.target.closest('[data-add]'))return $('#pu',host).click();
+      const cv=e.target.closest('[data-cv]');
+      if(cv){await db.from('listing_photos').update({is_cover:false}).eq('listing_id',l.id);const{error}=await db.from('listing_photos').update({is_cover:true}).eq('id',cv.dataset.cv);if(error)throw error;l.listing_photos.forEach(p=>p.is_cover=String(p.id)===cv.dataset.cv);paint();ui.toast('Cover photo updated','ok');T.reload();return;}
+      const dl=e.target.closest('[data-dl]');
+      if(dl){const p=l.listing_photos.find(x=>String(x.id)===dl.dataset.dl);if(!await ui.confirm({title:'Delete this photo?',message:'It is removed from the listing and from storage.',confirm:'Delete',danger:true}))return;
+        const path=photoPath(p.url);if(path)await db.storage.from('listing-photos').remove([path]);
+        const{error}=await db.from('listing_photos').delete().eq('id',p.id);if(error)throw error;
+        l.listing_photos=l.listing_photos.filter(x=>x.id!==p.id);
+        if(p.is_cover&&l.listing_photos.length){await db.from('listing_photos').update({is_cover:true}).eq('id',l.listing_photos[0].id);l.listing_photos[0].is_cover=true;}
+        logAction('delete_listing_photo','listing',l.id,'');paint();T.reload();}
+    }catch(err){ui.toast(err.message,'err');}
+  };
+  host.onchange=async e=>{
+    if(e.target.id!=='pu')return;const files=[...e.target.files],st=$('#ps',host);
+    for(let i=0;i<files.length;i++){
+      st.textContent=`Uploading ${i+1}/${files.length}…`;
+      const ext=(files[i].name.split('.').pop()||'jpg').toLowerCase(),path=`${l.id}/${Date.now()}_${i}.${ext}`;
+      const up=await db.storage.from('listing-photos').upload(path,files[i]);if(up.error){ui.toast('Upload failed: '+up.error.message,'err');continue;}
+      const{data:pub}=db.storage.from('listing-photos').getPublicUrl(path);
+      const{data:row,error}=await db.from('listing_photos').insert({listing_id:l.id,url:pub.publicUrl,is_cover:l.listing_photos.length===0}).select().single();
+      if(error){ui.toast('Save failed: '+error.message,'err');continue;}l.listing_photos.push(row);
+    }
+    logAction('add_listing_photos','listing',l.id,files.length+' file(s)');paint();T.reload();
+  };
+}
+async function videoSection(l,d){
+  const host=$('#vd',d.el);
+  async function paint(){
+    const[v,s,pd]=await Promise.all([db.from('listing_videos').select('*').eq('listing_id',l.id).order('position',{ascending:true}),l.seller_id?db.from('profiles').select('id,full_name,video_walkthrough_blocked,video_walkthrough_block_reason').eq('id',l.seller_id).single():{data:null},db.from('pending_seller_videos').select('*').eq('listing_id',l.id).eq('status','pending_review').order('created_at',{ascending:false})]);
+    if(!host.isConnected)return;
+    if(v.error){host.innerHTML=`<small>Video tables unavailable: ${esc(v.error.message)}</small>`;return;}
+    const cur=v.data?.[0],sel=s.data,blocked=!!sel?.video_walkthrough_blocked;
+    host.innerHTML=`${(pd.data||[]).map(p=>`<div class="intro" style="background:var(--goldl);padding:10px;border-radius:8px"><b>Seller upload awaiting review</b><br><a href="${esc(p.youtube_url)}" target="_blank" rel="noopener" style="text-decoration:underline">${esc(p.youtube_url)}</a><div style="margin-top:8px"><button class="btn sm ok" data-pa="${p.id}">Approve &amp; publish</button> <button class="btn sm bad" data-pr="${p.id}">Reject</button></div></div>`).join('')}
+    ${cur?`<p style="word-break:break-all;margin-bottom:8px"><a href="${esc(cur.url)}" target="_blank" rel="noopener" style="text-decoration:underline">${esc(cur.url)}</a> <button class="btn sm bad" data-vx="${cur.id}">Delete</button></p>`:'<p><small>No video on this listing.</small></p>'}
+    <div style="display:flex;gap:8px;margin:8px 0"><input class="in" id="vu" placeholder="${cur?'Replace with a new link…':'YouTube / Vimeo / TikTok / direct file link'}"><button class="btn sm" data-vs>${cur?'Replace':'Add'}</button></div>
+    ${sel?`<label class="chk"><input type="checkbox" id="vb" ${blocked?'checked':''}> Block ${esc(sel.full_name||'this seller')} from adding video walkthroughs</label><div class="fld" id="vrw" ${blocked?'':'hidden'}><textarea class="in" id="vr" rows="2" placeholder="Reason (internal)">${esc(sel.video_walkthrough_block_reason||'')}</textarea></div><button class="btn sm" data-vk>Save block setting</button>`:''}`;
+    const vb=$('#vb',host);if(vb)vb.onchange=()=>{$('#vrw',host).hidden=!vb.checked;};
+  }
+  host.onclick=async e=>{
+    const b=e.target.closest('button');if(!b)return;
+    try{
+      if(b.dataset.vs!==undefined){const url=$('#vu',host).value.trim();if(!/^https?:\/\//i.test(url))return ui.toast('Enter a valid link starting with http:// or https://','err');await db.from('listing_videos').delete().eq('listing_id',l.id);const{error}=await db.from('listing_videos').insert({listing_id:l.id,url,position:0});if(error)throw error;logAction('admin_set_listing_video','listing',l.id,url);ui.toast('Video saved','ok');}
+      else if(b.dataset.vx){const{error}=await db.from('listing_videos').delete().eq('id',b.dataset.vx);if(error)throw error;logAction('admin_delete_listing_video','listing',l.id,'');ui.toast('Video deleted');}
+      else if(b.dataset.pa){const{data:p}=await db.from('pending_seller_videos').select('*').eq('id',b.dataset.pa).single();await db.from('listing_videos').delete().eq('listing_id',l.id);await db.from('listing_videos').insert({listing_id:l.id,url:p.youtube_url,position:0});await db.from('pending_seller_videos').update({status:'approved',reviewed_at:new Date().toISOString(),reviewed_by:S.user.id}).eq('id',p.id);logAction('approve_seller_video','listing',l.id,p.youtube_url);ui.toast('Video approved and published','ok');}
+      else if(b.dataset.pr){await db.from('pending_seller_videos').update({status:'rejected',reviewed_at:new Date().toISOString(),reviewed_by:S.user.id}).eq('id',b.dataset.pr);ui.toast('Video rejected');}
+      else if(b.dataset.vk!==undefined){const on=$('#vb',host).checked;const{error}=await db.from('profiles').update({video_walkthrough_blocked:on,video_walkthrough_block_reason:on?($('#vr',host).value.trim()||null):null}).eq('id',l.seller_id);if(error)throw error;logAction(on?'block_seller_videos':'unblock_seller_videos','profile',l.seller_id,'');ui.toast(on?'Seller blocked from adding videos':'Seller unblocked','ok');}
+      else return;
+      paint();
+    }catch(err){ui.toast(err.message,'err');}
+  };
+  paint();
+}
 /* ═════════ SELLERS ═════════ */
 const EMAIL_TPL=[
   {id:'verification_reminder',l:'Verification reminder',s:'Verify your Nyumba254 account',b:n=>`Hi ${n},\n\nA quick reminder to verify your seller account. Verified sellers get unlimited listings and a trust badge buyers can see — it takes about 2 minutes under Settings → Verification.\n\nThanks for listing with us.`},
@@ -998,6 +1062,7 @@ VIEWS.verification={title:'Verification',mount(el,p){
       {label:'Approve extra documents',hide:u.extra_verification_status!=='submitted',fn:async()=>{await db.from('profiles').update({extra_verification_status:'approved'}).eq('id',u.id);await db.from('verification_activity_log').insert({seller_id:u.id,action:'extra_approved',admin_id:S.user.id});ui.toast('Extra documents approved','ok');}},
       {label:'Request extra documents',fn:()=>requestExtraDocs(u)},
       {label:'Revoke verification',danger:true,hide:!ver,fn:async()=>{const r=await ui.ask({title:'Revoke verification?',message:`${esc(u.full_name||'This seller')} loses their badge and returns to the unverified listing limit.`,label:'Internal note',confirm:'Revoke',danger:true});if(r===null)return false;await db.from('profiles').update({verification_status:'unverified',verification_reviewed_at:new Date().toISOString(),verification_reviewed_by:S.user.id}).eq('id',u.id);await db.from('verification_activity_log').insert({seller_id:u.id,action:'revoked',detail:r,admin_id:S.user.id});ui.toast('Verification revoked');}}];},
+    open:(u,T)=>openVerify(u,T),
     empty:['Nothing to review','New verification submissions appear here.']
   }).mount(el);
 }};
@@ -1086,11 +1151,16 @@ VIEWS.support={title:'Support chat',async mount(el,p,ctx){
     $$('[data-f]',el).forEach(b=>b.classList.toggle('ok',b.dataset.f===filter));
   }
   function paintThread(){
-    const s=act;$('#ct',el).innerHTML=`<div style="padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;gap:10px;align-items:center"><div style="flex:1;min-width:0"><b>${esc(s.visitor_name||'Visitor')}</b><br><small>${isSel(s)?'Registered seller':'Visitor'} · ${esc(s.topic||s.page||'')}</small></div><button class="btn sm" id="rs">${s.is_resolved?'Reopen':'Resolve'}</button></div><div class="msgs" id="ms">${msgs.length?msgs.map(m=>`<div class="m ${m.sender==='admin'?'me':''}" style="${m.sender==='admin'?'':'align-self:flex-start'}">${esc(m.body)}<small>${dtt(m.created_at)}</small></div>`).join(''):'<div class="empty">No messages yet — say hello.</div>'}</div>${s.is_resolved?'<div class="reply"><small style="margin:auto">Resolved — reopen to reply</small></div>':'<div class="reply"><textarea id="rt" rows="1" placeholder="Type a reply… (Enter to send)"></textarea><button class="btn pri" id="sn">Send</button></div>'}`;
+    const s=act,draft=$('#rt',el)?.value||'',had=document.activeElement?.id==='rt';
+    $('#ct',el).innerHTML=`<div style="padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;gap:10px;align-items:center;flex-shrink:0"><div style="flex:1;min-width:0"><b>${esc(s.visitor_name||'Visitor')}</b><br><small>${isSel(s)?'Registered seller':'Visitor'} · ${esc(s.topic||s.page||'')}${s.is_resolved?' · resolved':''}</small></div><button class="btn sm" id="rs">${s.is_resolved?'Reopen':'Resolve'}</button></div><div class="msgs" id="ms">${msgs.length?msgs.map(m=>`<div class="m ${m.sender==='admin'?'me':''}" style="${m.sender==='admin'?'':'align-self:flex-start'}">${esc(m.body)}<small>${dtt(m.created_at)}</small></div>`).join(''):'<div class="empty">No messages yet — say hello.</div>'}</div><div class="reply"><textarea id="rt" rows="2" placeholder="${s.is_resolved?'Replying will reopen this conversation…':'Type a reply… (Enter to send)'}"></textarea><button class="btn pri" id="sn">Send</button></div>`;
     const ms=$('#ms',el);ms.scrollTop=ms.scrollHeight;
+    const rt=$('#rt',el);rt.value=draft;if(had)rt.focus();
     $('#rs',el).onclick=async()=>{await db.from('chat_sessions').update({is_resolved:!s.is_resolved}).eq('id',s.id);s.is_resolved=!s.is_resolved;paintThread();paintList();refreshBadges();};
-    const send=async()=>{const t=$('#rt',el);const b=t.value.trim();if(!b)return;t.value='';const{data,error}=await db.from('chat_messages').insert({session_id:s.id,sender:'admin',body:b}).select().single();if(error){ui.toast(error.message,'err');t.value=b;return;}if(!msgs.some(m=>m.id===data.id))msgs.push(data);await db.from('chat_sessions').update({last_msg_at:new Date().toISOString()}).eq('id',s.id);paintThread();$('#rt',el)?.focus();};
-    if($('#sn',el)){$('#sn',el).onclick=send;$('#rt',el).onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}};}
+    const send=async()=>{const t=$('#rt',el);const b=t.value.trim();if(!b)return;t.value='';
+      if(s.is_resolved){await db.from('chat_sessions').update({is_resolved:false}).eq('id',s.id);s.is_resolved=false;}
+      const{data,error}=await db.from('chat_messages').insert({session_id:s.id,sender:'admin',body:b}).select().single();if(error){ui.toast(error.message,'err');t.value=b;return;}
+      if(!msgs.some(m=>m.id===data.id))msgs.push(data);await db.from('chat_sessions').update({last_msg_at:new Date().toISOString()}).eq('id',s.id);paintThread();paintList();$('#rt',el)?.focus();};
+    $('#sn',el).onclick=send;rt.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}};
   }
   async function open(id){
     act=sessions.find(s=>s.id===id)||(await db.from('chat_sessions').select('*').eq('id',id).single()).data;if(!act)return;
@@ -1186,16 +1256,16 @@ VIEWS.reveals={title:'Contact reveals',mount(el,p){
 
 /* ═════════ ACTIVITY + ANALYTICS ═════════ */
 VIEWS.activity={title:'Activity log',mount(el,p){
-  return Table({route:'activity',params:p,size:100,id:r=>r.id,search:'',filters:[{id:'from',type:'date',label:'From'},{id:'to',type:'date',label:'To'}],refetchOnFilter:true,
-    async fetch(st){let q=db.from('admin_logs').select('*',{count:'exact'});if(st.f.from)q=q.gte('created_at',st.f.from+'T00:00:00');if(st.f.to)q=q.lte('created_at',st.f.to+'T23:59:59');const{data,error,count}=await q.order('created_at',{ascending:false}).range(st.page*st.size,st.page*st.size+st.size-1);if(error)throw error;return{rows:data,count};},
+  return Table({route:'activity',params:p,size:100,id:r=>r.id,search:'Search action, admin or details…',filters:[{id:'from',type:'date',label:'From'},{id:'to',type:'date',label:'To'}],refetchOnFilter:true,
+    async fetch(st){let q=db.from('admin_logs').select('*',{count:'exact'});{const s=safe(st.q);if(s)q=q.or(`admin_name.ilike.%${s}%,action.ilike.%${s}%,details.ilike.%${s}%`);}if(st.f.from)q=q.gte('created_at',st.f.from+'T00:00:00');if(st.f.to)q=q.lte('created_at',st.f.to+'T23:59:59');const{data,error,count}=await q.order('created_at',{ascending:false}).range(st.page*st.size,st.page*st.size+st.size-1);if(error)throw error;return{rows:data,count};},
     columns:[{label:'Admin',render:r=>esc(r.admin_name||'—')},{label:'Action',render:r=>bd(String(r.action||'').replace(/_/g,' '),'ok')},{label:'Target',render:r=>esc(r.target_type||'—')},{label:'Details',render:r=>`<span style="display:block;max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.details||'—')}</span>`},{label:'When',render:r=>dtt(r.created_at)}],
     csv:{name:'nyumba254-activity',headers:['When','Admin','Action','Target','Target id','Details'],row:r=>[r.created_at,r.admin_name,r.action,r.target_type,r.target_id,r.details]},
     empty:['No activity yet','Admin actions are recorded here.']
   }).mount(el);
 }};
 VIEWS.analytics={title:'Site visits',mount(el,p){
-  return Table({route:'analytics',params:p,id:r=>r.id,search:'',filters:[{id:'from',type:'date',label:'From'},{id:'to',type:'date',label:'To'}],refetchOnFilter:true,
-    async fetch(st){let q=db.from('page_views').select('*',{count:'exact'});if(st.f.from)q=q.gte('created_at',st.f.from+'T00:00:00');if(st.f.to)q=q.lte('created_at',st.f.to+'T23:59:59');const{data,error,count}=await q.order('created_at',{ascending:false}).range(st.page*st.size,st.page*st.size+st.size-1);if(error)throw error;return{rows:data,count};},
+  return Table({route:'analytics',params:p,id:r=>r.id,search:'Search page path…',filters:[{id:'from',type:'date',label:'From'},{id:'to',type:'date',label:'To'}],refetchOnFilter:true,
+    async fetch(st){let q=db.from('page_views').select('*',{count:'exact'});{const s=safe(st.q);if(s)q=q.ilike('path',`%${s}%`);}if(st.f.from)q=q.gte('created_at',st.f.from+'T00:00:00');if(st.f.to)q=q.lte('created_at',st.f.to+'T23:59:59');const{data,error,count}=await q.order('created_at',{ascending:false}).range(st.page*st.size,st.page*st.size+st.size-1);if(error)throw error;return{rows:data,count};},
     async header(st){
       const today=new Date();today.setHours(0,0,0,0);let q=db.from('page_views').select('path,session_id').order('created_at',{ascending:false}).limit(1000);if(st.f.from)q=q.gte('created_at',st.f.from+'T00:00:00');if(st.f.to)q=q.lte('created_at',st.f.to+'T23:59:59');
       const[{count:total},{count:td},{data}]=await Promise.all([db.from('page_views').select('id',{count:'exact',head:true}),db.from('page_views').select('id',{count:'exact',head:true}).gte('created_at',today.toISOString()),q]);
@@ -1206,6 +1276,12 @@ VIEWS.analytics={title:'Site visits',mount(el,p){
     empty:['No visits recorded','Add the tracking snippet to your public pages.']
   }).mount(el);
 }};
+
+function openVerify(u,T){
+  const acts=(T.st.acts.get(String(u.id))||[]).filter(a=>a.label&&!a.sep);
+  const d=ui.drawer(u.full_name||'Seller',`<div style="display:flex;gap:6px;margin-bottom:12px">${bd(u.verification_status||'unverified')}${u.extra_verification_status?bd('extra docs: '+u.extra_verification_status,'info'):''}</div><dl class="kv"><dt>Email</dt><dd>${esc(u.email||'—')}</dd><dt>Phone</dt><dd>${esc(u.phone||'—')}</dd><dt>Ownership</dt><dd>${u.verification_is_owner===false?'Not owner (authority letter)':'Owner'}</dd><dt>Submitted</dt><dd>${dt(u.verification_submitted_at)}</dd>${u.verification_rejection_reason?`<dt>Last rejection</dt><dd>${esc(u.verification_rejection_reason)}</dd>`:''}${u.extra_verification_reason?`<dt>Extra docs asked</dt><dd>${esc(u.extra_verification_reason)}</dd>`:''}</dl><p class="intro"><small>Use the buttons below to open the uploaded documents, then approve or reject.</small></p>`,acts.map((a,i)=>`<button class="btn sm ${a.cls||''}" data-a="${i}">${esc(a.label)}</button>`).join(''));
+  d.foot.onclick=e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=acts[+b.dataset.a];if(!/^View/.test(a.label))d.close();T.run(a,u);};
+}
 /* ═════════ CONCIERGE INBOX (managed chat: admin replies to buyers as the seller) ═════════ */
 async function conciergeScope(){
   const{data:sellers}=await db.from('profiles').select('id,full_name,email,phone,concierge_enabled_at').eq('concierge_enabled',true).order('concierge_enabled_at',{ascending:false});
@@ -1270,15 +1346,15 @@ VIEWS.concierge={title:'Concierge inbox',async mount(el,p,ctx){
   }
   function leave(){if(pres){db.removeChannel(pres);pres=null;}clearTimeout(typingT);online=false;}
   function thread(){
-    const t=active,l=t.listing,s=suggest(t);
+    const t=active,l=t.listing,s=suggest(t),draft=$('#rt',el)?.value||'',had=document.activeElement?.id==='rt';
     const wa=t.phone?`<a class="btn sm" target="_blank" rel="noopener" href="https://wa.me/${t.phone.replace(/[\s+]/g,'').replace(/^0/,'254')}">WhatsApp</a>`:'';
     $('#ct',el).innerHTML=`<div style="padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;gap:10px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:0"><b>${esc(t.buyerName)}</b><br><small>${esc(t.sellerName)} · ${esc(l?.title||'Listing')}${t.phone?' · '+esc(t.phone):''}</small><br><small><span id="pd" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#9a9a94;margin-right:5px"></span><span id="pt">Buyer offline</span></small></div>${wa}${l&&numOf(l)?`<a class="btn sm" target="_blank" rel="noopener" href="/listing?id=${numOf(l)}">View listing</a>`:''}</div>
     <div class="msgs" id="ms">${t.msgs.map(m=>`<div class="m ${m.sender==='seller'?'me':''}" style="${m.sender==='seller'?'':'align-self:flex-start'}">${esc(m.content||'')}<small>${m.sender==='seller'?(m.byAdmin?'You (as seller)':'Seller'):esc(t.buyerName)} · ${dtt(m.created_at)}</small></div>`).join('')}</div>
     ${t.msgs.some(m=>m.sender==='buyer')?`<div style="margin:0 12px 8px;padding:10px 12px;background:var(--goldl);border-radius:10px"><small style="color:var(--gold);font-weight:700">💡 Suggested reply — ${esc(s.tpl.label.replace(/^\S+\s/,''))}</small><p style="margin:4px 0 8px;color:var(--tx2)">${esc(s.body)}</p><button class="btn sm ok" data-q="${s.tpl.id}">⚡ Send this</button> <button class="btn sm" data-e="${s.tpl.id}">✎ Edit first</button></div>`:''}
     <div style="display:flex;gap:6px;flex-wrap:wrap;padding:0 12px 8px">${CC_QR.map(x=>`<button class="btn sm" data-q="${x.id}">${x.label}</button>`).join('')}</div>
-    <div class="reply"><textarea id="rt" rows="1" placeholder="Type a reply as the seller… (Enter to send)"></textarea><button class="btn pri" id="sn">Send</button></div>`;
+    <div class="reply"><textarea id="rt" rows="2" placeholder="Type a reply as the seller… (Enter to send)"></textarea><button class="btn pri" id="sn">Send</button></div>`;
     const ms=$('#ms',el);ms.scrollTop=ms.scrollHeight;setPresence(online?'online':'offline');
-    const rt=$('#rt',el);rt.oninput=()=>{const n=Date.now();if(pres&&n-typingSent>2000){typingSent=n;pres.send({type:'broadcast',event:'typing',payload:{from:'seller'}});}};
+    const rt=$('#rt',el);rt.value=draft;if(had)rt.focus();rt.oninput=()=>{const n=Date.now();if(pres&&n-typingSent>2000){typingSent=n;pres.send({type:'broadcast',event:'typing',payload:{from:'seller'}});}};
     rt.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send(rt.value);}};$('#sn',el).onclick=()=>send(rt.value);
   }
   async function send(text){
@@ -1288,7 +1364,7 @@ VIEWS.concierge={title:'Concierge inbox',async mount(el,p,ctx){
     if(!t.msgs.some(m=>m.id===data.id))t.msgs.push({id:data.id,sender:'seller',content:text,created_at:data.created_at,read:null,tbl:'messages',raw:data.id,byAdmin:true});
     t.last=data.created_at;threads=[t,...threads.filter(x=>x!==t)];
     logAction('concierge_reply','listing',t.listingId,'Replied to '+t.buyerName);notifyBuyerIfOffline(t.token,t.listing?.title,text,t.listingId);
-    paint();thread();$('#rt',el)?.focus();
+    {const r=$('#rt',el);if(r)r.value='';}paint();thread();$('#rt',el)?.focus();
   }
   async function open(key){
     const t=threads.find(x=>x.key===key);if(!t)return;active=t;join(t.listingId);thread();paint();
@@ -1385,7 +1461,7 @@ const PU_TPL={
 const PU_CATS={general:'General update',feature:'New feature',maintenance:'Maintenance',policy_update:'Terms / Privacy update',security_alert:'Security alert',billing:'Billing / pricing',promotion:'Promotion',milestone:'Milestone',legal:'Legal / compliance',event:'Event',survey:'Survey',incident:'Incident'};
 VIEWS.updates={title:'Platform updates',async mount(el,p,ctx){
   let tab=p.tab||'compose';
-  el.innerHTML=`<div class="tabs"><button data-t="compose">Compose</button><button data-t="auto">Automated triggers</button><button data-t="history">History</button></div><div id="pu"></div>`;
+  el.innerHTML=`<div class="tabs"><button data-t="compose">Bulk compose</button><button data-t="person">Email one person</button><button data-t="auto">Automated triggers</button><button data-t="history">History</button></div><div id="pu"></div>`;
   $('.tabs',el).onclick=e=>{const b=e.target.closest('[data-t]');if(b){tab=b.dataset.t;paint();}};
   async function audienceCount(a){
     const pf=()=>db.from('profiles').select('id',{count:'exact',head:true}).neq('role','admin');
@@ -1394,7 +1470,7 @@ VIEWS.updates={title:'Platform updates',async mount(el,p,ctx){
     const{data}=await db.from('listings').select('seller_id').eq('status','active');return new Set((data||[]).map(r=>r.seller_id)).size;
   }
   async function paint(){
-    $$('.tabs button',el).forEach(b=>b.classList.toggle('on',b.dataset.t===tab));const box=$('#pu',el);
+    $$('.tabs button',el).forEach(b=>b.classList.toggle('on',b.dataset.t===tab));const box=$('#pu',el);box.onclick=null;box.onchange=null;box.oninput=null;box.onkeydown=null;
     if(tab==='compose'){
       box.innerHTML=`<div class="two" style="align-items:start"><div class="card" style="padding:18px"><div class="fld"><label>Start from a template</label><select class="in" id="pt"><option value="">— From scratch —</option>${Object.entries(PU_TPL).map(([k,v])=>`<option value="${k}">${esc(v.title)}</option>`).join('')}</select></div>
       <div class="g2"><div class="fld"><label>Category</label><select class="in" id="pc">${Object.entries(PU_CATS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div><div class="fld"><label>Audience</label><select class="in" id="pa"><option value="all">All sellers</option><option value="verified">Verified sellers</option><option value="premium">Premium / Elite</option><option value="active_listings">Sellers with an active listing</option></select></div></div>
@@ -1405,7 +1481,7 @@ VIEWS.updates={title:'Platform updates',async mount(el,p,ctx){
       const pv=()=>{$('#pvt',box).textContent=$('#ptl',box).value||'(no title yet)';$('#pvm',box).textContent=$('#pm',box).value||'(no message yet)';$('#pcn',box).textContent=`${$('#pm',box).value.length} / 2000`;};
       const ac=debounce(async()=>{$('#pac',box).textContent=`≈ ${await audienceCount($('#pa',box).value)} seller(s) will receive this`;},200);
       $('#pt',box).onchange=e=>{const t=PU_TPL[e.target.value];if(!t)return;$('#pc',box).value=t.category;$('#ptl',box).value=t.title;$('#pm',box).value=t.message;$('#pl',box).value=t.link;pv();};
-      box.addEventListener('input',pv);$('#pa',box).onchange=ac;ac();pv();
+      box.oninput=pv;$('#pa',box).onchange=ac;ac();pv();
       $('#ps',box).onclick=async()=>{
         const title=$('#ptl',box).value.trim(),message=$('#pm',box).value.trim(),audience=$('#pa',box).value;if(!title||!message)return ui.toast('Title and message are required','err');
         if(/\[[^\]]+\]/.test(message+title)&&!await ui.confirm({title:'Placeholders still in the text',message:'Your message still contains [bracketed placeholders]. Send anyway?',confirm:'Send anyway',danger:true}))return;
@@ -1418,6 +1494,33 @@ VIEWS.updates={title:'Platform updates',async mount(el,p,ctx){
           ui.toast(`Sent to ${body.recipients} seller(s) — ${body.emailsSent||0} email(s) delivered`,'ok');logAction('send_platform_update','announcement',body.announcementId,title);tab='history';paint();
         }catch(e){ui.toast('Could not send: '+e.message,'err');b.disabled=false;b.textContent='Send to sellers';}
       };
+    }else if(tab==='person'){
+      let picked=null,results=[],edited=false;
+      box.innerHTML=`<div class="card" style="padding:18px;max-width:720px"><div class="fld"><label>Recipient</label><input class="in" id="qi" placeholder="Type a name, email or phone number…" autocomplete="off"><small>What you type is matched against existing seller profiles. Click a match (or press Enter for the first one).</small></div><div id="qr"></div><div id="sel"></div>
+      <div class="fld"><label>Template</label><select class="in" id="tt">${EMAIL_TPL.map(t=>`<option value="${t.id}">${esc(t.l)}</option>`).join('')}</select></div>
+      <div class="fld"><label>Subject</label><input class="in" id="ts"></div><div class="fld"><label>Message</label><textarea class="in" id="tm" rows="8"></textarea><small>Sent exactly as written. The template is only a starting point.</small></div>
+      <label class="chk"><input type="checkbox" id="tn" checked> Also send an in-app notification</label><button class="btn pri" id="tsd" disabled>Send email</button></div>`;
+      const nm=()=>picked?.full_name||'there';
+      const applyTpl=()=>{const t=EMAIL_TPL.find(x=>x.id===$('#tt',box).value);$('#ts',box).value=t.s;$('#tm',box).value=t.b(nm());edited=false;};
+      const paintSel=()=>{$('#sel',box).innerHTML=picked?`<div class="chip" style="margin-bottom:14px">${esc(picked.full_name||'—')} · ${esc(picked.email||'no email on file')}<button id="clr" aria-label="Remove recipient">×</button></div>${picked.email?'':'<p class="intro" style="color:var(--red)">This profile has no email address, so an email can’t be sent.</p>'}`:'';$('#tsd',box).disabled=!picked||!picked.email;};
+      const paintRes=()=>{$('#qr',box).innerHTML=results.length?`<div style="border:1px solid var(--bd);border-radius:10px;margin-bottom:12px;overflow:hidden">${results.map((u,i)=>`<div class="ci" data-i="${i}"><b>${esc(u.full_name||'—')}</b> <small>${esc(u.email||'no email')}${u.phone?' · '+esc(u.phone):''}</small> ${bd(u.verification_status||'unverified')}</div>`).join('')}</div>`:'';};
+      const pick=u=>{picked=u;results=[];$('#qi',box).value='';paintRes();paintSel();if(!edited)applyTpl();};
+      const search=debounce(async v=>{const s=safe(v);if(s.length<2){results=[];paintRes();return;}const{data}=await db.from('profiles').select('id,full_name,email,phone,verification_status').neq('role','admin').or(`full_name.ilike.%${s}%,email.ilike.%${s}%,phone.ilike.%${s}%`).limit(8);results=data||[];if(results.length)paintRes();else $('#qr',box).innerHTML='<p style="margin-bottom:12px"><small>No seller profile matches that.</small></p>';},250);
+      applyTpl();$('#qi',box).focus();
+      $('#qi',box).oninput=e=>search(e.target.value);
+      $('#qi',box).onkeydown=e=>{if(e.key==='Enter'&&results[0]){e.preventDefault();pick(results[0]);}};
+      $('#tm',box).oninput=()=>{edited=true;};$('#tt',box).onchange=applyTpl;
+      box.onclick=e=>{const r=e.target.closest('[data-i]');if(r){pick(results[+r.dataset.i]);return;}if(e.target.id==='clr'){picked=null;paintSel();}};
+      $('#tsd',box).onclick=async()=>{
+        const subject=$('#ts',box).value.trim(),message=$('#tm',box).value.trim();if(!picked?.email)return;if(!subject||!message)return ui.toast('Subject and message are required','err');
+        if(!await ui.confirm({title:`Email ${picked.full_name||'this seller'}?`,message:`To <b>${esc(picked.email)}</b><br>Subject: <b>${esc(subject)}</b>`,confirm:'Send email'}))return;
+        const b=$('#tsd',box);b.disabled=true;b.textContent='Sending…';
+        const res=await notifyByEmail('admin_seller_notice',{audience:'seller',noticeType:$('#tt',box).value,subject,message,sellerName:picked.full_name,sellerEmail:picked.email});
+        if(!res.ok){ui.toast('Email failed: '+(res.body?.error||res.body?.failedRecipients?.[0]?.error||'HTTP '+res.status),'err');b.disabled=false;b.textContent='Send email';return;}
+        logAction('email_seller','profile',picked.id,`Sent "${subject}"`);
+        if($('#tn',box).checked)notifyInApp(picked.id,'platform_update',subject,message.slice(0,240),null);
+        ui.toast(`Email sent to ${picked.email}`,'ok');picked=null;paintSel();applyTpl();b.textContent='Send email';
+      };
     }else if(tab==='auto'){
       const{data,error}=await db.from('platform_automation_rules').select('*').order('id');
       box.innerHTML=`<p class="intro">These rules run on a schedule and message sellers automatically (each seller at most once per rule every 20 hours). Toggle a rule on to activate it.</p>`+(error||!data?.length?'<div class="card empty"><h4>No automation rules found</h4><p>Run the setup SQL to seed the defaults.</p></div>':data.map(r=>`<div class="card" style="padding:16px;margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b>${esc(r.rule_key.replace(/_/g,' '))}</b> ${bd(r.enabled?'active':'off',r.enabled?'ok':'mute')}<br><small>${r.last_run_at?'Last checked '+dtt(r.last_run_at):'Never run yet'}</small></div><label class="chk" style="margin:0"><input type="checkbox" data-r="${r.id}" ${r.enabled?'checked':''}> Enabled</label></div><div class="fld" style="margin:12px 0 8px"><input class="in" id="rt${r.id}" value="${esc(r.title)}"></div><div class="fld"><textarea class="in" id="rm${r.id}" rows="2">${esc(r.message)}</textarea></div><button class="btn sm" data-sv="${r.id}">Save wording</button></div>`).join(''));
@@ -1425,8 +1528,8 @@ VIEWS.updates={title:'Platform updates',async mount(el,p,ctx){
       box.onclick=async e=>{const s=e.target.closest('[data-sv]');if(!s)return;const id=s.dataset.sv,t=$('#rt'+id,box).value.trim(),m=$('#rm'+id,box).value.trim();if(!t||!m)return ui.toast('Title and message are required','err');const{error}=await db.from('platform_automation_rules').update({title:t,message:m,updated_at:new Date().toISOString(),updated_by:S.user.id}).eq('id',id);ui.toast(error?error.message:'Wording saved',error?'err':'ok');};
     }else{
       box.innerHTML='';
-      const T=Table({route:'updates',params:{},size:50,id:r=>r.id,search:'',tabs:[{id:'all',label:'All'},{id:'manual',label:'Manual'},{id:'automated',label:'Automated'}],
-        async fetch(st){let q=db.from('platform_announcements').select('*',{count:'exact'});if(st.tab!=='all')q=q.eq('trigger_source',st.tab);const{data,error,count}=await q.order('created_at',{ascending:false}).range(st.page*st.size,st.page*st.size+st.size-1);if(error)throw error;return{rows:data,count};},
+      const T=Table({route:'updates',params:{},size:50,id:r=>r.id,search:'Search broadcasts…',tabs:[{id:'all',label:'All'},{id:'manual',label:'Manual'},{id:'automated',label:'Automated'}],
+        async fetch(st){let q=db.from('platform_announcements').select('*',{count:'exact'});if(st.tab!=='all')q=q.eq('trigger_source',st.tab);{const s=safe(st.q);if(s)q=q.ilike('title',`%${s}%`);}const{data,error,count}=await q.order('created_at',{ascending:false}).range(st.page*st.size,st.page*st.size+st.size-1);if(error)throw error;return{rows:data,count};},
         columns:[{label:'Title',nl:1,render:r=>`<b style="color:var(--tx)">${esc(r.title)}</b>`},{label:'Category',render:r=>bd((r.category||'').replace(/_/g,' '),'info')},{label:'Source',render:r=>bd(r.trigger_source==='automated'?'automated':'manual','mute')},{label:'Audience',render:r=>esc((r.audience||'').replace(/_/g,' '))},{label:'Recipients',render:r=>r.recipient_count},{label:'Emails',render:r=>`${r.emails_sent||0} sent${r.emails_failed?` · ${r.emails_failed} failed`:''}`},{label:'Sent',render:r=>dtt(r.created_at)}],
         empty:['No broadcasts yet','Sent updates are listed here.']}).mount(box);
     }
