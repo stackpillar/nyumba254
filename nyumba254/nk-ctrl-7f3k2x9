@@ -1571,4 +1571,5 @@ $('#lgf').onsubmit=async e=>{
 };
 boot();
 </script>
+<script src="admin-extras.js"></script>
 </body></html>
