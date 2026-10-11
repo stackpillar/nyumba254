@@ -17,18 +17,25 @@ ui.toast=function(m,t,a){const s=String(m||'');if(X.mute&&X.mute.test(s)){X.mute
 
 /* ───── 13. roles ───── */
 const ROLES={
-  super:{l:'Super admin',d:'Everything, including settings, pricing, deleting and team roles.',can:['*']},
+  super:{l:'Super admin',d:'Everything. Set only in Supabase. No one in the dashboard can change or remove it.',can:['*']},
+  admin:{l:'Admin',d:'Full access to everything, except managing Super admins.',can:['*']},
   moderator:{l:'Moderator',d:'Approve, reject and edit listings; verification, reports, reviews, suspensions, messages. No pricing, deletes, payments or team.',can:['listing.moderate','seller.suspend','verify','report','review','message','email']},
   support:{l:'Support',d:'Chat, concierge, enquiries, reviews and individual emails. Read-only elsewhere.',can:['message','email','review']},
   finance:{l:'Finance',d:'Payments, reconciliation, refunds, plans, revenue and data export. Read-only elsewhere.',can:['payment.confirm','plan.grant','refund.record','data.export','email']}
 };
-const role=()=>ROLES[S.me&&S.me.admin_role]?S.me.admin_role:'super';
+const role=()=>ROLES[S.me&&S.me.admin_role]?S.me.admin_role:'admin';
 const can=a=>{const c=ROLES[role()].can;return c.includes('*')||c.includes(a);};
 const need=(a,fn)=>function(...args){if(!can(a))throw new Error(`Your role (${ROLES[role()].l}) can’t do this.`);return fn.apply(this,args);};
 ['approve','approveFlow','reject','rejectFlow','feature','unfeature','activate','deactivate','occupied','free','extend','recycle','recycleRaw','restore','edit','post'].forEach(k=>{if(LA[k])LA[k]=need('listing.moderate',LA[k]);});
 LA.upgrade=need('payment.confirm',LA.upgrade);LA.del=need('listing.delete',LA.del);LA.cascade=need('listing.delete',LA.cascade);
 confirmPayment=need('payment.confirm',confirmPayment);rejectPayment=need('payment.confirm',rejectPayment);
-grantPlan=need('plan.grant',grantPlan);deleteSeller=need('seller.delete',deleteSeller);
+grantPlan=need('plan.grant',grantPlan);
+const _delSeller=deleteSeller;
+deleteSeller=need('seller.delete',async function(u){
+  const{data:t}=await db.from('profiles').select('role,admin_role').eq('id',u.id).maybeSingle();
+  if(t&&(t.role==='admin'||t.admin_role))throw new Error('Delete failed: admin and Super admin profiles can’t be deleted from the dashboard. Remove admin access first under Team & roles (email verification required).');
+  return _delSeller(u);
+});
 suspendSeller=need('seller.suspend',suspendSeller);reinstateSeller=need('seller.suspend',reinstateSeller);
 emailSeller=need('email',emailSeller);setReport=need('report',setReport);requestExtraDocs=need('verify',requestExtraDocs);
 
@@ -505,24 +512,42 @@ VIEWS.emails={title:'Email log',mount(el,p){
   }).mount(el);
 }};
 
-/* ───── 13. team & roles ───── */
+/* ───── 13. team & roles (email-verified, Admin only; Super is managed in Supabase) ───── */
+async function changeAdminAccess(u,grant){
+  if(u.id===S.user.id)throw new Error('You can’t change your own access.');
+  if(u.admin_role==='super')throw new Error('Super admins can only be managed in Supabase.');
+  const email=S.user.email;
+  if(!await ui.confirm({title:grant?'Make this person an admin?':'Remove admin access?',message:`<b>${esc(u.full_name||u.email||'This person')}</b> ${grant?'will get full admin access (not Super admin).':'will go back to a normal seller account.'}<br><br>For security, a verification code will be emailed to <b>${esc(email)}</b>.`,confirm:'Send code'}))return false;
+  const{error:e1}=await db.auth.signInWithOtp({email,options:{shouldCreateUser:false}});
+  if(e1)throw new Error('Could not send the code: '+e1.message);
+  const code=await ui.ask({title:'Enter verification code',message:`We emailed a code to <b>${esc(email)}</b>.`,label:'Code',type:'text',confirm:'Verify and apply'});
+  if(code===null)return false;
+  const{error:e2}=await db.auth.verifyOtp({email,token:code.replace(/\s/g,''),type:'email'});
+  if(e2)throw new Error('Code not accepted: '+e2.message);
+  const{error:e3}=await db.rpc('set_admin_access',{p_target:u.id,p_grant:grant});
+  if(e3)throw new Error(e3.message);
+  logAction(grant?'grant_admin':'revoke_admin','profile',u.id,u.email||'');
+  ui.toast(grant?'Admin access granted':'Admin access removed','ok');
+}
 VIEWS.team={title:'Team & roles',mount(el,p){
-  el.innerHTML=`<p class="intro">To add someone: open them under <b>Sellers → Manage profile</b>, set Role to Admin, then give them a role here. Admins without a role are treated as Super admins.</p><div class="grid4">${Object.values(ROLES).map(r=>`<div class="card kpi"><b style="font-size:16px">${esc(r.l)}</b><small>${esc(r.d)}</small></div>`).join('')}</div><div id="tm"></div>`;
+  el.innerHTML=`<p class="intro">Admins have full access except managing Super admins. Granting or removing admin access needs an emailed verification code. Super admins are managed only in Supabase.</p><div id="tm"></div>`;
   return Table({route:'team',params:p,id:r=>r.id,local:true,search:'Search admins…',
     async fetch(){const{data,error}=await db.from('profiles').select('id,full_name,email,phone,admin_role,created_at').eq('role','admin').order('created_at');if(error)throw error;return data;},
     searchText:u=>`${u.full_name} ${u.email}`,
-    columns:[{label:'Admin',nl:1,render:u=>`<b style="color:var(--tx)">${esc(u.full_name||'—')}</b>${u.id===S.user.id?' '+bd('you','info'):''}<br><small>${esc(u.email||'')}</small>`},{label:'Role',render:u=>bd((ROLES[u.admin_role]||ROLES.super).l,(u.admin_role&&u.admin_role!=='super'&&ROLES[u.admin_role])?'info':'pur')},{label:'Joined',render:u=>dt(u.created_at)}],
-    actions:u=>Object.entries(ROLES).map(([k,v])=>({label:'Set role: '+v.l,hide:(ROLES[u.admin_role]?u.admin_role:'super')===k,fn:need('team.manage',async()=>{
-      if(u.id===S.user.id)throw new Error('You can’t change your own role — ask another Super admin.');
-      const cur=ROLES[u.admin_role]?u.admin_role:'super';
-      if(cur==='super'&&k!=='super'){const{data}=await db.from('profiles').select('id,admin_role').eq('role','admin');if((data||[]).filter(x=>(ROLES[x.admin_role]?x.admin_role:'super')==='super').length<=1)throw new Error('At least one Super admin is required.');}
-      if(!await ui.confirm({title:`Make ${esc(u.full_name||'this admin')} a ${v.l}?`,message:esc(v.d),confirm:'Change role'}))return false;
-      const{error}=await db.from('profiles').update({admin_role:k}).eq('id',u.id);if(error)throw error;logAction('set_admin_role','profile',u.id,k);ui.toast('Role updated','ok');})})),
-    empty:['No admins found','Make a seller an admin first.']
+    columns:[{label:'Admin',nl:1,render:u=>`<b style="color:var(--tx)">${esc(u.full_name||'—')}</b>${u.id===S.user.id?' '+bd('you','info'):''}<br><small>${esc(u.email||'')}</small>`},{label:'Role',render:u=>bd((ROLES[u.admin_role]||ROLES.admin).l,u.admin_role==='super'?'pur':'info')},{label:'Joined',render:u=>dt(u.created_at)}],
+    actions:u=>[{label:'Remove admin access',danger:true,hide:u.admin_role==='super'||u.id===S.user.id,fn:()=>changeAdminAccess(u,false)}],
+    toolbar:[{label:'+ Add admin',cls:'pri',fn:async T=>{try{
+      const k=await ui.ask({title:'Add an admin',message:'Enter the email or phone saved on their <b>existing seller profile</b>. They must already have an account.',label:'Email or phone',type:'text',confirm:'Find'});if(k===null)return;
+      const s=safe(k);const{data}=await db.from('profiles').select('id,full_name,email,role,admin_role').or(`email.eq.${s},phone.eq.${s}`).limit(1);const u=data&&data[0];
+      if(!u)throw new Error('No profile found with that email or phone');
+      if(u.role==='admin')throw new Error('That person is already an admin');
+      if(await changeAdminAccess(u,true)!==false)T.reload();
+    }catch(e){ui.toast(e.message,'err');}}}],
+    empty:['No admins found','Use + Add admin.']
   }).mount($('#tm',el));
 }};
 const _os=openSeller;
-openSeller=function(u,T){_os(u,T);if(!can('team.manage')){const s=$('#p_r');if(s)s.disabled=true;}};
+openSeller=function(u,T){_os(u,T);const s=$('#p_r');if(s){s.disabled=true;s.title='Admin access is managed under Team & roles';}};
 
 /* ───── 15 + 16. health panel and backup ───── */
 async function pingFn(n){
