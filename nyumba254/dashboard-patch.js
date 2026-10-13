@@ -162,7 +162,12 @@
   function syncTabBar(pageName) {
     const page = pageName || (document.querySelector('.page.active') || {}).id?.replace('page-', '') || 'overview';
     const active = PAGE_TO_TAB[page] || 'more';
-    document.querySelectorAll('.nyb-tab').forEach((b) => b.classList.toggle('active', b.dataset.tab === active));
+    document.querySelectorAll('.nyb-tab').forEach((b) => {
+      const isActive = b.dataset.tab === active;
+      b.classList.toggle('active', isActive);
+      if (isActive) b.setAttribute('aria-current', 'page');
+      else b.removeAttribute('aria-current');
+    });
     // hide the bar while a chat is open on mobile so the reply box isn't covered
     const chat = page === 'messages' && $('messages-layout')?.classList.contains('mobile-chat-active');
     document.body.classList.toggle('nyb-chat', !!chat);
