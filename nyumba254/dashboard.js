@@ -241,6 +241,7 @@ async function init(){
     if(sessionError) throw new Error(`Could not verify your session: ${sessionError.message}`);
     if(!session){window.location.href='/login';return;}
     currentUser=session.user;
+    discardUnscopedNotificationQueue();
     document.getElementById('topbar-date').textContent=new Date().toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
     await resolveEffectiveSeller();
     await Promise.all([loadPlatformVerifySettings(), loadProfile()]);
@@ -728,8 +729,9 @@ async function loadProfile(){
   if (sidebarBadge) sidebarBadge.textContent = data?.verification_status === 'verified' ? '✓ Verified' : 'Unverified';
 
   if(isTeamMember){
-    const{data:owner}=await db.from('profiles').select('*').eq('id',effectiveSellerId).single();
-    ownerProfile=owner||currentProfile;
+    const{data:owner,error:ownerError}=await db.from('profiles').select('*').eq('id',effectiveSellerId).single();
+    if(ownerError||!owner) throw new Error(`Could not load the account owner's profile: ${ownerError?.message||'profile not found'}`);
+    ownerProfile=owner;
   }else{
     ownerProfile=currentProfile;
   }
