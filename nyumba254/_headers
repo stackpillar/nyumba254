@@ -1,13 +1,6 @@
 /sw.js
   Cache-Control: no-cache
 
-/dashboard
-  Content-Type: text/html; charset=utf-8
-  X-Content-Type-Options: nosniff
-  X-Frame-Options: DENY
-  Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), geolocation=(), microphone=()
-
 /manifest.webmanifest
   Content-Type: application/manifest+json
   Cache-Control: public, max-age=3600
