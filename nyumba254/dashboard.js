@@ -361,7 +361,8 @@ updateNetworkStatus();
   async function openNotifItem(id) {
     const n = notifItems.find(x => x.id === id);
     if (n && !n.is_read) {
-      await db.from('notifications').update({ is_read: true }).eq('id', id);
+      const{error}=await db.from('notifications').update({ is_read: true }).eq('seller_id',effectiveSellerId).eq('id', id);
+      if(error){console.error('Could not mark notification as read:',error);showToast('Could not update this notification. Please try again.','error');return;}
       n.is_read = true; renderNotifBell();
     }
     document.getElementById('notif-bell-panel').style.display = 'none';
@@ -420,7 +421,12 @@ updateNetworkStatus();
   function viewNotificationInCenter(id) {
     document.getElementById('notif-bell-panel').style.display = 'none';
     const n = notifItems.find(x => x.id === id);
-    if (n && !n.is_read) { db.from('notifications').update({ is_read: true }).eq('id', id); n.is_read = true; renderNotifBell(); }
+    if (n && !n.is_read) {
+      db.from('notifications').update({ is_read: true }).eq('seller_id',effectiveSellerId).eq('id', id).then(({error})=>{
+        if(error){console.error('Could not mark notification as read:',error);showToast('Could not update this notification. Please try again.','error');return;}
+        n.is_read=true;renderNotifBell();renderNotificationsPage();
+      }).catch(error=>{console.error('Could not mark notification as read:',error);showToast('Could not update this notification. Please try again.','error');});
+    }
     showPage('notifications');
     setTimeout(() => { document.getElementById('notif-card-' + id)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); document.getElementById('notif-card-' + id)?.classList.add('notif-card-highlight'); }, 150);
   }
@@ -490,7 +496,7 @@ updateNetworkStatus();
   }
 
   async function deleteNotifItem(id) {
-    const { error } = await db.from('notifications').delete().eq('id', id);
+    const { error } = await db.from('notifications').delete().eq('seller_id',effectiveSellerId).eq('id', id);
     if (error) { showToast('Could not delete: '+error.message,'error'); return; }
     notifItems = notifItems.filter(n => n.id !== id);
     renderNotifBell();
@@ -613,7 +619,8 @@ updateNetworkStatus();
   async function openNotifItemFromPage(id) {
     const n = notifItems.find(x => x.id === id);
     if (n && !n.is_read) {
-      await db.from('notifications').update({ is_read: true }).eq('id', id);
+      const{error}=await db.from('notifications').update({ is_read: true }).eq('seller_id',effectiveSellerId).eq('id', id);
+      if(error){console.error('Could not mark notification as read:',error);showToast('Could not update this notification. Please try again.','error');return;}
       n.is_read = true; renderNotifBell(); renderNotificationsPage();
     }
     // Silent by default — just re-highlight the card in place.
@@ -7618,8 +7625,41 @@ async function notifyBuyerIfOffline(buyerToken, listingTitle, messageText) {
   } catch (e) { console.error('notifyBuyerIfOffline failed:', e); }
 }
 const NOTIFY_RETRY_KEY='ny_notify_retry_queue';
-function notifyQueueRead(){try{return JSON.parse(localStorage.getItem(NOTIFY_RETRY_KEY)||'[]');}catch(e){return[];}}
-function notifyQueueWrite(q){try{localStorage.setItem(NOTIFY_RETRY_KEY,JSON.stringify(q.slice(-20)));}catch(e){}}
+const NOTIFY_RETRY_MAX_AGE=7*86400000;
+function notifyQueueKey(){
+  return currentUser?.id?`${NOTIFY_RETRY_KEY}_${currentUser.id}`:null;
+}
+function discardUnscopedNotificationQueue(){
+  try{
+    if(localStorage.getItem(NOTIFY_RETRY_KEY)!==null){
+      localStorage.removeItem(NOTIFY_RETRY_KEY);
+      console.warn('Discarded legacy notification retries that were not associated with an account.');
+    }
+  }catch(error){console.error('Could not discard unscoped notification retries:',error);}
+}
+function notifyQueueRead(){
+  const key=notifyQueueKey();
+  if(!key)return[];
+  try{
+    const parsed=JSON.parse(localStorage.getItem(key)||'[]');
+    if(!Array.isArray(parsed))throw new Error('Stored notification retry queue is not an array.');
+    const now=Date.now();
+    return parsed.filter(entry=>
+      entry&&typeof entry.type==='string'&&entry.type.length>0&&
+      entry.payload&&typeof entry.payload==='object'&&!Array.isArray(entry.payload)&&
+      Number.isFinite(entry.queuedAt)&&entry.queuedAt<=now&&now-entry.queuedAt<NOTIFY_RETRY_MAX_AGE
+    ).slice(-20);
+  }catch(error){
+    console.error('Could not read notification retry queue:',error);
+    return[];
+  }
+}
+function notifyQueueWrite(q){
+  const key=notifyQueueKey();
+  if(!key){console.error('Could not persist notification retry: no signed-in account is available.');return;}
+  try{localStorage.setItem(key,JSON.stringify(q.slice(-20)));}
+  catch(error){console.error('Could not persist notification retry queue:',error);}
+}
 async function notifyByEmail(type,payload,_isRetry){
   try{
     const res=await fetch(`${EDGE_URL}/send-notification-email`,{
@@ -7644,7 +7684,8 @@ async function notifyByEmail(type,payload,_isRetry){
   }
 }
 async function retryQueuedNotifications(){
-  const q=notifyQueueRead().filter(e=>Date.now()-e.queuedAt<7*86400000); // drop anything older than a week
+  const q=notifyQueueRead();
+  notifyQueueWrite(q); // Persist pruning of expired or invalid entries before attempting retries.
   for(const entry of q){ await notifyByEmail(entry.type,entry.payload,true); }
 }
 function notifyAdmin(type,payload){return notifyByEmail(type,{...payload,audience:'admin'});}
