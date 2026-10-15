@@ -158,6 +158,9 @@
         </div>
       </div>
       <div class="topbar-right">
+              <button class="theme-switch-btn" id="notification-sound-toggle" type="button" title="Enable notification sound" aria-label="Enable notification sound" aria-pressed="false">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>
+              </button>
               <button class="theme-switch-btn" onclick="openCmdPalette()" title="Search & jump to anything (⌘K or Ctrl+K)" aria-label="Search and jump to anything">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               </button>
@@ -1551,6 +1554,7 @@
     </div>
   </div>
 </div>
+<script src="/nk-notification-sound.js"></script>
 <script src="/dashboard.js"></script>
 <script>
 (function(){
@@ -1566,7 +1570,7 @@
   },1200);
 })();
 </script>
-<audio id="scw-notify-sound" preload="auto" src="/assets/notify.mp3"></audio>
+<audio id="scw-notify-sound" preload="auto" src="/assetsnotify.mp3"></audio>
 <script id="coming-soon-patch">
 (function(){
   var SELS = ['a[href^="/plans"]','#nav-premium-upgrade','#premium-upgrade-btn','#elite-upgrade-btn','[data-act="upgrade"]'];

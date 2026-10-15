@@ -8544,32 +8544,29 @@ async function notifyInApp(type,title,body,link){
 }
 
 // ── Sound alert system ──────────────────────────────────
-// Reuses the existing #scw-notify-sound <audio> tag. Plays on:
-//  · new buyer message arriving (pollNewMessages, above)
-//  · a listing's status changing — approved/rejected/etc (pollListingStatusChanges, below)
-//  · a new support chat reply (scwHandleIncoming, further down)
 let listingStatusPollTimer=null,listingStatusSnapshot={};
-let audioUnlocked=false;
-function unlockAudioOnce(){
-  if(audioUnlocked)return;
-  const a=document.getElementById('scw-notify-sound');
-  if(a){
-    // Browsers block programmatic audio.play() until the user has interacted
-    // with the page at least once. This primes the element on the very first
-    // click/tap/keypress anywhere on the page, so background-triggered sounds
-    // (new message, listing approved, etc.) aren't silently dropped afterward.
-    a.play().then(()=>{a.pause();a.currentTime=0;audioUnlocked=true;}).catch(()=>{});
-  }
-  document.removeEventListener('click',unlockAudioOnce);
-  document.removeEventListener('keydown',unlockAudioOnce);
-  document.removeEventListener('touchstart',unlockAudioOnce);
+function updateNotificationSoundToggle(){
+  const button=document.getElementById('notification-sound-toggle'),sound=window.NKNotificationSound;
+  if(!button||!sound)return;
+  const on=sound.enabled(),ready=sound.unlocked();
+  button.setAttribute('aria-pressed',String(on));
+  button.setAttribute('aria-label',!on?'Enable notification sound':ready?'Turn off notification sound':'Click to enable notification sound');
+  button.title=!on?'Enable notification sound':ready?'Turn off notification sound':'Click to enable notification sound';
+  button.innerHTML=`<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">${on?'<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>':'<path d="M11 5 6 9H3v6h3l5 4z"/><line x1="16" y1="9" x2="22" y2="15"/><line x1="22" y1="9" x2="16" y2="15"/>'}</svg>`;
 }
-document.addEventListener('click',unlockAudioOnce);
-document.addEventListener('keydown',unlockAudioOnce);
-document.addEventListener('touchstart',unlockAudioOnce);
+async function toggleNotificationSound(){
+  const sound=window.NKNotificationSound;if(!sound)return;
+  if(!sound.enabled()||!sound.unlocked()){
+    const ready=await sound.setEnabled(true);
+    if(!ready)showToast('Sound is enabled, but this browser has not unlocked audio yet. Click the sound button again.','error');
+  }else await sound.setEnabled(false);
+  updateNotificationSoundToggle();
+}
+document.getElementById('notification-sound-toggle')?.addEventListener('click',toggleNotificationSound);
+window.addEventListener(window.NKNotificationSound?.eventName||'nk-notification-sound-change',updateNotificationSoundToggle);
+updateNotificationSoundToggle();
 function playActivitySound(){
-  const a=document.getElementById('scw-notify-sound');
-  if(a){a.currentTime=0;a.play().catch(()=>{});}
+  window.NKNotificationSound?.play();
 }
 
 async function pollListingStatusChanges(){
@@ -8816,7 +8813,6 @@ async function scwHandleIncoming(msg){
       scwMarkTicketRead(t);
     }else{
       t._unread=(t._unread||0)+1;
-      scwPlayNotifySound();
     }
     playActivitySound();
   }
@@ -8824,9 +8820,7 @@ async function scwHandleIncoming(msg){
 }
 
 function scwPlayNotifySound(){
-  if(!scwSoundEnabled)return;
-  const a=document.getElementById('scw-notify-sound');
-  if(a){a.currentTime=0;a.play().catch(()=>{});}
+  if(scwSoundEnabled)playActivitySound();
 }
 
 function scwHandleTyping(payload){

@@ -8,3 +8,11 @@ src
 wrangler.toml
 package.json
 package-lock.json
+*.bak*
+*.prepatch*
+Google Auth.txt
+change email address
+email-verification message
+invite user email
+magic link email
+reset password email

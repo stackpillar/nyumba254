@@ -1,5 +1,5 @@
 -- Optional viewing fees for agents and companies. This migration is local
--- only until it is explicitly applied to the linked Supabase project.
+-- until it is explicitly applied to the linked Supabase project.
 begin;
 
 alter table public.profiles

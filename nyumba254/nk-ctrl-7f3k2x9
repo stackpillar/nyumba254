@@ -46,6 +46,7 @@ kbd{font:600 10.5px Inter;background:var(--sf);border:1px solid var(--bd);border
 .top{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--bd);height:58px;display:flex;align-items:center;gap:10px;padding:0 24px}
 .top h2{font-size:16px;font-weight:600;margin-right:auto}
 .cmdbtn{display:flex;align-items:center;gap:8px;border:1px solid var(--bd);background:var(--sf);border-radius:8px;padding:6px 10px;color:var(--tx3);min-width:200px}
+.live-status{display:inline-flex;align-items:center;gap:6px;color:var(--tx3);font-size:11.5px;white-space:nowrap}.live-status i{width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 3px var(--goldl)}.live-status[data-state=live] i{background:var(--gm);box-shadow:0 0 0 3px var(--gl)}.live-status[data-state=offline] i{background:var(--red);box-shadow:0 0 0 3px var(--redl)}
 #view{padding:24px;outline:0;max-width:1500px;width:100%}
 #burger{display:none}
 /* buttons / badges */
@@ -73,6 +74,9 @@ kbd{font:600 10.5px Inter;background:var(--sf);border:1px solid var(--bd);border
 .tabs button{padding:9px 14px;font-weight:600;color:var(--tx3);border-bottom:2px solid transparent;white-space:nowrap;margin-bottom:-1px}
 .tabs button:hover{color:var(--tx)}.tabs button.on{color:var(--g);border-color:var(--g)}
 .tabs .n{background:var(--sf);border-radius:10px;font-size:11px;padding:0 7px;margin-left:5px;color:var(--tx3)}.tabs .on .n{background:var(--gl);color:var(--gd)}
+.view-settings{position:relative}.view-panel{position:absolute;right:0;top:calc(100% + 8px);z-index:80;width:min(292px,calc(100vw - 28px));padding:8px;background:var(--bg);border:1px solid var(--bd);border-radius:12px;box-shadow:var(--sh)}.view-panel[hidden]{display:none}.view-group+.view-group{border-top:1px solid var(--bd);margin-top:7px;padding-top:7px}.view-group>small{display:block;padding:5px 8px 4px;text-transform:uppercase;letter-spacing:.08em;font-size:10.5px;font-weight:700}.view-choice{width:100%;display:flex;align-items:center;gap:10px;text-align:left;padding:9px 10px;border-radius:8px;font-weight:500}.view-choice:hover{background:var(--sf)}.view-choice[aria-pressed=true]{background:var(--gl);color:var(--gd);font-weight:600}.view-choice .check{margin-left:auto;opacity:0}.view-choice[aria-pressed=true] .check{opacity:1}.view-choice:disabled{opacity:.45;cursor:not-allowed}
+.cards-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px;padding:14px}.listing-card{position:relative;min-width:0;overflow:hidden;border:1px solid var(--bd);border-radius:12px;background:var(--bg);transition:box-shadow .15s,border-color .15s,transform .15s}.listing-card:hover,.listing-card:focus-visible,.listing-card.kf{border-color:var(--g);box-shadow:var(--sh);transform:translateY(-1px)}.listing-card.selected{background:var(--gl);border-color:var(--g)}.listing-card .lc-media{position:relative;aspect-ratio:16/9;background:var(--sf);overflow:hidden}.listing-card .lc-media img{width:100%;height:100%;display:block;object-fit:cover}.listing-card .lc-check{position:absolute;top:10px;left:10px;width:28px;height:28px;display:grid;place-items:center;border:1px solid rgba(0,0,0,.12);border-radius:8px;background:var(--bg);box-shadow:var(--sh)}.listing-card .lc-status{position:absolute;right:10px;top:10px}.listing-card .lc-body{padding:13px 14px 12px}.listing-card .lc-title{font-size:15px;line-height:1.35;font-weight:650;color:var(--tx);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.listing-card .lc-sub{color:var(--tx3);font-size:12px;margin-top:4px}.listing-card .lc-price{margin-top:10px;font-size:16px;font-weight:700;color:var(--g)}.listing-card .lc-facts{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.listing-card .lc-meta{display:flex;justify-content:space-between;gap:10px;padding-top:10px;margin-top:10px;border-top:1px solid var(--bd);color:var(--tx3);font-size:11.5px}.listing-card .lc-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:0 14px 14px}.view-cards .table-wrap{display:none}.view-table .cards-wrap{display:none}.view-table .table-wrap{display:block}.view-cards .cards-wrap{display:grid}.view-density-compact .cards-wrap{grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:9px;padding:10px}.view-density-compact .listing-card .lc-media{aspect-ratio:2.2/1}.view-density-compact .listing-card .lc-body{padding:9px 11px 7px}.view-density-compact .listing-card .lc-price{margin-top:5px;font-size:14px}.view-density-compact .listing-card .lc-facts{margin-top:6px}.view-density-compact .listing-card .lc-meta{margin-top:6px;padding-top:6px}.view-density-compact .listing-card .lc-actions{padding:0 11px 10px}.view-density-compact .table-wrap td{padding:7px 10px}.view-density-compact .table-wrap .th .im{width:40px;height:32px}
+.cards-empty{grid-column:1/-1}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .chip{display:inline-flex;gap:6px;align-items:center;background:var(--gl);color:var(--gd);font-weight:600;font-size:12px;padding:3px 6px 3px 12px;border-radius:20px}
 .chip button{padding:0 4px;font-size:15px;line-height:1}
@@ -146,6 +150,7 @@ tbody tr:last-child td{border-bottom:0}
 .two,.rq .mb{grid-template-columns:1fr}.chat{grid-template-columns:1fr;grid-template-rows:auto auto;height:auto}.chat .cl{max-height:240px;border-right:0;border-bottom:1px solid var(--bd)}.chat .ct{height:60vh}
 .g2{grid-template-columns:1fr}.fld input,.fld select,.fld textarea{font-size:16px}
 thead{display:none}table,tbody,tr{display:block}tr{border-bottom:8px solid var(--sf);padding:6px}
+.live-status span{display:none}.view-table .table-wrap{display:none!important}.view-table .cards-wrap,.view-cards .cards-wrap{display:grid!important}.listing-card .lc-media{aspect-ratio:2.2/1}
 td{display:flex;justify-content:space-between;gap:14px;border:0!important;padding:6px 10px;text-align:right}
 td::before{content:attr(data-label);color:var(--tx3);font-size:12px;text-align:left;flex-shrink:0}
 td.nl::before,td.c-sel::before,td.c-act::before{display:none}td.nl{text-align:left}td.c-act{width:auto}.ra{justify-content:flex-start;flex-wrap:wrap}
@@ -167,10 +172,13 @@ td.nl::before,td.c-sel::before,td.c-act::before{display:none}td.nl{text-align:le
 <div class="main">
 <header class="top"><button class="btn ghost icon" id="burger" aria-label="Open menu"></button><h2 id="title">Dashboard</h2>
 <button class="cmdbtn" id="cmdb" aria-label="Search and jump (Ctrl+K)"></button>
+<span class="live-status" id="live-status" data-state="connecting" role="status" title="Connecting to live updates"><i></i><span>Connecting</span></span>
+<button class="btn ghost icon" id="notification-sound-toggle" type="button" title="Enable notification sound" aria-label="Enable notification sound" aria-pressed="false"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg></button>
 <button class="btn ghost icon" id="theme" aria-label="Toggle dark mode"></button></header>
 <main id="view" tabindex="-1"></main>
 </div></div>
 <div id="ov"></div><div id="toasts" aria-live="polite"></div>
+<script src="/nk-notification-sound.js"></script>
 <script>
 'use strict';
 const SUPABASE_URL='https://vliuuloyfhyxcsuchpss.supabase.co';
@@ -204,6 +212,8 @@ async function loadAreas(county){
   AREAS[county]=[...new Set((data||[]).map(r=>r.area).filter(Boolean))].sort();
 }
 const IC={grid:'<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>',home:'<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>',card:'<rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>',users:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>',shield:'<path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/>',flag:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>',star:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',phone:'<path d="M22 16.92v3a2 2 0 01-2.18 2 19.8 19.8 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.8 19.8 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0122 16.92z"/>',chart:'<path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-4-4L3 13.9"/>',clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',bell:'<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>',gear:'<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>',msg:'<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>',search:'<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',more:'<circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>',x:'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',moon:'<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>',sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>',menu:'<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>',dl:'<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',img:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',out:'<path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',life:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.9" y1="4.9" x2="9.2" y2="9.2"/><line x1="14.8" y1="14.8" x2="19.1" y2="19.1"/>'};
+IC.sound='<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>';
+IC.mute='<path d="M11 5 6 9H3v6h3l5 4z"/><line x1="16" y1="9" x2="22" y2="15"/><line x1="22" y1="9" x2="16" y2="15"/>';
 const icon=(n,s=16)=>`<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]||''}</svg>`;
 
 /* ───── app state + settings ───── */
@@ -339,9 +349,31 @@ const ui={
 function Table(cfg){
   const PAGE=cfg.size||50,p=cfg.params||{};
   const st={tab:cfg.tabs?(cfg.tabs.find(t=>t.id===p.tab)?p.tab:cfg.tabs[0].id):null,q:p.q||'',page:0,sort:cfg.sort?{...cfg.sort}:null,f:{},sel:new Set(),map:new Map(),acts:new Map(),rows:[],count:null,hasMore:false,all:null,dirty:true,focus:-1,counts:{}};
+  if(cfg.viewOptions){
+    let saved={};
+    try{saved=JSON.parse(localStorage.getItem(`nk-admin-view-${cfg.route}`)||'{}')||{};}catch(error){console.warn('Could not load saved listing view:',error);}
+    st.view={layout:['cards','table'].includes(saved.layout)?saved.layout:cfg.viewOptions.layout,density:['roomy','compact'].includes(saved.density)?saved.density:cfg.viewOptions.density};
+  }
   (cfg.paramKeys||(cfg.filters||[]).map(f=>f.id)).forEach(k=>{if(p[k])st.f[k]=p[k];});
   let root,seq=0;const T={st,cfg};
   const R=s=>$(s,root);
+  function applyViewPrefs(){
+    if(!cfg.viewOptions||!root)return;
+    root.classList.toggle('view-cards',st.view.layout==='cards');
+    root.classList.toggle('view-table',st.view.layout==='table');
+    root.classList.toggle('view-density-compact',st.view.density==='compact');
+    root.classList.toggle('view-density-roomy',st.view.density==='roomy');
+    const effectiveLayout=matchMedia('(max-width: 900px)').matches?'cards':st.view.layout;
+    $$('[data-layout]',root).forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.layout===effectiveLayout)));
+    $$('[data-density]',root).forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.density===st.view.density)));
+    const tableOption=R('[data-layout="table"]');
+    if(tableOption)tableOption.disabled=matchMedia('(max-width: 900px)').matches;
+  }
+  function saveViewPrefs(){
+    try{localStorage.setItem(`nk-admin-view-${cfg.route}`,JSON.stringify(st.view));}
+    catch(error){console.warn('Could not save listing view:',error);}
+    applyViewPrefs();
+  }
   function sync(){
     const q=new URLSearchParams();
     if(cfg.tabs&&st.tab!==cfg.tabs[0].id)q.set('tab',st.tab);if(st.q)q.set('q',st.q);
@@ -349,11 +381,18 @@ function Table(cfg){
     history.replaceState(null,'',`#/${cfg.route}${q.toString()?'?'+q:''}`);
   }
   function shell(){
-    root.innerHTML=`<div class="tb-top"><label class="search">${icon('search')}<input type="search" placeholder="${esc(cfg.search||'Search…')}" value="${esc(st.q)}" aria-label="Search"><kbd>/</kbd></label><div class="filters"></div><div style="margin-left:auto;display:flex;gap:8px">${(cfg.toolbar||[]).map((b,i)=>`<button class="btn ${b.cls||''}" data-tb="${i}">${esc(b.label)}</button>`).join('')}${cfg.csv?`<button class="btn" data-exp>${icon('dl')}Export</button>`:''}</div></div>
+    root.innerHTML=`<div class="tb-top"><label class="search">${icon('search')}<input type="search" placeholder="${esc(cfg.search||'Search…')}" value="${esc(st.q)}" aria-label="Search"><kbd>/</kbd></label><div class="filters"></div><div style="margin-left:auto;display:flex;gap:8px;align-items:center">${cfg.viewOptions?`<div class="view-settings"><button class="btn" type="button" data-view-toggle aria-expanded="false" aria-controls="listing-view-options">${icon('grid')}View</button><div class="view-panel" id="listing-view-options" hidden><div class="view-group"><small>Layout</small><button class="view-choice" type="button" data-layout="cards" aria-pressed="false">${icon('grid')}Card view<span class="check" aria-hidden="true">✓</span></button><button class="view-choice" type="button" data-layout="table" aria-pressed="false"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>Table view (desktop)<span class="check" aria-hidden="true">✓</span></button></div><div class="view-group"><small>Density</small><button class="view-choice" type="button" data-density="roomy" aria-pressed="false">${icon('grid')}Card view (roomy)<span class="check" aria-hidden="true">✓</span></button><button class="view-choice" type="button" data-density="compact"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>Compact list<span class="check" aria-hidden="true">✓</span></button></div></div></div>`:''}${(cfg.toolbar||[]).map((b,i)=>`<button class="btn ${b.cls||''}" data-tb="${i}">${esc(b.label)}</button>`).join('')}${cfg.csv?`<button class="btn" data-exp>${icon('dl')}Export</button>`:''}</div></div>
     ${cfg.tabs?'<div class="tabs" role="tablist"></div>':''}<div class="chips"></div><div class="hdr"></div><div class="bulk" hidden></div>
-    <div class="card"><div class="tw"><table><thead></thead><tbody></tbody></table></div><div class="pager"></div></div>`;
+    <div class="results"><div class="card table-wrap"><div class="tw"><table><thead></thead><tbody></tbody></table></div></div>${cfg.viewOptions?'<div class="cards-wrap card" aria-live="polite"></div>':''}<div class="card pager"></div></div>`;
+    applyViewPrefs();
+    R('#listing-view-options')&&(R('#listing-view-options').onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();R('#listing-view-options').hidden=true;R('[data-view-toggle]').setAttribute('aria-expanded','false');R('[data-view-toggle]').focus();}});
     $('.search input',root).oninput=debounce(e=>{st.q=e.target.value.trim();st.page=0;st.sel.clear();if(cfg.remoteSearch)st.dirty=true;sync();load();},300);
     root.onclick=async e=>{
+      const viewToggle=e.target.closest('[data-view-toggle]');
+      if(viewToggle){applyViewPrefs();const panel=R('#listing-view-options'),opening=panel.hidden;panel.hidden=!opening;viewToggle.setAttribute('aria-expanded',String(opening));if(opening){const target=matchMedia('(max-width: 900px)').matches?'cards':st.view.layout;R('[data-layout="'+target+'"]')?.focus();}return;}
+      const layout=e.target.closest('[data-layout]'),density=e.target.closest('[data-density]');
+      if(layout||density){if(layout&&layout.disabled)return;if(layout)st.view.layout=layout.dataset.layout;if(density)st.view.density=density.dataset.density;saveViewPrefs();R('#listing-view-options').hidden=true;R('[data-view-toggle]').setAttribute('aria-expanded','false');R('[data-view-toggle]').focus();return;}
+      if(cfg.viewOptions&&R('#listing-view-options')&&!R('#listing-view-options').hidden&&!e.target.closest('.view-settings')){R('#listing-view-options').hidden=true;R('[data-view-toggle]').setAttribute('aria-expanded','false');}
       const t=e.target.closest('.tabs button');if(t){st.tab=t.dataset.t;st.page=0;st.sel.clear();st.map.clear();sync();load();return;}
       const tb=e.target.closest('[data-tb]');if(tb){await cfg.toolbar[+tb.dataset.tb].fn(T);return;}
       if(e.target.closest('[data-exp]'))return exportCsv();
@@ -371,6 +410,16 @@ function Table(cfg){
       if(e.target.closest('a,button,input,select,textarea'))return;
       cfg.open&&cfg.open(r,T);
     };
+    if(cfg.viewOptions){
+      R('.cards-wrap').onclick=e=>{
+        const card=e.target.closest('.listing-card[data-id]');if(!card)return;const id=card.dataset.id,r=st.map.get(id);
+        const cb=e.target.closest('.lc-check input');if(cb){cb.checked?st.sel.add(id):st.sel.delete(id);card.classList.toggle('selected',cb.checked);paintBulk();return;}
+        const ab=e.target.closest('[data-a]');if(ab){run(st.acts.get(id)[+ab.dataset.a],r,ab);return;}
+        const mo=e.target.closest('[data-more]');if(mo){ui.menu(mo,st.acts.get(id).map(a=>({...a,fn:()=>run(a,r)})));return;}
+        if(e.target.closest('a,button,input,select,textarea'))return;
+        cfg.open&&cfg.open(r,T);
+      };
+    }
     paintFilters();
   }
   let chipsNow=[];
@@ -399,17 +448,23 @@ function Table(cfg){
   }
   function paintBody(){
     const th=R('thead'),tb=R('tbody'),cols=cfg.columns,n=cols.length+(cfg.bulk?1:0)+1;
+    const cards=cfg.viewOptions?R('.cards-wrap'):null;
     th.innerHTML=`<tr>${cfg.bulk?`<th class="c-sel"><input type="checkbox" data-all aria-label="Select all on page"></th>`:''}${cols.map(c=>`<th class="${c.sort?'s':''}" ${c.sort?`data-k="${c.sort}"`:''}>${esc(c.label)}${st.sort&&st.sort.key===c.sort?(st.sort.dir==='asc'?' ▲':' ▼'):''}</th>`).join('')}<th></th></tr>`;
-    if(st.loading&&!st.rows.length){tb.innerHTML=Array(5).fill(`<tr><td colspan="${n}"><div class="sk"></div></td></tr>`).join('');return;}
-    if(st.err){tb.innerHTML=`<tr><td colspan="${n}"><div class="empty"><h4>Couldn't load this list</h4><p>${esc(st.err)}</p><br><button class="btn" data-retry>Try again</button></div></td></tr>`;return;}
-    if(!st.rows.length){const e=cfg.empty||['Nothing here','Try a different tab or clear your filters.'];tb.innerHTML=`<tr><td colspan="${n}"><div class="empty"><h4>${esc(e[0])}</h4><p>${esc(e[1])}</p></div></td></tr>`;return;}
+    if(st.loading&&!st.rows.length){tb.innerHTML=Array(5).fill(`<tr><td colspan="${n}"><div class="sk"></div></td></tr>`).join('');if(cards)cards.innerHTML=Array(6).fill('<div class="listing-card"><div class="lc-media sk"></div><div class="lc-body"><div class="sk"></div></div></div>').join('');return;}
+    if(st.err){const message=`<div class="empty"><h4>Couldn't load this list</h4><p>${esc(st.err)}</p><br><button class="btn" data-retry>Try again</button></div>`;tb.innerHTML=`<tr><td colspan="${n}">${message}</td></tr>`;if(cards)cards.innerHTML=`<div class="cards-empty">${message}</div>`;return;}
+    if(!st.rows.length){const e=cfg.empty||['Nothing here','Try a different tab or clear your filters.'];const message=`<div class="empty"><h4>${esc(e[0])}</h4><p>${esc(e[1])}</p></div>`;tb.innerHTML=`<tr><td colspan="${n}">${message}</td></tr>`;if(cards)cards.innerHTML=`<div class="cards-empty">${message}</div>`;return;}
     tb.innerHTML=st.rows.map(rowHtml).join('');
+    if(cards)cards.innerHTML=st.rows.map(cardHtml).join('');
     const all=R('[data-all]');if(all)all.checked=st.rows.length>0&&st.rows.every(r=>st.sel.has(String(cfg.id(r))));
   }
   function rowHtml(r){
     const id=String(cfg.id(r)),acts=(cfg.actions?cfg.actions(r):[]).filter(a=>!a.hide);st.acts.set(id,acts);
     const prim=acts.filter(a=>a.primary).slice(0,2);
     return `<tr data-id="${esc(id)}" tabindex="0" class="${cfg.rowClass?cfg.rowClass(r):''}${st.sel.has(id)?' sel':''}">${cfg.bulk?`<td class="c-sel"><input type="checkbox" ${st.sel.has(id)?'checked':''} aria-label="Select row"></td>`:''}${cfg.columns.map(c=>`<td data-label="${esc(c.label)}" class="${c.nl?'nl':''}">${c.render(r)}</td>`).join('')}<td class="c-act"><div class="ra">${prim.map(a=>`<button class="btn sm ${a.cls||''}" data-a="${acts.indexOf(a)}">${esc(a.label)}</button>`).join('')}${acts.length>prim.length?`<button class="btn sm ghost icon" data-more aria-label="More actions">${icon('more')}</button>`:''}</div></td></tr>`;
+  }
+  function cardHtml(r){
+    const id=String(cfg.id(r)),acts=st.acts.get(id)||[],prim=acts.filter(a=>a.primary).slice(0,2);
+    return `<article class="listing-card${st.sel.has(id)?' selected':''}" data-id="${esc(id)}" tabindex="0" aria-label="${esc(r.title||'Listing')}">${cfg.card(r)}${cfg.bulk?`<label class="lc-check"><input type="checkbox" ${st.sel.has(id)?'checked':''} aria-label="Select listing"></label>`:''}<div class="lc-actions">${prim.map(a=>`<button class="btn sm ${a.cls||''}" data-a="${acts.indexOf(a)}">${esc(a.label)}</button>`).join('')}${acts.length>prim.length?`<button class="btn sm ghost icon" data-more aria-label="More listing actions">${icon('more')}</button>`:''}</div></article>`;
   }
   function paintPager(){
     const pg=R('.pager'),from=st.page*PAGE+1,to=st.page*PAGE+st.rows.length;
@@ -451,15 +506,15 @@ function Table(cfg){
     let rows;if(cfg.local)rows=localRows();else{const res=await cfg.fetch({...st,size:5000,page:0});rows=res.rows||[];}
     csvDownload(cfg.csv.name+'-'+new Date().toISOString().slice(0,10)+'.csv',cfg.csv.headers,rows.map(cfg.csv.row));
   }
-  T.mount=el=>{root=el;shell();R('tbody').onkeydown=e=>{if(e.key==='Enter'&&e.target.matches('tr[data-id]')){e.stopPropagation();const r=st.map.get(e.target.dataset.id);cfg.open&&cfg.open(r,T);}};(async()=>{try{await cfg.init?.(st);}catch(e){console.error(e);}paintFilters();load();})();return T;};
+  T.mount=el=>{root=el;shell();(async()=>{try{await cfg.init?.(st);}catch(e){console.error(e);}paintFilters();load();})();return T;};
   T.reload=(keep=true)=>{st.dirty=true;return load(keep);};
   T.paintChips=paintChips;T.run=run;
   T.key=e=>{
-    const trs=$$('tbody tr[data-id]',root);if(!trs.length)return;
+    const trs=$$('tbody tr[data-id],.cards-wrap .listing-card[data-id]',root).filter(t=>t.offsetParent!==null);if(!trs.length)return;
     if(e.key==='j'||e.key==='k'){e.preventDefault();st.focus=Math.max(0,Math.min(trs.length-1,st.focus+(e.key==='j'?1:-1)));trs.forEach((t,i)=>t.classList.toggle('kf',i===st.focus));trs[st.focus].scrollIntoView({block:'nearest'});return;}
     const tr=trs[st.focus];if(!tr)return;const r=st.map.get(tr.dataset.id);
     if(e.key==='Enter')cfg.open&&cfg.open(r,T);
-    else if(e.key==='x')$('.c-sel input',tr)?.click();
+    else if(e.key==='x')$('.c-sel input,.lc-check input',tr)?.click();
     else if(cfg.keys&&cfg.keys[e.key]){e.preventDefault();run({fn:cfg.keys[e.key]},r);}
   };
   return T;
@@ -480,11 +535,49 @@ function buildShell(){
   $('#sb').innerHTML=`<div class="brand"><img src="/logo-icon.png" alt="" onerror="this.remove()">Nyumba254<b>ADMIN</b></div><nav>${NAV.map(g=>`<div class="ng"><small>${g.g}</small>${g.i.map(([id,l,ic,bk])=>`<a class="ni" href="#/${id}" data-v="${id}">${icon(ic)}${l}${bk?`<span class="n z" data-b="${bk}">0</span>`:''}</a>`).join('')}</div>`).join('')}<div class="ng"><small>Site</small><a class="ni" href="/" target="_blank" rel="noopener">${icon('home')}View live site</a></div></nav>
   <div class="sbf"><div class="av">${esc(initials(S.me?.full_name||'A'))}</div><div style="min-width:0;flex:1"><div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(S.me?.full_name||'Admin')}</div><small style="color:rgba(255,255,255,.45)">Super admin</small></div><button class="btn ghost icon" id="so" aria-label="Sign out" style="color:#fff">${icon('out')}</button></div>`;
   $('#burger').innerHTML=icon('menu',20);$('#cmdb').innerHTML=`${icon('search')}<span>Search or jump to…</span><kbd>Ctrl K</kbd>`;
-  $('#burger').onclick=()=>{const o=$('#sb').classList.toggle('open');$('#burger').setAttribute('aria-expanded',o);};document.addEventListener('click',e=>{const sb=$('#sb');if(sb&&sb.classList.contains('open')&&!sb.contains(e.target)&&!e.target.closest('#burger'))sb.classList.remove('open');});$('#cmdb').onclick=cmdk;$('#theme').onclick=toggleTheme;$('#so').onclick=signOut;
+  $('#burger').onclick=()=>{const o=$('#sb').classList.toggle('open');$('#burger').setAttribute('aria-expanded',o);};document.addEventListener('click',e=>{const sb=$('#sb');if(sb&&sb.classList.contains('open')&&!sb.contains(e.target)&&!e.target.closest('#burger'))sb.classList.remove('open');});$('#cmdb').onclick=cmdk;$('#theme').onclick=toggleTheme;$('#notification-sound-toggle').onclick=toggleAdminNotificationSound;$('#so').onclick=signOut;paintAdminSoundToggle();
   paintThemeIcon();
 }
 function paintThemeIcon(){$('#theme').innerHTML=icon(document.documentElement.dataset.theme==='dark'?'sun':'moon',18);}
 function toggleTheme(){const d=document.documentElement.dataset.theme==='dark';if(d)delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme='dark';localStorage.setItem('nk-admin-theme',d?'light':'dark');paintThemeIcon();}
+function paintAdminSoundToggle(){
+  const button=$('#notification-sound-toggle'),sound=window.NKNotificationSound;if(!button||!sound)return;
+  const on=sound.enabled(),ready=sound.unlocked(),label=!on?'Enable notification sound':ready?'Turn off notification sound':'Click to enable notification sound';
+  button.setAttribute('aria-pressed',String(on));button.setAttribute('aria-label',label);button.title=label;button.innerHTML=icon(on?'sound':'mute',17);
+  button.classList.toggle('ok',on&&ready);
+}
+async function toggleAdminNotificationSound(){
+  const sound=window.NKNotificationSound;if(!sound)return;
+  if(!sound.enabled()||!sound.unlocked()){
+    const ready=await sound.setEnabled(true);
+    if(!ready)ui.toast('Sound is enabled, but the browser has not unlocked audio. Click the sound button again.','err');
+  }else await sound.setEnabled(false);
+  paintAdminSoundToggle();
+}
+window.addEventListener(window.NKNotificationSound?.eventName||'nk-notification-sound-change',paintAdminSoundToggle);
+function setAdminLiveStatus(state,label){
+  const node=$('#live-status');if(!node)return;
+  node.dataset.state=state;node.title=label;const text=$('span',node);if(text)text.textContent=label;
+}
+let adminLiveChannel=null,adminFallbackTimer=null;
+function playAdminNotificationSound(){window.NKNotificationSound?.play();}
+function subscribeAdminRealtime(){
+  if(adminLiveChannel)db.removeChannel(adminLiveChannel);
+  setAdminLiveStatus('connecting','Connecting');
+  const update=debounce(refreshBadges,1200);
+  adminLiveChannel=db.channel('admin-live')
+    .on('postgres_changes',{event:'*',schema:'public',table:'reports'},()=>{update();if(ui.active?.cfg.route==='reports')ui.active.reload();})
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'reports'},()=>{playAdminNotificationSound();ui.toast('A new report needs review','err');})
+    .on('postgres_changes',{event:'*',schema:'public',table:'payments'},()=>{update();if(ui.active?.cfg.route==='payments')ui.active.reload();})
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'payments'},payload=>{if(['pending','pending_verification'].includes(payload.new.status)){playAdminNotificationSound();ui.toast('A new payment needs review','');}})
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'listings'},payload=>{update();playAdminNotificationSound();ui.toast('A new listing was submitted');if(ui.active?.cfg.route==='listings')ui.active.reload();})
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages'},payload=>{update();if(payload.new.sender!=='admin'){playAdminNotificationSound();if(parseHash().id!=='support')ui.toast('New support message','',{label:'Open',fn:()=>go('support')});}})
+    .subscribe(status=>{
+      if(status==='SUBSCRIBED'){setAdminLiveStatus('live','Live updates connected');refreshBadges();}
+      else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){setAdminLiveStatus('offline','Live updates reconnecting');console.warn('Admin realtime channel status:',status);}
+      else setAdminLiveStatus('connecting','Connecting to live updates');
+    });
+}
 async function signOut(){await db.auth.signOut();location.reload();}
 async function refreshBadges(){
   const cnt=(t,f)=>f(db.from(t).select('*',{count:'exact',head:true})).then(r=>r.count||0,()=>0);
@@ -762,7 +855,7 @@ async function openListing(l,T){
   q('[data-ed]').onclick=()=>act(()=>LA.edit(l));q('[data-go]')&&(q('[data-go]').onclick=()=>{d.close();go('listings',{seller:l.seller_id});});
 }
 function listingsView(el,p){
-  const T=Table({route:'listings',params:p,id:r=>r.id,sort:{key:'created_at',dir:'desc'},search:'Search title, area or listing no.…  (press /)',paramKeys:['seller','county','area','category'],
+  const T=Table({route:'listings',params:p,id:r=>r.id,sort:{key:'created_at',dir:'desc'},search:'Search title, area or listing no.…  (press /)',paramKeys:['seller','county','area','category'],viewOptions:{layout:'cards',density:'roomy'},
     tabs:[['all','All'],['pending','Pending'],['active','Active'],['trial','Trial'],['featured','Featured'],['multiunit','Unit types'],['inactive','Inactive']].map(([id,label])=>({id,label})),
     filters:[{id:'county',label:'County',all:'All counties',options:()=>NK_COUNTIES.map(c=>({v:c,l:c}))},{id:'area',label:'Area',all:'All areas',options:st=>(AREAS[st.f.county]||[]).map(a=>({v:a,l:a})),disabled:st=>!st.f.county},{id:'category',label:'Category',all:'All categories',options:()=>Object.entries(CAT).map(([v,l])=>({v,l}))}],
     init:st=>loadAreas(st.f.county),onFilter:async(id,st)=>{if(id==='county'){st.f.area='';await loadAreas(st.f.county);}},
@@ -786,6 +879,7 @@ function listingsView(el,p){
       {label:'Location',render:l=>esc(locOf(l))},{label:'Price',sort:'price',render:l=>`<b style="color:var(--tx)">${esc(priceOf(l))}</b>`},
       {label:'Category',render:l=>esc(CAT[l.category]||l.category)},{label:'Status',render:l=>bd(l.is_disabled?'disabled':l.status)},
       {label:'Payment',render:l=>bd(l.payment_status||'unpaid')},{label:'Posted',sort:'created_at',render:l=>dt(l.created_at)},{label:'Expires',render:expiryOf}],
+    card:l=>{const c=coverOf(l),status=l.is_disabled?'disabled':l.status;return `<div class="lc-media">${c?`<img src="${esc(c.url)}" alt="" loading="lazy">`:icon('img',24)}<span class="lc-status">${bd(status)}</span></div><div class="lc-body"><div class="lc-title">${esc(l.title||'Untitled listing')}</div><div class="lc-sub">${esc(l.profiles?.full_name||'Unknown seller')}${numOf(l)?` · #${numOf(l)}`:''}</div><div class="lc-price">${esc(priceOf(l))}</div><div class="lc-sub">${esc(locOf(l))}</div><div class="lc-facts">${bd(CAT[l.category]||l.category)}${bd(l.payment_status||'unpaid')}${l.is_featured?bd('featured','pur'):''}${l.is_multi_unit?bd('multi-unit','info'):''}</div><div class="lc-meta"><span>Posted ${dt(l.created_at)}</span><span>${expiryOf(l)}</span></div></div>`;},
     rowClass:l=>l.status==='pending'&&Date.now()-new Date(l.created_at)>864e5?'urgent':'',
     actions:listingActions,open:(l,T)=>openListing(l,T),keys:{a:l=>l.status==='pending'?LA.approveFlow(l):false,r:l=>l.status==='pending'?LA.rejectFlow(l):false},
     bulk:[
@@ -1560,9 +1654,10 @@ async function boot(){
   S.user=user;S.me=me;await loadSettings();buildShell();
   $('#login').hidden=true;$('#app').hidden=false;$('#gate').remove();
   window.addEventListener('hashchange',route);await route();refreshBadges();db.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_OUT'){ui.toast('Your session ended. Please sign in again.','err');setTimeout(()=>location.reload(),2500);}});
-  const live=debounce(refreshBadges,1500);
-  db.channel('admin-live').on('postgres_changes',{event:'*',schema:'public',table:'reports'},live).on('postgres_changes',{event:'*',schema:'public',table:'payments'},()=>{live();ui.active?.cfg.route==='payments'&&ui.active.reload();}).on('postgres_changes',{event:'INSERT',schema:'public',table:'listings'},()=>{live();ui.toast('A new listing was submitted');}).on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages'},pl=>{live();if(pl.new.sender!=='admin'&&parseHash().id!=='support')ui.toast('New support message','',{label:'Open',fn:()=>go('support')});}).subscribe();
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshBadges();});
+  subscribeAdminRealtime();
+  if(adminFallbackTimer)clearInterval(adminFallbackTimer);
+  adminFallbackTimer=setInterval(()=>{if(!document.hidden){refreshBadges();if($('#live-status')?.dataset.state!=='live')ui.active?.reload?.();}},60000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden){refreshBadges();if($('#live-status')?.dataset.state!=='live')subscribeAdminRealtime();}});
 }
 $('#lsp').onchange=e=>{$('#lpw').type=e.target.checked?'text':'password';};
 $('#lgf').onsubmit=async e=>{
