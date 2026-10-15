@@ -109,7 +109,7 @@
       <button class="nav-item" id="nav-payments" onclick="showPage('payments')">
         <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Payments
       </button>
-      <div class="nav-section-label" style="margin-top:8px">Elite tools</div>
+      <div class="nav-section-label" id="nav-elite-section" style="margin-top:8px">Elite tools</div>
       <button class="nav-item" id="nav-rent-ledger" onclick="showPage('rent-ledger')">
         <svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 9h1M9 13h1M9 17h1M14 9h1M14 13h1M14 17h1"/></svg><span id="nav-rent-ledger-label">Rent Ledger</span>
         <span class="badge-count red" id="nav-badge-rentledger" style="display:none">0</span>
@@ -117,7 +117,7 @@
       <button class="nav-item" id="nav-demand-heatmap" onclick="showPage('demand-heatmap')">
         <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Demand Insights
       </button>
-      <div class="nav-section-label" style="margin-top:8px">Account</div>
+      <div class="nav-section-label" id="nav-account-section" style="margin-top:8px">Account</div>
       <button class="nav-item" id="nav-notifications" onclick="showPage('notifications')">
         <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>Notifications
         <span class="badge-count red" id="nav-badge-notifications" style="display:none">0</span>
@@ -202,7 +202,7 @@
     <!-- OVERVIEW -->
     <div class="page active" id="page-overview">
       <div id="overview-quickdock" style="display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom));z-index:390;background:var(--white);border:1px solid var(--border);border-radius:30px;box-shadow:var(--shadow-lg);padding:6px;gap:4px;align-items:center">
-        <a href="/post-listing" class="btn btn-primary btn-sm" style="border-radius:24px" onclick="return confirmListingCategoryBeforeLeaving()"><svg viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New</a>
+        <a href="/post-listing" class="btn btn-primary btn-sm" id="btn-new-listing-small" style="border-radius:24px" onclick="return confirmListingCategoryBeforeLeaving()"><svg viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New</a>
         <button class="btn btn-outline btn-sm" style="border-radius:24px" onclick="showAllMessages()"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Messages</button>
         <button class="btn btn-outline btn-sm" style="border-radius:24px" onclick="scwToggle()"><svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Help</button>
       </div>
@@ -241,6 +241,19 @@
       <div class="card" id="listing-performance-card" style="display:none;padding:18px 20px;margin-bottom:20px"></div>
       <div class="overview-grid">
         <div class="card" id="overview-activity-card" style="padding:20px 24px">
+          <div id="buyer-mode-card" class="card" hidden style="padding:18px 22px;margin-bottom:18px">
+            <strong>Welcome to Nyumba254</strong>
+            <p style="margin:6px 0 12px;color:var(--text-2);font-size:13px">As a Tenant / Buyer, you can browse homes, save favourites, and contact listers. To publish property, change your account type in settings.</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <a href="/listings" class="btn btn-primary btn-sm">Browse properties</a>
+              <a href="/saved" class="btn btn-outline btn-sm">Saved properties</a>
+            </div>
+          </div>
+          <div id="account-onboarding-reminder" class="card" hidden style="padding:18px 22px;margin-bottom:18px;border-color:var(--green);">
+            <strong>Finish setting up your account</strong>
+            <p style="margin:6px 0 12px;color:var(--text-2);font-size:13px">Choose whether you are a Tenant / Buyer, Property owner, Caretaker, Agent, or Company. This helps Nyumba254 show the right tools for you.</p>
+            <button type="button" class="btn btn-primary btn-sm" onclick="showPage('settings')">Choose account type</button>
+          </div>
           <div class="section-head"><h2>Recent activity</h2><button class="btn btn-outline btn-sm" onclick="showAllMessages()">View messages</button></div>
           <div class="activity-feed" id="activity-feed"><div style="padding:20px 0;text-align:center;color:var(--text-3);font-size:13px">Loading activity…</div></div>
         </div>
@@ -263,7 +276,7 @@
     <div class="page" id="page-listings">
       <div class="section-head">
         <h2>My listings</h2>
-        <a href="/post-listing" class="btn btn-primary" onclick="return confirmListingCategoryBeforeLeaving()"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add listing</a>
+        <a href="/post-listing" class="btn btn-primary" id="btn-add-listing-empty" onclick="return confirmListingCategoryBeforeLeaving()"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add listing</a>
       </div>
 
       <div class="lc-stat-strip" id="lc-stat-strip"></div>
@@ -581,6 +594,40 @@
           <div class="profile-avatar-row"><div class="profile-avatar-lg" id="settings-avatar">?</div><div class="profile-avatar-info"><strong id="settings-fullname">—</strong><span id="settings-email-display">—</span></div></div>
           <p style="font-size:13px;color:var(--text-3);margin-bottom:18px;line-height:1.6">Edit your name, phone number, email address, and password from your dedicated profile page.</p>
           <a href="/profile" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;text-decoration:none"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="15" height="15"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit profile &amp; password</a>
+          <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
+            <h4 style="font-size:14px;margin-bottom:4px">Your account type</h4>
+            <p style="font-size:12px;color:var(--text-3);line-height:1.5;margin-bottom:10px">Choose one account type. Verification is reviewed separately and does not grant admin access. Account type changes are limited to once every 7 days.</p>
+            <div class="role-choice-list" id="account-role-options">
+              <label class="role-choice"><input type="radio" name="account-type" value="buyer"/><div><strong>Tenant / Buyer</strong><span>Browse, save, and contact property listers</span></div></label>
+              <label class="role-choice"><input type="radio" name="account-type" value="owner"/><div><strong>Property owner</strong><span>List rental or sale property</span></div></label>
+              <label class="role-choice"><input type="radio" name="account-type" value="caretaker"/><div><strong>Caretaker</strong><span>Manage property on an owner's behalf</span></div></label>
+              <label class="role-choice"><input type="radio" name="account-type" value="agent"/><div><strong>Agent</strong><span>Connect people with properties</span></div></label>
+              <label class="role-choice"><input type="radio" name="account-type" value="company"/><div><strong>Company</strong><span>Represent an agency, developer, or property manager</span></div></label>
+            </div>
+            <div id="account-role-status" aria-live="polite" style="font-size:12px;color:var(--text-3);margin-top:8px"></div>
+            <button type="button" class="btn btn-outline btn-sm" id="save-account-roles-btn" onclick="saveAccountType()" style="width:100%;justify-content:center;margin-top:10px">Save account type</button>
+            <div id="account-role-history" style="margin-top:12px;font-size:12px;color:var(--text-3)"></div>
+          </div>
+          <div class="settings-section" id="company-profile-settings" hidden>
+            <h3>Company profile</h3>
+            <p style="font-size:12px;color:var(--text-3);line-height:1.5;margin-bottom:12px">Company name and details are public while Company is your account type. A logo appears publicly only after company-role verification.</p>
+            <label class="field-label" for="company-name">Company name</label>
+            <input class="form-input" id="company-name" maxlength="160" autocomplete="organization"/>
+            <label class="field-label" for="company-type" style="margin-top:10px">Company type</label>
+            <select class="form-input" id="company-type">
+              <option value="agency">Agency</option><option value="developer">Developer</option><option value="property_manager">Property manager</option>
+            </select>
+            <label class="field-label" for="company-registration" style="margin-top:10px">Registration number (optional)</label>
+            <input class="form-input" id="company-registration" maxlength="120"/>
+            <label class="field-label" for="company-logo" style="margin-top:10px">Logo URL (optional)</label>
+            <input class="form-input" id="company-logo" type="url" maxlength="2048" placeholder="https://…"/>
+            <label class="field-label" for="company-description" style="margin-top:10px">Description</label>
+            <textarea class="form-input" id="company-description" maxlength="2000" rows="3"></textarea>
+            <label class="field-label" for="company-website" style="margin-top:10px">Website (optional)</label>
+            <input class="form-input" id="company-website" type="url" maxlength="2048" placeholder="https://…"/>
+            <div id="company-profile-status" aria-live="polite" style="font-size:12px;color:var(--text-3);margin-top:8px"></div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="saveCompanyProfile()" style="width:100%;justify-content:center;margin-top:10px">Save company profile</button>
+          </div>
           <button class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:10px" onclick="window.__tourShort=false;Tour.restart()">🔄 Replay dashboard tour</button>
         </div>
         <div style="display:flex;flex-direction:column;gap:20px">
@@ -627,7 +674,7 @@
           </div>
           <div class="settings-section" id="settings-premium-section">
             <h3><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Premium</h3>
-            <p style="font-size:12.5px;color:var(--text-3);margin-bottom:14px;line-height:1.6">Unlock managed chat, a Pro badge, scheduled publishing, video tours, printable brochures, and more.</p>
+            <p style="font-size:12.5px;color:var(--text-3);margin-bottom:14px;line-height:1.6">Unlock managed chat, a Pro badge, scheduled publishing, printable brochures, and more. Video walkthroughs are free on every plan.</p>
             <button type="button" class="btn btn-outline btn-sm" style="margin-bottom:12px" onclick="var w=document.getElementById('plan-compare-wrap');w.style.display=w.style.display==='none'?'block':'none'">Compare Premium vs Elite</button>
             <div id="plan-compare-wrap" style="display:none;overflow-x:auto;margin-bottom:16px;border:1px solid var(--border);border-radius:10px">
               <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:340px">
@@ -642,7 +689,7 @@
                   <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Managed chat</td><td style="text-align:center;padding:7px 10px;color:var(--gold);font-weight:700">✓</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
                   <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Pro seller badge</td><td style="text-align:center;padding:7px 10px;color:var(--gold);font-weight:700">✓</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
                   <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Scheduled publishing</td><td style="text-align:center;padding:7px 10px;color:var(--gold);font-weight:700">✓</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
-                  <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Video walkthroughs</td><td style="text-align:center;padding:7px 10px;color:var(--gold);font-weight:700">✓</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
+                  <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Video walkthroughs</td><td colspan="2" style="text-align:center;padding:7px 10px;color:var(--green-dark);font-weight:700">✓ Free on every plan</td></tr>
                   <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Printable brochure</td><td style="text-align:center;padding:7px 10px;color:var(--gold);font-weight:700">✓</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
                   <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">SMS enquiry alerts</td><td style="text-align:center;padding:7px 10px;color:var(--gold);font-weight:700">✓</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
                   <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Unlimited listings</td><td style="text-align:center;padding:7px 10px;color:var(--text-3);font-weight:700">—</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
@@ -673,8 +720,8 @@
               <span style="font-size:11px;font-weight:700;color:var(--gold);background:var(--gold-light);padding:3px 9px;border-radius:20px">Premium</span>
             </div>
             <div class="toggle-row">
-              <div class="toggle-label"><strong>Video walkthroughs</strong><span>Add a video or 360° tour to your listing — up to 1 (monthly) or 5 (yearly) per listing</span></div>
-              <span style="font-size:11px;font-weight:700;color:var(--gold);background:var(--gold-light);padding:3px 9px;border-radius:20px">Premium</span>
+              <div class="toggle-label"><strong>Video walkthroughs</strong><span>Add a video or 360° tour to any listing — 1 per listing on the free plan, or up to 5 on yearly plans</span></div>
+              <span style="font-size:11px;font-weight:700;color:var(--green-dark);background:var(--green-light);padding:3px 9px;border-radius:20px">Free</span>
             </div>
             <div class="toggle-row">
               <div class="toggle-label"><strong>Printable brochure</strong><span>Download a branded PDF flyer for a listing</span></div>
@@ -983,7 +1030,7 @@
   </div>
 </div>
 
-<!-- MANAGE VIDEOS MODAL (Premium/Elite video walkthroughs) -->
+<!-- MANAGE VIDEOS MODAL -->
 <div class="modal-overlay" id="modal-manage-videos">
   <div class="modal" style="max-width:480px">
     <div class="modal-head">

@@ -325,10 +325,18 @@ const PS={sale_standard_pct:.1,rent_standard_pct:3,standard_min_fee:500,standard
 const DRAFT_KEY='nk_post_listing_draft_v3';
 
 /* ═══ STATE ═══ */
-const S={step:1,max:1,cat:'apartment',amen:new Set(),custom:[],tiers:[],seq:0,pin:null,photos:[],cover:0,video:null,user:null,userName:'',first:true,cov:{rental:false,bnb:false},ready:false,busy:false,guestBlocked:false,
+const S={step:1,max:1,cat:'apartment',amen:new Set(),custom:[],tiers:[],seq:0,pin:null,photos:[],cover:0,video:null,user:null,effectiveSellerId:null,userName:'',first:true,cov:{rental:false,bnb:false},ready:false,busy:false,guestBlocked:false,
   sub:{listingId:null,urls:{},unitsDone:false,photosDone:false,videoLinked:false}};
 const group=()=>(NK_CATEGORIES[S.cat]||{}).group;
 let toastT;function toast(m,k){const t=$('toast');t.textContent=m;t.className='toast show '+(k||'');clearTimeout(toastT);toastT=setTimeout(()=>t.className='toast',4200)}
+async function resolveEffectiveSellerId(){
+  if(!S.user)return null;
+  if(S.effectiveSellerId)return S.effectiveSellerId;
+  const{data,error}=await db.from('team_members').select('owner_id').eq('member_id',S.user.id).eq('status','active').maybeSingle();
+  if(error)throw new Error(`Could not verify team membership: ${error.message}`);
+  S.effectiveSellerId=data?.owner_id||S.user.id;
+  return S.effectiveSellerId;
+}
 
 /* ═══ FIELD HELPERS ═══ */
 function fail(id,msg){const e=$('e-'+id),i=$(id);if(e)e.textContent=msg||'';if(i)i.setAttribute('aria-invalid',msg?'true':'false');return !msg}
@@ -623,7 +631,7 @@ async function pickVideo(f){
 }
 async function uploadVideo(listingId){
   if(!S.video||!S.user)return;const st=$('video-status');st.textContent='Uploading video…';
-  try{const {data:{session}}=await db.auth.getSession();const fd=new FormData();fd.append('video',S.video);fd.append('listingId',listingId);fd.append('sellerId',S.user.id);fd.append('title',val('title')||'Nyumba254 listing video');
+  try{const {data:{session}}=await db.auth.getSession();const fd=new FormData();fd.append('video',S.video);fd.append('listingId',listingId);fd.append('sellerId',await resolveEffectiveSellerId());fd.append('title',val('title')||'Nyumba254 listing video');
     const r=await fetch(`${EDGE_URL}/upload-listing-video`,{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+session.access_token},body:fd}),j=await r.json();
     if(!r.ok||j.error)throw new Error('x');st.textContent='Video received, pending review.';
   }catch(e){st.textContent='Video upload failed. Your listing was still submitted; add the video from your dashboard.'}
@@ -647,17 +655,27 @@ function feeBox(){
 /* ═══ ACCOUNT CHECKS ═══ */
 async function checkGate(){
   if(!S.user)return {blocked:false};
-  const {data:p}=await db.from('profiles').select('verification_status,verification_enforced').eq('id',S.user.id).maybeSingle();
+  const sellerId=await resolveEffectiveSellerId();
+  const {data:p,error}=await db.from('profiles').select('verification_status,verification_enforced,account_type,onboarding_completed').eq('id',sellerId).maybeSingle();
+  if(error)throw new Error(`Could not check account permissions: ${error.message}`);
+  if(!p)return {blocked:false,accountBlocked:'Complete account setup before posting a listing.'};
+  S.accountType=p.account_type||null;
+  const{data:canList,error:capabilityError}=await db.rpc('can_create_listing',{p_profile_id:sellerId});
+  if(capabilityError)throw new Error(`Could not check listing permissions: ${capabilityError.message}`);
+  if((!p.onboarding_completed||!S.accountType)&&canList!==true)return {blocked:false,accountBlocked:'Complete account setup before posting a listing.'};
+  if(S.accountType==='buyer')return {blocked:false,accountBlocked:'Tenant / Buyer accounts cannot create listings. Change your account type in dashboard settings.'};
   const enforced=Number(PS.enforce_verification_general)===1||!!(p&&p.verification_enforced);
   if(!enforced||(p&&p.verification_status==='verified'))return {blocked:false};
   const limit=Number(PS.unverified_listing_limit)||2;
-  const {count}=await db.from('listings').select('*',{count:'exact',head:true}).eq('seller_id',S.user.id).eq('recycle_bin',false).in('status',['active','pending','scheduled','approved_unpaid','approved_unpaid_bnb']);
+  const {count,error:countError}=await db.from('listings').select('id',{count:'exact',head:true}).eq('seller_id',sellerId).eq('recycle_bin',false).eq('status','active');
+  if(countError)throw new Error(`Could not check your active listings: ${countError.message}`);
   return {blocked:(count||0)>=limit,limit};
 }
 async function loadAccount(){
   if(!S.user){S.first=true;return}
-  const {count}=await db.from('listings').select('*',{count:'exact',head:true}).eq('seller_id',S.user.id);S.first=(count||0)===0;
-  const {data:p}=await db.from('profiles').select('has_bnb_capacity,has_rental_capacity,bnb_expires_at,subscription_expires_at,subscription_plan,subscription_tier').eq('id',S.user.id).maybeSingle();if(!p)return;
+  const sellerId=await resolveEffectiveSellerId();
+  const {count,error:countError}=await db.from('listings').select('id',{count:'exact',head:true}).eq('seller_id',sellerId);if(countError)throw new Error(`Could not check your existing listings: ${countError.message}`);S.first=(count||0)===0;
+  const {data:p,error}=await db.from('profiles').select('has_bnb_capacity,has_rental_capacity,bnb_expires_at,subscription_expires_at,subscription_plan,subscription_tier,account_type,onboarding_completed').eq('id',sellerId).maybeSingle();if(error)throw new Error(`Could not load your listing account: ${error.message}`);if(!p)return;
   const live=!p.subscription_expires_at||new Date(p.subscription_expires_at)>new Date(),paid=!!p.subscription_tier&&p.subscription_tier!=='none',elite=paid&&p.subscription_plan==='elite'&&live;
   S.cov={rental:(!!p.has_rental_capacity&&paid&&live)||elite,bnb:(!!p.has_bnb_capacity&&p.bnb_expires_at&&new Date(p.bnb_expires_at)>new Date())||elite};
 }
@@ -743,7 +761,7 @@ function payload(){
   const f=freq();
   return {title:val('title'),description:val('description'),price:g==='boarding'?boardingPrice():priceVal(),price_frequency:f,price_type:f==='once'?'sale':'rent',category:S.cat,county:val('county'),area:areaName(),address:val('address'),
     latitude:S.pin?S.pin.lat:null,longitude:S.pin?S.pin.lng:null,amenities:[...S.amen],details:d,contact_name:val('contact_name'),phone:nkNormalizePhone(val('phone')),whatsapp:nkNormalizePhone(val('whatsapp')||val('phone')),contact_email:val('contact_email'),contact_hidden:chk('contact_hidden'),
-    status:'pending',payment_status:S.first?'trial':'unpaid',trial_expires_at:S.first?new Date(Date.now()+(PS.trial_days||14)*864e5).toISOString():null,seller_id:S.user?S.user.id:null,views:0,is_live:false};
+    status:'pending',payment_status:S.first?'trial':'unpaid',trial_expires_at:S.first?new Date(Date.now()+(PS.trial_days||14)*864e5).toISOString():null,seller_id:S.user?S.effectiveSellerId||S.user.id:null,views:0,is_live:false};
 }
 function unitTiers(){const g=group();
   if(g==='boarding'||unitsOn())return validTiers();
@@ -753,6 +771,7 @@ async function submit(){
   if(S.busy)return;$('submit-error').textContent='';
   for(const s of [2,3,4]){if(!validate(s)){toast('Please fix the highlighted fields in step '+s,'error');return show(s,true)}}
   const gate=await checkGate();
+  if(gate.accountBlocked){toast(gate.accountBlocked,'error');setTimeout(()=>{location.href='/dashboard#settings'},1200);saveDraftNow();return}
   if(gate.blocked){toast(`Verify your account first: unverified sellers are limited to ${gate.limit} listing(s).`,'error');saveDraftNow();return setTimeout(()=>{location.href='/dashboard?verify=1&limit='+gate.limit},1200)}
   let ok=true;
   ok=fail('contact_name',val('contact_name').length>1?'':'Enter your full name')&&ok;
@@ -905,6 +924,7 @@ async function init(){
   }else{$('guest-note').hidden=false;$('video-file-f').querySelector('label').innerHTML='Video upload <span class="opt">available after you sign in</span>';qsa('[data-act="vid-up"],[data-act="vid-rec"]').forEach(b=>b.disabled=true)}
   await loadSettings();await loadAccount();updateKicker();checkPlan();
   const gate=await checkGate();
+  if(gate.accountBlocked){toast(gate.accountBlocked,'error');setTimeout(()=>{location.href='/dashboard#settings'},1800);return}
   if(gate.blocked){toast(`Unverified sellers are limited to ${gate.limit} listing(s). Verify your account to post more.`,'error');setTimeout(()=>{location.href='/dashboard?verify=1&limit='+gate.limit},1800);return}
   await findDraft();S.ready=true;
   setTimeout(()=>{if(map)map.invalidateSize()},300);

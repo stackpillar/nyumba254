@@ -213,7 +213,7 @@ function nkCountyEq(query, county) {
 }
 
 /* ---------- B1: one URL contract shared by index and listings ---------- */
-const NK_URL_KEYS = ['category','freq','county','area','minPrice','maxPrice','beds','furn','amen','q','sort','page','view'];
+const NK_URL_KEYS = ['category','freq','county','area','minPrice','maxPrice','beds','furn','amen','q','sort','page','view','listedBy'];
 function nkBuildListingsUrl(f) {
   const p = new URLSearchParams();
   NK_URL_KEYS.forEach(k => {
@@ -380,8 +380,24 @@ function nkCardCoverPhoto(listing) {
 }
 
 function nkBuildVerifiedBadge(listing) {
-  if (listing?.profiles?.verification_status !== 'verified') return '';
-  return `<span class="card-verified-badge" title="This seller has been identity-verified by Nyumba254"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>Verified</span>`;
+  const profile=listing?.profiles||{};
+  const roleLabels={buyer:'Tenant / Buyer',owner:'Property owner',caretaker:'Caretaker',agent:'Agent',company:'Company'};
+  const roleVerified=!!profile.account_type&&profile.verified_role===profile.account_type;
+  const identityVerified=profile.identity_verified===true||profile.verification_status==='verified';
+  const icon='<svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>';
+  return `${roleVerified?`<span class="card-role-badge" title="Nyumba254 verified this account as ${escHtml(roleLabels[profile.account_type]||profile.account_type)}">${icon}Verified ${escHtml(roleLabels[profile.account_type]||profile.account_type)}</span>`:''}${identityVerified?`<span class="card-verified-badge" title="This person’s identity has been verified by Nyumba254">${icon}Identity verified</span>`:''}`;
+}
+
+async function nkHydratePublicProfiles(listings) {
+  const rows=Array.isArray(listings)?listings:[];
+  const ids=[...new Set(rows.map(row=>row.seller_id).filter(Boolean))];
+  if(!ids.length)return rows;
+  const{data,error}=await db.from('public_account_profiles')
+    .select('id,full_name,created_at,identity_verified,account_type,verified_role,company_name,company_type,company_logo_url,company_description,company_website')
+    .in('id',ids);
+  if(error)throw new Error(`Could not load public account details: ${error.message}`);
+  const byId=new Map((data||[]).map(profile=>[profile.id,profile]));
+  return rows.map(row=>({...row,profiles:byId.get(row.seller_id)||row.profiles||null}));
 }
 
 function nkImgSrc(url, width) {
@@ -426,6 +442,8 @@ function nkBuildCard(listing, opts) {
 
   const heart = (typeof NKSaved !== 'undefined' && NKSaved.buildHeartBtn) ? NKSaved.buildHeartBtn(listing.id) : '';
   const verifiedBadge = nkBuildVerifiedBadge(listing);
+  const listedByLabels={buyer:'Tenant / Buyer',owner:'Property owner',caretaker:'Caretaker',agent:'Agent',company:'Company',seller:'Seller'};
+  const listedBy=listedByLabels[listing.listed_by_type||(listing.seller_id?'seller':'')];
 
   return `
     <a class="card" href="${href}" aria-label="${safeTitle}" data-listing-id="${escHtml(listing.id)}" style="${isOccupied ? 'opacity:.7' : ''}">
@@ -438,7 +456,7 @@ function nkBuildCard(listing, opts) {
       <div class="card-body">
         <div class="card-area">${escHtml(listing.area)} ${verifiedBadge}</div>
         <div class="card-title">${safeTitle}</div>
-        <div class="card-sub">${escHtml(subText)}</div>
+        <div class="card-sub">${escHtml(subText)}${listedBy?` · Listed by ${escHtml(listedBy)}`:''}</div>
         <div class="card-price">${formatPrice(listing, { showFromPrefix: !compact })}</div>
       </div>
     </a>`;

@@ -647,7 +647,7 @@
         <h2>Platform</h2>
         <a href="/post-listing">List a property</a>
         <a href="/how-it-works">How it works</a>
-        <a href="/login">Seller login</a>
+        <a href="/login">Account sign in</a>
       </div>
       <div class="footer-col">
         <h2>Company</h2>
@@ -804,11 +804,13 @@ function renderListings(containerId, listings, imgWidth, emptyHtml) {
 const SKELETON = '<div class="loading-grid">' + Array(3).fill('<div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line short"></div><div class="skeleton-line"></div></div></div>').join('') + '</div>';
 
 async function loadFeatured() {
-  const { data, error } = await db.from('listings').select('*, listing_photos(*), profiles(verification_status)')
+  const { data, error } = await db.from('listings').select('*, listing_photos(*), profiles(verification_status,account_type,verified_role)')
     .eq('status', 'active').eq('is_featured', true).order('created_at', { ascending: false }).order('id').limit(12);
   if (error) { console.error(error); $('featured-section').hidden = true; return; }
   if (!data || !data.length) { $('featured-section').hidden = true; return; }     // no empty "be the first" block for Featured
-  renderListings('featured-listings', data);
+  let listings=data;
+  try{listings=await nkHydratePublicProfiles(data);}catch(profileError){console.error(profileError);}
+  renderListings('featured-listings', listings);
 }
 
 const latest = { county: '', area: '', token: 0 };
@@ -816,13 +818,16 @@ function syncLatestLink() { $('latest-see-all').href = nkBuildListingsUrl({ coun
 async function loadLatest() {
   const my = ++latest.token, { county, area } = latest;
   $('latest-listings').innerHTML = SKELETON; syncLatestLink();
-  let q = db.from('listings').select('*, listing_photos(*), profiles(verification_status)').eq('status', 'active');
+  let q = db.from('listings').select('*, listing_photos(*), profiles(verification_status,account_type,verified_role)').eq('status', 'active');
   if (area) { q = q.eq('area', area); if (county) q = q.eq('county', county); } else q = nkCountyEq(q, county);
   const { data, error } = await q.order('created_at', { ascending: false }).order('id').limit(20);
   if (my !== latest.token) return;
   if (error) { console.error(error); return; }
   const where = area ? `${area}${county ? ', ' + nkCountyLabel(county) : ''}` : (county ? nkCountyLabel(county) : '');
-  renderListings('latest-listings', data || [], 480, `<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><p>No listings ${where ? 'in ' + escHtml(where) + ' ' : ''}yet. <a href="/post-listing">Be the first to list!</a></p></div>`);
+  let listings=data||[];
+  try{listings=await nkHydratePublicProfiles(listings);}catch(profileError){console.error(profileError);}
+  if(my!==latest.token)return;
+  renderListings('latest-listings', listings, 480, `<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><p>No listings ${where ? 'in ' + escHtml(where) + ' ' : ''}yet. <a href="/post-listing">Be the first to list!</a></p></div>`);
 }
 function renderAreaPills() {
   const wrap = $('area-pills'), county = latest.county;

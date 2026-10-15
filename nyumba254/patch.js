@@ -133,6 +133,15 @@
     { id: 'money', label: 'Money', icon: ICON.money, go: () => showPage('payments') },
     { id: 'more', label: 'More', icon: ICON.more, go: () => toggleSidebar() },
   ];
+  const BUYER_TABS = [
+    { id: 'home', label: 'Home', icon: ICON.home, go: () => showPage('overview') },
+    { id: 'browse', label: 'Browse', icon: ICON.list, go: () => { window.location.href='/listings'; } },
+    { id: 'saved', label: 'Saved', icon: '<path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1.1a5.5 5.5 0 000-7.7z"/>', go: () => { window.location.href='/saved'; } },
+    { id: 'inbox', label: 'Inbox', icon: ICON.inbox, go: () => showAllMessages() },
+    { id: 'more', label: 'More', icon: ICON.more, go: () => toggleSidebar() },
+  ];
+  const currentTabs = () => currentProfile?.account_type === 'buyer' ? BUYER_TABS : TABS;
+  const tabMode = () => currentProfile?.account_type === 'buyer' ? 'buyer' : 'seller';
   const PAGE_TO_TAB = {
     overview: 'home', listings: 'listings',
     messages: 'inbox', enquiries: 'inbox', reviews: 'inbox',
@@ -145,7 +154,8 @@
     nav.className = 'nyb-bar';
     nav.id = 'nyb-bar';
     nav.setAttribute('aria-label', 'Main navigation');
-    nav.innerHTML = TABS.map((t) =>
+    nav.dataset.mode=tabMode();
+    nav.innerHTML = currentTabs().map((t) =>
       `<button type="button" class="nyb-tab" data-tab="${t.id}" aria-label="${t.label}">
          <svg viewBox="0 0 24 24" aria-hidden="true">${t.icon}</svg><span>${t.label}</span>
          ${t.id === 'inbox' ? '<span class="nyb-badge" id="nyb-badge-inbox"></span>' : ''}
@@ -153,13 +163,18 @@
     nav.addEventListener('click', (e) => {
       const b = e.target.closest('.nyb-tab');
       if (!b) return;
-      const tab = TABS.find((t) => t.id === b.dataset.tab);
+      const tab = currentTabs().find((t) => t.id === b.dataset.tab);
       if (tab) tab.go();
     });
     document.body.appendChild(nav);
   }
 
   function syncTabBar(pageName) {
+    const nav=$('nyb-bar');
+    if(nav&&nav.dataset.mode!==tabMode()){
+      nav.dataset.mode=tabMode();
+      nav.innerHTML=currentTabs().map(t=>`<button type="button" class="nyb-tab" data-tab="${t.id}" aria-label="${t.label}"><svg viewBox="0 0 24 24" aria-hidden="true">${t.icon}</svg><span>${t.label}</span>${t.id==='inbox'?'<span class="nyb-badge" id="nyb-badge-inbox"></span>':''}</button>`).join('');
+    }
     const page = pageName || (document.querySelector('.page.active') || {}).id?.replace('page-', '') || 'overview';
     const active = PAGE_TO_TAB[page] || 'more';
     document.querySelectorAll('.nyb-tab').forEach((b) => b.classList.toggle('active', b.dataset.tab === active));
@@ -170,6 +185,7 @@
     const bd = $('nyb-badge-inbox');
     if (bd) { bd.textContent = unread > 99 ? '99+' : unread; bd.classList.toggle('show', unread > 0); }
   }
+  window.syncAccountTypeNavigation=syncTabBar;
 
   /* ═════════════════════════════════════════════
      STEP 4 (data) — lead stages + viewings

@@ -153,6 +153,7 @@
     .sidebar-actions .btn-primary { flex: 2; }
     .filter-section { margin-bottom: 26px; }
     .filter-label { display: block; font-size: 12px; font-weight: 700; color: var(--text-3); margin-bottom: 10px; }
+    .filter-section select { width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;background:var(--white);color:var(--text);font:inherit;font-size:13px; }
     .check-list { display: flex; flex-direction: column; gap: 4px; }
     .check-item { display: flex; align-items: center; gap: 9px; cursor: pointer; min-height: 30px; font-size: 13px; color: var(--text-2); }
     .check-item input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--green); cursor: pointer; flex-shrink: 0; }
@@ -658,6 +659,17 @@
         <span class="filter-label">Availability</span>
         <label class="check-item"><input type="checkbox" id="occ-check"/><span>Include occupied / sold listings</span></label>
       </div>
+      <div class="filter-section">
+        <label class="filter-label" for="listed-by-select">Listed by</label>
+        <select class="form-input" id="listed-by-select">
+          <option value="">Any account type</option>
+          <option value="owner">Property owner</option>
+          <option value="caretaker">Caretaker</option>
+          <option value="agent">Agent</option>
+          <option value="company">Company</option>
+          <option value="seller">Legacy seller</option>
+        </select>
+      </div>
     </div>
     <div class="sidebar-actions">
       <button type="button" class="btn btn-outline" id="sb-clear">Clear</button>
@@ -921,7 +933,7 @@ const SITE = 'https://nyumba254.com';
 const NK_CLEAN_ROUTES = false;   // flip to true once /listings/<county>/<category> rewrites exist (canonical then uses them)
 // WhatsApp: adjust these two lines to your real column names. Cards fall back to the enquiry form if absent.
 const NK_WHATSAPP = { enabled: l => !!(l.allow_whatsapp && l.whatsapp_number), number: l => l.whatsapp_number };
-const LISTING_SELECT = '*, listing_photos(*), listing_units(*), profiles(verification_status)';
+const LISTING_SELECT = '*, listing_photos(*), listing_units(*), profiles(verification_status,account_type,verified_role)';
 const MAP_SELECT = 'id, listing_number, title, area, county, price, price_frequency, category, latitude, longitude';
 const MAP_LIMIT = 300;
 const AUTO_PAGES = 3;                       // mobile: auto-load this many pages, then show "Load more"
@@ -982,11 +994,11 @@ function toast(msg, kind) {
    1. STATE  (one object; every control renders from it)
    S = committed filters. D = staged draft while the mobile drawer is open.
    ═══════════════════════════════════════════════════════════════ */
-const S = { category: '', freq: '', county: '', areas: [], minPrice: '', maxPrice: '', beds: '', furn: '', amen: [], q: '', sort: '', occ: false, view: 'grid', page: 1, mapIds: null };
+const S = { category: '', freq: '', county: '', areas: [], minPrice: '', maxPrice: '', beds: '', furn: '', amen: [], q: '', sort: '', occ: false, listedBy: '', view: 'grid', page: 1, mapIds: null };
 let D = null;
 const cur = () => D || S;
 const cloneState = s => ({ ...s, areas: [...s.areas], amen: [...s.amen], mapIds: s.mapIds ? [...s.mapIds] : null });
-const BLANK = () => ({ category: '', freq: '', county: '', areas: [], minPrice: '', maxPrice: '', beds: '', furn: '', amen: [], q: '', occ: false, mapIds: null });
+const BLANK = () => ({ category: '', freq: '', county: '', areas: [], minPrice: '', maxPrice: '', beds: '', furn: '', amen: [], q: '', occ: false, listedBy: '', mapIds: null });
 
 function normalize(f) {
   const g = groupOf(f.category);
@@ -1021,6 +1033,7 @@ function readUrl() {
   S.q = safeQ(p.q || '').slice(0, 80);
   S.sort = ['price_asc', 'price_desc', 'featured'].includes(p.sort) ? p.sort : '';
   S.occ = p.occ === '1';
+  S.listedBy = ['owner','caretaker','agent','company','seller'].includes(p.listedBy) ? p.listedBy : '';
   S.view = p.view === 'map' ? 'map' : 'grid';
   S.page = Math.max(1, parseInt(p.page, 10) || 1);
   // Area given without a county (older links): infer the county only when the name is unambiguous.
@@ -1029,7 +1042,7 @@ function readUrl() {
 }
 
 function urlObject(f) {
-  return { category: f.category, freq: f.freq, county: f.county, area: f.areas, minPrice: f.minPrice, maxPrice: f.maxPrice, beds: f.beds, furn: f.furn, amen: f.amen, q: f.q, sort: f.sort };
+  return { category: f.category, freq: f.freq, county: f.county, area: f.areas, minPrice: f.minPrice, maxPrice: f.maxPrice, beds: f.beds, furn: f.furn, amen: f.amen, q: f.q, sort: f.sort, listedBy: f.listedBy };
 }
 function writeUrl() {
   nkSyncUrl({ ...urlObject(S), page: (!isMobileFeed() && S.page > 1) ? S.page : '', view: S.view === 'map' ? 'map' : '', occ: S.occ ? '1' : '' });
@@ -1049,6 +1062,8 @@ const SEARCH_FIELDS = ['title', 'description', 'area', 'address', 'county'];
 
 function applyFilters(query, f) {
   query = f.occ ? query.in('status', ['active', 'occupied']) : query.eq('status', 'active');
+  if(f.listedBy==='seller')query=query.or('listed_by_type.eq.seller,listed_by_type.is.null');
+  else if(f.listedBy)query=query.eq('listed_by_type',f.listedBy);
   if (f.freq) query = query.eq('price_frequency', f.freq);
   if (f.category) query = query.eq('category', f.category);
   query = bedsFilter(query, f.beds);
@@ -1103,6 +1118,7 @@ function tagList(f) {
   if (f.minPrice !== '' || f.maxPrice !== '') t.push({ key: 'price', label: priceLabel(f) });
   if (f.q) t.push({ key: 'q', label: `“${f.q}”` });
   if (f.occ) t.push({ key: 'occ', label: 'Incl. occupied / sold' });
+  if (f.listedBy) t.push({ key: 'listedBy', label: `Listed by ${({owner:'Property owner',caretaker:'Caretaker',agent:'Agent',company:'Company',seller:'Legacy seller'})[f.listedBy]}` });
   if (f.mapIds && f.mapIds.length) t.push({ key: 'map', label: 'Map area' });
   return t;
 }
@@ -1275,6 +1291,8 @@ function cardHtml(l, i) {
       `<button type="button" class="card-carousel-arrow next" data-photo-nav="1" data-id="${id}" aria-label="Next photo">${IC.chevR}</button>` +
       `<div class="card-photo-counter" id="ctr-${id}" aria-hidden="true">${idx + 1}/${photos.length}</div>` : '';
   const sub = l.address ? l.address : (l.county ? `${l.area || ''}${l.area ? ', ' : ''}${nkCountyLabel(l.county)}` : (l.area || 'Kenya'));
+  const listedByLabels={buyer:'Tenant / Buyer',owner:'Property owner',caretaker:'Caretaker',agent:'Agent',company:'Company',seller:'Legacy seller'};
+  const listedBy=listedByLabels[l.listed_by_type||(l.seller_id?'seller':'')];
   const heart = (typeof NKSaved !== 'undefined' && NKSaved.buildHeartBtn) ? NKSaved.buildHeartBtn(l.id) : '';
   const middle = meta.group === 'boarding' ? boardingHtml(l, d) : specsHtml(meta, d);
   return `<article class="card${occupied ? ' is-occupied' : ''}" data-listing-id="${id}">
@@ -1288,7 +1306,7 @@ function cardHtml(l, i) {
     <div class="card-body">
       <div class="card-area">${escHtml(l.area)} ${nkBuildVerifiedBadge(l)}</div>
       <h3 class="card-title"><a class="card-link" href="${listingHref(l)}">${title}</a></h3>
-      <div class="card-sub">${escHtml(sub)}</div>
+      <div class="card-sub">${escHtml(sub)}${listedBy?` · Listed by ${escHtml(listedBy)}`:''}</div>
       <div class="card-price">${formatPrice(l, { showFromPrefix: true })}</div>
       ${middle}${amenitiesHtml(l)}
       <div class="card-foot">
@@ -1335,7 +1353,9 @@ async function runSearch(opts) {
   if (my !== reqId) return;
   feed.loading = false;
   if (error) { console.error(error); renderError(); return; }
-  const list = data || [];
+  let list = data || [];
+  try{list=await nkHydratePublicProfiles(list);}catch(profileError){console.error(profileError);}
+  if (my !== reqId) return;
   feed.total = count || 0;
   if (!append && !list.length && feed.total > 0 && page > 1) { S.page = 1; return runSearch(opts); }   // stale ?page=99
   feed.pages = page;
@@ -1560,6 +1580,7 @@ function syncSidebar() {
   }).join('');
   qsa('#amen-checks input').forEach(i => { i.checked = f.amen.includes(i.value); });
   $('occ-check').checked = f.occ;
+  $('listed-by-select').value = f.listedBy;
   const g = groupOf(f.category);
   $('sec-beds').hidden = g === 'boarding' || g === 'commercial';
   $('sec-furn').hidden = g === 'boarding' || g === 'airbnb' || g === 'commercial';
@@ -1577,6 +1598,7 @@ function onSidebarChange(e) {
   if (t.dataset.area !== undefined) { const f = cur(); return setFilter({ areas: t.checked ? [...f.areas, t.dataset.area] : f.areas.filter(a => a !== t.dataset.area) }); }
   if (t.closest('#amen-checks')) { const f = cur(); return setFilter({ amen: t.checked ? [...f.amen, t.value] : f.amen.filter(a => a !== t.value) }); }
   if (t.id === 'occ-check') return setFilter({ occ: t.checked }, { immediate: !D });
+  if (t.id === 'listed-by-select') return setFilter({ listedBy: t.value }, { immediate: !D });
 }
 function onSidebarInput(e) {
   if (e.target.id === 'price-min') setFilter({ minPrice: digitsOnly(e.target.value) });
@@ -1663,6 +1685,7 @@ function removeTag(key, val) {
     case 'price': return setFilter({ minPrice: '', maxPrice: '' }, imm);
     case 'q': { const i = $('search-q'); i.value = ''; delete i.dataset.priceValue; return setFilter({ q: '' }, imm); }
     case 'occ': return setFilter({ occ: false }, imm);
+    case 'listedBy': return setFilter({ listedBy: '' }, imm);
     case 'map': return setFilter({ mapIds: null }, imm);
   }
 }

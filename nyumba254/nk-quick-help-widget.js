@@ -103,7 +103,7 @@ HOW LISTING WORKS (sellers)
 - Airbnb / Holiday Rental listings run on a separate monthly plan instead of a one-time fee, since they need to stay bookable. Plans scale up for sellers with more than one short-stay property.
 - Sellers can edit, pause, mark a listing sold/occupied, or delete any listing anytime from their dashboard once signed in — no need to contact the team for routine changes.
 - Sellers can optionally verify identity/ownership for a trust badge buyers can see. It's optional, never required to list.
-- Optional paid add-ons (never required to post or sell): managed chat, a Pro badge, scheduled publishing, video walkthroughs, printable brochures, SMS alerts, and — for top-tier sellers — AI tools, a branded storefront page, a rent/tenant ledger, and demand insights. Exact pricing for these lives inside the seller's own account settings, not on a public page.
+- Optional paid add-ons (never required to post or sell): managed chat, a Pro badge, scheduled publishing, printable brochures, SMS alerts, and — for top-tier sellers — AI tools, a branded storefront page, a rent/tenant ledger, and demand insights. Video walkthroughs are free on every plan. Exact pricing for paid tools lives inside the seller's own account settings, not on a public page.
 
 ===========================
 COVERAGE
@@ -520,7 +520,7 @@ body.nk-modal-open #nk-qh-launcher{display:none;}
           label: 'My account',
           chips: [
             { label: '❤️ My saved listings', type: 'nav', href: '/saved' },
-            { label: '👤 Seller login / dashboard', type: 'nav', href: '/login' },
+            { label: '👤 Account sign in / dashboard', type: 'nav', href: '/login' },
             { label: '🆓 Do buyers pay anything?', type: 'ask', q: 'Do buyers ever have to pay to use Nyumba254?' },
             { label: '💬 Track a reply to my enquiry', type: 'ask', q: 'How do I check replies to my enquiry?' },
             { label: '📲 M-Pesa payment issue', type: 'ask', q: 'My M-Pesa payment is not reflecting' },
@@ -664,7 +664,7 @@ body.nk-modal-open #nk-qh-launcher{display:none;}
             label === 'Talk to a real person' ? { type: 'escalate' } :
             label === 'Choose a different topic' ? { type: 'menu' } :
             label === 'Report a listing' ? { type: 'report', reason: 'fake_listing', label } :
-            label === 'Seller login / dashboard' ? { type: 'nav', href: '/login', label } :
+            label === 'Account sign in / dashboard' ? { type: 'nav', href: '/login', label } :
             { type: 'ask', q: label }
           );
           chipsWrap.appendChild(btn);
@@ -802,7 +802,7 @@ body.nk-modal-open #nk-qh-launcher{display:none;}
         return { text: "Our team occasionally features standout listings with top placement and a badge — it's not something you buy at posting. Ask about our optional seller add-ons if you want more visibility tools.", chips: ['What does it cost to list?', 'Talk to a real person'] };
       }
       if (q.includes('edit') || q.includes('remove') || q.includes('pause') || q.includes('delete')) {
-        return { text: "Yes — once you're signed in, your seller dashboard lets you edit, pause, or remove any of your listings anytime. No need to contact the team for routine changes.", chips: ['Seller login / dashboard', 'Talk to a real person'] };
+        return { text: "Yes — sign in to manage your account, search for property, and access tools for the roles you selected. If you manage listings, you can edit, pause, or remove them from your dashboard.", chips: ['Account sign in / dashboard', 'Talk to a real person'] };
       }
       if (q.includes('buyer') && q.includes('pay')) {
         return { text: "Never. Browsing, searching, and contacting sellers is completely free for buyers — the only fee on the platform is the one-time listing fee sellers pay to post." };

@@ -181,6 +181,7 @@ applyStoredTheme();
 
 
 let currentUser=null,currentProfile=null,ownerProfile=null,effectiveSellerId=null,isTeamMember=false,allListings=[],allEnquiries=[],allPayments=[],allMessages=[],allReviews=[],threads=[],activeThread=null,listingFilter='all',enquiryFilter='all',deleteTargetId=null,occupiedTargetId=null,replyTargetEnquiry=null,msgPollTimer=null,threadListingFilter=null,messagesChannel=null,listingActionBusy=new Set(),notifPollTimer=null,bnbBookingsChannel=null,bnbPropertyIdSet=new Set();
+const ACCOUNT_TYPES=['buyer','owner','caretaker','agent','company'];
 
 async function refreshBnbPropertyIdSet(){
   const{data,error}=await db.from('bnb_properties').select('id').eq('seller_id',effectiveSellerId);
@@ -279,6 +280,10 @@ async function init(){
     }
     const lastPage=location.hash.slice(1)||sessionStorage.getItem('ny_last_page');
     if(lastPage&&lastPage!=='overview'&&document.getElementById('page-'+lastPage)){showPage(lastPage);}
+    if(!currentProfile?.onboarding_completed){
+      showToast('Choose an account type to finish setting up your account.','success');
+      showPage('settings');
+    }
     retryQueuedNotifications(); // flush any emails that failed to send last session
     msgPollTimer=setInterval(pollNewMessages,MSG_POLL_MS);
     listingStatusPollTimer=setInterval(pollListingStatusChanges,LISTING_STATUS_POLL_MS);
@@ -713,6 +718,8 @@ async function loadProfile(){
   }
   if(error) throw new Error(`Could not load your profile: ${error.message}`);
   currentProfile=data;
+  renderAccountType();
+  await Promise.all([loadAccountRoleHistory(),loadCompanyProfileForSettings()]);
   const email=currentUser.email||'';
   const name=(data&&data.full_name)?data.full_name:email.split('@')[0];
   const initials=name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()||'?';
@@ -764,6 +771,126 @@ async function loadProfile(){
 
   updateVerifyWarningBanner();
   loadSubscriptionUI();
+}
+
+function renderAccountType(){
+  const accountType=ACCOUNT_TYPES.includes(currentProfile?.account_type)?currentProfile.account_type:null;
+  document.querySelectorAll('input[name="account-type"]').forEach(input=>{input.checked=input.value===accountType;});
+  const status=document.getElementById('account-role-status');
+  const saveButton=document.getElementById('save-account-roles-btn');
+  const companySection=document.getElementById('company-profile-settings');
+  const onboardingReminder=document.getElementById('account-onboarding-reminder');
+  const buyerMode=accountType==='buyer';
+  const buyerCard=document.getElementById('buyer-mode-card');
+  if(companySection)companySection.hidden=accountType!=='company';
+  if(onboardingReminder)onboardingReminder.hidden=!!currentProfile?.onboarding_completed;
+  if(buyerCard)buyerCard.hidden=!buyerMode;
+  ['nav-listings','nav-enquiries','nav-reviews','nav-payments','nav-rent-ledger','nav-demand-heatmap','nav-elite-section','nav-premium-upgrade'].forEach(id=>{
+    const element=document.getElementById(id);if(element)element.hidden=buyerMode;
+  });
+  ['btn-new-listing-tour','btn-new-listing-small','btn-add-listing-empty'].forEach(id=>{
+    const element=document.getElementById(id);if(element)element.hidden=buyerMode;
+  });
+  document.querySelectorAll('#page-overview > *:not(#buyer-mode-card):not(#account-onboarding-reminder)').forEach(element=>{element.hidden=buyerMode;});
+  window.syncAccountTypeNavigation?.();
+  if(saveButton)saveButton.textContent=accountType?'Save account type':'Complete account setup';
+  if(!status)return;
+  if(!currentProfile?.onboarding_completed){
+    status.textContent='Choose one account type to complete account setup. You can still browse while you decide.';
+    return;
+  }
+  const changedAt=currentProfile.account_type_set_at?new Date(currentProfile.account_type_set_at):null;
+  const availableAt=changedAt?new Date(changedAt.getTime()+7*24*60*60*1000):null;
+  status.textContent=availableAt&&availableAt>Date.now()
+    ?`Current type: ${accountType}. You can change it after ${availableAt.toLocaleDateString()}.`
+    :`Current type: ${accountType}.`;
+}
+
+async function loadAccountRoleHistory(){
+  const target=document.getElementById('account-role-history');
+  if(!target)return;
+  const{data,error}=await db.from('role_history').select('previous_account_type,new_account_type,changed_at').eq('profile_id',currentUser.id).order('changed_at',{ascending:false}).limit(5);
+  if(error)throw new Error(`Could not load account type history: ${error.message}`);
+  if(!data?.length){target.textContent='No account type changes yet.';return;}
+  target.replaceChildren();
+  const heading=document.createElement('strong');
+  heading.textContent='Recent account type changes';
+  target.appendChild(heading);
+  data.forEach(row=>{
+    const item=document.createElement('div');
+    const previous=row.previous_account_type||'Not set';
+    item.textContent=`${previous} → ${row.new_account_type} · ${new Date(row.changed_at).toLocaleDateString()}`;
+    target.appendChild(item);
+  });
+}
+
+async function loadCompanyProfileForSettings(){
+  const section=document.getElementById('company-profile-settings');
+  if(!section)return;
+  section.hidden=currentProfile?.account_type!=='company';
+  if(section.hidden)return;
+  const{data,error}=await db.from('company_profiles').select('company_name,company_type,registration_number,logo_url,description,website').eq('profile_id',currentUser.id).maybeSingle();
+  if(error)throw new Error(`Could not load company profile: ${error.message}`);
+  const values={
+    'company-name':data?.company_name||'',
+    'company-type':data?.company_type||'agency',
+    'company-registration':data?.registration_number||'',
+    'company-logo':data?.logo_url||'',
+    'company-description':data?.description||'',
+    'company-website':data?.website||''
+  };
+  Object.entries(values).forEach(([id,value])=>{const field=document.getElementById(id);if(field)field.value=value;});
+}
+
+async function saveAccountType(){
+  const accountType=document.querySelector('input[name="account-type"]:checked')?.value;
+  const status=document.getElementById('account-role-status');
+  if(!ACCOUNT_TYPES.includes(accountType)){if(status)status.textContent='Choose one account type before saving.';showToast('Choose one account type.','error');return;}
+  const button=document.getElementById('save-account-roles-btn');
+  if(button){button.disabled=true;button.textContent='Saving…';}
+  try{
+    const{data,error}=await db.rpc('set_account_type',{p_account_type:accountType});
+    if(error)throw new Error(`Could not save your account type: ${error.message}`);
+    const result=Array.isArray(data)?data[0]:data;
+    currentProfile={...currentProfile,...result,account_type:accountType,onboarding_completed:true};
+    renderAccountType();
+    await Promise.all([loadAccountRoleHistory(),loadCompanyProfileForSettings()]);
+    showToast('Your account type was saved ✓','success');
+  }catch(error){
+    console.error('Account type update failed:',error);
+    if(status)status.textContent=error.message||'Could not save your account type.';
+    showToast(error.message||'Could not save your account type.','error');
+  }finally{
+    if(button){button.disabled=false;button.textContent=currentProfile?.onboarding_completed?'Save account type':'Complete account setup';}
+  }
+}
+
+async function saveCompanyProfile(){
+  const status=document.getElementById('company-profile-status');
+  const input=id=>document.getElementById(id)?.value.trim()||'';
+  const companyName=input('company-name');
+  if(companyName.length<2){if(status)status.textContent='Enter a company name with at least two characters.';return;}
+  try{
+    const{error}=await db.rpc('save_company_profile',{
+      p_company_name:companyName,
+      p_company_type:input('company-type'),
+      p_registration_number:input('company-registration')||null,
+      p_logo_url:input('company-logo')||null,
+      p_description:input('company-description')||null,
+      p_website:input('company-website')||null
+    });
+    if(error)throw new Error(`Could not save the company profile: ${error.message}`);
+    const{data:company,error:reviewError}=await db.from('company_profiles').select('duplicate_review_required').eq('profile_id',currentUser.id).single();
+    if(reviewError)throw new Error(`Company profile saved, but duplicate-review status could not be checked: ${reviewError.message}`);
+    if(status)status.textContent=company.duplicate_review_required
+      ?'Company profile saved. A similar verified company name needs admin review; the company verification badge and logo remain hidden until review.'
+      :'Company profile saved. Company verification is reviewed separately.';
+    showToast('Company profile saved ✓','success');
+  }catch(error){
+    console.error('Company profile update failed:',error);
+    if(status)status.textContent=error.message||'Could not save the company profile.';
+    showToast(error.message||'Could not save the company profile.','error');
+  }
 }
 
 function updateVerifyWarningBanner(){
@@ -7169,29 +7296,39 @@ async function muLoadOccupancyLog(unitId){
     console.error(e);
   }
 }
-// ── Manage videos modal (Premium/Elite video walkthroughs) ──
+// ── Manage video walkthroughs ──
 let mvActiveListingId=null, mvVideos=[];
-const MV_MAX_VIDEOS = 1; // adjust per plan tier if you want monthly=1 / yearly=5
 
 function mvGetLimit(){
   const p = ownerProfile || currentProfile;
-  return p?.subscription_tier==='yearly' ? 5 : 1;
+  return subscriptionInfo().active&&p?.subscription_tier==='yearly' ? 5 : 1;
+}
+
+function mvIsBlocked(){
+  return !!(ownerProfile||currentProfile)?.video_walkthrough_blocked;
 }
 
 async function openManageVideosModal(listingId){
   const l=allListings.find(x=>String(x.id)===String(listingId));
   if(!l){showToast('Listing not found','error');return;}
-  if(!subscriptionInfo().active){showToast('Video walkthroughs are a Premium feature — upgrade to unlock.','error');return;}
+  if(mvIsBlocked()){showToast('Adding video walkthroughs is disabled for this account. Contact support for help.','error');return;}
   mvActiveListingId=listingId;
   document.getElementById('mv-listing-title').textContent=l.title;
   document.getElementById('mv-url-input').value='';
   document.getElementById('mv-file-input').value='';
   document.getElementById('mv-file-status').textContent='';
   const limit=mvGetLimit();
-  document.getElementById('mv-limit-note').textContent=`Up to ${limit} video${limit!==1?'s':''} per listing.`;
-  mvVideos = Array.isArray(l.videos) ? [...l.videos] : [];
-  mvRenderVideoList();
-  openModal('modal-manage-videos');
+  document.getElementById('mv-limit-note').textContent=`Free on every plan — 1 video per listing${limit>1?' (up to 5 with an active yearly plan)':''}.`;
+  try{
+    const{data,error}=await db.from('listing_videos').select('id,url,position').eq('listing_id',listingId).order('position',{ascending:true});
+    if(error)throw error;
+    mvVideos=data||[];
+    mvRenderVideoList();
+    openModal('modal-manage-videos');
+  }catch(error){
+    console.error('Could not load listing videos:',error);
+    showToast('Could not load listing videos: '+(error.message||String(error)),'error');
+  }
 }
 
 function mvRenderVideoList(){
@@ -7206,29 +7343,72 @@ function mvRenderVideoList(){
 }
 
 async function addListingVideo(){
+  if(mvIsBlocked()){showToast('Adding video walkthroughs is disabled for this account. Contact support for help.','error');return;}
   const input=document.getElementById('mv-url-input');
   const url=input.value.trim();
   if(!url){showToast('Paste a video link first','error');return;}
+  if(!safeHttpLink(url)){showToast('Enter a valid video link starting with http:// or https://.','error');return;}
   if(mvVideos.length>=mvGetLimit()){showToast(`You can add up to ${mvGetLimit()} video(s) on your plan`,'error');return;}
-  mvVideos.push({url});
   const btn=document.getElementById('mv-add-btn');
   btn.disabled=true;btn.textContent='Saving…';
-  const{error}=await db.from('listings').update({videos:mvVideos}).eq('id',mvActiveListingId);
-  btn.disabled=false;btn.textContent='+ Add';
-  if(error){mvVideos.pop();showToast('Could not save: '+error.message,'error');return;}
-  const l=allListings.find(x=>String(x.id)===String(mvActiveListingId));
-  if(l)l.videos=mvVideos;
-  input.value='';
-  mvRenderVideoList();
-  showToast('Video added ✓','success');
+  try{
+    const{data,error}=await db.from('listing_videos').insert({listing_id:mvActiveListingId,url,position:mvVideos.length}).select('id,url,position').single();
+    if(error)throw error;
+    mvVideos.push(data);
+    const l=allListings.find(x=>String(x.id)===String(mvActiveListingId));
+    if(l)l.videos=mvVideos;
+    input.value='';
+    mvRenderVideoList();
+    showToast('Video added ✓','success');
+  }catch(error){
+    console.error('Could not save listing video:',error);
+    showToast('Could not save: '+(error.message||String(error)),'error');
+  }finally{
+    btn.disabled=false;btn.textContent='+ Add';
+  }
+}
+
+function mvOwnStoragePath(urlValue){
+  try{
+    const url=new URL(urlValue),base=new URL(SUPABASE_URL);
+    const marker=`/storage/v1/object/public/${LISTING_VIDEOS_BUCKET}/`;
+    const index=url.pathname.indexOf(marker);
+    if(url.origin!==base.origin||index<0)return null;
+    const path=decodeURIComponent(url.pathname.slice(index+marker.length));
+    const segments=path.split('/');
+    if(!path.startsWith(`${mvActiveListingId}/`)||segments.some(part=>!part||part==='.'||part==='..'))return null;
+    return path;
+  }catch(error){
+    console.warn('Could not verify listing video storage ownership; leaving the file untouched:',error);
+    return null;
+  }
 }
 
 async function removeListingVideo(index){
-  const removed=mvVideos.splice(index,1);
-  const{error}=await db.from('listings').update({videos:mvVideos}).eq('id',mvActiveListingId);
-  if(error){mvVideos.splice(index,0,removed[0]);showToast('Could not remove: '+error.message,'error');return;}
+  const video=mvVideos[index];
+  if(!video)return;
+  let deleteError;
+  try{
+    const{error}=await db.from('listing_videos').delete().eq('id',video.id).eq('listing_id',mvActiveListingId);
+    deleteError=error;
+  }catch(error){deleteError=error;}
+  if(deleteError){console.error('Could not remove listing video:',deleteError);showToast('Could not remove: '+(deleteError.message||String(deleteError)),'error');return;}
+  mvVideos.splice(index,1);
   const l=allListings.find(x=>String(x.id)===String(mvActiveListingId));
   if(l)l.videos=mvVideos;
+  const path=mvOwnStoragePath(video.url);
+  if(path){
+    let storageError;
+    try{
+      ({error:storageError}=await db.storage.from(LISTING_VIDEOS_BUCKET).remove([path]));
+    }catch(error){storageError=error;}
+    if(storageError){
+      console.error('Video record was removed, but its uploaded file could not be deleted:',storageError);
+      showToast('Video removed, but its stored file could not be cleaned up: '+(storageError.message||String(storageError)),'error');
+      mvRenderVideoList();
+      return;
+    }
+  }
   mvRenderVideoList();
   showToast('Video removed','success');
 }
@@ -7236,23 +7416,38 @@ async function removeListingVideo(index){
 const LISTING_VIDEOS_BUCKET='listing-videos'; // create this Supabase storage bucket if it doesn't exist
 async function handleMvFileSelect(file){
   if(!file)return;
+  if(mvIsBlocked()){showToast('Adding video walkthroughs is disabled for this account. Contact support for help.','error');document.getElementById('mv-file-input').value='';return;}
+  if(!file.type.startsWith('video/')){showToast('Choose a video file.','error');document.getElementById('mv-file-input').value='';return;}
   if(mvVideos.length>=mvGetLimit()){showToast(`You can add up to ${mvGetLimit()} video(s) on your plan`,'error');document.getElementById('mv-file-input').value='';return;}
   if(file.size>100*1024*1024){showToast('Video must be under 100MB','error');document.getElementById('mv-file-input').value='';return;}
   const statusEl=document.getElementById('mv-file-status');
   statusEl.textContent='Uploading…';
-  const ext=(file.name.split('.').pop()||'mp4').toLowerCase();
+  const ext=(file.name.split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,8)||'mp4';
   const path=`${mvActiveListingId}/${Date.now()}.${ext}`;
-  const{error:upErr}=await db.storage.from(LISTING_VIDEOS_BUCKET).upload(path,file);
-  if(upErr){statusEl.textContent='Upload failed: '+upErr.message;return;}
-  const{data:pub}=db.storage.from(LISTING_VIDEOS_BUCKET).getPublicUrl(path);
-  mvVideos.push({url:pub.publicUrl});
-  const{error}=await db.from('listings').update({videos:mvVideos}).eq('id',mvActiveListingId);
-  if(error){mvVideos.pop();statusEl.textContent='Save failed: '+error.message;return;}
-  const l=allListings.find(x=>String(x.id)===String(mvActiveListingId));
-  if(l)l.videos=mvVideos;
-  statusEl.textContent='Uploaded ✓';
-  document.getElementById('mv-file-input').value='';
-  mvRenderVideoList();
+  let uploaded=false;
+  try{
+    const{error:upErr}=await db.storage.from(LISTING_VIDEOS_BUCKET).upload(path,file);
+    if(upErr)throw new Error(`Upload failed: ${upErr.message}`);
+    uploaded=true;
+    const{data:pub}=db.storage.from(LISTING_VIDEOS_BUCKET).getPublicUrl(path);
+    const{data,error}=await db.from('listing_videos').insert({listing_id:mvActiveListingId,url:pub.publicUrl,position:mvVideos.length}).select('id,url,position').single();
+    if(error)throw new Error(`Save failed: ${error.message}`);
+    mvVideos.push(data);
+    const l=allListings.find(x=>String(x.id)===String(mvActiveListingId));
+    if(l)l.videos=mvVideos;
+    statusEl.textContent='Uploaded ✓';
+    document.getElementById('mv-file-input').value='';
+    mvRenderVideoList();
+  }catch(error){
+    console.error('Video walkthrough upload failed:',error);
+    statusEl.textContent=error.message||'Video upload failed.';
+    if(uploaded){
+      try{
+        const{error:cleanupError}=await db.storage.from(LISTING_VIDEOS_BUCKET).remove([path]);
+        if(cleanupError)console.error('Could not remove uploaded video after its record failed to save:',cleanupError);
+      }catch(cleanupError){console.error('Could not clean up uploaded video after a failed save:',cleanupError);}
+    }
+  }
 }
 function openEditModal(id){
   const l=allListings.find(l=>l.id===id);if(!l)return;
@@ -9089,7 +9284,7 @@ const Tour = (() => {
     { selector:'#verification-settings-section', page:'settings', title:'Account verification', desc:'Submit your ID and proof of ownership here to get verified and unlock unlimited listings.' },
     { selector:'#settings-quicknav', page:'settings', title:'Jump to any settings section', desc:'Use these shortcuts to jump straight to Profile, Verification, Privacy, Notifications, Premium, Elite or Team — no more scrolling to find what you need.' },
     { selector:'#settings-contact-privacy-section', page:'settings', title:'Contact privacy', desc:'Hide your Call/WhatsApp buttons platform-wide so buyers can only reach you through chat — right here, not buried at the bottom.' },
-    { selector:'#settings-premium-section', page:'settings', title:'Premium & Elite', desc:'Premium unlocks managed chat, a Pro badge, video tours and SMS alerts. Elite adds AI tools, Instant Valuation, a branded Storefront, Rent Ledger and Demand Insights.' },
+    { selector:'#settings-premium-section', page:'settings', title:'Premium & Elite', desc:'Premium unlocks managed chat, a Pro badge and SMS alerts. Video walkthroughs are free. Elite adds AI tools, Instant Valuation, a branded Storefront, Rent Ledger and Demand Insights.' },
     { selector:'#nav-premium-upgrade', page:'settings', title:'Upgrade any time', desc:'Your plan status always shows here in the sidebar — tap it any time to upgrade.' },
     { selector:'#sidebar-user-block', page:'settings', title:"That's it!", desc:'Your account and sign-out are always one tap away from here. Enjoy Nyumba254! 🎉' },
   ];

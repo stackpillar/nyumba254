@@ -454,6 +454,14 @@
     .settings-section{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px 24px}
     .settings-section h3{font-size:14px;font-weight:600;color:var(--text);margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
     .settings-section h3 svg{width:15px;height:15px;stroke:var(--green);fill:none;stroke-width:2}
+    .role-choice-list{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+    .role-choice{display:flex;align-items:flex-start;gap:8px;padding:9px 10px;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:12.5px;color:var(--text-2)}
+    .role-choice input{margin-top:2px;accent-color:var(--green);flex-shrink:0}
+    .role-choice strong{display:block;color:var(--text);font-size:12.5px}
+    .role-choice span{display:block;font-size:11px;line-height:1.4;color:var(--text-3)}
+    .settings-section .form-input{display:block;width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font:inherit;font-size:13px;color:var(--text);background:var(--white)}
+    .settings-section .form-input:focus{outline:2px solid rgba(15,110,86,.2);border-color:var(--green)}
+    @media(max-width:420px){.role-choice-list{grid-template-columns:1fr}}
     .profile-avatar-row{display:flex;align-items:center;gap:16px;margin-bottom:20px}
     .profile-avatar-lg{width:64px;height:64px;border-radius:50%;background:var(--green-mid);color:white;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;flex-shrink:0}
     .profile-avatar-info strong{font-size:15px;font-weight:600;display:block;margin-bottom:2px}

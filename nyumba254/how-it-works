@@ -780,8 +780,8 @@
     </div>
     <div class="feature-card">
       <div class="feature-card-icon"><svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>
-      <h3>Video walkthroughs</h3>
-      <p>Add a short video link (or record one) to give buyers a fuller sense of the space before they message you. Videos are reviewed quickly before appearing on the listing.</p>
+      <h3>Free video walkthroughs</h3>
+      <p>Add one video link for free (or up to five on a yearly plan) to give buyers a fuller sense of the space before they message you. Videos are reviewed quickly before appearing on the listing.</p>
     </div>
     <div class="feature-card">
       <div class="feature-card-icon"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.12 1.2 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg></div>
@@ -914,7 +914,7 @@
     <div class="pricing-note">
       <div class="pricing-note-text">
         <span class="badge-elite">Optional</span>
-        <strong>Want more tools once you're listing regularly?</strong> Optional paid add-ons — never required to post or sell — unlock things like a verified badge boost, video walkthroughs, priority support, and tools for owners managing several units. Details and pricing are always shown inside your own account before you upgrade.
+        <strong>Want more tools once you're listing regularly?</strong> Optional paid add-ons — never required to post or sell — unlock things like a verified badge boost, priority support, and tools for owners managing several units. Video walkthroughs are free on every plan. Details and pricing are always shown inside your own account before you upgrade.
       </div>
       <a href="/login" class="pricing-cta outline" style="width:auto;padding:10px 20px;white-space:nowrap">Sign in to see plans</a>
     </div>

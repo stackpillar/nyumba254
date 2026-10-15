@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sign in — Nyumba254</title>
-  <meta name="description" content="Sign in or create a seller account on Nyumba254 to list your apartment, shop, or office anywhere in Kenya."/>
+  <meta name="description" content="Create a Nyumba254 account to buy, sell, rent, or manage property anywhere in Kenya."/>
   <meta name="robots" content="noindex,follow"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
@@ -257,6 +257,17 @@
     .consent-text a:hover { color: var(--green-dark); }
     .consent-box #err-consent { margin-top: 8px; margin-bottom: 0; }
 
+    .role-choice-group { border: 0; padding: 0; margin: 0 0 16px; }
+    .role-choice-group legend { font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 6px; }
+    .role-choice-note { font-size: 12px; color: var(--text-3); margin-bottom: 8px; }
+    .role-choice-list { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .role-choice { display: flex; align-items: flex-start; gap: 8px; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 12.5px; color: var(--text-2); }
+    .role-choice input { margin-top: 2px; accent-color: var(--green); flex-shrink: 0; }
+    .role-choice strong { display: block; color: var(--text); font-size: 12.5px; }
+    .role-choice span { display: block; font-size: 11px; line-height: 1.4; color: var(--text-3); }
+    .role-choice-group.error .role-choice { border-color: var(--red); }
+    @media (max-width: 420px) { .role-choice-list { grid-template-columns: 1fr; } }
+
     /* Trust strip */
     .trust-strip {
       display: flex; align-items: center; gap: 10px;
@@ -364,7 +375,7 @@
   <!-- ── LEFT PANEL ── -->
   <div class="left-panel">
     <div class="left-eyebrow">Kisumu · Nairobi · Mombasa</div>
-    <h2>List your property,<br>reach <span>real buyers</span></h2>
+    <h2>Find or manage property,<br>connect with <span>Kenya</span></h2>
     <p>No agents. No commission. Just your listing in front of thousands of people searching for apartments, shops, and offices across Kenya.</p>
 
     <div class="benefits">
@@ -546,6 +557,8 @@
             <p class="phone-note">Used only for M-Pesa listing payments. We never share it publicly or with third parties.</p>
           </div>
 
+          <p class="role-choice-note">After you verify your email, choose one account type to personalize Nyumba254. You can change it later in account settings.</p>
+
           <div class="form-group">
             <label class="field-label" for="reg-password">Password</label>
             <div class="input-wrap">
@@ -597,7 +610,7 @@
         <div class="success-screen" id="register-success">
           <div class="success-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
           <h3>Account created!</h3>
-          <p>Check your email to verify your address. Once verified, sign in and start listing your apartment.</p>
+          <p>Check your email to verify your address. Once verified, sign in and choose the account type that best describes how you use Nyumba254.</p>
           <div class="spam-note">
             <strong>Didn't get the email?</strong> It can take a minute or two — and sometimes it lands in Spam/Junk/Promotions instead of your main inbox. If you still don't see it, <a id="resend-success-link" onclick="resendFromSuccess()">click here to resend it</a>.
           </div>
@@ -662,7 +675,6 @@
   // ── Production site base — used for ALL auth email redirects so links ──
   // ── always work no matter where signup/reset was triggered from       ──
   const SITE_BASE = 'https://nyumba254.com';
-
   // ── Safe redirect target: same-origin relative paths only.        ──
   // ── Fixes both the missing-leading-slash bug and the open-redirect ──
   // ── vulnerability (next=https://evil.com, next=@evil.com, etc.)    ──
@@ -762,7 +774,6 @@
     document.querySelectorAll('input.error').forEach(i => { i.classList.remove('error'); i.setAttribute('aria-invalid', 'false'); });
     document.getElementById('resend-link')?.remove();
   }
-
   function showAlert(alertId, msgId, message, type) {
     const el = document.getElementById(alertId);
     el.className = 'alert ' + type;
@@ -1011,12 +1022,13 @@
     // every other page that writes to profiles.phone)
     if (data.user) {
       try {
-        await db.from('profiles').upsert({
+        const{error:profileError}=await db.from('profiles').upsert({
           id: data.user.id,
           full_name: `${first} ${last}`,
           phone: phoneNorm, email
         });
-      } catch (e) { /* non-fatal — profile can be completed later */ }
+        if(profileError)console.error('Could not save signup roles to profile; they remain in account metadata for sync after sign-in:',profileError);
+      } catch (e) { console.error('Could not save signup profile; it can be completed after sign-in:',e); }
     }
 
     // Notify admin of the new seller registration

@@ -591,7 +591,11 @@ async function load(){
     const [lr,sr]=await Promise.all([fetchListing(parseInt(n,10)),nkSessionPromise]);
     const {data,error}=lr;
     if(error)return error.code==='PGRST116'?unavailable('missing'):unavailable('error');
-    P=data;const s=sr&&sr.data;uid=(s&&s.session&&s.session.user&&s.session.user.id)||null;
+    P=data;
+    const{data:publicProfile,error:profileError}=await db.rpc('get_public_account_profile',{p_profile_id:P.seller_id});
+    if(profileError)throw new Error(`Could not load the public account profile: ${profileError.message}`);
+    P.profiles=(Array.isArray(publicProfile)?publicProfile[0]:publicProfile)||P.profiles||{};
+    const s=sr&&sr.data;uid=(s&&s.session&&s.session.user&&s.session.user.id)||null;
     isOwner=!!uid&&P.seller_id===uid;
     const live=(P.status==='active'||P.status==='occupied')&&!P.is_disabled&&!P.recycle_bin;
     if(!live){
@@ -746,8 +750,9 @@ function ownerHtml(){
     <div class="row"><a class="btn btn-primary" href="/dashboard?edit=${encodeURIComponent(P.id)}">Edit and manage</a><a class="btn btn-outline" href="/dashboard">View enquiries</a>${preview?'':`<button type="button" class="btn btn-outline" data-act="status">${occ?'Mark as available':sold?'Mark as sold':'Mark as occupied'}</button>`}</div></section>`;
 }
 function sellerHead(){
-  const p=P.profiles||{},name=P.contact_name||p.full_name||'Seller',ini=name.split(' ').filter(Boolean).map(x=>x[0]).join('').toUpperCase().slice(0,2)||'S',ver=p.verification_status==='verified',lb=(P.details||{}).listed_by;
-  return `<div class="seller"><div class="av" aria-hidden="true">${escHtml(ini)}</div><div><b>${escHtml(name)}</b><button type="button" class="vbadge${ver?'':' no'}" data-act="verinfo" data-v="${ver?1:0}" aria-haspopup="dialog" aria-label="${ver?'Verified seller. What does this mean?':'Not yet verified. What does this mean?'}">${ver?IC.check+'Verified seller':'Not yet verified'}${IC.info}</button><small class="js-rate"></small>${lb?`<small>${escHtml(nkTitleCase(lb))}</small>`:''}${p.created_at?`<small>Member since ${escHtml(new Date(p.created_at).toLocaleDateString('en-KE',{month:'long',year:'numeric'}))}</small>`:''}${!isOwner&&canReview()?'<button type="button" class="link" data-act="rate">Rate this seller</button>':''}</div></div>`;
+  const p=P.profiles||{},company=p.account_type==='company',name=company?(p.company_name||P.contact_name||p.full_name||'Company'):(P.contact_name||p.full_name||'Seller'),ini=name.split(' ').filter(Boolean).map(x=>x[0]).join('').toUpperCase().slice(0,2)||'S',identityVerified=p.identity_verified===true,roleVerified=!!p.account_type&&p.verified_role===p.account_type,roleLabels={buyer:'Tenant / Buyer',owner:'Property owner',caretaker:'Caretaker',agent:'Agent',company:'Company'},listedBy=P.listed_by_type||((P.details||{}).listed_by);
+  const logo=company&&roleVerified&&p.company_logo_url?`<img src="${escHtml(p.company_logo_url)}" alt="" width="36" height="36" loading="lazy" style="object-fit:contain;border-radius:6px">`:'';
+  return `<div class="seller"><div class="av" aria-hidden="true">${escHtml(ini)}</div><div>${logo}<b>${escHtml(name)}${company&&!roleVerified?' (not verified)':''}</b>${roleVerified?`<small>${IC.check}Verified ${escHtml(roleLabels[p.account_type])}</small>`:''}<button type="button" class="vbadge${identityVerified?'':' no'}" data-act="verinfo" data-v="${identityVerified?1:0}" aria-haspopup="dialog" aria-label="${identityVerified?'Identity verified. What does this mean?':'Identity not yet verified. What does this mean?'}">${identityVerified?IC.check+'Identity verified':'Identity not yet verified'}${IC.info}</button><small class="js-rate"></small>${listedBy?`<small>Listed by ${escHtml(roleLabels[listedBy]||nkTitleCase(listedBy))}</small>`:''}${p.created_at?`<small>Member since ${escHtml(new Date(p.created_at).toLocaleDateString('en-KE',{month:'long',year:'numeric'}))}</small>`:''}${!isOwner&&canReview()?'<button type="button" class="link" data-act="rate">Rate this seller</button>':''}</div></div>`;
 }
 const SAFETY='Never pay before you have viewed the property and met the seller. Nyumba254 never asks buyers for money.';
 function sidebarHtml(){
@@ -778,7 +783,7 @@ function sidebarHtml(){
 function anchorsHtml(list){return `<nav class="anchors" id="anchors" aria-label="Page sections">${list.map(([id,l])=>`<a href="#${id}" data-anchor="${id}">${escHtml(l)}</a>`).join('')}</nav>`}
 function render(){
   const m=meta(),f=facts(),strip=f.slice(0,3),rest=[...f.slice(3),...extraRows()],am=amenityLabels(),desc=(P.description||'').trim(),st=availState(),cost=costLine();
-  const ver=(P.profiles||{}).verification_status==='verified',occ=P.status==='occupied';
+  const ver=(P.profiles||{}).identity_verified===true,occ=P.status==='occupied';
   const pills=[`<span class="pill st${st.k==='bad'?' bad':st.k==='soon'?' soon':''}">${escHtml(st.t)}</span>`,`<span class="pill plain">${escHtml(m.label)}</span>`];
   if(m.group==='boarding'&&(P.details||{}).institution)pills.push('<span class="pill plain">Student friendly</span>');
   const pv=preview?`<div class="notice warn" role="status"><b>Preview.</b> ${P.is_disabled?'Hidden by admin'+(P.disabled_reason?': '+escHtml(P.disabled_reason):'.'):P.recycle_bin?'This listing is in the recycle bin.':'Status: '+escHtml(nkTitleCase(P.status))+'. It is not public yet.'} Only you${isOwner?'':' and the admin team'} can see this page.</div>`:'';
@@ -791,7 +796,7 @@ function render(){
     <div class="pills">${pills.join('')}</div>
     <h1 class="title">${escHtml(P.title)}</h1><div class="loc">${IC.pin}<span>${escHtml(where())}</span></div><div class="price">${priceHtml()}</div>${cost?`<div class="cost">${escHtml(cost)}</div>`:''}
     ${strip.length?`<div class="strip" style="--n:${strip.length}">${strip.map(([k,v])=>`<div class="f">${factIcon(k)}<b title="${escHtml(v)}">${escHtml(v)}</b><span>${escHtml(k)}</span></div>`).join('')}</div>`:''}
-    <div class="meta">${ver?`<button type="button" class="tchip" data-act="verinfo" data-v="1" aria-haspopup="dialog" aria-label="Verified seller. What does this mean?">${IC.check}Verified seller${IC.info}</button>`:''}<span class="mchip">${IC.clock}Posted ${P.created_at?escHtml(ago(P.created_at)):''}</span><span class="mchip">${IC.eye}<span id="m-views">${Number(P.views||0).toLocaleString('en-KE')} views</span></span><span class="mchip" id="m-enq-w" hidden>${IC.msg}<span id="m-enq"></span></span></div>
+    <div class="meta">${ver?`<button type="button" class="tchip" data-act="verinfo" data-v="1" aria-haspopup="dialog" aria-label="Identity verified. What does this mean?">${IC.check}Identity verified${IC.info}</button>`:''}<span class="mchip">${IC.clock}Posted ${P.created_at?escHtml(ago(P.created_at)):''}</span><span class="mchip">${IC.eye}<span id="m-views">${Number(P.views||0).toLocaleString('en-KE')} views</span></span><span class="mchip" id="m-enq-w" hidden>${IC.msg}<span id="m-enq"></span></span></div>
     ${stale}${inline}${isOwner?ownerHtml():''}
     <div class="bnb-slot md-only"></div>
     ${anchorsHtml(anchors)}
@@ -1166,7 +1171,7 @@ async function sendViewing(){
 
 /* ═══ 4. verified explainer ═══ */
 function openVerify(verified){
-  $('vf-body').innerHTML=(verified?'<p><b>Verified seller</b> means Nyumba254 has checked this seller\'s identity.</p><p>That is a good sign, but it is not a guarantee about the property itself.</p>':'<p>This seller has not completed identity verification yet.</p><p>That does not mean anything is wrong, but take extra care.</p>')+
+  $('vf-body').innerHTML=(verified?'<p><b>Identity verified</b> means Nyumba254 has checked this person’s identity.</p><p>That is a good sign, but it is not a guarantee about the property itself.</p>':'<p>This person has not completed identity verification yet.</p><p>That does not mean anything is wrong, but take extra care.</p>')+
     '<ul class="vlist"><li>View the property in person first.</li><li>Meet the person you will pay, and ask for a receipt.</li><li>Never pay before you have viewed it. Nyumba254 never asks buyers for money.</li></ul>';
   nkOpenModal($('ov-verify'));
 }

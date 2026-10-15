@@ -720,7 +720,7 @@ const CACHE_KEY = 'nk_saved_cache_v1';              // last shortlist, for insta
 const SHORTLIST_TOKEN_KEY = 'nk_shortlist_token';   // anonymous shortlist token
 const THEME_KEY = 'nk_theme';
 const PAGE_SIZE = 12;
-const LISTING_SELECT = '*, listing_photos(*), profiles(verification_status)';
+const LISTING_SELECT = '*, listing_photos(*), profiles(verification_status,account_type,verified_role)';
 /* Columns that may hold the seller's phone. Add or reorder to match your `listings` table. */
 const CONTACT_FIELDS = ['whatsapp_number', 'whatsapp', 'contact_phone', 'phone', 'phone_number', 'seller_phone', 'contact_number'];
 const STATUS_LABEL = { interested: 'Interested', contacted: 'Contacted', viewing: 'Viewing booked', viewed: 'Viewed', rejected: 'Rejected' };
@@ -1056,8 +1056,14 @@ async function loadAnonymousMerged() {
   return true;
 }
 const loadOwn = async () => {
-  if (currentUser) return loadFromAccount();
-  return loadAnonymousMerged();
+  const ok=currentUser?await loadFromAccount():await loadAnonymousMerged();
+  if(ok){
+    try{
+      const listings=await nkHydratePublicProfiles(savedRows.map(row=>row.listing));
+      savedRows.forEach((row,index)=>{row.listing=listings[index];});
+    }catch(profileError){console.error('Could not hydrate saved listing account details:',profileError);}
+  }
+  return ok;
 };
 
 /* Item 1: merge anonymous saves into the account on sign-in. Nothing is deleted locally unless it was saved (or is a dead listing). */
@@ -1122,6 +1128,12 @@ async function silentRefresh(force) {
   const ok = isAnonShortlist ? await loadFromAnonymousShortlist() : await loadOwn();
   refreshing = false; lastRefresh = Date.now();
   if (!ok) return;
+  if(isAnonShortlist){
+    try{
+      const listings=await nkHydratePublicProfiles(savedRows.map(row=>row.listing));
+      savedRows.forEach((row,index)=>{row.listing=listings[index];});
+    }catch(profileError){console.error('Could not hydrate saved listing account details:',profileError);}
+  }
   loadError = false; $('stale-note').hidden = true;
   ensureSnapshots(); pruneMeta(); writeCache();
   if (!currentUser && shortlistMode) syncShortlistToServer();
@@ -1691,6 +1703,7 @@ async function loadRecommended() {
     if (error) { console.error('Load recommended error:', error.message); recommendedRows = []; renderRecommended(); return; }
     rows = (data || []).filter(l => !excl.has(l.id)).slice(0, 8);
   }
+  try{rows=await nkHydratePublicProfiles(rows);}catch(profileError){console.error('Could not hydrate recommended listing account details:',profileError);}
   recommendedRows = rows;
   $('rec-sub').textContent = similar && basis ? 'Similar to your shortlist: ' + basis : 'Recently listed properties across Kenya';
   renderRecommended();
