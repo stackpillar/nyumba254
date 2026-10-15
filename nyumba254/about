@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>About Us — Nyumba254</title>
-<meta name="description" content="Nyumba254 is a commission-free property platform for Kenya: apartments, houses, boarding, Airbnb and shops in all 47 counties. No agents, no commission."/>
+<meta name="description" content="Nyumba254 is an open property marketplace in Kenya for buyers, tenants, owners, caretakers, agents, and companies, with no deal commission charged by the platform."/>
 <meta name="theme-color" content="#0F6E56"/>
 <link rel="canonical" href="https://nyumba254.com/about"/>
 <meta property="og:type" content="website"/>
@@ -278,9 +278,9 @@ main{display:block}
       <div class="eyebrow on-dark">Our mission</div>
       <h2 class="section-title" id="mission-title">Connect people to homes across Kenya, without the middleman</h2>
       <div class="section-body">
-        <p>Property hunting in Kenya has always worked the same way: you need a home, you call an agent, the agent calls another agent, and by the time you see the apartment you owe someone a commission before you've even moved in. It's a system that benefits everyone except the people looking for a home.</p>
-        <p>Nyumba254 cuts through that. Sellers post their properties directly for a small one-time listing fee, shown before they pay, and their first listing is free. Buyers browse, shortlist and message sellers straight from the listing, with no intermediaries and no commission on the deal. Every listing is checked by our team, usually within a few hours.</p>
-        <p>We believe the rental and property market in every corner of Kenya, not just the big cities, deserves a modern platform that puts landlords and tenants in the same room, digitally, and then gets out of the way.</p>
+        <p>Finding or listing property in Kenya should be open to everyone involved: buyers, tenants, owners, caretakers, agents, and companies. People should be able to discover properties and understand the terms before making contact.</p>
+        <p>Nyumba254 brings listings and enquiries together in one marketplace. There is no commission charged by Nyumba254 on a sale or rental agreement. Agents and companies may optionally disclose a viewing fee on a listing; any fee is agreed and paid directly to the lister, not collected by the platform.</p>
+        <p>We believe the rental and property market in every corner of Kenya, not just the big cities, deserves a modern platform that lets people choose how they participate and connect with one another.</p>
       </div>
     </div>
   </div>
@@ -462,7 +462,7 @@ main{display:block}
     <div class="footer-top">
       <div>
         <div class="footer-logo"><div class="footer-logo-icon"><img src="/logo-icon.png" alt="" width="40" height="40"/></div>Nyumba254</div>
-        <p class="footer-tagline">The easiest way to find and list apartments, houses, boarding rooms, Airbnb rentals and commercial spaces across Kenya, without agents or commissions.</p>
+        <p class="footer-tagline">Find and list property across Kenya. Open to buyers, owners, caretakers, agents, and companies, with no deal commission from Nyumba254.</p>
         <div class="footer-social">
           <a href="https://wa.me/254739348560" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></a>
           <a href="https://www.instagram.com/nyumba.254?igsh=Z2VhNzJkMm1td2Jz" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>

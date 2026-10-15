@@ -407,7 +407,7 @@ async function nkHydrateViewingFees(listings) {
   const{data,error}=await db.rpc('get_public_viewing_fees',{p_listing_ids:ids});
   if(error)throw new Error(`Could not load public viewing fees: ${error.message}`);
   const byId=new Map((data||[]).map(row=>[row.listing_id,Number(row.viewing_fee)||0]));
-  return rows.map(row=>({...row,viewing_fee:byId.get(row.id)??0}));
+  return rows.map(row=>({...row,public_viewing_fee:byId.get(row.id)??0}));
 }
 
 function nkImgSrc(url, width) {
@@ -454,7 +454,7 @@ function nkBuildCard(listing, opts) {
   const verifiedBadge = nkBuildVerifiedBadge(listing);
   const listedByLabels={buyer:'Tenant / Buyer',owner:'Property owner',caretaker:'Caretaker',agent:'Agent',company:'Company',seller:'Seller'};
   const listedBy=listedByLabels[listing.profiles?.account_type||(listing.seller_id?'seller':'')];
-  const viewingFee=Number(listing.viewing_fee)||0;
+  const viewingFee=Number(listing.public_viewing_fee)||0;
 
   return `
     <a class="card" href="${href}" aria-label="${safeTitle}" data-listing-id="${escHtml(listing.id)}" style="${isOccupied ? 'opacity:.7' : ''}">

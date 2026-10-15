@@ -338,6 +338,11 @@
             <td>When a buyer sends an enquiry</td>
           </tr>
           <tr>
+            <td>Viewing request info</td>
+            <td>Requested date and time, notes, disclosed viewing-fee snapshot, and whether the viewer acknowledged the fee</td>
+            <td>When a buyer requests a viewing</td>
+          </tr>
+          <tr>
             <td>Payment info</td>
             <td>M-Pesa phone number, transaction reference, amount paid</td>
             <td>When you pay a listing fee</td>
@@ -368,6 +373,7 @@
         <li><strong>To run the platform</strong> — creating and managing your account, publishing your listings, and delivering buyer enquiries to you</li>
         <li><strong>To process payments</strong> — verifying M-Pesa transactions and activating listings after payment confirmation</li>
         <li><strong>To communicate with you</strong> — sending listing confirmation emails, payment receipts, and important platform updates</li>
+        <li><strong>To manage viewing requests</strong> — recording requested dates, times, fee disclosures, and viewer acknowledgement so the lister and viewer can refer to the request</li>
         <li><strong>To improve the platform</strong> — analysing how people use Nyumba254 so we can make it better</li>
         <li><strong>To detect and prevent fraud</strong> — identifying suspicious listings or accounts and protecting other users</li>
         <li><strong>To comply with legal obligations</strong> — responding to lawful requests from Kenyan authorities where required</li>
@@ -630,7 +636,7 @@
     <div class="footer-top">
       <div>
         <div class="footer-logo">Nyumba254</div>
-        <p class="footer-tagline">Find and list apartments across Kenya — no agents, no commission.</p>
+        <p class="footer-tagline">Find and list property across Kenya, with open account roles and no deal commission.</p>
       </div>
       <div class="footer-col">
         <h4>Browse</h4>

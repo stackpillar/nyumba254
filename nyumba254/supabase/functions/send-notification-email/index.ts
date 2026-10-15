@@ -303,7 +303,7 @@ function renderShell(opts: {
             <td style="padding:22px 36px 26px;border-top:1px solid #ece9e1;text-align:center;margin-top:10px;">
               <div style="font-family:Georgia,'Times New Roman',serif;font-size:13.5px;color:#4a4a46;font-weight:700;margin-bottom:6px;">Nyumba254</div>
               <p style="margin:0 0 4px;font-size:11.5px;color:#98978f;">Kisumu &middot; Nairobi &middot; Mombasa &middot; Kenya</p>
-              <p style="margin:0;font-size:11px;color:#b3b2a9;">No agents. No commission. Just your listing in front of real buyers.</p>
+              <p style="margin:0;font-size:11px;color:#b3b2a9;">Connect with property seekers across Kenya, with no deal commission charged by Nyumba254.</p>
             </td>
           </tr>
         </table>

@@ -490,7 +490,7 @@
   <div class="hero-illustration" aria-hidden="true"><img src="/hero-photo-4.jpg" alt=""/></div>
   <div class="hero-overlay" aria-hidden="true"></div>
   <div class="hero-content">
-    <div class="hero-eyebrow">No agents · No commission · No confusion</div>
+    <div class="hero-eyebrow">Open marketplace · No deal commission · Clear terms</div>
     <h1 id="hero-title">Everything you need to<br><em>know, in one place</em></h1>
     <p class="hero-sub">A complete, plain-language guide to Nyumba254 — how to search and message sellers, how to list and manage a property, how payments and reviews work, and how to manage your account.</p>
     <div class="hero-tabs" role="tablist" aria-label="Choose your path">
@@ -562,7 +562,7 @@
           <div class="step-num"><span>4</span></div>
           <div class="step-icon-wrap"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
           <h3>Arrange a viewing &amp; move in</h3>
-          <p>Agree terms directly with the owner — no agent cuts, no delays. Once you're settled, leave a quick review to help the next buyer.</p>
+          <p>Agree terms directly with the lister, whether they are an owner, caretaker, agent, or company. Review any disclosed viewing fee before requesting a viewing; Nyumba254 does not collect it.</p>
         </div>
       </div>
 
@@ -1089,7 +1089,7 @@
     <div class="footer-top">
       <div>
         <div class="footer-logo"><div class="footer-logo-icon"><img src="/logo-icon.png" alt="" width="40" height="40"/></div>Nyumba254</div>
-        <p class="footer-tagline">The easiest way to find and list apartments, houses, boarding rooms, Airbnb rentals, and commercial spaces across Kenya — without agents or commissions.</p>
+        <p class="footer-tagline">Find and list property across Kenya. Open to buyers, owners, caretakers, agents, and companies, with no deal commission from Nyumba254.</p>
         <div class="footer-social">
           <a href="https://wa.me/254739348560" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></a>
           <a href="https://www.instagram.com/nyumba.254?igsh=Z2VhNzJkMm1td2Jz" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>

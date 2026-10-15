@@ -65,7 +65,7 @@
     return AGENT_REQUEST_KEYWORDS.some(k => q.includes(k));
   }
 
-const NK_QH_SYSTEM_PROMPT = `You are Nia, the friendly Quick Help assistant on Nyumba254 (nyumba254.com) — a Kenyan property listing website. Buyers and renters browse for free; sellers list without agents or commission.
+const NK_QH_SYSTEM_PROMPT = `You are Nia, the friendly Quick Help assistant on Nyumba254 (nyumba254.com) — an open Kenyan property marketplace for buyers, tenants, owners, caretakers, agents, and companies. Buyers and renters browse for free; Nyumba254 does not charge deal commission.
 
 ===========================
 WHO YOU'RE TALKING TO
@@ -80,8 +80,8 @@ WHAT NYUMBA254 IS
 - Search works by county and area, and can also be narrowed by price, bedrooms, category and frequency. Buyers can type things like "2 bedroom Kilimani under 50k", use "Near me", switch to a map view, and compare up to 3 listings side by side.
 - If nothing matches, buyers can set up an alert for their search and the team will contact them (by phone/WhatsApp or email) when a matching listing is posted.
 - 0% commission — whatever a seller agrees with a buyer is entirely theirs.
-- Buyers pay nothing, ever, at any point.
-- No agents or middlemen — sellers and buyers deal directly.
+- Buyers do not pay Nyumba254 to browse or contact listers. Some agents and companies may set an optional viewing fee, up to KES 5,000; it is shown on the listing and agreed/paid directly to the lister. Nyumba254 does not collect it.
+- Users can list as an owner, caretaker, agent, or company, and account types can be changed from dashboard settings.
 
 ===========================
 HOW BROWSING & CONTACTING WORKS (buyers/renters)
@@ -90,12 +90,13 @@ HOW BROWSING & CONTACTING WORKS (buyers/renters)
 - All buyer-seller conversations start inside Nyumba254's own chat — either on the listing page or in the buyer's inbox.
 - If a seller allows it, buyers can reveal the seller's phone number to call or WhatsApp directly. Some sellers keep things chat-only for privacy — that's the seller's choice, not a platform restriction.
 - Buyers can save listings (the "Saved" page) to revisit later.
-- Safety tips to give when relevant: never send money before viewing a property in person, deal directly through the contact details on the listing itself, and use the "Report" button on the listing if something feels off.
+- Safety tips to give when relevant: verify the property and lister, do not pay unlisted deposits or reservation charges, and confirm any disclosed viewing fee directly with the lister. Nyumba254 does not collect viewing fees; use the "Report" button if something feels off.
 
 ===========================
 HOW LISTING WORKS (sellers)
 ===========================
 - Sellers create a free account, pick a property type, fill in details, add photos, and submit.
+- Agents and companies may set an optional viewing fee up to KES 5,000. It is disclosed on the listing, agreed directly between the lister and viewer, and is not collected by Nyumba254. Owners, caretakers, and buyers cannot set a positive fee.
 - Every listing is reviewed by the team before it goes live — this isn't instant, so don't promise immediate publishing.
 - A seller's first listing is free for a trial period.
 - After the trial, listings are billed as a small percentage of the rent or sale price — the exact estimate (with a minimum/maximum fee) is shown on the listing form before submitting, based on what they've entered. Payment is via M-Pesa only, and only after approval — never upfront.
@@ -693,7 +694,7 @@ body.nk-modal-open #nk-qh-launcher{display:none;}
     function addInviteCard() {
       // Was origin + pathname-with-index.html, which produced /index.html. The site root is the link to share.
       const origin = window.location.origin + '/';
-      const shareText = `🏠 Check out Nyumba254 — find or list apartments, shops, and offices across Kenya. No agents, no commission: ${origin}`;
+      const shareText = `🏠 Check out Nyumba254 — find or list property across Kenya, with open account roles and no deal commission: ${origin}`;
       const waHref = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
 
       const card = document.createElement('div');
@@ -796,7 +797,7 @@ body.nk-modal-open #nk-qh-launcher{display:none;}
         return { text: "Posting takes a few minutes: create a free account, pick your property type, fill in the details, add photos, and submit. Our team reviews it before it goes live — your first listing is free for a trial period.", chips: ['What does it cost to list?', 'What areas do you cover?', 'Talk to a real person'] };
       }
       if (q.includes('cost') || q.includes('price') || q.includes('fee') || q.includes('pricing')) {
-        return { text: "Your first listing is free for a trial period. After that, it's a small percentage of the rent or sale price, shown as an estimate before you submit and only billed once approved — no upfront payment. Airbnb listings run on a monthly plan instead. There's always 0% commission on the deal itself.", chips: ['How do I list my property?', 'Talk to a real person'] };
+        return { text: "Nyumba254 does not charge commission on the rent or sale deal. Agents and companies may set an optional viewing fee up to KES 5,000; it is shown on the listing and paid directly to the lister, not Nyumba254. Listing and plan charges are shown in the app before payment.", chips: ['How do I list my property?', 'Talk to a real person'] };
       }
       if (q.includes('featured') || q.includes('boost') || q.includes('promote')) {
         return { text: "Our team occasionally features standout listings with top placement and a badge — it's not something you buy at posting. Ask about our optional seller add-ons if you want more visibility tools.", chips: ['What does it cost to list?', 'Talk to a real person'] };
@@ -805,10 +806,10 @@ body.nk-modal-open #nk-qh-launcher{display:none;}
         return { text: "Yes — sign in to manage your account, search for property, and access tools for the roles you selected. If you manage listings, you can edit, pause, or remove them from your dashboard.", chips: ['Account sign in / dashboard', 'Talk to a real person'] };
       }
       if (q.includes('buyer') && q.includes('pay')) {
-        return { text: "Never. Browsing, searching, and contacting sellers is completely free for buyers — the only fee on the platform is the one-time listing fee sellers pay to post." };
+        return { text: "Nyumba254 does not charge buyers to browse or contact listers. An agent or company may disclose an optional viewing fee on a listing; it is agreed and paid directly to that lister, not collected by Nyumba254." };
       }
       if (q.includes('trustworthy') || q.includes('fake') || q.includes('legit')) {
-        return { text: "Good instinct to check. Never send money before viewing the property in person, and deal directly through the contact details on the listing itself. If a price feels too good to be true, or a seller's pushing you to pay upfront, that's worth reporting.", chips: ['Report a listing', 'Talk to a real person'] };
+        return { text: "Good instinct to check. Verify the property and lister, confirm any disclosed viewing fee directly with them, and do not pay unlisted deposits or reservation charges. Nyumba254 does not collect viewing fees. Report anything suspicious from the listing.", chips: ['Report a listing', 'Talk to a real person'] };
       }
       if (q.includes('area') || q.includes('county') || q.includes('cover') || q.includes('where')) {
         return { text: "We're fully live in Kisumu, Nairobi, and Mombasa, and expanding county by county across all of Kenya. If your county isn't fully live yet, you can still be the first to list there.", chips: ['How do I list my property?', 'Talk to a real person'] };
@@ -817,7 +818,7 @@ body.nk-modal-open #nk-qh-launcher{display:none;}
         return { text: "Payments go through M-Pesa STK Push — you'll get a prompt straight to your phone. We never see or store your M-Pesa PIN. If a payment isn't reflecting after a few minutes, I can connect you with the team.", chips: ['Talk to a real person'] };
       }
       if (q.includes('commission') || q.includes('agent')) {
-        return { text: "Zero commission, always. You pay a flat one-time listing fee — whatever you agree with a buyer or tenant is entirely yours." };
+        return { text: "Nyumba254 charges no commission on a sale or rental deal. Agents and companies can optionally set a disclosed viewing fee up to KES 5,000, agreed directly with the viewer; the platform does not collect it." };
       }
       if (q.includes('contact') && q.includes('seller')) {
         return { text: "Open any listing and send a message — that starts a chat right inside Nyumba254. If the seller allows it, you can also reveal their number to call or WhatsApp them directly from the same listing." };

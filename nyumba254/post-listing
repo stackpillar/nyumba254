@@ -774,7 +774,7 @@ function payload(){
   if(val('deposit')!==''&&freq()!=='once')d.deposit_months=Number(val('deposit'));if(val('available_from'))d.available_from=val('available_from');
   if(val('area')==='__other__')d.custom_area=true;
   const f=freq();
-  return {title:val('title'),description:val('description'),price:g==='boarding'?boardingPrice():priceVal(),price_frequency:f,price_type:f==='once'?'sale':'rent',category:S.cat,county:val('county'),area:areaName(),address:val('address'),viewing_fee:S.user&&['agent','company'].includes(S.accountType)&&viewingFee!==''?Number(viewingFee):null,
+  return {title:val('title'),description:val('description'),price:g==='boarding'?boardingPrice():priceVal(),price_frequency:f,price_type:f==='once'?'sale':'rent',category:S.cat,county:val('county'),area:areaName(),address:val('address'),
     latitude:S.pin?S.pin.lat:null,longitude:S.pin?S.pin.lng:null,amenities:[...S.amen],details:d,contact_name:val('contact_name'),phone:nkNormalizePhone(val('phone')),whatsapp:nkNormalizePhone(val('whatsapp')||val('phone')),contact_email:val('contact_email'),contact_hidden:chk('contact_hidden'),
     status:'pending',payment_status:S.first?'trial':'unpaid',trial_expires_at:S.first?new Date(Date.now()+(PS.trial_days||14)*864e5).toISOString():null,seller_id:S.user?S.effectiveSellerId||S.user.id:null,views:0,is_live:false};
 }
@@ -803,6 +803,11 @@ async function submit(){
     const data=payload(),units=unitTiers(),link=val('video_url');let id=S.sub.listingId;
     if(S.user){
       if(!id){const {data:row,error}=await db.from('listings').insert(data).select().single();if(error)throw error;id=S.sub.listingId=row.id;saveDraftNow()}
+      if(['agent','company'].includes(S.accountType)){
+        const fee=val('viewing_fee')===''?0:Number(val('viewing_fee'));
+        const{error}=await db.rpc('set_listing_viewing_fees',{p_listing_ids:[id],p_viewing_fee:fee});
+        if(error)throw new Error(`Listing created, but its viewing fee could not be saved: ${error.message}`);
+      }
       if(units.length&&!S.sub.unitsDone){const {error}=await db.from('listing_units').insert(units.map(t=>({listing_id:id,unit_label:t.label.trim(),bedrooms:group()==='standard'&&t.cap!==''?parseInt(t.cap):null,quantity_available:parseInt(t.qty),quantity_total:parseInt(t.qty),price:parseFloat(t.price)})));if(error)throw error;S.sub.unitsDone=true;saveDraftNow()}
       if(!S.sub.photosDone){const bad=await uploadPhotos(id);
         if(bad){$('submit-error').textContent=`${bad} photo(s) failed to upload (see the red thumbnails on the Photos step). Check your connection and tap "Retry upload"; the photos that worked won't be sent again.`;btn.textContent='Retry upload';btn.disabled=false;S.busy=false;$('submit-error').scrollIntoView({block:'center',behavior:'smooth'});return}

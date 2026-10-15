@@ -2,11 +2,20 @@
 -- only until it is explicitly applied to the linked Supabase project.
 begin;
 
-alter table public.listings
-  add column if not exists viewing_fee integer;
-
 alter table public.profiles
   add column if not exists default_viewing_fee integer;
+
+create table if not exists public.listing_viewing_fees (
+  listing_id uuid primary key references public.listings(id) on delete cascade,
+  viewing_fee integer not null default 0
+    check (viewing_fee between 0 and 5000),
+  updated_at timestamptz not null default now()
+);
+alter table public.listing_viewing_fees enable row level security;
+revoke all on public.listing_viewing_fees from public, anon, authenticated;
+create index if not exists listing_viewing_fees_positive_idx
+  on public.listing_viewing_fees (viewing_fee)
+  where viewing_fee > 0;
 
 alter table public.viewing_requests
   add column if not exists viewing_fee_snapshot integer,
@@ -14,16 +23,6 @@ alter table public.viewing_requests
 
 do $$
 begin
-  if not exists (
-    select 1 from pg_constraint
-    where conname = 'listings_viewing_fee_range'
-      and conrelid = 'public.listings'::regclass
-  ) then
-    alter table public.listings
-      add constraint listings_viewing_fee_range
-      check (viewing_fee is null or viewing_fee between 0 and 5000);
-  end if;
-
   if not exists (
     select 1 from pg_constraint
     where conname = 'profiles_default_viewing_fee_range'
@@ -69,13 +68,18 @@ language plpgsql
 security definer
 set search_path = public
 as $function$
+declare
+  v_seller_id uuid;
 begin
-  if tg_table_name = 'listings' then
-    if new.viewing_fee is not null
-       and new.viewing_fee > 0
-       and not public.can_set_viewing_fee(new.seller_id) then
+  if tg_table_name = 'listing_viewing_fees' then
+    select l.seller_id into v_seller_id
+    from public.listings l
+    where l.id = new.listing_id;
+    if not found then raise exception 'Listing not found'; end if;
+    if new.viewing_fee > 0 and not public.can_set_viewing_fee(v_seller_id) then
       raise exception 'Only agent and company accounts can set a viewing fee';
     end if;
+    new.updated_at := now();
     return new;
   end if;
 
@@ -88,10 +92,25 @@ begin
 end;
 $function$;
 
-drop trigger if exists protect_listing_viewing_fee on public.listings;
-create trigger protect_listing_viewing_fee
-  before insert or update of seller_id, viewing_fee on public.listings
-  for each row execute function public.protect_viewing_fee_fields();
+create or replace function public.clear_default_viewing_fee_on_role_change()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $function$
+begin
+  if new.account_type is distinct from old.account_type
+     and new.account_type not in ('agent', 'company') then
+    new.default_viewing_fee := null;
+  end if;
+  return new;
+end;
+$function$;
+
+drop trigger if exists clear_default_viewing_fee_on_role_change on public.profiles;
+create trigger clear_default_viewing_fee_on_role_change
+  before update of account_type on public.profiles
+  for each row execute function public.clear_default_viewing_fee_on_role_change();
 
 drop trigger if exists protect_profile_default_viewing_fee on public.profiles;
 create trigger protect_profile_default_viewing_fee
@@ -129,20 +148,20 @@ declare
   v_new integer;
   v_id uuid;
 begin
-  if tg_table_name = 'listings' then
-    v_id := new.id;
+  if tg_table_name = 'listing_viewing_fees' then
+    v_id := new.listing_id;
     v_new := new.viewing_fee;
-    if tg_op = 'UPDATE' then v_old := old.viewing_fee; end if;
+    if tg_op = 'UPDATE' then v_old := old.viewing_fee; else v_old := 0; end if;
   else
     v_id := new.id;
     v_new := new.default_viewing_fee;
-    if tg_op = 'UPDATE' then v_old := old.default_viewing_fee; end if;
+    if tg_op = 'UPDATE' then v_old := old.default_viewing_fee; else v_old := null; end if;
   end if;
 
   if v_old is distinct from v_new then
     insert into public.viewing_fee_history (object_type, object_id, changed_by, old_fee, new_fee)
     values (
-      case when tg_table_name = 'listings' then 'listing' else 'profile' end,
+      case when tg_table_name = 'listing_viewing_fees' then 'listing' else 'profile' end,
       v_id,
       auth.uid(),
       v_old,
@@ -153,15 +172,81 @@ begin
 end;
 $function$;
 
-drop trigger if exists record_listing_viewing_fee_change on public.listings;
+drop trigger if exists record_listing_viewing_fee_change on public.listing_viewing_fees;
 create trigger record_listing_viewing_fee_change
-  after insert or update of viewing_fee on public.listings
+  after insert or update of viewing_fee on public.listing_viewing_fees
   for each row execute function public.record_viewing_fee_change();
 
 drop trigger if exists record_profile_default_viewing_fee_change on public.profiles;
 create trigger record_profile_default_viewing_fee_change
   after insert or update of default_viewing_fee on public.profiles
   for each row execute function public.record_viewing_fee_change();
+
+create or replace function public.get_my_listing_viewing_fees(p_listing_ids uuid[])
+returns table (listing_id uuid, viewing_fee integer)
+language sql
+stable
+security definer
+set search_path = public
+as $function$
+  select l.id, coalesce(f.viewing_fee, 0)::integer
+  from public.listings l
+  left join public.listing_viewing_fees f on f.listing_id = l.id
+  where l.id = any(coalesce(p_listing_ids, array[]::uuid[]))
+    and (l.seller_id = public.effective_seller_id() or public.is_admin());
+$function$;
+revoke all on function public.get_my_listing_viewing_fees(uuid[]) from public, anon;
+grant execute on function public.get_my_listing_viewing_fees(uuid[]) to authenticated;
+
+create or replace function public.set_listing_viewing_fees(p_listing_ids uuid[], p_viewing_fee integer)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $function$
+declare
+  v_seller_id uuid := public.effective_seller_id();
+  v_expected integer;
+  v_found integer;
+begin
+  if auth.uid() is null then raise exception 'Authentication is required'; end if;
+  if p_viewing_fee is null or p_viewing_fee < 0 or p_viewing_fee > 5000 then
+    raise exception 'Viewing fee must be a whole number between KES 0 and KES 5,000';
+  end if;
+  if coalesce(cardinality(p_listing_ids), 0) = 0 then return 0; end if;
+  if p_viewing_fee > 0 and not public.can_set_viewing_fee(v_seller_id) and not public.is_admin() then
+    raise exception 'Only agent and company accounts can set a viewing fee';
+  end if;
+
+  select count(distinct id)::integer into v_expected
+  from unnest(p_listing_ids) as requested(id);
+  if public.is_admin() then
+    select count(*)::integer into v_found
+    from public.listings l where l.id = any(p_listing_ids);
+    if v_found <> v_expected then raise exception 'One or more listings could not be found'; end if;
+    insert into public.listing_viewing_fees (listing_id, viewing_fee)
+    select l.id, p_viewing_fee
+    from public.listings l
+    where l.id = any(p_listing_ids)
+    on conflict (listing_id) do update
+      set viewing_fee = excluded.viewing_fee, updated_at = now();
+  else
+    select count(*)::integer into v_found
+    from public.listings l
+    where l.id = any(p_listing_ids) and l.seller_id = v_seller_id;
+    if v_found <> v_expected then raise exception 'You can only update your own listings'; end if;
+    insert into public.listing_viewing_fees (listing_id, viewing_fee)
+    select l.id, p_viewing_fee
+    from public.listings l
+    where l.id = any(p_listing_ids) and l.seller_id = v_seller_id
+    on conflict (listing_id) do update
+      set viewing_fee = excluded.viewing_fee, updated_at = now();
+  end if;
+  return v_found;
+end;
+$function$;
+revoke all on function public.set_listing_viewing_fees(uuid[], integer) from public, anon;
+grant execute on function public.set_listing_viewing_fees(uuid[], integer) to authenticated;
 
 create or replace function public.get_public_viewing_fees(p_listing_ids uuid[])
 returns table (listing_id uuid, viewing_fee integer)
@@ -172,15 +257,17 @@ set search_path = public
 as $function$
   select l.id,
          case when p.account_type in ('agent', 'company')
-              then coalesce(l.viewing_fee, 0)
+              then coalesce(f.viewing_fee, 0)
               else 0
          end::integer
   from public.listings l
   join public.profiles p on p.id = l.seller_id
+  left join public.listing_viewing_fees f on f.listing_id = l.id
   where l.id = any(coalesce(p_listing_ids, array[]::uuid[]))
     and l.status in ('active', 'occupied')
     and coalesce(l.is_disabled, false) = false
-    and coalesce(l.recycle_bin, false) = false;
+    and coalesce(l.recycle_bin, false) = false
+    and p.is_disabled is not true;
 $function$;
 revoke all on function public.get_public_viewing_fees(uuid[]) from public;
 grant execute on function public.get_public_viewing_fees(uuid[]) to anon, authenticated;
@@ -194,17 +281,28 @@ as $function$
 declare
   v_fee integer;
 begin
+  if tg_op = 'UPDATE' then
+    if new.listing_id is distinct from old.listing_id then
+      raise exception 'A viewing request cannot be moved to another listing';
+    end if;
+    new.viewing_fee_snapshot := old.viewing_fee_snapshot;
+    new.viewing_fee_acknowledged := old.viewing_fee_acknowledged;
+    return new;
+  end if;
+
   select case when p.account_type in ('agent', 'company')
-              then coalesce(l.viewing_fee, 0)
+              then coalesce(f.viewing_fee, 0)
               else 0
          end
     into v_fee
   from public.listings l
   join public.profiles p on p.id = l.seller_id
+  left join public.listing_viewing_fees f on f.listing_id = l.id
   where l.id = new.listing_id
     and l.status = 'active'
     and coalesce(l.is_disabled, false) = false
-    and coalesce(l.recycle_bin, false) = false;
+    and coalesce(l.recycle_bin, false) = false
+    and p.is_disabled is not true;
 
   if not found then
     raise exception 'This listing is not available for viewing requests';
@@ -220,97 +318,31 @@ $function$;
 
 drop trigger if exists snapshot_viewing_request_fee on public.viewing_requests;
 create trigger snapshot_viewing_request_fee
-  before insert on public.viewing_requests
+  before insert or update on public.viewing_requests
   for each row execute function public.snapshot_viewing_request_fee();
-
--- Keep the existing account-type rules and role history, while clearing only
--- the account default when the current role no longer qualifies. Listing fees
--- remain stored and are hidden publicly by get_public_viewing_fees().
-create or replace function public.set_account_type(p_account_type text)
-returns table (account_type text, onboarding_completed boolean, account_type_set_at timestamptz)
-language plpgsql
-security definer
-set search_path = public
-as $function$
-declare
-  v_user_id uuid := auth.uid();
-  v_current_type text;
-  v_set_at timestamptz;
-  v_platform_role text;
-  v_disabled boolean;
-begin
-  if v_user_id is null then
-    raise exception 'Authentication is required';
-  end if;
-  if p_account_type is null
-     or p_account_type not in ('buyer', 'owner', 'caretaker', 'agent', 'company') then
-    raise exception 'Choose a supported account type';
-  end if;
-
-  select p.account_type, p.account_type_set_at, p.role, p.is_disabled
-    into v_current_type, v_set_at, v_platform_role, v_disabled
-  from public.profiles p
-  where p.id = v_user_id
-  for update;
-  if not found then
-    raise exception 'Profile not found';
-  end if;
-  if v_disabled then
-    raise exception 'Disabled accounts cannot change account type';
-  end if;
-  if v_current_type is distinct from p_account_type
-     and v_platform_role is distinct from 'admin'
-     and v_set_at is not null
-     and v_set_at > now() - interval '7 days' then
-    raise exception 'Account type can be changed once every 7 days';
-  end if;
-
-  if v_current_type is distinct from p_account_type then
-    insert into public.role_history (profile_id, previous_account_type, new_account_type)
-    values (v_user_id, v_current_type, p_account_type);
-  end if;
-
-  perform set_config('nyumba254.account_type_rpc', '1', true);
-  update public.profiles p
-  set account_type = p_account_type,
-      account_type_set_at = case
-        when p.account_type is distinct from p_account_type then now()
-        else coalesce(p.account_type_set_at, now())
-      end,
-      onboarding_completed = true,
-      verified_role = case
-        when p.verified_role = p_account_type then p.verified_role
-        else null
-      end,
-      default_viewing_fee = case
-        when p_account_type in ('agent', 'company') then p.default_viewing_fee
-        else null
-      end
-  where p.id = v_user_id;
-
-  return query
-  select p.account_type, p.onboarding_completed, p.account_type_set_at
-  from public.profiles p
-  where p.id = v_user_id;
-end;
-$function$;
 
 -- Rollback (destructive to newly added fee data; review before running):
 -- drop trigger if exists snapshot_viewing_request_fee on public.viewing_requests;
 -- drop function if exists public.snapshot_viewing_request_fee();
 -- drop function if exists public.get_public_viewing_fees(uuid[]);
 -- drop trigger if exists record_profile_default_viewing_fee_change on public.profiles;
--- drop trigger if exists record_listing_viewing_fee_change on public.listings;
+-- drop trigger if exists record_listing_viewing_fee_change on public.listing_viewing_fees;
 -- drop function if exists public.record_viewing_fee_change();
+-- drop function if exists public.set_listing_viewing_fees(uuid[], integer);
+-- drop function if exists public.get_my_listing_viewing_fees(uuid[]);
+-- drop index if exists public.listing_viewing_fees_positive_idx;
+-- drop table if exists public.listing_viewing_fees;
 -- drop policy if exists viewing_fee_history_admin_read on public.viewing_fee_history;
 -- drop table if exists public.viewing_fee_history;
 -- drop trigger if exists protect_profile_default_viewing_fee on public.profiles;
--- drop trigger if exists protect_listing_viewing_fee on public.listings;
+-- drop trigger if exists clear_default_viewing_fee_on_role_change on public.profiles;
+-- drop function if exists public.clear_default_viewing_fee_on_role_change();
 -- drop function if exists public.protect_viewing_fee_fields();
 -- drop function if exists public.can_set_viewing_fee(uuid);
 -- alter table public.viewing_requests drop column if exists viewing_fee_acknowledged;
 -- alter table public.viewing_requests drop column if exists viewing_fee_snapshot;
+-- alter table public.viewing_requests drop constraint if exists viewing_requests_fee_snapshot_range;
+-- alter table public.profiles drop constraint if exists profiles_default_viewing_fee_range;
 -- alter table public.profiles drop column if exists default_viewing_fee;
--- alter table public.listings drop column if exists viewing_fee;
 
 commit;

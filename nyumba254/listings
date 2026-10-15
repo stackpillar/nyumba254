@@ -934,7 +934,7 @@ const NK_CLEAN_ROUTES = false;   // flip to true once /listings/<county>/<catego
 // WhatsApp: adjust these two lines to your real column names. Cards fall back to the enquiry form if absent.
 const NK_WHATSAPP = { enabled: l => !!(l.allow_whatsapp && l.whatsapp_number), number: l => l.whatsapp_number };
 const LISTING_SELECT = '*, listing_photos(*), listing_units(*), profiles(verification_status,account_type,verified_role)';
-const MAP_SELECT = 'id, listing_number, title, area, county, price, price_frequency, category, latitude, longitude';
+const MAP_SELECT = 'id, listing_number, seller_id, title, area, county, price, price_frequency, category, latitude, longitude';
 const MAP_LIMIT = 300;
 const AUTO_PAGES = 3;                       // mobile: auto-load this many pages, then show "Load more"
 const CTX_KEY = 'nk_results_ctx';           // read by listing.html for "Back to results" / "Next listing"
@@ -1062,7 +1062,7 @@ const SEARCH_FIELDS = ['title', 'description', 'area', 'address', 'county'];
 
 function applyFilters(query, f) {
   query = f.occ ? query.in('status', ['active', 'occupied']) : query.eq('status', 'active');
-  if(f.listedBy==='seller')query=query.or('profiles.account_type.is.null,listed_by_type.eq.seller');
+  if(f.listedBy==='seller')query=query.or('listed_by_type.eq.seller,listed_by_type.is.null');
   else if(f.listedBy)query=query.eq('profiles.account_type',f.listedBy);
   if (f.freq) query = query.eq('price_frequency', f.freq);
   if (f.category) query = query.eq('category', f.category);
@@ -1090,10 +1090,12 @@ function applySort(query, f) {
 }
 function fetchPage(f, page) {
   const from = (page - 1) * PAGE_SIZE;
-  return applySort(applyFilters(db.from('listings').select(LISTING_SELECT, { count: 'exact' }), f), f).range(from, from + PAGE_SIZE - 1);
+  const select=f.listedBy&&f.listedBy!=='seller'?'*, listing_photos(*), listing_units(*), profiles!inner(verification_status,account_type,verified_role)':LISTING_SELECT;
+  return applySort(applyFilters(db.from('listings').select(select, { count: 'exact' }), f), f).range(from, from + PAGE_SIZE - 1);
 }
 async function countOnly(f) {
-  const { count, error } = await applyFilters(db.from('listings').select('id', { count: 'exact', head: true }), f);
+  const select=f.listedBy&&f.listedBy!=='seller'?'id, profiles!inner(account_type)':'id';
+  const { count, error } = await applyFilters(db.from('listings').select(select, { count: 'exact', head: true }), f);
   return error ? null : (count || 0);
 }
 
@@ -1293,7 +1295,7 @@ function cardHtml(l, i) {
   const sub = l.address ? l.address : (l.county ? `${l.area || ''}${l.area ? ', ' : ''}${nkCountyLabel(l.county)}` : (l.area || 'Kenya'));
   const listedByLabels={buyer:'Tenant / Buyer',owner:'Property owner',caretaker:'Caretaker',agent:'Agent',company:'Company',seller:'Legacy seller'};
   const listedBy=listedByLabels[l.profiles?.account_type||(l.seller_id?'seller':'')];
-  const viewingFee=Number(l.viewing_fee)||0;
+  const viewingFee=Number(l.public_viewing_fee)||0;
   const heart = (typeof NKSaved !== 'undefined' && NKSaved.buildHeartBtn) ? NKSaved.buildHeartBtn(l.id) : '';
   const middle = meta.group === 'boarding' ? boardingHtml(l, d) : specsHtml(meta, d);
   return `<article class="card${occupied ? ' is-occupied' : ''}" data-listing-id="${id}">
@@ -1932,14 +1934,21 @@ async function refreshMap(opts) {
   }
   setTimeout(() => MAP.inst.invalidateSize(), 150);
   const f = { ...cloneState(S), mapIds: null };
-  const [res] = await Promise.all([applySort(applyFilters(db.from('listings').select(MAP_SELECT).limit(MAP_LIMIT), f), f), loadCentroids()]);
+  const mapSelect=f.listedBy&&f.listedBy!=='seller'?MAP_SELECT+', profiles!inner(account_type)':MAP_SELECT;
+  const [res] = await Promise.all([applySort(applyFilters(db.from('listings').select(mapSelect).limit(MAP_LIMIT), f), f), loadCentroids()]);
   if (my !== MAP.token) return;
   MAP.layer.clearLayers(); MAP.pins = {}; MAP.points = [];
-  (res.data || []).forEach(l => {
+  let mapListings=res.data||[];
+  if(mapListings.length){
+    try{mapListings=await nkHydratePublicProfiles(mapListings);mapListings=await nkHydrateViewingFees(mapListings);}
+    catch(hydrationError){console.error('Could not hydrate map listing details:',hydrationError);}
+  }
+  mapListings.forEach(l => {
     const pos = positionFor(l); if (!pos) return;
     const icon = L.divIcon({ className: 'nk-pin', html: `<span>${escHtml(shortPrice(Number(l.price)))}</span>`, iconSize: [0, 0] });
     const m = L.marker(pos.ll, { icon, riseOnHover: true }).addTo(MAP.layer);
-    m.bindPopup(`<div class="nk-pop"><div class="nk-pop-title">${escHtml(l.title)}</div><div class="nk-pop-sub">${escHtml(fmtKES(l.price))}${escHtml(NK_FREQ_LABEL[l.price_frequency] || '')} · ${escHtml(l.area)}${pos.approx ? ' (approximate location)' : ''}</div><a href="${listingHref(l)}">View listing</a></div>`, { maxWidth: 240 });
+    const fee=Number(l.public_viewing_fee)||0;
+    m.bindPopup(`<div class="nk-pop"><div class="nk-pop-title">${escHtml(l.title)}</div><div class="nk-pop-sub">${escHtml(fmtKES(l.price))}${escHtml(NK_FREQ_LABEL[l.price_frequency] || '')} · ${escHtml(l.area)}${pos.approx ? ' (approximate location)' : ''}<br/>${fee>0?'Viewing fee: '+escHtml(fmtKES(fee)):'Free viewing'}</div><a href="${listingHref(l)}">View listing</a></div>`, { maxWidth: 240 });
     m.on('mouseover', () => cardHover(l.id, true)); m.on('mouseout', () => cardHover(l.id, false));
     m.on('click', () => { const c = cardHover(l.id, true); if (c) c.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); setTimeout(() => cardHover(l.id, false), 2200); });
     MAP.pins[l.id] = m; MAP.points.push({ id: l.id, ll: pos.ll });

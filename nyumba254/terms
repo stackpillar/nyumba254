@@ -345,6 +345,7 @@
       </div>
       <p>Fees are subject to change. Any fee changes will be announced at least 14 days in advance on the platform. Your existing paid listing duration will not be affected by fee changes.</p>
       <p>Nyumba254 does not charge commission on sales or rental agreements. The listing fee is the only charge from Nyumba254.</p>
+      <p>Agents and companies may display an optional viewing fee of up to KES 5,000 per listing. Any such fee is agreed and paid directly between the viewer and the lister; Nyumba254 does not collect, process, guarantee, or refund it. Buyers should review the disclosed fee and confirm the arrangement directly with the lister before requesting a viewing.</p>
     </div>
     <div class="section-divider"></div>
 
@@ -352,16 +353,16 @@
     <div class="section" id="buyers">
       <div class="section-num">Section 6</div>
       <h2>Buyers & renters</h2>
-      <p>Browsing listings and sending enquiries is free. As a buyer or renter using Nyumba254 you agree to:</p>
+      <p>Browsing listings and sending enquiries through Nyumba254 is free. A lister may separately disclose an optional viewing fee. As a buyer or renter using Nyumba254 you agree to:</p>
       <ul>
         <li>Contact sellers only for genuine enquiries about properties you are interested in</li>
         <li>Not send spam, unsolicited commercial messages, or abusive content to sellers</li>
-        <li>Verify the property in person before making any payment to a seller</li>
+        <li>Verify the property and lister before making any payment, and confirm any disclosed viewing fee directly with the lister</li>
         <li>Conduct your own due diligence on any property before entering into an agreement</li>
       </ul>
       <div class="warning">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span><strong>Safety warning:</strong> Never send money to a seller before viewing the property in person and verifying ownership documents. Nyumba254 is not responsible for any financial loss resulting from fraudulent sellers. If you suspect a listing is fraudulent, report it to us immediately.</span>
+        <span><strong>Safety warning:</strong> Do not send unlisted deposits or reservation payments. If a listing displays a viewing fee, confirm its amount and payment arrangement directly with the lister; Nyumba254 does not collect it. Verify the property and lister, request a receipt for any payment, and report suspected fraud immediately.</span>
       </div>
       <p>Nyumba254 does not verify the identity of all sellers or the accuracy of all listings. We encourage buyers to exercise caution and common sense in all property transactions.</p>
     </div>
@@ -492,7 +493,7 @@
     <div class="footer-top">
       <div>
         <div class="footer-logo">Nyumba254</div>
-        <p class="footer-tagline">Find and list apartments across Kenya — no agents, no commission.</p>
+        <p class="footer-tagline">Find and list property across Kenya, with open account roles and no deal commission.</p>
       </div>
       <div class="footer-col">
         <h4>Browse</h4>

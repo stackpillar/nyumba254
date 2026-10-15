@@ -851,7 +851,8 @@ async function applyViewingFeeToActiveListings(){
   const confirmed=window.confirm(`Apply KES ${value.toLocaleString('en-KE')} viewing fee to all your active listings? Existing active listing fees will be replaced.`);
   if(!confirmed)return;
   try{
-    const{error}=await db.from('listings').update({viewing_fee:value}).eq('seller_id',currentUser.id).eq('status','active').eq('is_disabled',false).eq('recycle_bin',false);
+    const ids=allListings.filter(l=>l.status==='active'&&!l.is_disabled&&!l.recycle_bin).map(l=>l.id);
+    const{error}=await db.rpc('set_listing_viewing_fees',{p_listing_ids:ids,p_viewing_fee:value});
     if(error)throw new Error(`Could not apply the fee to active listings: ${error.message}`);
     await loadAllData();
     status.textContent='Fee applied to active listings.';
@@ -4491,6 +4492,13 @@ async function loadAllData(){
   if(listingsError) throw new Error(`Could not load your listings: ${listingsError.message}`);
   allListings=listingsData||[];
   const ids=allListings.map(l=>l.id);
+  if(ids.length){
+    const{data:feeRows,error:feeError}=await db.rpc('get_my_listing_viewing_fees',{p_listing_ids:ids});
+    if(feeError)throw new Error(`Could not load listing viewing fees: ${feeError.message}`);
+    if((feeRows||[]).length!==ids.length)throw new Error('The viewing-fee service did not return every listing. Reload the dashboard and try again.');
+    const fees=new Map((feeRows||[]).map(row=>[row.listing_id,Number(row.viewing_fee)||0]));
+    allListings=allListings.map(listing=>({...listing,viewing_fee:fees.get(listing.id)??0}));
+  }
   const msgCutoff=new Date(Date.now()-MSG_HISTORY_DAYS*86400000).toISOString();
 
   const[enqRes,msgRes,payRes,revRes]=await Promise.all([
@@ -7094,7 +7102,7 @@ async function bulkSetViewingFeeSelectedListings(){
   if(!window.confirm(`Apply KES ${fee.toLocaleString('en-KE')} to ${rows.length} selected listing${rows.length===1?'':'s'}?`))return;
   const ids=rows.map(l=>l.id);
   try{
-    const{error}=await db.from('listings').update({viewing_fee:fee}).eq('seller_id',effectiveSellerId).in('id',ids);
+    const{error}=await db.rpc('set_listing_viewing_fees',{p_listing_ids:ids,p_viewing_fee:fee});
     if(error)throw new Error(`Could not update selected viewing fees: ${error.message}`);
     allListings=allListings.map(l=>ids.includes(l.id)?{...l,viewing_fee:fee}:l);
     renderListingsTable();
@@ -7568,10 +7576,11 @@ async function saveEdit(){
   };
   const u={title:document.getElementById('edit-title').value.trim(),price:parseFloat(document.getElementById('edit-price').value)||0,price_type:document.getElementById('edit-price-type').value,price_frequency:priceFreqOut,area:document.getElementById('edit-area').value,category:document.getElementById('edit-category').value,address:document.getElementById('edit-address').value.trim(),description:document.getElementById('edit-description').value.trim(),contact_hidden:document.getElementById('edit-contact_hidden').checked,amenities:editAmenities,details:mergedDetails};
   const feeEligible=['agent','company'].includes((ownerProfile||currentProfile)?.account_type);
+  let viewingFeeToSave=null;
   if(feeEligible){
     const feeInput=document.getElementById('edit-viewing-fee'),feeRaw=feeInput.value.trim(),fee=feeRaw===''?null:Number(feeRaw);
     if(fee!==null&&(!Number.isInteger(fee)||fee<0||fee>5000)){showToast('Enter a whole-number viewing fee from KES 0 to KES 5,000.','error');feeInput.focus();return;}
-    u.viewing_fee=fee;
+    viewingFeeToSave=fee??0;
   }
   const btn=document.getElementById('btn-save-edit');btn.disabled=true;btn.innerHTML='<span class="spinner-sm"></span> Saving…';
   const oldPrice=original?Number(original.price):null;
@@ -7582,7 +7591,7 @@ async function saveEdit(){
   if(original){
     if(original.title!==u.title)changeLines.push(`Title: "${original.title}" → "${u.title}"`);
     if(Number(original.price)!==Number(u.price))changeLines.push(`Price: KES ${Number(original.price).toLocaleString('en-KE')} → KES ${Number(u.price).toLocaleString('en-KE')}`);
-    if(feeEligible&&Number(original.viewing_fee||0)!==Number(u.viewing_fee||0))changeLines.push(`Viewing fee: KES ${Number(original.viewing_fee||0).toLocaleString('en-KE')} → KES ${Number(u.viewing_fee||0).toLocaleString('en-KE')}`);
+    if(feeEligible&&Number(original.viewing_fee||0)!==Number(viewingFeeToSave||0))changeLines.push(`Viewing fee: KES ${Number(original.viewing_fee||0).toLocaleString('en-KE')} → KES ${Number(viewingFeeToSave||0).toLocaleString('en-KE')}`);
     if(original.area!==u.area)changeLines.push(`Area: ${original.area} → ${u.area}`);
     if(original.address!==u.address)changeLines.push('Address updated');
     if((original.description||'')!==u.description)changeLines.push('Description updated');
@@ -7599,6 +7608,11 @@ async function saveEdit(){
   const{error}=await db.from('listings').update(u).eq('id',id);
   btn.disabled=false;btn.innerHTML='Save changes';
   if(error){showToast('Could not save: '+error.message,'error');return;}
+  if(feeEligible){
+    const{error:feeError}=await db.rpc('set_listing_viewing_fees',{p_listing_ids:[id],p_viewing_fee:viewingFeeToSave});
+    if(feeError){showToast(`Listing details were saved, but the viewing fee was not: ${feeError.message}`,'error');return;}
+    u.viewing_fee=viewingFeeToSave;
+  }
   const idx=allListings.findIndex(l=>l.id===id);if(idx!==-1)allListings[idx]={...allListings[idx],...u};
   closeModal('modal-edit');renderListingsTable();renderQuickListings();showToast('Listing updated ✓','success');
   if(oldPrice!==null&&oldPrice!==Number(u.price)){
