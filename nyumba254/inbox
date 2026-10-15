@@ -362,6 +362,7 @@
   <div class="ni-field"><label for="ni-vname" data-i18n="v_name">Full name</label><input type="text" id="ni-vname" autocomplete="name"/><div class="ni-err" id="ni-vname-e" role="alert"></div></div>
   <div class="ni-field"><label for="ni-vphone" data-i18n="v_phone">Phone</label><input type="tel" id="ni-vphone" inputmode="tel" autocomplete="tel" placeholder="07XX XXX XXX"/><div class="ni-err" id="ni-vphone-e" role="alert"></div></div>
   <div class="ni-field"><label for="ni-vnotes" data-i18n="v_notes">Notes (optional)</label><textarea id="ni-vnotes" rows="2"></textarea></div>
+  <label class="ni-field" id="ni-vfee-wrap" hidden><span id="ni-vfee-label"></span><span style="display:flex;gap:8px;align-items:flex-start;margin-top:8px"><input type="checkbox" id="ni-vfee-ack" style="margin-top:4px"/>I understand the fee is agreed and paid directly to the lister; Nyumba254 does not collect it.</span></label>
   <div class="ni-actions"><button class="ni-btn ghost" type="button" id="ni-vcancel" data-i18n="cancel">Cancel</button><button class="ni-btn" type="button" id="ni-vsend" data-i18n="v_send">Request viewing</button></div>
 </div></div>
 
@@ -712,9 +713,19 @@
 
   /* ═════ viewing: request, change time, add to calendar ═════ */
   let viewingFor = null, resched = false;
-  function openViewing(isResched) {
+  async function openViewing(isResched) {
     const a = core.active(); if (!a) return; viewingFor = a.listingId; resched = !!isResched && !!core.nextViewing(a.listingId);
     const p = core.Profile.forListing(viewingFor), tm = new Date(), nv = core.nextViewing(viewingFor); ['ni-vdate', 'ni-vtime', 'ni-vname', 'ni-vphone'].forEach(i => setErr(i, '')); $('ni-verr').textContent = '';
+    $('ni-vfee-wrap').hidden = true; $('ni-vfee-ack').checked = false;
+    try {
+      const fee = await core.viewingFee(viewingFor);
+      $('ni-vfee-wrap').hidden = fee <= 0;
+      $('ni-vfee-label').textContent = fee > 0 ? `Viewing fee: KES ${fee.toLocaleString('en-KE')}. Nyumba254 does not collect this fee.` : '';
+    } catch (feeError) {
+      $('ni-verr').textContent = 'Could not load the viewing fee. Please try again.';
+      console.error('Viewing fee lookup failed:', feeError);
+      return;
+    }
     $('ni-vt').textContent = t(resched ? 'v_title_r' : 'v_title'); $('ni-vsend').textContent = t(resched ? 'v_send_r' : 'v_send');
     $('ni-vtime').innerHTML = `<option value="">${esc(t('v_select'))}</option>` + SLOTS.map(s => `<option value="${esc(s[0])}">${esc(s[lang === 'sw' ? 2 : 1])}</option>`).join('');
     $('ni-vdate').min = core.localISO(tm); if (resched && nv) { $('ni-vdate').value = nv.requested_date; $('ni-vtime').value = nv.requested_time; } else { tm.setDate(tm.getDate() + 1); $('ni-vdate').value = core.localISO(tm); $('ni-vtime').value = ''; }
@@ -723,7 +734,7 @@
   async function sendViewing() {
     ['ni-vdate', 'ni-vtime', 'ni-vname', 'ni-vphone'].forEach(i => setErr(i, '')); $('ni-verr').textContent = '';
     const b = $('ni-vsend'), label = b.textContent; b.disabled = true; b.textContent = t('sending');
-    const r = await core.requestViewing({ listingId: viewingFor, date: $('ni-vdate').value, time: $('ni-vtime').value, name: $('ni-vname').value, phone: $('ni-vphone').value, notes: $('ni-vnotes').value, reschedule: resched });
+    const r = await core.requestViewing({ listingId: viewingFor, date: $('ni-vdate').value, time: $('ni-vtime').value, name: $('ni-vname').value, phone: $('ni-vphone').value, notes: $('ni-vnotes').value, reschedule: resched, viewingFeeAcknowledged: $('ni-vfee-ack').checked });
     b.disabled = false; b.textContent = label;
     if (!r.ok) { if (r.field) { setErr('ni-v' + r.field, r.error); const f = $('ni-v' + r.field); if (f) f.focus(); } else $('ni-verr').textContent = r.error; return; }
     closeModal('ni-vov'); if (r.warning) toast(r.warning); renderHead(); renderQuick(); renderVStrip(); renderList();

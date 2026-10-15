@@ -393,7 +393,7 @@ a.lncard:hover{border-color:var(--green);background:var(--green-light)}
   <div class="notify-modal-body">
     <p class="notify-modal-sub">Fake listing, scam attempt or wrong details? We review every report.</p>
     <div class="nf-banner" id="rp-banner" role="alert"></div>
-    <div class="nf-field"><label for="rp-reason">Reason</label><select id="rp-reason"><option value="">Select a reason…</option><option value="fake_listing">This listing looks fake</option><option value="scam_attempt">Seller asked for money upfront</option><option value="unreasonable_fee">Unreasonable finder's fee</option><option value="wrong_info">Details don't match reality</option><option value="offensive">Offensive content</option><option value="other">Something else</option></select></div>
+    <div class="nf-field"><label for="rp-reason">Reason</label><select id="rp-reason"><option value="">Select a reason…</option><option value="fake_listing">This listing looks fake</option><option value="scam_attempt">Seller asked for money upfront</option><option value="viewing_fee_dispute">Viewing fee was not disclosed or differs from the listing</option><option value="unreasonable_fee">Legacy finder's-fee report</option><option value="wrong_info">Details don't match reality</option><option value="offensive">Offensive content</option><option value="other">Something else</option></select></div>
     <div class="nf-field" id="rp-amt-wrap" hidden><label for="rp-amt">Amount asked (KES)</label><input type="number" id="rp-amt" min="0" inputmode="numeric"/></div>
     <div class="nf-field"><label for="rp-det">Details <span class="nf-optional">optional</span></label><textarea id="rp-det" maxlength="1000"></textarea></div>
   </div>
@@ -1280,7 +1280,7 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&$('mobile-nav').classList.contains('open')){closeMenu();$('mobile-menu-btn').focus();return}
   const g=$('gallery');if(P&&photos.length>1&&g&&g.contains(document.activeElement)){if(e.key==='ArrowLeft'){e.preventDefault();showPhoto(idx-1)}if(e.key==='ArrowRight'){e.preventDefault();showPhoto(idx+1)}}
 });
-document.addEventListener('change',e=>{if(e.target.id==='rp-reason')$('rp-amt-wrap').hidden=!/unreasonable_fee|scam_attempt/.test(e.target.value)});
+document.addEventListener('change',e=>{if(e.target.id==='rp-reason')$('rp-amt-wrap').hidden=!/viewing_fee_dispute|unreasonable_fee|scam_attempt/.test(e.target.value)});
 /* photo fallback: if a resized URL fails (transforms unavailable), fall back to the original file once */
 document.addEventListener('error',e=>{const im=e.target;if(im&&im.tagName==='IMG'&&im.dataset&&im.dataset.orig&&im.getAttribute('src')!==im.dataset.orig)im.src=im.dataset.orig},true);
 /* carousel: keep the counter and index in step with the native swipe */

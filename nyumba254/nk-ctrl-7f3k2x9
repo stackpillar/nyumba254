@@ -1197,7 +1197,7 @@ VIEWS.support={title:'Support chat',async mount(el,p,ctx){
 }};
 
 /* ═════════ REPORTS ═════════ */
-const REASON={fake_listing:'Fake listing',scam_attempt:'Scam / money upfront',wrong_info:'Details don’t match',offensive:'Offensive content',other:'Other'};
+const REASON={fake_listing:'Fake listing',scam_attempt:'Scam / money upfront',viewing_fee_dispute:'Viewing fee disclosure or amount dispute',unreasonable_fee:"Legacy finder's-fee report",wrong_info:'Details don’t match',offensive:'Offensive content',other:'Other'};
 async function setReport(r,status,notes){
   const up={status};if(notes!==undefined)up.admin_notes=notes||null;if(status==='resolved'||status==='dismissed')up.resolved_at=new Date().toISOString();
   const{error}=await db.from('reports').update(up).eq('id',r.id);if(error)throw error;logAction('update_report','report',r.id,status);ui.toast('Report marked '+status,'ok');

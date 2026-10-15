@@ -5767,6 +5767,7 @@ function lcCardHtml(l,showHint){
 
   const priceTxt=units?muPriceRangeText(l):`KES ${Number(l.price||0).toLocaleString('en-KE')}${NK_DASH_FREQ_SUFFIX[l.price_frequency||(l.price_type==='rent'?'month':'once')]||''}`;
   const priceSub=units?(muAvailabilitySummary(l)||'across unit types'):(l.price_type==='rent'?'per month':'sale price');
+  const viewingFeeText=Number(l.viewing_fee)>0?`Viewing fee: KES ${Number(l.viewing_fee).toLocaleString('en-KE')}`:'Free viewing';
 
   const liveLine=lcIsLive(l)
     ? `Live ${days} day${days!==1?'s':''} · ${s.enquiries} enquir${s.enquiries!==1?'ies':'y'}${s.unanswered?` · <strong style="color:var(--red)">${s.unanswered} unanswered</strong>`:''}`
@@ -5822,6 +5823,7 @@ function lcCardHtml(l,showHint){
               </div>
               <div class="lc-meta">${escHtml(l.area||'')}${l.sub_area?' · '+escHtml(l.sub_area):''}${num?' · #'+num:''}</div>
               <div class="lc-meta">${liveLine}</div>
+              <div class="lc-meta">${viewingFeeText}</div>
             </div>
             <div class="lc-price-block">
               <span class="lc-price">${priceTxt}</span>
@@ -7532,6 +7534,9 @@ async function handleMvFileSelect(file){
 }
 function openEditModal(id){
   const l=allListings.find(l=>l.id===id);if(!l)return;
+  const feeEligible=['agent','company'].includes((ownerProfile||currentProfile)?.account_type);
+  document.getElementById('edit-viewing-fee-wrap').hidden=!feeEligible;
+  document.getElementById('edit-viewing-fee').value=l.viewing_fee??'';
   editPhotosListingId=id;
   const ed = l.details || {};
   document.getElementById('edit-id').value=l.id;document.getElementById('edit-title').value=l.title||'';document.getElementById('edit-price').value=l.price||'';document.getElementById('edit-price-type').value=l.price_type||(l.price_frequency==='once'?'sale':'rent');document.getElementById('edit-bedrooms').value=ed.bedrooms||'';document.getElementById('edit-bathrooms').value=ed.bathrooms||'';document.getElementById('edit-size').value=ed.size_sqm||'';document.getElementById('edit-category').value=l.category||'apartment';document.getElementById('edit-address').value=l.address||'';document.getElementById('edit-description').value=l.description||'';document.getElementById('edit-furnished').checked=ed.furnished==='yes';document.getElementById('edit-contact_hidden').checked=l.contact_hidden||false;
@@ -7562,6 +7567,12 @@ async function saveEdit(){
     furnished: document.getElementById('edit-furnished').checked ? 'yes' : 'no',
   };
   const u={title:document.getElementById('edit-title').value.trim(),price:parseFloat(document.getElementById('edit-price').value)||0,price_type:document.getElementById('edit-price-type').value,price_frequency:priceFreqOut,area:document.getElementById('edit-area').value,category:document.getElementById('edit-category').value,address:document.getElementById('edit-address').value.trim(),description:document.getElementById('edit-description').value.trim(),contact_hidden:document.getElementById('edit-contact_hidden').checked,amenities:editAmenities,details:mergedDetails};
+  const feeEligible=['agent','company'].includes((ownerProfile||currentProfile)?.account_type);
+  if(feeEligible){
+    const feeInput=document.getElementById('edit-viewing-fee'),feeRaw=feeInput.value.trim(),fee=feeRaw===''?null:Number(feeRaw);
+    if(fee!==null&&(!Number.isInteger(fee)||fee<0||fee>5000)){showToast('Enter a whole-number viewing fee from KES 0 to KES 5,000.','error');feeInput.focus();return;}
+    u.viewing_fee=fee;
+  }
   const btn=document.getElementById('btn-save-edit');btn.disabled=true;btn.innerHTML='<span class="spinner-sm"></span> Saving…';
   const oldPrice=original?Number(original.price):null;
 
@@ -7571,6 +7582,7 @@ async function saveEdit(){
   if(original){
     if(original.title!==u.title)changeLines.push(`Title: "${original.title}" → "${u.title}"`);
     if(Number(original.price)!==Number(u.price))changeLines.push(`Price: KES ${Number(original.price).toLocaleString('en-KE')} → KES ${Number(u.price).toLocaleString('en-KE')}`);
+    if(feeEligible&&Number(original.viewing_fee||0)!==Number(u.viewing_fee||0))changeLines.push(`Viewing fee: KES ${Number(original.viewing_fee||0).toLocaleString('en-KE')} → KES ${Number(u.viewing_fee||0).toLocaleString('en-KE')}`);
     if(original.area!==u.area)changeLines.push(`Area: ${original.area} → ${u.area}`);
     if(original.address!==u.address)changeLines.push('Address updated');
     if((original.description||'')!==u.description)changeLines.push('Description updated');

@@ -171,10 +171,9 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
         <div class="field-hint">Only Agent and Company accounts can set a fee. It is agreed and paid directly to you; Nyumba254 does not collect it.</div>
         <div class="field-error" id="e-viewing_fee" role="alert"></div>
       </div>
-      <div class="grid-3">
+      <div class="grid-2">
         <div class="field" id="deposit-f"><label for="deposit">Deposit <span class="opt">optional</span></label><select id="deposit"><option value="">Not specified</option><option value="0">No deposit</option><option value="1">1 month</option><option value="2">2 months</option><option value="3">3 months</option><option value="4">4 months</option><option value="5">5 months</option><option value="6">6 months</option></select></div>
         <div class="field"><label for="available_from">Available from <span class="opt">optional</span></label><input type="date" id="available_from"/></div>
-        <div class="field"><label for="listed_by">Listed by <span class="opt">optional</span></label><select id="listed_by"><option value="">Select</option><option value="owner">Owner</option><option value="caretaker">Caretaker</option></select></div>
       </div>
     </div>
   </section>
@@ -326,7 +325,7 @@ const FREQS={standard:[['month','Per month'],['once','One-time (for sale)']],boa
 const PRICE_HINT={standard:'Digits only. Choose the payment frequency alongside it.',airbnb:'The nightly or weekly rate shown to guests.',commercial:'Monthly lease rate, or the asking price if for sale.'};
 const LABEL={furnished:{yes:'Fully furnished',partial:'Partly furnished',no:'Unfurnished'},parking:{private:'Private',shared:'Shared compound',street:'Street only',none:'None'},security:{gated_guard_cctv:'Gated, guarded and CCTV',gated_guard:'Gated with guard',gated_cctv:'Gated with CCTV',gated:'Gated, no guard',cctv:'CCTV only',none:'None'}};
 const FREQ_SUFFIX={month:'/month',once:'',night:'/night',term:'/term',semester:'/semester',week:'/week'};
-const FIELD_IDS=['title','description','county','area','area_custom','address','price','price_frequency','comm_lease_type','deposit','available_from','listed_by','viewing_fee','std_bathrooms','std_bedrooms','std_size','std_furnished','std_parking','std_security','board_gender','board_institution','air_guests','air_bedrooms','air_bathrooms','air_min_stay','air_checkin','air_rules','std_rules','comm_type','comm_size','comm_parking','comm_condition','comm_units','comm_frontage','video_url','contact_name','phone','whatsapp','contact_email'];
+const FIELD_IDS=['title','description','county','area','area_custom','address','price','price_frequency','comm_lease_type','deposit','available_from','viewing_fee','std_bathrooms','std_bedrooms','std_size','std_furnished','std_parking','std_security','board_gender','board_institution','air_guests','air_bedrooms','air_bathrooms','air_min_stay','air_checkin','air_rules','std_rules','comm_type','comm_size','comm_parking','comm_condition','comm_units','comm_frontage','video_url','contact_name','phone','whatsapp','contact_email'];
 const PS={sale_standard_pct:.1,rent_standard_pct:3,standard_min_fee:500,standard_max_fee:18000,standard_fee_per_unit:50,trial_days:14,bnb_basic_price:700,enforce_verification_general:0,unverified_listing_limit:2};
 const DRAFT_KEY='nk_post_listing_draft_v3';
 
@@ -721,7 +720,8 @@ function renderReview(){
   const g=group(),sec=(t,n,rows)=>`<div class="review-title"><span>${t}</span><button type="button" class="linkbtn" data-act="go" data-n="${n}">Edit</button></div>`+rows.map(([k,v])=>`<div class="sum"><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join('');
   const price=g==='boarding'?'From '+money(boardingPrice()):money(priceVal());
   const am=[...NK_AMENITIES.filter(a=>S.amen.has(a.key)).map(a=>a.label),...S.custom].join(', ')||'None selected';
-  $('review').innerHTML=sec('Property',2,[['Type',NK_CATEGORIES[S.cat].label],['Title',val('title')],['Price',price+(FREQ_SUFFIX[freq()]||'')],['Location',[areaName(),nkCountyLabel(val('county'))].filter(Boolean).join(', ')],['Address',val('address')],['Map pin',S.pin?'Exact pin set':'Approximate area only']])+
+  const viewingFee=val('viewing_fee');
+  $('review').innerHTML=sec('Property',2,[['Type',NK_CATEGORIES[S.cat].label],['Title',val('title')],['Price',price+(FREQ_SUFFIX[freq()]||'')],['Viewing fee',viewingFee&&Number(viewingFee)>0?money(viewingFee):'Free viewing'],['Location',[areaName(),nkCountyLabel(val('county'))].filter(Boolean).join(', ')],['Address',val('address')],['Map pin',S.pin?'Exact pin set':'Approximate area only']])+
     sec('Details',3,[...detailRows(),['Amenities',am]])+
     `<div class="review-title"><span>Photos</span><button type="button" class="linkbtn" data-act="go" data-n="4">Edit</button></div><div class="rev-photos">${S.photos.map((p,i)=>`<img src="${p.url}" alt="Photo ${i+1}"/>`).join('')||'<span style="font-size:13px;color:var(--text-3)">No photos</span>'}</div>`+
     sec('Contact',5,[['Name',val('contact_name')||'-'],['Phone',val('phone')||'-'],['Email',val('contact_email')||'-'],['Buyers reach you via',chk('contact_hidden')?'Nyumba254 chat only':'Chat, call and WhatsApp']]);
@@ -771,7 +771,7 @@ function payload(){
   if(g==='airbnb')Object.assign(d,{guests:num('air_guests'),bedrooms:num('air_bedrooms'),bathrooms:num('air_bathrooms'),min_stay:val('air_min_stay'),checkin:num('air_checkin'),house_rules:num('air_rules')});
   if(g==='commercial')Object.assign(d,{property_type:num('comm_type'),size_sqm:num('comm_size'),lease_type:val('comm_lease_type'),parking:num('comm_parking'),frontage:num('comm_frontage'),condition:num('comm_condition'),units:num('comm_units')});
   if(S.custom.length)d.custom_amenities=S.custom;
-  if(val('deposit')!==''&&freq()!=='once')d.deposit_months=Number(val('deposit'));if(val('available_from'))d.available_from=val('available_from');if(val('listed_by'))d.listed_by=val('listed_by');
+  if(val('deposit')!==''&&freq()!=='once')d.deposit_months=Number(val('deposit'));if(val('available_from'))d.available_from=val('available_from');
   if(val('area')==='__other__')d.custom_area=true;
   const f=freq();
   return {title:val('title'),description:val('description'),price:g==='boarding'?boardingPrice():priceVal(),price_frequency:f,price_type:f==='once'?'sale':'rent',category:S.cat,county:val('county'),area:areaName(),address:val('address'),viewing_fee:S.user&&['agent','company'].includes(S.accountType)&&viewingFee!==''?Number(viewingFee):null,

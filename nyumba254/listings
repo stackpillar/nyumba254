@@ -1062,8 +1062,8 @@ const SEARCH_FIELDS = ['title', 'description', 'area', 'address', 'county'];
 
 function applyFilters(query, f) {
   query = f.occ ? query.in('status', ['active', 'occupied']) : query.eq('status', 'active');
-  if(f.listedBy==='seller')query=query.or('listed_by_type.eq.seller,listed_by_type.is.null');
-  else if(f.listedBy)query=query.eq('listed_by_type',f.listedBy);
+  if(f.listedBy==='seller')query=query.or('profiles.account_type.is.null,listed_by_type.eq.seller');
+  else if(f.listedBy)query=query.eq('profiles.account_type',f.listedBy);
   if (f.freq) query = query.eq('price_frequency', f.freq);
   if (f.category) query = query.eq('category', f.category);
   query = bedsFilter(query, f.beds);
@@ -1292,7 +1292,8 @@ function cardHtml(l, i) {
       `<div class="card-photo-counter" id="ctr-${id}" aria-hidden="true">${idx + 1}/${photos.length}</div>` : '';
   const sub = l.address ? l.address : (l.county ? `${l.area || ''}${l.area ? ', ' : ''}${nkCountyLabel(l.county)}` : (l.area || 'Kenya'));
   const listedByLabels={buyer:'Tenant / Buyer',owner:'Property owner',caretaker:'Caretaker',agent:'Agent',company:'Company',seller:'Legacy seller'};
-  const listedBy=listedByLabels[l.listed_by_type||(l.seller_id?'seller':'')];
+  const listedBy=listedByLabels[l.profiles?.account_type||(l.seller_id?'seller':'')];
+  const viewingFee=Number(l.viewing_fee)||0;
   const heart = (typeof NKSaved !== 'undefined' && NKSaved.buildHeartBtn) ? NKSaved.buildHeartBtn(l.id) : '';
   const middle = meta.group === 'boarding' ? boardingHtml(l, d) : specsHtml(meta, d);
   return `<article class="card${occupied ? ' is-occupied' : ''}" data-listing-id="${id}">
@@ -1307,6 +1308,7 @@ function cardHtml(l, i) {
       <div class="card-area">${escHtml(l.area)} ${nkBuildVerifiedBadge(l)}</div>
       <h3 class="card-title"><a class="card-link" href="${listingHref(l)}">${title}</a></h3>
       <div class="card-sub">${escHtml(sub)}${listedBy?` · Listed by ${escHtml(listedBy)}`:''}</div>
+      <div class="card-viewing-fee">${viewingFee>0?`Viewing fee: KES ${viewingFee.toLocaleString('en-KE')}`:'Free viewing'}</div>
       <div class="card-price">${formatPrice(l, { showFromPrefix: true })}</div>
       ${middle}${amenitiesHtml(l)}
       <div class="card-foot">

@@ -1063,6 +1063,8 @@ const HANDLERS: Record<string, (p: Payload, ctx: Awaited<ReturnType<typeof conte
     const phone = escapeHtml(p.buyerPhone || "—");
     const when = escapeHtml(p.date || "—");
     const slot = escapeHtml(p.time || "—");
+    const fee = Number(p.viewingFee);
+    const feeLabel = Number.isFinite(fee) && fee > 0 ? `KES ${fee.toLocaleString("en-KE")} (paid directly to the lister; not collected by Nyumba254)` : "Free";
     const notesHtml = p.notes ? para(escapeHtml(p.notes)) : "";
     const emails: EmailOut[] = ADMIN_EMAILS.map((addr) => ({
       to: addr, toName: "Admin",
@@ -1073,7 +1075,7 @@ const HANDLERS: Record<string, (p: Payload, ctx: Awaited<ReturnType<typeof conte
         preheader: `${p.buyerName || "A buyer"} wants to view "${p.listingTitle || "a listing"}".`,
         bodyHtml:
           para(`<strong style="color:#161614;">${name}</strong> requested a viewing for <strong style="color:#161614;">"${escapeHtml(p.listingTitle || "a listing")}"</strong>.`) +
-          factCard([["Name", name], ["Phone", phone], ["Preferred date", when], ["Time slot", slot]]) +
+          factCard([["Name", name], ["Phone", phone], ["Preferred date", when], ["Time slot", slot], ["Viewing fee", escapeHtml(feeLabel)]]) +
           notesHtml,
         ctaLabel: "View listing", ctaUrl: listingUrl,
         footerNote: "You're receiving this because a buyer requested a viewing on Nyumba254.",
@@ -1091,7 +1093,7 @@ const HANDLERS: Record<string, (p: Payload, ctx: Awaited<ReturnType<typeof conte
           bodyHtml:
             para(`Hi ${sellerName},`) +
             para(`<strong style="color:#161614;">${name}</strong> requested a viewing for <strong style="color:#161614;">"${escapeHtml(p.listingTitle || "your listing")}"</strong>.`) +
-            factCard([["Name", name], ["Phone", phone], ["Preferred date", when], ["Time slot", slot]]) +
+            factCard([["Name", name], ["Phone", phone], ["Preferred date", when], ["Time slot", slot], ["Viewing fee", escapeHtml(feeLabel)]]) +
             notesHtml +
             tip(`Call or WhatsApp them at ${phone} to confirm the exact time.`),
           ctaLabel: "Open your dashboard", ctaUrl: `${SITE_URL}/dashboard.html`,

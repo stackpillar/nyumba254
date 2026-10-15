@@ -361,6 +361,11 @@
     try { const { count } = await getClient().from('viewing_requests').select('id', { count: 'exact', head: true }).eq('listing_id', listingId).eq('buyer_token', token); S.booked[listingId] = (count || 0) > 0; } catch (e) {}
     emit('viewing', { listingId }); return !!S.booked[listingId];
   }
+  async function viewingFee(listingId) {
+    const { data, error } = await getClient().rpc('get_public_viewing_fees', { p_listing_ids: [String(listingId)] });
+    if (error) throw new Error(`Could not load viewing fee: ${error.message}`);
+    return Number(data?.[0]?.viewing_fee) || 0;
+  }
   async function requestViewing(v) {
     const listingId = String(v.listingId), name = String(v.name || '').trim(), phone = normPhone(v.phone), notes = String(v.notes || '').trim();
     if (!v.date) return { ok: false, field: 'date', error: 'Pick a date' };
@@ -369,16 +374,19 @@
     if (name.length < 2) return { ok: false, field: 'name', error: 'Enter your name' };
     if (!okPhone(phone)) return { ok: false, field: 'phone', error: 'Enter a valid phone number, e.g. 0712 345 678' };
     if (navigator.onLine === false) return { ok: false, error: "You're offline. Try again when you're back online." };
+    let fee;
+    try { fee = await viewingFee(listingId); } catch (e) { return { ok: false, error: 'Could not confirm the viewing fee. Please try again.' }; }
+    if (fee > 0 && v.viewingFeeAcknowledged !== true) return { ok: false, error: 'Please acknowledge the viewing fee before requesting a viewing.' };
     let token = v.token || ls.get('nk_buyer_' + listingId); if (!token || !TOKEN_RE.test(token)) { token = uuid(); ls.set('nk_buyer_' + listingId, token); }
     Profile.set({ name, phone });
-    const { error: vErr } = await getClient().from('viewing_requests').insert({ id: uuid(), listing_id: listingId, buyer_token: token, buyer_name: name, buyer_phone: phone, requested_date: v.date, requested_time: v.time, notes: notes || null });
+    const { error: vErr } = await getClient().from('viewing_requests').insert({ id: uuid(), listing_id: listingId, buyer_token: token, buyer_name: name, buyer_phone: phone, requested_date: v.date, requested_time: v.time, notes: notes || null, viewing_fee_acknowledged: fee > 0 && v.viewingFeeAcknowledged === true });
     if (vErr) return { ok: false, error: 'Could not send your request. Please try again.' };
     const when = new Date(v.date + 'T00:00:00').toLocaleDateString('en-KE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    const summary = (v.reschedule ? '📅 Change of viewing time requested\nNew date: ' : '📅 Viewing requested\nDate: ') + when + '\nTime: ' + v.time + (notes ? '\nNotes: ' + notes : '');
+    const summary = (v.reschedule ? '📅 Change of viewing time requested\nNew date: ' : '📅 Viewing requested\nDate: ') + when + '\nTime: ' + v.time + (fee > 0 ? `\nViewing fee: KES ${fee.toLocaleString('en-KE')} (paid directly to the lister; not collected by Nyumba254)` : '\nViewing fee: Free') + (notes ? '\nNotes: ' + notes : '');
     let warning = null;
     const { error: mErr } = await getClient().from('messages').insert({ listing_id: listingId, buyer_token: token, buyer_name: name, buyer_phone: phone, sender: 'buyer', content: summary });
     if (mErr) warning = 'Your request was saved, but the chat message did not send.';
-    fetch(EDGE + '/send-notification-email', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }, body: JSON.stringify({ type: 'viewing_request', listingId, buyerName: name, buyerPhone: phone, date: v.date, time: v.time, notes }) }).catch(() => {});
+    fetch(EDGE + '/send-notification-email', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }, body: JSON.stringify({ type: 'viewing_request', listingId, buyerName: name, buyerPhone: phone, date: v.date, time: v.time, notes, viewingFee: fee }) }).catch(() => {});
     S.booked[listingId] = true; emit('viewing', { listingId });
     await fetchConversations(); await loadViewings();
     if (S.active && S.active.listingId === listingId) openThread(listingId, token);
@@ -440,7 +448,7 @@
     version: '2.0', on, init, getClient, esc, uuid, ls, Profile, saveContacts, savedIds, setSaved, normPhone, okPhone, prettyPhone, priceLabel, localISO, initials, dayLabel, timeLabel, whenLabel,
     setLang, Archive, revealContact, loadEarlier, loadViewings, viewingRows, nextViewing, hasMore: () => S.hasMore, listingGone: () => S.listingGone, unreadAtOpen: () => S.unreadAtOpen,
     convos: () => S.convos, unread: totalUnread, loading: () => S.loading, loadError: () => S.loadError, active: () => S.active, messages: () => S.messages, listing: () => S.listing, presence: () => S.presence, isOnline: () => S.net, booked: isBooked,
-    fetchConversations, openThread, closeThread, markRead, setViewing, setPolling, send, retry, typing, requestViewing, checkBooked, report,
+    fetchConversations, openThread, closeThread, markRead, setViewing, setPolling, send, retry, typing, requestViewing, checkBooked, viewingFee, report,
     buildResumeLink, hasResumeData, importResume, scanPairs, setTitleBadge,
     ui: { rowHtml, dayHtml, tickHtml, highlight, QUICK, scamTest: t => SCAM.test(t) }
   };
