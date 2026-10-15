@@ -2223,27 +2223,49 @@ function renderRentAnalytics(){
 }
 
 async function sendAllOverdueReminders(){
-  const targets=[];
+  const targets=[],recentlyReminded=[];
+  const now=Date.now(),cooldown=RL_REMINDER_COOLDOWN_MS;
   rentalUnitsCache.forEach(u=>{
     const t=rlActiveTenant(u); if(!t||!t.email) return;
     const overdue = last12Months().some(m=>m<currentMonthKey() && rentStatusForMonth(t,m)==='overdue');
-    if(overdue) targets.push({unit:u,tenant:t});
+    if(!overdue)return;
+    const lastSent=Date.parse(t.last_reminder_sent_at||'');
+    if(Number.isFinite(lastSent)&&lastSent<=now&&now-lastSent<cooldown){recentlyReminded.push(t);return;}
+    targets.push({unit:u,tenant:t});
   });
-  if(!targets.length){ showToast('No overdue tenants with an email on file','error'); return; }
-  if(!await lcConfirm({title:'Send reminders?',message:`An overdue-rent reminder will be emailed to <strong>${targets.length} tenant(s)</strong>.`,confirmLabel:'Send reminders'})) return;
+  if(!targets.length){
+    showToast(recentlyReminded.length?'Overdue tenants were already reminded within the last 24 hours.':'No overdue tenants with an email on file','error');
+    return;
+  }
+  if(!await lcConfirm({title:'Send reminders?',message:`An overdue-rent reminder will be emailed to <strong>${targets.length} tenant(s)</strong>.${recentlyReminded.length?` ${recentlyReminded.length} recently reminded tenant(s) will be skipped.`:''}`,confirmLabel:'Send reminders'})) return;
   const btn=document.getElementById('btn-remind-overdue');
   if(btn){btn.disabled=true;btn.textContent='Sending…';}
-  for(const {unit,tenant} of targets){
-    const overdueMonthCount = last12Months().filter(m=>m<currentMonthKey()&&rentStatusForMonth(tenant,m)==='overdue').length;
-    const overdueAmt = overdueAmountForUnit(unit, overdueMonthCount);
-    await notifyByEmail('rent_overdue_alert',{
-      tenantName:tenant.full_name, tenantEmail:tenant.email, unitLabel:unit.unit_label,
-      monthlyRent:unit.monthly_rent, overdueAmount:overdueAmt,
-      sellerName:currentProfile?.full_name, sellerEmail:currentUser?.email
-    });
+  let delivered=0,notDelivered=0,recordingFailed=0;
+  try{
+    for(const {unit,tenant} of targets){
+      const overdueMonths=last12Months().filter(m=>m<currentMonthKey()&&rentStatusForMonth(tenant,m)==='overdue');
+      const overdueAmt=overdueAmountForUnit(unit,overdueMonths.length);
+      const sent=await notifyByEmail('rent_overdue_alert',{
+        tenantName:tenant.full_name,tenantEmail:tenant.email,unitLabel:unit.unit_label,
+        monthlyRent:unit.monthly_rent,overdueAmount:overdueAmt,
+        sellerName:currentProfile?.full_name,sellerEmail:currentUser?.email
+      });
+      if(!sent){notDelivered++;continue;}
+      delivered++;
+      const stage=overdueMonths.length>2?'final_notice':'notice';
+      const sentAt=new Date().toISOString();
+      const{error:updateError}=await db.from('tenants').update({reminder_stage:stage,last_reminder_sent_at:sentAt}).eq('id',tenant.id);
+      if(updateError){console.error('Could not save rent reminder status:',updateError);recordingFailed++;continue;}
+      tenant.reminder_stage=stage;tenant.last_reminder_sent_at=sentAt;
+      const{error:logError}=await db.from('rent_reminder_log').insert({tenant_id:tenant.id,stage,channel:'email'});
+      if(logError){console.error('Could not save rent reminder log:',logError);recordingFailed++;}
+    }
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='✉️ Remind all overdue';}
   }
-  if(btn){btn.disabled=false;btn.textContent='✉️ Remind all overdue';}
-  showToast(`Reminders sent to ${targets.length} tenant(s) ✓`,'success');
+  if(delivered)renderRentalUnits();
+  const summary=`${delivered} delivered, ${notDelivered} not delivered${recentlyReminded.length?`, ${recentlyReminded.length} skipped (sent in last 24h)`:''}${recordingFailed?`, ${recordingFailed} reminder record(s) need attention`:''}.`;
+  showToast(summary,notDelivered||recordingFailed?'error':'success');
 }
 
 async function exportAnnualReport(){
@@ -3163,17 +3185,26 @@ const RL_STAGE_COPY={
   notice:{subject:'Rent overdue notice',tone:'A firmer notice that rent is now overdue.'},
   final_notice:{subject:'FINAL notice — rent seriously overdue',tone:'A final, formal notice before further action.'},
 };
+const RL_REMINDER_COOLDOWN_MS=24*60*60*1000;
 async function sendStagedReminder(unitId,tenantId){
   const u=rentalUnitsCache.find(x=>String(x.id)===String(unitId));
   const t=u?.tenants?.find(x=>String(x.id)===String(tenantId));
   if(!t?.email){showToast('This tenant has no email on file','error');return;}
+  const lastSent=Date.parse(t.last_reminder_sent_at||'');
+  if(Number.isFinite(lastSent)&&lastSent<=Date.now()&&Date.now()-lastSent<RL_REMINDER_COOLDOWN_MS){
+    showToast('This tenant was reminded within the last 24 hours. Try again later.','error');return;
+  }
   const stage=rlReminderStageFor(t,u)||'reminder';
   const copy=RL_STAGE_COPY[stage];
-  await notifyByEmail('rent_reminder',{tenantName:t.full_name,tenantEmail:t.email,unitLabel:u.unit_label,monthlyRent:u.monthly_rent,sellerName:currentProfile?.full_name,sellerEmail:currentUser?.email,stage,stageSubject:copy.subject});
-  await db.from('tenants').update({reminder_stage:stage,last_reminder_sent_at:new Date().toISOString()}).eq('id',tenantId);
-  await db.from('rent_reminder_log').insert({tenant_id:tenantId,stage,channel:'email'});
-  t.reminder_stage=stage;t.last_reminder_sent_at=new Date().toISOString();
-  showToast(`${copy.subject} sent ✓`,'success');
+  const sent=await notifyByEmail('rent_reminder',{tenantName:t.full_name,tenantEmail:t.email,unitLabel:u.unit_label,monthlyRent:u.monthly_rent,sellerName:currentProfile?.full_name,sellerEmail:currentUser?.email,stage,stageSubject:copy.subject});
+  if(!sent){showToast('Reminder was not delivered. A retry may run if it was saved on this device; send status was not changed.','error');return;}
+  const sentAt=new Date().toISOString();
+  const{error:updateError}=await db.from('tenants').update({reminder_stage:stage,last_reminder_sent_at:sentAt}).eq('id',tenantId);
+  if(updateError){console.error('Could not save rent reminder status:',updateError);showToast('Reminder was sent, but its status could not be saved: '+updateError.message,'error');return;}
+  const{error:logError}=await db.from('rent_reminder_log').insert({tenant_id:tenantId,stage,channel:'email'});
+  if(logError)console.error('Could not save rent reminder log:',logError);
+  t.reminder_stage=stage;t.last_reminder_sent_at=sentAt;
+  showToast(logError?'Reminder was sent, but its activity log could not be saved: '+logError.message:`${copy.subject} sent ✓`,logError?'error':'success');
   renderRentalUnits();
 }
 
@@ -3936,7 +3967,7 @@ async function saveNotificationPrefs(){
 }
 
 const DASHBOARD_BACKUP_FORMAT='nyumba254-dashboard-backup';
-const DASHBOARD_BACKUP_VERSION=1;
+const DASHBOARD_BACKUP_VERSION=2;
 const DASHBOARD_BACKUP_PAGE_SIZE=500;
 const DASHBOARD_BACKUP_MAX_BYTES=50*1024*1024;
 const DASHBOARD_BACKUP_MAX_ROWS=100000;
@@ -3952,6 +3983,59 @@ const DASHBOARD_RESTORE_ORDER=[
 ];
 let pendingDashboardRestore=null;
 let dashboardBackupBusy=false;
+
+function dashboardBackupHistoryKey(){
+  return effectiveSellerId?`ny_dashboard_backup_history_${effectiveSellerId}`:null;
+}
+
+function readDashboardBackupHistory(){
+  const key=dashboardBackupHistoryKey();
+  if(!key)return[];
+  try{
+    const history=JSON.parse(localStorage.getItem(key)||'[]');
+    return Array.isArray(history)?history.filter(item=>item&&typeof item.fileName==='string'&&typeof item.digest==='string').slice(0,5):[];
+  }catch(error){
+    console.error('Could not read backup history:',error);
+    return[];
+  }
+}
+
+function renderDashboardBackupHistory(){
+  const el=document.getElementById('dashboard-backup-history');
+  if(!el)return;
+  const history=readDashboardBackupHistory();
+  el.textContent=history.length
+    ?'Recent local backup records: '+history.map(item=>`${item.fileName} · ${new Date(item.createdAt).toLocaleString('en-KE')} · SHA-256 ${item.digest.slice(0,12)}…`).join(' | ')
+    :'Backup history will appear here after you download a backup on this device.';
+}
+
+function rememberDashboardBackup(item){
+  const key=dashboardBackupHistoryKey();
+  if(!key){console.error('Could not save backup history: seller account is unavailable.');return;}
+  try{
+    const history=[item,...readDashboardBackupHistory().filter(existing=>existing.fileName!==item.fileName)].slice(0,5);
+    localStorage.setItem(key,JSON.stringify(history));
+    renderDashboardBackupHistory();
+  }catch(error){console.error('Could not save backup history:',error);}
+}
+
+async function dashboardBackupDigest(data){
+  if(!globalThis.crypto?.subtle)throw new Error('Secure SHA-256 checks are not available in this browser.');
+  const bytes=new TextEncoder().encode(JSON.stringify(data));
+  const digest=await crypto.subtle.digest('SHA-256',bytes);
+  return Array.from(new Uint8Array(digest),byte=>byte.toString(16).padStart(2,'0')).join('');
+}
+
+async function verifyDashboardBackupIntegrity(backup){
+  if(backup.version===1)return false;
+  if(backup.version!==DASHBOARD_BACKUP_VERSION||backup.integrity?.algorithm!=='SHA-256'||typeof backup.integrity.digest!=='string')
+    throw new Error('The backup has no supported SHA-256 integrity record.');
+  const unsigned={...backup};
+  delete unsigned.integrity;
+  const actual=await dashboardBackupDigest(unsigned);
+  if(actual!==backup.integrity.digest)throw new Error('The backup integrity check failed. The file may be damaged or modified.');
+  return true;
+}
 
 function updateDashboardBackupControls(){
   const restoreBtn=document.getElementById('dashboard-backup-restore');
@@ -4050,6 +4134,8 @@ async function downloadDashboardBackup(){
   status.textContent='Reading account records securely…';
   try{
     const backup=await collectDashboardBackup();
+    backup.version=DASHBOARD_BACKUP_VERSION;
+    backup.integrity={algorithm:'SHA-256',digest:await dashboardBackupDigest(backup)};
     const blob=new Blob([JSON.stringify(backup)],{type:'application/json'});
     if(blob.size>DASHBOARD_BACKUP_MAX_BYTES)throw new Error('This backup is larger than the 50 MB restore limit and was not downloaded.');
     const url=URL.createObjectURL(blob);
@@ -4058,6 +4144,7 @@ async function downloadDashboardBackup(){
     link.download=`Nyumba254-Backup-${new Date().toISOString().slice(0,10)}.json`;
     document.body.appendChild(link);link.click();link.remove();
     setTimeout(()=>URL.revokeObjectURL(url),1000);
+    rememberDashboardBackup({fileName:link.download,createdAt:backup.createdAt,bytes:blob.size,digest:backup.integrity.digest});
     status.textContent=`Backup downloaded. ${dashboardBackupSummary(backup.tables)}.`;
     showToast('Account backup downloaded ✓','success');
   }catch(error){
@@ -4073,7 +4160,7 @@ async function downloadDashboardBackup(){
 
 function validateDashboardBackup(backup){
   if(!backup||typeof backup!=='object'||Array.isArray(backup))throw new Error('The selected file is not a valid Nyumba254 backup.');
-  if(backup.format!==DASHBOARD_BACKUP_FORMAT||backup.version!==DASHBOARD_BACKUP_VERSION)throw new Error('This backup format or version is not supported.');
+  if(backup.format!==DASHBOARD_BACKUP_FORMAT||(backup.version!==1&&backup.version!==DASHBOARD_BACKUP_VERSION))throw new Error('This backup format or version is not supported.');
   if(String(backup.sellerId)!==String(effectiveSellerId))throw new Error('This backup belongs to a different seller account.');
   if(!backup.tables||typeof backup.tables!=='object'||Array.isArray(backup.tables))throw new Error('The backup has no valid records section.');
   const unknown=Object.keys(backup.tables).filter(name=>!DASHBOARD_BACKUP_TABLES.includes(name));
@@ -4139,11 +4226,12 @@ async function previewDashboardBackup(file){
     if(!file)throw new Error('Choose a backup file first.');
     if(file.size>DASHBOARD_BACKUP_MAX_BYTES)throw new Error('Backup files must be 50 MB or smaller.');
     const parsed=JSON.parse(await file.text());
+    const integrityVerified=await verifyDashboardBackupIntegrity(parsed);
     const backup=validateDashboardBackup(parsed);
     pendingDashboardRestore=backup;
     status.textContent=isTeamMember
       ?`Backup is valid for this account, but only the account owner can restore it. ${dashboardBackupSummary(backup.tables)}.`
-      :`Ready to restore from ${file.name}. ${dashboardBackupSummary(backup.tables)}. Existing records will not be overwritten.`;
+      :`Ready to restore from ${file.name}. ${integrityVerified?'SHA-256 integrity verified.':'Legacy backup: no integrity hash.'} ${dashboardBackupSummary(backup.tables)}. Existing records will not be overwritten.`;
   }catch(error){
     console.error('Dashboard backup validation failed:',error);
     status.textContent=`Backup not ready: ${error.message||String(error)}`;
@@ -4371,7 +4459,7 @@ function renderOverview(){
   document.getElementById('stat-views').textContent=views.toLocaleString('en-KE');
   const avgViewsPerListing=allListings.length?Math.round(views/allListings.length):0;
   document.getElementById('stat-views-delta').textContent=`~${avgViewsPerListing} views per listing`;
-  renderActivityFeed();renderChart();renderQuickListings();loadDemandMatches();renderPerformanceSummary();renderGettingStarted();renderWeekMomentum();renderSmartInsight();renderActionCenter();
+  renderActivityFeed();renderChart();renderQuickListings();loadDemandMatches();renderPerformanceSummary();renderGettingStarted();renderWeekMomentum();renderSmartInsight();renderListingPerformance();renderActionCenter();
 }
 
 function renderActivityFeed(){
@@ -4438,6 +4526,53 @@ function renderSmartInsight(){
   const idx=Math.floor(Date.now()/86400000)%tips.length;
   card.style.display='block';
   card.innerHTML=`<div style="font-size:13px;color:#8a5a0f;font-weight:600">💡 ${escHtml(tips[idx])}</div>`;
+}
+
+function renderListingPerformance(){
+  const card=document.getElementById('listing-performance-card');
+  if(!card)return;
+  const now=Date.now(),week=7*86400000,month=30*86400000;
+  const enquiryStats=new Map();
+  let currentWeek=0,previousWeek=0;
+  allEnquiries.forEach(enquiry=>{
+    const createdAt=new Date(enquiry.created_at).getTime();
+    if(!Number.isFinite(createdAt))return;
+    const age=now-createdAt;
+    if(age>=0&&age<week)currentWeek++;
+    else if(age>=week&&age<week*2)previousWeek++;
+    const key=String(enquiry.listing_id);
+    const stats=enquiryStats.get(key)||{total:0,recent:0};
+    stats.total++;
+    if(age>=0&&age<month)stats.recent++;
+    enquiryStats.set(key,stats);
+  });
+  const change=previousWeek?Math.round((currentWeek-previousWeek)/previousWeek*100):(currentWeek?null:0);
+  const active=allListings.filter(l=>lcIsLive(l));
+  const perListing=active.map(listing=>{
+    const stats=enquiryStats.get(String(listing.id))||{total:0,recent:0};
+    const views=Number(listing.views);
+    const createdAt=new Date(listing.created_at).getTime();
+    return{listing,views:Number.isFinite(views)&&views>0?views:0,recent:stats.recent,total:stats.total,createdAt};
+  }).sort((a,b)=>b.views-a.views);
+  const opportunities=perListing.filter(row=>row.views>=20&&row.recent===0&&Number.isFinite(row.createdAt)&&now-row.createdAt>=14*86400000).slice(0,3);
+  const top=perListing.slice(0,3);
+  card.style.display='block';
+  card.innerHTML=`<div class="section-head" style="margin-bottom:12px">
+    <h2 style="font-size:15px">📊 Listing performance</h2>
+    <span style="font-size:12px;color:var(--text-3)">Buyer enquiries compare the last 7 days with the previous 7</span>
+  </div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+    <div style="padding:10px 14px;background:var(--surface);border-radius:8px"><strong>${currentWeek}</strong><span style="font-size:12px;color:var(--text-3)"> enquiries this week</span></div>
+    <div style="padding:10px 14px;background:var(--surface);border-radius:8px"><strong style="color:${change===null||change>=0?'var(--green)':'var(--red)'}">${change===null?'New':`${change>=0?'↑':'↓'} ${Math.abs(change)}%`}</strong><span style="font-size:12px;color:var(--text-3)"> vs previous week</span></div>
+  </div>
+  ${opportunities.length?`<div style="font-size:12.5px;color:var(--amber);font-weight:600;margin:4px 0 8px">⚠️ ${opportunities.length} live listing${opportunities.length===1?' has':'s have'} 20+ lifetime views but no enquiry in 30 days.</div>`:''}
+  ${top.length?top.map(row=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--border)">
+    <div style="min-width:0;flex:1"><strong style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(row.listing.title||'Untitled listing')}</strong><span style="font-size:11.5px;color:var(--text-3)">${row.views.toLocaleString('en-KE')} lifetime views · ${row.recent} enquiries in 30 days</span></div>
+    <button type="button" class="btn btn-outline btn-sm" data-performance-listing="${escAttr(row.listing.id)}">Review</button>
+  </div>`).join(''):'<div style="font-size:12.5px;color:var(--text-3)">No live listings to compare yet.</div>'}`;
+  card.querySelectorAll('[data-performance-listing]').forEach(button=>{
+    button.addEventListener('click',()=>openListingPreview(button.dataset.performanceListing));
+  });
 }
 
 function dismissGettingStarted(){
@@ -6597,6 +6732,71 @@ async function bulkResumeSelectedListings(){
   showToast(`${ids.length} listing(s) resubmitted for approval ✓`,'success');
   lcAnnounce(`${ids.length} listings resubmitted`);
 }
+async function bulkRenewExpiredListings(){
+  const selected=lcSelected();
+  const eligible=selected.filter(l=>l.status==='expired'&&!l.is_disabled&&!l.recycle_bin);
+  if(!eligible.length){showToast('Select at least one expired listing to renew.','error');return;}
+  const skipped=selected.length-eligible.length;
+  if(!await lcConfirm({
+    title:'Renew expired listings?',
+    message:`<strong>${eligible.length}</strong> expired listing${eligible.length===1?'':'s'} will be resubmitted for review.${skipped?` ${skipped} selected listing${skipped===1?'':'s'} will be skipped.`:''}`,
+    confirmLabel:'Resubmit for review'
+  }))return;
+  const ids=eligible.map(l=>l.id);
+  const{data,error}=await db.from('listings').update({status:'pending'}).eq('seller_id',effectiveSellerId).eq('status','expired').in('id',ids).select('id');
+  if(error){showToast('Could not renew listings: '+error.message,'error');return;}
+  const renewedIds=new Set((data||[]).map(row=>String(row.id)));
+  if(!renewedIds.size){showToast('No selected expired listings could be renewed. Refresh and try again.','error');return;}
+  const renewed=eligible.filter(l=>renewedIds.has(String(l.id)));
+  renewed.forEach(l=>{l.status='pending';});
+  selectedListingIds.clear();
+  renderListingsTable();renderOverview();
+  renewed.forEach(l=>notifyAdmin('listing_pending',{listingId:l.id,listingTitle:l.title,sellerName:currentProfile?.full_name||currentUser?.email,sellerEmail:currentUser?.email}));
+  const skippedCount=selected.length-renewed.length;
+  showToast(`${renewed.length} listing${renewed.length===1?'':'s'} resubmitted for review${skippedCount?`; ${skippedCount} skipped`:''}.`,'success');
+}
+
+function dashboardPlanCoversListing(listing){
+  const profile=ownerProfile||currentProfile;
+  const subscriptionActive=!!profile?.subscription_tier&&profile.subscription_tier!=='none'&&
+    (!profile.subscription_expires_at||new Date(profile.subscription_expires_at)>new Date());
+  if(listing.category==='airbnb'){
+    const bnbActive=!!profile?.has_bnb_capacity&&!!profile.bnb_expires_at&&new Date(profile.bnb_expires_at)>new Date();
+    return bnbActive||(profile?.subscription_plan==='elite'&&subscriptionActive);
+  }
+  return !!profile?.has_rental_capacity&&subscriptionActive;
+}
+
+async function bulkScheduleSelectedListings(){
+  const selected=lcSelected();
+  const input=document.getElementById('bulk-listing-publish-at');
+  const publishAt=input?.value?new Date(input.value):null;
+  if(!publishAt||!Number.isFinite(publishAt.getTime())||publishAt.getTime()<=Date.now()){
+    showToast('Choose a valid future date and time for publishing.','error');return;
+  }
+  const eligible=selected.filter(l=>lcIsLive(l)&&
+    (l.payment_status==='paid'||l.payment_status==='trial'||dashboardPlanCoversListing(l)));
+  if(!eligible.length){showToast('Select live listings covered by payment, trial, or an active plan.','error');return;}
+  const skipped=selected.length-eligible.length;
+  if(!await lcConfirm({
+    title:'Schedule selected listings?',
+    message:`${eligible.length} live listing${eligible.length===1?'':'s'} will be hidden from buyers now and automatically republished on <strong>${escHtml(publishAt.toLocaleString('en-KE'))}</strong>.${skipped?` ${skipped} selected listing${skipped===1?'':'s'} will be skipped because they are not live or lack payment, trial, or active-plan coverage.`:''}`,
+    confirmLabel:'Schedule publishing'
+  }))return;
+  const ids=eligible.map(l=>l.id);
+  const iso=publishAt.toISOString();
+  const{data,error}=await db.from('listings').update({status:'scheduled',publish_at:iso}).eq('seller_id',effectiveSellerId).eq('status','active').in('id',ids).select('id');
+  if(error){showToast('Could not schedule listings: '+error.message,'error');return;}
+  const scheduledIds=new Set((data||[]).map(row=>String(row.id)));
+  if(!scheduledIds.size){showToast('No selected live listings could be scheduled. Refresh and try again.','error');return;}
+  const scheduled=eligible.filter(l=>scheduledIds.has(String(l.id)));
+  scheduled.forEach(l=>{l.status='scheduled';l.publish_at=iso;});
+  selectedListingIds.clear();
+  if(input)input.value='';
+  renderListingsTable();renderOverview();
+  showToast(`${scheduled.length} listing${scheduled.length===1?'':'s'} scheduled for ${publishAt.toLocaleString('en-KE')}.`,'success');
+}
+
 async function bulkOccupySelectedListings(){
   const ok=lcSelected().filter(lcIsLive);
   if(!ok.length){showToast('Only live listings can be marked occupied or sold','error');return;}
@@ -7953,13 +8153,16 @@ async function notifyByEmail(type,payload,_isRetry){
     if(!res.ok){
       console.error('notifyByEmail: edge function returned',res.status);
       if(!_isRetry){const q=notifyQueueRead();q.push({type,payload,queuedAt:Date.now()});notifyQueueWrite(q);}
+      return false;
     }else if(_isRetry){
       // successful retry — drop it from the queue
       notifyQueueWrite(notifyQueueRead().filter(e=>!(e.type===type&&JSON.stringify(e.payload)===JSON.stringify(payload))));
     }
+    return true;
   }catch(err){
     console.error('notifyByEmail failed:',err);
     if(!_isRetry){const q=notifyQueueRead();q.push({type,payload,queuedAt:Date.now()});notifyQueueWrite(q);}
+    return false;
   }
 }
 async function retryQueuedNotifications(){

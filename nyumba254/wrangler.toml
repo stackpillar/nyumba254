@@ -2,6 +2,13 @@ name = "nyumba254"
 compatibility_date = "2026-08-14"
 main = "src/index.js"
 
+# Configure separately with `wrangler secret put SUPABASE_SERVICE_ROLE_KEY`.
+[triggers]
+crons = ["*/5 * * * *"]
+
+[vars]
+NYUMBA254_SUPABASE_URL = "https://vliuuloyfhyxcsuchpss.supabase.co"
+
 [assets]
 directory = "./"
 html_handling = "drop-trailing-slash"
