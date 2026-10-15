@@ -3935,6 +3935,285 @@ async function saveNotificationPrefs(){
   showToast('Notification preferences saved','success');
 }
 
+const DASHBOARD_BACKUP_FORMAT='nyumba254-dashboard-backup';
+const DASHBOARD_BACKUP_VERSION=1;
+const DASHBOARD_BACKUP_PAGE_SIZE=500;
+const DASHBOARD_BACKUP_MAX_BYTES=50*1024*1024;
+const DASHBOARD_BACKUP_MAX_ROWS=100000;
+const DASHBOARD_BACKUP_TABLES=[
+  'profiles','listings','listing_photos','listing_units','enquiries','messages','payments','reviews','notifications',
+  'rental_units','tenants','rent_payments','tenant_documents','unit_expenses','maintenance_requests',
+  'bnb_properties','bnb_bookings','chat_sessions','chat_messages'
+];
+const DASHBOARD_RESTORE_ORDER=[
+  'listings','listing_photos','listing_units','rental_units','bnb_properties',
+  'enquiries','messages','reviews','notifications','tenants','rent_payments','tenant_documents',
+  'unit_expenses','maintenance_requests','bnb_bookings','chat_sessions','chat_messages'
+];
+let pendingDashboardRestore=null;
+let dashboardBackupBusy=false;
+
+function updateDashboardBackupControls(){
+  const restoreBtn=document.getElementById('dashboard-backup-restore');
+  if(restoreBtn)restoreBtn.disabled=dashboardBackupBusy||isTeamMember||!pendingDashboardRestore;
+}
+
+async function fetchDashboardBackupRows(table,configure){
+  const rows=[];
+  for(let offset=0;;offset+=DASHBOARD_BACKUP_PAGE_SIZE){
+    const{data,error}=await configure(db.from(table).select('*'))
+      .range(offset,offset+DASHBOARD_BACKUP_PAGE_SIZE-1);
+    if(error)throw new Error(`Could not back up ${table}: ${error.message}`);
+    const page=data||[];
+    rows.push(...page);
+    if(rows.length>DASHBOARD_BACKUP_MAX_ROWS)throw new Error(`Backup exceeds the ${DASHBOARD_BACKUP_MAX_ROWS.toLocaleString()}-record safety limit.`);
+    if(page.length<DASHBOARD_BACKUP_PAGE_SIZE)return rows;
+  }
+}
+
+async function fetchDashboardBackupByIds(table,column,ids){
+  const rows=[];
+  for(let start=0;start<ids.length;start+=DASHBOARD_BACKUP_PAGE_SIZE){
+    const chunk=ids.slice(start,start+DASHBOARD_BACKUP_PAGE_SIZE);
+    rows.push(...await fetchDashboardBackupRows(table,q=>q.in(column,chunk)));
+  }
+  return rows;
+}
+
+async function collectDashboardBackup(){
+  if(!currentUser||!effectiveSellerId)throw new Error('Your seller account is not ready for backup.');
+  const tables=Object.fromEntries(DASHBOARD_BACKUP_TABLES.map(name=>[name,[]]));
+  const[profileRows,listings,rentalUnits,bnbProperties]=await Promise.all([
+    fetchDashboardBackupRows('profiles',q=>q.eq('id',effectiveSellerId)),
+    fetchDashboardBackupRows('listings',q=>q.eq('seller_id',effectiveSellerId)),
+    fetchDashboardBackupRows('rental_units',q=>q.eq('seller_id',effectiveSellerId)),
+    fetchDashboardBackupRows('bnb_properties',q=>q.eq('seller_id',effectiveSellerId))
+  ]);
+  if(!profileRows.length)throw new Error('Your account profile could not be found; no backup was created.');
+  tables.profiles=profileRows;
+  tables.listings=listings;
+  tables.rental_units=rentalUnits;
+  tables.bnb_properties=bnbProperties;
+
+  const listingIds=listings.map(row=>row.id);
+  const rentalUnitIds=rentalUnits.map(row=>row.id);
+  const bnbPropertyIds=bnbProperties.map(row=>row.id);
+  const[
+    listingPhotos,listingUnits,enquiries,messages,payments,reviews,notifications,
+    tenantDocuments,unitExpenses,maintenanceRequests,chatSessions,tenants
+  ]=await Promise.all([
+    fetchDashboardBackupByIds('listing_photos','listing_id',listingIds),
+    fetchDashboardBackupByIds('listing_units','listing_id',listingIds),
+    fetchDashboardBackupByIds('enquiries','listing_id',listingIds),
+    fetchDashboardBackupByIds('messages','listing_id',listingIds),
+    fetchDashboardBackupRows('payments',q=>q.eq('seller_id',effectiveSellerId)),
+    fetchDashboardBackupRows('reviews',q=>q.eq('review_type','seller').eq('target_seller_id',effectiveSellerId)),
+    fetchDashboardBackupRows('notifications',q=>q.eq('seller_id',effectiveSellerId)),
+    fetchDashboardBackupRows('tenant_documents',q=>q.eq('seller_id',effectiveSellerId)),
+    fetchDashboardBackupRows('unit_expenses',q=>q.eq('seller_id',effectiveSellerId)),
+    fetchDashboardBackupRows('maintenance_requests',q=>q.eq('seller_id',effectiveSellerId)),
+    fetchDashboardBackupRows('chat_sessions',q=>q.eq('session_type','seller').eq('seller_id',effectiveSellerId)),
+    fetchDashboardBackupByIds('tenants','rental_unit_id',rentalUnitIds)
+  ]);
+  Object.assign(tables,{
+    listing_photos:listingPhotos,listing_units:listingUnits,enquiries,messages,payments,reviews,notifications,
+    tenant_documents:tenantDocuments,unit_expenses:unitExpenses,maintenance_requests:maintenanceRequests,
+    chat_sessions:chatSessions,tenants
+  });
+  const tenantIds=tenants.map(row=>row.id);
+  const chatSessionIds=chatSessions.map(row=>row.id);
+  const[rentPayments,bnbBookings,chatMessages]=await Promise.all([
+    fetchDashboardBackupByIds('rent_payments','tenant_id',tenantIds),
+    fetchDashboardBackupByIds('bnb_bookings','bnb_property_id',bnbPropertyIds),
+    fetchDashboardBackupByIds('chat_messages','session_id',chatSessionIds)
+  ]);
+  Object.assign(tables,{rent_payments:rentPayments,bnb_bookings:bnbBookings,chat_messages:chatMessages});
+  const totalRows=DASHBOARD_BACKUP_TABLES.reduce((total,name)=>total+tables[name].length,0);
+  if(totalRows>DASHBOARD_BACKUP_MAX_ROWS)throw new Error(`Backup exceeds the ${DASHBOARD_BACKUP_MAX_ROWS.toLocaleString()}-record safety limit.`);
+  return{format:DASHBOARD_BACKUP_FORMAT,version:DASHBOARD_BACKUP_VERSION,createdAt:new Date().toISOString(),sellerId:effectiveSellerId,tables};
+}
+
+function dashboardBackupSummary(tables){
+  return DASHBOARD_BACKUP_TABLES
+    .filter(name=>(tables[name]||[]).length)
+    .map(name=>`${name.replace(/_/g,' ')}: ${tables[name].length}`)
+    .join(' · ')||'No records found';
+}
+
+async function downloadDashboardBackup(){
+  if(dashboardBackupBusy)return;
+  const button=document.getElementById('dashboard-backup-download');
+  const status=document.getElementById('dashboard-backup-status');
+  dashboardBackupBusy=true;
+  if(button){button.disabled=true;button.textContent='Preparing backup…';}
+  updateDashboardBackupControls();
+  status.textContent='Reading account records securely…';
+  try{
+    const backup=await collectDashboardBackup();
+    const blob=new Blob([JSON.stringify(backup)],{type:'application/json'});
+    if(blob.size>DASHBOARD_BACKUP_MAX_BYTES)throw new Error('This backup is larger than the 50 MB restore limit and was not downloaded.');
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement('a');
+    link.href=url;
+    link.download=`Nyumba254-Backup-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(link);link.click();link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    status.textContent=`Backup downloaded. ${dashboardBackupSummary(backup.tables)}.`;
+    showToast('Account backup downloaded ✓','success');
+  }catch(error){
+    console.error('Dashboard backup failed:',error);
+    status.textContent=`Backup failed: ${error.message||String(error)}`;
+    showToast('Could not create backup: '+(error.message||String(error)),'error');
+  }finally{
+    dashboardBackupBusy=false;
+    if(button){button.disabled=false;button.textContent='Download account backup';}
+    updateDashboardBackupControls();
+  }
+}
+
+function validateDashboardBackup(backup){
+  if(!backup||typeof backup!=='object'||Array.isArray(backup))throw new Error('The selected file is not a valid Nyumba254 backup.');
+  if(backup.format!==DASHBOARD_BACKUP_FORMAT||backup.version!==DASHBOARD_BACKUP_VERSION)throw new Error('This backup format or version is not supported.');
+  if(String(backup.sellerId)!==String(effectiveSellerId))throw new Error('This backup belongs to a different seller account.');
+  if(!backup.tables||typeof backup.tables!=='object'||Array.isArray(backup.tables))throw new Error('The backup has no valid records section.');
+  const unknown=Object.keys(backup.tables).filter(name=>!DASHBOARD_BACKUP_TABLES.includes(name));
+  if(unknown.length)throw new Error(`The backup contains unsupported data tables: ${unknown.join(', ')}.`);
+  const tables=Object.fromEntries(DASHBOARD_BACKUP_TABLES.map(name=>{
+    const rows=backup.tables[name];
+    if(!Array.isArray(rows))throw new Error(`The backup is missing the ${name} record list.`);
+    return[name,rows];
+  }));
+  const totalRows=DASHBOARD_BACKUP_TABLES.reduce((total,name)=>total+tables[name].length,0);
+  if(totalRows>DASHBOARD_BACKUP_MAX_ROWS)throw new Error(`The backup exceeds the ${DASHBOARD_BACKUP_MAX_ROWS.toLocaleString()}-record safety limit.`);
+  const idSet=name=>new Set(tables[name].map(row=>String(row?.id)));
+  const listingIds=idSet('listings'),rentalUnitIds=idSet('rental_units'),tenantIds=idSet('tenants');
+  const bnbPropertyIds=idSet('bnb_properties'),chatSessionIds=idSet('chat_sessions');
+  const requireOwner=(table,field='seller_id')=>{
+    for(const row of tables[table]){
+      if(!row||typeof row!=='object'||Array.isArray(row)||row[field]==null||String(row[field])!==String(effectiveSellerId))
+        throw new Error(`The backup contains an out-of-account record in ${table}.`);
+    }
+  };
+  for(const name of DASHBOARD_BACKUP_TABLES){
+    for(const row of tables[name]){
+      if(!row||typeof row!=='object'||Array.isArray(row)||row.id==null||
+        (typeof row.id==='string'&&!row.id.trim())||
+        (typeof row.id==='number'&&!Number.isFinite(row.id))||
+        !['string','number'].includes(typeof row.id))
+        throw new Error(`The backup contains an invalid record in ${name}.`);
+    }
+  }
+  requireOwner('profiles','id');
+  ['listings','rental_units','bnb_properties','payments','notifications','tenant_documents','unit_expenses','maintenance_requests'].forEach(name=>requireOwner(name));
+  requireOwner('reviews','target_seller_id');
+  requireOwner('chat_sessions');
+  if(tables.chat_sessions.some(row=>row.session_type!=='seller'))throw new Error('The backup contains an unsupported support conversation.');
+  const requireParent=(table,field,parents)=>{
+    for(const row of tables[table])if(row[field]==null||!parents.has(String(row[field])))
+      throw new Error(`The backup contains an unlinked record in ${table}.`);
+  };
+  ['listing_photos','listing_units','enquiries','messages'].forEach(name=>requireParent(name,'listing_id',listingIds));
+  requireParent('tenants','rental_unit_id',rentalUnitIds);
+  requireParent('rent_payments','tenant_id',tenantIds);
+  requireParent('bnb_bookings','bnb_property_id',bnbPropertyIds);
+  requireParent('chat_messages','session_id',chatSessionIds);
+  for(const row of tables.tenant_documents){
+    if(row.tenant_id!=null&&!tenantIds.has(String(row.tenant_id)))throw new Error('The backup contains a tenant document linked outside this account.');
+    if(row.rental_unit_id!=null&&!rentalUnitIds.has(String(row.rental_unit_id)))throw new Error('The backup contains a tenant document linked outside this account.');
+  }
+  for(const table of ['unit_expenses','maintenance_requests']){
+    for(const row of tables[table]){
+      if(row.rental_unit_id!=null&&!rentalUnitIds.has(String(row.rental_unit_id)))throw new Error(`The backup contains an out-of-account property reference in ${table}.`);
+      if(row.bnb_property_id!=null&&!bnbPropertyIds.has(String(row.bnb_property_id)))throw new Error(`The backup contains an out-of-account BNB reference in ${table}.`);
+    }
+  }
+  return{...backup,tables};
+}
+
+async function previewDashboardBackup(file){
+  pendingDashboardRestore=null;
+  updateDashboardBackupControls();
+  const status=document.getElementById('dashboard-backup-status');
+  const input=document.getElementById('dashboard-backup-file');
+  try{
+    if(!file)throw new Error('Choose a backup file first.');
+    if(file.size>DASHBOARD_BACKUP_MAX_BYTES)throw new Error('Backup files must be 50 MB or smaller.');
+    const parsed=JSON.parse(await file.text());
+    const backup=validateDashboardBackup(parsed);
+    pendingDashboardRestore=backup;
+    status.textContent=isTeamMember
+      ?`Backup is valid for this account, but only the account owner can restore it. ${dashboardBackupSummary(backup.tables)}.`
+      :`Ready to restore from ${file.name}. ${dashboardBackupSummary(backup.tables)}. Existing records will not be overwritten.`;
+  }catch(error){
+    console.error('Dashboard backup validation failed:',error);
+    status.textContent=`Backup not ready: ${error.message||String(error)}`;
+    showToast('Could not read backup: '+(error.message||String(error)),'error');
+  }finally{
+    if(input)input.value='';
+    updateDashboardBackupControls();
+  }
+}
+
+async function restoreDashboardBackup(){
+  if(dashboardBackupBusy||!pendingDashboardRestore)return;
+  if(isTeamMember){showToast('Only the account owner can restore a backup.','error');return;}
+  const backup=pendingDashboardRestore;
+  const summary=dashboardBackupSummary(backup.tables);
+  if(!await lcConfirm({
+    title:'Restore account backup?',
+    message:`This will add missing records from this account's backup. Existing records will not be replaced. Restored listings will return as pending review. Platform payment history is not recreated. Continue?<br><br><strong>${escHtml(summary)}</strong>`,
+    confirmLabel:'Restore missing records',requireText:'RESTORE'
+  }))return;
+  const status=document.getElementById('dashboard-backup-status');
+  const button=document.getElementById('dashboard-backup-restore');
+  const inserted={};
+  dashboardBackupBusy=true;
+  updateDashboardBackupControls();
+  if(button)button.textContent='Restoring…';
+  status.textContent='Restoring missing records. Keep this page open until it finishes…';
+  try{
+    for(const table of DASHBOARD_RESTORE_ORDER){
+      const rows=backup.tables[table];
+      if(!rows.length)continue;
+      inserted[table]=0;
+      for(let offset=0;offset<rows.length;offset+=100){
+        let batch=rows.slice(offset,offset+100).map(row=>({...row}));
+        if(table==='listings'){
+          batch=batch.map(row=>({...row,status:'pending',payment_status:null,is_featured:false,views:0}));
+        }
+        const onConflict=table==='rent_payments'?'tenant_id,period_month':'id';
+        const{data,error}=await db.from(table).upsert(batch,{onConflict,ignoreDuplicates:true}).select('id');
+        if(error)throw new Error(`Restore stopped at ${table} records ${offset+1}–${Math.min(offset+batch.length,rows.length)}: ${error.message}`);
+        inserted[table]+=(data||[]).length;
+      }
+    }
+    const restored=Object.entries(inserted).filter(([,count])=>count>0).map(([name,count])=>`${name.replace(/_/g,' ')}: ${count}`).join(' · ');
+    const paymentsSkipped=backup.tables.payments.length;
+    status.textContent=`Restore completed. Added ${restored||'no new records'}. ${paymentsSkipped} platform payment record(s) were left untouched.`;
+    pendingDashboardRestore=null;
+    updateDashboardBackupControls();
+    showToast('Backup restore completed ✓','success');
+    try{
+      await loadAllData();
+      await Promise.all([loadRentalUnits(),loadBnbLedger(),loadNotifBell()]);
+      renderOverview();
+    }catch(refreshError){
+      console.error('Backup restored, but dashboard refresh failed:',refreshError);
+      status.textContent+=` Dashboard refresh failed: ${refreshError.message||String(refreshError)}. Reload the page to refresh.`;
+      showToast('Backup restored, but the dashboard could not refresh. Reload the page.','error');
+    }
+  }catch(error){
+    console.error('Dashboard restore failed:',error,inserted);
+    const partial=Object.entries(inserted).filter(([,count])=>count>0).map(([name,count])=>`${name.replace(/_/g,' ')}: ${count}`).join(' · ');
+    status.textContent=`Restore stopped: ${error.message||String(error)}${partial?` Records already added: ${partial}. You can safely select the same backup and retry.`:''}`;
+    showToast('Restore incomplete: '+(error.message||String(error)),'error');
+  }finally{
+    dashboardBackupBusy=false;
+    if(button)button.textContent='Restore missing records';
+    updateDashboardBackupControls();
+  }
+}
+
 async function loadAllData(){
   const{data:listingsData,error:listingsError}=await db.from('listings').select('*, listing_photos(*), listing_units(*)').eq('seller_id',effectiveSellerId).order('created_at',{ascending:false});
   if(listingsError) throw new Error(`Could not load your listings: ${listingsError.message}`);

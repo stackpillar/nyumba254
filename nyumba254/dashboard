@@ -757,6 +757,18 @@
           </div>
         </div>
       </div>
+      <div class="settings-section" id="settings-backup-section" style="margin-top:20px">
+        <h3><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 17v3a1 1 0 001 1h12a1 1 0 001-1v-3"/></svg>Account backup &amp; restore</h3>
+        <p style="font-size:12.5px;color:var(--text-3);line-height:1.6;margin-bottom:12px">Download a private JSON copy of your account records, including listings, messages, support conversations, payment history, rental records, and BNB bookings. Keep the file somewhere secure — it contains personal and financial information.</p>
+        <p style="font-size:12px;color:var(--gold);background:var(--gold-light);border-radius:8px;padding:10px 12px;line-height:1.6;margin-bottom:14px">Restore only accepts a backup from this same account and adds missing records without replacing existing records. Restored listings are sent for review. Payment records are included in downloads but are never recreated during restore. Uploaded files themselves are not included.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <button class="btn btn-primary" id="dashboard-backup-download" type="button" onclick="downloadDashboardBackup()">Download account backup</button>
+          <label class="btn btn-outline" for="dashboard-backup-file" style="cursor:pointer">Choose backup to restore</label>
+          <input id="dashboard-backup-file" type="file" accept=".json,application/json" style="display:none" onchange="previewDashboardBackup(this.files[0])"/>
+          <button class="btn btn-outline" id="dashboard-backup-restore" type="button" onclick="restoreDashboardBackup()" disabled>Restore missing records</button>
+        </div>
+        <div id="dashboard-backup-status" role="status" aria-live="polite" style="font-size:12px;color:var(--text-3);margin-top:12px"></div>
+      </div>
       <div class="danger-zone">
         <h3>Danger zone</h3>
         <p>Deleting your account permanently removes all your listings, messages, and payment records. This cannot be undone.</p>
