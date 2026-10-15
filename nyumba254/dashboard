@@ -303,6 +303,7 @@
           <button class="btn btn-outline btn-sm" onclick="bulkPauseSelectedListings()">⏸ Pause</button>
           <button class="btn btn-outline btn-sm" onclick="bulkResumeSelectedListings()">▶ Resume</button>
           <button class="btn btn-outline btn-sm" onclick="bulkRenewExpiredListings()">↻ Renew expired</button>
+          <button class="btn btn-outline btn-sm" onclick="bulkCancelScheduledListings()">✕ Cancel scheduled</button>
           <button class="btn btn-outline btn-sm" onclick="bulkOccupySelectedListings()">✓ Occupied/sold</button>
           <label class="btn btn-outline btn-sm" style="display:inline-flex;align-items:center;gap:6px">📅 Schedule
             <input type="datetime-local" id="bulk-listing-publish-at" aria-label="Schedule selected live listings" style="max-width:180px;border:0;background:transparent;color:inherit;font:inherit"/>

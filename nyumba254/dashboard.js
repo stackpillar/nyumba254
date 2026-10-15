@@ -4846,8 +4846,13 @@ async function publishScheduledNow(id){
   if(listingActionBusy.has(id))return;
   listingActionBusy.add(id);
   try{
-    const{error}=await db.from('listings').update({status:'active',publish_at:null}).eq('id',id);
+    const{data,error}=await db.from('listings').update({status:'active',publish_at:null})
+      .eq('seller_id',effectiveSellerId).eq('id',id).eq('status','scheduled')
+      .or('is_disabled.is.null,is_disabled.eq.false')
+      .or('recycle_bin.is.null,recycle_bin.eq.false')
+      .select('id');
     if(error){showToast('Could not publish: '+error.message,'error');return;}
+    if(!data?.length){showToast('This listing is no longer eligible to publish. Refresh and try again.','error');return;}
     const l=allListings.find(l=>l.id===id);
     if(l){l.status='active';l.publish_at=null;}
     renderListingsTable();renderOverview();
@@ -4855,6 +4860,27 @@ async function publishScheduledNow(id){
   } finally {
     listingActionBusy.delete(id);
   }
+}
+async function cancelScheduledListings(ids){
+  const eligible=ids.map(id=>allListings.find(l=>String(l.id)===String(id)))
+    .filter(l=>l?.status==='scheduled'&&!l.is_disabled&&!l.recycle_bin);
+  if(!eligible.length){showToast('This listing is no longer scheduled or has been disabled. Refresh and try again.','error');return;}
+  const listing=eligible[0];
+  if(!await lcConfirm({
+    title:'Cancel scheduled publishing?',
+    message:`<strong>${escHtml(listing.title||'This listing')}</strong> will be returned to pending review. It will not go live until approved again.`,
+    confirmLabel:'Cancel schedule'
+  }))return;
+  const{data,error}=await db.from('listings').update({status:'pending',publish_at:null})
+    .eq('seller_id',effectiveSellerId).eq('id',listing.id).eq('status','scheduled')
+    .or('is_disabled.is.null,is_disabled.eq.false')
+    .or('recycle_bin.is.null,recycle_bin.eq.false')
+    .select('id');
+  if(error){showToast('Could not cancel scheduled publishing: '+error.message,'error');return;}
+  if(!data?.length){showToast('This listing changed elsewhere and was not updated. Refresh and try again.','error');return;}
+  listing.status='pending';listing.publish_at=null;
+  renderListingsTable();renderOverview();
+  showToast('Schedule cancelled; listing returned to pending review.','success');
 }
 async function reactivateListing(id){
   if(listingActionBusy.has(id))return;
@@ -6656,6 +6682,11 @@ function openMoreActionsMenu(listingId,anchorEl,after){
     if(isLive)items.push({label:'Pause listing',icon:'<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>',onclick:wrap(()=>togglePause(listingId,l.status))});
     if(isOcc||isPaused)items.push({label:'Resume (resubmits for approval)',icon:'<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>',onclick:wrap(()=>reactivateListing(listingId))});
   }
+  if(l.status==='scheduled'){
+    items.push({divider:'Scheduled publishing'});
+    items.push({label:'Publish now',icon:'<polygon points="5 3 19 12 5 21 5 3"/>',onclick:wrap(()=>publishScheduledNow(listingId))});
+    items.push({label:'Cancel schedule and resubmit for review',icon:'<path d="M18 6L6 18M6 6l12 12"/>',onclick:wrap(()=>cancelScheduledListings([listingId]))});
+  }
 
   items.push({divider:'Danger zone'});
   items.push({label:'Delete listing permanently',icon:'<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/>',danger:true,onclick:wrap(()=>openDeleteModal(listingId,l.title))});
@@ -6795,6 +6826,30 @@ async function bulkScheduleSelectedListings(){
   if(input)input.value='';
   renderListingsTable();renderOverview();
   showToast(`${scheduled.length} listing${scheduled.length===1?'':'s'} scheduled for ${publishAt.toLocaleString('en-KE')}.`,'success');
+}
+
+async function bulkCancelScheduledListings(){
+  const selected=lcSelected();
+  const eligible=selected.filter(l=>l.status==='scheduled'&&!l.is_disabled&&!l.recycle_bin);
+  if(!eligible.length){showToast('Select at least one scheduled listing that has not been disabled.','error');return;}
+  if(!await lcConfirm({
+    title:'Cancel scheduled publishing?',
+    message:`<strong>${eligible.length}</strong> scheduled listing${eligible.length===1?'':'s'} will be returned to pending review.${selected.length>eligible.length?` ${selected.length-eligible.length} other selected listing${selected.length-eligible.length===1?'':'s'} will be skipped.`:''}`,
+    confirmLabel:'Cancel schedule'
+  }))return;
+  const ids=eligible.map(l=>l.id);
+  const{data,error}=await db.from('listings').update({status:'pending',publish_at:null})
+    .eq('seller_id',effectiveSellerId).eq('status','scheduled')
+    .or('is_disabled.is.null,is_disabled.eq.false')
+    .or('recycle_bin.is.null,recycle_bin.eq.false')
+    .in('id',ids).select('id');
+  if(error){showToast('Could not cancel scheduled publishing: '+error.message,'error');return;}
+  const changed=new Set((data||[]).map(row=>String(row.id)));
+  if(!changed.size){showToast('No scheduled listings could be changed. Refresh and try again.','error');return;}
+  allListings.forEach(l=>{if(changed.has(String(l.id))){l.status='pending';l.publish_at=null;}});
+  selectedListingIds.clear();
+  renderListingsTable();renderOverview();
+  showToast(`${changed.size} listing${changed.size===1?'':'s'} returned to pending review${changed.size<eligible.length?`; ${eligible.length-changed.size} changed elsewhere and were skipped`:''}.`,'success');
 }
 
 async function bulkOccupySelectedListings(){
