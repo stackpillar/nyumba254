@@ -400,6 +400,16 @@ async function nkHydratePublicProfiles(listings) {
   return rows.map(row=>({...row,profiles:byId.get(row.seller_id)||row.profiles||null}));
 }
 
+async function nkHydrateViewingFees(listings) {
+  const rows=Array.isArray(listings)?listings:[];
+  const ids=[...new Set(rows.map(row=>row.id).filter(Boolean))];
+  if(!ids.length)return rows;
+  const{data,error}=await db.rpc('get_public_viewing_fees',{p_listing_ids:ids});
+  if(error)throw new Error(`Could not load public viewing fees: ${error.message}`);
+  const byId=new Map((data||[]).map(row=>[row.listing_id,Number(row.viewing_fee)||0]));
+  return rows.map(row=>({...row,viewing_fee:byId.get(row.id)??0}));
+}
+
 function nkImgSrc(url, width) {
   if (!url) return '';
   if (!width) return url;
@@ -443,7 +453,8 @@ function nkBuildCard(listing, opts) {
   const heart = (typeof NKSaved !== 'undefined' && NKSaved.buildHeartBtn) ? NKSaved.buildHeartBtn(listing.id) : '';
   const verifiedBadge = nkBuildVerifiedBadge(listing);
   const listedByLabels={buyer:'Tenant / Buyer',owner:'Property owner',caretaker:'Caretaker',agent:'Agent',company:'Company',seller:'Seller'};
-  const listedBy=listedByLabels[listing.listed_by_type||(listing.seller_id?'seller':'')];
+  const listedBy=listedByLabels[listing.profiles?.account_type||(listing.seller_id?'seller':'')];
+  const viewingFee=Number(listing.viewing_fee)||0;
 
   return `
     <a class="card" href="${href}" aria-label="${safeTitle}" data-listing-id="${escHtml(listing.id)}" style="${isOccupied ? 'opacity:.7' : ''}">
@@ -457,6 +468,7 @@ function nkBuildCard(listing, opts) {
         <div class="card-area">${escHtml(listing.area)} ${verifiedBadge}</div>
         <div class="card-title">${safeTitle}</div>
         <div class="card-sub">${escHtml(subText)}${listedBy?` · Listed by ${escHtml(listedBy)}`:''}</div>
+        <div class="card-viewing-fee">${viewingFee>0?`Viewing fee: KES ${viewingFee.toLocaleString('en-KE')}`:'Free viewing'}</div>
         <div class="card-price">${formatPrice(listing, { showFromPrefix: !compact })}</div>
       </div>
     </a>`;

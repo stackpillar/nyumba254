@@ -326,6 +326,7 @@
           <button class="btn btn-outline btn-sm" style="color:#7c3aed;border-color:#7c3aed" onclick="bulkAiRewriteSelectedListings()">✨ AI rewrite</button>
           <button class="btn btn-outline btn-sm" style="color:var(--gold);border-color:var(--gold)" onclick="bulkFeatureSelectedListings()">⭐ Feature</button>
           <button class="btn btn-outline btn-sm" onclick="bulkShareSelectedListings()">🔗 Share</button>
+          <button class="btn btn-outline btn-sm" onclick="bulkSetViewingFeeSelectedListings()">Set viewing fee</button>
           <button class="btn btn-outline btn-sm" onclick="exportListingsCSV(true)">⬇️ CSV</button>
           <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="bulkDeleteSelectedListings()">🗑 Delete</button>
         </div>
@@ -607,6 +608,15 @@
             <div id="account-role-status" aria-live="polite" style="font-size:12px;color:var(--text-3);margin-top:8px"></div>
             <button type="button" class="btn btn-outline btn-sm" id="save-account-roles-btn" onclick="saveAccountType()" style="width:100%;justify-content:center;margin-top:10px">Save account type</button>
             <div id="account-role-history" style="margin-top:12px;font-size:12px;color:var(--text-3)"></div>
+            <div id="viewing-fee-settings" hidden style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+              <h4 style="font-size:14px;margin-bottom:4px">Viewing fee defaults</h4>
+              <p style="font-size:12px;color:var(--text-3);line-height:1.5;margin-bottom:10px">Optional, for Agent and Company accounts only. Set KES 0–5,000. This is agreed and paid directly to you; Nyumba254 does not collect it.</p>
+              <label class="field-label" for="viewing-fee-default">Default fee (KES)</label>
+              <input class="form-input" id="viewing-fee-default" type="number" min="0" max="5000" step="1" inputmode="numeric" placeholder="Leave blank for free viewing"/>
+              <div id="viewing-fee-status" aria-live="polite" style="font-size:12px;color:var(--text-3);margin-top:6px"></div>
+              <button type="button" class="btn btn-outline btn-sm" onclick="saveViewingFeeDefault()" style="width:100%;justify-content:center;margin-top:8px">Save default</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="applyViewingFeeToActiveListings()" style="width:100%;justify-content:center;margin-top:8px">Apply to active listings…</button>
+            </div>
           </div>
           <div class="settings-section" id="company-profile-settings" hidden>
             <h3>Company profile</h3>

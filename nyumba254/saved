@@ -1059,7 +1059,8 @@ const loadOwn = async () => {
   const ok=currentUser?await loadFromAccount():await loadAnonymousMerged();
   if(ok){
     try{
-      const listings=await nkHydratePublicProfiles(savedRows.map(row=>row.listing));
+      let listings=await nkHydratePublicProfiles(savedRows.map(row=>row.listing));
+      listings=await nkHydrateViewingFees(listings);
       savedRows.forEach((row,index)=>{row.listing=listings[index];});
     }catch(profileError){console.error('Could not hydrate saved listing account details:',profileError);}
   }
@@ -1130,7 +1131,8 @@ async function silentRefresh(force) {
   if (!ok) return;
   if(isAnonShortlist){
     try{
-      const listings=await nkHydratePublicProfiles(savedRows.map(row=>row.listing));
+      let listings=await nkHydratePublicProfiles(savedRows.map(row=>row.listing));
+      listings=await nkHydrateViewingFees(listings);
       savedRows.forEach((row,index)=>{row.listing=listings[index];});
     }catch(profileError){console.error('Could not hydrate saved listing account details:',profileError);}
   }
@@ -1703,7 +1705,7 @@ async function loadRecommended() {
     if (error) { console.error('Load recommended error:', error.message); recommendedRows = []; renderRecommended(); return; }
     rows = (data || []).filter(l => !excl.has(l.id)).slice(0, 8);
   }
-  try{rows=await nkHydratePublicProfiles(rows);}catch(profileError){console.error('Could not hydrate recommended listing account details:',profileError);}
+  try{rows=await nkHydratePublicProfiles(rows);rows=await nkHydrateViewingFees(rows);}catch(profileError){console.error('Could not hydrate recommended listing account details:',profileError);}
   recommendedRows = rows;
   $('rec-sub').textContent = similar && basis ? 'Similar to your shortlist: ' + basis : 'Recently listed properties across Kenya';
   renderRecommended();

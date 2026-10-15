@@ -145,6 +145,7 @@ footer{background:var(--text);color:rgba(255,255,255,.6);padding:56px 32px 28px}
 .card-role-badge svg{width:9px;height:9px;stroke:currentColor;fill:none;stroke-width:2.6}
 .card-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:3px;line-height:1.35;overflow-wrap:anywhere}
 .card-sub{font-size:12.5px;color:var(--text-3);margin-bottom:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-viewing-fee{font-size:11.5px;font-weight:600;color:var(--text-2);margin:-7px 0 8px}
 .card-price{font-size:18px;font-weight:700;color:var(--green-dark);letter-spacing:-.01em;display:flex;align-items:baseline;gap:4px;flex-wrap:wrap}
 .card-price span{font-size:13px;font-weight:500;color:var(--text-2)}
 .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:20px}

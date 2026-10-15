@@ -293,7 +293,10 @@
       db.from('reviews').select('*').eq('review_type','seller').eq('target_seller_id', sellerId).order('created_at',{ascending:false}),
     ]);
 
-    const items = listErr ? [] : (listings || []);
+    let items = listErr ? [] : (listings || []);
+    if(items.length){
+      try{items=await nkHydrateViewingFees(items);}catch(feeError){console.error('Could not load storefront viewing fees:',feeError);}
+    }
     ALL_ITEMS = items;
     ALL_REVIEWS = reviews || [];
 

@@ -749,6 +749,7 @@ async function loadProfile(){
   }else{
     ownerProfile=currentProfile;
   }
+  renderViewingFeeSettings();
 
   // These are account-wide (owner) settings, not per-login — must read
   // from ownerProfile so a team member sees the OWNER's real settings,
@@ -783,6 +784,7 @@ function renderAccountType(){
   const buyerMode=accountType==='buyer';
   const buyerCard=document.getElementById('buyer-mode-card');
   if(companySection)companySection.hidden=accountType!=='company';
+  renderViewingFeeSettings();
   if(onboardingReminder)onboardingReminder.hidden=!!currentProfile?.onboarding_completed;
   if(buyerCard)buyerCard.hidden=!buyerMode;
   ['nav-listings','nav-enquiries','nav-reviews','nav-payments','nav-rent-ledger','nav-demand-heatmap','nav-elite-section','nav-premium-upgrade'].forEach(id=>{
@@ -804,6 +806,61 @@ function renderAccountType(){
   status.textContent=availableAt&&availableAt>Date.now()
     ?`Current type: ${accountType}. You can change it after ${availableAt.toLocaleDateString()}.`
     :`Current type: ${accountType}.`;
+}
+
+function renderViewingFeeSettings(){
+  const section=document.getElementById('viewing-fee-settings');
+  if(!section)return;
+  const profile=ownerProfile||currentProfile;
+  const eligible=profile?.account_type==='agent'||profile?.account_type==='company';
+  section.hidden=!eligible||isTeamMember;
+  const input=document.getElementById('viewing-fee-default');
+  if(input&&document.activeElement!==input)input.value=profile?.default_viewing_fee??'';
+}
+
+async function saveViewingFeeDefault(){
+  const input=document.getElementById('viewing-fee-default'),status=document.getElementById('viewing-fee-status');
+  if(!input||!status)return;
+  const raw=input.value.trim(),value=raw===''?null:Number(raw);
+  if(value!==null&&(!Number.isInteger(value)||value<0||value>5000)){
+    status.textContent='Enter a whole-number amount from KES 0 to KES 5,000, or leave it blank.';
+    showToast(status.textContent,'error');return;
+  }
+  try{
+    const{error}=await db.from('profiles').update({default_viewing_fee:value}).eq('id',currentUser.id);
+    if(error)throw new Error(`Could not save your default viewing fee: ${error.message}`);
+    currentProfile={...currentProfile,default_viewing_fee:value};
+    ownerProfile=currentProfile;
+    status.textContent=value===null?'Default cleared.':'Default saved.';
+    showToast('Viewing fee default saved ✓','success');
+  }catch(error){
+    console.error('Viewing fee default update failed:',error);
+    status.textContent=error.message||'Could not save your default viewing fee.';
+    showToast(status.textContent,'error');
+  }
+}
+
+async function applyViewingFeeToActiveListings(){
+  const input=document.getElementById('viewing-fee-default'),status=document.getElementById('viewing-fee-status');
+  if(!input||!status)return;
+  const value=input.value.trim()===''?0:Number(input.value);
+  if(!Number.isInteger(value)||value<0||value>5000){
+    status.textContent='Enter a whole-number amount from KES 0 to KES 5,000 first.';
+    showToast(status.textContent,'error');return;
+  }
+  const confirmed=window.confirm(`Apply KES ${value.toLocaleString('en-KE')} viewing fee to all your active listings? Existing active listing fees will be replaced.`);
+  if(!confirmed)return;
+  try{
+    const{error}=await db.from('listings').update({viewing_fee:value}).eq('seller_id',currentUser.id).eq('status','active').eq('is_disabled',false).eq('recycle_bin',false);
+    if(error)throw new Error(`Could not apply the fee to active listings: ${error.message}`);
+    await loadAllData();
+    status.textContent='Fee applied to active listings.';
+    showToast('Viewing fee applied to active listings ✓','success');
+  }catch(error){
+    console.error('Bulk viewing fee update failed:',error);
+    status.textContent=error.message||'Could not apply the fee to active listings.';
+    showToast(status.textContent,'error');
+  }
 }
 
 async function loadAccountRoleHistory(){
@@ -5969,7 +6026,7 @@ function lcTableHtml(rows){
         <div style="font-size:11px;color:var(--text-3);font-weight:400">${escHtml(l.area||'')}${lcNum(l)?' · #'+lcNum(l):''}</div>
       </td>
       <td><span class="status ${d.cls}">${d.label}</span></td>
-      <td>${units?escHtml(muPriceRangeText(l)):escHtml('KES '+Number(l.price||0).toLocaleString('en-KE'))}</td>
+      <td>${units?escHtml(muPriceRangeText(l)):escHtml('KES '+Number(l.price||0).toLocaleString('en-KE'))}<div style="font-size:11px;color:var(--text-3)">${Number(l.viewing_fee)>0?'Viewing fee: KES '+Number(l.viewing_fee).toLocaleString('en-KE'):'Free viewing'}</div></td>
       <td>${units?'—':escHtml(String((l.details&&l.details.bedrooms)??'—'))}</td>
       <td>${lcPhotoCount(l)}</td>
       <td>${(l.views||0).toLocaleString('en-KE')}</td>
@@ -7021,6 +7078,30 @@ async function bulkFeatureSelectedListings(){
   },600);
   selectedListingIds.clear();updateBulkBar();
 }
+async function bulkSetViewingFeeSelectedListings(){
+  const profile=ownerProfile||currentProfile;
+  if(!profile||!['agent','company'].includes(profile.account_type)){
+    showToast('Only Agent and Company accounts can set viewing fees.','error');return;
+  }
+  const rows=lcSelected();
+  if(!rows.length){showToast('Select at least one listing.','error');return;}
+  const entered=window.prompt('Set a viewing fee in KES (0–5,000). Enter 0 for free viewing:',String(profile.default_viewing_fee??0));
+  if(entered===null)return;
+  const fee=Number(entered.trim());
+  if(!Number.isInteger(fee)||fee<0||fee>5000){showToast('Enter a whole-number fee from KES 0 to KES 5,000.','error');return;}
+  if(!window.confirm(`Apply KES ${fee.toLocaleString('en-KE')} to ${rows.length} selected listing${rows.length===1?'':'s'}?`))return;
+  const ids=rows.map(l=>l.id);
+  try{
+    const{error}=await db.from('listings').update({viewing_fee:fee}).eq('seller_id',effectiveSellerId).in('id',ids);
+    if(error)throw new Error(`Could not update selected viewing fees: ${error.message}`);
+    allListings=allListings.map(l=>ids.includes(l.id)?{...l,viewing_fee:fee}:l);
+    renderListingsTable();
+    showToast('Viewing fees updated ✓','success');
+  }catch(error){
+    console.error('Bulk viewing fee update failed:',error);
+    showToast(error.message||'Could not update viewing fees.','error');
+  }
+}
 function bulkShareSelectedListings(){
   const sel=lcSelected();
   if(!sel.length)return;
@@ -7050,10 +7131,10 @@ async function bulkDeleteSelectedListings(){
 function exportListingsCSV(selectedOnly){
   const rows=selectedOnly?lcSelected():allListings;
   if(!rows.length){showToast('Nothing to export','error');return;}
-  const out=[['ID','Title','Status','Area','Sub-area','Price (KES)','Type','Photos','Views','Messages','Unread','Enquiries','Unanswered','Health','Days live','Posted','Link']];
+  const out=[['ID','Title','Status','Area','Sub-area','Price (KES)','Viewing fee (KES)','Type','Photos','Views','Messages','Unread','Enquiries','Unanswered','Health','Days live','Posted','Link']];
   rows.forEach(l=>{
     const s=lcS(l.id);
-    out.push([lcNum(l),l.title,getListingStatusDisplay(l).label,l.area||'',l.sub_area||'',Number(l.price)||0,l.price_type||'',lcPhotoCount(l),l.views||0,s.msgs,s.unread,s.enquiries,s.unanswered,lcHealth(l).score,lcDaysLive(l),new Date(l.created_at).toLocaleDateString('en-KE'),lcListingUrl(l)]);
+    out.push([lcNum(l),l.title,getListingStatusDisplay(l).label,l.area||'',l.sub_area||'',Number(l.price)||0,Number(l.viewing_fee)||0,l.price_type||'',lcPhotoCount(l),l.views||0,s.msgs,s.unread,s.enquiries,s.unanswered,lcHealth(l).score,lcDaysLive(l),new Date(l.created_at).toLocaleDateString('en-KE'),lcListingUrl(l)]);
   });
   const csv=out.map(r=>r.map(v=>csvCell(v)).join(',')).join('\n');
   rlDownloadBlob(`Nyumba254-Listings-${new Date().toISOString().slice(0,10)}.csv`,csv,'text/csv');

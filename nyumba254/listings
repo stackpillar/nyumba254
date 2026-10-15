@@ -1354,7 +1354,7 @@ async function runSearch(opts) {
   feed.loading = false;
   if (error) { console.error(error); renderError(); return; }
   let list = data || [];
-  try{list=await nkHydratePublicProfiles(list);}catch(profileError){console.error(profileError);}
+  try{list=await nkHydratePublicProfiles(list);list=await nkHydrateViewingFees(list);}catch(profileError){console.error(profileError);}
   if (my !== reqId) return;
   feed.total = count || 0;
   if (!append && !list.length && feed.total > 0 && page > 1) { S.page = 1; return runSearch(opts); }   // stale ?page=99

@@ -424,8 +424,9 @@ a.lncard:hover{border-color:var(--green);background:var(--green-light)}
       <div class="nf-field"><label for="vw-name">Full name</label><input type="text" id="vw-name" autocomplete="name"/><div class="nf-err" id="vw-name-e" role="alert"></div></div>
       <div class="nf-field" id="vw-phone-f"><label for="vw-phone">Phone</label><input type="tel" id="vw-phone" inputmode="tel" autocomplete="tel" placeholder="07XX XXX XXX"/><div class="nf-err" id="vw-phone-e" role="alert"></div></div>
       <div class="nf-field"><label for="vw-note">Note <span class="nf-optional">optional</span></label><textarea id="vw-note" maxlength="300" placeholder="e.g. I will come with my family"></textarea></div>
+      <label class="nf-check" id="vw-fee-ack-wrap" hidden><input type="checkbox" id="vw-fee-ack"/> I understand the listed viewing fee is agreed and paid directly to the lister; Nyumba254 does not collect it.</label>
       <div class="hp" aria-hidden="true"><label for="vw-web">Leave empty</label><input id="vw-web" tabindex="-1" autocomplete="off"/></div>
-      <p class="tip">The seller confirms the time in your chat. Never pay before you have viewed the property.</p>
+      <p class="tip">The lister confirms the time in your chat. Nyumba254 does not collect viewing fees. Verify the property and agree the terms directly with the lister.</p>
     </div>
     <div class="notify-modal-foot"><button type="button" class="btn btn-outline" data-act="close">Cancel</button><button type="button" class="btn btn-primary" id="vw-send" data-act="send-viewing">Send request</button></div>
   </div>
@@ -485,10 +486,10 @@ const CFG={
   reviewAfterMs:864e5,           // "Rate this seller" unlocks 24 h after first contact
   /* Explicit columns keep phone/whatsapp/contact_email out of the public payload.
      If any name below does not exist in your table, the query silently retries with '*'. */
-  listCols:'id,listing_number,seller_id,title,description,category,status,is_disabled,disabled_reason,recycle_bin,is_featured,price,price_frequency,county,area,address,latitude,longitude,details,amenities,contact_name,contact_hidden,views,created_at,payment_status,trial_expires_at',
+  listCols:'id,listing_number,seller_id,title,description,category,status,is_disabled,disabled_reason,recycle_bin,is_featured,price,price_frequency,county,area,address,latitude,longitude,details,amenities,contact_name,contact_hidden,views,created_at,payment_status,trial_expires_at,listed_by_type',
   cardCols:'id,listing_number,title,area,county,address,category,price,price_frequency,status,is_featured,created_at'
 };
-const REL='profiles(full_name, created_at, verification_status), listing_photos(*), listing_units(*), listing_videos(*)';
+const REL='profiles(full_name, created_at, verification_status, account_type), listing_photos(*), listing_units(*), listing_videos(*)';
 const FREQ=Object.assign({},NK_FREQ_LABEL,{semester:'/semester'});
 const money=n=>'KES '+Number(n||0).toLocaleString('en-KE');
 const pad=n=>String(n).padStart(6,'0');
@@ -595,6 +596,9 @@ async function load(){
     const{data:publicProfile,error:profileError}=await db.rpc('get_public_account_profile',{p_profile_id:P.seller_id});
     if(profileError)throw new Error(`Could not load the public account profile: ${profileError.message}`);
     P.profiles=(Array.isArray(publicProfile)?publicProfile[0]:publicProfile)||P.profiles||{};
+    const{data:feeRows,error:feeError}=await db.rpc('get_public_viewing_fees',{p_listing_ids:[P.id]});
+    if(feeError)throw new Error(`Could not load the listing viewing fee: ${feeError.message}`);
+    P.viewing_fee=Number(feeRows?.[0]?.viewing_fee)||0;
     const s=sr&&sr.data;uid=(s&&s.session&&s.session.user&&s.session.user.id)||null;
     isOwner=!!uid&&P.seller_id===uid;
     const live=(P.status==='active'||P.status==='occupied')&&!P.is_disabled&&!P.recycle_bin;
@@ -750,14 +754,14 @@ function ownerHtml(){
     <div class="row"><a class="btn btn-primary" href="/dashboard?edit=${encodeURIComponent(P.id)}">Edit and manage</a><a class="btn btn-outline" href="/dashboard">View enquiries</a>${preview?'':`<button type="button" class="btn btn-outline" data-act="status">${occ?'Mark as available':sold?'Mark as sold':'Mark as occupied'}</button>`}</div></section>`;
 }
 function sellerHead(){
-  const p=P.profiles||{},company=p.account_type==='company',name=company?(p.company_name||P.contact_name||p.full_name||'Company'):(P.contact_name||p.full_name||'Seller'),ini=name.split(' ').filter(Boolean).map(x=>x[0]).join('').toUpperCase().slice(0,2)||'S',identityVerified=p.identity_verified===true,roleVerified=!!p.account_type&&p.verified_role===p.account_type,roleLabels={buyer:'Tenant / Buyer',owner:'Property owner',caretaker:'Caretaker',agent:'Agent',company:'Company'},listedBy=P.listed_by_type||((P.details||{}).listed_by);
+  const p=P.profiles||{},company=p.account_type==='company',name=company?(p.company_name||P.contact_name||p.full_name||'Company'):(P.contact_name||p.full_name||'Seller'),ini=name.split(' ').filter(Boolean).map(x=>x[0]).join('').toUpperCase().slice(0,2)||'S',identityVerified=p.identity_verified===true,roleVerified=!!p.account_type&&p.verified_role===p.account_type,roleLabels={buyer:'Tenant / Buyer',owner:'Property owner',caretaker:'Caretaker',agent:'Agent',company:'Company'},listedBy=p.account_type;
   const logo=company&&roleVerified&&p.company_logo_url?`<img src="${escHtml(p.company_logo_url)}" alt="" width="36" height="36" loading="lazy" style="object-fit:contain;border-radius:6px">`:'';
   return `<div class="seller"><div class="av" aria-hidden="true">${escHtml(ini)}</div><div>${logo}<b>${escHtml(name)}${company&&!roleVerified?' (not verified)':''}</b>${roleVerified?`<small>${IC.check}Verified ${escHtml(roleLabels[p.account_type])}</small>`:''}<button type="button" class="vbadge${identityVerified?'':' no'}" data-act="verinfo" data-v="${identityVerified?1:0}" aria-haspopup="dialog" aria-label="${identityVerified?'Identity verified. What does this mean?':'Identity not yet verified. What does this mean?'}">${identityVerified?IC.check+'Identity verified':'Identity not yet verified'}${IC.info}</button><small class="js-rate"></small>${listedBy?`<small>Listed by ${escHtml(roleLabels[listedBy]||nkTitleCase(listedBy))}</small>`:''}${p.created_at?`<small>Member since ${escHtml(new Date(p.created_at).toLocaleDateString('en-KE',{month:'long',year:'numeric'}))}</small>`:''}${!isOwner&&canReview()?'<button type="button" class="link" data-act="rate">Rate this seller</button>':''}</div></div>`;
 }
-const SAFETY='Never pay before you have viewed the property and met the seller. Nyumba254 never asks buyers for money.';
+const SAFETY='Any viewing fee is agreed and paid directly to the lister; Nyumba254 does not collect it. Verify the property and terms with the lister before paying.';
 function sidebarHtml(){
-  const hidden=!!P.contact_hidden,cost=costLine();
-  const top=`<div class="s-top"><div class="s-price">${priceHtml()}</div>${cost?`<div class="s-cost">${escHtml(cost)}</div>`:''}</div>${sellerHead()}`;
+  const hidden=!!P.contact_hidden,cost=costLine(),viewingFee=Number(P.viewing_fee)||0;
+  const top=`<div class="s-top"><div class="s-price">${priceHtml()}</div>${cost?`<div class="s-cost">${escHtml(cost)}</div>`:''}<div class="s-cost">${viewingFee>0?`Viewing fee: ${money(viewingFee)}`:'Free viewing'}</div></div>${sellerHead()}`;
   if(isOwner)return `<div class="scard">${top}<p class="s-note">This is how buyers see you. Enquiries reach you in your chat inbox and dashboard.</p></div>`;
   if(P.status==='occupied')return `<div class="scard">${top}<h3 class="s-h">${isSale()?'This property has been sold':'This property is no longer available'}</h3><p class="s-note">See similar listings below, or browse more in ${escHtml(P.county?nkCountyLabel(P.county):'Kenya')}.</p><a class="btn btn-primary btn-block" href="${escHtml(nkBuildListingsUrl({county:P.county,category:P.category}))}">Browse similar listings</a></div>`;
   const opts=units.filter(u=>(u.quantity_available??0)>0),pr=nkGetBuyerProfile();
@@ -1143,6 +1147,9 @@ function openViewing(){
   ['vw-date','vw-name','vw-phone'].forEach(i=>setErr(i,''));$('vw-banner').textContent='';
   const pr=nkGetBuyerProfile(),first=(P.contact_name||(P.profiles||{}).full_name||'the seller').split(' ')[0],t=new Date();
   $('vw-sub').textContent=`Tell ${first} when you would like to see "${P.title}".`;
+  const fee=Number(P.viewing_fee)||0,feeAckWrap=$('vw-fee-ack-wrap');
+  feeAckWrap.hidden=fee<=0;
+  $('vw-fee-ack').checked=false;
   $('vw-date').min=localISO(t);t.setDate(t.getDate()+1);$('vw-date').value=localISO(t);
   $('vw-name').value=pr.name||'';$('vw-phone').value=pr.phone||'';$('vw-note').value='';
   $('vw-phone-f').hidden=!!P.contact_hidden;$('vw-form').hidden=false;$('vw-done').hidden=true;
@@ -1154,18 +1161,22 @@ async function sendViewing(){
   if(!date){setErr('vw-date','Pick a date');ok=false}else if(date<localISO(new Date())){setErr('vw-date','Pick today or a later date');ok=false}
   if(name.length<2){setErr('vw-name','Enter your name');ok=false}
   if(!hidden&&!okPhone(phone)){setErr('vw-phone','Enter a valid phone number, e.g. 0712 345 678');ok=false}
+  const viewingFee=Number(P.viewing_fee)||0;
+  if(viewingFee>0&&!$('vw-fee-ack').checked){$('vw-banner').textContent='Please acknowledge the viewing fee before sending your request.';ok=false}
   if(!ok){const bad=document.querySelector('#vw-form [aria-invalid="true"]');if(bad)bad.focus();return}
   const done=()=>{$('vw-form').hidden=true;$('vw-done').hidden=false;showSent(false)};
   if($('vw-web').value){done();return}
   if(cooling()){$('vw-banner').textContent=COOLDOWN;return}
   if(needNet())return;
   const when=new Date(date+'T00:00:00').toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  const message=`📅 Viewing requested\nDate: ${when}\nTime: ${slot}${note?`\nNotes: ${note}`:''}`;   // same wording the chat widget uses
+  const feeLine=viewingFee>0?`\nViewing fee: ${money(viewingFee)} (agreed and paid directly to the lister; not collected by Nyumba254)`: '\nViewing fee: Free';
+  const message=`📅 Viewing requested\nDate: ${when}\nTime: ${slot}${feeLine}${note?`\nNotes: ${note}`:''}`;
   const btn=$('vw-send');btn.disabled=true;btn.innerHTML='<span class="spin"></span>Sending…';
   let r;try{r=await postEnquiry({name,phone,email:'',message},'viewing')}catch(e){r={error:e}}
   btn.disabled=false;btn.textContent='Send request';
   if(r.error){if(isNetErr(r.error))showNet("You're offline. Your request is kept, so try again when you're back online.");$('vw-banner').textContent=enquiryFailure(r.error);return}
-  try{await db.from('viewing_requests').insert({id:uuid(),listing_id:P.id,buyer_token:lsg('nk_buyer_'+P.id),buyer_name:name,buyer_phone:phone,requested_date:date,requested_time:slot,notes:note||null})}catch(e){}   // so the seller side and "Book another viewing" see it too
+  const{error:viewingError}=await db.from('viewing_requests').insert({id:uuid(),listing_id:P.id,buyer_token:lsg('nk_buyer_'+P.id),buyer_name:name,buyer_phone:phone,requested_date:date,requested_time:slot,notes:note||null,viewing_fee_acknowledged:viewingFee>0&&$('vw-fee-ack').checked});
+  if(viewingError){$('vw-banner').textContent='Your message was sent, but the viewing request could not be recorded. Please contact the lister directly.';console.error('Viewing request record failed:',viewingError);return}
   done();
 }
 

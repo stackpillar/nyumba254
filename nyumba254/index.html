@@ -809,7 +809,7 @@ async function loadFeatured() {
   if (error) { console.error(error); $('featured-section').hidden = true; return; }
   if (!data || !data.length) { $('featured-section').hidden = true; return; }     // no empty "be the first" block for Featured
   let listings=data;
-  try{listings=await nkHydratePublicProfiles(data);}catch(profileError){console.error(profileError);}
+  try{listings=await nkHydratePublicProfiles(data);listings=await nkHydrateViewingFees(listings);}catch(profileError){console.error(profileError);}
   renderListings('featured-listings', listings);
 }
 
@@ -825,7 +825,7 @@ async function loadLatest() {
   if (error) { console.error(error); return; }
   const where = area ? `${area}${county ? ', ' + nkCountyLabel(county) : ''}` : (county ? nkCountyLabel(county) : '');
   let listings=data||[];
-  try{listings=await nkHydratePublicProfiles(listings);}catch(profileError){console.error(profileError);}
+  try{listings=await nkHydratePublicProfiles(listings);listings=await nkHydrateViewingFees(listings);}catch(profileError){console.error(profileError);}
   if(my!==latest.token)return;
   renderListings('latest-listings', listings, 480, `<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><p>No listings ${where ? 'in ' + escHtml(where) + ' ' : ''}yet. <a href="/post-listing">Be the first to list!</a></p></div>`);
 }
