@@ -284,6 +284,7 @@ a.lncard:hover{border-color:var(--green);background:var(--green-light)}
 .state .btn{margin:4px}
 
 /* listing quick tools and at-a-glance cards */
+.pdrop{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:999px;background:rgba(22,163,74,.12);color:var(--green-dark);font-size:13px;font-weight:700}.pdrop s{font-weight:500;opacity:.8}.qa-list{display:grid;gap:10px;margin:0}.qa-list>div{padding:10px 12px;border:1px solid var(--border);border-radius:10px}.qa-list dt{font-weight:700;font-size:13px}.qa-list dd{margin:2px 0 0;color:var(--text-2);font-size:14px;white-space:pre-line}
 .insight-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0 6px}
 .insight{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;min-width:0}
 .insight b{display:block;font-size:14px;color:var(--green-dark);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -555,7 +556,7 @@ const FI={Bedrooms:'<path d="M2 4v16M2 8h18a2 2 0 012 2v10M2 17h20M6 8v9"/>',Bat
  Frontage:'<path d="M3 21h18M6 21V10l6-5 6 5v11M10 21v-6h4v6"/>'};
 const FI_DEF='<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>';
 const factIcon=k=>svg(FI[k]||FI_DEF);
-const SI={about:'<path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9zM14 3v6h6M8 13h8M8 17h5"/>',units:FI_DEF,details:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+const SI={answers:'<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2zM9 9a3 3 0 115 2c-1 .8-2 1.2-2 2.5M12 16.5h.01"/>',about:'<path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9zM14 3v6h6M8 13h8M8 17h5"/>',units:FI_DEF,details:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
  amenities:'<path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',video:'<circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>',
  loc:'<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',rules:'<path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2M9 2h6v4H9z"/>',
  seller:'<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>',safety:'<path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/>'};
@@ -616,6 +617,12 @@ async function load(){
       const{data:feeRows,error:feeError}=await db.rpc('get_public_viewing_fees',{p_listing_ids:[P.id]});
       if(feeError){console.error('[viewing-fee] Could not load listing fee:',feeError);P.viewing_fee=null}
       else P.viewing_fee=Number.isFinite(Number(feeRows?.[0]?.viewing_fee))?Number(feeRows[0].viewing_fee):null;
+    try{const{data:dr}=await db.rpc('get_listing_price_drops',{p_listing_ids:[P.id]});P._drop=dr&&dr[0]||null}catch(e){P._drop=null}
+    try{
+      const{data:qa}=await db.from('lister_quick_answers').select('question_key,answer,listing_id').eq('lister_id',P.seller_id).or('listing_id.is.null,listing_id.eq.'+P.id);
+      const m=new Map();(qa||[]).filter(r=>!r.listing_id).forEach(r=>m.set(r.question_key,r.answer));(qa||[]).filter(r=>r.listing_id).forEach(r=>m.set(r.question_key,r.answer));
+      P._answers=[...m].map(([k,a])=>({k,a}));
+    }catch(e){P._answers=[]}
     const s=sr&&sr.data;uid=(s&&s.session&&s.session.user&&s.session.user.id)||null;
     isOwner=!!uid&&P.seller_id===uid;
     const live=(P.status==='active'||P.status==='occupied')&&!P.is_disabled&&!P.recycle_bin;
@@ -663,6 +670,9 @@ function basePrice(){
     const p=open.length?open:all;if(p.length)return Math.min(...p)}
   return Number(P.price)||0;
 }
+const QA_LABELS={water:'Water',electricity:'Electricity',security:'Security',parking:'Parking',deposit:'Deposit',lease_length:'Lease length',pets:'Pets',internet:'Internet',distance:'Distance',title_status:'Title status',payment_arrangements:'Payment arrangements',viewing_days:'Viewing days'};
+function dropBadgeHtml(){const d=P._drop;if(!d||!(Number(d.new_price)<Number(d.old_price)))return '';const pct=Math.round((1-Number(d.new_price)/Number(d.old_price))*100);return `<div class="pdrop" role="status">Price dropped${pct>0?' '+pct+'%':''} <s>${escHtml(money(Number(d.old_price)))}</s> · ${escHtml(ago(d.changed_at))}</div>`}
+function answersHtml(){const a=P._answers||[];if(!a.length)return '';return `<section class="sec" id="sec-answers">${secHead('answers','Quick answers from the lister')}<dl class="qa-list">${a.map(r=>`<div><dt>${escHtml(QA_LABELS[r.k]||r.k)}</dt><dd>${escHtml(r.a)}</dd></div>`).join('')}</dl></section>`}
 function priceHtml(){
   const v=basePrice(),from=meta().group==='boarding'&&units.length&&v>0;
   if(!(v>0))return '<span class="price-req">Price on request</span>';
@@ -833,12 +843,13 @@ function render(){
   $('view').innerHTML=`${pv}<div class="layout"><div class="main-col">
     ${galleryHtml()}
     <div class="pills">${pills.join('')}</div>
-    <h1 class="title">${escHtml(P.title)}</h1><div class="loc">${IC.pin}<span>${escHtml(where())}</span></div><div class="price">${priceHtml()}</div>${cost?`<div class="cost">${escHtml(cost)}</div>`:''}
+    <h1 class="title">${escHtml(P.title)}</h1><div class="loc">${IC.pin}<span>${escHtml(where())}</span></div><div class="price">${priceHtml()}</div>${dropBadgeHtml()}${cost?`<div class="cost">${escHtml(cost)}</div>`:''}
     ${strip.length?`<div class="strip" style="--n:${strip.length}">${strip.map(([k,v])=>`<div class="f">${factIcon(k)}<b title="${escHtml(v)}">${escHtml(v)}</b><span>${escHtml(k)}</span></div>`).join('')}</div>`:''}
     <div class="meta">${ver?`<button type="button" class="tchip" data-act="verinfo" data-v="1" aria-haspopup="dialog" aria-label="Identity verified. What does this mean?">${IC.check}Identity verified${IC.info}</button>`:''}<span class="mchip">${IC.clock}Posted ${P.created_at?escHtml(ago(P.created_at)):''}</span><span class="mchip">${IC.eye}<span id="m-views">${Number(P.views||0).toLocaleString('en-KE')} views</span></span><span class="mchip" id="m-enq-w" hidden>${IC.msg}<span id="m-enq"></span></span></div>
     ${quickInfoHtml}${quickToolsHtml}${stale}${inline}${isOwner?ownerHtml():''}
     <div class="bnb-slot md-only"></div>
     ${anchorsHtml(anchors)}
+    ${answersHtml()}
     ${desc?`<section class="sec" id="sec-about">${secHead('about','About this property')}<div class="desc${desc.length>300?' clamp':''}" id="desc">${escHtml(desc)}</div>${desc.length>300?'<button type="button" class="link" data-act="more" id="more" aria-expanded="false">Read more ↓</button>':''}</section>`:''}
     ${unitsHtml()}
     ${rest.length?`<section class="sec" id="sec-details">${secHead('details','Property details')}<dl class="dgrid">${rest.map(([k,v])=>`<div><dt>${escHtml(k)}</dt><dd>${escHtml(v)}</dd></div>`).join('')}</dl></section>`:''}

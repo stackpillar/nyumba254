@@ -336,13 +336,17 @@
       <div class="card" id="lister-quick-answers-hub" style="padding:20px;margin-bottom:18px">
         <h3 style="margin:0 0 8px">Quick Answers</h3>
         <p style="font-size:13px;color:var(--text-3);margin-bottom:12px">Answer common property questions clearly. Phone numbers and payment requests are not allowed.</p>
-        <label class="field-label" for="lister-answer-question">Question</label>
-        <select class="form-input" id="lister-answer-question">
+        <label class="field-label" for="lister-answer-listing">Applies to</label>
+        <select class="form-input" id="lister-answer-listing" onchange="fillListerQuickAnswer()"><option value="">All my listings (default)</option></select>
+        <label class="field-label" for="lister-answer-question" style="margin-top:10px">Question</label>
+        <select class="form-input" id="lister-answer-question" onchange="fillListerQuickAnswer()">
           <option value="water">Water</option><option value="electricity">Electricity</option><option value="security">Security</option><option value="parking">Parking</option><option value="deposit">Deposit</option><option value="lease_length">Lease length</option><option value="pets">Pets</option><option value="internet">Internet</option><option value="distance">Distance</option><option value="title_status">Title status</option><option value="payment_arrangements">Payment arrangements</option><option value="viewing_days">Viewing days</option>
         </select>
         <label class="field-label" for="lister-answer-text" style="margin-top:10px">Answer</label>
         <textarea class="form-input" id="lister-answer-text" maxlength="500" rows="3" placeholder="Write a concise, factual answer"></textarea>
         <button class="btn btn-outline btn-sm" type="button" style="margin-top:8px" onclick="saveListerQuickAnswer()">Save answer</button>
+        <button class="btn btn-outline btn-sm" type="button" style="margin-top:8px;color:var(--red);border-color:var(--red)" onclick="deleteListerQuickAnswer()">Delete answer</button>
+        <p style="font-size:12px;color:var(--text-3);margin-top:8px">An answer for one listing replaces your default answer on that listing page.</p>
         <div id="lister-answer-status" aria-live="polite" style="font-size:12px;color:var(--text-3);margin-top:8px"></div>
       </div>
       <div class="card" id="lister-source-stats" style="padding:20px">
@@ -911,6 +915,14 @@
               <button class="btn btn-primary btn-sm" id="team-invite-btn" onclick="inviteTeamMember()">Invite</button>
             </div>
             <div id="team-members-list"></div>
+            <p style="font-size:12px;color:var(--text-3);line-height:1.6;margin-top:10px">Teammates choose for themselves whether their name appears on your Lister Page. You cannot turn this on for them.</p>
+          </div>
+          <div class="settings-section" id="settings-roster-consent-section" style="display:none">
+            <h3><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Team listing on Lister Page</h3>
+            <div class="toggle-row" style="border-bottom:none">
+              <div class="toggle-label"><strong>Show my name on the team's Lister Page</strong><span>Only your name is shown publicly. You can turn this off at any time.</span></div>
+              <label class="switch"><input type="checkbox" id="roster-consent-toggle" onchange="setRosterConsent(this.checked)"/><span class="switch-track"></span></label>
+            </div>
           </div>
           <div class="settings-section" id="settings-contact-privacy-section">
             <h3><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.12 1.2 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>Buyer contact privacy</h3>

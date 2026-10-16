@@ -1350,11 +1350,12 @@ async function saveListerQuickAnswer(){
   const answer=document.getElementById('lister-answer-text')?.value||'';
   const question=document.getElementById('lister-answer-question')?.value||'';
   try{
+    const listingId=document.getElementById('lister-answer-listing')?.value||null;
     const{error}=await db.rpc('save_lister_quick_answer',{
-      p_listing_id:null,p_question_key:question,p_answer:answer
+      p_listing_id:listingId,p_question_key:question,p_answer:answer
     });
     if(error)throw error;
-    document.getElementById('lister-answer-text').value='';
+    await loadListerQuickAnswers();
     if(status)status.textContent='Answer saved.';
     showToast('Quick Answer saved.','success');
   }catch(error){
@@ -1364,11 +1365,39 @@ async function saveListerQuickAnswer(){
   }
 }
 
+let listerQuickAnswerRows=[];
+function fillListerQuickAnswer(){
+  const listingId=document.getElementById('lister-answer-listing')?.value||null;
+  const key=document.getElementById('lister-answer-question')?.value;
+  const row=listerQuickAnswerRows.find(r=>(r.listing_id||null)===listingId&&r.question_key===key);
+  const box=document.getElementById('lister-answer-text');
+  if(box)box.value=row?row.answer:'';
+}
 async function loadListerQuickAnswers(){
   const status=document.getElementById('lister-answer-status');
-  const{data,error}=await db.from('lister_quick_answers').select('question_key,answer').eq('lister_id',effectiveSellerId).is('listing_id',null).order('question_key');
+  const sel=document.getElementById('lister-answer-listing');
+  if(sel){
+    const keep=sel.value;
+    sel.innerHTML='<option value="">All my listings (default)</option>'+(allListings||[]).filter(l=>l.status==='active').map(l=>`<option value="${escHtml(l.id)}">${escHtml(l.title||'Untitled listing')}</option>`).join('');
+    sel.value=[...sel.options].some(o=>o.value===keep)?keep:'';
+  }
+  const{data,error}=await db.from('lister_quick_answers').select('listing_id,question_key,answer').eq('lister_id',effectiveSellerId).order('question_key');
   if(error){console.error('Could not load saved Quick Answers:',error);if(status)status.textContent='Saved answers could not be loaded.';return;}
-  if(status)status.textContent=data?.length?`${data.length} answer${data.length===1?'':'s'} saved. Select a question to update its answer.`:'No answers yet.';
+  listerQuickAnswerRows=data||[];
+  fillListerQuickAnswer();
+  const defaults=listerQuickAnswerRows.filter(r=>!r.listing_id).length,perListing=listerQuickAnswerRows.length-defaults;
+  if(status)status.textContent=listerQuickAnswerRows.length?`${defaults} default answer${defaults===1?'':'s'} and ${perListing} listing-specific answer${perListing===1?'':'s'} saved. Choose a question to edit its answer.`:'No answers yet.';
+}
+async function deleteListerQuickAnswer(){
+  const status=document.getElementById('lister-answer-status');
+  const listingId=document.getElementById('lister-answer-listing')?.value||null;
+  const key=document.getElementById('lister-answer-question')?.value;
+  if(!listerQuickAnswerRows.some(r=>(r.listing_id||null)===listingId&&r.question_key===key)){showToast('There is no saved answer to delete here.','error');return;}
+  const{error}=await db.rpc('delete_lister_quick_answer',{p_listing_id:listingId,p_question_key:key});
+  if(error){console.error('Could not delete Quick Answer:',error);showToast(error.message||'Could not delete this answer.','error');return;}
+  await loadListerQuickAnswers();
+  if(status)status.textContent='Answer deleted.';
+  showToast('Quick Answer deleted.','success');
 }
 
 async function saveListerAvailability(){
@@ -1435,7 +1464,22 @@ function teamSeatLimit(){
   return p?.subscription_tier==='yearly' ? 3 : 1;
 }
 
+async function loadRosterConsent(){
+  const wrap=document.getElementById('settings-roster-consent-section');
+  if(!wrap)return;
+  if(!isTeamMember){wrap.style.display='none';return;}
+  const{data}=await db.from('team_members').select('show_on_lister_page').eq('member_id',currentUser.id).eq('status','active').maybeSingle();
+  wrap.style.display='block';
+  const box=document.getElementById('roster-consent-toggle');
+  if(box)box.checked=!!data?.show_on_lister_page;
+}
+async function setRosterConsent(show){
+  const{error}=await db.rpc('set_my_roster_visibility',{p_show:!!show});
+  if(error){console.error('Could not save roster choice:',error);showToast(error.message||'Could not save your choice.','error');loadRosterConsent();return;}
+  showToast(show?'Your name will appear on the team Lister Page.':'Your name is hidden from the team Lister Page.','success');
+}
 async function loadTeamSeats(sub){
+  loadRosterConsent();
   const section=document.getElementById('settings-team-section');
   if(!section)return;
   if(!sub.active || isTeamMember){section.style.display='none';return;}
