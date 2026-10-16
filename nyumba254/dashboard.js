@@ -1332,6 +1332,12 @@ async function loadListerPageHub(){
   }catch(e){console.error('QR generation failed:',e)}
   const caption=document.getElementById('lister-share-caption');
   if(caption)caption.textContent=`One link for all my properties. Browse, ask questions and arrange a viewing: ${link}`;
+  const socialHub=document.getElementById('lister-social-hub');
+  if(socialHub&&window.NKSocial&&LISTER_PAGE_FLAGS.pages&&profile.account_type!=='buyer'&&!socialHub.dataset.mounted){
+    socialHub.dataset.mounted='1';
+    const socialHost=document.getElementById('lister-social-host');
+    NKSocial.mountEditor(socialHost,{db,toast:showToast}).then(ok=>{socialHub.hidden=!ok;}).catch(()=>{socialHub.hidden=true;});
+  }
   if(LISTER_PAGE_FLAGS.quickAnswers)await loadListerQuickAnswers();
   if(LISTER_PAGE_FLAGS.availability)await loadListerAvailability();
   if(LISTER_PAGE_FLAGS.sources)await loadListerSourceStats();

@@ -42,6 +42,13 @@
 
   /* ── seller header / branding ── */
   .seller-header{background:linear-gradient(135deg,var(--green-dark),var(--green-mid));padding:44px 24px 90px;text-align:center;position:relative}
+.seller-social{margin:4px 0 10px}
+.seller-social .nks-row{justify-content:center}
+.seller-social .nks-link{color:#fff;border-color:rgba(255,255,255,.6);background:rgba(255,255,255,.12)}
+.seller-social .nks-link:hover{background:rgba(255,255,255,.22)}
+.seller-social .nks-link:focus-visible{outline-color:#fff}
+.seller-social .nks-note{color:rgba(255,255,255,.9)}
+.seller-social .nks-note a{color:#fff;text-decoration:underline}
   .seller-avatar{width:84px;height:84px;border-radius:50%;background:rgba(255,255,255,0.15);border:3px solid rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:white;margin:0 auto 16px}
   .seller-name{font-family:'Playfair Display',serif;font-size:clamp(24px,4vw,32px);color:white;margin-bottom:8px}
   .seller-badges{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
@@ -153,6 +160,7 @@
   <div class="loading-wrap"><div class="spin"></div>Loading Lister Page…</div>
 </div>
 
+<script src="/nk-social.js"></script>
 <script>
   const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
@@ -274,6 +282,24 @@
     searchEl.addEventListener('input', debounce(applyFilters,250));
     ['sf-category','sf-type','sf-area','sf-sort','sf-max-price','sf-bedrooms'].forEach(id=>document.getElementById(id)?.addEventListener('input',applyFilters));
     applyFilters();
+  }
+
+  function socialVisitorToken(){
+    try{let t=localStorage.getItem('nk_sv');if(!t){t=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)+Date.now());localStorage.setItem('nk_sv',t);}return t;}catch(e){return null;}
+  }
+  document.addEventListener('click',function(ev){
+    const a=ev.target.closest&&ev.target.closest('a[data-nks-platform]');
+    if(!a||!SELLER_PROFILE?.handle)return;
+    const tok=socialVisitorToken();
+    if(!tok)return;
+    db.rpc('record_social_click',{p_handle:SELLER_PROFILE.handle,p_platform:a.dataset.nksPlatform,p_visitor:tok}).then(()=>{},()=>{});
+  });
+  async function reportListerPage(ev){
+    if(ev)ev.preventDefault();
+    if(!SELLER_PROFILE?.id)return;
+    if(!window.confirm('Report this page as a fake or impersonating account? Nyumba254 will review it.'))return;
+    const{error}=await db.from('reports').insert({target_type:'seller',target_id:SELLER_PROFILE.id,reason:'fake_or_impersonating_account',details:'Reported from Lister Page @'+(SELLER_PROFILE.handle||'')});
+    window.alert(error?'We could not send your report. Please use the Contact page.':'Thank you. Your report has been sent.');
   }
 
   function shareStorefront(){
@@ -403,6 +429,17 @@
       }
     }
 
+    let socialLinks=[];
+    if(handleParam&&window.NKSocial){
+      try{const{data:sl,error:se}=await db.rpc('get_lister_social_links',{p_handle:handleParam});if(!se&&Array.isArray(sl))socialLinks=sl.filter(l=>l&&typeof l.url==='string');}catch(e){console.error('Could not load social links:',e)}
+    }
+    const socialBlock=socialLinks.length?`<div class="seller-social">${NKSocial.renderRow(socialLinks)}<p class="nks-note">Social accounts are self-declared and not verified by Nyumba254. Pay viewing fees only at the property, never through direct messages. <a href="#" onclick="reportListerPage(event)">Report this page</a></p></div>`:'';
+    if(socialLinks.length){
+      const ld=document.createElement('script');ld.type='application/ld+json';
+      ld.textContent=JSON.stringify({'@context':'https://schema.org','@type':isCompany?'Organization':'Person',name,url:`${location.origin}/@${encodeURIComponent(profile.handle||handleParam)}`,sameAs:socialLinks.map(l=>l.url)}).replace(/</g,'\u003c');
+      document.head.appendChild(ld);
+    }
+
     const contactRow = !publicPhone
       ? `<div class="seller-contact-row"><a class="contact-btn chat" href="${firstListingHref}">Message via listing chat</a><button class="share-btn" onclick="shareStorefront()"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share</button></div>`
       : `<div class="seller-contact-row">
@@ -434,6 +471,7 @@
           ${companyWebsite?`<p><a href="${esc(companyWebsite)}" rel="noopener noreferrer">Visit company website</a></p>`:''}
           <p>Member since ${esc(new Date(profile.created_at).toLocaleDateString('en-KE',{month:'long',year:'numeric'}))}</p>
         </div>
+        ${socialBlock}
         ${contactRow}
       </div>
       <div class="content">

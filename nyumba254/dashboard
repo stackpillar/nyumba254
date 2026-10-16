@@ -325,6 +325,10 @@
         </div>
         <p id="lister-share-caption" style="font-size:13px;background:var(--surface);padding:12px;border-radius:8px;margin-top:12px"></p>
       </div>
+      <div class="card" id="lister-social-hub" style="padding:20px;margin-bottom:18px" hidden>
+        <h3 style="margin:0 0 8px">Social links</h3>
+        <div id="lister-social-host"></div>
+      </div>
       <div class="card" id="lister-availability-hub" style="padding:20px;margin-bottom:18px">
         <h3 style="margin:0 0 8px">Viewing availability</h3>
         <p style="font-size:13px;color:var(--text-3);margin-bottom:12px">Set a weekly window when people may request a viewing. You confirm arrangements through your existing Viewings inbox.</p>
@@ -1713,6 +1717,7 @@
 <script src="/nk-notification-sound.js"></script>
 <script src="/qrcode.js"></script>
 <script src="/nk-activity.js"></script>
+<script src="/nk-social.js"></script>
 <script src="/dashboard.js"></script>
 <script src="/nk-policy-viewer.js"></script>
 <script>

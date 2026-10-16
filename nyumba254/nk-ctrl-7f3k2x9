@@ -1443,7 +1443,7 @@ VIEWS.support={title:'Support chat',async mount(el,p,ctx){
 
 /* ═════════ REPORTS ═════════ */
 const VIEWING_FEE_REPORT_REASONS=new Set(['viewing_fee_dispute','viewing_fee_free_listing','viewing_fee_not_refunded','viewing_fee_advance_payment']);
-const REASON={fake_listing:'Fake listing',scam_attempt:'Scam / other upfront payment',viewing_fee_dispute:'Asked for more than the listed fee',viewing_fee_free_listing:'Charged after a free-viewing listing',viewing_fee_not_refunded:'Viewing fee not refunded',viewing_fee_advance_payment:'Asked for viewing-fee payment before viewing',unreasonable_fee:"Legacy finder's-fee report",wrong_info:'Details don’t match',offensive:'Offensive content',other:'Other'};
+const REASON={fake_listing:'Fake listing',scam_attempt:'Scam / other upfront payment',fake_or_impersonating_account:'Fake or impersonating account',viewing_fee_dispute:'Asked for more than the listed fee',viewing_fee_free_listing:'Charged after a free-viewing listing',viewing_fee_not_refunded:'Viewing fee not refunded',viewing_fee_advance_payment:'Asked for viewing-fee payment before viewing',unreasonable_fee:"Legacy finder's-fee report",wrong_info:'Details don’t match',offensive:'Offensive content',other:'Other'};
 async function setReport(r,status,notes,feeValid){
   const up={status};if(notes!==undefined)up.admin_notes=notes||null;if(feeValid!==undefined)up.fee_report_valid=feeValid;if(status==='resolved'||status==='dismissed')up.resolved_at=new Date().toISOString();
   const{error}=await db.from('reports').update(up).eq('id',r.id);if(error)throw error;
