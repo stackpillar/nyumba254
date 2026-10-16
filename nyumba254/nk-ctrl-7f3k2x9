@@ -217,7 +217,7 @@ IC.mute='<path d="M11 5 6 9H3v6h3l5 4z"/><line x1="16" y1="9" x2="22" y2="15"/><
 const icon=(n,s=16)=>`<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]||''}</svg>`;
 
 /* ───── app state + settings ───── */
-const S={user:null,me:null,cfg:{sale_standard_pct:.1,sale_featured_pct:.15,rent_standard_pct:3,rent_featured_pct:6,standard_min_fee:500,standard_max_fee:18000,featured_min_fee:1200,featured_max_fee:28000,standard_fee_per_unit:50,featured_fee_per_unit:150,trial_days:14,standard_duration_days:60,featured_duration_days:90,recycle_bin_days:30,premium_monthly_price:1200,premium_yearly_price:12000,elite_monthly_price:3000,elite_yearly_price:30000,elite_ai_listing_uses_monthly:20,elite_valuation_uses_monthly:20,bnb_basic_price:700,bnb_bundle_price:2000,require_payment_to_publish:1,enforce_verification_general:0,unverified_listing_limit:2,viewing_fee_max:5000,viewing_fee_requires_identity:1,viewing_fee_policy_version:'v1'},social:{facebook:false,instagram:false,tiktok:false}};
+const S={user:null,me:null,cfg:{sale_standard_pct:.1,sale_featured_pct:.15,rent_standard_pct:3,rent_featured_pct:6,standard_min_fee:500,standard_max_fee:18000,featured_min_fee:1200,featured_max_fee:28000,standard_fee_per_unit:50,featured_fee_per_unit:150,trial_days:14,standard_duration_days:60,featured_duration_days:90,recycle_bin_days:30,premium_monthly_price:1200,premium_yearly_price:12000,elite_monthly_price:3000,elite_yearly_price:30000,elite_ai_listing_uses_monthly:20,elite_valuation_uses_monthly:20,bnb_basic_price:700,bnb_bundle_price:2000,require_payment_to_publish:1,enforce_verification_general:0,unverified_listing_limit:2,viewing_fee_max:5000,viewing_fee_requires_identity:0,allowance_over_10_requires_identity:0,boost_requires_identity:0,owner_listing_risk_threshold:5,viewing_fee_policy_version:'v1'},social:{facebook:false,instagram:false,tiktok:false}};
 async function loadSettings(){
   const{data}=await db.from('platform_settings').select('key,value');
   (data||[]).forEach(r=>{
@@ -240,7 +240,7 @@ function listingRoleText(l){
   const labels={owner:'Direct from owner',caretaker:'Caretaker',agent:'Agent',company:'Company',buyer:'Buyer'};
   if(!role)return 'Role not set';
   const verified=profile.account_type===role&&profile.verified_role===role;
-  return `${labels[role]||role}${verified?' · verified':' · not verified'}${profile.account_type&&profile.account_type!==role?' · role changed':''}`;
+  return `${labels[role]||role}${profile.account_type&&profile.account_type!==role?' (role changed, not verified)':verified?' · identity checked':' (not verified)'}`;
 }
 async function emailViewingFeeNotice(profile,subject,message){
   if(!profile?.email)return;
@@ -538,13 +538,13 @@ let B={};
 const NAV=[
   {g:'Overview',i:[['overview','Dashboard','grid']]},
   {g:'Marketplace',i:[['listings','Listings','home','pending'],['recycle','Recycle bin','trash'],['payments','Payments','card','payments']]},
-  {g:'People',i:[['sellers','Sellers','users'],['verification','Verification','shield','verification'],['role-verification','Role verification','shield'],['role-requests','Role change requests','users'],['premium','Premium sellers','star'],['enquiries','Enquiries','msg','enquiries'],['concierge','Concierge inbox','msg','concierge'],['support','Support chat','life','support']]},
-  {g:'Trust & safety',i:[['reports','Reports','flag','reports'],['reviews','Reviews','star','reviews'],['reveals','Contact reveals','phone']]},
+  {g:'People',i:[['sellers','Sellers','users'],['verification','Verification','shield','verification'],['role-requests','Role change requests','users'],['premium','Premium sellers','star'],['enquiries','Enquiries','msg','enquiries'],['concierge','Concierge inbox','msg','concierge'],['support','Support chat','life','support']]},
+  {g:'Trust & safety',i:[['reports','Reports','flag','reports'],['risk-signals','Risk signals','flag'],['reviews','Reviews','star','reviews'],['reveals','Contact reveals','phone']]},
   {g:'Insights',i:[['analytics','Site visits','chart'],['activity','Activity log','clock']]},
   {g:'Platform',i:[['updates','Platform updates','bell'],['settings','Settings','gear']]},
 ];
 function buildShell(){
-  $('#sb').innerHTML=`<div class="brand"><img src="/logo-icon.png" alt="" onerror="this.remove()">Nyumba254<b>ADMIN</b></div><nav>${NAV.map(g=>`<div class="ng"><small>${g.g}</small>${g.i.map(([id,l,ic,bk])=>`<a class="ni" href="#/${id}" data-v="${id}">${icon(ic)}${l}${bk?`<span class="n z" data-b="${bk}">0</span>`:''}</a>`).join('')}</div>`).join('')}<div class="ng"><small>Site</small><a class="ni" href="/" target="_blank" rel="noopener">${icon('home')}View live site</a></div></nav>
+  $('#sb').innerHTML=`<div class="brand"><img src="/logo-icon.png" alt="" onerror="this.remove()">Nyumba254<b>ADMIN</b></div><nav>${NAV.map(g=>`<div class="ng"><small>${g.g}</small>${g.i.map(([id,l,ic,bk])=>`<a class="ni" href="#/${id}" data-v="${id}">${icon(ic)}${l}${bk?`<span class="n z" data-b="${bk}">0</span>`:''}</a>`).join('')}</div>`).join('')}<div class="ng"><small>Site</small><a class="ni" href="/" rel="noopener">${icon('home')}View live site</a></div></nav>
   <div class="sbf"><div class="av">${esc(initials(S.me?.full_name||'A'))}</div><div style="min-width:0;flex:1"><div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(S.me?.full_name||'Admin')}</div><small style="color:rgba(255,255,255,.45)">Super admin</small></div><button class="btn ghost icon" id="so" aria-label="Sign out" style="color:#fff">${icon('out')}</button></div>`;
   $('#burger').innerHTML=icon('menu',20);$('#cmdb').innerHTML=`${icon('search')}<span>Search or jump to…</span><kbd>Ctrl K</kbd>`;
   $('#burger').onclick=()=>{const o=$('#sb').classList.toggle('open');$('#burger').setAttribute('aria-expanded',o);};document.addEventListener('click',e=>{const sb=$('#sb');if(sb&&sb.classList.contains('open')&&!sb.contains(e.target)&&!e.target.closest('#burger'))sb.classList.remove('open');});$('#cmdb').onclick=cmdk;$('#theme').onclick=toggleTheme;$('#notification-sound-toggle').onclick=toggleAdminNotificationSound;$('#so').onclick=signOut;paintAdminSoundToggle();
@@ -886,7 +886,7 @@ async function openListing(l,T){
     ${l.description?`<div class="sec">Description</div><p style="white-space:pre-wrap;color:var(--tx2)">${esc(l.description)}</p>`:''}
     <div class="sec">Video walkthrough</div><div id="vd"><small>Loading…</small></div><div class="sec">Social</div><p>${(posts||[]).length?(posts||[]).map(p=>bd(p.platform+' · '+dt(p.created_at),'ok')).join(' '):'<small>Not posted yet</small>'}</p>
     <div class="sec">Recent admin activity</div>${(logs||[]).length?logs.map(x=>`<div class="row"><span>${esc(String(x.action).replace(/_/g,' '))}${x.details?' — '+esc(x.details):''}</span><small>${ago(x.created_at)}</small></div>`).join(''):'<small>None</small>'}`,
-    `${numOf(l)?`<a class="btn" href="/listing?id=${numOf(l)}" target="_blank" rel="noopener">View live</a>`:''}${l.seller_id?`<button class="btn" data-go>Seller’s listings</button>`:''}<button class="btn" data-ed>Edit</button>${l.status==='pending'?'<button class="btn bad" data-rj>Reject</button><button class="btn pri" data-ap>Approve</button>':''}`);
+    `${numOf(l)?`<a class="btn" href="/listing?id=${numOf(l)}" rel="noopener">View live</a>`:''}${l.seller_id?`<button class="btn" data-go>Seller’s listings</button>`:''}<button class="btn" data-ed>Edit</button>${l.status==='pending'?'<button class="btn bad" data-rj>Reject</button><button class="btn pri" data-ap>Approve</button>':''}`);
   photoSection(l,d,T);videoSection(l,d);
   const act=async f=>{try{const res=await f();if(res!==false){d.close();T.reload();refreshBadges();}}catch(e){ui.toast(e.message,'err');}};
   const q=s=>$(s,d.foot);
@@ -954,7 +954,7 @@ async function reviewQueue(){
     if(i>=data.length){close();ui.toast(`Review complete — ${done} decided`,'ok');return;}
     const l=data[i],c=coverOf(l),n=(l.listing_photos||[]).length;
     $('#rqt',w).textContent=`Review ${i+1} of ${data.length}`;
-    $('#rqb',w).innerHTML=`<div>${c?`<img class="hero" src="${esc(c.url)}" alt="">`:'<div class="hero empty" style="display:grid;place-items:center">No photos</div>'}<small>${n} photo${n!==1?'s':''}</small><div class="strip" style="margin:8px 0 0">${(l.listing_photos||[]).slice(0,8).map(p=>`<a href="${esc(p.url)}" target="_blank" rel="noopener"><img src="${esc(p.url)}" alt="" loading="lazy" style="height:56px"></a>`).join('')}</div></div>
+    $('#rqb',w).innerHTML=`<div>${c?`<img class="hero" src="${esc(c.url)}" alt="">`:'<div class="hero empty" style="display:grid;place-items:center">No photos</div>'}<small>${n} photo${n!==1?'s':''}</small><div class="strip" style="margin:8px 0 0">${(l.listing_photos||[]).slice(0,8).map(p=>`<a href="${esc(p.url)}" rel="noopener"><img src="${esc(p.url)}" alt="" loading="lazy" style="height:56px"></a>`).join('')}</div></div>
     <div><h3 style="margin-bottom:6px">${esc(l.title)}</h3><p style="font-size:20px;font-weight:700;margin-bottom:8px">${esc(priceOf(l))}</p>
     <dl class="kv"><dt>Seller</dt><dd>${esc(l.profiles?.full_name||'—')}</dd><dt>Location</dt><dd>${esc(locOf(l))}</dd><dt>Category</dt><dd>${esc(CAT[l.category]||l.category)}</dd><dt>Posted</dt><dd>${ago(l.created_at)} ago</dd><dt>Payment</dt><dd id="rqp">${bd(l.payment_status||'unpaid')} <small>checking plan…</small></dd></dl>
     <p style="white-space:pre-wrap;color:var(--tx2);max-height:140px;overflow:auto">${esc(l.description||'No description.')}</p></div>`;
@@ -1096,8 +1096,8 @@ async function videoSection(l,d){
     if(!host.isConnected)return;
     if(v.error){host.innerHTML=`<small>Video tables unavailable: ${esc(v.error.message)}</small>`;return;}
     const cur=v.data?.[0],sel=s.data,blocked=!!sel?.video_walkthrough_blocked;
-    host.innerHTML=`${(pd.data||[]).map(p=>`<div class="intro" style="background:var(--goldl);padding:10px;border-radius:8px"><b>Seller upload awaiting review</b><br><a href="${esc(p.youtube_url)}" target="_blank" rel="noopener" style="text-decoration:underline">${esc(p.youtube_url)}</a><div style="margin-top:8px"><button class="btn sm ok" data-pa="${p.id}">Approve &amp; publish</button> <button class="btn sm bad" data-pr="${p.id}">Reject</button></div></div>`).join('')}
-    ${cur?`<p style="word-break:break-all;margin-bottom:8px"><a href="${esc(cur.url)}" target="_blank" rel="noopener" style="text-decoration:underline">${esc(cur.url)}</a> <button class="btn sm bad" data-vx="${cur.id}">Delete</button></p>`:'<p><small>No video on this listing.</small></p>'}
+    host.innerHTML=`${(pd.data||[]).map(p=>`<div class="intro" style="background:var(--goldl);padding:10px;border-radius:8px"><b>Seller upload awaiting review</b><br><a href="${esc(p.youtube_url)}" rel="noopener" style="text-decoration:underline">${esc(p.youtube_url)}</a><div style="margin-top:8px"><button class="btn sm ok" data-pa="${p.id}">Approve &amp; publish</button> <button class="btn sm bad" data-pr="${p.id}">Reject</button></div></div>`).join('')}
+    ${cur?`<p style="word-break:break-all;margin-bottom:8px"><a href="${esc(cur.url)}" rel="noopener" style="text-decoration:underline">${esc(cur.url)}</a> <button class="btn sm bad" data-vx="${cur.id}">Delete</button></p>`:'<p><small>No video on this listing.</small></p>'}
     <div style="display:flex;gap:8px;margin:8px 0"><input class="in" id="vu" placeholder="${cur?'Replace with a new link…':'YouTube / Vimeo / TikTok / direct file link'}"><button class="btn sm" data-vs>${cur?'Replace':'Add'}</button></div>
     ${sel?`<label class="chk"><input type="checkbox" id="vb" ${blocked?'checked':''}> Block ${esc(sel.full_name||'this seller')} from adding video walkthroughs</label><div class="fld" id="vrw" ${blocked?'':'hidden'}><textarea class="in" id="vr" rows="2" placeholder="Reason (internal)">${esc(sel.video_walkthrough_block_reason||'')}</textarea></div><button class="btn sm" data-vk>Save block setting</button>`:''}`;
     const vb=$('#vb',host);if(vb)vb.onchange=()=>{$('#vrw',host).hidden=!vb.checked;};
@@ -1118,7 +1118,7 @@ async function videoSection(l,d){
 }
 /* ═════════ SELLERS ═════════ */
 const EMAIL_TPL=[
-  {id:'verification_reminder',l:'Verification reminder',s:'Verify your Nyumba254 account',b:n=>`Hi ${n},\n\nA quick reminder to verify your seller account. Verified sellers get unlimited listings and a trust badge buyers can see — it takes about 2 minutes under Settings → Verification.\n\nThanks for listing with us.`},
+  {id:'verification_reminder',l:'Verification reminder',s:'Verify your identity on Nyumba254',b:n=>`Hi ${n},\n\nA quick reminder that you can submit the front and back of your ID for an identity check under Settings → Verification. Your account role remains self-declared and is shown separately.\n\nThanks for listing with us.`},
   {id:'listing_improvement',l:'Improve listing details',s:'A few tips to improve your listing',b:n=>`Hi ${n},\n\nClearer photos, a fuller description and an accurate price all help your listing stand out. You can update it any time from your dashboard.\n\nLet us know if you need a hand.`},
   {id:'trial_expiring',l:'Free trial ending soon',s:'Your free trial is ending soon',b:n=>`Hi ${n},\n\nYour free trial is ending soon. To keep your listing visible, upgrade to a paid plan from your dashboard.\n\nThanks for using Nyumba254.`},
   {id:'payment_reminder',l:'Payment reminder',s:'Complete your listing payment',b:n=>`Hi ${n},\n\nYour listing payment hasn't been confirmed yet. If you've already paid, reply with your M-Pesa code and we'll check right away.`},
@@ -1195,9 +1195,9 @@ VIEWS.sellers={title:'Sellers',mount(el,p){
 
 /* ═════════ VERIFICATION ═════════ */
 async function viewDoc(u,kind){
-  const path={id:u.verification_id_url,id2:u.verification_id_url_2,proof:u.verification_proof_url}[kind];if(!path)throw new Error('No document uploaded');
+  const path={id:u.verification_id_url,id2:u.verification_id_url_2}[kind];if(!path)throw new Error('No document uploaded');
   const{data,error}=await db.storage.from('verification-docs').createSignedUrl(path,3600);if(error||!data?.signedUrl)throw new Error(error?.message||'Could not open document');
-  window.open(data.signedUrl,'_blank','noopener,noreferrer');return false;
+  window.location.href=data.signedUrl;return false;
 }
 VIEWS.verification={title:'Verification',mount(el,p){
   return Table({route:'verification',params:p,id:r=>r.id,local:true,search:'Search sellers…',
@@ -1205,13 +1205,13 @@ VIEWS.verification={title:'Verification',mount(el,p){
     tabFilter:(u,t)=>t==='verified'?u.verification_status==='verified':(u.verification_status==='pending'||u.extra_verification_status==='submitted'),
     async fetch(){const{data,error}=await db.from('profiles').select('*').neq('role','admin').or('verification_status.in.(pending,verified),extra_verification_status.eq.submitted,account_type.not.is.null').order('verification_submitted_at',{ascending:false}).limit(500);if(error)throw error;const{data:companies,error:companyError}=await db.from('company_profiles').select('profile_id,company_name,duplicate_review_required').eq('duplicate_review_required',true);if(companyError)throw companyError;const reviewById=new Map((companies||[]).map(company=>[company.profile_id,company]));return(data||[]).map(profile=>({...profile,...(reviewById.get(profile.id)||{})}));},
     searchText:u=>`${u.full_name} ${u.email}`,
-    columns:[{label:'Account',nl:1,render:u=>`<b style="color:var(--tx)">${esc(u.full_name||'—')}</b><br><small>${esc(u.email||'')}</small>`},{label:'Identity',render:u=>u.verification_status==='verified'?bd('ID verified'):bd(u.verification_status||'unverified')},{label:'Account type',render:u=>`${esc(u.account_type||'Not selected')}${u.account_type&&u.verified_role===u.account_type?` ${bd('role verified','ok')}`:''}`},{label:'Submitted',render:u=>dt(u.verification_submitted_at)}],
-    actions:u=>{const pend=u.verification_status==='pending',ver=u.verification_status==='verified',roleVerified=!!u.account_type&&u.verified_role===u.account_type;return[
-      {label:'Revoke role verification',danger:true,hide:!roleVerified,fn:async()=>{const{error}=await db.rpc('admin_approve_account_role',{p_profile_id:u.id,p_approved:false});if(error)throw error;u.verified_role=null;ui.toast('Role verification revoked','ok');}},
+    columns:[{label:'Account',nl:1,render:u=>`<b style="color:var(--tx)">${esc(u.full_name||'—')}</b><br><small>${esc(u.email||'')}</small>`},{label:'Identity',render:u=>u.verification_status==='verified'?bd('ID verified'):bd(u.verification_status||'unverified')},{label:'Role claim',render:u=>`${esc(u.account_type||'Not selected')}${u.account_type?` ${bd(u.role_badge_revoked?'badge paused':'self-declared',u.role_badge_revoked?'warn':'info')}`:''}`},{label:'Submitted',render:u=>dt(u.verification_submitted_at)}],
+    actions:u=>{const pend=u.verification_status==='pending',ver=u.verification_status==='verified';return[
+      {label:u.role_badge_revoked?'Restore role badge':'Revoke role badge',danger:!u.role_badge_revoked,hide:!u.account_type,fn:async()=>{const reason=await ui.ask({title:u.role_badge_revoked?'Restore role badge':'Revoke role badge',message:`${u.role_badge_revoked?'Restore':'Pause'} the public badge for ${esc(u.full_name||'this lister')}? This does not change identity verification.`,label:'Reason (minimum 5 characters)',confirm:u.role_badge_revoked?'Restore badge':'Revoke badge'});if(reason===null)return false;if(reason.trim().length<5)throw new Error('Enter a reason of at least 5 characters');const{error}=await db.rpc('admin_set_role_badge_revoked',{p_profile_id:u.id,p_revoked:!u.role_badge_revoked,p_reason:reason.trim()});if(error)throw error;u.role_badge_revoked=!u.role_badge_revoked;u.verified_role=u.role_badge_revoked?null:(u.verification_status==='verified'?u.account_type:null);const subject=u.role_badge_revoked?'Nyumba254 paused your role badge':'Nyumba254 restored your role badge';const message=u.role_badge_revoked?`An administrator paused the public role badge on your account. Your identity verification status has not changed. Reason: ${reason.trim()}`:`An administrator restored the public role badge for your selected account role. Reason: ${reason.trim()}`;if(u.email){const email=await notifyByEmail('admin_seller_notice',{audience:'seller',noticeType:'role_badge_status',subject,message,sellerName:u.full_name,sellerEmail:u.email});if(!email.ok)ui.toast('Role badge updated, but the email did not send.','err');}ui.toast(u.role_badge_revoked?'Role badge paused':'Role badge restored','ok');}},
       {label:'Clear company duplicate review',cls:'ok',hide:!u.duplicate_review_required,fn:async()=>{const{error}=await db.rpc('admin_review_company_duplicate',{p_profile_id:u.id,p_clear_flag:true});if(error)throw error;u.duplicate_review_required=false;ui.toast('Company duplicate review cleared','ok');}},
       {label:'Approve',primary:pend,cls:'ok',hide:!pend,fn:async()=>{const{error}=await db.from('profiles').update({verification_status:'verified',verification_reviewed_at:new Date().toISOString(),verification_reviewed_by:S.user.id}).eq('id',u.id);if(error)throw error;await db.from('verification_activity_log').insert({seller_id:u.id,action:'approved',admin_id:S.user.id});notifySeller('verification_approved',{sellerName:u.full_name,sellerEmail:u.email});notifyInApp(u.id,'profile','Your identity is verified ✓','Identity verification is separate from verification of your selected account type.','/dashboard.html');ui.toast('Identity verified','ok');}},
       {label:'Reject',primary:pend,cls:'bad',hide:!pend,fn:async()=>{const r=await ui.ask({title:'Reject verification?',message:`${esc(u.full_name||'This seller')} will be asked to resubmit.`,label:'Reason (shown to seller)',confirm:'Reject',danger:true});if(r===null)return false;await db.from('profiles').update({verification_status:'rejected',verification_rejection_reason:r,verification_reviewed_at:new Date().toISOString(),verification_reviewed_by:S.user.id}).eq('id',u.id);await db.from('verification_activity_log').insert({seller_id:u.id,action:'rejected',detail:r,admin_id:S.user.id});notifySeller('verification_rejected',{sellerName:u.full_name,sellerEmail:u.email,reason:r});notifyInApp(u.id,'profile','Verification needs changes',r,'/dashboard.html');ui.toast('Rejected');}},
-      {sep:'Documents',hide:ver},{label:'View ID (front)',hide:ver,fn:()=>viewDoc(u,'id')},{label:'View ID (back)',hide:ver,fn:()=>viewDoc(u,'id2')},{label:'View proof of ownership',hide:ver,fn:()=>viewDoc(u,'proof')},
+      {sep:'Identity documents',hide:ver},{label:'View ID (front)',hide:ver,fn:()=>viewDoc(u,'id')},{label:'View ID (back)',hide:ver,fn:()=>viewDoc(u,'id2')},
       {label:'Approve extra documents',hide:u.extra_verification_status!=='submitted',fn:async()=>{await db.from('profiles').update({extra_verification_status:'approved'}).eq('id',u.id);await db.from('verification_activity_log').insert({seller_id:u.id,action:'extra_approved',admin_id:S.user.id});ui.toast('Extra documents approved','ok');}},
       {label:'Request extra documents',fn:()=>requestExtraDocs(u)},
       {label:'Revoke verification',danger:true,hide:!ver,fn:async()=>{const r=await ui.ask({title:'Revoke verification?',message:`${esc(u.full_name||'This seller')} loses their badge and returns to the unverified listing limit.`,label:'Internal note',confirm:'Revoke',danger:true});if(r===null)return false;await db.from('profiles').update({verification_status:'unverified',verification_reviewed_at:new Date().toISOString(),verification_reviewed_by:S.user.id}).eq('id',u.id);await db.from('verification_activity_log').insert({seller_id:u.id,action:'revoked',detail:r,admin_id:S.user.id});ui.toast('Verification revoked');}}];},
@@ -1220,50 +1220,6 @@ VIEWS.verification={title:'Verification',mount(el,p){
   }).mount(el);
 }};
 
-async function openRoleVerificationDocument(path){
-  if(typeof path!=='string'||!path)throw new Error('No role-verification document was uploaded');
-  const documentWindow=window.open('about:blank','_blank');
-  if(!documentWindow)throw new Error('Allow pop-ups to open this verification document');
-  documentWindow.opener=null;
-  try{
-    const{data,error}=await db.storage.from('verification-docs').createSignedUrl(path,3600);
-    if(error||!data?.signedUrl)throw new Error(error?.message||'Could not open role-verification document');
-    documentWindow.location.href=data.signedUrl;
-    return false;
-  }catch(error){
-    documentWindow.close();
-    throw error;
-  }
-}
-VIEWS['role-verification']={title:'Role verification',mount(el,p){
-  return Table({route:'role-verification',params:p,id:r=>r.id,local:true,search:'Search applicants…',
-    async fetch(){
-      const{data:submissions,error}=await db.from('role_verification_submissions').select('*').eq('status','pending').order('submitted_at',{ascending:true}).limit(500);
-      if(error)throw error;
-      const ids=[...new Set((submissions||[]).map(item=>item.profile_id))];
-      if(!ids.length)return[];
-      const{data:profiles,error:profileError}=await db.from('profiles').select('id,full_name,email,phone,account_type,verified_role,verification_status').in('id',ids);
-      if(profileError)throw profileError;
-      const byId=new Map((profiles||[]).map(profile=>[profile.id,profile]));
-      return(submissions||[]).map(item=>({...item,profile:byId.get(item.profile_id)||{}}));
-    },
-    searchText:r=>`${r.profile.full_name||''} ${r.profile.email||''} ${r.account_type} ${r.applicant_note||''}`,
-    columns:[
-      {label:'Applicant',nl:1,render:r=>`<b style="color:var(--tx)">${esc(r.profile.full_name||'—')}</b><br><small>${esc(r.profile.email||'')}</small>`},
-      {label:'Role',render:r=>`${esc(r.account_type)}${r.profile.verification_status==='verified'?` ${bd('identity verified','ok')}`:` ${bd('identity not verified','warn')}`}`},
-      {label:'Documents',render:r=>r.document_paths.length},
-      {label:'Applicant note',render:r=>esc(r.applicant_note||'—')},
-      {label:'Submitted',render:r=>dt(r.submitted_at)}
-    ],
-    actions:r=>[
-      ...r.document_paths.map((path,i)=>({label:`Open document ${i+1}`,fn:()=>openRoleVerificationDocument(path)})),
-      {sep:'Review'},
-      {label:'Approve role',primary:true,cls:'ok',fn:async()=>{const ok=await ui.confirm({title:'Verify this role?',message:`Approve the ${esc(r.account_type)} role claim for <b>${esc(r.profile.full_name||'this lister')}</b>? This is separate from identity verification.`,confirm:'Verify role'});if(!ok)return false;const{error}=await db.rpc('admin_review_role_verification',{p_submission_id:r.id,p_approved:true,p_admin_note:null});if(error)throw error;ui.toast(`${r.account_type} role verified`,'ok');}},
-      {label:'Request changes / reject',cls:'bad',fn:async()=>{const note=await ui.ask({title:'Request changes to role verification',message:`Tell ${esc(r.profile.full_name||'the applicant')} what supporting evidence is needed.`,label:'Reason',confirm:'Send update'});if(note===null)return false;if(note.trim().length<5)return ui.toast('Add a clear reason of at least 5 characters','err');const{error}=await db.rpc('admin_review_role_verification',{p_submission_id:r.id,p_approved:false,p_admin_note:note.trim()});if(error)throw error;ui.toast('Role verification returned for changes','ok');}}
-    ],
-    empty:['No role-verification submissions','New submissions will appear here for review.']
-  }).mount(el);
-}};
 VIEWS['role-requests']={title:'Role change requests',mount(el,p){
   return Table({route:'role-requests',params:p,id:r=>r.id,local:true,search:'Search role requests…',
     async fetch(){
@@ -1432,7 +1388,7 @@ async function openReport(r,T){
   const d=ui.drawer('Report — '+r.target_type,`<div style="display:flex;gap:6px;margin-bottom:12px">${bd(r.status)}${r._n>1?bd(r._n+' reports on this seller','bad'):''}${s?.is_disabled?bd('suspended','bad'):''}</div>
     <dl class="kv"><dt>Reason</dt><dd>${esc(REASON[r.reason]||r.reason)}</dd><dt>Details</dt><dd>${esc(r.details||'—')}</dd><dt>Reporter</dt><dd>${esc(r.reporter_name||'Anonymous')}${r.reporter_contact?' · '+esc(r.reporter_contact):''}</dd><dt>Submitted</dt><dd>${dtt(r.created_at)}</dd></dl>
     ${l?`<div class="sec">Reported listing</div><dl class="kv"><dt>Title</dt><dd>${esc(l.title)}</dd><dt>Price</dt><dd>${esc(priceOf(l))}</dd><dt>Location</dt><dd>${esc(locOf(l))}</dd><dt>Status</dt><dd>${bd(l.status)}${l.is_disabled?' '+bd('disabled','bad'):''}</dd><dt>Listed</dt><dd>${dt(l.created_at)}</dd></dl>`:r.target_type==='listing'?'<p><small>Listing not found — it may have been deleted.</small></p>':''}
-    ${s?`<div class="sec">Lister</div><dl class="kv"><dt>Name</dt><dd>${esc(s.full_name||'—')}</dd><dt>Role</dt><dd>${esc(s.account_type||'—')} · ${s.verified_role===s.account_type&&s.account_type?'verified':'not verified'}</dd><dt>Fee privilege</dt><dd>${s.viewing_fee_blocked?'Paused':'Available'}${s.viewing_fee_block_reason?': '+esc(s.viewing_fee_block_reason):''}</dd><dt>Phone</dt><dd>${esc(s.phone||'—')}</dd><dt>Email</dt><dd>${esc(s.email||'—')}</dd><dt>Since</dt><dd>${dt(s.created_at)}</dd></dl>`:''}
+    ${s?`<div class="sec">Lister</div><dl class="kv"><dt>Name</dt><dd>${esc(s.full_name||'—')}</dd><dt>Role claim</dt><dd>${esc(s.account_type||'—')} · ${s.role_badge_revoked?'badge paused':s.verified_role===s.account_type&&s.account_type?'identity checked':'not verified'} (self-declared)</dd><dt>Fee privilege</dt><dd>${s.viewing_fee_blocked?'Paused':'Available'}${s.viewing_fee_block_reason?': '+esc(s.viewing_fee_block_reason):''}</dd><dt>Phone</dt><dd>${esc(s.phone||'—')}</dd><dt>Email</dt><dd>${esc(s.email||'—')}</dd><dt>Since</dt><dd>${dt(s.created_at)}</dd></dl>`:''}
     ${VIEWING_FEE_REPORT_REASONS.has(r.reason)?`<div class="fld"><label class="chk"><input type="checkbox" id="rfee" ${r.fee_report_valid?'checked':''}><span><b>Validate this viewing-fee report</b><br><small>Two valid reports within 90 days pause the lister’s fee privilege.</small></span></label></div><div class="sec">Recent viewing-fee reports for this lister</div><div id="fee-report-history"><small>Loading report history…</small></div>`:''}
     <div class="fld"><label>Admin notes (internal only)</label><textarea class="in" id="rn" rows="3">${esc(r.admin_notes||'')}</textarea></div>`,
     `${s&&!s.is_disabled?'<button class="btn bad" data-su>Suspend lister</button>':''}${s&&['agent','company'].includes(s.account_type)?`<button class="btn ${s.viewing_fee_blocked?'ok':'bad'}" data-freeze-fees>${s.viewing_fee_blocked?'Restore fee privilege':'Pause fee privilege'}</button>`:''}${l&&!l.is_disabled?'<button class="btn bad" data-rc>Recycle listing</button>':''}<button class="btn" data-st="dismissed">Dismiss</button><button class="btn" data-st="reviewing">Reviewing</button><button class="btn ok" data-st="resolved">Resolve</button>`);
@@ -1463,6 +1419,27 @@ async function openReport(r,T){
     }
   }
 }
+VIEWS['risk-signals']={title:'Risk signals',mount(el,p){
+  return Table({route:'risk-signals',params:p,id:r=>r.id,local:true,search:'Search risk signals…',sort:{key:'created_at',dir:'desc'},
+    tabs:[{id:'open',label:'Open'},{id:'reviewed',label:'Reviewed'},{id:'dismissed',label:'Dismissed'}],
+    tabFilter:(r,t)=>r.status===t,
+    async fetch(){const{data,error}=await db.from('risk_signals').select('*').order('created_at',{ascending:false}).limit(500);if(error)throw error;return data||[];},
+    searchText:r=>`${r.signal_code} ${r.subject_type} ${r.subject_id} ${r.source} ${JSON.stringify(r.details||{})}`,
+    columns:[
+      {label:'Signal',nl:1,render:r=>`<b>${esc(r.signal_code)}</b><br><small>${esc(r.source)}</small>`},
+      {label:'Severity',render:r=>bd(r.severity,r.severity==='low'?'info':'warn')},
+      {label:'Subject',render:r=>`${esc(r.subject_type)} · ${esc(r.subject_id)}`},
+      {label:'Details',render:r=>esc(JSON.stringify(r.details||{}))},
+      {label:'Created',render:r=>dt(r.created_at)}
+    ],
+    actions:r=>[
+      {label:'Open lister account',hide:r.subject_type!=='profile',fn:()=>location.hash=`#/sellers?search=${encodeURIComponent(r.subject_id)}`},
+      {label:'Mark reviewed',cls:'ok',hide:r.status!=='open',fn:async()=>{const{error}=await db.from('risk_signals').update({status:'reviewed',reviewed_at:new Date().toISOString(),reviewed_by:S.user.id}).eq('id',r.id);if(error)throw error;logAction('review_risk_signal','risk_signal',r.id,r.signal_code);ui.toast('Risk signal marked reviewed','ok');}},
+      {label:'Dismiss',danger:true,hide:r.status!=='open',fn:async()=>{const ok=await ui.confirm({title:'Dismiss risk signal?',message:`Dismiss <b>${esc(r.signal_code)}</b>?`,confirm:'Dismiss'});if(!ok)return false;const{error}=await db.from('risk_signals').update({status:'dismissed',reviewed_at:new Date().toISOString(),reviewed_by:S.user.id}).eq('id',r.id);if(error)throw error;logAction('dismiss_risk_signal','risk_signal',r.id,r.signal_code);ui.toast('Risk signal dismissed','ok');}}
+    ],
+    empty:['No risk signals','Low-severity owner listing-count signals appear here for review.']
+  }).mount(el);
+}};
 VIEWS.reports={title:'Reports',mount(el,p){
   return Table({route:'reports',params:p,id:r=>r.id,local:true,search:'Search reports…',sort:{key:'created_at',dir:'desc'},
     tabs:[['open','Open'],['reviewing','Reviewing'],['resolved','Resolved'],['dismissed','Dismissed'],['fee_disputes','Fee disputes'],['all','All']].map(([id,label])=>({id,label})),tabFilter:(r,t)=>t==='all'||(t==='fee_disputes'?VIEWING_FEE_REPORT_REASONS.has(r.reason):r.status===t),
@@ -1539,7 +1516,7 @@ VIEWS.analytics={title:'Site visits',mount(el,p){
 
 function openVerify(u,T){
   const acts=(T.st.acts.get(String(u.id))||[]).filter(a=>a.label&&!a.sep);
-  const d=ui.drawer(u.full_name||'Seller',`<div style="display:flex;gap:6px;margin-bottom:12px">${bd(u.verification_status||'unverified')}${u.extra_verification_status?bd('extra docs: '+u.extra_verification_status,'info'):''}</div><dl class="kv"><dt>Email</dt><dd>${esc(u.email||'—')}</dd><dt>Phone</dt><dd>${esc(u.phone||'—')}</dd><dt>Ownership</dt><dd>${u.verification_is_owner===false?'Not owner (authority letter)':'Owner'}</dd><dt>Submitted</dt><dd>${dt(u.verification_submitted_at)}</dd>${u.verification_rejection_reason?`<dt>Last rejection</dt><dd>${esc(u.verification_rejection_reason)}</dd>`:''}${u.extra_verification_reason?`<dt>Extra docs asked</dt><dd>${esc(u.extra_verification_reason)}</dd>`:''}</dl><p class="intro"><small>Use the buttons below to open the uploaded documents, then approve or reject.</small></p>`,acts.map((a,i)=>`<button class="btn sm ${a.cls||''}" data-a="${i}">${esc(a.label)}</button>`).join(''));
+  const d=ui.drawer(u.full_name||'Seller',`<div style="display:flex;gap:6px;margin-bottom:12px">${bd(u.verification_status||'unverified')}${u.extra_verification_status?bd('extra docs: '+u.extra_verification_status,'info'):''}</div><dl class="kv"><dt>Email</dt><dd>${esc(u.email||'—')}</dd><dt>Phone</dt><dd>${esc(u.phone||'—')}</dd><dt>Account role</dt><dd>${esc(u.account_type||'Not selected')} · self-declared</dd><dt>Submitted</dt><dd>${dt(u.verification_submitted_at)}</dd>${u.verification_rejection_reason?`<dt>Last rejection</dt><dd>${esc(u.verification_rejection_reason)}</dd>`:''}${u.extra_verification_reason?`<dt>Extra docs asked</dt><dd>${esc(u.extra_verification_reason)}</dd>`:''}</dl><p class="intro"><small>Review the uploaded identity documents, then approve or reject.</small></p>`,acts.map((a,i)=>`<button class="btn sm ${a.cls||''}" data-a="${i}">${esc(a.label)}</button>`).join(''));
   d.foot.onclick=e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=acts[+b.dataset.a];if(!/^View/.test(a.label))d.close();T.run(a,u);};
 }
 /* ═════════ CONCIERGE INBOX (managed chat: admin replies to buyers as the seller) ═════════ */
@@ -1607,8 +1584,8 @@ VIEWS.concierge={title:'Concierge inbox',async mount(el,p,ctx){
   function leave(){if(pres){db.removeChannel(pres);pres=null;}clearTimeout(typingT);online=false;}
   function thread(){
     const t=active,l=t.listing,s=suggest(t),had=document.activeElement?.id==='rt';if($('#rt',el)&&dFor)drafts[dFor]=$('#rt',el).value;const draft=drafts[t.key]||'';dFor=t.key;
-    const wa=t.phone?`<a class="btn sm" target="_blank" rel="noopener" href="https://wa.me/${t.phone.replace(/[\s+]/g,'').replace(/^0/,'254')}">WhatsApp</a>`:'';
-    $('#ct',el).innerHTML=`<div style="padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;gap:10px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:0"><b>${esc(t.buyerName)}</b><br><small>${esc(t.sellerName)} · ${esc(l?.title||'Listing')}${t.phone?' · '+esc(t.phone):''}</small><br><small><span id="pd" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#9a9a94;margin-right:5px"></span><span id="pt">Buyer offline</span></small></div>${wa}${l&&numOf(l)?`<a class="btn sm" target="_blank" rel="noopener" href="/listing?id=${numOf(l)}">View listing</a>`:''}</div>
+    const wa=t.phone?`<a class="btn sm" rel="noopener" href="https://wa.me/${t.phone.replace(/[\s+]/g,'').replace(/^0/,'254')}">WhatsApp</a>`:'';
+    $('#ct',el).innerHTML=`<div style="padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;gap:10px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:0"><b>${esc(t.buyerName)}</b><br><small>${esc(t.sellerName)} · ${esc(l?.title||'Listing')}${t.phone?' · '+esc(t.phone):''}</small><br><small><span id="pd" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#9a9a94;margin-right:5px"></span><span id="pt">Buyer offline</span></small></div>${wa}${l&&numOf(l)?`<a class="btn sm" rel="noopener" href="/listing?id=${numOf(l)}">View listing</a>`:''}</div>
     <div class="msgs" id="ms">${t.msgs.map(m=>`<div class="m ${m.sender==='seller'?'me':''}" style="${m.sender==='seller'?'':'align-self:flex-start'}">${esc(m.content||'')}<small>${m.sender==='seller'?(m.byAdmin?'You (as seller)':'Seller'):esc(t.buyerName)} · ${dtt(m.created_at)}</small></div>`).join('')}</div>
     ${t.msgs.some(m=>m.sender==='buyer')?`<div style="margin:0 12px 8px;padding:10px 12px;background:var(--goldl);border-radius:10px"><small style="color:var(--gold);font-weight:700">💡 Suggested reply — ${esc(s.tpl.label.replace(/^\S+\s/,''))}</small><p style="margin:4px 0 8px;color:var(--tx2)">${esc(s.body)}</p><button class="btn sm ok" data-q="${s.tpl.id}">⚡ Send this</button> <button class="btn sm" data-e="${s.tpl.id}">✎ Edit first</button></div>`:''}
     <div style="display:flex;gap:6px;flex-wrap:wrap;padding:0 12px 8px">${CC_QR.map(x=>`<button class="btn sm" data-q="${x.id}">${x.label}</button>`).join('')}</div>
@@ -1689,13 +1666,16 @@ VIEWS.settings={title:'Settings',async mount(el){
     ${chk('require_payment_to_publish','Require payment before listings go live','On: pay or trial before going active. Off: every approved listing goes live free.')}
     ${chk('enforce_verification_general','Enforce verification limit for all sellers','Caps unverified sellers at the limit below and sends them to KYC.')}
     ${chk('viewing_fee_requires_identity','Require identity verification before charging a viewing fee','When enabled, agents and companies must have verified identity before setting a fee.')}
+    ${chk('allowance_over_10_requires_identity','Require identity verification for allowances over 10 listings','When enabled, an account must verify identity before exceeding 10 active listings.')}
+    ${chk('boost_requires_identity','Require identity verification before requesting a listing boost','When enabled, listers must verify identity before asking support to feature a listing.')}
     ${chk('storefront_free_enabled','Make public lister storefronts free','When enabled, every lister can use a public profile page with their active listings. When disabled, active Elite subscribers retain storefront access.')}
-    <div class="fld" style="max-width:260px"><label>Unverified listing limit</label><input class="in" type="number" min="0" id="s_unverified_listing_limit" value="${esc(val('unverified_listing_limit'))}"></div></div>
+    <div class="fld" style="max-width:260px"><label>Unverified listing limit</label><input class="in" type="number" min="0" id="s_unverified_listing_limit" value="${esc(val('unverified_listing_limit'))}"></div>
+    <div class="fld" style="max-width:260px"><label for="s_owner_listing_risk_threshold">Owner listing-count signal threshold</label><input class="in" type="number" min="1" id="s_owner_listing_risk_threshold" value="${esc(val('owner_listing_risk_threshold'))}"><small>Creates a low-severity review signal at this many active listings.</small></div></div>
   ${SET_GROUPS.map(g=>`<div class="card" style="padding:18px;margin-bottom:16px"><h3>${g.t}</h3><p class="intro" style="margin:2px 0 12px"><small>${g.d}</small></p><div class="g2">${g.f.map(([k,l,s])=>`<div class="fld"><label for="s_${k}">${l}</label><input class="in" id="s_${k}" ${s==='text'?'type="text"':`type="number" step="${s||1}"`} value="${esc(val(k))}"></div>`).join('')}</div></div>`).join('')}
   <div class="card" style="padding:18px"><h3 style="margin-bottom:4px">Social auto-posting</h3><p class="intro"><small>New listings are posted to Nyumba254's own Facebook, Instagram and TikTok when approved. You can always post manually from a listing.</small></p>
     ${['facebook','instagram','tiktok'].map(k=>`<label class="chk"><input type="checkbox" id="a_${k}" ${auto(k)?'checked':''}> Auto-post to ${k[0].toUpperCase()+k.slice(1)}${k==='tiktok'?' <small>(private until TikTok’s audit clears)</small>':''}</label>`).join('')}</div>
   <div class="savebar" id="sv" hidden><span id="svn"></span><span><button class="btn ghost" style="color:inherit" id="rs">Discard</button> <button class="btn pri" id="sa">Save changes</button></span></div></div>`;
-  const keys=[...SET_GROUPS.flatMap(g=>g.f.map(f=>f[0])),'unverified_listing_limit','storefront_free_enabled'],flags=['require_payment_to_publish','enforce_verification_general','viewing_fee_requires_identity','storefront_free_enabled'];
+  const keys=[...SET_GROUPS.flatMap(g=>g.f.map(f=>f[0])),'unverified_listing_limit','owner_listing_risk_threshold','storefront_free_enabled'],flags=['require_payment_to_publish','enforce_verification_general','viewing_fee_requires_identity','allowance_over_10_requires_identity','boost_requires_identity','storefront_free_enabled'];
   const read=()=>{const o={};keys.forEach(k=>{const e=$('#s_'+k,el);o[k]=SET_GROUPS.find(g=>g.f.find(f=>f[0]===k&&f[2]==='text'))?e.value.trim():(e.value===''?val(k):Number(e.value));});flags.forEach(k=>o[k]=$('#s_'+k,el).checked?1:0);['facebook','instagram','tiktok'].forEach(k=>o['auto_post_'+k]=$('#a_'+k,el).checked?'1':'0');return o;};
   const changed=()=>{const o=read();return Object.entries(o).filter(([k,v])=>String(v)!==String(k.startsWith('auto_post_')?(auto(k.slice(10))?'1':'0'):(flags.includes(k)?(Number(val(k))?1:0):val(k))));};
   const upd=()=>{const c=changed();window.onbeforeunload=c.length?()=>'':null;$('#sv',el).hidden=!c.length;$('#svn',el).textContent=`${c.length} unsaved change${c.length!==1?'s':''}`;};
@@ -1706,6 +1686,8 @@ VIEWS.settings={title:'Settings',async mount(el){
 if([['standard_min_fee','standard_max_fee'],['featured_min_fee','featured_max_fee']].some(([a,b])=>o[a]>o[b]))return ui.toast('Minimum fee can’t be higher than the maximum fee','err');
 if(['sale_standard_pct','sale_featured_pct','rent_standard_pct','rent_featured_pct'].some(k=>o[k]<0||o[k]>100))return ui.toast('Percentages must be between 0 and 100','err');
 if(!Number.isInteger(o.viewing_fee_max)||o.viewing_fee_max<0||o.viewing_fee_max>5000)return ui.toast('The viewing-fee cap must be a whole amount from KES 0 to KES 5,000','err');
+if(!Number.isInteger(o.unverified_listing_limit)||o.unverified_listing_limit<0)return ui.toast('The unverified listing limit must be a whole number of zero or more','err');
+if(!Number.isInteger(o.owner_listing_risk_threshold)||o.owner_listing_risk_threshold<1)return ui.toast('The owner listing-count signal threshold must be a whole number of at least 1','err');
 if(!String(o.viewing_fee_policy_version||'').trim())return ui.toast('Enter a viewing-fee policy version','err');
     const risky=c.filter(([k])=>/price|pct|fee|require_payment/.test(k));
     if(risky.length&&!await ui.confirm({title:'Change pricing or payment rules?',message:`This affects what sellers pay from now on: <b>${risky.map(([k])=>k.replace(/_/g,' ')).join(', ')}</b>.`,confirm:'Save changes'}))return;

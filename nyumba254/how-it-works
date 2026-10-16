@@ -836,7 +836,7 @@
     <div class="trust-card">
       <div class="trust-icon g"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg></div>
       <h3>Every listing is reviewed</h3>
-      <p>Listings are reviewed before publication. Listers who complete identity verification carry a visible identity badge; role verification is shown separately.</p>
+      <p>Listings are reviewed before publication. Identity checks confirm identity only; every lister's role remains self-declared and is shown separately from identity status.</p>
     </div>
     <div class="trust-card">
       <div class="trust-icon gold"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
@@ -852,9 +852,9 @@
 
   <div class="guide-two-col" style="margin-top:44px">
     <div>
-      <h3 style="font-size:16px;font-weight:600;margin-bottom:14px">How seller verification works</h3>
-      <p style="font-size:13.5px;color:var(--text-2);line-height:1.7;margin-bottom:14px">Sellers can optionally submit ID and proof of ownership (or authority to list) for review. Once approved, a "Verified" badge appears on their profile and listings — a signal to buyers, not a guarantee, so always still view a property in person before paying anything.</p>
-      <p style="font-size:13.5px;color:var(--text-2);line-height:1.7">Unverified sellers can still list and be contacted normally; verification is an extra layer of trust, not a requirement to use the platform.</p>
+      <h3 style="font-size:16px;font-weight:600;margin-bottom:14px">How identity checks and role badges work</h3>
+      <p style="font-size:13.5px;color:var(--text-2);line-height:1.7;margin-bottom:14px">Identity checks review identity documents only. A role such as owner, caretaker, agent or company is self-declared and is not proof of ownership or authority to list. An identity badge does not guarantee a property's availability or condition.</p>
+      <p style="font-size:13.5px;color:var(--text-2);line-height:1.7">Listers may set up their account and listings before identity verification, subject to the platform's current limits. Check the listing for any viewing fee, pay only that disclosed fee directly to the lister, get a receipt, and never pay rent or a deposit before viewing.</p>
     </div>
     <div class="callout-box warn">
       <h4><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Reporting a listing or a seller</h4>
@@ -1091,11 +1091,11 @@
         <div class="footer-logo"><div class="footer-logo-icon"><img src="/logo-icon.png" alt="" width="40" height="40"/></div>Nyumba254</div>
         <p class="footer-tagline">Find and list property across Kenya. Open to buyers, owners, caretakers, agents, and companies, with no deal commission from Nyumba254.</p>
         <div class="footer-social">
-          <a href="https://wa.me/254739348560" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></a>
-          <a href="https://www.instagram.com/nyumba.254?igsh=Z2VhNzJkMm1td2Jz" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
-          <a href="https://www.facebook.com/share/1EdzJKujSK/" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
-          <a href="https://www.tiktok.com/@nyumba.254?_r=1&amp;_t=ZS-98w137YXueA" target="_blank" rel="noopener" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="M9 12a4 4 0 104 4V4a5 5 0 005 5"/></svg></a>
-          <a href="https://x.com/Nyumba254" target="_blank" rel="noopener" aria-label="X (Twitter)"><svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20"/></svg></a>
+          <a href="https://wa.me/254739348560" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></a>
+          <a href="https://www.instagram.com/nyumba.254?igsh=Z2VhNzJkMm1td2Jz" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+          <a href="https://www.facebook.com/share/1EdzJKujSK/" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
+          <a href="https://www.tiktok.com/@nyumba.254?_r=1&amp;_t=ZS-98w137YXueA" rel="noopener" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="M9 12a4 4 0 104 4V4a5 5 0 005 5"/></svg></a>
+          <a href="https://x.com/Nyumba254" rel="noopener" aria-label="X (Twitter)"><svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20"/></svg></a>
           <a href="mailto:hello@nyumba254.co.ke" aria-label="Email"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></a>
         </div>
       </div>

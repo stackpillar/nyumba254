@@ -111,7 +111,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 <a href="#main" class="skip-link">Skip to form</a>
 <nav aria-label="Main">
   <a href="/" class="logo"><img src="/logo-icon.png" alt="" width="40" height="40"/>Nyumba254</a>
-  <div class="nav-right"><a href="https://wa.me/254739348560" target="_blank" rel="noopener" class="nav-link">Need help?</a><a href="/listings" class="nav-link">Browse listings</a></div>
+  <div class="nav-right"><a href="https://wa.me/254739348560" rel="noopener" class="nav-link">Need help?</a><a href="/listings" class="nav-link">Browse listings</a></div>
 </nav>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -175,7 +175,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
         <div class="field-hint" id="viewing-fee-locked" hidden>Verify your identity to charge a viewing fee. <a href="/dashboard#verification-settings-section">Verify identity</a></div>
         <div class="field-error" id="e-viewing_fee" role="alert"></div>
         <div id="viewing-fee-preview" class="box" aria-live="polite" style="margin-top:8px">Buyers will see: Free viewing</div>
-        <label style="display:flex;gap:9px;align-items:flex-start;font-weight:400;font-size:12px;color:var(--text-2);margin-top:10px"><input type="checkbox" id="viewing-fee-policy-accept" style="width:18px;height:18px;accent-color:var(--green)"/>I have read and agree to the <a href="/viewing-fee-policy" target="_blank" rel="noopener">Viewing Fee Policy</a>.</label>
+        <label style="display:flex;gap:9px;align-items:flex-start;font-weight:400;font-size:12px;color:var(--text-2);margin-top:10px"><input type="checkbox" id="viewing-fee-policy-accept" style="width:18px;height:18px;accent-color:var(--green)"/>I have read and agree to the <a href="/viewing-fee-policy" data-policy-viewer>Viewing Fee Policy</a>.</label>
         <div class="field-hint" style="margin-top:8px">Safety preview: Pay any listed viewing fee only at the property, to the person you meet, and ask for a receipt. Never pay rent, a deposit or any other fee before you have viewed the property.</div>
       </div>
       <div class="field-hint" id="viewing-free-note" hidden>Viewing is free for this listing. Only agents and companies can charge a viewing fee.</div>
@@ -284,7 +284,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     <div class="form-card">
       <h2>Review your listing</h2><p class="hint">Check everything before submitting. You can edit after posting too.</p>
       <div id="fee-box"></div><div id="review"></div>
-      <div class="field" style="margin-top:20px"><label style="display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:13px;color:var(--text-2);cursor:pointer"><input type="checkbox" id="agree" style="width:18px;height:18px;margin-top:1px;accent-color:var(--green)"/><span>I agree to the <a href="/terms" target="_blank" rel="noopener" style="color:var(--green);font-weight:600;text-decoration:underline">Terms</a> and <a href="/privacy" target="_blank" rel="noopener" style="color:var(--green);font-weight:600;text-decoration:underline">Privacy Policy</a>, and confirm the information is accurate. <span style="color:var(--red)">*</span></span></label><div class="field-error" id="e-agree" role="alert"></div></div>
+      <div class="field" style="margin-top:20px"><label style="display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:13px;color:var(--text-2);cursor:pointer"><input type="checkbox" id="agree" style="width:18px;height:18px;margin-top:1px;accent-color:var(--green)"/><span>I agree to the <a href="/terms" rel="noopener" style="color:var(--green);font-weight:600;text-decoration:underline">Terms</a> and <a href="/privacy" rel="noopener" style="color:var(--green);font-weight:600;text-decoration:underline">Privacy Policy</a>, and confirm the information is accurate. <span style="color:var(--red)">*</span></span></label><div class="field-error" id="e-agree" role="alert"></div></div>
       <div class="field-error" id="submit-error" role="alert" style="margin-top:14px;font-size:13px"></div>
     </div>
   </section>
@@ -318,6 +318,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/nk-shared.js"></script>
+<script src="/nk-policy-viewer.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 (function(){'use strict';
@@ -334,7 +335,7 @@ const PRICE_HINT={standard:'Digits only. Choose the payment frequency alongside 
 const LABEL={furnished:{yes:'Fully furnished',partial:'Partly furnished',no:'Unfurnished'},parking:{private:'Private',shared:'Shared compound',street:'Street only',none:'None'},security:{gated_guard_cctv:'Gated, guarded and CCTV',gated_guard:'Gated with guard',gated_cctv:'Gated with CCTV',gated:'Gated, no guard',cctv:'CCTV only',none:'None'}};
 const FREQ_SUFFIX={month:'/month',once:'',night:'/night',term:'/term',semester:'/semester',week:'/week'};
 const FIELD_IDS=['title','description','county','area','area_custom','address','price','price_frequency','comm_lease_type','deposit','available_from','viewing_fee','std_bathrooms','std_bedrooms','std_size','std_furnished','std_parking','std_security','board_gender','board_institution','air_guests','air_bedrooms','air_bathrooms','air_min_stay','air_checkin','air_rules','std_rules','comm_type','comm_size','comm_parking','comm_condition','comm_units','comm_frontage','video_url','contact_name','phone','whatsapp','contact_email'];
-const PS={sale_standard_pct:.1,rent_standard_pct:3,standard_min_fee:500,standard_max_fee:18000,standard_fee_per_unit:50,trial_days:14,bnb_basic_price:700,enforce_verification_general:0,unverified_listing_limit:2,viewing_fee_max:5000,viewing_fee_requires_identity:1,viewing_fee_policy_version:'v1'};
+const PS={sale_standard_pct:.1,rent_standard_pct:3,standard_min_fee:500,standard_max_fee:18000,standard_fee_per_unit:50,trial_days:14,bnb_basic_price:700,enforce_verification_general:0,unverified_listing_limit:2,allowance_over_10_requires_identity:0,viewing_fee_max:5000,viewing_fee_requires_identity:0,viewing_fee_policy_version:'v1'};
 const DRAFT_KEY='nk_post_listing_draft_v3';
 
 /* ═══ STATE ═══ */
@@ -683,9 +684,11 @@ async function checkGate(){
   if(capabilityError)throw new Error(`Could not check listing permissions: ${capabilityError.message}`);
   if((!p.onboarding_completed||!S.accountType)&&canList!==true)return {blocked:false,accountBlocked:'Complete account setup before posting a listing.'};
   if(S.accountType==='buyer')return {blocked:false,accountBlocked:'Tenant / Buyer accounts cannot create listings. Change your account type in dashboard settings.'};
-  const enforced=Number(PS.enforce_verification_general)===1||!!(p&&p.verification_enforced);
-  if(!enforced||(p&&p.verification_status==='verified'))return {blocked:false};
-  const limit=Number(PS.unverified_listing_limit)||2;
+  const enforced=Number(PS.enforce_verification_general)===1||!!p.verification_enforced;
+  const allowanceOver10=Number(PS.allowance_over_10_requires_identity)===1;
+  if(p.verification_status==='verified'||(!enforced&&!allowanceOver10))return {blocked:false};
+  const configuredLimit=Number(PS.unverified_listing_limit??2);
+  const limit=allowanceOver10?Math.min(configuredLimit,10):configuredLimit;
   const {count,error:countError}=await db.from('listings').select('id',{count:'exact',head:true}).eq('seller_id',sellerId).eq('recycle_bin',false).eq('status','active');
   if(countError)throw new Error(`Could not check your active listings: ${countError.message}`);
   return {blocked:(count||0)>=limit,limit};
@@ -872,7 +875,7 @@ function done(guest){
   $('s-head').textContent=guest?'Check your email to finish setup':'Listing submitted';
   $('s-msg').textContent=guest?"We saved your listing and created your free Nyumba254 account. Open the email we sent and set your password to send the listing for review.":'Your listing is saved and waiting for review.';
   $('s-pay').textContent=guest?'Didn\'t get the email? Check spam, or contact us on WhatsApp and we\'ll resend it.':S.first?`Your first listing is free for ${PS.trial_days} days once it goes live.`:'After approval, you can pay the listing fee from your dashboard.';
-  $('s-actions').innerHTML=guest?`<a class="p" href="https://mail.google.com/mail/u/0/#search/nyumba254" target="_blank" rel="noopener">Open my email</a><a href="https://wa.me/254739348560" target="_blank" rel="noopener">Get help</a><a href="/">Back to home</a>`
+  $('s-actions').innerHTML=guest?`<a class="p" href="https://mail.google.com/mail/u/0/#search/nyumba254" rel="noopener">Open my email</a><a href="https://wa.me/254739348560" rel="noopener">Get help</a><a href="/">Back to home</a>`
     :`<a class="p" href="/dashboard">View my listings</a><a href="/post-listing">Post another listing</a><a href="/">Back to home</a>`;
   window.scrollTo({top:0,behavior:'smooth'});$('success').querySelector('h2').focus&&$('s-head').setAttribute('tabindex','-1');$('s-head').focus();
 }

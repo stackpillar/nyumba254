@@ -754,11 +754,11 @@
         <div class="footer-logo"><div class="footer-logo-icon"><img src="/logo-icon.png" alt="" width="40" height="40"/></div>Nyumba254</div>
         <p class="footer-tagline">Find and list property across Kenya, with open account roles and no deal commission.</p>
         <div class="footer-social">
-          <a href="https://wa.me/254739348560" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></a>
-          <a href="https://www.instagram.com/nyumba.254?igsh=Z2VhNzJkMm1td2Jz" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
-          <a href="https://www.facebook.com/share/1EdzJKujSK/" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
-          <a href="https://www.tiktok.com/@nyumba.254?_r=1&amp;_t=ZS-98w137YXueA" target="_blank" rel="noopener" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="M9 12a4 4 0 104 4V4a5 5 0 005 5"/></svg></a>
-          <a href="https://x.com/Nyumba254" target="_blank" rel="noopener" aria-label="X (Twitter)"><svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20"/></svg></a>
+          <a href="https://wa.me/254739348560" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></a>
+          <a href="https://www.instagram.com/nyumba.254?igsh=Z2VhNzJkMm1td2Jz" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+          <a href="https://www.facebook.com/share/1EdzJKujSK/" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
+          <a href="https://www.tiktok.com/@nyumba.254?_r=1&amp;_t=ZS-98w137YXueA" rel="noopener" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="M9 12a4 4 0 104 4V4a5 5 0 005 5"/></svg></a>
+          <a href="https://x.com/Nyumba254" rel="noopener" aria-label="X (Twitter)"><svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20"/></svg></a>
           <a href="mailto:hello@nyumba254.co.ke" aria-label="Email"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></a>
         </div>
       </div>
@@ -838,7 +838,7 @@
       <div class="nf-field"><span class="nf-label" id="nf-budget-l">Budget (KES)</span><div class="range-row" role="group" aria-labelledby="nf-budget-l"><input type="text" inputmode="numeric" class="range-input" id="nf-min" placeholder="Min" aria-label="Minimum budget"/><span class="range-sep" aria-hidden="true">–</span><input type="text" inputmode="numeric" class="range-input" id="nf-max" placeholder="Max" aria-label="Maximum budget"/></div></div>
       <div class="nf-field"><span class="nf-label" id="nf-beds-l">Bedrooms <span class="nf-optional">optional</span></span><div class="pill-group" id="nf-beds" role="group" aria-labelledby="nf-beds-l"></div></div>
       <div class="nf-field"><label for="nf-notes">Anything else? <span class="nf-optional">optional</span></label><textarea id="nf-notes" rows="2" placeholder="e.g. must have parking, near a school…"></textarea></div>
-      <div class="nf-field"><label class="nf-check"><input type="checkbox" id="nf-consent"/><span>I agree to be contacted about matching listings, per the <a href="/privacy" target="_blank" rel="noopener" style="color:var(--green);font-weight:600">Privacy Policy</a>.</span></label><div class="nf-err" id="nf-consent-err" role="alert"></div></div>
+      <div class="nf-field"><label class="nf-check"><input type="checkbox" id="nf-consent"/><span>I agree to be contacted about matching listings, per the <a href="/privacy" rel="noopener" style="color:var(--green);font-weight:600">Privacy Policy</a>.</span></label><div class="nf-err" id="nf-consent-err" role="alert"></div></div>
     </div>
     <div class="notify-modal-foot"><button type="button" class="btn btn-outline" data-close="notify-overlay">Cancel</button><button type="button" class="btn btn-primary" id="nf-submit">Get alerts</button></div>
   </div>
@@ -1292,7 +1292,7 @@ function ctaHtml(l) {
   if (l.status === 'occupied') return `<button type="button" class="card-inquire-btn" disabled>${IC.msg}<span>No longer available</span></button>`;
   const id = escHtml(l.id), thread = hasThread(l.id);
   if (NK_WHATSAPP.enabled(l)) {
-    return `<a class="card-wa-btn" href="${escHtml(waLink(l))}" target="_blank" rel="noopener noreferrer">${IC.wa}<span>WhatsApp</span></a>` +
+    return `<a class="card-wa-btn" href="${escHtml(waLink(l))}" rel="noopener noreferrer">${IC.wa}<span>WhatsApp</span></a>` +
       `<button type="button" class="card-msg-btn" data-cta="${id}" aria-label="${thread ? 'View conversation' : 'Send enquiry'}">${IC.msg}</button>`;
   }
   return `<button type="button" class="card-inquire-btn${thread ? ' sent' : ''}" data-cta="${id}">${IC.msg}<span>${thread ? 'View conversation' : 'Send enquiry'}</span></button>`;
@@ -1324,7 +1324,7 @@ function cardHtml(l, i) {
   const currentRole=l.profiles?.account_type;
   const roleChanged=!!listedByType&&!!currentRole&&listedByType!==currentRole;
   const roleVerified=!roleChanged&&!!listedByType&&l.profiles?.verified_role===listedByType;
-  const roleText=`${listedBy}${roleChanged?' (role changed)':roleVerified?' ✓':' (not verified)'}`;
+  const roleText=`${listedBy}${roleChanged?' (role changed, not verified)':roleVerified?' · identity checked':' (not verified)'}`;
   const viewingFee=l.viewing_fee_status==='error'||l.public_viewing_fee==null?null:Number(l.public_viewing_fee);
   const heart = (typeof NKSaved !== 'undefined' && NKSaved.buildHeartBtn) ? NKSaved.buildHeartBtn(l.id) : '';
   const middle = meta.group === 'boarding' ? boardingHtml(l, d) : specsHtml(meta, d);
@@ -1340,7 +1340,7 @@ function cardHtml(l, i) {
       <div class="card-area">${escHtml(l.area)} ${nkBuildVerifiedBadge(l)}</div>
       <h3 class="card-title"><a class="card-link" href="${listingHref(l)}">${title}</a></h3>
       <div class="card-sub">${escHtml(sub)}</div>
-      <div class="card-role">${escHtml(roleText)}</div>
+      <div class="card-role" title="Role claims are self-declared. Identity checks do not verify property ownership or authority to list.">${escHtml(roleText)}</div>
       <div class="card-viewing-fee">${viewingFee===null?'Viewing fee: confirm with the lister':viewingFee>0?`Viewing fee: KES ${viewingFee.toLocaleString('en-KE')}`:'Free viewing'}</div>
       <div class="card-price">${formatPrice(l, { showFromPrefix: true })}</div>
       ${middle}${amenitiesHtml(l)}
@@ -1992,7 +1992,7 @@ async function refreshMap(opts) {
     const fee=l.viewing_fee_status==='error'||l.public_viewing_fee==null?null:Number(l.public_viewing_fee);
     const roleLabels={owner:'Direct from owner',landlord:'Direct from owner',caretaker:'Caretaker',agent:'Agent',company:'Company',buyer:'Tenant / Buyer'};
     const role=l.listed_by_type||l.profiles?.account_type||'',current=l.profiles?.account_type,roleChanged=!!role&&!!current&&role!==current,roleVerified=!roleChanged&&!!role&&l.profiles?.verified_role===role;
-    const roleText=`${roleLabels[role]||'Lister'}${roleChanged?' (role changed)':roleVerified?' ✓':' (not verified)'}`;
+    const roleText=`${roleLabels[role]||'Lister'}${roleChanged?' (role changed, not verified)':roleVerified?' · identity checked':' (not verified)'}`;
     const feeText=fee===null?'Viewing fee: confirm with the lister':fee>0?`Viewing fee: ${fmtKES(fee)}`:'Free viewing';
     m.bindPopup(`<div class="nk-pop"><div class="nk-pop-title">${escHtml(l.title)}</div><div class="nk-pop-sub">${escHtml(fmtKES(l.price))}${escHtml(NK_FREQ_LABEL[l.price_frequency] || '')} · ${escHtml(l.area)}${pos.approx ? ' (approximate location)' : ''}<br/>${escHtml(roleText)}<br/>${escHtml(feeText)}</div><a href="${listingHref(l)}">View listing</a></div>`, { maxWidth: 240 });
     m.on('mouseover', () => cardHover(l.id, true)); m.on('mouseout', () => cardHover(l.id, false));
@@ -2110,7 +2110,7 @@ function openInquiry(id) {
   $('ci-message').value = `Hi, I'm interested in "${l.title}" (ref #${pad(l.listing_number)}). Is it still available?`;
   $('ci-phone-field').hidden = !!l.contact_hidden;
   $('ci-wa-wrap').innerHTML = NK_WHATSAPP.enabled(l)
-    ? `<a class="wa-primary" href="${escHtml(waLink(l))}" target="_blank" rel="noopener noreferrer">${IC.wa} Chat on WhatsApp</a><div class="or-divider">or send an enquiry here</div>` : '';
+    ? `<a class="wa-primary" href="${escHtml(waLink(l))}" rel="noopener noreferrer">${IC.wa} Chat on WhatsApp</a><div class="or-divider">or send an enquiry here</div>` : '';
   const meta = NK_CATEGORIES[l.category] || { group: 'standard' }, room = $('ci-room-field');
   if (meta.group === 'boarding' && (l.listing_units || []).length) {
     room.hidden = false;
@@ -2210,8 +2210,8 @@ function openCompare() {
     const current=l.profiles?.account_type;
     const labels={buyer:'Tenant / Buyer',owner:'Direct from owner',landlord:'Direct from owner',caretaker:'Caretaker',agent:'Agent',company:'Company'};
     if(!snapshot)return 'Lister (not verified)';
-    if(current&&snapshot!==current)return `${labels[snapshot]||'Lister'} (role changed)`;
-    return `${labels[snapshot]||'Lister'}${l.profiles?.verified_role===snapshot?' ✓':' (not verified)'}`;
+    if(current&&snapshot!==current)return `${labels[snapshot]||'Lister'} (role changed, not verified)`;
+    return `${labels[snapshot]||'Lister'}${l.profiles?.verified_role===snapshot?' · identity checked':' (not verified)'}`;
   };
   const feeFor = l => l.viewing_fee_status==='error'||l.public_viewing_fee==null?'Viewing fee: confirm with the lister':Number(l.public_viewing_fee)>0?`Viewing fee: ${fmtKES(l.public_viewing_fee)}`:'Free viewing';
   $('cmp-body').innerHTML = `<table class="cmp-table"><thead><tr><th></th>${ls.map(l => `<th scope="col"><a href="${listingHref(l)}">${escHtml(l.title)}</a></th>`).join('')}</tr></thead><tbody>

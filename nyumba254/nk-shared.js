@@ -383,7 +383,7 @@ function nkBuildVerifiedBadge(listing) {
   const profile=listing?.profiles||{};
   const identityVerified=profile.identity_verified===true||profile.verification_status==='verified';
   const icon='<svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>';
-  return identityVerified?`<span class="card-verified-badge" title="This person’s identity has been verified by Nyumba254">${icon}Identity verified</span>`:'';
+  return identityVerified?`<span class="card-verified-badge" title="Nyumba254 checked this person’s identity. Their listed role is self-declared.">${icon}Identity checked</span>`:'';
 }
 
 async function nkHydratePublicProfiles(listings) {
@@ -461,7 +461,7 @@ function nkBuildCard(listing, opts) {
   const currentRole=listing.profiles?.account_type;
   const roleChanged=!!listedByType&&!!currentRole&&currentRole!==listedByType;
   const roleVerified=!!listedByType&&!roleChanged&&listing.profiles?.verified_role===listedByType;
-  const roleText=listedByType?`${listedBy}${roleChanged?' (role changed)':roleVerified?' ✓':' (not verified)'}`:'Lister (not verified)';
+  const roleText=listedByType?`${listedBy}${roleChanged?' (role changed, not verified)':roleVerified?' · identity checked':' (not verified)'}`:'Lister (not verified)';
   const feeLoaded=listing.viewing_fee_status!=='error'&&listing.public_viewing_fee!==null&&listing.public_viewing_fee!==undefined;
   const viewingFee=feeLoaded?Number(listing.public_viewing_fee)||0:null;
 
@@ -477,7 +477,7 @@ function nkBuildCard(listing, opts) {
         <div class="card-area">${escHtml(listing.area)} ${verifiedBadge}</div>
         <div class="card-title">${safeTitle}</div>
         <div class="card-sub">${escHtml(subText)}</div>
-        <div class="card-role">${escHtml(roleText)}</div>
+        <div class="card-role" title="Role claims are self-declared. Identity checks do not verify property ownership or authority to list.">${escHtml(roleText)}</div>
         <div class="card-viewing-fee">${viewingFee===null?'Viewing fee: confirm with the lister':viewingFee>0?`Viewing KES ${viewingFee.toLocaleString('en-KE')}`:'Free viewing'}</div>
         <div class="card-price">${formatPrice(listing, { showFromPrefix: !compact })}</div>
       </div>

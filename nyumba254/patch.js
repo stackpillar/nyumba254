@@ -581,7 +581,7 @@
             <div class="ny-view-who">${esc(v.buyer_name || 'Buyer')}<span>${esc(v.listing_title || '')}${v.note ? ' · ' + esc(v.note) : ''}</span></div>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               <button type="button" class="btn btn-outline btn-sm" onclick="nyViewingOpenChat('${escA(v.buyer_key)}')">Chat</button>
-              <a class="btn btn-outline btn-sm" href="${escA(gcalUrl(v))}" target="_blank" rel="noopener">Add to calendar</a>
+              <a class="btn btn-outline btn-sm" href="${escA(gcalUrl(v))}" rel="noopener">Add to calendar</a>
               <button type="button" class="btn btn-outline btn-sm" onclick="nyViewingDone('${escA(v.id)}')">Done</button>
               <button type="button" class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="nyViewingCancel('${escA(v.id)}')">Cancel</button>
             </div>

@@ -706,9 +706,9 @@ async function verifyAccountStillActive(){
 
 let PLATFORM_VERIFY_SETTINGS = { enforce_verification_general: 0, unverified_listing_limit: 2 };
 let STOREFRONT_FREE_ENABLED=false;
-let VIEWING_FEE_POLICY_VERSION='v1',VIEWING_FEE_MAX=5000,VIEWING_FEE_REQUIRES_IDENTITY=true;
+let VIEWING_FEE_POLICY_VERSION='v1',VIEWING_FEE_MAX=5000,VIEWING_FEE_REQUIRES_IDENTITY=false;
 async function loadPlatformVerifySettings(){
-  const{data,error}=await db.from('platform_settings').select('key,value').in('key',['enforce_verification_general','unverified_listing_limit','viewing_fee_policy_version','viewing_fee_max','viewing_fee_requires_identity','storefront_free_enabled']);
+  const{data,error}=await db.from('platform_settings').select('key,value').in('key',['enforce_verification_general','unverified_listing_limit','viewing_fee_policy_version','viewing_fee_max','viewing_fee_requires_identity','storefront_free_enabled','allowance_over_10_requires_identity','boost_requires_identity']);
   if(error) throw new Error(`Could not load verification settings: ${error.message}`);
   (data||[]).forEach(r=>{
     if(r.key==='storefront_free_enabled')STOREFRONT_FREE_ENABLED=Number(r.value)===1;
@@ -720,6 +720,16 @@ async function loadPlatformVerifySettings(){
 }
 function verificationEnforcedForMe(){
   return Number(PLATFORM_VERIFY_SETTINGS.enforce_verification_general)===1 || !!currentProfile?.verification_enforced;
+}
+function identityRequiredFor(feature){
+  return Number(PLATFORM_VERIFY_SETTINGS[`${feature}_requires_identity`])===1;
+}
+function requireVerifiedIdentity(feature,description){
+  const profile=ownerProfile||currentProfile;
+  if(!identityRequiredFor(feature)||profile?.verification_status==='verified')return true;
+  showToast(`Verify your identity before ${description}.`,'error');
+  openKycModal();
+  return false;
 }
 
 async function loadProfile(){
@@ -800,7 +810,6 @@ function renderAccountType(){
   const roleVerification=document.getElementById('account-role-verification');
   const roleSetDate=document.getElementById('account-role-set-date');
   const roleChangeButton=document.getElementById('change-account-role-btn');
-  const roleVerifyButton=document.getElementById('verify-account-role-btn');
   const sidebarRoleChip=document.getElementById('sidebar-role-chip');
   const bulkSetFeeButton=document.getElementById('bulk-set-viewing-fee-btn');
   const bulkClearFeeButton=document.getElementById('bulk-clear-viewing-fee-btn');
@@ -808,7 +817,7 @@ function renderAccountType(){
   const onboardingReminder=document.getElementById('account-onboarding-reminder');
   const buyerMode=accountType==='buyer';
   const buyerCard=document.getElementById('buyer-mode-card');
-  const roleVerified=!!accountType&&roleProfile?.verified_role===accountType;
+  const roleVerified=!!accountType&&roleProfile?.verification_status==='verified'&&roleProfile?.role_badge_revoked!==true;
   const feeEligible=['agent','company'].includes(roleProfile?.account_type);
   const policyAccepted=roleProfile?.viewing_fee_policy_version===VIEWING_FEE_POLICY_VERSION&&!!roleProfile?.viewing_fee_policy_accepted_at;
   if(bulkSetFeeButton)bulkSetFeeButton.hidden=!feeEligible||!policyAccepted||VIEWING_FEE_REQUIRES_IDENTITY&&roleProfile?.verification_status!=='verified'||roleProfile?.viewing_fee_blocked===true;
@@ -818,10 +827,9 @@ function renderAccountType(){
     :'Role not selected';
   if(roleLabel)roleLabel.textContent=accountType?ACCOUNT_ROLE_LABELS[accountType]:'Choose a role';
   if(roleDescription)roleDescription.textContent=accountType?ACCOUNT_ROLE_DESCRIPTIONS[accountType]:'Choose one role to tailor your Nyumba254 experience.';
-  if(roleVerification)roleVerification.textContent=accountType?(roleVerified?`Verified ${ACCOUNT_ROLE_LABELS[accountType]} ✓`:`${ACCOUNT_ROLE_LABELS[accountType]} (not verified)`):'';
+  if(roleVerification)roleVerification.textContent=accountType?`${ACCOUNT_ROLE_LABELS[accountType]} is self-declared · identity ${roleProfile?.verification_status==='verified'?'checked':'not checked'}${roleProfile?.role_badge_revoked?' · badge paused by admin':''}`:'';
   if(roleSetDate)roleSetDate.textContent=roleProfile?.account_type_set_at?`Role set ${roleDate(roleProfile.account_type_set_at)}`:'';
   if(roleChangeButton)roleChangeButton.hidden=!accountType||isTeamMember;
-  if(roleVerifyButton)roleVerifyButton.hidden=!accountType||roleVerified||isTeamMember;
   if(options)options.hidden=!!accountType;
   if(pickerHint)pickerHint.hidden=!!accountType;
   if(saveButton)saveButton.hidden=!!accountType;
@@ -868,15 +876,15 @@ function renderRoleTrustOverview(){
   if(!target)return;
   const profile=ownerProfile||currentProfile;
   const role=ACCOUNT_TYPES.includes(profile?.account_type)?ACCOUNT_ROLE_LABELS[profile.account_type]:'Not selected';
-  const roleVerified=profile?.verified_role===profile?.account_type&&!!profile?.account_type;
+  const roleVerified=profile?.verification_status==='verified'&&profile?.role_badge_revoked!==true&&!!profile?.account_type;
   const identityVerified=profile?.verification_status==='verified';
   const count=allListings.filter(listing=>listing.status==='active'&&!listing.is_disabled&&!listing.recycle_bin).length;
   const limit=Number(PLATFORM_VERIFY_SETTINGS.unverified_listing_limit)||2;
   const next=!profile?.account_type?'Choose your role in Settings.':
     profile.account_type==='buyer'?'Browse listings, save favourites and contact listers.':
-    !identityVerified?'Verify your identity to increase the applicable listing cap.':
-    !roleVerified?'Submit role-specific evidence to verify your current role.':
-    'Your identity and current role are verified.';
+    !identityVerified?'Identity checks are optional unless an admin rule applies.':
+    !roleVerified?'Your identity is checked; role claims remain self-declared.':
+    'Identity checked; your selected role remains self-declared.';
   const cap=`${count} active${identityVerified?' (no unverified cap)':` of ${limit} unverified listing cap`}`;
   const checklistKey=`ny_role_checklist_dismissed_${currentUser?.id||''}`;
   let checklistDismissed=false;
@@ -892,7 +900,7 @@ function renderRoleTrustOverview(){
   const checklist=profile?.account_type&&profile.account_type!=='buyer'&&!checklistDismissed
     ?`<div class="card" style="padding:14px;margin-top:14px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong style="font-size:13px">Getting started</strong><button type="button" class="btn btn-outline btn-sm" onclick="dismissRoleSetupChecklist()" aria-label="Dismiss getting started checklist">Dismiss</button></div><ol style="margin:8px 0 0;padding-left:20px">${steps.map(step=>`<li style="margin:7px 0;font-size:12px;color:var(--text-2)"><span>${step.done?'✓':'○'} ${escHtml(step.label)}</span>${step.done?'':` <button type="button" class="link" onclick="${step.action}" style="min-height:44px">${step.action.includes('post-listing')?'Add a listing':'Continue'}</button>`}</li>`).join('')}</ol></div>`
     :'';
-  target.innerHTML=`<div style="display:flex;gap:10px;flex-wrap:wrap"><span><strong>Role:</strong> ${escHtml(role)}</span><span><strong>Role verification:</strong> ${escHtml(roleVerified?'Verified':'Not verified')}</span><span><strong>Identity:</strong> ${escHtml(identityVerified?'Verified':'Not verified')}</span><span><strong>Listing cap used:</strong> ${escHtml(cap)}</span></div><p style="margin:8px 0 0;color:var(--text-2);font-size:12px">${escHtml(next)}</p>${checklist}`;
+  target.innerHTML=`<div style="display:flex;gap:10px;flex-wrap:wrap"><span><strong>Role claim:</strong> ${escHtml(role)}</span><span><strong>Role badge:</strong> ${escHtml(roleVerified?'Active':'Not active')}</span><span><strong>Identity:</strong> ${escHtml(identityVerified?'Checked':'Not checked')}</span><span><strong>Listing cap used:</strong> ${escHtml(cap)}</span></div><p style="margin:8px 0 0;color:var(--text-2);font-size:12px">${escHtml(next)}</p>${checklist}`;
 }
 
 function dismissRoleSetupChecklist(){
@@ -962,17 +970,17 @@ async function applyViewingFeeToActiveListings(){
 async function loadAccountRoleHistory(){
   const target=document.getElementById('account-role-history');
   if(!target)return;
-  const{data,error}=await db.from('role_history').select('previous_account_type,new_account_type,changed_at').eq('profile_id',currentUser.id).order('changed_at',{ascending:false}).limit(3);
+  const{data,error,count}=await db.from('role_history').select('previous_account_type,new_account_type,changed_at,changed_by_name',{count:'exact'}).eq('profile_id',currentUser.id).order('changed_at',{ascending:false}).limit(3);
   if(error)throw new Error(`Could not load account type history: ${error.message}`);
   if(!data?.length){target.textContent='No account type changes yet.';return;}
   target.replaceChildren();
   const heading=document.createElement('strong');
-  heading.textContent='Recent account type changes';
+  heading.textContent=`Role changes · ${count||0} recorded`;
   target.appendChild(heading);
   data.forEach(row=>{
     const item=document.createElement('div');
     const previous=row.previous_account_type||'Not set';
-    item.textContent=`${ACCOUNT_ROLE_LABELS[previous]||previous} → ${ACCOUNT_ROLE_LABELS[row.new_account_type]||row.new_account_type} · ${roleDate(row.changed_at)}`;
+    item.textContent=`${ACCOUNT_ROLE_LABELS[previous]||previous} → ${ACCOUNT_ROLE_LABELS[row.new_account_type]||row.new_account_type} · ${roleDate(row.changed_at)} · by ${row.changed_by_name||'account holder'}`;
     target.appendChild(item);
   });
 }
@@ -1159,8 +1167,8 @@ async function saveCompanyProfile(){
     const{data:company,error:reviewError}=await db.from('company_profiles').select('duplicate_review_required').eq('profile_id',currentUser.id).single();
     if(reviewError)throw new Error(`Company profile saved, but duplicate-review status could not be checked: ${reviewError.message}`);
     if(status)status.textContent=company.duplicate_review_required
-      ?'Company profile saved. A similar verified company name needs admin review; the company verification badge and logo remain hidden until review.'
-      :'Company profile saved. Company verification is reviewed separately.';
+      ?'Company profile saved. A similar company name needs admin review; the logo remains hidden until review.'
+      :'Company profile saved. Your company role remains self-declared; identity verification is shown separately.';
     showToast('Company profile saved ✓','success');
   }catch(error){
     console.error('Company profile update failed:',error);
@@ -1175,31 +1183,20 @@ function updateVerifyWarningBanner(){
   const roleProfile=ownerProfile||currentProfile;
   const accountType=roleProfile?.account_type;
   const status=roleProfile?.verification_status||'unverified';
-  const applies=!!accountType&&accountType!=='buyer'&&(
-    status==='unverified'||status==='rejected'||roleProfile?.verified_role!==accountType
-  );
+  const applies=!!accountType&&accountType!=='buyer'&&status!=='verified';
   banner.style.display = applies ? 'flex' : 'none';
   if(applies){
     const limit = Number(PLATFORM_VERIFY_SETTINGS.unverified_listing_limit)||2;
     const textEl = banner.querySelector('span');
-    const copy={
-      owner:'Submit proof that you own the property to verify your Owner role.',
-      agent:'Verify your identity and submit your Agent credentials to verify this role.',
-      caretaker:'Submit a landlord authorization letter with the landlord’s name and phone to verify your Caretaker role.',
-      company:'Submit company registration documents to verify your Company role.'
-    };
-    if(textEl)textEl.textContent=`${copy[accountType]||'Complete verification for your role.'} When verification limits apply, unverified accounts may post up to ${limit} active listings.`;
+    if(textEl)textEl.textContent=`Submit your ID for an identity check. Your ${ACCOUNT_ROLE_LABELS[accountType]||'account'} role remains self-declared. Unverified accounts may have an active-listing limit of ${limit}.`;
   }
 }
 function goToVerification(){
   openKycModal();
 }
-function goToRoleVerification(){
-  window.open('/kyc.html#role-verification','_blank','noopener,noreferrer');
-}
 function openKycModal(){ openModal('modal-kyc'); }
 function closeKycModal(){ closeModal('modal-kyc'); }
-function openKycFullPage(){ window.open('/kyc.html','_blank','noopener,noreferrer'); }
+function openKycFullPage(){ window.location.href='/kyc.html'; }
 
 // ── Subscription status — reads what the admin panel's Grant Premium
 // modal writes (subscription_tier: 'monthly'/'yearly'/'none',
@@ -1320,7 +1317,7 @@ async function loadRelationshipManager(sub){
   const normalizedPhone=phone.replace(/\D/g,'').replace(/^0/,'254');
   const validPhone=/^\d{9,15}$/.test(normalizedPhone);
   const waLink=validPhone?`https://wa.me/${normalizedPhone}`:null;
-  content.innerHTML=`${escHtml(name)||'Your manager'} is your direct contact for anything on Nyumba254.${validPhone?` <a href="tel:${normalizedPhone}" style="color:var(--green);font-weight:600">Call ${escHtml(phone)}</a>`:''}${waLink?` · <a href="${waLink}" target="_blank" rel="noopener noreferrer" style="color:#25D366;font-weight:600">WhatsApp</a>`:''}`;
+  content.innerHTML=`${escHtml(name)||'Your manager'} is your direct contact for anything on Nyumba254.${validPhone?` <a href="tel:${normalizedPhone}" style="color:var(--green);font-weight:600">Call ${escHtml(phone)}</a>`:''}${waLink?` · <a href="${waLink}" rel="noopener noreferrer" style="color:#25D366;font-weight:600">WhatsApp</a>`:''}`;
 }
 
 async function toggleDemandDigest(enabled){
@@ -1848,7 +1845,7 @@ function renderBnbProperties(){
           ${expired
             ?`<button class="btn btn-primary btn-sm" style="background:#7c3aed" onclick="openRenewBnbPropertyModal('${p.id}')">🔄 Renew to reactivate</button>`
             :`<button class="btn btn-outline btn-sm" onclick="openBnbPublicBookingModal('${p.id}')">${p.is_publicly_bookable?'🌐 Public booking: ON':'🌐 Public booking'}</button>`}
-          ${(p.is_publicly_bookable&&!expired)?`<a class="btn btn-outline btn-sm" href="https://book.nyumba254.com/property.html?id=${encodeURIComponent(String(p.id))}" target="_blank" rel="noopener noreferrer">↗ View book page</a>`:''}
+          ${(p.is_publicly_bookable&&!expired)?`<a class="btn btn-outline btn-sm" href="https://book.nyumba254.com/property.html?id=${encodeURIComponent(String(p.id))}" rel="noopener noreferrer">↗ View book page</a>`:''}
           <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteBnbProperty('${p.id}')">Delete</button>
         </div>
         ${(!p.listing_id && !(Array.isArray(p.photos)&&p.photos.length))?`<div style="margin-top:8px;font-size:11px;color:var(--red)">⚠️ No photos yet — add at least one before turning on public booking.</div>`:''}
@@ -3107,7 +3104,7 @@ async function loadTenantDocuments(unitId,tenantId){
     return{...d,url:signedError?null:safeHttpLink(signed?.signedUrl)};
   }));
   el.innerHTML=rows.map(d=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12.5px">
-      ${d.url?`<a href="${escAttr(d.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--green-dark);font-weight:600;text-decoration:underline;word-break:break-all">${escHtml(d.doc_type||'Document')} — ${escHtml(d.file_name||'')}</a>`:`<span style="color:var(--text-3)">${escHtml(d.doc_type||'Document')} — ${escHtml(d.file_name||'')} (link unavailable)</span>`}
+      ${d.url?`<a href="${escAttr(d.url)}" rel="noopener noreferrer" style="color:var(--green-dark);font-weight:600;text-decoration:underline;word-break:break-all">${escHtml(d.doc_type||'Document')} — ${escHtml(d.file_name||'')}</a>`:`<span style="color:var(--text-3)">${escHtml(d.doc_type||'Document')} — ${escHtml(d.file_name||'')} (link unavailable)</span>`}
       <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red);flex-shrink:0;margin-left:8px" onclick="deleteTenantDocument(${d.id},'${unitId}','${tenantId}')">Delete</button>
     </div>`).join('');
 }
@@ -4154,13 +4151,13 @@ function loadVerificationUI() {
   if (pillEl) { pillEl.className = 'kyc-pill '+meta.pill; pillEl.textContent = meta.pillLabel; }
   if (subEl) {
     subEl.textContent =
-      status==='verified' ? "You're verified — buyers see a trust badge on your listings, and your listing space is unlimited." :
+      status==='verified' ? "Your identity is checked. Your selected role remains self-declared and appears separately on listings." :
       status==='pending' ? "We're reviewing your documents — usually within 24 hours." :
       status==='rejected' ? (v.verification_rejection_reason || 'Your submission needs changes — open the KYC Center for details.') :
-      'Verify your identity to unlock a trust badge and unlimited listings.';
+      'Verify your identity to show buyers that your identity was checked.';
   }
 
-  const steps=['Identity','Ownership','Review'];
+  const steps=['Identity','Review'];
   const stepperEl=document.getElementById('kyc-stepper');
   if(stepperEl){
     stepperEl.innerHTML = steps.map((label,i)=>{
@@ -4177,12 +4174,11 @@ function loadVerificationUI() {
   if(!bodyEl||!footEl)return;
 
   if (status === 'verified') {
-    if(headStatusEl) headStatusEl.innerHTML = "<strong>You're fully verified.</strong> Buyers see a trust badge on every listing, and your listing space is unlimited.";
+    if(headStatusEl) headStatusEl.innerHTML = "<strong>Your identity is verified.</strong> Your selected role remains self-declared; listings show role and identity status separately.";
     bodyEl.innerHTML = `
       <div class="kyc-checklist">
         <div class="kyc-checklist-item"><svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>Identity document verified</div>
-        <div class="kyc-checklist-item"><svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>Ownership / authority document verified</div>
-        <div class="kyc-checklist-item"><svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>Trust badge active on all listings</div>
+        <div class="kyc-checklist-item"><svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>Your role is a separate, self-declared claim</div>
       </div>`;
     footEl.innerHTML = `<button class="btn btn-outline" onclick="closeModal('modal-kyc')">Close</button>`;
     return;
@@ -4194,7 +4190,6 @@ function loadVerificationUI() {
       <div class="kyc-section-title">Submitted for review</div>
       <div class="kyc-checklist">
         <div class="kyc-checklist-item"><svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>National ID (front &amp; back) received</div>
-        <div class="kyc-checklist-item"><svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>${v.verification_is_owner===false?'Authority letter':'Proof of ownership'} received</div>
       </div>
       ${v.extra_verification_status==='requested' ? `
       <div class="kyc-section-title">⚠️ Additional document requested</div>
@@ -4214,25 +4209,16 @@ function loadVerificationUI() {
   if(headStatusEl){
     headStatusEl.innerHTML = status==='rejected'
       ? `<strong>Your last submission needs changes.</strong> ${v.verification_rejection_reason?escHtml(v.verification_rejection_reason):'Please review and resubmit below.'}`
-      : `Verifying your identity keeps buyers safe and unlocks <strong>unlimited listings</strong> plus a visible trust badge.`;
+      : `Verify your identity to show buyers your identity was checked. Your selected role remains a separate, self-declared claim.`;
   }
   bodyEl.innerHTML = `
     <div class="kyc-section-title">Before you start</div>
     <div class="kyc-checklist">
       <div class="kyc-checklist-item"><svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>A valid, unexpired national ID (front and back)</div>
-      <div class="kyc-checklist-item"><svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>Proof of ownership (title deed / lease) or an authority letter if listing on someone's behalf</div>
-      <div class="kyc-checklist-item"><svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>Clear, uncropped photos or scans — takes about 2 minutes</div>
+      <div class="kyc-checklist-item"><svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>Clear, uncropped photos or scans of both sides of your ID</div>
     </div>
 
-    <div class="kyc-section-title">Ownership status</div>
-    <div class="form-group" style="margin-bottom:16px">
-      <select id="kyc-is-owner" onchange="updateVerifyProofLabel()">
-        <option value="yes">Yes, I own this property</option>
-        <option value="no">No — I'm listing on someone's behalf</option>
-      </select>
-    </div>
-
-    <div class="kyc-section-title">Step 1 · Identity document</div>
+    <div class="kyc-section-title">Identity documents</div>
     <div class="kyc-upload-card">
       <div class="kyc-upload-top">
         <div class="kyc-upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="8" cy="11" r="2.4"/><path d="M4 18c1-2.2 2.8-3.4 4-3.4s3 1.2 4 3.4M15 9h5M15 13h5"/></svg></div>
@@ -4250,16 +4236,6 @@ function loadVerificationUI() {
       <div class="kyc-upload-input"><input type="file" id="kyc-id-back-file" accept="image/*,.pdf"/></div>
     </div>
 
-    <div class="kyc-section-title">Step 2 · <span id="kyc-proof-label-text">Proof of ownership</span></div>
-    <div class="kyc-upload-card">
-      <div class="kyc-upload-top">
-        <div class="kyc-upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-        <div class="kyc-upload-info"><div class="kyc-upload-title" id="kyc-proof-title">Title deed or lease copy</div><div class="kyc-upload-sub" id="kyc-proof-sub">Confirms your right to list this property</div></div>
-        <span class="kyc-required-tag">Required</span>
-      </div>
-      <div class="kyc-upload-input"><input type="file" id="kyc-proof-file" accept="image/*,.pdf"/></div>
-    </div>
-
     <div class="kyc-trust-row">
       <div class="kyc-trust-item"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>Encrypted upload</div>
       <div class="kyc-trust-item"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>~24hr review</div>
@@ -4267,24 +4243,10 @@ function loadVerificationUI() {
     </div>
   `;
   footEl.innerHTML = `<button class="btn btn-outline" onclick="closeModal('modal-kyc')">Not now</button><button class="btn btn-primary" id="kyc-submit-btn" onclick="submitVerification()">Submit for review</button>`;
-  updateVerifyProofLabel();
-
-  ['kyc-id-front-file','kyc-id-back-file','kyc-proof-file'].forEach(id=>{
+  ['kyc-id-front-file','kyc-id-back-file'].forEach(id=>{
     const inp=document.getElementById(id);
     if(inp) inp.addEventListener('change',()=>{ inp.closest('.kyc-upload-card')?.classList.toggle('has-file', inp.files.length>0); });
   });
-}
-
-function updateVerifyProofLabel() {
-  const sel=document.getElementById('kyc-is-owner');
-  if(!sel)return;
-  const isOwner = sel.value === 'yes';
-  const labelText=document.getElementById('kyc-proof-label-text');
-  const title=document.getElementById('kyc-proof-title');
-  const sub=document.getElementById('kyc-proof-sub');
-  if(labelText) labelText.textContent = isOwner ? 'Proof of ownership' : 'Authority to list';
-  if(title) title.textContent = isOwner ? 'Title deed or lease copy' : "Authority letter, or the owner's ID + written consent";
-  if(sub) sub.textContent = isOwner ? 'Confirms your right to list this property' : 'Confirms the owner has authorized you to list on their behalf';
 }
 
 async function uploadVerifyFile(file, kind) {
@@ -4306,33 +4268,27 @@ function kycValidateFile(file,label){
 async function submitVerification() {
   const idFile = document.getElementById('kyc-id-front-file').files[0];
   const idFile2 = document.getElementById('kyc-id-back-file').files[0];
-  const proofFile = document.getElementById('kyc-proof-file').files[0];
-  const isOwner = document.getElementById('kyc-is-owner').value === 'yes';
   if (!idFile || !idFile2) { showToast('Please upload both the front and back of your ID','error'); return; }
-  if (!proofFile) { showToast('Please attach your proof of ownership document','error'); return; }
   if(kycValidateFile(idFile,'ID front')===false)return;
   if(kycValidateFile(idFile2,'ID back')===false)return;
-  if(kycValidateFile(proofFile,'Proof document')===false)return;
   const btn = document.getElementById('kyc-submit-btn');
   btn.disabled = true; btn.textContent = 'Uploading…';
   try {
     const idPath = await uploadVerifyFile(idFile, 'id-front');
     const idPath2 = await uploadVerifyFile(idFile2, 'id-back');
-    const proofPath = await uploadVerifyFile(proofFile, isOwner ? 'ownership' : 'authority');
     const { error } = await db.from('profiles').update({
-      verification_status: 'pending', verification_is_owner: isOwner,
-      verification_id_url: idPath, verification_id_url_2: idPath2, verification_proof_url: proofPath,
-      verification_proof_type: isOwner ? 'title_deed_or_lease' : 'authority_letter',
+      verification_status: 'pending',
+      verification_id_url: idPath, verification_id_url_2: idPath2,
       verification_submitted_at: new Date().toISOString(), verification_rejection_reason: null,
     }).eq('id', currentUser.id);
     if (error) throw error;
     await db.from('verification_activity_log').insert({ seller_id: currentUser.id, action:'submitted' });
-    currentProfile = { ...currentProfile, verification_status:'pending', verification_is_owner:isOwner };
+    currentProfile = { ...currentProfile, verification_status:'pending' };
     loadVerificationUI();
     updateVerifyWarningBanner();
     showToast('Submitted for review ✓','success');
     fetch(`${EDGE_URL}/send-notification-email`, { method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}, body: JSON.stringify({
-      type:'verification_submitted', sellerName: currentProfile?.full_name, sellerEmail: currentUser.email, isOwner, proofType: isOwner?'Title deed / lease':'Authority letter',
+      type:'verification_submitted', sellerName: currentProfile?.full_name, sellerEmail: currentUser.email,
     })}).catch(()=>{});
   } catch(e) {
     showToast('Upload failed: '+e.message,'error');
@@ -5028,7 +4984,7 @@ function renderGettingStarted(){
   let dismissed=false;
   try{dismissed=localStorage.getItem('ny_gs_dismissed_'+(currentUser?.id||''))==='1';}catch(e){}
   const steps=[
-    {done:currentProfile?.verification_status==='verified',label:'Verify your account',sub:'Unlocks unlimited listings and a trust badge',action:()=>{showPage('settings');setTimeout(()=>settingsJumpTo('verification-settings-section'),150);}},
+    {done:currentProfile?.verification_status==='verified',label:'Verify your identity',sub:'Shows buyers your identity was checked; your role remains self-declared',action:()=>{showPage('settings');setTimeout(()=>settingsJumpTo('verification-settings-section'),150);}},
     {done:allListings.length>0,label:'Post your first listing',sub:'Takes about 3 minutes',action:()=>{window.location.href='/post-listing';}},
     {done:allListings.length>0 && allListings.every(l=>(l.listing_photos||[]).length>0),label:'Add photos to every listing',sub:'Listings with 6+ photos get far more enquiries',action:()=>showPage('listings')},
     {done:threads.some(t=>t.messages.some(m=>m.sender==='seller')),label:'Reply to a buyer message',sub:'Fast replies win more viewings',action:()=>showAllMessages()},
@@ -6195,6 +6151,7 @@ async function lcCheckMarketPrice(id){
 async function boostSingleListing(id){
   const l=allListings.find(x=>String(x.id)===String(id));
   if(!l)return;
+  if(!requireVerifiedIdentity('boost','requesting a listing boost'))return;
   const unit=Math.round((Number(platformPrices.premium_monthly_price)||1200)*0.6);
   if(!await lcConfirm({title:'Feature this listing?',message:`Featuring "<strong>${escHtml(l.title)}</strong>" costs roughly <strong>KES ${unit.toLocaleString('en-KE')}</strong>.<br><br>This opens a support ticket so our team can confirm the exact price and send payment details. <strong>Nothing is charged yet.</strong>`,confirmLabel:'Request featuring'}))return;
   if(!scwOpen)scwToggle();
@@ -6787,7 +6744,7 @@ function lcAction(act,id,el){
   const l=allListings.find(x=>String(x.id)===String(id));
   switch(act){
     case 'preview':openListingPreview(id);break;
-    case 'view':if(l)window.open(lcListingUrl(l),'_blank','noopener');break;
+    case 'view':if(l)window.location.assign(lcListingUrl(l));break;
     case 'edit':openEditModal(id);setTimeout(()=>document.getElementById('edit-photos-grid')?.scrollIntoView({behavior:'smooth',block:'center'}),300);break;
     case 'share':openShareMenu(id,el);break;
     case 'more':openMoreActionsMenu(id,el);break;
@@ -6897,7 +6854,7 @@ function openListingPreview(id){
   const canEdit=(lcIsLive(l)||l.status==='paused'||l.status==='occupied')&&!l.is_disabled;
   document.getElementById('lc-sheet-foot').innerHTML=`
     ${canEdit?`<button type="button" class="btn btn-primary" style="flex:1;justify-content:center" onclick="closeListingPreview();openEditModal('${l.id}')">Edit listing</button>`:''}
-    <button type="button" class="btn btn-outline" onclick="window.open('${escAttr(lcListingUrl(l))}','_blank','noopener')">View live ↗</button>
+    <button type="button" class="btn btn-outline" onclick="window.location.assign('${escAttr(lcListingUrl(l))}')">View live ↗</button>
     <button type="button" class="btn btn-outline" onclick="copyListingLink('${l.id}')">Share</button>
     <button type="button" class="btn btn-outline" onclick="lcSheetMore('${l.id}',this)">More ⋯</button>
   `;
@@ -6967,11 +6924,11 @@ function copyListingLink(id){
 }
 function shareListing(id){
   const l=allListings.find(x=>String(x.id)===String(id));if(!l)return;
-  window.open(`https://wa.me/?text=${encodeURIComponent(lcShareText(l))}`,'_blank','noopener');
+  window.location.assign(`https://wa.me/?text=${encodeURIComponent(lcShareText(l))}`);
 }
 function shareListingToFacebook(id){
   const l=allListings.find(x=>String(x.id)===String(id));if(!l)return;
-  window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(lcListingUrl(l))}`,'_blank','noopener,noreferrer,width=600,height=600');
+  window.location.assign(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(lcListingUrl(l))}`);
 }
 function shareListingToInstagram(id){
   const l=allListings.find(x=>String(x.id)===String(id));if(!l)return;
@@ -6979,7 +6936,7 @@ function shareListingToInstagram(id){
   navigator.clipboard.writeText(caption)
     .then(()=>showToast('Caption + link copied — paste it into your Instagram post or story','success'))
     .catch(()=>showToast('Could not copy the caption automatically','error'));
-  setTimeout(()=>window.open('https://www.instagram.com/','_blank','noopener,noreferrer'),400);
+  setTimeout(()=>window.location.assign('https://www.instagram.com/'),400);
 }
 function shareListingToTiktok(id){
   const l=allListings.find(x=>String(x.id)===String(id));if(!l)return;
@@ -6987,7 +6944,7 @@ function shareListingToTiktok(id){
   navigator.clipboard.writeText(caption)
     .then(()=>showToast('Caption + link copied — paste it into your TikTok post','success'))
     .catch(()=>showToast('Could not copy the caption automatically','error'));
-  setTimeout(()=>window.open('https://www.tiktok.com/upload','_blank','noopener,noreferrer'),400);
+  setTimeout(()=>window.location.assign('https://www.tiktok.com/upload'),400);
 }
 async function downloadListingQR(id){
   const l=allListings.find(x=>String(x.id)===String(id));if(!l)return;
@@ -7100,7 +7057,7 @@ function openMoreActionsMenu(listingId,anchorEl,after){
 
   items.push({divider:'View'});
   items.push({label:'Open details',icon:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',onclick:wrap(()=>openListingPreview(listingId))});
-  items.push({label:'Open live listing ↗',icon:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',onclick:wrap(()=>window.open(lcListingUrl(l),'_blank','noopener'))});
+  items.push({label:'Open live listing ↗',icon:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',onclick:wrap(()=>window.location.assign(lcListingUrl(l)))});
 
   items.push({divider:'Improve'});
   items.push({label:'Rewrite with AI',icon:'<path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/>',onclick:wrap(()=>openAiListingForListing(listingId))});
@@ -7322,6 +7279,7 @@ async function bulkDuplicateSelectedListings(){
 async function bulkFeatureSelectedListings(){
   const ok=lcSelected().filter(l=>lcIsLive(l)&&!l.is_featured);
   if(!ok.length){showToast('Select live, not-yet-featured listings to boost','error');return;}
+  if(!requireVerifiedIdentity('boost','requesting a listing boost'))return;
   const unit=Math.round((Number(platformPrices.premium_monthly_price)||1200)*0.6);
   const total=unit*ok.length;
   if(!await lcConfirm({title:'Feature these listings?',message:`Featuring <strong>${ok.length} listing${ok.length!==1?'s':''}</strong> costs roughly <strong>KES ${total.toLocaleString('en-KE')}</strong> (about KES ${unit.toLocaleString('en-KE')} each).<br><br>This opens a support ticket so our team can confirm the exact price and send payment details. <strong>Nothing is charged yet.</strong>`,confirmLabel:'Request featuring'}))return;
@@ -7391,7 +7349,7 @@ function bulkShareSelectedListings(){
   if(!sel.length)return;
   const text=sel.map(lcShareText).join('\n\n');
   if(navigator.share&&/Mobi|Android/i.test(navigator.userAgent)){navigator.share({title:'My listings',text}).catch(()=>{});return;}
-  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,'_blank','noopener');
+  window.location.assign(`https://wa.me/?text=${encodeURIComponent(text)}`);
 }
 async function bulkDeleteSelectedListings(){
   const ids=[...selectedListingIds];
@@ -8127,9 +8085,9 @@ function renderChatPane(t){
   const av=document.getElementById('chat-active');av.style.display='flex';
   const qrBar=document.getElementById('chat-quickreply-bar');if(qrBar)qrBar.style.display='none';
   const ini=escHtml(t.buyer_name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()||'?');
-  const waLink=t.buyer_phone?`<a href="https://wa.me/${formatWaPhone(t.buyer_phone)}" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background:#25D366;color:white;text-decoration:none">WhatsApp</a>`:'';
+  const waLink=t.buyer_phone?`<a href="https://wa.me/${formatWaPhone(t.buyer_phone)}" rel="noopener noreferrer" class="btn btn-sm" style="background:#25D366;color:white;text-decoration:none">WhatsApp</a>`:'';
   const listing=allListings.find(l=>l.id===t.listing_id);
-  const liveLink=listing?`<a href="/listing?id=${encodeURIComponent(String(listing.listing_number).padStart(6,'0'))}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" style="text-decoration:none">View listing</a>`:'';
+  const liveLink=listing?`<a href="/listing?id=${encodeURIComponent(String(listing.listing_number).padStart(6,'0'))}" rel="noopener noreferrer" class="btn btn-outline btn-sm" style="text-decoration:none">View listing</a>`:'';
   document.getElementById('chat-header').innerHTML=`<button class="mobile-back-btn" onclick="showThreadListMobile()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="chat-header-avatar">${ini}</div><div class="chat-header-info"><div class="chat-header-name">${escHtml(t.buyer_name)}</div><div class="chat-header-sub" title="${escAttr(t.listing_title)}">${escHtml(t.buyer_phone||'No phone')} · Re: ${escHtml(truncateWords(t.listing_title,6))}</div><div style="font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:5px;margin-top:2px"><span id="chat-presence-dot" style="width:6px;height:6px;border-radius:50%;background:#9a9a94;flex-shrink:0"></span><span id="chat-presence-text">Buyer offline</span></div></div><div class="chat-header-actions">${waLink}${liveLink}</div>`;
   document.getElementById('chat-wa-hint').innerHTML=t.buyer_phone?"Your reply appears in the buyer's chat. Use the WhatsApp button above to message them directly.":'Buyer will see your reply when they revisit the listing.';
   renderChatMessages(t);
@@ -8321,7 +8279,7 @@ function renderEnquiries(){
         <div class="enquiry-msg">${escHtml(i.message||'')}</div>
         <div class="enquiry-actions">
           <button class="btn btn-primary btn-sm" data-key="${escAttr(i.key)}" onclick="openConversationFromThread(this.dataset.key)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Open conversation</button>
-          ${i.buyer_phone?`<a class="btn btn-sm" style="background:#25D366;color:white" href="https://wa.me/${formatWaPhone(i.buyer_phone)}" target="_blank" rel="noopener noreferrer">WhatsApp</a>`:''}
+          ${i.buyer_phone?`<a class="btn btn-sm" style="background:#25D366;color:white" href="https://wa.me/${formatWaPhone(i.buyer_phone)}" rel="noopener noreferrer">WhatsApp</a>`:''}
           ${i.unread?`<button class="btn btn-outline btn-sm" data-key="${escAttr(i.key)}" onclick="markEnqThreadRead(this.dataset.key)">Mark read</button>`:''}
         </div>
       </div>
@@ -8336,7 +8294,7 @@ function formatWaPhone(p){
   return clean;
 }
 async function markEnqThreadRead(key){const t=threads.find(x=>x.key===key);if(!t)return;await markThreadRead(t);renderEnquiries();}
-function sendReply(){const text=document.getElementById('reply-text').value.trim();if(!text){showToast('Please type a reply first','error');return;}if(replyTargetEnquiry?.buyer_phone){window.open(`https://wa.me/${formatWaPhone(replyTargetEnquiry.buyer_phone)}?text=${encodeURIComponent(text)}`,'_blank','noopener,noreferrer');}else{showToast('No phone number available','error');return;}closeModal('modal-reply');showToast('Opened WhatsApp with your reply','success');}
+function sendReply(){const text=document.getElementById('reply-text').value.trim();if(!text){showToast('Please type a reply first','error');return;}if(replyTargetEnquiry?.buyer_phone){window.location.assign(`https://wa.me/${formatWaPhone(replyTargetEnquiry.buyer_phone)}?text=${encodeURIComponent(text)}`);}else{showToast('No phone number available','error');return;}closeModal('modal-reply');showToast('Opened WhatsApp with your reply','success');}
 
 /* ══════════════════════════════════════
    REVIEWS — seller-facing view + response
@@ -9727,7 +9685,7 @@ const Tour = (() => {
   const STEPS = [
     { selector:'#nav-overview', page:'overview', title:'Welcome to your dashboard', desc:"Let's take a quick tour of everything you can do here. This is your Overview — your home base every time you sign in." },
     { selector:'#theme-switch', page:'overview', title:'Choose your theme', desc:'Switch between Emerald, Sandstone, and Midnight — your choice is saved for next time.' },
-    { selector:'#verify-warning-banner', page:'overview', title:'Get verified', desc:'Verify your account here to unlock unlimited listings and a trust badge buyers can see. It only takes about 2 minutes.' },
+    { selector:'#verify-warning-banner', page:'overview', title:'Verify your identity', desc:'Submit identity documents for review. Your account role remains a separate, self-declared claim.' },
     { selector:'.stat-grid', page:'overview', title:'Your key numbers', desc:'Active listings, total enquiries, unread messages, payments and views — all at a glance.' },
     { selector:'#overview-activity-card', page:'overview', title:'Recent activity', desc:'A live feed of new enquiries, messages, listings and payments. Tap any item to jump straight to it.' },
     { selector:'#overview-chart-card', page:'overview', title:'Messages this week', desc:'See how buyer activity on your listings has trended over the last 7 days.' },
@@ -9757,7 +9715,7 @@ const Tour = (() => {
     { selector:['#demand-content','#demand-locked'], page:'demand-heatmap', title:'Platform-wide demand', desc:'See top areas, categories, and rent-vs-sale demand — and how your listings compare to the area average.' },
 
     { selector:'#nav-settings', page:'demand-heatmap', title:'Settings', desc:'Tap "Settings" to manage your profile, notifications, and plan.', click:true },
-    { selector:'#verification-settings-section', page:'settings', title:'Account verification', desc:'Submit your ID and proof of ownership here to get verified and unlock unlimited listings.' },
+    { selector:'#verification-settings-section', page:'settings', title:'Identity verification', desc:'Submit the front and back of your ID for review. Nyumba254 checks identity, not ownership or authority to list.' },
     { selector:'#settings-quicknav', page:'settings', title:'Jump to any settings section', desc:'Use these shortcuts to jump straight to Profile, Verification, Privacy, Notifications, Premium, Elite or Team — no more scrolling to find what you need.' },
     { selector:'#settings-contact-privacy-section', page:'settings', title:'Contact privacy', desc:'Hide your Call/WhatsApp buttons platform-wide so buyers can only reach you through chat — right here, not buried at the bottom.' },
     { selector:'#settings-premium-section', page:'settings', title:'Premium & Elite', desc:'Premium unlocks managed chat, a Pro badge and SMS alerts. Video walkthroughs are free. Elite adds AI tools, Instant Valuation, a branded Storefront, Rent Ledger and Demand Insights.' },

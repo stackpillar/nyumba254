@@ -613,7 +613,7 @@
       <div class="ni-side-body"><h3>${esc(l.title)}</h3><div class="ni-side-price">${esc(core.priceLabel(l) || t('price_req'))}</div><div class="ni-side-loc">📍 ${esc([l.area, l.county].filter(Boolean).join(', '))}</div>
       <div class="ni-side-tags"><span class="ni-tag${gone ? ' bad' : ''}">${esc(gone ? t(l.price_frequency === 'once' ? 'sold' : 'occupied') : t('available'))}</span><span class="ni-tag">${esc(t(ver ? 'verified' : 'unverified'))}</span></div>
       <dl>${factsFor(l).map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>
-      <a class="ni-btn" href="/listing?id=${num}">${esc(t('open_listing'))}</a><a class="ni-btn ghost" href="${esc(maps)}" target="_blank" rel="noopener">${esc(t('open_maps'))}</a></div>`;
+      <a class="ni-btn" href="/listing?id=${num}">${esc(t('open_listing'))}</a><a class="ni-btn ghost" href="${esc(maps)}" rel="noopener">${esc(t('open_maps'))}</a></div>`;
   }
 
   /* ═════ messages ═════ */

@@ -336,7 +336,7 @@
     const contactRow = !publicPhone
       ? `<div class="seller-contact-row"><span class="contact-btn chat" style="cursor:default"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Message via listing chat</span><button class="share-btn" onclick="shareStorefront()"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share</button></div>`
       : `<div class="seller-contact-row">
-          ${publicPhone?`<a class="contact-btn wa" href="https://wa.me/${formatWaPhone(publicPhone)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>WhatsApp</a>`:''}
+          ${publicPhone?`<a class="contact-btn wa" href="https://wa.me/${formatWaPhone(publicPhone)}" rel="noopener"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>WhatsApp</a>`:''}
           <button class="share-btn" onclick="shareStorefront()"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share</button>
         </div>`;
 
@@ -359,7 +359,7 @@
           ${profile.profile_location?`<p>${esc(profile.profile_location)}</p>`:''}
           ${profile.bio?`<p>${esc(profile.bio)}</p>`:''}
           ${profile.company_description?`<p>${esc(profile.company_description)}</p>`:''}
-          ${companyWebsite?`<p><a href="${esc(companyWebsite)}" target="_blank" rel="noopener noreferrer">Visit company website</a></p>`:''}
+          ${companyWebsite?`<p><a href="${esc(companyWebsite)}" rel="noopener noreferrer">Visit company website</a></p>`:''}
           <p>Member since ${esc(new Date(profile.created_at).toLocaleDateString('en-KE',{month:'long',year:'numeric'}))}</p>
         </div>
         ${contactRow}
@@ -400,7 +400,7 @@
       </div>
       <footer>Powered by <a href="/">Nyumba254</a> — Kenya's open property platform</footer>
       ${(!hideContact && profile.phone) ? `<div class="sticky-contact-bar">
-        <a class="contact-btn wa" style="flex:1" href="https://wa.me/${formatWaPhone(profile.phone)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>Chat on WhatsApp</a>
+        <a class="contact-btn wa" style="flex:1" href="https://wa.me/${formatWaPhone(profile.phone)}" rel="noopener"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>Chat on WhatsApp</a>
       </div>`:''}`;
 
     wireFilters();
