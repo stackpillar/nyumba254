@@ -6,7 +6,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const skipDirs = new Set(['node_modules', '.git', '.wrangler', 'supabase', 'tools']);
-const allowed = new Set(['nk-shared.js', path.join('src', 'index.js'), 'storefront', 'nk-ctrl-7f3k2x9']);
+const allowed = new Set(['nk-shared.js', path.join('src', 'index.js'), 'storefront', 'nk-ctrl-7f3k2x9', 'dashboard.js']);
 const pattern = /\/storefront\?(?:seller|handle)=/;
 const failures = [];
 

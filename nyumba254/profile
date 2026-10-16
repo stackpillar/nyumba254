@@ -389,6 +389,7 @@
   </style>
   <link rel="stylesheet" href="/theme.css"/>
   <script src="/theme.js"></script>
+  <script src="/nk-activity.js"></script>
 <link rel="manifest" href="/manifest.webmanifest"><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script></head>
 <body>
 
@@ -456,6 +457,10 @@
         <li><a href="#notifications" onclick="scrollToSection('notifications',this)">
           <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
           Notifications
+        </a></li>
+        <li><a href="#my-activity" onclick="scrollToSection('my-activity',this)">
+          <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          My activity
         </a></li>
         <li><div class="divider"></div></li>
         <li><a href="/dashboard">
@@ -803,6 +808,12 @@
         </div>
       </div>
 
+      <!-- ── MY ACTIVITY ── -->
+      <div class="card" id="my-activity">
+        <div class="card-header"><div class="card-header-left"><div><div class="card-title">My activity</div><div class="card-sub">A readable history of your account. Download it as a report you can keep or print.</div></div></div></div>
+        <div class="card-body"><div id="activity-host"></div></div>
+      </div>
+
       <!-- ── DANGER ZONE ── -->
       <div class="card" id="danger-zone" style="border-color:#f5c6c2">
         <div class="card-header" style="border-color:#f5c6c2">
@@ -965,6 +976,10 @@
     profileData = data || {};
 
     populate();
+    if (window.NKActivity) {
+      db.rpc('log_activity', { p_category: 'account', p_action: 'sign_in', p_meta: { device: (navigator.userAgent.match(/Edg|Chrome|Firefox|Safari/) || ['Browser'])[0] } }).then(function () {}, function () {});
+      NKActivity.mount(document.getElementById('activity-host'), { db: db, role: profileData.account_type === 'buyer' ? 'buyer' : 'lister', buyer: profileData.account_type === 'buyer' });
+    }
     loadStats();
     loadVerificationUI();
     updateNavVerifyBadge();

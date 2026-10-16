@@ -73,6 +73,7 @@ export default {
   async scheduled(controller, env, ctx) {
     ctx.waitUntil(publishDueListings(env));
     ctx.waitUntil(pruneListerPageAnalytics(env));
+    ctx.waitUntil(purgeActivityEvents(env));
   },
 };
 
@@ -367,6 +368,24 @@ async function pruneListerPageAnalytics(env) {
     return;
   }
   console.info('Pruned expired Lister Page analytics:', await response.json());
+}
+
+async function purgeActivityEvents(env) {
+  if (!env.NYUMBA254_SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) return;
+  try {
+    const response = await fetch(`${env.NYUMBA254_SUPABASE_URL}/rest/v1/rpc/purge_activity_events`, {
+      method: 'POST',
+      headers: {
+        apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: '{}',
+    });
+    if (!response.ok) console.error('Could not purge activity events:', response.status);
+  } catch (error) {
+    console.error('Could not purge activity events:', error);
+  }
 }
 
 async function supabaseRequest(env, table, params, options = {}) {

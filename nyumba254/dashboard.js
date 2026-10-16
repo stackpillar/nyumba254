@@ -4,6 +4,15 @@ const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
 const EDGE_URL = `${SUPABASE_URL}/functions/v1`;
 const { createClient } = supabase;
 const PDF_LIBRARY_URL = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+/* The dashboard does not load nk-shared.js, so it carries its own copy of the Lister Page URL helper. Keep both in sync. */
+window.nkListerPageUrl = window.nkListerPageUrl || function (o) {
+  const x = o || {};
+  const path = x.handle
+    ? '/@' + encodeURIComponent(String(x.handle).toLowerCase())
+    : (x.user_id ? '/storefront?seller=' + encodeURIComponent(x.user_id) : '');
+  if (!path) return '';
+  return x.absolute ? location.origin + path : path;
+};
 let pdfLibraryPromise = null;
 
 function ensurePdfLibrary(){
@@ -238,6 +247,24 @@ const AMENITY_KEYS=[
   { key:'has_backup_power', label:'Backup power' },
 ];
 
+function activityDeviceLabel(){
+  const ua=navigator.userAgent||'';
+  const os=/Android/i.test(ua)?'Android':/iPhone|iPad|iOS/i.test(ua)?'iOS':/Windows/i.test(ua)?'Windows':/Mac OS/i.test(ua)?'macOS':/Linux/i.test(ua)?'Linux':'Unknown OS';
+  const browser=/Edg\//.test(ua)?'Edge':/OPR\/|Opera/.test(ua)?'Opera':/Chrome\//.test(ua)?'Chrome':/Firefox\//.test(ua)?'Firefox':/Safari\//.test(ua)?'Safari':'Browser';
+  return browser+' on '+os;
+}
+function logSignInOnce(){
+  try{if(sessionStorage.getItem('nk_signin_logged'))return;sessionStorage.setItem('nk_signin_logged','1');}catch(error){return;}
+  db.rpc('log_activity',{p_category:'account',p_action:'sign_in',p_meta:{device:activityDeviceLabel()}}).then(()=>{},()=>{});
+}
+let activityMounted=false;
+function mountActivityPage(){
+  const host=document.getElementById('activity-host');
+  if(!host||activityMounted||!window.NKActivity)return;
+  activityMounted=true;
+  const buyer=(ownerProfile||currentProfile)?.account_type==='buyer';
+  window.NKActivity.mount(host,{db,role:buyer?'buyer':'lister',buyer});
+}
 async function init(){
   try{
     nkPopulateEditCounties();
@@ -248,6 +275,7 @@ async function init(){
     discardUnscopedNotificationQueue();
     document.getElementById('topbar-date').textContent=new Date().toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
     await resolveEffectiveSeller();
+    logSignInOnce();
     await Promise.all([loadPlatformVerifySettings(), loadProfile()]);
     updateVerifyWarningBanner();
     if(currentProfile?.role==='admin'){
@@ -4924,6 +4952,7 @@ async function downloadDashboardBackup(){
     const link=document.createElement('a');
     link.href=url;
     link.download=`Nyumba254-Backup-${new Date().toISOString().slice(0,10)}.json`;
+    db.rpc('log_activity',{p_category:'data',p_action:'backup_downloaded'}).then(()=>{},()=>{});
     document.body.appendChild(link);link.click();link.remove();
     setTimeout(()=>URL.revokeObjectURL(url),1000);
     rememberDashboardBackup({fileName:link.download,createdAt:backup.createdAt,bytes:blob.size,digest:backup.integrity.digest});
@@ -9012,8 +9041,8 @@ document.getElementById('viewings-list')?.addEventListener('click',event=>{
   if(button)updateViewingRequestStatus(button.dataset.viewingId,button.dataset.viewingStatus);
 });
 
-const pageTitles={overview:'Overview',listings:'My listings',messages:'Messages',enquiries:'Enquiries',viewings:'Viewings',reviews:'Reviews',payments:'Payments','lister-page':'Lister Page',settings:'Settings','rent-ledger':'Rent & Tenant Ledger','demand-heatmap':'Demand Insights',notifications:'Notifications'};
-function showPage(name){if(!document.getElementById('page-'+name))name='overview';try{sessionStorage.setItem('ny_last_page',name);}catch(error){console.info('Dashboard page preference could not be saved.',error);}if(!window.__navFromHash&&!document.getElementById('tour-overlay').classList.contains('open')&&location.hash!=='#'+name)history.pushState(null,'','#'+name);document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>{n.classList.remove('active');n.removeAttribute('aria-current');});document.getElementById('page-'+name).classList.add('active');const navEl=document.getElementById('nav-'+name);if(navEl){navEl.classList.add('active');navEl.setAttribute('aria-current','page');}document.getElementById('topbar-title').textContent=pageTitles[name]||name;if(name==='overview')renderOverview();if(name==='lister-page')loadListerPageHub();if(name==='listings')renderListingsTable();if(name==='messages'){showThreadListMobile();renderThreadList();}if(name==='enquiries')renderEnquiries();if(name==='viewings')loadViewingRequestsPage();if(name==='reviews')renderReviews();if(name==='payments')renderPayments();if(name==='rent-ledger'){ if(isBnbLedgerMode()) loadBnbLedger(); else loadRentalUnits(); }if(name==='demand-heatmap')loadDemandInsights();if(name==='notifications')renderNotificationsPage();closeSidebar();
+const pageTitles={overview:'Overview',listings:'My listings',messages:'Messages',enquiries:'Enquiries',viewings:'Viewings',reviews:'Reviews',payments:'Payments','lister-page':'Lister Page',settings:'Settings','rent-ledger':'Rent & Tenant Ledger','demand-heatmap':'Demand Insights',notifications:'Notifications',activity:'Activity'};
+function showPage(name){if(!document.getElementById('page-'+name))name='overview';try{sessionStorage.setItem('ny_last_page',name);}catch(error){console.info('Dashboard page preference could not be saved.',error);}if(!window.__navFromHash&&!document.getElementById('tour-overlay').classList.contains('open')&&location.hash!=='#'+name)history.pushState(null,'','#'+name);document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>{n.classList.remove('active');n.removeAttribute('aria-current');});document.getElementById('page-'+name).classList.add('active');const navEl=document.getElementById('nav-'+name);if(navEl){navEl.classList.add('active');navEl.setAttribute('aria-current','page');}document.getElementById('topbar-title').textContent=pageTitles[name]||name;if(name==='overview')renderOverview();if(name==='lister-page')loadListerPageHub();if(name==='listings')renderListingsTable();if(name==='messages'){showThreadListMobile();renderThreadList();}if(name==='enquiries')renderEnquiries();if(name==='viewings')loadViewingRequestsPage();if(name==='reviews')renderReviews();if(name==='payments')renderPayments();if(name==='rent-ledger'){ if(isBnbLedgerMode()) loadBnbLedger(); else loadRentalUnits(); }if(name==='demand-heatmap')loadDemandInsights();if(name==='notifications')renderNotificationsPage();if(name==='activity')mountActivityPage();closeSidebar();
   const scwFabEl=document.getElementById('scw-fab');
   if(scwFabEl){
     if(name==='messages'){

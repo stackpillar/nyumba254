@@ -113,6 +113,9 @@
         <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>Notifications
         <span class="badge-count red" id="nav-badge-notifications" style="display:none">0</span>
       </button>
+      <button class="nav-item" id="nav-activity" onclick="showPage('activity')">
+        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Activity
+      </button>
       <button class="nav-item" id="nav-settings" onclick="showPage('settings')">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Settings
       </button>
@@ -679,6 +682,13 @@
       <div id="notif-groups-list"><div style="text-align:center;padding:40px;color:var(--text-3);font-size:13px">Loading…</div></div>
     </div>
 
+    <!-- ACTIVITY -->
+    <div class="page" id="page-activity">
+      <div class="section-head"><h2>Activity</h2></div>
+      <p style="font-size:13px;color:var(--text-2);margin-bottom:12px">A categorised history of what happened on your account. Download it as a report you can keep or print.</p>
+      <div id="activity-host"><div style="text-align:center;padding:40px;color:var(--text-3);font-size:13px">Loading…</div></div>
+    </div>
+
     <!-- SETTINGS -->
     <div class="page" id="page-settings">
       <div class="section-head" style="margin-bottom:12px"><h2>Account settings</h2></div>
@@ -940,6 +950,11 @@
             <p style="font-size:12px;color:var(--text-3);line-height:1.6;margin-top:8px" id="hide-contact-note"></p>
           </div>
         </div>
+      </div>
+      <div class="settings-section" id="settings-data-section" style="margin-top:20px">
+        <h3><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Your data</h3>
+        <p style="font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:12px">See a readable history of your account and download it as a report. Backup = a copy you can restore. Activity report = a readable history you can keep or print.</p>
+        <button class="btn btn-outline" type="button" onclick="showPage('activity')">Open Activity</button>
       </div>
       <div class="settings-section" id="settings-backup-section" style="margin-top:20px">
         <h3><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 17v3a1 1 0 001 1h12a1 1 0 001-1v-3"/></svg>Account backup &amp; restore</h3>
@@ -1697,6 +1712,7 @@
 </div>
 <script src="/nk-notification-sound.js"></script>
 <script src="/qrcode.js"></script>
+<script src="/nk-activity.js"></script>
 <script src="/dashboard.js"></script>
 <script src="/nk-policy-viewer.js"></script>
 <script>

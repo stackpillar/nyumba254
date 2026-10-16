@@ -179,6 +179,7 @@ td.nl::before,td.c-sel::before,td.c-act::before{display:none}td.nl{text-align:le
 </div></div>
 <div id="ov"></div><div id="toasts" aria-live="polite"></div>
 <script src="/nk-notification-sound.js"></script>
+<script src="/nk-activity.js"></script>
 <script>
 'use strict';
 const SUPABASE_URL='https://vliuuloyfhyxcsuchpss.supabase.co';
@@ -1182,14 +1183,30 @@ async function deleteSeller(u){
   const{data:d,error}=await db.from('profiles').delete().eq('id',u.id).select();if(error)throw error;if(!d?.length)throw new Error('Blocked by database policy (RLS)');
   logAction('delete_profile','profile',u.id,(data||[]).length?`Also removed ${data.length} listing(s)`:'');ui.toast('Profile deleted','ok');
 }
+async function openUserActivity(u){
+  if(!window.NKActivity)return ui.toast('Activity viewer failed to load','err');
+  const reason=await ui.ask({title:'View account activity',message:`Read-only history for <b>${esc(u.full_name||'this account')}</b>. Your access is logged with the reason you give.`,label:'Reason (at least 5 characters)',confirm:'View activity'});
+  if(reason===null)return;
+  if(String(reason).trim().length<5)return ui.toast('Please give a reason of at least 5 characters','err');
+  const why=String(reason).trim();
+  let first=null;
+  const fetchPage=p=>db.rpc('admin_get_user_activity',{p_user:u.id,p_reason:why,p_categories:p.categories,p_from:p.from,p_to:p.to,p_limit:p.limit||100,p_cursor:p.cursor});
+  const source={
+    page:p=>{if(!p.cursor&&(!p.categories||!p.categories.length)&&!p.from&&!p.to){first=first||fetchPage({limit:500});return first.then(r=>r.error?r:{data:(r.data||[]).slice(0,100),error:null});}return fetchPage(p);},
+    count:async p=>{first=first||fetchPage({limit:500});const r=await first;if(r.error)return r;const t={};(r.data||[]).forEach(x=>{if(p.from&&x.created_at<p.from)return;if(p.to&&x.created_at>p.to)return;t[x.category]=(t[x.category]||0)+1;});return{data:Object.keys(t).map(k=>({category:k,n:t[k]})),error:null};}
+  };
+  const d=ui.drawer('Activity — '+(u.full_name||'Account'),'<div id="adm-activity"></div>');
+  NKActivity.mount($('#adm-activity',d.el),{db,role:'lister',source});
+}
 function openSeller(u,T){
   const d=ui.drawer(u.full_name||'Seller',`${u.is_disabled?`<div class="intro" style="color:var(--red)">Suspended${u.disabled_reason?': '+esc(u.disabled_reason):''}</div>`:''}
     <div class="fld"><label>Full name</label><input class="in" id="p_n" value="${esc(u.full_name||'')}"></div><div class="g2"><div class="fld"><label>Phone</label><input class="in" id="p_p" value="${esc(u.phone||'')}"></div><div class="fld"><label>Role</label><select class="in" id="p_r"><option value="seller" ${u.role!=='admin'?'selected':''}>Seller</option><option value="admin" ${u.role==='admin'?'selected':''}>Admin</option></select></div></div>
     <div class="fld"><label>Email</label><input class="in" id="p_e" value="${esc(u.email||'')}"></div>
     <label class="chk"><input type="checkbox" id="p_v" ${u.verification_enforced?'checked':''}> Force this seller to verify (caps them at the unverified listing limit)</label>
     <dl class="kv"><dt>Listings</dt><dd>${u.listing_count??'—'}</dd><dt>Verification</dt><dd>${bd(u.verification_status||'unverified')}</dd><dt>Joined</dt><dd>${dt(u.created_at)}</dd><dt>Profile ID</dt><dd><code>${esc(u.id)}</code></dd></dl>`,
-    `<button class="btn" data-l>Listings</button><button class="btn" data-m>Message</button><button class="btn" data-em>Email</button><button class="btn pri" data-sv>Save changes</button>`);
+    `<button class="btn" data-l>Listings</button><button class="btn" data-m>Message</button>    <button class="btn" data-em>Email</button><button class="btn" data-act>Activity</button><button class="btn pri" data-sv>Save changes</button>`);
   const q=s=>$(s,d.foot);
+      q('[data-act]').onclick=()=>openUserActivity(u);
   q('[data-l]').onclick=()=>{d.close();go('listings',{seller:u.id});};q('[data-m]').onclick=()=>{d.close();go('support',{seller:u.id});};
   q('[data-em]').onclick=()=>T.run({fn:()=>emailSeller(u)});
   q('[data-sv]').onclick=async()=>{

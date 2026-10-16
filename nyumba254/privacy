@@ -527,11 +527,16 @@
             <td>Event-level records for up to 90 days; daily source totals for up to 13 months</td>
           </tr>
           <tr>
+            <td>Account activity history</td>
+            <td>24 months, then automatically deleted (draft, needs legal review)</td>
+          </tr>
+          <tr>
             <td>Support emails</td>
             <td>2 years from the date of the last communication</td>
           </tr>
         </tbody>
       </table>
+      <p>Activity history: your account keeps a readable record of key actions (such as listings, enquiries, viewings and payments, with M-Pesa references masked and no message text) so you can view and download your own copy from Activity in your dashboard or profile. Admins may view it only with a recorded reason. <em>Draft, needs legal review.</em></p>
       <p>When data is deleted, it is permanently removed from our systems and cannot be recovered. Payment records are the exception — we are required by Kenyan tax and financial regulations to retain these for 7 years.</p>
     </div>
     <div class="section-divider"></div>
