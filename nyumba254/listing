@@ -442,7 +442,7 @@ a.lncard:hover{border-color:var(--green);background:var(--green-light)}
 <div class="notify-modal-overlay" id="ov-verify"><div class="notify-modal" role="dialog" aria-modal="true" aria-labelledby="vf-t">
   <div class="notify-modal-head"><h2 id="vf-t">What does Verified mean?</h2><button type="button" class="notify-modal-close" data-act="close" aria-label="Close">✕</button></div>
   <div class="notify-modal-body" id="vf-body"></div>
-  <div class="notify-modal-foot"><a class="link" href="/how-it-works" style="margin-right:auto">How role verification works</a><button type="button" class="btn btn-primary" data-act="close">Got it</button></div>
+  <div class="notify-modal-foot"><a class="link" href="/how-it-works" style="margin-right:auto">How identity checks and role badges work</a><button type="button" class="btn btn-primary" data-act="close">Got it</button></div>
 </div></div>
 
 <footer>
@@ -826,7 +826,7 @@ function render(){
     <section class="sec" id="sec-loc">${secHead('loc','Location')}<div class="mapbox" id="mapbox"></div>
       <div class="maprow"><span class="addr">${escHtml(P.address||where())}</span><a class="link" id="maplink" href="#" rel="noopener">Open in Maps</a></div><p class="maphint" id="maphint" hidden>Pinch to zoom the map. Use Open in Maps for directions.</p></section>
     ${rules.length?`<section class="sec" id="sec-rules">${secHead('rules','House rules')}<ul class="rules">${rules.map(r=>`<li>${escHtml(r)}</li>`).join('')}</ul></section>`:''}
-    ${isOwner?'':`<section class="sec md-only">${secHead('seller','About the lister')}${sellerHead()}</section><section class="sec md-only safety">${secHead('safety','Viewing fee and safety')}<p>${escHtml(viewingFeeSafetyText(P.viewing_fee))}</p><a class="link" href="/viewing-fee-policy">Read the Viewing Fee Policy</a><button type="button" class="link" data-act="report-fee">Report a fee problem</button><ul><li>Verify the property and confirm it is available.</li><li>Never pay rent, a deposit or another fee before viewing.</li><li>Nyumba254 does not collect viewing fees.</li></ul></section>`}
+    ${isOwner?'':`<section class="sec md-only">${secHead('seller','About the lister')}${sellerHead()}</section><section class="sec md-only safety">${secHead('safety','Viewing fee and safety')}<p>${escHtml(viewingFeeSafetyText(P.viewing_fee))}</p><a class="link" href="/viewing-fee-policy">Read the Viewing Fee Policy</a><button type="button" class="link" data-act="report-fee">Report a fee problem</button><ul><li>Verify the property and confirm it is available.</li><li>Check the listing for any viewing fee and pay only that fee directly to the lister, with a receipt.</li><li>Never pay rent or a deposit before viewing. Nyumba254 does not collect viewing fees.</li></ul></section>`}
     <div class="listnav" id="listnav" hidden></div>
   </div><aside class="side" id="side" aria-label="Contact the lister">${sidebarHtml()}</aside></div>
   <section class="sim" id="sim" hidden><div class="sim-head"><h2>${occ?'Similar listings available now':'Similar listings nearby'}</h2><a class="link" href="${escHtml(nkBuildListingsUrl({category:P.category,county:P.county}))}">View all in ${escHtml(P.county?nkCountyLabel(P.county):'Kenya')}</a></div><div class="card-grid" id="sim-grid"><div class="sk" style="aspect-ratio:4/3"></div><div class="sk" style="aspect-ratio:4/3"></div><div class="sk" style="aspect-ratio:4/3"></div></div></section>`;
@@ -1043,22 +1043,20 @@ async function reveal(channel){
   if(P.contact_hidden){toast('This lister keeps contact on Nyumba254 chat. Send a message instead.');return openContactSheet()}
   if(revealBusy)return;
   if(!phoneRaw&&needNet("You're offline. Connect to the internet to see the lister's contact."))return;
-  const wa=channel==='whatsapp';let win=null;
-  /* Safari blocks window.open() after an await, so the tab is opened first, inside the tap, and pointed at WhatsApp afterwards. */
-  if(wa&&!phoneRaw){win=window.open('about:blank','_blank');if(win)try{win.opener=null}catch(e){}}
+  const wa=channel==='whatsapp';
   if(!phoneRaw){
     revealBusy=true;setBusy(true);
     try{
       const {data,error}=await db.rpc('reveal_seller_contact',{p_listing_id:P.id,p_device_id:lsg('nk_sid')||'',p_channel:channel});
-      if(error||!data){if(win)win.close();toast(error?'Contact is temporarily unavailable. Send a message instead.':"You've reached the contact limit for now. Send a message instead.",'error');return}
+      if(error||!data){toast(error?'Contact is temporarily unavailable. Send a message instead.':"You've reached the contact limit for now. Send a message instead.",'error');return}
       phoneRaw=data;
-    }catch(e){if(win)win.close();toast('Contact is temporarily unavailable. Send a message instead.','error');return}
+    }catch(e){toast('Contact is temporarily unavailable. Send a message instead.','error');return}
     finally{revealBusy=false;setBusy(false)}
   }
   const n=nkNormalizePhone(phoneRaw);
   if(wa){
     const url=`https://wa.me/${n.replace('+','')}?text=${encodeURIComponent(`Hello, I saw your listing "${P.title}" (ref ${shortRef()}) on Nyumba254. Is it still available?`)}`;
-    if(win){try{win.location.href=url}catch(e){location.href=url}}else window.open(url,'_blank','noopener,noreferrer')
+    location.assign(url);
   }else if(coarse()){location.href='tel:'+n}
   else{showPhonePanel();if(isMobileWidth())openContactSheet()}
   nkTrackContactIntent();

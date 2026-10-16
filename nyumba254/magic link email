@@ -478,7 +478,7 @@
       Activity log
     </button>
     <div class="nav-section-label" style="margin-top:8px">Site</div>
-    <button class="nav-item" onclick="window.open('index.html','_blank')">
+    <button class="nav-item" onclick="window.location.assign('index.html')">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
       View live site
     </button>
@@ -2003,7 +2003,7 @@ async function messageSellerInChat(sellerId, sellerName) {
       if (error) { toast('Could not open chat: ' + error.message, 'error'); return; }
       existing = created;
     }
-    window.open(`admin-chat.html?session=${existing.id}`, '_blank');
+    window.location.assign(`admin-chat.html?session=${encodeURIComponent(existing.id)}`);
   }
 
   // ─── PROFILE MODAL ───
@@ -2193,7 +2193,7 @@ async function messageSellerInChat(sellerId, sellerName) {
 
     tbody.innerHTML = filtered.map(i => {
       const actionBtn = (i.type==='site_chat'||i.type==='seller_chat')
-        ? `<div class="action-btns">${aBtn('chat','Open chat','message',`window.open('admin-chat.html?session=${i.sessionId}','_blank')`)}</div>`
+        ? `<div class="action-btns">${aBtn('chat','Open chat','message',`window.location.assign('admin-chat.html?session=${encodeURIComponent(i.sessionId)}')`)}</div>`
         : `<div class="action-btns">${aBtn('view','View conversation','view',`openInquiryModal('${i.id}')`)}</div>`;
       const unreadDot = i.unread ? `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--red);margin-right:7px;flex-shrink:0"></span>` : '';
       return `<tr>
@@ -2208,7 +2208,7 @@ async function messageSellerInChat(sellerId, sellerName) {
 
     mobileEl.innerHTML = filtered.map(i => {
       const actionBtn = (i.type==='site_chat'||i.type==='seller_chat')
-        ? aBtn('chat','Open chat','message',`window.open('admin-chat.html?session=${i.sessionId}','_blank')`)
+        ? aBtn('chat','Open chat','message',`window.location.assign('admin-chat.html?session=${encodeURIComponent(i.sessionId)}')`)
         : aBtn('view','View','view',`openInquiryModal('${i.id}')`);
       const unreadDot = i.unread ? `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--red);margin-right:6px;flex-shrink:0"></span>` : '';
       return `<div class="mobile-card">
@@ -2408,7 +2408,7 @@ async function messageSellerInChat(sellerId, sellerName) {
           ${mobileMenu(r.id,[
             {label:'View full details', cls:'', fn:`openReportModal('${r.id}')`},
             ...(seller && !seller.is_disabled?[{label:'Suspend seller', cls:'danger', fn:`quickSuspendSeller('${seller.id}')`}]:[]),
-            ...(listing?[{label:'Open listing page', cls:'', fn:`window.open('listing.html?id=${listing.id}','_blank')`}]:[]),
+            ...(listing?[{label:'Open listing page', cls:'', fn:`window.location.assign('listing.html?id=${encodeURIComponent(listing.id)}')`}]:[]),
           ])}
         </td>
       </tr>`;
@@ -2493,7 +2493,7 @@ async function messageSellerInChat(sellerId, sellerName) {
     document.getElementById('report-modal-body').innerHTML = html;
 
     document.getElementById('report-modal-footer').innerHTML = `
-      ${listing?`<button class="btn-modal cancel" onclick="window.open('listing.html?id=${listing.id}','_blank')">View listing</button>`:''}
+      ${listing?`<button class="btn-modal cancel" onclick="window.location.assign('listing.html?id=${encodeURIComponent(listing.id)}')">View listing</button>`:''}
       ${seller?`<button class="btn-modal cancel" onclick="closeReportModal(); openProfileModal('${seller.id}')">View seller profile</button>`:''}
       ${seller && !seller.is_disabled?`<button class="btn-modal reject" onclick="closeReportModal(); disableProfileFlow('${seller.id}')">Suspend seller</button>`:''}
       ${listing && !listing.is_disabled?`<button class="btn-modal reject" onclick="closeReportModal(); recycleListing('${listing.id}')">Recycle listing</button>`:''}

@@ -41,7 +41,9 @@ begin
   foreach v_signature in array array[
     'public.protect_account_type_fields()',
     'public.set_account_type(text)',
-    'public.enforce_listing_limit()'
+    'public.enforce_listing_limit()',
+    'public.admin_set_viewing_fee_privilege(uuid, boolean, text)',
+    'public.admin_set_listing_viewing_fee(uuid, integer, text)'
   ] loop
     select pg_get_functiondef(to_regprocedure(v_signature))
       into v_definition
@@ -235,6 +237,105 @@ $function$;
 revoke all on function public.requires_identity(text) from public, anon;
 grant execute on function public.requires_identity(text) to authenticated;
 
+create or replace function public.admin_set_viewing_fee_privilege(
+  p_profile_id uuid,
+  p_blocked boolean,
+  p_reason text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $function$
+declare
+  v_admin_name text;
+begin
+  if auth.uid() is null or not public.is_admin() then
+    raise exception 'Administrator access is required';
+  end if;
+  if p_profile_id is null or p_blocked is null or length(btrim(coalesce(p_reason, ''))) < 5 then
+    raise exception 'Choose a lister, an action, and provide a reason of at least five characters';
+  end if;
+  select full_name into v_admin_name from public.profiles where id = auth.uid();
+  perform set_config('nyumba254.viewing_fee_admin_rpc', '1', true);
+  update public.profiles
+  set viewing_fee_blocked = p_blocked,
+      viewing_fee_block_reason = case when p_blocked then btrim(p_reason) else null end
+  where id = p_profile_id;
+  if not found then raise exception 'Lister profile not found'; end if;
+
+  insert into public.admin_logs (admin_id, admin_name, action, target_type, target_id, details)
+  values (auth.uid(), coalesce(v_admin_name, 'Admin'),
+    case when p_blocked then 'freeze_viewing_fee_privilege' else 'unfreeze_viewing_fee_privilege' end,
+    'profile', p_profile_id::text, btrim(p_reason));
+
+  insert into public.notifications (seller_id, type, title, body, link)
+  values (p_profile_id, 'viewing_fee_policy',
+    case when p_blocked then 'Viewing fee privilege paused' else 'Viewing fee privilege restored' end,
+    case when p_blocked then 'Your viewing-fee privilege was paused. Reason: ' || btrim(p_reason)
+         else 'Your viewing-fee privilege was restored. Reason: ' || btrim(p_reason) end,
+    '/dashboard?view=settings');
+end;
+$function$;
+revoke all on function public.admin_set_viewing_fee_privilege(uuid, boolean, text) from public, anon;
+grant execute on function public.admin_set_viewing_fee_privilege(uuid, boolean, text) to authenticated;
+
+create or replace function public.admin_set_listing_viewing_fee(
+  p_listing_id uuid,
+  p_viewing_fee integer,
+  p_reason text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $function$
+declare
+  v_seller_id uuid;
+  v_admin_name text;
+  v_max integer;
+begin
+  if auth.uid() is null or not public.is_admin() then
+    raise exception 'Administrator access is required';
+  end if;
+  if p_listing_id is null or p_viewing_fee is null or length(btrim(coalesce(p_reason, ''))) < 5 then
+    raise exception 'Choose a listing, fee, and provide a reason of at least five characters';
+  end if;
+  select coalesce((s.value #>> '{}')::integer, 5000) into v_max
+  from public.platform_settings s where s.key = 'viewing_fee_max';
+  v_max := least(coalesce(v_max, 5000), 5000);
+  if p_viewing_fee < 0 or p_viewing_fee > v_max then
+    raise exception 'Viewing fee must be between KES 0 and KES %', v_max;
+  end if;
+  select l.seller_id into v_seller_id
+  from public.listings l
+  join public.profiles p on p.id = l.seller_id
+  where l.id = p_listing_id;
+  if not found then raise exception 'Listing not found'; end if;
+  if p_viewing_fee > 0 and not public.viewing_fee_lister_can_charge(v_seller_id) then
+    raise exception 'The lister must be an eligible Agent or Company with the current policy accepted and fee privilege enabled';
+  end if;
+  select full_name into v_admin_name from public.profiles where id = auth.uid();
+
+  insert into public.listing_viewing_fees (listing_id, viewing_fee)
+  values (p_listing_id, p_viewing_fee)
+  on conflict (listing_id) do update
+    set viewing_fee = excluded.viewing_fee, updated_at = now();
+
+  insert into public.admin_logs (admin_id, admin_name, action, target_type, target_id, details)
+  values (auth.uid(), coalesce(v_admin_name, 'Admin'), 'admin_set_listing_viewing_fee',
+    'listing', p_listing_id::text,
+    'Set viewing fee to KES ' || p_viewing_fee::text || '. Reason: ' || btrim(p_reason));
+
+  insert into public.notifications (seller_id, type, title, body, link)
+  values (v_seller_id, 'viewing_fee_policy', 'Viewing fee updated by Nyumba254',
+    'An administrator updated this listing’s viewing fee. Reason: ' || btrim(p_reason),
+    '/dashboard?view=listings');
+end;
+$function$;
+revoke all on function public.admin_set_listing_viewing_fee(uuid, integer, text) from public, anon;
+grant execute on function public.admin_set_listing_viewing_fee(uuid, integer, text) to authenticated;
+
 insert into public.platform_settings (key, value)
 values
   ('allowance_over_10_requires_identity', 'false'::jsonb),
@@ -352,7 +453,7 @@ begin
   from public.profiles a
   where a.id = auth.uid();
 
-  insert into public.notifications (seller_id, type, title, description, link)
+  insert into public.notifications (seller_id, type, title, body, link)
   values (
     p_profile_id,
     'profile',
@@ -361,7 +462,7 @@ begin
       then 'An administrator paused the public role badge on your account. Your identity verification status has not changed.'
       else 'An administrator restored the public role badge for your selected account role.'
     end,
-    '/dashboard.html#settings'
+    '/dashboard?view=settings'
   );
 end;
 $function$;
@@ -516,6 +617,7 @@ commit;
 --   end loop;
 -- end;
 -- $$;
+-- select set_config('nyumba254.role_verification_rpc', '1', true);
 -- update public.profiles p
 -- set verified_role = b.verified_role
 -- from migration_rollback.verified_role_backup_20261016 b
@@ -535,4 +637,7 @@ commit;
 -- delete from public.platform_settings s using migration_rollback.platform_settings b
 -- where b.migration_id = '20261017170000' and b.setting_key = s.key and not b.existed;
 -- delete from migration_rollback.migration_markers where migration_id = '20261017170000';
+-- grant execute on function public.submit_role_verification(text[], text) to authenticated;
+-- grant execute on function public.admin_review_role_verification(uuid, boolean, text) to authenticated;
+-- grant execute on function public.admin_approve_account_role(uuid, boolean) to authenticated;
 -- commit;

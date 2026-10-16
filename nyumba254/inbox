@@ -691,18 +691,17 @@
   function toggleMenu() { const open = !$('ni-menu').classList.contains('open'); $('ni-menu').classList.toggle('open', open); $('ni-more').setAttribute('aria-expanded', String(open)); if (open) { renderHead(); const f = $('ni-menu').querySelector('button'); if (f && !touch()) f.focus(); } }
   async function doContact(ch) {
     const a = core.active(); if (!a) return; closeMenu();
-    let win = null; if (ch === 'whatsapp') { win = window.open('about:blank', '_blank'); if (win) try { win.opener = null; } catch (e) {} }   // opened inside the tap, so Safari does not block it
     toast(t('c_getting')); const r = await core.revealContact(a.listingId, ch);
-    if (r.error) { if (win) win.close(); toast(t(r.error === 'offline' ? 'c_offline' : r.error === 'limit' ? 'c_limit' : 'c_unavail')); return; }
+    if (r.error) { toast(t(r.error === 'offline' ? 'c_offline' : r.error === 'limit' ? 'c_limit' : 'c_unavail')); return; }
     const n = core.normPhone(r.phone), l = core.listing(), title = (l && l.title) || (activeConvo() || {}).title || '';
-    if (ch === 'whatsapp') { const url = `https://wa.me/${n.replace('+', '')}?text=${encodeURIComponent(t('wa_text', title))}`; if (win) { try { win.location.href = url; } catch (e) { location.href = url; } } else window.open(url, '_blank', 'noopener,noreferrer'); hideToast(); }
+    if (ch === 'whatsapp') { const url = `https://wa.me/${n.replace('+', '')}?text=${encodeURIComponent(t('wa_text', title))}`; location.assign(url); hideToast(); }
     else if (touch()) { location.href = 'tel:' + n; hideToast(); }
     else { try { navigator.clipboard.writeText(n); } catch (e) {} toast(`${core.prettyPhone(n)} · ${t('c_copied')}`); }
   }
   function invite() {
     const l = core.listing(), c = activeConvo(); if (!c) return;
     const url = l && l.listing_number != null ? `${location.origin}/listing?id=${String(l.listing_number).padStart(6, '0')}` : location.origin, title = (l && l.title) || c.title;
-    if (navigator.share) navigator.share({ title, text: t('invite_text', title, url), url }).catch(() => {}); else window.open('https://wa.me/?text=' + encodeURIComponent(t('invite_text', title, url)), '_blank', 'noopener');
+    if (navigator.share) navigator.share({ title, text: t('invite_text', title, url), url }).catch(() => {}); else location.assign('https://wa.me/?text=' + encodeURIComponent(t('invite_text', title, url)));
   }
   function reportAsk() { $('ni-safety').classList.add('show'); const b = $('ni-report'); $('ni-safety-t').textContent = t('report_ask'); b.textContent = t('report_yes'); b.dataset.a = 'go'; b.focus(); }
   function menuAction(m) {

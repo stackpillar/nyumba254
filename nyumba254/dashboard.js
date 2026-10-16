@@ -276,8 +276,8 @@ async function init(){
     document.getElementById('app-shell').style.display='flex';
     const urlParams=new URLSearchParams(location.search);
     if(urlParams.get('verify')==='1'){
-      const lim=urlParams.get('limit')||PLATFORM_VERIFY_SETTINGS.unverified_listing_limit||2;
-      showToast(`Please verify your account — unverified sellers are limited to ${lim} listing(s).`,'error');
+      const lim=urlParams.get('limit')??String(PLATFORM_VERIFY_SETTINGS.unverified_listing_limit??2);
+      showToast(`Please verify your identity — unverified listers are limited to ${lim} listing(s).`,'error');
       showPage('settings');
       setTimeout(()=>openKycModal(),400);
       history.replaceState(null,'',location.pathname);
@@ -879,7 +879,7 @@ function renderRoleTrustOverview(){
   const roleVerified=profile?.verification_status==='verified'&&profile?.role_badge_revoked!==true&&!!profile?.account_type;
   const identityVerified=profile?.verification_status==='verified';
   const count=allListings.filter(listing=>listing.status==='active'&&!listing.is_disabled&&!listing.recycle_bin).length;
-  const limit=Number(PLATFORM_VERIFY_SETTINGS.unverified_listing_limit)||2;
+  const limit=Number(PLATFORM_VERIFY_SETTINGS.unverified_listing_limit??2);
   const next=!profile?.account_type?'Choose your role in Settings.':
     profile.account_type==='buyer'?'Browse listings, save favourites and contact listers.':
     !identityVerified?'Identity checks are optional unless an admin rule applies.':
@@ -1186,7 +1186,7 @@ function updateVerifyWarningBanner(){
   const applies=!!accountType&&accountType!=='buyer'&&status!=='verified';
   banner.style.display = applies ? 'flex' : 'none';
   if(applies){
-    const limit = Number(PLATFORM_VERIFY_SETTINGS.unverified_listing_limit)||2;
+    const limit = Number(PLATFORM_VERIFY_SETTINGS.unverified_listing_limit??2);
     const textEl = banner.querySelector('span');
     if(textEl)textEl.textContent=`Submit your ID for an identity check. Your ${ACCOUNT_ROLE_LABELS[accountType]||'account'} role remains self-declared. Unverified accounts may have an active-listing limit of ${limit}.`;
   }
@@ -4191,13 +4191,7 @@ function loadVerificationUI() {
       <div class="kyc-checklist">
         <div class="kyc-checklist-item"><svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>National ID (front &amp; back) received</div>
       </div>
-      ${v.extra_verification_status==='requested' ? `
-      <div class="kyc-section-title">⚠️ Additional document requested</div>
-      <div class="kyc-upload-card">
-        <p style="font-size:12.5px;color:var(--text-2);margin-bottom:10px">${escHtml(v.extra_verification_reason||'')}</p>
-        <div class="kyc-upload-input"><input type="file" id="kyc-extra-doc-file" accept="image/*,.pdf"/></div>
-        <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="submitExtraVerification()">Upload document</button>
-      </div>` : ''}
+      ${v.extra_verification_status==='requested' ? '<p class="intro">A previous request for additional role or ownership documents is no longer part of identity verification. Your selected role remains self-declared.</p>' : ''}
       <div class="kyc-trust-row">
         <div class="kyc-trust-item"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>Encrypted upload</div>
         <div class="kyc-trust-item"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>~24hr review</div>
@@ -4297,25 +4291,6 @@ async function submitVerification() {
   }
 }
 
-async function submitExtraVerification() {
-  const file = document.getElementById('kyc-extra-doc-file')?.files[0];
-  if (!file) { showToast('Please attach a file','error'); return; }
-  if(kycValidateFile(file,'Document')===false)return;
-  try {
-    const path = await uploadVerifyFile(file, 'extra');
-    const docs = Array.isArray(currentProfile?.extra_verification_docs) ? [...currentProfile.extra_verification_docs] : [];
-    docs.push({ url: path, uploaded_at: new Date().toISOString() });
-    const { error } = await db.from('profiles').update({ extra_verification_docs: docs, extra_verification_status: 'submitted' }).eq('id', currentUser.id);
-    if (error) throw error;
-    await db.from('verification_activity_log').insert({ seller_id: currentUser.id, action:'extra_submitted' });
-    currentProfile = { ...currentProfile, extra_verification_docs: docs, extra_verification_status:'submitted' };
-    loadVerificationUI();
-    showToast('Uploaded ✓ — our team will review it shortly','success');
-    fetch(`${EDGE_URL}/send-notification-email`, { method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}, body: JSON.stringify({
-      type:'extra_verification_submitted', sellerName: currentProfile?.full_name, sellerEmail: currentUser.email,
-    })}).catch(()=>{});
-  } catch(e) { showToast('Upload failed: '+e.message,'error'); }
-}
 
 async function toggleConcierge(enabled) {
   const error = await updateOwnerProfile({ concierge_enabled: enabled, concierge_enabled_at: enabled ? new Date().toISOString() : null });

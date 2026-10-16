@@ -819,7 +819,7 @@ async function submit(){
   for(const s of [2,3,4]){if(!validate(s)){toast('Please fix the highlighted fields in step '+s,'error');return show(s,true)}}
   const gate=await checkGate();
   if(gate.accountBlocked){toast(gate.accountBlocked,'error');setTimeout(()=>{location.href='/dashboard#settings'},1200);saveDraftNow();return}
-  if(gate.blocked){toast(`Verify your account first: unverified sellers are limited to ${gate.limit} listing(s).`,'error');saveDraftNow();return setTimeout(()=>{location.href='/dashboard?verify=1&limit='+gate.limit},1200)}
+  if(gate.blocked){toast(`Verify your identity first: unverified listers are limited to ${gate.limit} listing(s).`,'error');saveDraftNow();return setTimeout(()=>{location.href='/dashboard?verify=1&limit='+gate.limit},1200)}
   let ok=true;
   const feeEligible=['agent','company'].includes(S.accountType),viewingFee=selectedViewingFee();
   ok=fail('viewing_fee',!feeEligible||Number.isInteger(viewingFee)&&viewingFee>=0&&viewingFee<=Math.min(5000,Number(PS.viewing_fee_max)||5000)?'':`Enter a whole-number viewing fee from KES 0 to KES ${Math.min(5000,Number(PS.viewing_fee_max)||5000).toLocaleString('en-KE')}`)&&ok;
@@ -898,7 +898,7 @@ async function doSignIn(){
     qsa('[data-act="vid-up"],[data-act="vid-rec"]').forEach(x=>x.disabled=false);
     await loadAccount();updateKicker();checkPlan();
     const gate=await checkGate();$('signin-modal').classList.remove('show');
-    if(gate.blocked){toast(`Unverified sellers are limited to ${gate.limit} listing(s).`,'error');saveDraftNow();setTimeout(()=>{location.href='/dashboard?verify=1&limit='+gate.limit},1200);return}
+    if(gate.blocked){toast(`Unverified listers are limited to ${gate.limit} listing(s).`,'error');saveDraftNow();setTimeout(()=>{location.href='/dashboard?verify=1&limit='+gate.limit},1200);return}
     toast('Signed in. Your listing is ready to submit.','success');if(S.step===5)renderReview();
   }catch(e){$('si-err').textContent=/invalid/i.test(e.message||'')?'Wrong email or password':'Could not sign in. Try again.'}
   finally{b.disabled=false;b.textContent='Sign in'}
@@ -992,7 +992,7 @@ async function init(){
   await loadSettings();await loadAccount();updateKicker();checkPlan();
   const gate=await checkGate();
   if(gate.accountBlocked){toast(gate.accountBlocked,'error');setTimeout(()=>{location.href='/dashboard#settings'},1800);return}
-  if(gate.blocked){toast(`Unverified sellers are limited to ${gate.limit} listing(s). Verify your account to post more.`,'error');setTimeout(()=>{location.href='/dashboard?verify=1&limit='+gate.limit},1800);return}
+  if(gate.blocked){toast(`Unverified listers are limited to ${gate.limit} listing(s). Verify your identity to post more.`,'error');setTimeout(()=>{location.href='/dashboard?verify=1&limit='+gate.limit},1800);return}
   await findDraft();S.ready=true;
   setTimeout(()=>{if(map)map.invalidateSize()},300);
 }
