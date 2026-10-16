@@ -13,3 +13,5 @@ NYUMBA254_SUPABASE_URL = "https://vliuuloyfhyxcsuchpss.supabase.co"
 directory = "./"
 html_handling = "drop-trailing-slash"
 binding = "ASSETS"
+# These paths are also static files, so the Worker must run first for crawler previews and legacy redirects.
+run_worker_first = ["/listing", "/storefront"]
