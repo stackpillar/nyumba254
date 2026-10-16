@@ -157,7 +157,12 @@ begin
     return new;
   end if;
   if new.status <> 'resolved'
-     or new.reason <> 'viewing_fee_dispute'
+     or new.reason not in (
+       'viewing_fee_dispute',
+       'viewing_fee_free_listing',
+       'viewing_fee_not_refunded',
+       'viewing_fee_advance_payment'
+     )
      or new.fee_report_valid is not true
      or (
        old.status = 'resolved'
@@ -179,7 +184,12 @@ begin
   select count(*)::integer into v_prior_valid_reports
   from public.reports r
   where r.id <> new.id
-    and r.reason = 'viewing_fee_dispute'
+    and r.reason in (
+      'viewing_fee_dispute',
+      'viewing_fee_free_listing',
+      'viewing_fee_not_refunded',
+      'viewing_fee_advance_payment'
+    )
     and r.status = 'resolved'
     and r.fee_report_valid is true
     and r.created_at >= now() - interval '90 days'
