@@ -339,8 +339,13 @@
           </tr>
           <tr>
             <td>Viewing request info</td>
-            <td>Requested date and time, notes, disclosed viewing-fee snapshot, and whether the viewer acknowledged the fee</td>
+            <td>Viewer name and phone number, requested date and time, notes, disclosed viewing-fee snapshot, and whether the viewer acknowledged the fee</td>
             <td>When a buyer requests a viewing</td>
+          </tr>
+          <tr>
+            <td>Lister Page analytics</td>
+            <td>Page or listing event, approved traffic-source label, date, and a random session identifier. Public Lister Pages show the profile details the lister has made public, their selected role, and whether that role is verified.</td>
+            <td>When source analytics are enabled and a visitor uses a Lister Page</td>
           </tr>
           <tr>
             <td>Payment info</td>
@@ -360,7 +365,7 @@
         </tbody>
       </table>
 
-      <p>We do not collect your national ID number, bank account details, or any sensitive personal data beyond what is listed above.</p>
+      <p>We do not collect your national ID number, bank account details, or any sensitive personal data beyond what is listed above. Role labels on public Lister Pages are selected by the lister; role verification is shown separately and does not verify identity or guarantee a transaction.</p>
     </div>
     <div class="section-divider"></div>
 
@@ -392,6 +397,7 @@
       <ul>
         <li><strong>Other users (limited):</strong> When you post a listing, your contact phone number and listing details are visible to buyers on the platform. Buyers who send you an enquiry share their name, phone number, and message with you.</li>     
         <li><strong>Safaricom M-Pesa:</strong> Payment processing is handled by Safaricom. We share your phone number and payment amount with Safaricom to process the STK Push. We do not store your M-Pesa PIN — this is handled entirely by Safaricom.</li>
+        <li><strong>QR code generation:</strong> If you choose to download a Lister Page QR code, your public page URL is sent to the QR code service at api.qrserver.com to generate the image. That provider may receive request metadata such as your IP address and browser information.</li>
         <li><strong>Legal authorities:</strong> We may disclose personal data to Kenyan authorities if required by law, court order, or to protect the rights and safety of our users.</li>
       </ul>
       <p>We do not sell, rent, or trade your personal data to any third party for marketing purposes. We do not use advertising networks that track you across other websites.</p>
@@ -508,6 +514,10 @@
           <tr>
             <td>Usage / access logs</td>
             <td>90 days, then automatically deleted</td>
+          </tr>
+          <tr>
+            <td>Lister Page analytics</td>
+            <td>Event-level records for up to 90 days; daily source totals for up to 13 months</td>
           </tr>
           <tr>
             <td>Support emails</td>

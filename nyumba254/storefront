@@ -3,12 +3,17 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Seller Storefront — Nyumba254</title>
-<meta name="robots" content="index,follow"/>
+<title>Nyumba254 Lister Page</title>
+<meta name="robots" id="m-robots" content="index,follow"/>
 <meta name="description" id="meta-description" content="Browse active property listings on Nyumba254."/>
-<meta property="og:title" id="og-title" content="Seller Storefront — Nyumba254"/>
+<meta property="og:title" id="og-title" content="Nyumba254 Lister Page"/>
 <meta property="og:description" id="og-description" content="Browse active property listings on Nyumba254."/>
 <meta property="og:type" content="profile"/>
+<link rel="canonical" href="https://nyumba254.com/storefront"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" id="tw-title" content="Nyumba254 Lister Page"/>
+<meta name="twitter:description" id="tw-description" content="Browse active property listings on Nyumba254."/>
+<meta name="twitter:image" content="https://nyumba254.com/hero-photo.jpg"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -145,7 +150,7 @@
 </div>
 
 <div id="app-root">
-  <div class="loading-wrap"><div class="spin"></div>Loading storefront…</div>
+  <div class="loading-wrap"><div class="spin"></div>Loading Lister Page…</div>
 </div>
 
 <script>
@@ -174,10 +179,11 @@
   }
 
   function renderNotAvailable(msg){
+    document.getElementById('m-robots')?.setAttribute('content','noindex,follow');
     document.getElementById('app-root').innerHTML = `
       <div class="not-available">
         <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-        <h2>Storefront not available</h2>
+        <h2>Lister Page not available</h2>
         <p>${esc(msg)}</p>
         <a href="/listings" class="topbar-cta" style="display:inline-block">Browse all listings</a>
       </div>`;
@@ -197,7 +203,7 @@
       ? `<img src="${esc(cover.url)}" alt="${esc(listing.title)}" loading="lazy"/>`
       : `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
     return `
-      <div class="card" onclick="window.location='/listing?id=${String(listing.listing_number).padStart(6,'0')}'" role="button" tabindex="0" aria-label="${esc(listing.title)}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.location='/listing?id=${String(listing.listing_number).padStart(6,'0')}'}">
+      <div class="card" onclick="trackListerEvent('listing_view','${esc(listing.id)}');window.location='/listing?id=${String(listing.listing_number).padStart(6,'0')}'" role="button" tabindex="0" aria-label="${esc(listing.title)}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();trackListerEvent('listing_view','${esc(listing.id)}');window.location='/listing?id=${String(listing.listing_number).padStart(6,'0')}'}">
         <div class="card-img">${imgHtml}${listing.is_featured?'<span class="badge-featured">Featured</span>':''}</div>
         <div class="card-body">
           <div class="card-area">${esc(listing.area||'')}${listing.sub_area?' · '+esc(listing.sub_area):''}</div>
@@ -235,6 +241,8 @@
     const cat=document.getElementById('sf-category')?.value||'';
     const type=document.getElementById('sf-type')?.value||'';
     const area=document.getElementById('sf-area')?.value||'';
+    const maxPrice=Number(document.getElementById('sf-max-price')?.value)||0;
+    const bedrooms=Number(document.getElementById('sf-bedrooms')?.value)||0;
     const sort=document.getElementById('sf-sort')?.value||'newest';
 
     let filtered=ALL_ITEMS.filter(l=>{
@@ -242,6 +250,8 @@
       if(cat && l.category!==cat) return false;
       if(type && l.price_type!==type) return false;
       if(area && l.area!==area) return false;
+      if(maxPrice&&Number(l.price)>maxPrice)return false;
+      if(bedrooms&&Number(l.bedrooms||l.bedroom_count||0)<bedrooms)return false;
       return true;
     });
     if(sort==='price_low') filtered=[...filtered].sort((a,b)=>Number(a.price)-Number(b.price));
@@ -262,7 +272,7 @@
     const searchEl=document.getElementById('sf-search');
     if(!searchEl)return;
     searchEl.addEventListener('input', debounce(applyFilters,250));
-    ['sf-category','sf-type','sf-area','sf-sort'].forEach(id=>document.getElementById(id)?.addEventListener('change',applyFilters));
+    ['sf-category','sf-type','sf-area','sf-sort','sf-max-price','sf-bedrooms'].forEach(id=>document.getElementById(id)?.addEventListener('input',applyFilters));
     applyFilters();
   }
 
@@ -272,29 +282,60 @@
     if(navigator.share){
       navigator.share({title:`${name} — Nyumba254`, text:`Check out ${name}'s listings on Nyumba254`, url}).catch(()=>{});
     } else {
-      navigator.clipboard.writeText(url).then(()=>{
+      const copy=navigator.clipboard?.writeText?navigator.clipboard.writeText(url):Promise.reject(new Error('Clipboard unavailable'));
+      copy.then(()=>{
         document.querySelectorAll('.share-btn').forEach(b=>{const orig=b.innerHTML;b.innerHTML='✓ Link copied';setTimeout(()=>b.innerHTML=orig,1800);});
-      }).catch(()=>{});
+      }).catch(()=>window.prompt('Copy this Lister Page link',url));
     }
+    trackListerEvent('share_click');
+  }
+
+  const LISTER_SOURCES=new Set(['instagram','facebook','whatsapp','tiktok','x','telegram','qr']);
+  let LISTER_SOURCE='direct';
+  let LISTER_SESSION=null;
+  function initListerTracking(){
+    const source=new URLSearchParams(location.search).get('src')||'';
+    if(LISTER_SOURCES.has(source))LISTER_SOURCE=source;
+    try{
+      LISTER_SESSION=sessionStorage.getItem('nk_lister_sid')||crypto.randomUUID();
+      LISTER_SOURCE=LISTER_SOURCES.has(source)?source:(sessionStorage.getItem('nk_lister_src')||'direct');
+      sessionStorage.setItem('nk_lister_sid',LISTER_SESSION);
+      sessionStorage.setItem('nk_lister_src',LISTER_SOURCE);
+    }catch(error){
+      LISTER_SESSION=typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():null;
+      console.info('Session storage unavailable; source tracking will use a temporary session.',error);
+    }
+  }
+  function trackListerEvent(event,listingId){
+    if(!SELLER_PROFILE?.handle||!LISTER_SESSION)return;
+    db.rpc('record_lister_page_event',{
+      p_handle:SELLER_PROFILE.handle,p_event:event,p_source:LISTER_SOURCE,
+      p_listing_id:listingId||null,p_session_id:LISTER_SESSION
+    }).then(({error})=>{if(error)console.error('Could not record Lister Page event:',error);});
   }
 
   async function init(){
     const params = new URLSearchParams(location.search);
+    initListerTracking();
+    const handleParam=params.get('handle')||(/^\/@([^/]+)/.exec(location.pathname)||[])[1]||'';
     const sellerParam = params.get('seller');
-    if (!sellerParam) { renderNotAvailable("No seller was specified in this link."); return; }
+    if (!sellerParam&&!handleParam) { renderNotAvailable("No lister was specified in this link."); return; }
 
-    const { data: profileData, error: profileError } = await db.rpc('get_public_storefront_profile', { p_lookup: sellerParam });
+    const { data: profileData, error: profileError } = handleParam
+      ? await db.rpc('get_public_lister_page',{p_handle:handleParam})
+      : await db.rpc('get_public_storefront_profile', { p_lookup: sellerParam });
     if (profileError) {
-      console.error('Could not load public storefront profile:', profileError);
+      console.error('Could not load public Lister Page profile:', profileError);
       renderNotAvailable('Public profile details are temporarily unavailable. Please try again later.');
       return;
     }
     const profile = Array.isArray(profileData) ? profileData[0] : profileData;
+    if(profile?.redirect_to){location.replace(`/@${encodeURIComponent(profile.redirect_to)}`);return;}
     if (!profile) { renderNotAvailable("We couldn't find this lister — the link may be incorrect."); return; }
     const sellerId = profile.id;
     SELLER_PROFILE = profile;
-    if (!profile.storefront_available) {
-      renderNotAvailable("This lister's public storefront isn't currently available.");
+    if (handleParam ? profile.visibility==='hidden' : !profile.storefront_available) {
+      renderNotAvailable("This lister's public page isn't currently available.");
       return;
     }
 
@@ -304,39 +345,67 @@
     ]);
 
     if(listErr){
-      console.error('Could not load public storefront listings:',listErr);
+      console.error('Could not load public Lister Page listings:',listErr);
       renderNotAvailable('This lister’s active listings are temporarily unavailable. Please try again later.');
       return;
     }
-    if(reviewError)console.error('Could not load public storefront reviews:',reviewError);
+    if(reviewError)console.error('Could not load public Lister Page reviews:',reviewError);
     let items = listings || [];
     if(items.length){
-      try{items=await nkHydrateViewingFees(items);}catch(feeError){console.error('Could not load storefront viewing fees:',feeError);}
+      try{items=await nkHydrateViewingFees(items);}catch(feeError){console.error('Could not load Lister Page viewing fees:',feeError);}
     }
     ALL_ITEMS = items;
     ALL_REVIEWS = reviews || [];
 
     const isCompany=profile.account_type==='company';
-    const name = isCompany?(profile.company_name||profile.full_name||'Company'):(profile.full_name||'Seller');
+    const name = isCompany?(profile.company_name||profile.full_name||'Company'):(profile.full_name||'Lister');
     const roleLabels={buyer:'Tenant / Buyer',owner:'Direct from owner',caretaker:'Caretaker',agent:'Agent',company:'Company'};
     const roleVerified=!!profile.account_type&&profile.verified_role===profile.account_type;
     const isVerified = profile.identity_verified===true;
     const publicPhone = profile.public_phone || '';
     const hideContact = !publicPhone;
+    const firstListingHref=items[0]?`/listing?id=${String(items[0].listing_number).padStart(6,'0')}`:'/listings';
     const companyWebsite=safeExternalUrl(profile.company_website);
     const totalViews = items.reduce((s,l)=>s+(Number(l.views)||0),0);
     const avgRating = ALL_REVIEWS.length ? (ALL_REVIEWS.reduce((s,r)=>s+r.rating,0)/ALL_REVIEWS.length) : 0;
 
-    document.title = `${name} — Nyumba254 Storefront`;
+    document.title = `${name} — Nyumba254 Lister Page`;
     const descText = `Browse ${items.length} active propert${items.length===1?'y':'ies'} from ${name} on Nyumba254.`;
     document.getElementById('meta-description')?.setAttribute('content', descText);
-    document.getElementById('og-title')?.setAttribute('content', `${name} — Nyumba254 Storefront`);
+    document.getElementById('og-title')?.setAttribute('content', `${name} — Nyumba254 Lister Page`);
     document.getElementById('og-description')?.setAttribute('content', descText);
+    document.getElementById('tw-title')?.setAttribute('content',`${name} — Nyumba254 Lister Page`);
+    document.getElementById('tw-description')?.setAttribute('content',descText);
+    document.getElementById('m-robots')?.setAttribute('content',
+      profile.visibility==='public'&&items.length?'index,follow':'noindex,follow');
+    if(profile.handle)document.querySelector('link[rel="canonical"]')?.setAttribute('href',`${location.origin}/@${encodeURIComponent(profile.handle)}`);
+    trackListerEvent('page_view');
+    const {data:quickAnswers,error:answersError}=handleParam
+      ? await db.from('lister_quick_answers').select('question_key,answer').eq('lister_id',sellerId).is('listing_id',null).order('question_key')
+      : {data:[],error:null};
+    if(answersError)console.error('Could not load public Quick Answers:',answersError);
+    const quickAnswerLabels={water:'Water',electricity:'Electricity',security:'Security',parking:'Parking',deposit:'Deposit',lease_length:'Lease length',pets:'Pets',internet:'Internet',distance:'Distance',title_status:'Title status',payment_arrangements:'Payment arrangements',viewing_days:'Viewing days'};
+    let availabilitySlots=[];
+    if(handleParam){
+      const{data:availabilityFlag,error:availabilityFlagError}=await db.from('platform_settings').select('value').eq('key','lister_availability_enabled').maybeSingle();
+      if(availabilityFlagError)console.error('Could not read viewing availability setting:',availabilityFlagError);
+      const availabilityEnabled=availabilityFlag?.value===true||Number(availabilityFlag?.value)===1;
+      if(availabilityEnabled){
+        const from=new Date(),to=new Date(from.getTime()+30*24*60*60*1000);
+        const{data:slots,error:slotsError}=await db.rpc('get_lister_open_slots',{
+          p_handle:profile.handle,p_from:from.toISOString(),p_to:to.toISOString()
+        });
+        if(slotsError)console.error('Could not load available viewing slots:',slotsError);
+        availabilitySlots=slots||[];
+      }
+    }
 
     const contactRow = !publicPhone
-      ? `<div class="seller-contact-row"><span class="contact-btn chat" style="cursor:default"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Message via listing chat</span><button class="share-btn" onclick="shareStorefront()"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share</button></div>`
+      ? `<div class="seller-contact-row"><a class="contact-btn chat" href="${firstListingHref}">Message via listing chat</a><button class="share-btn" onclick="shareStorefront()"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share</button></div>`
       : `<div class="seller-contact-row">
           ${publicPhone?`<a class="contact-btn wa" href="https://wa.me/${formatWaPhone(publicPhone)}" rel="noopener"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>WhatsApp</a>`:''}
+          ${publicPhone?`<a class="contact-btn chat" href="tel:${esc(publicPhone)}">Call</a>`:''}
+          <a class="contact-btn chat" href="${firstListingHref}">Message via listing chat</a>
           <button class="share-btn" onclick="shareStorefront()"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share</button>
         </div>`;
 
@@ -376,6 +445,8 @@
           <select id="sf-category"><option value="">All categories</option>${categories.map(c=>`<option value="${esc(c)}">${esc(catLabels[c]||c)}</option>`).join('')}</select>
           <select id="sf-type"><option value="">Sale &amp; rent</option><option value="sale">For sale</option><option value="rent">To let</option></select>
           <select id="sf-area"><option value="">All areas</option>${areas.map(a=>`<option value="${esc(a)}">${esc(a)}</option>`).join('')}</select>
+          <input type="number" id="sf-max-price" min="0" inputmode="numeric" placeholder="Max price (KES)" aria-label="Maximum price"/>
+          <input type="number" id="sf-bedrooms" min="0" inputmode="numeric" placeholder="Bedrooms" aria-label="Minimum bedrooms"/>
           <select id="sf-sort"><option value="newest">Newest first</option><option value="price_low">Price: low to high</option><option value="price_high">Price: high to low</option></select>
           <span class="filters-count" id="sf-count"></span>
         </div>`:''}
@@ -386,6 +457,9 @@
             ? `<div class="listings-grid" id="listings-grid">${items.map(buildCard).join('')}</div>`
             : `<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><p>No active listings right now — check back soon.</p></div>`}
         </div>
+        ${handleParam&&availabilitySlots.length?`<section class="card" style="padding:20px;margin:24px 0"><h2>Request a viewing</h2><p>Choose a property and available time. Your request will be sent to the lister for confirmation.</p><form id="lister-viewing-form"><label for="lv-listing">Property</label><select id="lv-listing" required>${items.map(l=>`<option value="${esc(l.id)}">${esc(l.title)}</option>`).join('')}</select><label for="lv-slot">Available time (East Africa Time)</label><select id="lv-slot" required>${availabilitySlots.map(s=>`<option value="${esc(s.slot_start)}">${esc(new Date(s.slot_start).toLocaleString('en-KE',{timeZone:s.timezone||'Africa/Nairobi',weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}))}</option>`).join('')}</select><label for="lv-name">Your name</label><input id="lv-name" required maxlength="120" autocomplete="name"/><label for="lv-phone">Phone number</label><input id="lv-phone" required maxlength="20" autocomplete="tel" inputmode="tel"/><label for="lv-note">Note (optional)</label><textarea id="lv-note" maxlength="1000" rows="2"></textarea><label id="lv-fee-ack-wrap" hidden><input type="checkbox" id="lv-fee-ack"/> I have checked and acknowledge the viewing fee on the selected listing. Any fee is paid directly to the lister.</label><button type="submit" class="btn btn-primary">Request viewing</button><p id="lv-status" role="status" aria-live="polite"></p></form></section>`:''}
+        ${quickAnswers?.length?`<section class="lister-quick-answers" aria-labelledby="quick-answers-title"><div class="section-title" id="quick-answers-title">Quick answers</div><dl>${quickAnswers.map(row=>`<div><dt>${esc(quickAnswerLabels[row.question_key]||row.question_key)}</dt><dd>${esc(row.answer)}</dd></div>`).join('')}</dl></section>`:''}
+        <section class="lister-safety" aria-label="Viewing safety"><div class="section-title">Arrange a viewing safely</div><p>Check the viewing fee shown on each listing. If a fee applies, pay only that fee to the lister you meet and ask for a receipt. Never pay rent or a deposit before viewing.</p><p><a href="/viewing-fee-policy">Read the Viewing Fee Policy</a> · <a href="/contact?type=lister&handle=${encodeURIComponent(profile.handle||sellerParam||'')}">Report this lister</a></p></section>
 
         ${ALL_REVIEWS.length ? `
         <div class="section-title" style="margin-top:44px">Reviews for ${esc(name)}</div>
@@ -399,12 +473,46 @@
         <div id="reviews-list">${ALL_REVIEWS.slice(0,8).map(buildReviewCard).join('')}</div>` : ''}
       </div>
       <footer>Powered by <a href="/">Nyumba254</a> — Kenya's open property platform</footer>
-      ${(!hideContact && profile.phone) ? `<div class="sticky-contact-bar">
-        <a class="contact-btn wa" style="flex:1" href="https://wa.me/${formatWaPhone(profile.phone)}" rel="noopener"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>Chat on WhatsApp</a>
+      ${(!hideContact && publicPhone) ? `<div class="sticky-contact-bar">
+        <a class="contact-btn wa" style="flex:1" href="https://wa.me/${formatWaPhone(publicPhone)}" rel="noopener"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>Chat on WhatsApp</a>
       </div>`:''}`;
 
     wireFilters();
-    db.from('page_views').insert({ path: '/storefront?seller='+sellerId, referrer: document.referrer || null, user_agent: navigator.userAgent, session_id: localStorage.getItem('nk_sid')||null }).then(()=>{}).catch(()=>{});
+    let legacySessionId=null;
+    try{legacySessionId=localStorage.getItem('nk_sid')||null;}catch(error){console.info('Local storage unavailable for legacy page-view tracking.',error);}
+    db.from('page_views').insert({ path: handleParam?`/@${profile.handle}`:'/storefront?seller='+sellerId, referrer: document.referrer || null, user_agent: navigator.userAgent, session_id: legacySessionId }).then(({error})=>{if(error)console.error('Could not record legacy page view:',error);});
+    const syncViewingFeeAcknowledgement=()=>{
+      const selected=items.find(row=>row.id===document.getElementById('lv-listing').value);
+      const acknowledgement=document.getElementById('lv-fee-ack-wrap');
+      const checkbox=document.getElementById('lv-fee-ack');
+      if(acknowledgement)acknowledgement.hidden=!(Number(selected?.public_viewing_fee)>0);
+      if(checkbox)checkbox.checked=false;
+    };
+    document.getElementById('lv-listing')?.addEventListener('change',syncViewingFeeAcknowledgement);
+    syncViewingFeeAcknowledgement();
+    document.querySelectorAll('.seller-contact-row a.contact-btn,.sticky-contact-bar a.contact-btn').forEach(link=>
+      link.addEventListener('click',()=>trackListerEvent('contact_click',items[0]?.id))
+    );
+    document.getElementById('lister-viewing-form')?.addEventListener('submit',async event=>{
+      event.preventDefault();
+      const status=document.getElementById('lv-status');
+      const selected=items.find(row=>row.id===document.getElementById('lv-listing').value);
+      const feeAcknowledged=!!document.getElementById('lv-fee-ack')?.checked;
+      if(Number(selected?.public_viewing_fee)>0&&!feeAcknowledged){if(status)status.textContent='Please acknowledge the viewing fee shown on the listing.';return;}
+      if(status)status.textContent='Sending your request…';
+      const{error}=await db.rpc('request_lister_viewing_slot',{
+        p_listing_id:selected?.id,p_slot_start:document.getElementById('lv-slot').value,
+        p_buyer_name:document.getElementById('lv-name').value.trim(),
+        p_buyer_phone:document.getElementById('lv-phone').value.trim(),
+        p_buyer_timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||'Africa/Nairobi',
+        p_note:document.getElementById('lv-note').value.trim()||null,
+        p_fee_acknowledged:feeAcknowledged,p_source:LISTER_SOURCE
+      });
+      if(error){console.error('Could not request viewing slot:',error);if(status)status.textContent=error.message||'Could not request that viewing. Please choose another slot.';return;}
+      if(status)status.textContent='Your request was sent. The lister will confirm the viewing.';
+      trackListerEvent('viewing_request',selected?.id);
+      event.currentTarget.reset();
+    });
   }
 
   init();

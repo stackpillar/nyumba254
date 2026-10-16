@@ -706,12 +706,17 @@ async function verifyAccountStillActive(){
 
 let PLATFORM_VERIFY_SETTINGS = { enforce_verification_general: 0, unverified_listing_limit: 2 };
 let STOREFRONT_FREE_ENABLED=false;
+let LISTER_PAGE_FLAGS={pages:false,availability:false,quickAnswers:false,sources:false};
 let VIEWING_FEE_POLICY_VERSION='v1',VIEWING_FEE_MAX=5000,VIEWING_FEE_REQUIRES_IDENTITY=false;
 async function loadPlatformVerifySettings(){
-  const{data,error}=await db.from('platform_settings').select('key,value').in('key',['enforce_verification_general','unverified_listing_limit','viewing_fee_policy_version','viewing_fee_max','viewing_fee_requires_identity','storefront_free_enabled','allowance_over_10_requires_identity','boost_requires_identity']);
+  const{data,error}=await db.from('platform_settings').select('key,value').in('key',['enforce_verification_general','unverified_listing_limit','viewing_fee_policy_version','viewing_fee_max','viewing_fee_requires_identity','storefront_free_enabled','allowance_over_10_requires_identity','boost_requires_identity','lister_pages_enabled','lister_availability_enabled','lister_quick_answers_enabled','lister_source_tracking_enabled']);
   if(error) throw new Error(`Could not load verification settings: ${error.message}`);
   (data||[]).forEach(r=>{
     if(r.key==='storefront_free_enabled')STOREFRONT_FREE_ENABLED=Number(r.value)===1;
+    else if(r.key==='lister_pages_enabled')LISTER_PAGE_FLAGS.pages=r.value===true||Number(r.value)===1;
+    else if(r.key==='lister_availability_enabled')LISTER_PAGE_FLAGS.availability=r.value===true||Number(r.value)===1;
+    else if(r.key==='lister_quick_answers_enabled')LISTER_PAGE_FLAGS.quickAnswers=r.value===true||Number(r.value)===1;
+    else if(r.key==='lister_source_tracking_enabled')LISTER_PAGE_FLAGS.sources=r.value===true||Number(r.value)===1;
     else if(r.key==='viewing_fee_policy_version')VIEWING_FEE_POLICY_VERSION=String(r.value??'v1');
     else if(r.key==='viewing_fee_max')VIEWING_FEE_MAX=Math.min(5000,Number(r.value)||5000);
     else if(r.key==='viewing_fee_requires_identity')VIEWING_FEE_REQUIRES_IDENTITY=Number(r.value)!==0;
@@ -1239,12 +1244,188 @@ async function updateStorefrontBanner(sub){
   let slug;
   try{slug=await ensureStorefrontSlug();}
   catch(error){console.error('Could not prepare public storefront link:',error);showToast('Could not prepare your public storefront link. Please try again.','error');return;}
-  const url = `${location.origin}/storefront?seller=${slug}`;
+  const url = LISTER_PAGE_FLAGS.pages&&(ownerProfile||currentProfile)?.handle
+    ? `${location.origin}/@${encodeURIComponent((ownerProfile||currentProfile).handle)}`
+    : `${location.origin}/storefront?seller=${slug}`;
   const urlEl=document.getElementById('storefront-banner-url');
   const openEl=document.getElementById('storefront-banner-open');
   if(urlEl) urlEl.textContent = url.replace(/^https?:\/\//,'');
   if(openEl) openEl.href = url;
   card.style.display='block';
+}
+
+function listerPageUrl(){
+  const profile=ownerProfile||currentProfile;
+  return profile?.handle
+    ? `${location.origin}/@${encodeURIComponent(profile.handle)}`
+    : `${location.origin}/storefront?seller=${encodeURIComponent(profile?.storefront_slug||effectiveSellerId)}`;
+}
+
+async function loadListerPageHub(){
+  const profile=ownerProfile||currentProfile;
+  if(!profile)return;
+  const status=document.getElementById('lister-page-status');
+  const handleInput=document.getElementById('lister-page-handle');
+  const visibility=document.getElementById('lister-page-visibility');
+  const open=document.getElementById('lister-page-open');
+  const link=listerPageUrl();
+  if(handleInput)handleInput.value=profile.handle||'';
+  if(visibility)visibility.value=profile.lister_page_visibility||'public';
+  if(open)open.href=link;
+  if(status)status.textContent=LISTER_PAGE_FLAGS.pages
+    ? 'Your Lister Page is available. Role information is a lister claim; verification is shown separately.'
+    : 'Your existing public page remains available. Handle-based Lister Pages are not enabled yet.';
+  const canEdit=LISTER_PAGE_FLAGS.pages&&!isTeamMember;
+  if(handleInput)handleInput.disabled=!canEdit;
+  if(visibility)visibility.disabled=!canEdit;
+  document.querySelectorAll('#page-lister-page button[onclick^="saveListerPage"]').forEach(button=>{button.disabled=!canEdit;});
+  const quickHub=document.getElementById('lister-quick-answers-hub');
+  const availabilityHub=document.getElementById('lister-availability-hub');
+  const sourcesHub=document.getElementById('lister-source-stats');
+  if(quickHub)quickHub.hidden=!LISTER_PAGE_FLAGS.pages||!LISTER_PAGE_FLAGS.quickAnswers;
+  if(availabilityHub)availabilityHub.hidden=!LISTER_PAGE_FLAGS.pages||!LISTER_PAGE_FLAGS.availability;
+  if(sourcesHub)sourcesHub.hidden=!LISTER_PAGE_FLAGS.pages||!LISTER_PAGE_FLAGS.sources;
+  const qrText=encodeURIComponent(link);
+  const png=document.getElementById('lister-qr-png');
+  const svg=document.getElementById('lister-qr-svg');
+  if(png)png.href=`https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${qrText}`;
+  if(svg)svg.href=`https://api.qrserver.com/v1/create-qr-code/?size=600x600&format=svg&data=${qrText}`;
+  const caption=document.getElementById('lister-share-caption');
+  if(caption)caption.textContent=`One link for all my properties. Browse, ask questions and arrange a viewing: ${link}`;
+  if(LISTER_PAGE_FLAGS.quickAnswers)await loadListerQuickAnswers();
+  if(LISTER_PAGE_FLAGS.availability)await loadListerAvailability();
+  if(LISTER_PAGE_FLAGS.sources)await loadListerSourceStats();
+}
+
+async function copyListerPageLink(){
+  const link=listerPageUrl();
+  try{
+    if(!navigator.clipboard?.writeText)throw new Error('Clipboard access is unavailable.');
+    await navigator.clipboard.writeText(link);
+    showToast('Lister Page link copied.','success');
+  }catch(error){
+    console.warn('Clipboard copy unavailable for Lister Page link:',error);
+    window.prompt('Copy your Lister Page link',link);
+  }
+}
+
+async function saveListerPageHandle(){
+  const input=document.getElementById('lister-page-handle');
+  const status=document.getElementById('lister-page-status');
+  const handle=(input?.value||'').trim().toLowerCase();
+  if(!LISTER_PAGE_FLAGS.pages){showToast('Lister Pages are not enabled yet.','error');return;}
+  if(!/^[a-z0-9][a-z0-9._-]{1,28}[a-z0-9]$/.test(handle)){
+    if(status)status.textContent='Enter 3–30 lowercase letters, numbers, dots, underscores or hyphens; start and end with a letter or number.';
+    return;
+  }
+  if(status)status.textContent='Checking and saving your handle…';
+  try{
+    const{data,error}=await db.rpc('set_lister_handle',{p_handle:handle});
+    if(error)throw error;
+    ownerProfile={...ownerProfile,handle:data};
+    if(!isTeamMember)currentProfile=ownerProfile;
+    if(status)status.textContent=`Your Lister Page link is ${location.origin}/@${data}`;
+    await loadListerPageHub();
+    showToast('Lister Page handle saved.','success');
+  }catch(error){
+    console.error('Could not save Lister Page handle:',error);
+    if(status)status.textContent=error.message||'Could not save this handle. Try another.';
+    showToast(error.message||'Could not save this handle.','error');
+  }
+}
+
+async function saveListerPageVisibility(){
+  if(!LISTER_PAGE_FLAGS.pages){showToast('Lister Pages are not enabled yet.','error');return;}
+  const visibility=document.getElementById('lister-page-visibility')?.value;
+  if(!['public','unlisted','hidden'].includes(visibility)){showToast('Choose a valid visibility setting.','error');return;}
+  const error=await updateOwnerProfile({lister_page_visibility:visibility});
+  if(error){console.error('Could not save Lister Page visibility:',error);showToast(error.message||'Could not save page visibility.','error');return;}
+  showToast('Lister Page visibility saved.','success');
+}
+
+async function saveListerQuickAnswer(){
+  if(!LISTER_PAGE_FLAGS.quickAnswers){showToast('Quick Answers are not enabled yet.','error');return;}
+  const status=document.getElementById('lister-answer-status');
+  const answer=document.getElementById('lister-answer-text')?.value||'';
+  const question=document.getElementById('lister-answer-question')?.value||'';
+  try{
+    const{error}=await db.rpc('save_lister_quick_answer',{
+      p_listing_id:null,p_question_key:question,p_answer:answer
+    });
+    if(error)throw error;
+    document.getElementById('lister-answer-text').value='';
+    if(status)status.textContent='Answer saved.';
+    showToast('Quick Answer saved.','success');
+  }catch(error){
+    console.error('Could not save Quick Answer:',error);
+    if(status)status.textContent=error.message||'Could not save this answer.';
+    showToast(error.message||'Could not save this answer.','error');
+  }
+}
+
+async function loadListerQuickAnswers(){
+  const status=document.getElementById('lister-answer-status');
+  const{data,error}=await db.from('lister_quick_answers').select('question_key,answer').eq('lister_id',effectiveSellerId).is('listing_id',null).order('question_key');
+  if(error){console.error('Could not load saved Quick Answers:',error);if(status)status.textContent='Saved answers could not be loaded.';return;}
+  if(status)status.textContent=data?.length?`${data.length} answer${data.length===1?'':'s'} saved. Select a question to update its answer.`:'No answers yet.';
+}
+
+async function saveListerAvailability(){
+  if(!LISTER_PAGE_FLAGS.availability){showToast('Viewing availability is not enabled yet.','error');return;}
+  const status=document.getElementById('lister-availability-status');
+  const row={
+    lister_id:effectiveSellerId,
+    weekday:Number(document.getElementById('lister-availability-day')?.value),
+    start_time:document.getElementById('lister-availability-start')?.value,
+    end_time:document.getElementById('lister-availability-end')?.value,
+    slot_minutes:Number(document.getElementById('lister-availability-slot')?.value)||30,
+    timezone:'Africa/Nairobi'
+  };
+  if(!row.start_time||!row.end_time||row.end_time<=row.start_time){if(status)status.textContent='Choose an end time later than the start time.';return;}
+  const{error}=await db.from('lister_availability').upsert(row,{onConflict:'lister_id,weekday'});
+  if(error){console.error('Could not save viewing availability:',error);if(status)status.textContent=error.message||'Could not save availability.';return;}
+  if(status)status.textContent='Weekly availability saved. Buyers still need your confirmation through Viewings.';
+  showToast('Viewing availability saved.','success');
+}
+
+async function saveListerViewingPreferences(){
+  const minNotice=Number(document.getElementById('lister-min-notice')?.value);
+  const maxDays=Number(document.getElementById('lister-max-days')?.value);
+  if(!Number.isInteger(minNotice)||minNotice<0||minNotice>720||!Number.isInteger(maxDays)||maxDays<1||maxDays>180){
+    showToast('Enter a valid notice period and booking window.','error');
+    return;
+  }
+  const error=await updateOwnerProfile({
+    viewing_auto_confirm:!!document.getElementById('lister-auto-confirm')?.checked,
+    viewing_min_notice_hours:minNotice,
+    viewing_max_days_ahead:maxDays
+  });
+  if(error){console.error('Could not save viewing preferences:',error);showToast(error.message||'Could not save viewing preferences.','error');return;}
+  showToast('Viewing preferences saved.','success');
+}
+
+async function loadListerAvailability(){
+  const status=document.getElementById('lister-availability-status');
+  const{data,error}=await db.from('lister_availability').select('weekday,start_time,end_time').eq('lister_id',effectiveSellerId).order('weekday');
+  if(error){console.error('Could not load viewing availability:',error);if(status)status.textContent='Availability could not be loaded.';return;}
+  const profile=ownerProfile||currentProfile;
+  document.getElementById('lister-auto-confirm').checked=!!profile?.viewing_auto_confirm;
+  document.getElementById('lister-min-notice').value=profile?.viewing_min_notice_hours??12;
+  document.getElementById('lister-max-days').value=profile?.viewing_max_days_ahead??30;
+  if(status)status.textContent=data?.length?`${data.length} weekly viewing window${data.length===1?'':'s'} configured.`:'No weekly viewing windows configured.';
+}
+
+async function loadListerSourceStats(){
+  const el=document.getElementById('lister-source-stats-content');
+  if(!el)return;
+  const since=new Date();since.setDate(since.getDate()-30);
+  const{data,error}=await db.from('lister_stats').select('day,source,views,enquiries,viewings').eq('lister_id',effectiveSellerId).gte('day',since.toISOString().slice(0,10)).order('day',{ascending:false});
+  if(error){console.error('Could not load Lister Page source stats:',error);el.textContent='Source statistics are temporarily unavailable.';return;}
+  if(!data?.length){el.textContent='No source activity available yet.';return;}
+  const grouped=new Map();
+  data.forEach(row=>{const current=grouped.get(row.source)||{views:0,enquiries:0,viewings:0};current.views+=Number(row.views)||0;current.enquiries+=Number(row.enquiries)||0;current.viewings+=Number(row.viewings)||0;grouped.set(row.source,current);});
+  const lines=[...grouped].map(([source,counts])=>`<div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--border)"><strong>${escHtml(source)}</strong><span>${counts.views} views · ${counts.enquiries} enquiries · ${counts.viewings} viewings</span></div>`);
+  el.innerHTML=lines.join('');
 }
 
 function teamSeatLimit(){
@@ -1564,7 +1745,7 @@ function updateEliteSectionUI(sub){
     if(valuationBtn) valuationBtn.style.display = 'none';
     if(aiListingBtn) aiListingBtn.style.display = 'none';
   }
-  const storefrontAvailable=(sub.active&&sub.plan==='elite')||STOREFRONT_FREE_ENABLED;
+  const storefrontAvailable=(sub.active&&sub.plan==='elite')||STOREFRONT_FREE_ENABLED||LISTER_PAGE_FLAGS.pages;
   if(storefrontRow)storefrontRow.style.display=storefrontAvailable?'block':'none';
   if(storefrontAvailable){
     ensureStorefrontSlug().then(slug=>{
@@ -3830,6 +4011,10 @@ async function exportDemandPDF(){
 }
 
 async function copyStorefrontLink(){
+  if(LISTER_PAGE_FLAGS.pages&&(ownerProfile||currentProfile)?.handle){
+    await copyListerPageLink();
+    return;
+  }
   const btn = document.getElementById('elite-storefront-btn');
   if(btn) btn.disabled = true;
   const slug = await ensureStorefrontSlug();
@@ -5146,6 +5331,7 @@ function renderGettingStarted(){
     {done:allListings.length>0 && allListings.every(l=>(l.listing_photos||[]).length>0),label:'Add photos to every listing',sub:'Listings with 6+ photos get far more enquiries',action:()=>showPage('listings')},
     {done:threads.some(t=>t.messages.some(m=>m.sender==='seller')),label:'Reply to a buyer message',sub:'Fast replies win more viewings',action:()=>showAllMessages()},
   ];
+  if(LISTER_PAGE_FLAGS.pages)steps.push({done:!!currentProfile?.handle,label:'Set up and share your Lister Page',sub:'Bring all your active properties together under one link',action:()=>showPage('lister-page')});
   const allDone=steps.every(s=>s.done);
   if(dismissed||allDone){card.style.display='none';return;}
   card.style.display='block';
@@ -8763,8 +8949,8 @@ document.getElementById('viewings-list')?.addEventListener('click',event=>{
   if(button)updateViewingRequestStatus(button.dataset.viewingId,button.dataset.viewingStatus);
 });
 
-const pageTitles={overview:'Overview',listings:'My listings',messages:'Messages',enquiries:'Enquiries',viewings:'Viewings',reviews:'Reviews',payments:'Payments',settings:'Settings','rent-ledger':'Rent & Tenant Ledger','demand-heatmap':'Demand Insights',notifications:'Notifications'};
-function showPage(name){if(!document.getElementById('page-'+name))name='overview';sessionStorage.setItem('ny_last_page',name);if(!window.__navFromHash&&!document.getElementById('tour-overlay').classList.contains('open')&&location.hash!=='#'+name)history.pushState(null,'','#'+name);document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>{n.classList.remove('active');n.removeAttribute('aria-current');});document.getElementById('page-'+name).classList.add('active');const navEl=document.getElementById('nav-'+name);if(navEl){navEl.classList.add('active');navEl.setAttribute('aria-current','page');}document.getElementById('topbar-title').textContent=pageTitles[name]||name;if(name==='overview')renderOverview();if(name==='listings')renderListingsTable();if(name==='messages'){showThreadListMobile();renderThreadList();}if(name==='enquiries')renderEnquiries();if(name==='viewings')loadViewingRequestsPage();if(name==='reviews')renderReviews();if(name==='payments')renderPayments();if(name==='rent-ledger'){ if(isBnbLedgerMode()) loadBnbLedger(); else loadRentalUnits(); }if(name==='demand-heatmap')loadDemandInsights();if(name==='notifications')renderNotificationsPage();closeSidebar();
+const pageTitles={overview:'Overview',listings:'My listings',messages:'Messages',enquiries:'Enquiries',viewings:'Viewings',reviews:'Reviews',payments:'Payments','lister-page':'Lister Page',settings:'Settings','rent-ledger':'Rent & Tenant Ledger','demand-heatmap':'Demand Insights',notifications:'Notifications'};
+function showPage(name){if(!document.getElementById('page-'+name))name='overview';try{sessionStorage.setItem('ny_last_page',name);}catch(error){console.info('Dashboard page preference could not be saved.',error);}if(!window.__navFromHash&&!document.getElementById('tour-overlay').classList.contains('open')&&location.hash!=='#'+name)history.pushState(null,'','#'+name);document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>{n.classList.remove('active');n.removeAttribute('aria-current');});document.getElementById('page-'+name).classList.add('active');const navEl=document.getElementById('nav-'+name);if(navEl){navEl.classList.add('active');navEl.setAttribute('aria-current','page');}document.getElementById('topbar-title').textContent=pageTitles[name]||name;if(name==='overview')renderOverview();if(name==='lister-page')loadListerPageHub();if(name==='listings')renderListingsTable();if(name==='messages'){showThreadListMobile();renderThreadList();}if(name==='enquiries')renderEnquiries();if(name==='viewings')loadViewingRequestsPage();if(name==='reviews')renderReviews();if(name==='payments')renderPayments();if(name==='rent-ledger'){ if(isBnbLedgerMode()) loadBnbLedger(); else loadRentalUnits(); }if(name==='demand-heatmap')loadDemandInsights();if(name==='notifications')renderNotificationsPage();closeSidebar();
   const scwFabEl=document.getElementById('scw-fab');
   if(scwFabEl){
     if(name==='messages'){

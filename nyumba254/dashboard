@@ -97,6 +97,9 @@
       <button class="nav-item" id="nav-payments" onclick="showPage('payments')">
         <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Payments
       </button>
+      <button class="nav-item" id="nav-lister-page" onclick="showPage('lister-page')">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5M16 4v5"/></svg>Lister Page
+      </button>
       <div class="nav-section-label" id="nav-elite-section" style="margin-top:8px">Management tools</div>
       <button class="nav-item" id="nav-rent-ledger" onclick="showPage('rent-ledger')">
         <svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 9h1M9 13h1M9 17h1M14 9h1M14 13h1M14 17h1"/></svg><span id="nav-rent-ledger-label">Rent Ledger</span>
@@ -211,7 +214,7 @@
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="white" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>
           </div>
           <div style="flex:1;min-width:200px">
-            <div style="font-size:13px;font-weight:700">Your public lister storefront is live</div>
+            <div style="font-size:13px;font-weight:700">Your Lister Page is live</div>
             <div style="font-size:12px;opacity:.85;word-break:break-all" id="storefront-banner-url">nyumba254.com/storefront?seller=…</div>
           </div>
           <div style="display:flex;gap:8px;flex-shrink:0">
@@ -265,6 +268,87 @@
             <div id="quick-listings"><div style="padding:10px 0;color:var(--text-3);font-size:13px">Loading…</div></div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- LISTER PAGE -->
+    <div class="page" id="page-lister-page">
+      <div class="section-head" style="margin-bottom:18px">
+        <h2>Your Lister Page</h2>
+        <p>One link for all your properties. Organise your listings, share them anywhere, and let people view, ask and book in one place.</p>
+      </div>
+      <div class="card" style="padding:20px;margin-bottom:18px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
+          <div><h3 style="margin:0 0 6px">Your shareable page</h3><p id="lister-page-status" style="font-size:13px;color:var(--text-3)">Loading your page settings…</p></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-outline" type="button" onclick="copyListerPageLink()">Copy link</button>
+            <a class="btn btn-primary" id="lister-page-open" href="/storefront" rel="noopener">Preview page</a>
+          </div>
+        </div>
+        <div class="settings-grid" style="margin-top:18px">
+          <div class="settings-section">
+            <label class="field-label" for="lister-page-handle">Page handle</label>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <span style="font-size:13px;color:var(--text-3)">nyumba254.com/@</span>
+              <input class="form-input" id="lister-page-handle" maxlength="30" autocomplete="off" placeholder="your-name"/>
+              <button class="btn btn-outline btn-sm" type="button" onclick="saveListerPageHandle()">Save handle</button>
+            </div>
+            <p style="font-size:12px;color:var(--text-3);margin-top:6px">3–30 lowercase letters, numbers, dots, underscores or hyphens. Handle changes are limited to once every 30 days.</p>
+          </div>
+          <div class="settings-section">
+            <label class="field-label" for="lister-page-visibility">Page visibility</label>
+            <select class="form-input" id="lister-page-visibility">
+              <option value="public">Public — searchable</option>
+              <option value="unlisted">Unlisted — anyone with the link</option>
+              <option value="hidden">Hidden</option>
+            </select>
+            <button class="btn btn-outline btn-sm" type="button" style="margin-top:8px" onclick="saveListerPageVisibility()">Save visibility</button>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="padding:20px;margin-bottom:18px">
+        <h3 style="margin:0 0 10px">Share kit</h3>
+        <p style="font-size:13px;color:var(--text-3);margin-bottom:12px">Share the same page from your WhatsApp status, Instagram bio, Facebook page, TikTok profile or a printed QR code.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a class="btn btn-outline btn-sm" id="lister-qr-png" href="#" download="nyumba254-lister-page-qr.png">Download QR (PNG)</a>
+          <a class="btn btn-outline btn-sm" id="lister-qr-svg" href="#" download="nyumba254-lister-page-qr.svg">Download QR (SVG)</a>
+        </div>
+        <p id="lister-share-caption" style="font-size:13px;background:var(--surface);padding:12px;border-radius:8px;margin-top:12px"></p>
+      </div>
+      <div class="card" id="lister-availability-hub" style="padding:20px;margin-bottom:18px">
+        <h3 style="margin:0 0 8px">Viewing availability</h3>
+        <p style="font-size:13px;color:var(--text-3);margin-bottom:12px">Set a weekly window when people may request a viewing. You confirm arrangements through your existing Viewings inbox.</p>
+        <div class="settings-grid">
+          <div><label class="field-label" for="lister-availability-day">Day</label><select class="form-input" id="lister-availability-day"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option></select></div>
+          <div><label class="field-label" for="lister-availability-start">From</label><input class="form-input" id="lister-availability-start" type="time" value="09:00"/></div>
+          <div><label class="field-label" for="lister-availability-end">Until</label><input class="form-input" id="lister-availability-end" type="time" value="17:00"/></div>
+          <div><label class="field-label" for="lister-availability-slot">Slot length</label><select class="form-input" id="lister-availability-slot"><option value="30">30 minutes</option><option value="45">45 minutes</option><option value="60">1 hour</option><option value="90">1.5 hours</option></select></div>
+        </div>
+        <button class="btn btn-outline btn-sm" type="button" style="margin-top:12px" onclick="saveListerAvailability()">Save weekly availability</button>
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:14px">
+          <label style="display:flex;gap:8px;align-items:center;font-size:13px"><input type="checkbox" id="lister-auto-confirm"/> Confirm requests automatically</label>
+          <label style="font-size:13px">Minimum notice (hours) <input class="form-input" id="lister-min-notice" type="number" min="0" max="720" value="12" style="width:100px;display:inline-block"/></label>
+          <label style="font-size:13px">Book up to (days) <input class="form-input" id="lister-max-days" type="number" min="1" max="180" value="30" style="width:100px;display:inline-block"/></label>
+          <button class="btn btn-outline btn-sm" type="button" onclick="saveListerViewingPreferences()">Save booking preferences</button>
+        </div>
+        <div id="lister-availability-status" aria-live="polite" style="font-size:12px;color:var(--text-3);margin-top:8px"></div>
+      </div>
+      <div class="card" id="lister-quick-answers-hub" style="padding:20px;margin-bottom:18px">
+        <h3 style="margin:0 0 8px">Quick Answers</h3>
+        <p style="font-size:13px;color:var(--text-3);margin-bottom:12px">Answer common property questions clearly. Phone numbers and payment requests are not allowed.</p>
+        <label class="field-label" for="lister-answer-question">Question</label>
+        <select class="form-input" id="lister-answer-question">
+          <option value="water">Water</option><option value="electricity">Electricity</option><option value="security">Security</option><option value="parking">Parking</option><option value="deposit">Deposit</option><option value="lease_length">Lease length</option><option value="pets">Pets</option><option value="internet">Internet</option><option value="distance">Distance</option><option value="title_status">Title status</option><option value="payment_arrangements">Payment arrangements</option><option value="viewing_days">Viewing days</option>
+        </select>
+        <label class="field-label" for="lister-answer-text" style="margin-top:10px">Answer</label>
+        <textarea class="form-input" id="lister-answer-text" maxlength="500" rows="3" placeholder="Write a concise, factual answer"></textarea>
+        <button class="btn btn-outline btn-sm" type="button" style="margin-top:8px" onclick="saveListerQuickAnswer()">Save answer</button>
+        <div id="lister-answer-status" aria-live="polite" style="font-size:12px;color:var(--text-3);margin-top:8px"></div>
+      </div>
+      <div class="card" id="lister-source-stats" style="padding:20px">
+        <h3 style="margin:0 0 8px">Page sources</h3>
+        <p style="font-size:12px;color:var(--text-3);margin-bottom:12px">Source counts are aggregate page events; they do not include names, email addresses or phone numbers.</p>
+        <div id="lister-source-stats-content">No source activity available yet.</div>
       </div>
     </div>
 
