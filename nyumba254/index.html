@@ -805,7 +805,7 @@ function renderListings(containerId, listings, imgWidth, emptyHtml) {
 const SKELETON = '<div class="loading-grid">' + Array(3).fill('<div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line short"></div><div class="skeleton-line"></div></div></div>').join('') + '</div>';
 
 async function loadFeatured() {
-  const { data, error } = await db.from('listings').select('*, listing_photos(*), profiles(verification_status,account_type,verified_role)')
+  const { data, error } = await db.from('listings').select('*, listing_photos(*)')
     .eq('status', 'active').eq('is_featured', true).order('created_at', { ascending: false }).order('id').limit(12);
   if (error) { console.error(error); $('featured-section').hidden = true; return; }
   if (!data || !data.length) { $('featured-section').hidden = true; return; }     // no empty "be the first" block for Featured
@@ -819,7 +819,7 @@ function syncLatestLink() { $('latest-see-all').href = nkBuildListingsUrl({ coun
 async function loadLatest() {
   const my = ++latest.token, { county, area } = latest;
   $('latest-listings').innerHTML = SKELETON; syncLatestLink();
-  let q = db.from('listings').select('*, listing_photos(*), profiles(verification_status,account_type,verified_role)').eq('status', 'active');
+  let q = db.from('listings').select('*, listing_photos(*)').eq('status', 'active');
   if (area) { q = q.eq('area', area); if (county) q = q.eq('county', county); } else q = nkCountyEq(q, county);
   const { data, error } = await q.order('created_at', { ascending: false }).order('id').limit(20);
   if (my !== latest.token) return;

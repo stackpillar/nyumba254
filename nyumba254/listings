@@ -941,7 +941,7 @@ const SITE = 'https://nyumba254.com';
 const NK_CLEAN_ROUTES = false;   // flip to true once /listings/<county>/<category> rewrites exist (canonical then uses them)
 // WhatsApp: adjust these two lines to your real column names. Cards fall back to the enquiry form if absent.
 const NK_WHATSAPP = { enabled: l => !!(l.allow_whatsapp && l.whatsapp_number), number: l => l.whatsapp_number };
-const LISTING_SELECT = '*, listing_photos(*), listing_units(*), profiles(verification_status,account_type,verified_role)';
+const LISTING_SELECT = '*, listing_photos(*), listing_units(*)';
 const MAP_SELECT = 'id, listing_number, seller_id, listed_by_type, title, area, county, price, price_frequency, category, latitude, longitude';
 const MAP_LIMIT = 300;
 const AUTO_PAGES = 3;                       // mobile: auto-load this many pages, then show "Load more"

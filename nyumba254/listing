@@ -495,7 +495,7 @@ const CFG={
   listCols:'id,listing_number,seller_id,title,description,category,status,is_disabled,disabled_reason,recycle_bin,is_featured,price,price_frequency,county,area,address,latitude,longitude,details,amenities,contact_name,contact_hidden,views,created_at,payment_status,trial_expires_at,listed_by_type',
   cardCols:'id,listing_number,title,area,county,address,category,price,price_frequency,status,is_featured,created_at'
 };
-const REL='profiles(full_name, created_at, verification_status, account_type), listing_photos(*), listing_units(*), listing_videos(*)';
+const REL='listing_photos(*), listing_units(*), listing_videos(*)';
 const FREQ=Object.assign({},NK_FREQ_LABEL,{semester:'/semester'});
 const money=n=>'KES '+Number(n||0).toLocaleString('en-KE');
 const pad=n=>String(n).padStart(6,'0');
@@ -979,7 +979,7 @@ async function loadSimilar(){
   const sec=$('sim');if(!sec)return;sec.hidden=false;
   const noSim=()=>{sec.hidden=true;qsa('#anchors [data-anchor="sim"]').forEach(a=>a.remove())};
   try{
-    const base=cols=>db.from('listings').select(cols+', listing_photos(*), profiles(verification_status)').eq('status','active').eq('is_disabled',false).eq('recycle_bin',false).neq('id',P.id);
+    const base=cols=>db.from('listings').select(cols+', listing_photos(*)').eq('status','active').eq('is_disabled',false).eq('recycle_bin',false).neq('id',P.id);
     const {data}=await withCols(cols=>{let q=base(cols).eq('category',P.category);q=P.county?q.eq('county',P.county):q.eq('area',P.area);return q.order('created_at',{ascending:false}).limit(24)});
     const score=l=>(l.area===P.area?0:1e9)+Math.abs(Number(l.price||0)-Number(P.price||0));
     let list=(data||[]).sort((a,b)=>score(a)-score(b)).slice(0,4);

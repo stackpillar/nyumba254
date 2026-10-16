@@ -381,12 +381,9 @@ function nkCardCoverPhoto(listing) {
 
 function nkBuildVerifiedBadge(listing) {
   const profile=listing?.profiles||{};
-  const roleLabels={buyer:'Tenant / Buyer',owner:'Direct from owner',landlord:'Direct from owner',caretaker:'Caretaker',agent:'Agent',company:'Company'};
-  const snapshotRole=listing?.listed_by_type||profile.account_type;
-  const roleVerified=!!snapshotRole&&profile.account_type===snapshotRole&&profile.verified_role===snapshotRole;
   const identityVerified=profile.identity_verified===true||profile.verification_status==='verified';
   const icon='<svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>';
-  return `${roleVerified?`<span class="card-role-badge" title="Nyumba254 verified this account as ${escHtml(roleLabels[snapshotRole]||snapshotRole)}">${icon}Verified ${escHtml(roleLabels[snapshotRole]||snapshotRole)}</span>`:''}${identityVerified?`<span class="card-verified-badge" title="This person’s identity has been verified by Nyumba254">${icon}Identity verified</span>`:''}`;
+  return identityVerified?`<span class="card-verified-badge" title="This person’s identity has been verified by Nyumba254">${icon}Identity verified</span>`:'';
 }
 
 async function nkHydratePublicProfiles(listings) {
