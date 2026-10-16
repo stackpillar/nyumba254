@@ -10,7 +10,7 @@
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -250,7 +250,7 @@
         </a>
         <a href="/listing" class="page-card">
           <div class="page-card-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
-          <div class="page-card-info"><div class="page-card-name">Listing detail</div><div class="page-card-desc">Photos, specs, contact seller</div></div>
+          <div class="page-card-info"><div class="page-card-name">Listing detail</div><div class="page-card-desc">Photos, specs, contact the lister</div></div>
           <span class="page-arrow">→</span>
         </a>
         <a href="/saved" class="page-card">

@@ -10,7 +10,7 @@
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
   <style>
     /* ─── Reset & Tokens ─────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -422,7 +422,14 @@
   </style>
   <link rel="stylesheet" href="/theme.css"/>
   <script src="/theme.js"></script>
-<link rel="manifest" href="/manifest.webmanifest"><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script></head>
+<link rel="manifest" href="/manifest.webmanifest"><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script>  <meta property="og:type" content="website"/>
+  <meta property="og:site_name" content="Nyumba254"/>
+  <meta property="og:title" content="Pricing — Nyumba254"/>
+  <meta property="og:description" content="List your apartment, shop, or office anywhere in Kenya. Simple, affordable pricing with no agent commissions."/>
+  <meta property="og:url" content="https://nyumba254.com/pricing"/>
+  <meta property="og:image" content="https://nyumba254.com/hero-photo.jpg"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+</head>
 <body>
 
 <!-- ── NAVBAR ── -->
@@ -519,7 +526,7 @@
           </li>
           <li>
             <div class="feat-check yes"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-            <div class="feat-label"><strong>Buyer enquiries via WhatsApp</strong><span class="feat-sub">Buyers contact you directly — no middleman</span></div>
+            <div class="feat-label"><strong>Buyer enquiries via WhatsApp</strong><span class="feat-sub">Buyers contact you directly</span></div>
           </li>
           <li>
             <div class="feat-check yes"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>

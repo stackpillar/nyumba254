@@ -384,7 +384,7 @@
 <!-- ── NAVBAR ── -->
 <nav id="main-nav" aria-label="Main">
   <a href="/" class="logo">
-    <div class="logo-icon"><img src="/logo-icon.png" alt="" width="48" height="48"/></div>
+    <div class="logo-icon"><img src="/logo-icon.png" alt="" width="48" height="48" decoding="async"/></div>
     <span>Nyumba254</span>
   </a>
   <div class="nav-compact-search" id="nav-compact-search" role="search">
@@ -425,10 +425,10 @@
 <!-- ── HERO ── -->
 <section class="hero" id="hero" aria-labelledby="hero-title">
   <div class="hero-illustration" aria-hidden="true">
-    <img class="hero-slide active" src="/hero-photo.jpg" alt="" fetchpriority="high"/>
-    <img class="hero-slide" data-src="/hero-photo-2.jpg" alt=""/>
-    <img class="hero-slide" data-src="/hero-photo-3.jpg" alt=""/>
-    <img class="hero-slide" data-src="/hero-photo-4.jpg" alt=""/>
+    <img class="hero-slide active" src="/hero-photo.jpg" alt="" width="1672" height="941" decoding="async" fetchpriority="high"/>
+    <img class="hero-slide" data-src="/hero-photo-2.jpg" alt="" width="1536" height="1024" decoding="async"/>
+    <img class="hero-slide" data-src="/hero-photo-3.jpg" alt="" width="1402" height="1122" decoding="async"/>
+    <img class="hero-slide" data-src="/hero-photo-4.jpg" alt="" width="1536" height="1024" decoding="async"/>
   </div>
   <div class="hero-overlay" aria-hidden="true"></div>
   <div class="hero-content">
@@ -622,7 +622,7 @@
   <div class="footer-inner">
     <div class="footer-top">
       <div>
-        <div class="footer-logo"><div class="footer-logo-icon"><img src="/logo-icon.png" alt="" width="40" height="40"/></div>Nyumba254</div>
+        <div class="footer-logo"><div class="footer-logo-icon"><img src="/logo-icon.png" alt="" width="40" height="40" loading="lazy" decoding="async"/></div>Nyumba254</div>
         <p class="footer-tagline">Find and list property across Kenya. Open to buyers, owners, caretakers, agents, and companies, with no deal commission from Nyumba254.</p>
         <div class="footer-social">
           <a href="https://wa.me/254739348560" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></a>
@@ -661,7 +661,7 @@
     <div class="footer-divider"></div>
     <div class="footer-bottom">
       <p>© <span id="nk-footer-year">2026</span> Nyumba254. All rights reserved. Built for Kenya.</p>
-      <div class="footer-bottom-links"><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/contact">Contact</a><a href="/sitemap">Sitemap</a></div>
+      <div class="footer-bottom-links"><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="#" data-nk-cookie-settings>Cookie settings</a><a href="/contact">Contact</a><a href="/sitemap">Sitemap</a></div>
     </div>
   </div>
 </footer>
@@ -690,7 +690,7 @@
 
 <!-- Supabase client, then the shared module. NOT deferred: inline scripts ignore `defer`, so the page script
      below used to run before nk-shared.js existed (const nkHeroSearchInput = nkDebounce(...) threw at parse time). -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 <script src="/nk-shared.js"></script>
 <script>
 (function () {

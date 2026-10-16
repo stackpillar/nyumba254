@@ -12,7 +12,7 @@
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -1385,7 +1385,7 @@
       (status==='verified' ? `<p style="font-size:12.5px;color:var(--text-3)">You're verified — buyers see a trust badge on your listings, and your listing space is unlimited.</p>` : '') +
       (status==='pending' ? `<p style="font-size:12.5px;color:var(--text-3)">We're reviewing your documents — usually within 24 hours.</p>` : '') +
       (status==='rejected' && v.verification_rejection_reason ? `<p style="font-size:12.5px;color:var(--red)">${escHtml(v.verification_rejection_reason)}</p>` : '') +
-      (status==='unverified' ? `<div style="background:var(--amber-light);border:1px solid #f2d29b;border-radius:8px;padding:10px 12px;font-size:12.5px;color:#7a5200;line-height:1.6"><strong>🔒 Verify your account to unlock more listing space.</strong> Unverified sellers can post up to 2 listings at a time — verified sellers get unlimited listings plus a trust badge buyers can see. Takes about 2 minutes.</div>` : '');
+      (status==='unverified' ? `<div style="background:var(--amber-light);border:1px solid #f2d29b;border-radius:8px;padding:10px 12px;font-size:12.5px;color:#7a5200;line-height:1.6"><strong>🔒 Verify your account to unlock more listing space.</strong> Accounts without an identity check can post up to 2 listings at a time — identity-checked accounts get unlimited listings plus an identity-checked badge buyers can see. Takes about 2 minutes.</div>` : '');
 
     formWrap.innerHTML = (status === 'pending' || status === 'verified') ? '' : `
         <div class="form-group"><label for="verify-is-owner">Are you the property owner?</label>

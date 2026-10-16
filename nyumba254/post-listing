@@ -316,7 +316,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
   <div class="modal"><h2 id="rs-t">Welcome back</h2><p id="rs-text"></p><div class="acts"><button class="btn-back" data-act="fresh">Start fresh</button><button class="btn-next" data-act="resume">Continue draft</button></div></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 <script src="/nk-shared.js"></script>
 <script src="/nk-policy-viewer.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

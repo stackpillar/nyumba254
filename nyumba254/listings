@@ -926,7 +926,7 @@
 
 <!-- Supabase client, then the shared module. NOT deferred on purpose: inline scripts ignore `defer`,
      so the page script below would otherwise run before nk-shared.js has defined anything. -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 <script src="/nk-shared.js"></script>
 <script>
 (function () {

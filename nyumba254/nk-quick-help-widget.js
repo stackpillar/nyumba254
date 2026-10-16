@@ -212,7 +212,7 @@ A: "Of course — connecting you with our team now."`;
     if (window.supabase && typeof window.supabase.createClient === 'function') {
       return Promise.resolve();
     }
-    return nkQhLoadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
+    return nkQhLoadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2');
   }
 
   // ═══════════════════════════════════════════════════════════════

@@ -241,7 +241,7 @@ async function renderSitemapXml(origin, env) {
       const headers = { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}` };
       const listingsQuery = new URL('/rest/v1/listings', env.NYUMBA254_SUPABASE_URL);
       listingsQuery.search = new URLSearchParams({
-        select: 'listing_number,updated_at',
+        select: 'listing_number,updated_at,county',
         status: 'eq.active',
         is_disabled: 'eq.false',
         recycle_bin: 'eq.false',
@@ -250,14 +250,33 @@ async function renderSitemapXml(origin, env) {
       }).toString();
       const response = await fetch(listingsQuery, { headers });
       if (response.ok) {
+        const counties = new Map();
         for (const row of await response.json()) {
+          if (row.county && (!counties.has(row.county) || (row.updated_at || '') > counties.get(row.county))) {
+            counties.set(row.county, row.updated_at || '');
+          }
           urls.push({
             loc: `${origin}/listing?id=${String(row.listing_number).padStart(6, '0')}`,
             lastmod: row.updated_at ? new Date(row.updated_at).toISOString().slice(0, 10) : '',
           });
         }
+        for (const [county, updated] of counties) {
+          urls.push({ loc: `${origin}/listings?county=${encodeURIComponent(county)}`, lastmod: updated ? new Date(updated).toISOString().slice(0, 10) : '' });
+        }
       } else {
         console.error('Sitemap listings lookup failed:', response.status);
+      }
+      const pagesResponse = await fetch(new URL('/rest/v1/rpc/get_sitemap_lister_pages', env.NYUMBA254_SUPABASE_URL), {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: '{}',
+      });
+      if (pagesResponse.ok) {
+        for (const row of await pagesResponse.json()) {
+          urls.push({ loc: `${origin}/@${encodeURIComponent(row.handle)}`, lastmod: row.lastmod ? new Date(row.lastmod).toISOString().slice(0, 10) : '' });
+        }
+      } else {
+        console.error('Sitemap Lister Page lookup failed:', pagesResponse.status);
       }
     } catch (error) {
       console.error('Sitemap generation failed:', error);

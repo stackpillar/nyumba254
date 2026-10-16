@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Admin — Nyumba254</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
 <link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96"><link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
@@ -538,7 +538,7 @@ let B={};
 const NAV=[
   {g:'Overview',i:[['overview','Dashboard','grid']]},
   {g:'Marketplace',i:[['listings','Listings','home','pending'],['recycle','Recycle bin','trash'],['payments','Payments','card','payments']]},
-  {g:'People',i:[['sellers','Sellers','users'],['verification','Verification','shield','verification'],['role-requests','Role change requests','users','roleRequests'],['premium','Premium sellers','star'],['enquiries','Enquiries','msg','enquiries'],['concierge','Concierge inbox','msg','concierge'],['support','Support chat','life','support']]},
+  {g:'People',i:[['sellers','Accounts','users'],['verification','Verification','shield','verification'],['role-requests','Role change requests','users','roleRequests'],['premium','Premium accounts','star'],['enquiries','Enquiries','msg','enquiries'],['concierge','Concierge inbox','msg','concierge'],['support','Support chat','life','support']]},
   {g:'Trust & safety',i:[['reports','Reports','flag','reports'],['risk-signals','Risk signals','flag'],['reviews','Reviews','star','reviews'],['reveals','Contact reveals','phone']]},
   {g:'Insights',i:[['analytics','Site visits','chart'],['activity','Activity log','clock']]},
   {g:'Platform',i:[['updates','Platform updates','bell'],['settings','Settings','gear']]},
@@ -673,7 +673,7 @@ async function cmdk(){
     const s=safe(q);sel=0;
     if(s.length<2){items=base.filter(x=>!s||x.l.toLowerCase().includes(s.toLowerCase()));paint();return;}
     const[l,u]=await Promise.all([db.from('listings').select('id,title,area,listing_number').or(`title.ilike.%${s}%,area.ilike.%${s}%`).limit(6),db.from('profiles').select('id,full_name,email').or(`full_name.ilike.%${s}%,email.ilike.%${s}%,phone.ilike.%${s}%`).limit(6)]);
-    items=[...base.filter(x=>x.l.toLowerCase().includes(s.toLowerCase())),...(l.data||[]).map(x=>({l:`${x.title} — ${x.area||''}`,k:'Listing',fn:()=>go('listings',{q:x.title})})),...(u.data||[]).map(x=>({l:`${x.full_name||'—'} · ${x.email||''}`,k:'Seller',fn:()=>go('sellers',{q:x.email||x.full_name})}))];
+    items=[...base.filter(x=>x.l.toLowerCase().includes(s.toLowerCase())),...(l.data||[]).map(x=>({l:`${x.title} — ${x.area||''}`,k:'Listing',fn:()=>go('listings',{q:x.title})})),...(u.data||[]).map(x=>({l:`${x.full_name||'—'} · ${x.email||''}`,k:'Account',fn:()=>go('sellers',{q:x.email||x.full_name})}))];
     paint();
   },200);
   $('#ci',w).oninput=e=>search(e.target.value);$('#ci',w).focus();paint();
@@ -1198,7 +1198,7 @@ function openSeller(u,T){
     logAction('edit_profile','profile',u.id,up.full_name);ui.toast('Profile updated','ok');d.close();T.reload();
   };
 }
-VIEWS.sellers={title:'Sellers',mount(el,p){
+VIEWS.sellers={title:'Accounts',mount(el,p){
   return Table({route:'sellers',params:p,id:r=>r.id,search:'Search by name, email or phone…',remoteSearch:true,
     async fetch(st){const{data,error}=await db.rpc('get_sellers_with_stats',{p_search:st.q||null,p_limit:st.size,p_offset:st.page*st.size});if(error)throw error;return{rows:data||[]};},
     columns:[{label:'Seller',nl:1,render:u=>`<div class="th"><div class="av" style="width:32px;height:32px">${esc(initials(u.full_name))}</div><div style="min-width:0"><b>${esc(u.full_name||'—')}</b><small>${esc(u.email||'')}</small></div></div>`},
@@ -1638,7 +1638,7 @@ VIEWS.concierge={title:'Concierge inbox',async mount(el,p,ctx){
   function paint(){
     const un=threads.reduce((s,t)=>s+t.unread,0);
     $('#cst',el).innerHTML=[['Unread messages',un],['Conversations',threads.length],['Sellers on concierge',sellers.length]].map(([l,v])=>`<div class="card kpi"><small>${l}</small><b>${v}</b></div>`).join('');
-    $('#csc',el).innerHTML=`<button class="btn sm ${sf==='all'?'ok':''}" data-s="all">All sellers</button>`+sellers.map(s=>`<button class="btn sm ${sf===s.id?'ok':''}" data-s="${s.id}">${esc((s.full_name||'Seller').split(' ')[0])}</button>`).join('');
+    $('#csc',el).innerHTML=`<button class="btn sm ${sf==='all'?'ok':''}" data-s="all">All accounts</button>`+sellers.map(s=>`<button class="btn sm ${sf===s.id?'ok':''}" data-s="${s.id}">${esc((s.full_name||'Seller').split(' ')[0])}</button>`).join('');
     const r=vis();
     $('#cli',el).innerHTML=!sellers.length?'<div class="empty"><h4>No concierge sellers</h4><p>Sellers with managed chat turned on appear here.</p></div>':r.length?r.map(t=>{const l=t.msgs[t.msgs.length-1];return `<div class="ci ${t.unread?'un':''} ${active?.key===t.key?'on':''}" data-k="${esc(t.key)}"><div style="display:flex;justify-content:space-between"><b>${esc(t.buyerName)}</b><small>${ago(t.last)}</small></div><small style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.sender==='seller'?'You: ':''}${esc(l.content||'')}</small><small>${esc(t.sellerName)} · ${esc(t.listing?.title||'Listing')}</small></div>`;}).join(''):'<div class="empty">No conversations found</div>';
   }
@@ -1803,7 +1803,7 @@ VIEWS.updates={title:'Platform updates',async mount(el,p,ctx){
     $$('.tabs button',el).forEach(b=>b.classList.toggle('on',b.dataset.t===tab));const box=$('#pu',el);box.onclick=null;box.onchange=null;box.oninput=null;box.onkeydown=null;
     if(tab==='compose'){
       box.innerHTML=`<div class="two" style="align-items:start"><div class="card" style="padding:18px"><div class="fld"><label>Start from a template</label><select class="in" id="pt"><option value="">— From scratch —</option>${Object.entries(PU_TPL).map(([k,v])=>`<option value="${k}">${esc(v.title)}</option>`).join('')}</select></div>
-      <div class="g2"><div class="fld"><label>Category</label><select class="in" id="pc">${Object.entries(PU_CATS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div><div class="fld"><label>Audience</label><select class="in" id="pa"><option value="all">All sellers</option><option value="verified">Verified sellers</option><option value="premium">Premium / Elite</option><option value="active_listings">Sellers with an active listing</option></select></div></div>
+      <div class="g2"><div class="fld"><label>Category</label><select class="in" id="pc">${Object.entries(PU_CATS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div><div class="fld"><label>Audience</label><select class="in" id="pa"><option value="all">All accounts</option><option value="verified">Identity-checked accounts</option><option value="premium">Premium / Elite</option><option value="active_listings">Accounts with an active listing</option></select></div></div>
       <div class="fld"><label>Title</label><input class="in" id="ptl" maxlength="120"></div><div class="fld"><label>Message <small id="pcn">0 / 2000</small></label><textarea class="in" id="pm" rows="7" maxlength="2000"></textarea></div><div class="fld"><label>Link (optional)</label><input class="in" id="pl" placeholder="/terms.html or https://…"></div>
       <label class="chk"><input type="checkbox" id="pn" checked> In-app notification</label><label class="chk"><input type="checkbox" id="pe" checked> Email</label>
       <button class="btn pri" id="ps">Send to sellers</button> <small id="pac"></small></div>

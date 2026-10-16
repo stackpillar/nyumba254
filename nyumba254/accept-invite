@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
   <link rel="icon" href="/favicon.ico" sizes="any">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{--green:#0F6E56;--green-light:#E1F5EE;--green-dark:#085041;--text:#1a1a18;--text-2:#4a4a46;--text-3:#888780;--border:#e0ded8;--surface:#f7f6f2;--white:#fff;--red:#c0392b;--red-light:#fdecea;--radius:10px;--radius-lg:16px}

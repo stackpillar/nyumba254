@@ -211,7 +211,14 @@
   </style>
   <link rel="stylesheet" href="/theme.css"/>
   <script src="/theme.js"></script>
-<link rel="manifest" href="/manifest.webmanifest"><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script></head>
+<link rel="manifest" href="/manifest.webmanifest"><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script>  <meta property="og:type" content="website"/>
+  <meta property="og:site_name" content="Nyumba254"/>
+  <meta property="og:title" content="Privacy Policy — Nyumba254"/>
+  <meta property="og:description" content="Privacy Policy for Nyumba254 — how we collect, use, and protect your personal data."/>
+  <meta property="og:url" content="https://nyumba254.com/privacy"/>
+  <meta property="og:image" content="https://nyumba254.com/hero-photo.jpg"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+</head>
 <body>
 
 <!-- ── NAVBAR ── -->
@@ -692,7 +699,7 @@
   });
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 <script>
   (function () {
     const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';

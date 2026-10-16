@@ -151,7 +151,14 @@
 </style>
   <link rel="stylesheet" href="/theme.css"/>
   <script src="/theme.js"></script>
-<link rel="manifest" href="/manifest.webmanifest"><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script></head>
+<link rel="manifest" href="/manifest.webmanifest"><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script>  <meta property="og:type" content="website"/>
+  <meta property="og:site_name" content="Nyumba254"/>
+  <meta property="og:title" content="Pricing — Nyumba254"/>
+  <meta property="og:description" content="Nyumba254 is a Kenyan property platform for finding and listing homes, rentals and commercial space."/>
+  <meta property="og:url" content="https://nyumba254.com/plans"/>
+  <meta property="og:image" content="https://nyumba254.com/hero-photo.jpg"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+</head>
 <body>
 
 <nav class="site-nav">
@@ -366,7 +373,7 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 <script src="saved-listings.js"></script>
 <script src="nav-badge.js"></script>
 <script>

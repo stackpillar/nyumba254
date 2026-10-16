@@ -30,6 +30,13 @@
     @media(max-width:600px){.policy-main{padding:28px 16px 48px}.policy-main li{padding:13px}.policy-nav{padding-inline:16px}}
   </style>
   <script src="/theme.js" defer></script>
+  <meta property="og:type" content="website"/>
+  <meta property="og:site_name" content="Nyumba254"/>
+  <meta property="og:title" content="Viewing Fee Policy — Nyumba254"/>
+  <meta property="og:description" content="The approved Nyumba254 rules for disclosed property viewing fees, payment, receipts, refunds, and reporting."/>
+  <meta property="og:url" content="https://nyumba254.com/viewing-fee-policy"/>
+  <meta property="og:image" content="https://nyumba254.com/hero-photo.jpg"/>
+  <meta name="twitter:card" content="summary_large_image"/>
 </head>
 <body>
   <nav class="policy-nav" aria-label="Main navigation">

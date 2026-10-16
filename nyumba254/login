@@ -11,7 +11,7 @@
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -403,7 +403,7 @@
         </div>
         <div class="benefit-text">
           <strong>Buyers contact you directly</strong>
-          <span>Enquiries go straight to your phone — no middleman, no delays.</span>
+          <span>Enquiries go straight to your phone — no waiting around.</span>
         </div>
       </div>
       <div class="benefit">

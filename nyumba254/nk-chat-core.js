@@ -420,7 +420,7 @@
   function highlight(text, term) { const e = esc(text); if (!term) return e; return e.replace(new RegExp('(' + escRe(esc(term)) + ')', 'ig'), '<mark>$1</mark>'); }
   const dayHtml = (iso, p) => '<div class="' + p + '-day">' + esc(dayLabel(iso)) + '</div>';
   const SCAM = /(m-?pesa|paybill|pay bill|till (number|no)|buy ?goods|reservation fee|booking fee|send (me |us )?(the )?(money|deposit|cash)|(pay|deposit)[^.!?\n]{0,25}(first|before (viewing|you view|seeing)|upfront|in advance))/i;
-  const LBL = { ai: 'Automated reply, written from the listing details', retry: 'Not sent. Tap to retry', queued: 'Waiting for a connection…', scam: 'Be careful: the seller mentioned a payment. Never pay before you have viewed the property, and never send money to a number you found only in chat.' };
+  const LBL = { ai: 'Automated reply, written from the listing details', retry: 'Not sent. Tap to retry', queued: 'Waiting for a connection…', scam: 'Be careful: the lister mentioned a payment. Check the viewing fee on the listing, pay only that fee to the person you meet, and get a receipt. Never pay rent or a deposit before you have viewed the property. Nyumba254 never asks buyers for money.' };
   function rowHtml(m, prev, p, peer, term, labels) {
     const T = Object.assign({}, LBL, labels || {});
     const mine = m.sender === 'buyer', gap = prev ? new Date(m.created_at) - new Date(prev.created_at) : Infinity;

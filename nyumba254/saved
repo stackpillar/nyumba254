@@ -28,7 +28,7 @@
     if (m) m.setAttribute('content', t === 'dark' ? '#0f1512' : '#0F6E56');
   })();
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -1469,7 +1469,7 @@ function buildCard(row, opts) {
       acts.push(`<a class="act-btn wa" data-act="wa" rel="noopener" href="${escHtml(waLink(ph, l))}">WhatsApp</a>`);
       acts.push(`<a class="act-btn" data-act="call" href="tel:${escHtml(ph)}">Call</a>`);
     } else {
-      acts.push(`<a class="act-btn" data-act="contact" href="${listingHref(l)}">Contact seller</a>`);
+      acts.push(`<a class="act-btn" data-act="contact" href="${listingHref(l)}">Contact lister</a>`);
     }
   }
   acts.push('<button type="button" class="act-btn" data-act="share">Share</button>');

@@ -393,7 +393,7 @@
 
 <div id="ni-toast" role="status" aria-live="polite"><span id="ni-toast-t"></span><button type="button" id="ni-toast-a" hidden></button></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 <script src="/nk-chat-core.js"></script>
 <script>
 (function () {
@@ -421,7 +421,7 @@
       s_none_t: 'No saved listings yet', s_none_d: 'Tap the heart on any listing to keep it here, then compare your favourites.', s_load: 'We could not load your saved listings.',
       gone_sold: 'This property has been sold.', gone_occ: 'This property is no longer available.', gone_missing: 'This listing is no longer available.', gone_link: 'See similar listings',
       empty_t: 'Say hello 👋', empty_d: 'Ask if it is still available, about the deposit, or when you can view it.', loading: 'Loading messages…', load_err: 'Could not load this chat', earlier: 'Load earlier messages', new_line: 'New messages',
-      ai: 'Automated reply, written from the listing details', retry_msg: 'Not sent. Tap to retry', queued: 'Waiting for a connection…', scam: 'Be careful: the seller mentioned a payment. Never pay before you have viewed the property, and never send money to a number you found only in chat.',
+      ai: 'Automated reply, written from the listing details', retry_msg: 'Not sent. Tap to retry', queued: 'Waiting for a connection…', scam: 'Be careful: the lister mentioned a payment. Check the viewing fee on the listing, pay only that fee to the person you meet, and get a receipt. Never pay rent or a deposit before you have viewed the property. Nyumba254 never asks buyers for money.',
       archived: 'Conversation archived', unarchived: 'Moved back to chats', undo: 'Undo', archive_short: 'Archive', unarchive_short: 'Restore', arch_aria: 'Archive conversation', unarch_aria: 'Move back to chats', sold: 'Sold', occupied: 'Occupied', remove_aria: 'Remove from saved',
       gone_saved: n => `${n} saved listing${n > 1 ? 's are' : ' is'} no longer available.`, remove_them: 'Remove', c_price: 'Price', c_loc: 'Location', c_type: 'Type', c_bed: 'Bedrooms', c_bath: 'Bathrooms', c_size: 'Floor area', c_status: 'Status', price_req: 'Price on request', available: 'Available',
       c_getting: 'Getting the seller’s contact…', c_offline: "You're offline. Connect to the internet to contact the seller.", c_unavail: 'The seller’s number is not available right now. Keep chatting here.', c_limit: 'You have reached the contact limit for now. Keep chatting here.', c_copied: 'number copied',

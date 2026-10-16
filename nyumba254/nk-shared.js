@@ -670,3 +670,6 @@ function nkSetPressed(el, pressed) { if (el) el.setAttribute('aria-pressed', pre
       updated client-side to reflect the active filters (see
       nkUpdatePageHeading/nkUpdateSeo in listings.html).
    ============================================================ */
+
+/* Consent banner (public pages only; the script skips private pages itself). */
+(function(){if(window.nkConsent)return;var s=document.createElement('script');s.src='/nk-consent.js';s.defer=true;document.head.appendChild(s);})();

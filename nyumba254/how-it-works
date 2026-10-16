@@ -1156,7 +1156,7 @@
 
 <!-- Supabase client (nk-shared.js creates `db`), then the shared module: real county/area data,
      escHtml, nkTrackPageView, nkInitAccountNav, etc. — the same two-script pattern as every other page. -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 <script src="/nk-shared.js"></script>
 <script>
 (function () {
