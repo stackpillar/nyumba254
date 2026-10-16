@@ -30,6 +30,16 @@ export default {
       return env.ASSETS.fetch(new Request(url, request));
     }
 
+    if (url.pathname === '/robots.txt') {
+      return new Response(`User-agent: *\nDisallow: /dashboard\nDisallow: /nk-ctrl-7f3k2x9\nDisallow: /listing?preview\nAllow: /\n\nSitemap: ${url.origin}/sitemap.xml\n`, {
+        headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'public, max-age=3600' },
+      });
+    }
+
+    if (url.pathname === '/sitemap.xml') {
+      return renderSitemapXml(url.origin, env);
+    }
+
     if (url.pathname === '/lister-page-card' && request.method === 'GET') {
       const card = await renderListerCard(request, env, url.searchParams.get('handle'));
       if (card) return card;
@@ -220,6 +230,40 @@ async function renderListerCard(request, env, handle) {
     console.error('Could not render Lister Page share card:', error);
     return null;
   }
+}
+
+async function renderSitemapXml(origin, env) {
+  const staticPaths = ['/', '/plans', '/faq', '/how-it-works', '/terms', '/privacy', '/viewing-fee-policy', '/sitemap'];
+  const urls = staticPaths.map((path) => ({ loc: origin + path }));
+  if (env.NYUMBA254_SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      const headers = { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}` };
+      const listingsQuery = new URL('/rest/v1/listings', env.NYUMBA254_SUPABASE_URL);
+      listingsQuery.search = new URLSearchParams({
+        select: 'listing_number,updated_at',
+        status: 'eq.active',
+        is_disabled: 'eq.false',
+        recycle_bin: 'eq.false',
+        order: 'listing_number.desc',
+        limit: '5000',
+      }).toString();
+      const response = await fetch(listingsQuery, { headers });
+      if (response.ok) {
+        for (const row of await response.json()) {
+          urls.push({
+            loc: `${origin}/listing?id=${String(row.listing_number).padStart(6, '0')}`,
+            lastmod: row.updated_at ? new Date(row.updated_at).toISOString().slice(0, 10) : '',
+          });
+        }
+      } else {
+        console.error('Sitemap listings lookup failed:', response.status);
+      }
+    } catch (error) {
+      console.error('Sitemap generation failed:', error);
+    }
+  }
+  const body = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `<url><loc>${escapeHtml(u.loc)}</loc>${u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : ''}</url>`).join('\n')}\n</urlset>\n`;
+  return new Response(body, { headers: { 'content-type': 'application/xml; charset=utf-8', 'cache-control': 'public, max-age=3600' } });
 }
 
 async function renderListingPreview(request, env, listingNumber) {

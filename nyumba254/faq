@@ -429,6 +429,16 @@
           </div></div>
         </div>
 
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            Can I estimate the monthly payment on a property for sale?
+            <div class="faq-q-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+          </div>
+          <div class="faq-a"><div class="faq-a-inner">
+            <p>Yes. On listings for sale, open <strong>Estimate monthly mortgage payment</strong> under the price details and enter a deposit, interest rate and term. It is an illustration only. Your lender sets the real rate and terms.</p>
+          </div></div>
+        </div>
       </div>
     </div>
     <div class="category-divider"></div>
@@ -499,6 +509,37 @@
           </div>
           <div class="faq-a"><div class="faq-a-inner">
             <p>Yes — there's no limit on the number of listings one account can have. Each listing is priced and reviewed individually, and they all appear together on your dashboard.</p>
+          </div></div>
+        </div>
+
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            What is a Lister Page?
+            <div class="faq-q-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+          </div>
+          <div class="faq-a"><div class="faq-a-inner">
+            <p>A Lister Page is one shareable link that shows all your active listings, your public profile details and quick answers to common questions. Listers use it to keep their property details in one place and share it on WhatsApp, social media or print. Availability depends on your plan and on what is enabled on the platform.</p>
+          </div></div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            Can buyers request a viewing from my Lister Page?
+            <div class="faq-q-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+          </div>
+          <div class="faq-a"><div class="faq-a-inner">
+            <p>Where viewing availability is switched on, you set the days and times you are free and people can request a slot. You confirm or decline each request. Any viewing fee is agreed and paid directly to you, never through Nyumba254.</p>
+          </div></div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            Is my Lister Page private?
+            <div class="faq-q-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+          </div>
+          <div class="faq-a"><div class="faq-a-inner">
+            <p>You choose: <strong>public</strong>, <strong>unlisted</strong> (only people with the link) or <strong>hidden</strong>. Your phone number and email are never shown in link previews. We record basic visit and click counts to show you where enquiries come from, and delete detailed events after 90 days. See the <a href="/privacy">Privacy Policy</a>.</p>
           </div></div>
         </div>
 

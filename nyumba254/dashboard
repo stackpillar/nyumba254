@@ -1677,6 +1677,7 @@
   </div>
 </div>
 <script src="/nk-notification-sound.js"></script>
+<script src="/qrcode.js"></script>
 <script src="/dashboard.js"></script>
 <script src="/nk-policy-viewer.js"></script>
 <script>

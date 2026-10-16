@@ -495,6 +495,7 @@
     );
     document.getElementById('lister-viewing-form')?.addEventListener('submit',async event=>{
       event.preventDefault();
+      const form=event.currentTarget;
       const status=document.getElementById('lv-status');
       const selected=items.find(row=>row.id===document.getElementById('lv-listing').value);
       const feeAcknowledged=!!document.getElementById('lv-fee-ack')?.checked;
@@ -509,9 +510,21 @@
         p_fee_acknowledged:feeAcknowledged,p_source:LISTER_SOURCE
       });
       if(error){console.error('Could not request viewing slot:',error);if(status)status.textContent=error.message||'Could not request that viewing. Please choose another slot.';return;}
-      if(status)status.textContent='Your request was sent. The lister will confirm the viewing.';
+      const slotIso=document.getElementById('lv-slot').value;
+      const slotMeta=availabilitySlots.find(s=>s.slot_start===slotIso);
+      if(status){
+        status.textContent='Your request was sent. The lister will confirm the viewing. ';
+        try{
+          const start=new Date(slotIso),end=new Date(start.getTime()+(Number(slotMeta?.slot_minutes)||30)*60000);
+          const stamp=d=>d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+          const clean=v=>String(v||'').replace(/[\\\\;,]/g,' ').replace(/\s+/g,' ').trim();
+          const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Nyumba254//Viewing//EN','BEGIN:VEVENT','UID:'+stamp(start)+'-'+(selected?.id||'x')+'@nyumba254.com','DTSTAMP:'+stamp(new Date()),'DTSTART:'+stamp(start),'DTEND:'+stamp(end),'SUMMARY:'+clean('Viewing request: '+(selected?.title||'Property')),'DESCRIPTION:'+clean('Requested on Nyumba254. Awaiting confirmation from the lister.'),'STATUS:TENTATIVE','END:VEVENT','END:VCALENDAR'].join('\r\n');
+          const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar'}));a.download='viewing-request.ics';a.textContent='Add to calendar';a.style.fontWeight='700';
+          status.appendChild(a);
+        }catch(e){console.error('Could not build calendar file:',e)}
+      }
       trackListerEvent('viewing_request',selected?.id);
-      event.currentTarget.reset();
+      form.reset();
     });
   }
 

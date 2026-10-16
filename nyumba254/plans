@@ -255,7 +255,7 @@
     <div style="margin-top:18px;background:var(--gold-light);border:1px solid #f2d29b;border-radius:var(--radius-lg);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
       <div>
         <div style="font-size:13.5px;font-weight:700;color:#8a5a12;margin-bottom:3px">Running 6+ units, or want the AI tools too?</div>
-        <div style="font-size:12.5px;color:var(--text-2);line-height:1.6">Elite includes <strong>unlimited BNB listings</strong> — no separate BNB plan needed — plus the AI listing assistant, storefront, and rent ledger, all in one subscription.</div>
+        <div style="font-size:12.5px;color:var(--text-2);line-height:1.6">Elite includes <strong>unlimited BNB listings</strong> — no separate BNB plan needed — plus the AI listing assistant, Lister Page, and rent ledger, all in one subscription.</div>
       </div>
       <a href="#plans-grid" class="bnb-cta" style="margin:0;white-space:nowrap;background:var(--gold);color:white;border-color:var(--gold)">See Elite →</a>
     </div>

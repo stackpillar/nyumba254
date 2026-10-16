@@ -397,7 +397,7 @@
       <ul>
         <li><strong>Other users (limited):</strong> When you post a listing, your contact phone number and listing details are visible to buyers on the platform. Buyers who send you an enquiry share their name, phone number, and message with you.</li>     
         <li><strong>Safaricom M-Pesa:</strong> Payment processing is handled by Safaricom. We share your phone number and payment amount with Safaricom to process the STK Push. We do not store your M-Pesa PIN — this is handled entirely by Safaricom.</li>
-        <li><strong>QR code generation:</strong> If you choose to download a Lister Page QR code, your public page URL is sent to the QR code service at api.qrserver.com to generate the image. That provider may receive request metadata such as your IP address and browser information.</li>
+        <li><strong>QR codes:</strong> QR codes for your Lister Page and listings are generated in your browser. The page URL is not sent to any third-party QR service.</li>
         <li><strong>Legal authorities:</strong> We may disclose personal data to Kenyan authorities if required by law, court order, or to protect the rights and safety of our users.</li>
       </ul>
       <p>We do not sell, rent, or trade your personal data to any third party for marketing purposes. We do not use advertising networks that track you across other websites.</p>

@@ -1285,11 +1285,12 @@ async function loadListerPageHub(){
   if(quickHub)quickHub.hidden=!LISTER_PAGE_FLAGS.pages||!LISTER_PAGE_FLAGS.quickAnswers;
   if(availabilityHub)availabilityHub.hidden=!LISTER_PAGE_FLAGS.pages||!LISTER_PAGE_FLAGS.availability;
   if(sourcesHub)sourcesHub.hidden=!LISTER_PAGE_FLAGS.pages||!LISTER_PAGE_FLAGS.sources;
-  const qrText=encodeURIComponent(link);
   const png=document.getElementById('lister-qr-png');
   const svg=document.getElementById('lister-qr-svg');
-  if(png)png.href=`https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${qrText}`;
-  if(svg)svg.href=`https://api.qrserver.com/v1/create-qr-code/?size=600x600&format=svg&data=${qrText}`;
+  try{
+    if(png){png.href=nkQrPngDataUrl(link,600);png.download='lister-page-qr.png'}
+    if(svg){svg.href=nkQrSvgDataUrl(link);svg.download='lister-page-qr.svg'}
+  }catch(e){console.error('QR generation failed:',e)}
   const caption=document.getElementById('lister-share-caption');
   if(caption)caption.textContent=`One link for all my properties. Browse, ask questions and arrange a viewing: ${link}`;
   if(LISTER_PAGE_FLAGS.quickAnswers)await loadListerQuickAnswers();
@@ -7283,10 +7284,19 @@ function shareListingToTiktok(id){
     .catch(()=>showToast('Could not copy the caption automatically','error'));
   setTimeout(()=>window.location.assign('https://www.tiktok.com/upload'),400);
 }
+function nkQrMatrix(text){const q=qrcode(0,'M');q.addData(String(text));q.make();return q}
+function nkQrSvgDataUrl(text){return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(nkQrMatrix(text).createSvgTag({cellSize:8,margin:16,scalable:true}))}
+function nkQrPngDataUrl(text,px){
+  const q=nkQrMatrix(text),n=q.getModuleCount(),margin=4,cell=Math.max(1,Math.floor(px/(n+margin*2)));
+  const size=(n+margin*2)*cell,c=document.createElement('canvas');c.width=c.height=size;
+  const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,size,size);x.fillStyle='#000';
+  for(let r=0;r<n;r++)for(let k=0;k<n;k++)if(q.isDark(r,k))x.fillRect((k+margin)*cell,(r+margin)*cell,cell,cell);
+  return c.toDataURL('image/png');
+}
 async function downloadListingQR(id){
   const l=allListings.find(x=>String(x.id)===String(id));if(!l)return;
   try{
-    const dataUrl=await urlToDataURL(`https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(lcListingUrl(l))}`);
+    const dataUrl=nkQrPngDataUrl(lcListingUrl(l),600);
     const a=document.createElement('a');
     a.href=dataUrl;a.download=`${(l.title||'listing').replace(/[^a-z0-9]+/gi,'-')}-qr.png`;
     document.body.appendChild(a);a.click();a.remove();
@@ -8775,9 +8785,8 @@ async function downloadReceiptPDF(){
    PRINTABLE BROCHURE — Premium/Elite
    ════════════════════════════════════════════════════
    Loads jsPDF on demand before generating.
-   QR code is fetched as an image from api.qrserver.com
-   (free, no key) and embedded as a data URL — no new
-   client library needed.
+   The QR code is generated locally in the browser
+   (qrcode.js) and embedded as a data URL.
 ══════════════════════════════════════ */
 async function urlToDataURL(url){
   const res=await fetch(url);
@@ -8848,8 +8857,7 @@ async function generateBrochure(id){
 
     try{
       const listingUrl=`${location.origin}/listing?id=${String(l.listing_number).padStart(6,'0')}`;
-      const qrUrl=`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(listingUrl)}`;
-      const qrDataUrl=await urlToDataURL(qrUrl);
+      const qrDataUrl=nkQrPngDataUrl(listingUrl,180);
       doc.addImage(qrDataUrl,'PNG',pageW-margin-32,y-8,32,32);
       doc.setFontSize(8);doc.setTextColor(136,135,128);
       doc.text('Scan to view listing',pageW-margin-32,y+27);
