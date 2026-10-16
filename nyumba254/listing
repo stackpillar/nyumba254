@@ -283,6 +283,17 @@ a.lncard:hover{border-color:var(--green);background:var(--green-light)}
 .state p{color:var(--text-3);margin:0 auto 20px;max-width:52ch}
 .state .btn{margin:4px}
 
+/* listing quick tools and at-a-glance cards */
+.insight-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0 6px}
+.insight{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;min-width:0}
+.insight b{display:block;font-size:14px;color:var(--green-dark);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.insight span{display:block;font-size:12.5px;color:var(--text-3);margin-top:2px}
+.quick-tools{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 2px}
+.quick-tools .qtool{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);font-size:13px;font-weight:600;color:var(--text-2)}
+.quick-tools .qtool:hover{border-color:var(--green);color:var(--green-dark);background:var(--green-light)}
+@media(max-width:900px){.insight-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:479px){.quick-tools .qtool{flex:1 1 calc(50% - 8px);padding:0 10px}}
+
 /* sticky action bar (phones and tablets). Appears only when the inline action row is off-screen. */
 .ctabar{display:none;position:fixed;left:0;right:0;bottom:var(--nk-tabbar-h);z-index:65;background:var(--white);border-top:1px solid var(--border);padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));gap:8px;align-items:center;box-shadow:0 -4px 16px rgba(0,0,0,.08);transform:translateY(110%);visibility:hidden;transition:transform .2s ease,visibility 0s linear .2s}
 .ctabar.show{transform:none;visibility:visible;transition:transform .2s ease}
@@ -806,6 +817,11 @@ function render(){
   if(m.group==='boarding'&&(P.details||{}).institution)pills.push('<span class="pill plain">Student friendly</span>');
   const pv=preview?`<div class="notice warn" role="status"><b>Preview.</b> ${P.is_disabled?'Hidden by admin'+(P.disabled_reason?': '+escHtml(P.disabled_reason):'.'):P.recycle_bin?'This listing is in the recycle bin.':'Status: '+escHtml(nkTitleCase(P.status))+'. It is not public yet.'} Only you${isOwner?'':' and the admin team'} can see this page.</div>`:'';
   const stale=!preview&&!occ&&daysOld()>CFG.staleDays?`<div class="notice warn">This listing was posted ${Math.floor(daysOld())} days ago. Confirm it is still available before you visit.</div>`:'';
+  const listingUrl=location.origin+'/listing?id='+pad(P.listing_number);
+  const postedFull=P.created_at?new Date(P.created_at).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'}):'Recently posted';
+  const quickInfo=[[shortRef(),'Reference'],[st.t,'Availability'],[viewingFeeText(P.viewing_fee),'Viewing'],[postedFull,'Posted']];
+  const quickInfoHtml=`<div class="insight-grid" aria-label="Listing highlights">${quickInfo.map(([v,l])=>`<div class="insight"><b title="${escHtml(v)}">${escHtml(v)}</b><span>${escHtml(l)}</span></div>`).join('')}</div>`;
+  const quickToolsHtml=`<div class="quick-tools" aria-label="Listing tools"><button type="button" class="qtool" data-act="share">Share listing</button><button type="button" class="qtool" data-act="copy" data-url="${escHtml(listingUrl)}">Copy link</button><button type="button" class="qtool" data-act="copy-ref">Copy reference</button><button type="button" class="qtool" data-act="map-jump">Jump to location</button>${P.seller_id?`<a class="qtool" href="/storefront?seller=${encodeURIComponent(P.seller_id)}">View lister page</a>`:''}</div>`;
   const inline=(!isOwner&&!occ)?`<div class="inline-cta md-only${P.contact_hidden?' two':''}" id="inline-cta">${P.contact_hidden?'':`<button type="button" class="btn btn-wa" data-act="wa" data-src="inline">${IC.wa}WhatsApp</button>`}<button type="button" class="btn ${P.contact_hidden?'btn-primary':'btn-outline'}" data-act="scroll">${IC.msg}Message</button>${P.contact_hidden?'':`<button type="button" class="btn btn-outline" data-act="call" data-src="inline">${IC.call}Call</button>`}<button type="button" class="btn btn-outline vbtn" data-act="viewing" data-src="inline">${IC.cal}${escHtml(viewingRequestButtonLabel())}</button></div>`:'';
   const anchors=[];if(desc)anchors.push(['sec-about','About']);if(units.length)anchors.push(['sec-units','Units']);if(rest.length)anchors.push(['sec-details','Details']);if(am.length)anchors.push(['sec-amen','Amenities']);anchors.push(['sec-loc','Location'],['sim','Similar']);
   const rules=(P.details||{}).house_rules?String(P.details.house_rules).split(/\n/).map(r=>r.trim()).filter(Boolean):[];
@@ -815,7 +831,7 @@ function render(){
     <h1 class="title">${escHtml(P.title)}</h1><div class="loc">${IC.pin}<span>${escHtml(where())}</span></div><div class="price">${priceHtml()}</div>${cost?`<div class="cost">${escHtml(cost)}</div>`:''}
     ${strip.length?`<div class="strip" style="--n:${strip.length}">${strip.map(([k,v])=>`<div class="f">${factIcon(k)}<b title="${escHtml(v)}">${escHtml(v)}</b><span>${escHtml(k)}</span></div>`).join('')}</div>`:''}
     <div class="meta">${ver?`<button type="button" class="tchip" data-act="verinfo" data-v="1" aria-haspopup="dialog" aria-label="Identity verified. What does this mean?">${IC.check}Identity verified${IC.info}</button>`:''}<span class="mchip">${IC.clock}Posted ${P.created_at?escHtml(ago(P.created_at)):''}</span><span class="mchip">${IC.eye}<span id="m-views">${Number(P.views||0).toLocaleString('en-KE')} views</span></span><span class="mchip" id="m-enq-w" hidden>${IC.msg}<span id="m-enq"></span></span></div>
-    ${stale}${inline}${isOwner?ownerHtml():''}
+    ${quickInfoHtml}${quickToolsHtml}${stale}${inline}${isOwner?ownerHtml():''}
     <div class="bnb-slot md-only"></div>
     ${anchorsHtml(anchors)}
     ${desc?`<section class="sec" id="sec-about">${secHead('about','About this property')}<div class="desc${desc.length>300?' clamp':''}" id="desc">${escHtml(desc)}</div>${desc.length>300?'<button type="button" class="link" data-act="more" id="more" aria-expanded="false">Read more ↓</button>':''}</section>`:''}
@@ -1334,6 +1350,8 @@ document.addEventListener('click',e=>{
     case 'vid':{const wrap=t;const f=document.createElement('div');f.className='vid';f.innerHTML=`<iframe src="${escHtml(t.dataset.src)}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="Video walkthrough"></iframe>`;wrap.replaceWith(f);break}
     case 'share':track('share');openShare();break;
     case 'copy':navigator.clipboard.writeText(t.dataset.url).then(()=>{t.innerHTML='<span>✓</span>Copied';toast('Link copied')},()=>toast('Could not copy the link','error'));break;
+    case 'copy-ref':navigator.clipboard.writeText(shortRef()).then(()=>toast('Listing reference copied'),()=>toast('Could not copy the reference','error'));break;
+    case 'map-jump':{const sec=$('sec-loc');if(sec){sec.scrollIntoView({behavior:'smooth',block:'start'});track('location_jump')}break;}
     case 'report':$('rp-reason').value='';$('rp-amt-wrap').hidden=true;$('rp-banner').textContent='';nkOpenModal($('ov-report'));break;
     case 'report-fee':$('rp-reason').value=P?.viewing_fee===0?'viewing_fee_free_listing':'viewing_fee_dispute';$('rp-amt-wrap').hidden=false;$('rp-banner').textContent='';nkOpenModal($('ov-report'));break;
     case 'send-report':sendReport();break;

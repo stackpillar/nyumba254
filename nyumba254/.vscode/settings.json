@@ -21,5 +21,6 @@
   ],
   "[typescript]": {
     "editor.defaultFormatter": "denoland.vscode-deno"
-  }
+  },
+  "r.lsp.promptToInstall": false
 }
