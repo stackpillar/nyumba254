@@ -3962,60 +3962,220 @@ async function runValuation(){
 // ── AI Listing Assistant (Elite) ──────────────────────────────────
 let eliteAiListingLimit = 20, eliteAiListingLimitLoaded = false;
 let aiListingLastResult = null;
+let aiListingGenerating = false;
 
 async function loadAiListingLimit(){
-  if(eliteAiListingLimitLoaded)return;
+  if(eliteAiListingLimitLoaded)return true;
   try{
-    const{data}=await db.from('platform_settings').select('value').eq('key','elite_ai_listing_uses_monthly').maybeSingle();
-    if(data?.value) eliteAiListingLimit = Number(data.value)||eliteAiListingLimit;
+    const{data,error}=await db.from('platform_settings').select('value').eq('key','elite_ai_listing_uses_monthly').maybeSingle();
+    if(error)throw error;
+    if(data?.value!==null&&data?.value!==undefined&&data.value!==''){
+      const limit=Number(data.value);
+      if(Number.isFinite(limit)&&limit>=0)eliteAiListingLimit=limit;
+    }
     eliteAiListingLimitLoaded = true;
-  }catch(e){/* fall back to default */}
+    return true;
+  }catch(e){
+    console.error('Could not load AI listing usage limit:',e);
+    return false;
+  }
 }
 
-async function openAiListingModal(){
+function aiListingFacts(listing){
+  if(!listing)return'';
+  const details=listing.details&&typeof listing.details==='object'?listing.details:{};
+  const facts=[];
+  const add=(label,value)=>{
+    if(value===null||value===undefined||value==='')return;
+    const text=String(value).trim();
+    if(text)facts.push(`${label}: ${text}`);
+  };
+  const pretty=value=>String(value).replace(/[_-]+/g,' ').replace(/\b\w/g,char=>char.toUpperCase());
+  if(listing.title)add('Current title',listing.title);
+  if(listing.description)add('Current description',String(listing.description).replace(/\s+/g,' ').trim());
+  add('Category',listing.category?pretty(listing.category):'');
+  if(listing.area)add('Area',listing.area);
+  if(listing.county)add('County',listing.county);
+  if(details.bedrooms!==null&&details.bedrooms!==undefined&&details.bedrooms!==''){
+    add('Bedrooms',Number(details.bedrooms)===0?'Studio':details.bedrooms);
+  }
+  add('Bathrooms',details.bathrooms);
+  add('Floor area',details.size_sqm?`${details.size_sqm} m²`:'');
+  add('Furnished',details.furnished?pretty(details.furnished):'');
+  add('Parking',details.parking?pretty(details.parking):'');
+  add('Security',details.security?pretty(details.security):'');
+  add('Guests',details.guests);
+  add('Total beds',details.total_beds);
+  add('Gender preference',details.gender?pretty(details.gender):'');
+  add('Nearest institution',details.institution);
+  add('Property type',details.property_type?pretty(details.property_type):'');
+  add('Property condition',details.condition?pretty(details.condition):'');
+  add('Lease type',details.lease_type?pretty(details.lease_type):'');
+  add('Available from',details.available_from);
+  if(Array.isArray(details.room_types)){
+    details.room_types.forEach(room=>{
+      if(!room||typeof room!=='object')return;
+      const parts=[room.label,room.capacity?`${room.capacity} capacity`:null,room.quantity?`${room.quantity} available`:null].filter(Boolean);
+      add('Room type',parts.join(' · '));
+    });
+  }
+  const amenityLabels=new Map(AMENITY_KEYS.map(item=>[item.key,item.label]));
+  const amenities=[...(Array.isArray(listing.amenities)?listing.amenities:[]),...(Array.isArray(details.custom_amenities)?details.custom_amenities:[])];
+  const seenAmenities=new Set();
+  amenities.forEach(item=>{
+    if(item===null||item===undefined||item==='')return;
+    const label=amenityLabels.get(String(item))||pretty(item);
+    const key=label.toLocaleLowerCase();
+    if(seenAmenities.has(key))return;
+    seenAmenities.add(key);
+    add('Amenity',label);
+  });
+  return [...new Set(facts)].join('\n');
+}
+
+function aiListingSelectionChanged(listingId){
+  const listing=allListings.find(item=>String(item.id)===String(listingId));
+  aiInvalidateListingResult();
+  const applyBtn=document.getElementById('btn-apply-ai-listing');
+  const loadBtn=document.getElementById('ai-listing-load-details');
+  if(applyBtn)applyBtn.style.display=(listingId&&aiListingLastResult)?'inline-flex':'none';
+  if(loadBtn)loadBtn.disabled=!listing;
+  const notes=document.getElementById('ai-listing-notes');
+  const hint=document.getElementById('ai-listing-notes-hint');
+  if(!listing){
+    if(notes.value===aiListingAutoNotes)notes.value='';
+    aiListingAutoNotes='';
+    document.getElementById('ai-listing-category').value='apartment';
+    document.getElementById('ai-listing-price-type').value='rent';
+    document.getElementById('ai-listing-bedrooms').value='';
+    document.getElementById('ai-listing-area').value='';
+    document.getElementById('ai-listing-price').value='';
+    aiListingUpdateFrequency();
+    if(hint)hint.textContent='Only use accurate details. The generated copy is a draft for you to review.';
+    return;
+  }
+  document.getElementById('ai-listing-category').value=listing.category||'apartment';
+  document.getElementById('ai-listing-price-type').value=listing.price_type==='sale'?'sale':'rent';
+  aiListingUpdateFrequency(listing.price_frequency);
+  document.getElementById('ai-listing-bedrooms').value=listing.details?.bedrooms??'';
+  document.getElementById('ai-listing-area').value=listing.area||'';
+  document.getElementById('ai-listing-price').value=listing.price??'';
+  const mayAutofill=!notes.value.trim()||notes.value===aiListingAutoNotes;
+  if(mayAutofill)aiLoadSelectedListingDetails(false);
+  else if(hint)hint.textContent='Your edited notes are kept. Use “Load listing details” to replace them with this listing’s saved facts.';
+}
+
+let aiListingAutoNotes='';
+function aiListingUpdateFrequency(preferred){
+  const category=document.getElementById('ai-listing-category').value;
+  const priceTypeSelect=document.getElementById('ai-listing-price-type');
+  const saleOption=priceTypeSelect.querySelector('option[value="sale"]');
+  const saleAllowed=category!=='airbnb'&&category!=='boarding';
+  if(saleOption)saleOption.disabled=!saleAllowed;
+  if(!saleAllowed)priceTypeSelect.value='rent';
+  const priceType=priceTypeSelect.value;
+  const options=priceType==='sale'
+    ? [['once','One-time (for sale)']]
+    : category==='airbnb'
+      ? [['night','Per night'],['week','Per week']]
+      : category==='boarding'
+        ? [['month','Per month'],['term','Per term'],['semester','Per semester']]
+        : [['month','Per month']];
+  const select=document.getElementById('ai-listing-frequency');
+  select.innerHTML=options.map(([value,label])=>`<option value="${value}">${label}</option>`).join('');
+  const fallback=priceType==='sale'?'once':category==='airbnb'?'night':'month';
+  select.value=options.some(([value])=>value===preferred)?preferred:fallback;
+  select.disabled=options.length===1;
+}
+
+function aiInvalidateListingResult(){
+  if(!aiListingLastResult)return;
+  aiListingLastResult=null;
+  const results=document.getElementById('ai-listing-results');
+  const apply=document.getElementById('btn-apply-ai-listing');
+  const hint=document.getElementById('ai-listing-notes-hint');
+  if(results)results.style.display='none';
+  if(apply)apply.style.display='none';
+  if(hint)hint.textContent='Your inputs changed. Generate again to refresh the draft before applying it.';
+}
+
+function aiLoadSelectedListingDetails(force){
+  const listingId=document.getElementById('ai-listing-select')?.value;
+  const listing=allListings.find(item=>String(item.id)===String(listingId));
+  if(!listing)return;
+  if(force)aiInvalidateListingResult();
+  const notes=document.getElementById('ai-listing-notes');
+  const hint=document.getElementById('ai-listing-notes-hint');
+  if(!force&&notes.value.trim()&&notes.value!==aiListingAutoNotes)return;
+  notes.value=aiListingFacts(listing);
+  aiListingAutoNotes=notes.value;
+  if(hint)hint.textContent=notes.value?'Saved listing details loaded. Check that they are current and accurate before generating.':'This listing has no saved description or feature details yet. Add accurate facts before generating.';
+}
+
+async function openAiListingModal(listingId=''){
   const sel=document.getElementById('ai-listing-select');
   sel.innerHTML='<option value="">Just generate text — I\'ll copy it myself</option>'+allListings.map(l=>`<option value="${l.id}">${escHtml(l.title)}</option>`).join('');
   document.getElementById('ai-listing-category').value='apartment';
   document.getElementById('ai-listing-price-type').value='rent';
+  aiListingUpdateFrequency('month');
   document.getElementById('ai-listing-bedrooms').value='';
-  document.getElementById('ai-listing-area').value=allListings[0]?.area||'';
+  document.getElementById('ai-listing-area').value='';
   document.getElementById('ai-listing-notes').value='';
+  document.getElementById('ai-listing-notes-hint').textContent='Only use accurate details. The generated copy is a draft for you to review.';
+  document.getElementById('ai-listing-load-details').disabled=true;
+  aiListingAutoNotes='';
   document.getElementById('ai-listing-price').value='';
   document.getElementById('ai-listing-results').style.display='none';
   document.getElementById('btn-apply-ai-listing').style.display='none';
   aiListingLastResult=null;
   document.getElementById('ai-listing-usage-note').textContent = 'Loading usage…';
   openModal('modal-ai-listing');
-  await loadAiListingLimit();
+  if(listingId&&allListings.some(item=>String(item.id)===String(listingId))){
+    sel.value=String(listingId);
+    aiListingSelectionChanged(sel.value);
+  }
+  const limitLoaded=await loadAiListingLimit();
   const monthKey = currentMonthKey();
-  const usedThisMonth = (currentProfile?.ai_listing_uses_month===monthKey) ? (currentProfile?.ai_listing_uses_count||0) : 0;
-  document.getElementById('ai-listing-usage-note').textContent = `${Math.max(0,eliteAiListingLimit-usedThisMonth)} of ${eliteAiListingLimit} generations left this month`;
+  const usageProfile=ownerProfile||currentProfile;
+  const usedThisMonth = (usageProfile?.ai_listing_uses_month===monthKey) ? (usageProfile?.ai_listing_uses_count||0) : 0;
+  document.getElementById('ai-listing-usage-note').textContent = limitLoaded
+    ? `${Math.max(0,eliteAiListingLimit-usedThisMonth)} of ${eliteAiListingLimit} generations left this month`
+    : 'Usage limit could not be loaded; the generation service will check your allowance.';
 }
 
 async function generateAiListing(){
-  const monthKey = currentMonthKey();
-  const usedThisMonth = (currentProfile?.ai_listing_uses_month===monthKey) ? (currentProfile?.ai_listing_uses_count||0) : 0;
-  if(usedThisMonth >= eliteAiListingLimit){
-    showToast(`You've used all ${eliteAiListingLimit} AI generations for this month — resets next month.`,'error');
-    return;
-  }
-  const notes = document.getElementById('ai-listing-notes').value.trim();
-  if(!notes){ showToast('Add a few bullet points about the property first','error'); return; }
-
-  const payload = {
-    category: document.getElementById('ai-listing-category').value,
-    priceType: document.getElementById('ai-listing-price-type').value,
-    bedrooms: document.getElementById('ai-listing-bedrooms').value || null,
-    area: document.getElementById('ai-listing-area').value.trim(),
-    notes,
-    currentPrice: document.getElementById('ai-listing-price').value || null,
-  };
-
+  if(aiListingGenerating)return;
+  aiListingGenerating=true;
   const btn=document.getElementById('btn-generate-ai-listing');
-  btn.disabled=true; btn.textContent='Generating…';
-  const resultsEl=document.getElementById('ai-listing-results');
-
+  const formControls=Array.from(document.querySelectorAll('#modal-ai-listing .modal-body input, #modal-ai-listing .modal-body select, #modal-ai-listing .modal-body textarea, #ai-listing-load-details'));
+  const previousDisabled=formControls.map(control=>control.disabled);
   try{
+    btn.disabled=true; btn.textContent='Generating…';
+    const limitLoaded=await loadAiListingLimit();
+    const monthKey = currentMonthKey();
+    const usageProfile=ownerProfile||currentProfile;
+    const usedThisMonth = (usageProfile?.ai_listing_uses_month===monthKey) ? (usageProfile?.ai_listing_uses_count||0) : 0;
+    if(limitLoaded&&usedThisMonth >= eliteAiListingLimit){
+      showToast(`You've used all ${eliteAiListingLimit} AI generations for this month — resets next month.`,'error');
+      return;
+    }
+    const notes = document.getElementById('ai-listing-notes').value.trim();
+    if(!notes){ showToast('Add a few bullet points about the property first','error'); return; }
+    if(notes.length>8000){showToast('Keep the listing details under 8,000 characters','error');return;}
+
+    const payload = {
+      listingId: document.getElementById('ai-listing-select').value || null,
+      category: document.getElementById('ai-listing-category').value,
+      priceType: document.getElementById('ai-listing-price-type').value,
+      priceFrequency: document.getElementById('ai-listing-frequency').value,
+      bedrooms: document.getElementById('ai-listing-bedrooms').value || null,
+      area: document.getElementById('ai-listing-area').value.trim(),
+      notes,
+      currentPrice: document.getElementById('ai-listing-price').value || null,
+    };
+
+    formControls.forEach(control=>{control.disabled=true;});
+    const resultsEl=document.getElementById('ai-listing-results');
     const{data:{session}}=await db.auth.getSession();
     if(!session) throw new Error('Please sign in again');
     const res=await fetch(`${EDGE_URL}/ai-listing-generate`,{
@@ -4024,14 +4184,15 @@ async function generateAiListing(){
       body:JSON.stringify(payload),
     });
     const body=await res.json();
-    if(!res.ok||body.error) throw new Error(body.error||'Generation failed');
+    if(!res.ok||body.error) throw new Error(body.error||`Generation failed (${res.status})`);
+    if(!body.title&&!body.description)throw new Error('The AI service returned no listing text. Please try again.');
 
     aiListingLastResult = body;
     document.getElementById('ai-listing-out-title').value = body.title||'';
     document.getElementById('ai-listing-out-desc').value = body.description||'';
     const priceEl=document.getElementById('ai-listing-out-price');
-    if(body.suggestedPriceMin && body.suggestedPriceMax){
-      const suffix = payload.priceType==='rent' ? '/mo' : '';
+    if(Number.isFinite(Number(body.suggestedPriceMin))&&Number.isFinite(Number(body.suggestedPriceMax))&&body.suggestedPriceMin!==null&&body.suggestedPriceMax!==null){
+      const suffix = {month:'/mo',night:'/night',week:'/week',term:'/term',semester:'/semester'}[payload.priceFrequency]||'';
       priceEl.textContent = body.suggestedPriceMin===body.suggestedPriceMax
         ? `KES ${Number(body.suggestedPriceMin).toLocaleString('en-KE')}${suffix}`
         : `KES ${Number(body.suggestedPriceMin).toLocaleString('en-KE')} – ${Number(body.suggestedPriceMax).toLocaleString('en-KE')}${suffix}`;
@@ -4041,12 +4202,21 @@ async function generateAiListing(){
     resultsEl.style.display='block';
     document.getElementById('btn-apply-ai-listing').style.display = document.getElementById('ai-listing-select').value ? 'inline-flex' : 'none';
 
-    currentProfile = { ...currentProfile, ai_listing_uses_month: monthKey, ai_listing_uses_count: body.usedCount };
-    document.getElementById('ai-listing-usage-note').textContent = `${Math.max(0,eliteAiListingLimit-body.usedCount)} of ${eliteAiListingLimit} generations left this month`;
+    const usedCount=Number(body.usedCount);
+    if(Number.isFinite(usedCount)){
+      const updatedUsageProfile={...(ownerProfile||currentProfile),ai_listing_uses_month:monthKey,ai_listing_uses_count:usedCount};
+      ownerProfile=updatedUsageProfile;
+      if(!isTeamMember)currentProfile=updatedUsageProfile;
+    }
+    document.getElementById('ai-listing-usage-note').textContent = Number.isFinite(usedCount)
+      ? `${Math.max(0,eliteAiListingLimit-usedCount)} of ${eliteAiListingLimit} generations left this month`
+      : 'Generation complete. Usage will refresh the next time this dialog opens.';
   }catch(e){
     showToast('Could not generate: '+(e.message||String(e)),'error');
   }finally{
+    aiListingGenerating=false;
     btn.disabled=false; btn.textContent='✨ Generate';
+    formControls.forEach((control,index)=>{control.disabled=previousDisabled[index];});
   }
 }
 
@@ -4063,14 +4233,19 @@ async function applyAiListingToSelected(){
   if(!title||!description){showToast('Title and description can\'t be empty','error');return;}
   const btn=document.getElementById('btn-apply-ai-listing');
   btn.disabled=true;btn.textContent='Applying…';
-  const{error}=await db.from('listings').update({title,description}).eq('id',listingId);
-  btn.disabled=false;btn.textContent='Apply to selected listing';
-  if(error){showToast('Could not apply: '+error.message,'error');return;}
-  const idx=allListings.findIndex(l=>l.id===listingId);
-  if(idx!==-1){allListings[idx]={...allListings[idx],title,description};}
-  renderListingsTable();renderQuickListings();
-  showToast('Applied to listing ✓','success');
-  closeModal('modal-ai-listing');
+  try{
+    const{error}=await db.from('listings').update({title,description}).eq('id',listingId);
+    if(error)throw error;
+    const idx=allListings.findIndex(l=>String(l.id)===String(listingId));
+    if(idx!==-1){allListings[idx]={...allListings[idx],title,description};}
+    renderListingsTable();renderQuickListings();
+    showToast('Applied to listing ✓','success');
+    closeModal('modal-ai-listing');
+  }catch(error){
+    showToast('Could not apply: '+(error.message||String(error)),'error');
+  }finally{
+    btn.disabled=false;btn.textContent='Apply to selected listing';
+  }
 }
 
 function updateConciergeGate(sub){
@@ -6466,7 +6641,9 @@ async function bulkAiRewriteSelectedListings(){
         method:'POST',
         headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${session.access_token}`},
         body:JSON.stringify({
+          listingId:l.id,
           category:l.category,priceType:l.price_type,
+          priceFrequency:l.price_frequency||(l.price_type==='rent'?'month':'once'),
           bedrooms:(l.details&&l.details.bedrooms)||null,area:l.area||'',
           notes:(l.description||l.title||'').slice(0,800),
           currentPrice:l.price||null,
@@ -6857,16 +7034,8 @@ async function lcSetCover(listingId,photoId){
 }
 function openAiListingForListing(id){
   const l=allListings.find(x=>String(x.id)===String(id));
-  openAiListingModal();
   if(!l)return;
-  setTimeout(()=>{
-    const sel=document.getElementById('ai-listing-select');if(sel)sel.value=l.id;
-    const cat=document.getElementById('ai-listing-category');if(cat&&l.category)cat.value=l.category;
-    const pt=document.getElementById('ai-listing-price-type');if(pt&&l.price_type)pt.value=l.price_type;
-    const bd=document.getElementById('ai-listing-bedrooms');if(bd)bd.value=(l.details&&l.details.bedrooms)||'';
-    const ar=document.getElementById('ai-listing-area');if(ar)ar.value=l.area||'';
-    const pr=document.getElementById('ai-listing-price');if(pr)pr.value=l.price||'';
-  },120);
+  openAiListingModal(id);
 }
 function openValuationForListing(id){
   const l=allListings.find(x=>String(x.id)===String(id));
@@ -9674,7 +9843,8 @@ const Tour = (() => {
     { selector:'#lc-view-btn', page:'listings', title:'Sort, density and CSV', desc:'Tap ⚙ View to change the sort order, switch between roomy cards and a compact list, or download all your listings as a CSV.' },
     { selector:'#lc-select-toggle-btn', page:'listings', title:'Do several at once', desc:'Tap ☑ Select to tick multiple listings, then pause, resume, duplicate, feature, share or delete them all in one go. On mobile you can also long-press any card to jump straight into select mode.' },
     { selector:'#listings-table-card', page:'listings', title:'Your listing cards', desc:"Each card shows the photo, price, status, live stats and a health-score ring — tap the ring for exactly what to fix, or tap anywhere on the card for the full detail panel." },
-    { selector:'#listings-table-card', page:'listings', title:'Share, and everything else', desc:'Share to WhatsApp, Facebook, Instagram, TikTok, or a QR code — free for every seller. The ⋯ menu holds the rest: duplicate, manage units, add video, request a price change, download a brochure, pause or delete.' },
+    { selector:'#listings-table-card', page:'listings', title:'Share, and everything else', desc:'Share to WhatsApp, Facebook, Instagram, TikTok, or a QR code. The ⋯ menu holds tools to duplicate, manage units, add video, request a price change, download a brochure, pause or delete.' },
+    { selector:'#listings-table-card', page:'listings', title:'Rewrite listing copy with AI (Elite)', desc:'If your plan includes Elite, open a listing’s ⋯ menu and choose “Rewrite with AI”. Saved details and amenities prefill the form; review the generated title and description, then apply them only when you are happy.' },
 
     { selector:'#nav-messages', page:'listings', title:'Messages', desc:'Tap "Messages" to see every conversation with buyers in one place.', click:true },
     { selector:'#thread-list', page:'messages', title:'Your inbox', desc:'All your buyer conversations live here, newest first. A green dot marks unread ones.' },
@@ -9721,13 +9891,13 @@ const Tour = (() => {
 
   function maybeStart(){
     if(!currentUser) return;
-    storageKey = `ny_tour_v4_seen_${currentUser.id}`;
+    storageKey = `ny_tour_v5_seen_${currentUser.id}`;
     if(localStorage.getItem(storageKey)) return;
     idx = 0;
     start();
   }
   function restart(){
-    if(currentUser){ storageKey = `ny_tour_v4_seen_${currentUser.id}`; localStorage.removeItem(storageKey); }
+    if(currentUser){ storageKey = `ny_tour_v5_seen_${currentUser.id}`; localStorage.removeItem(storageKey); }
     idx = 0;
     start();
   }
@@ -10009,7 +10179,7 @@ async function joinEliteWaitlist(){
   showToast("You're on the list — we'll notify you here and by email when Elite opens.",'success');
 }
 function tourOffer(){
-  const key=`ny_tour_v4_seen_${currentUser.id}`;
+  const key=`ny_tour_v5_seen_${currentUser.id}`;
   if(localStorage.getItem(key)||document.getElementById('tour-offer'))return;
   const d=document.createElement('div');
   d.id='tour-offer';
