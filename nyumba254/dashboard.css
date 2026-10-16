@@ -653,7 +653,7 @@
     .rl-toolbar-icon-btn:hover{border-color:#7c3aed;color:#7c3aed}
     @media(max-width:700px){.rl-kanban{grid-template-columns:1fr}.rl-heatmap{grid-template-columns:repeat(6,1fr)}.rl-heatmap-labels{grid-template-columns:repeat(6,1fr)}}
 
-    /* ===== Support Chat Widget v2 ===== */
+    /* ===== Support Chat Widget v5 ===== */
     .scw-fab{position:fixed;bottom:calc(28px + env(safe-area-inset-bottom));right:calc(28px + env(safe-area-inset-right));z-index:400;display:flex;align-items:center;gap:9px;padding:10px 20px 10px 10px;border-radius:40px;background:var(--white);border:1px solid var(--border);box-shadow:var(--shadow-lg);cursor:pointer;transition:transform .18s,opacity .15s;font-family:'Inter',sans-serif}
     .scw-fab.scw-hidden{display:none !important}
     .scw-fab:hover{transform:translateY(-2px)}
@@ -675,6 +675,10 @@
     .scw-header-title{font-family:'Playfair Display',serif;font-size:21px;color:white;line-height:1.25}
     .scw-header-sub{font-family:'Playfair Display',serif;font-size:21px;color:rgba(255,255,255,0.85);line-height:1.25}
     .scw-body{flex:1;overflow:hidden;position:relative;background:var(--surface)}
+    .scw-status{position:absolute;z-index:3;top:10px;left:12px;right:12px;display:flex;align-items:center;gap:12px;justify-content:space-between;padding:10px 12px;border:1px solid #f0c7c2;border-radius:10px;background:var(--white);box-shadow:var(--shadow);color:var(--red);font-size:12px;line-height:1.45}
+    .scw-status[hidden]{display:none}
+    .scw-status button{flex-shrink:0;border:1px solid var(--border);border-radius:7px;background:var(--white);padding:6px 10px;color:var(--text);font:600 12px 'Inter',sans-serif;cursor:pointer}
+    .scw-status button:hover{border-color:var(--green);color:var(--green-dark)}
     .scw-view{display:none;flex-direction:column;height:100%;overflow-y:auto}
     .scw-view.active{display:flex}
     .scw-home-scroll{padding:16px 18px 20px}

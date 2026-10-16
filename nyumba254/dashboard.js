@@ -4928,7 +4928,8 @@ async function pollNewMessages(){
   if(!allListings.length)return;
   const ids=allListings.map(l=>l.id);
   const msgCutoff=new Date(Date.now()-MSG_HISTORY_DAYS*86400000).toISOString();
-  const{data:msgData}=await db.from('messages').select('*').in('listing_id',ids).gte('created_at',msgCutoff).order('created_at',{ascending:true});
+  const{data:msgData,error}=await db.from('messages').select('*').in('listing_id',ids).gte('created_at',msgCutoff).order('created_at',{ascending:true});
+  if(error){console.error('Message refresh failed:',error);return;}
   const hadCount=allMessages.length;
   allMessages=msgData||[];
   buildThreads();updateNavBadges();
@@ -9092,6 +9093,7 @@ function handleVisibilityChange(){
     clearInterval(msgPollTimer);msgPollTimer=null;
     clearInterval(listingStatusPollTimer);listingStatusPollTimer=null;
     clearInterval(notifPollTimer);notifPollTimer=null;
+    clearInterval(scwPollTimer);scwPollTimer=null;
   }else{
     // A backgrounded tab's realtime sockets can silently drop — force a
     // resubscribe of all three, not just resume the poll-fallback timers.
@@ -9104,19 +9106,36 @@ function handleVisibilityChange(){
     if(!msgPollTimer)msgPollTimer=setInterval(pollNewMessages,MSG_POLL_MS);
     if(!listingStatusPollTimer)listingStatusPollTimer=setInterval(pollListingStatusChanges,LISTING_STATUS_POLL_MS);
     if(!notifPollTimer)notifPollTimer=setInterval(loadNotifBell,60000);
+    if(scwLoaded){scwPoll().catch(scwHandleLoadError);if(!scwPollTimer)scwPollTimer=setInterval(()=>scwPoll().catch(scwHandleLoadError),45000);}
   }
 }
 
 /* ══════════════════════════════════════
-   SUPPORT CHAT WIDGET v4
+   SUPPORT CHAT WIDGET v5
 ══════════════════════════════════════ */
 let scwOpen=false,scwTab='home',scwSellerName='',scwSellerInits='',scwTickets=[],scwActiveTicket=null,scwPollTimer=null,scwLoaded=false,scwChannel=null,scwBotBusy=false,scwSoundEnabled=true,scwTypingHideTimer=null;
+let scwStatusRetry=null;
+function scwSetStatus(message,retry){
+  const banner=document.getElementById('scw-status'),text=document.getElementById('scw-status-text');
+  if(!banner||!text)return;
+  text.textContent=message||'';banner.hidden=!message;scwStatusRetry=retry||null;
+}
+async function scwHandleLoadError(error){
+  console.error('Support widget refresh failed:',error);
+  scwSetStatus('Support data could not be refreshed. Check your connection and retry.',()=>scwPoll());
+}
+async function scwRetry(){
+  if(!scwStatusRetry)return;
+  try{await scwStatusRetry();}
+  catch(error){await scwHandleLoadError(error);}
+}
 
 const SCW_TOPICS=[
   {id:'payments',label:'💳 Payments & M-Pesa'},
   {id:'listing_status',label:'🏠 Listing status & approval'},
   {id:'edit_delete',label:'✏️ Editing or deleting a listing'},
   {id:'pricing',label:'💰 Fees & pricing'},
+  {id:'viewing_fee',label:'📅 Viewing fees'},
   {id:'messages',label:'📬 Messages & enquiries'},
   {id:'bug',label:'🐛 Report a bug'},
   {id:'other',label:'💬 Something else'},
@@ -9124,14 +9143,14 @@ const SCW_TOPICS=[
 
 const SCW_TREE={
   payments:[
-    {label:'My listing still shows trial/pending after paying',a:'Confirmed M-Pesa payments usually reflect within 2–5 minutes. If it\'s been longer, share your M-Pesa reference code and we\'ll trace it.'},
-    {label:'How do I pay for a listing?',a:'Go to <strong>My listings</strong> and tap <strong>Pay now</strong> on an approved listing. Pay via M-Pesa to Paybill 522522 (account 1298476615), then enter the 10-character M-Pesa code. We verify it within minutes.'},
+    {label:'My listing still shows trial or pending after I paid',a:'Check the payment status on <strong>My listings</strong>. If it has not updated, contact support with the listing number and M-Pesa transaction code. Never share your M-Pesa PIN or one-time password.'},
+    {label:'How do I pay for a listing?',a:'Open <strong>My listings</strong> and follow the payment instructions shown for that listing. Review the amount and terms before confirming. Never share your M-Pesa PIN or one-time password with anyone.'},
     {label:'I was charged twice',handoff:true},
     {label:'Something else about payments',handoff:true},
   ],
   listing_status:[
-    {label:'My listing has been pending for a while',a:'Listings are usually reviewed within 24 hours. If it\'s been longer, share the listing name and we\'ll check on it.'},
-    {label:'My listing was rejected',a:'Rejections are usually due to missing photos, an unclear price, or a duplicate post. Share the listing name and we\'ll tell you exactly what to fix.'},
+    {label:'My listing has been pending for a while',a:'The current status and any available updates appear under <strong>My listings</strong>. If you need help, contact support with the listing number.'},
+    {label:'My listing was rejected',a:'Open the listing in <strong>My listings</strong> and review the reason shown there. If anything is unclear, send support the listing number and we can help explain the next step.'},
     {label:'My account or listing is disabled',handoff:true},
     {label:'Something else about listing status',handoff:true},
   ],
@@ -9139,16 +9158,21 @@ const SCW_TREE={
     {label:"I can't edit my pending/rejected listing",a:'Editing is locked while a listing awaits admin review, to avoid re-review loops. Once it\'s active or paused, edits unlock from the listings table.'},
     {label:'How do I mark a listing as sold/occupied?',a:'On <strong>My listings</strong>, use the ✓ icon on an active listing — it hides it from public search but keeps your messages and history. For a multi-unit property, use the purple "Manage units" icon instead to mark individual units.'},
     {label:'How do I mark one unit occupied in a multi-unit property?',a:'On <strong>My listings</strong>, use the purple grid icon ("Manage units") on that property\'s row. Pick the unit type, tap "Mark one occupied", and optionally note the floor, door number, and position.'},
-    {label:'How do I permanently delete a listing?',a:'Use the 🗑 icon on the listing row. This is permanent and removes its messages, enquiries, and unit types too, so make sure first.'},
+    {label:'How do I delete a listing?',a:'Open <strong>My listings</strong> and use the listing actions. Read the confirmation carefully before proceeding; if you are unsure, pause and ask support first.'},
     {label:'Something else about editing',handoff:true},
   ],
   pricing:[
-    {label:'How much does a listing cost?',a:'Pricing depends on your plan and listing category — check the trial banner on each listing, or ask an agent for current rates. Multi-unit properties pay a base fee plus a small per-unit fee.'},
+    {label:'How much does a listing cost?',a:'Any applicable listing price and plan terms are shown in your dashboard before you confirm payment. Check the payment details for the specific listing, or contact support if something is unclear.'},
     {label:'Can I get a refund?',handoff:true},
     {label:'Something else about pricing',handoff:true},
   ],
+  viewing_fee:[
+    {label:'How should I show my viewing fee?',a:'Set the viewing fee on the listing before publishing. Agents and companies set their own fee; when no fee is set, the listing should say <strong>Free viewing</strong>. Nyumba254 does not collect viewing fees — they are paid directly to the lister.'},
+    {label:'A buyer has a question about my viewing fee',a:'Keep the fee and any viewing conditions clear on the listing before contact. Buyers should pay only the stated viewing fee to the person they meet, get a receipt, and never pay rent or a deposit before viewing.'},
+    {label:'Something else about viewing fees',handoff:true},
+  ],
   messages:[
-    {label:"A buyer's message isn't showing up",a:'New messages appear instantly. If one is missing, refresh the page, and if it\'s still missing, share the buyer\'s name and listing.'},
+    {label:"A buyer's message isn't showing up",a:'Open <strong>Messages</strong> and refresh the dashboard. If the conversation is still missing, contact support with the buyer name and listing number.'},
     {label:'How do I reply to a buyer?',a:'Open <strong>Messages</strong> on the main dashboard, pick the conversation, and type in the reply box — or tap WhatsApp on that thread.'},
     {label:'Something else about messages',handoff:true},
   ],
@@ -9217,15 +9241,15 @@ async function scwInit(){
     scwSellerInits=scwSellerName.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()||'S';
     const nameEl=document.getElementById('scw-greet-name');if(nameEl)nameEl.textContent=scwName();
   }catch(err){console.error('SCW profile error:',err);}
-  try{await scwLoadTickets();}catch(err){console.error('SCW load error:',err);}
-  scwPollTimer=setInterval(scwPoll,45000);
+  try{await scwLoadTickets();}catch(err){await scwHandleLoadError(err);}
+  if(!document.hidden)scwPollTimer=setInterval(()=>scwPoll().catch(scwHandleLoadError),45000);
 }
 
 async function scwLoadTickets(){
   const{data,error}=await db.from('chat_sessions').select('*').eq('session_type','seller')
     .like('session_key','seller_'+currentUser.id+'_%')
     .order('last_msg_at',{ascending:false});
-  if(error){console.error(error);return;}
+  if(error)throw error;
   const prevById={};scwTickets.forEach(t=>{prevById[t.id]=t;});
   const prevIds=scwTickets.map(t=>t.id).sort().join(',');
   scwTickets=(data||[]).map(t=>{
@@ -9236,6 +9260,7 @@ async function scwLoadTickets(){
   await scwRefreshUnreadCounts();
   scwRefreshListViews();
   scwUpdateBadges();
+  scwSetStatus('');
   // Only tear down/rebuild the realtime channel when the ticket id set
   // actually changed (or we don't have a live channel yet) — not on
   // every 45s poll, which was causing constant reconnect/flicker.
@@ -9274,7 +9299,7 @@ async function scwHandleNewSession(session){
   if(scwFindTicket(session.id))return; // already have it (e.g. we created it ourselves)
   const ticket={...session,status:session.status||(session.is_resolved?'resolved':'open'),_messages:[],_unread:0,_topicId:null,_botMsgs:{},_suggested:false,_clarified:false,_textSuggested:false};
   scwTickets.unshift(ticket);
-  await scwRefreshUnreadCounts();
+  try{await scwRefreshUnreadCounts();}catch(error){await scwHandleLoadError(error);}
   scwSubscribeRealtime(); // widen the chat_messages filter to include this new id
   scwUpdateBadges();scwRefreshListViews();
   if(session.session_key && !scwIsBroadcast(ticket)) scwPlayNotifySound();
@@ -9330,7 +9355,8 @@ function scwBroadcastTyping(){
 async function scwRefreshUnreadCounts(){
   if(!scwTickets.length)return;
   const ids=scwTickets.map(t=>t.id);
-  const{data}=await db.from('chat_messages').select('session_id').in('session_id',ids).eq('sender','admin').is('read_at',null);
+  const{data,error}=await db.from('chat_messages').select('session_id').in('session_id',ids).eq('sender','admin').is('read_at',null);
+  if(error)throw error;
   const counts={};(data||[]).forEach(m=>{counts[m.session_id]=(counts[m.session_id]||0)+1;});
   scwTickets.forEach(t=>t._unread=counts[t.id]||0);
 }
@@ -9353,6 +9379,7 @@ async function scwPoll(){
         }
       }
     }
+    scwSetStatus('');
   }
 }
 
@@ -9467,8 +9494,10 @@ function scwStartNewTicket(){scwSetTab('home');scwShowTopicPicker('home');}
 
 async function scwOpenTicket(id,isNew){
   const t=scwTickets.find(x=>String(x.id)===String(id));if(!t)return;
+  try{if(!isNew)await scwLoadTicketMessages(t);}
+  catch(error){console.error('Could not load support conversation:',error);scwSetStatus('This conversation could not be loaded. Check your connection and retry.',()=>scwOpenTicket(id,isNew));return;}
   scwActiveTicket=t;
-  if(!isNew)await scwLoadTicketMessages(t);
+  scwSetStatus('');
   scwSetTab('messages');
   document.getElementById('scw-msg-empty').style.display='none';
   document.getElementById('scw-msg-inbox').style.display='none';
@@ -9486,7 +9515,8 @@ async function scwOpenTicket(id,isNew){
 }
 
 async function scwLoadTicketMessages(t){
-  const{data}=await db.from('chat_messages').select('*').eq('session_id',t.id).order('created_at',{ascending:true});
+  const{data,error}=await db.from('chat_messages').select('*').eq('session_id',t.id).order('created_at',{ascending:true});
+  if(error)throw error;
   t._messages=data||[];
 }
 
@@ -9549,12 +9579,14 @@ function scwShowOptions(buttons){
 
 async function scwPersistVisitor(ticket,body){
   const{data,error}=await db.from('chat_messages').insert({session_id:ticket.id,sender:'visitor',body}).select().single();
-  if(!error&&data){ticket._messages=ticket._messages||[];ticket._messages.push(data);ticket.last_msg_at=data.created_at;await db.from('chat_sessions').update({last_msg_at:data.created_at}).eq('id',ticket.id);}
+  if(error){console.error('Could not save support message:',error);scwSetStatus('Could not save your support message. Check your connection and retry.',()=>scwPoll());return null;}
+  if(data){ticket._messages=ticket._messages||[];ticket._messages.push(data);ticket.last_msg_at=data.created_at;const{error:touchError}=await db.from('chat_sessions').update({last_msg_at:data.created_at}).eq('id',ticket.id);if(touchError)console.error('Could not update support ticket activity time:',touchError);}
   return data;
 }
 async function scwPersistBot(ticket,body){
   const{data,error}=await db.from('chat_messages').insert({session_id:ticket.id,sender:'admin',body,read_at:new Date().toISOString()}).select().single();
-  if(!error&&data){ticket._messages=ticket._messages||[];ticket._messages.push(data);ticket._botMsgs=ticket._botMsgs||{};ticket._botMsgs[data.id]=true;ticket.last_msg_at=data.created_at;await db.from('chat_sessions').update({last_msg_at:data.created_at}).eq('id',ticket.id);}
+  if(error){console.error('Could not save support assistant message:',error);scwSetStatus('A support response could not be saved. Please retry or contact support again.',()=>scwPoll());return null;}
+  if(data){ticket._messages=ticket._messages||[];ticket._messages.push(data);ticket._botMsgs=ticket._botMsgs||{};ticket._botMsgs[data.id]=true;ticket.last_msg_at=data.created_at;const{error:touchError}=await db.from('chat_sessions').update({last_msg_at:data.created_at}).eq('id',ticket.id);if(touchError)console.error('Could not update support ticket activity time:',touchError);}
   return data;
 }
 
@@ -9578,11 +9610,11 @@ function scwFindTicket(id){return scwTickets.find(x=>String(x.id)===String(id));
 async function scwPickLeaf(ticketId,idx){
   const ticket=scwFindTicket(ticketId);if(!ticket||scwBotBusy)return;
   scwBotBusy=true;
-  scwRemoveOptions();
   const opts=SCW_TREE[ticket._topicId]||[];
   const opt=opts[idx];if(!opt){scwBotBusy=false;return;}
+  if(!await scwPersistVisitor(ticket,opt.label)){scwBotBusy=false;return;}
+  scwRemoveOptions();
   scwAppendBubble('visitor',opt.label);
-  await scwPersistVisitor(ticket,opt.label);
   if(opt.handoff){ticket._pendingCategory=opt.label;await scwGoToHandoff(ticket);return;}
   scwShowTyping();await scwWait(700);scwHideTyping();
   scwAppendBubble('admin',opt.a,true);
@@ -9610,9 +9642,10 @@ async function scwHandoffFromLeaf(ticketId,idx){
 async function scwResolveByBot(ticketId){
   const ticket=scwFindTicket(ticketId);
   if(!ticket||scwBotBusy)return;
-  scwBotBusy=true;scwRemoveOptions();
+  scwBotBusy=true;
+  if(!await scwPersistVisitor(ticket,'Yes, that solved it — thanks!')){scwBotBusy=false;return;}
+  scwRemoveOptions();
   scwAppendBubble('visitor','Yes, that solved it — thanks!');
-  await scwPersistVisitor(ticket,'Yes, that solved it — thanks!');
   scwShowTyping();await scwWait(500);scwHideTyping();
   const bye='Glad we could help! 🎉 This ticket is now closed — start a new topic any time if you need more help.';
   scwAppendBubble('admin',bye);
@@ -9675,9 +9708,10 @@ async function scwReRoute(ticketId,topicId){
   const ticket=scwFindTicket(ticketId);if(!ticket||scwBotBusy)return;
   const topicObj=SCW_TOPICS.find(t=>t.id===topicId);
   const topicLabel=topicObj?topicObj.label.replace(/^\S+\s/,''):topicId;
-  scwBotBusy=true;scwRemoveOptions();
+  scwBotBusy=true;
+  if(!await scwPersistVisitor(ticket,topicLabel)){scwBotBusy=false;return;}
+  scwRemoveOptions();
   scwAppendBubble('visitor',topicLabel);
-  await scwPersistVisitor(ticket,topicLabel);
   ticket._topicId=topicId;
   // A fresh topic deserves one fresh chance at an FAQ suggestion, since a
   // different category may have a genuinely relevant answer. But _clarified
@@ -9722,7 +9756,8 @@ async function scwMarkTicketRead(t){
   // Re-read the actual unread count from the database rather than assuming
   // the RPC fully succeeded — this is the ground-truth fix. If something is
   // still off, this reflects that instead of hiding it.
-  const{count}=await db.from('chat_messages').select('id',{count:'exact',head:true}).eq('session_id',t.id).eq('sender','admin').is('read_at',null);
+  const{count,error:countError}=await db.from('chat_messages').select('id',{count:'exact',head:true}).eq('session_id',t.id).eq('sender','admin').is('read_at',null);
+  if(countError){await scwHandleLoadError(countError);return;}
   t._unread=count||0;
   scwUpdateBadges();scwRefreshListViews();
 }
@@ -9750,10 +9785,18 @@ function scwRenderTicketList(){
 
 async function scwSend(){
   const t=scwActiveTicket;if(!t||t.status!=='open'||scwBotBusy)return;
-  const input=document.getElementById('scw-input');const body=input.value.trim();if(!body)return;
+  const input=document.getElementById('scw-input');if(!input)return;const body=input.value.trim();if(!body)return;
   input.value='';input.style.height='auto';
   scwAppendBubble('visitor',body);
-  await scwPersistVisitor(t,body);
+  const saved=await scwPersistVisitor(t,body);
+  if(!saved){
+    input.value=body;
+    const mc=document.getElementById('scw-msgs');if(mc){mc.innerHTML='';(t._messages||[]).forEach(m=>scwAppendBubble(m.sender,m.body,!!(t._botMsgs&&t._botMsgs[m.id])));}
+    t._renderedCount=(t._messages||[]).length;
+    scwSetStatus('Your message could not be saved. It has been restored to the composer; retry when your connection is available.',()=>scwSend());
+    return;
+  }
+  scwSetStatus('');
   scwRenderRecentTicket();
 
   const visitorMsgCount=(t._messages||[]).filter(m=>m.sender==='visitor').length;

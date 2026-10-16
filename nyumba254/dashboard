@@ -1472,13 +1472,17 @@
 
 <div class="scw-panel" id="scw-panel">
   <div class="scw-header">
-    <button class="scw-close" onclick="scwToggle()">✕</button>
+    <button class="scw-close" onclick="scwToggle()" aria-label="Close support">✕</button>
     <div class="scw-header-avatars"><span class="scw-av">NK</span></div>
-    <div class="scw-header-title">Hello <span id="scw-greet-name">there</span>!</div>
-    <div class="scw-header-sub">How can we help?</div>
+    <div class="scw-header-title">Nyumba254 support</div>
+    <div class="scw-header-sub">Hello <span id="scw-greet-name">there</span> — how can we help?</div>
   </div>
 
   <div class="scw-body">
+    <div class="scw-status" id="scw-status" role="alert" aria-live="assertive" hidden>
+      <span id="scw-status-text"></span>
+      <button type="button" onclick="scwRetry()">Retry</button>
+    </div>
     <div class="scw-view active" id="scw-view-home">
       <div class="scw-home-scroll">
         <div class="scw-section-label">Recent ticket</div>
@@ -1487,7 +1491,7 @@
         <div id="scw-home-cta-wrap">
           <button class="scw-cta" onclick="scwShowTopicPicker('home')">
             <div class="scw-cta-icon">💬</div>
-            <div class="scw-cta-text"><strong>Send us a message</strong><span>We typically reply in under a minute</span></div>
+            <div class="scw-cta-text"><strong>Contact support</strong><span>We’ll reply in this conversation as soon as we can</span></div>
             <div class="scw-cta-arrow">→</div>
           </button>
         </div>

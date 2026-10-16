@@ -494,7 +494,7 @@ function Table(cfg){
     if(!keep){st.rows=[];paintBody();}
     try{
       if(cfg.local){
-        if(st.dirty||!st.all){st.all=await cfg.fetch(st);st.dirty=false;}
+        if(st.dirty||!st.all){const all=await cfg.fetch(st);if(my!==seq)return;st.all=all;st.dirty=false;}
         const rows=localRows();st.count=rows.length;st.rows=rows.slice(st.page*PAGE,(st.page+1)*PAGE);st.hasMore=(st.page+1)*PAGE<rows.length;
         st.counts=cfg.tabs?Object.fromEntries(cfg.tabs.map(t=>[t.id,st.all.filter(x=>!cfg.tabFilter||cfg.tabFilter(x,t.id,{...st,q:''})).length])):{};
       }else{
@@ -538,7 +538,7 @@ let B={};
 const NAV=[
   {g:'Overview',i:[['overview','Dashboard','grid']]},
   {g:'Marketplace',i:[['listings','Listings','home','pending'],['recycle','Recycle bin','trash'],['payments','Payments','card','payments']]},
-  {g:'People',i:[['sellers','Sellers','users'],['verification','Verification','shield','verification'],['role-requests','Role change requests','users'],['premium','Premium sellers','star'],['enquiries','Enquiries','msg','enquiries'],['concierge','Concierge inbox','msg','concierge'],['support','Support chat','life','support']]},
+  {g:'People',i:[['sellers','Sellers','users'],['verification','Verification','shield','verification'],['role-requests','Role change requests','users','roleRequests'],['premium','Premium sellers','star'],['enquiries','Enquiries','msg','enquiries'],['concierge','Concierge inbox','msg','concierge'],['support','Support chat','life','support']]},
   {g:'Trust & safety',i:[['reports','Reports','flag','reports'],['risk-signals','Risk signals','flag'],['reviews','Reviews','star','reviews'],['reveals','Contact reveals','phone']]},
   {g:'Insights',i:[['analytics','Site visits','chart'],['activity','Activity log','clock']]},
   {g:'Platform',i:[['updates','Platform updates','bell'],['settings','Settings','gear']]},
@@ -573,17 +573,39 @@ function setAdminLiveStatus(state,label){
 }
 let adminLiveChannel=null,adminFallbackTimer=null;
 function playAdminNotificationSound(){window.NKNotificationSound?.play();}
+let adminRefreshTimer=null;
+let badgeWarningAt=0;
+function warnBadgeRefresh(label,error){
+  console.error(`Admin ${label} refresh failed:`,error);
+  if(Date.now()-badgeWarningAt>30000){badgeWarningAt=Date.now();ui.toast('Some admin activity counts could not be refreshed.','err');}
+}
+function scheduleAdminReload(routes){
+  const routeId=parseHash().id||'overview',needsOverviewReload=routeId==='overview'&&!ui.active?.reload;
+  if(!routes.includes(ui.active?.cfg?.route)&&!needsOverviewReload)return;
+  clearTimeout(adminRefreshTimer);
+  adminRefreshTimer=setTimeout(()=>{
+    if(routes.includes(ui.active?.cfg?.route))ui.active?.reload?.();
+    else if((parseHash().id||'overview')==='overview'&&!ui.active?.reload)route();
+  },800);
+}
 function subscribeAdminRealtime(){
   if(adminLiveChannel)db.removeChannel(adminLiveChannel);
   setAdminLiveStatus('connecting','Connecting');
   const update=debounce(refreshBadges,1200);
   adminLiveChannel=db.channel('admin-live')
-    .on('postgres_changes',{event:'*',schema:'public',table:'reports'},()=>{update();if(ui.active?.cfg.route==='reports')ui.active.reload();})
+    .on('postgres_changes',{event:'*',schema:'public',table:'reports'},()=>{update();scheduleAdminReload(['reports']);})
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'reports'},()=>{playAdminNotificationSound();ui.toast('A new report needs review','err');})
-    .on('postgres_changes',{event:'*',schema:'public',table:'payments'},()=>{update();if(ui.active?.cfg.route==='payments')ui.active.reload();})
+    .on('postgres_changes',{event:'*',schema:'public',table:'payments'},()=>{update();scheduleAdminReload(['payments','sellers']);})
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'payments'},payload=>{if(['pending','pending_verification'].includes(payload.new.status)){playAdminNotificationSound();ui.toast('A new payment needs review','');}})
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'listings'},payload=>{update();playAdminNotificationSound();ui.toast('A new listing was submitted');if(ui.active?.cfg.route==='listings')ui.active.reload();})
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages'},payload=>{update();if(payload.new.sender!=='admin'){playAdminNotificationSound();if(parseHash().id!=='support')ui.toast('New support message','',{label:'Open',fn:()=>go('support')});}})
+    .on('postgres_changes',{event:'*',schema:'public',table:'listings'},payload=>{update();scheduleAdminReload(['listings','recycle','sellers','overview']);if(payload.eventType==='INSERT'){playAdminNotificationSound();ui.toast('A new listing was submitted');}})
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'enquiries'},()=>{update();scheduleAdminReload(['enquiries','concierge']);playAdminNotificationSound();ui.toast('A new buyer enquiry was received','');})
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},payload=>{update();scheduleAdminReload(['enquiries','concierge']);if(payload.new.sender==='buyer'){playAdminNotificationSound();ui.toast('A new buyer message was received','');}})
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages'},payload=>{update();if(payload.new.sender!=='admin'){playAdminNotificationSound();if(parseHash().id!=='support')ui.toast('New support message','',{label:'Open',fn:()=>go('support')});}scheduleAdminReload(['support']);})
+    .on('postgres_changes',{event:'*',schema:'public',table:'chat_sessions'},()=>{update();scheduleAdminReload(['support']);})
+    .on('postgres_changes',{event:'*',schema:'public',table:'profiles'},payload=>{update();scheduleAdminReload(['sellers','verification','role-requests']);if(payload.eventType==='UPDATE'&&payload.new.verification_status==='pending'&&payload.old.verification_status!=='pending'){playAdminNotificationSound();ui.toast('A new identity verification is waiting for review');}})
+    .on('postgres_changes',{event:'*',schema:'public',table:'account_type_change_requests'},()=>{update();scheduleAdminReload(['role-requests']);})
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'account_type_change_requests'},payload=>{if(payload.new.status==='pending'){playAdminNotificationSound();ui.toast('A new role change request needs review');}})
+    .on('postgres_changes',{event:'*',schema:'public',table:'reviews'},()=>{update();scheduleAdminReload(['reviews']);})
     .subscribe(status=>{
       if(status==='SUBSCRIBED'){setAdminLiveStatus('live','Live updates connected');refreshBadges();}
       else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){setAdminLiveStatus('offline','Live updates reconnecting');console.warn('Admin realtime channel status:',status);}
@@ -592,16 +614,21 @@ function subscribeAdminRealtime(){
 }
 async function signOut(){await db.auth.signOut();location.reload();}
 async function refreshBadges(){
-  const cnt=(t,f)=>f(db.from(t).select('*',{count:'exact',head:true})).then(r=>r.count||0,()=>0);
-  const[pend,pay,ver,rep,rev,eq,mq,chat,conc]=await Promise.all([
+  const cnt=async(t,f)=>{
+    try{const result=await f(db.from(t).select('*',{count:'exact',head:true}));if(result.error){warnBadgeRefresh(`${t} badge`,result.error);return null;}return result.count??0;}
+    catch(error){warnBadgeRefresh(`${t} badge`,error);return null;}
+  };
+  const[pend,pay,ver,rep,rev,eq,mq,chat,conc,roleRequests]=await Promise.all([
     cnt('listings',q=>q.eq('status','pending').eq('recycle_bin',false)),cnt('payments',q=>q.in('status',['pending','pending_verification'])),
     cnt('profiles',q=>q.neq('role','admin').eq('verification_status','pending')),cnt('reports',q=>q.eq('status','open')),
     cnt('reviews',q=>q.eq('review_type','platform').is('response_text',null)),cnt('enquiries',q=>q.is('admin_read_at',null)),
     cnt('messages',q=>q.eq('sender','buyer').is('admin_read_at',null)),
-    db.from('chat_sessions').select('unread_admin').eq('is_resolved',false).then(r=>(r.data||[]).reduce((s,x)=>s+(x.unread_admin||0),0),()=>0),conciergeUnread()]);
-  B={pending:pend,payments:pay,verification:ver,reports:rep,reviews:rev,enquiries:eq+mq,support:chat,concierge:conc};
+    db.from('chat_sessions').select('unread_admin').eq('is_resolved',false).then(r=>{if(r.error){warnBadgeRefresh('support chat',r.error);return null;}return(r.data||[]).reduce((s,x)=>s+(x.unread_admin||0),0);}).catch(error=>{warnBadgeRefresh('support chat',error);return null;}),conciergeUnread(),
+    cnt('account_type_change_requests',q=>q.eq('status','pending'))]);
+  const keep=(next,key)=>next??B[key]??0;
+  B={pending:keep(pend,'pending'),payments:keep(pay,'payments'),verification:keep(ver,'verification'),reports:keep(rep,'reports'),reviews:keep(rev,'reviews'),enquiries:keep(eq,'enquiries')+keep(mq,'messages'),messages:keep(mq,'messages'),support:keep(chat,'support'),concierge:keep(conc,'concierge'),roleRequests:keep(roleRequests,'roleRequests')};
   $$('[data-b]').forEach(el=>{const n=B[el.dataset.b]||0;el.textContent=n>99?'99+':n;el.classList.toggle('z',!n);});
-  const tot=pend+pay+ver+rep+chat;document.title=(tot?`(${tot}) `:'')+'Admin — Nyumba254';
+  const tot=B.pending+B.payments+B.verification+B.reports+B.support+B.roleRequests;document.title=(tot?`(${tot}) `:'')+'Admin — Nyumba254';
   return B;
 }
 const parseHash=()=>{const[id,qs]=(location.hash.slice(2)||'overview').split('?');return{id,params:Object.fromEntries(new URLSearchParams(qs||''))};};
@@ -609,13 +636,13 @@ const go=(id,params)=>{const q=params?new URLSearchParams(Object.entries(params)
 let cur=null;
 async function route(){
   const{id,params}=parseHash(),v=VIEWS[id]||VIEWS.overview,vid=VIEWS[id]?id:'overview';
-  cur?.cleanup.forEach(f=>{try{f();}catch{}});ui.active=null;window.onbeforeunload=null;const ctx={cleanup:[]};cur=ctx;
+  if(cur){cur.cancelled=true;cur.cleanup.forEach(f=>{try{f();}catch{}});}ui.active=null;window.onbeforeunload=null;const ctx={cleanup:[],cancelled:false};cur=ctx;
   $$('#sb .ni[data-v]').forEach(a=>{a.classList.toggle('on',a.dataset.v===vid);a.dataset.v===vid?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current');});
   $('#title').textContent=v.title;$('#sb').classList.remove('open');
-  const el=$('#view');el.innerHTML='';
+  const host=$('#view'),el=document.createElement('div');host.replaceChildren(el);
   try{const t=await v.mount(el,params,ctx);if(cur===ctx)ui.active=t&&t.st?t:null;}
-  catch(e){console.error(e);el.innerHTML=`<div class="card empty"><h4>This page failed to load</h4><p>${esc(e.message||e)}</p></div>`;}
-  window.scrollTo(0,0);
+  catch(e){console.error(e);if(cur===ctx)el.innerHTML=`<div class="card empty"><h4>This page failed to load</h4><p>${esc(e.message||e)}</p></div>`;}
+  if(cur===ctx)window.scrollTo(0,0);
 }
 let gp=0;
 document.addEventListener('keydown',e=>{
@@ -1312,10 +1339,37 @@ async function markEnq(r){
 /* ═════════ SUPPORT CHAT ═════════ */
 VIEWS.support={title:'Support chat',async mount(el,p,ctx){
   let sessions=[],act=null,msgs=[],filter='all',q='',ch=null,drafts={},dFor=null;
-  el.innerHTML=`<div class="card chat"><div class="cl"><div style="padding:10px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--bd)"><input class="in" id="cq" placeholder="Search…" style="flex:1;min-width:120px">${['all','unread','open','sellers','visitors'].map(f=>`<button class="btn sm ${f==='all'?'ok':''}" data-f="${f}">${f}</button>`).join('')}</div><div id="cli"></div></div><div class="ct" id="ct"><div class="empty" style="margin:auto"><h4>Select a conversation</h4></div></div></div>`;
+  el.innerHTML=`<div class="card chat"><div class="cl"><div style="padding:10px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--bd)"><input class="in" id="cq" placeholder="Search…" style="flex:1;min-width:120px">${['all','unread','open','sellers','visitors'].map(f=>`<button class="btn sm ${f==='all'?'ok':''}" data-f="${f}">${f}</button>`).join('')}</div><div id="support-status" role="status" aria-live="polite" hidden style="padding:10px;color:var(--red)"></div><div id="cli"><div class="empty">Loading conversations…</div></div></div><div class="ct" id="ct"><div class="empty" style="margin:auto"><h4>Select a conversation</h4></div></div></div>`;
   const isSel=s=>s.session_type==='seller'||(s.session_key||'').startsWith('seller_');
+  const setStatus=(message,canRetry=false)=>{
+    const node=$('#support-status',el);if(!node)return;
+    node.hidden=!message;
+    node.innerHTML=message?`${esc(message)}${canRetry?' <button class="btn sm" data-support-retry>Retry</button>':''}`:'';
+  };
+  const suggestedReply=s=>{
+    const name=(s.visitor_name||'there').trim().split(/\s+/)[0]||'there';
+    const topic=s.topic||s.page||'your request';
+    const incoming=[...msgs].reverse().find(m=>m.sender!=='admin'),text=(incoming?.body||'').toLowerCase();
+    const next=/payment|paid|mpesa|m-pesa|charged/.test(text)
+      ?'Please share the listing number and M-Pesa transaction code only; never your PIN or one-time password.'
+      :/listing|property|approval|pending|rejected/.test(text)
+        ?'Please share the listing number and the status or reason shown in your dashboard.'
+        :/login|sign in|password|account/.test(text)
+          ?'Please share the email on your account and the exact error shown; never share your password or one-time code.'
+          :'Please share the relevant listing or ticket reference and any error shown, if applicable.';
+    return `Hi ${name}, thanks for contacting Nyumba254 about ${topic}. I’ll review your message and follow up here. ${next}`;
+  };
   async function list(){
-    const{data}=await db.from('chat_sessions').select('*').order('last_msg_at',{ascending:false,nullsFirst:false}).limit(200);sessions=data||[];paintList();
+    const{data,error}=await db.from('chat_sessions').select('*').order('last_msg_at',{ascending:false,nullsFirst:false}).limit(200);
+    if(error){console.error('Support conversation list failed:',error);setStatus('Could not load support conversations. Check your connection and retry.',true);return false;}
+    sessions=data||[];setStatus('');paintList();return true;
+  }
+  async function refresh(){
+    if(!await list())return;
+    if(!act)return;
+    const{data,error}=await db.from('chat_messages').select('*').eq('session_id',act.id).order('created_at',{ascending:true});
+    if(error){console.error('Support thread refresh failed:',error);setStatus('Could not refresh the selected conversation. Retry to reload it.',true);return;}
+    msgs=data||[];setStatus('');paintThread();
   }
   function paintList(){
     let r=sessions.filter(s=>filter==='unread'?(s.unread_admin||0)>0:filter==='open'?!s.is_resolved:filter==='sellers'?isSel(s):filter==='visitors'?!isSel(s):true);
@@ -1325,35 +1379,48 @@ VIEWS.support={title:'Support chat',async mount(el,p,ctx){
   }
   function paintThread(){
     const s=act,had=document.activeElement?.id==='rt';if($('#rt',el)&&dFor)drafts[dFor]=$('#rt',el).value;const draft=drafts[s.id]||'';dFor=s.id;
-    $('#ct',el).innerHTML=`<div style="padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;gap:10px;align-items:center;flex-shrink:0"><div style="flex:1;min-width:0"><b>${esc(s.visitor_name||'Visitor')}</b><br><small>${isSel(s)?'Registered seller':'Visitor'} · ${esc(s.topic||s.page||'')}${s.is_resolved?' · resolved':''}</small></div><button class="btn sm" id="rs">${s.is_resolved?'Reopen':'Resolve'}</button></div><div class="msgs" id="ms">${msgs.length?msgs.map(m=>`<div class="m ${m.sender==='admin'?'me':''}" style="${m.sender==='admin'?'':'align-self:flex-start'}">${esc(m.body)}<small>${dtt(m.created_at)}</small></div>`).join(''):'<div class="empty">No messages yet — say hello.</div>'}</div><div class="reply"><textarea id="rt" rows="2" placeholder="${s.is_resolved?'Replying will reopen this conversation…':'Type a reply… (Enter to send)'}"></textarea><button class="btn pri" id="sn">Send</button></div>`;
+    const proposal=suggestedReply(s),hasIncoming=msgs.some(m=>m.sender!=='admin');
+    $('#ct',el).innerHTML=`<div style="padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;gap:10px;align-items:center;flex-shrink:0"><div style="flex:1;min-width:0"><b>${esc(s.visitor_name||'Visitor')}</b><br><small>${isSel(s)?'Registered seller':'Visitor'} · ${esc(s.topic||s.page||'')}${s.is_resolved?' · resolved':''}</small></div><button class="btn sm" id="rs">${s.is_resolved?'Reopen':'Resolve'}</button></div><div class="msgs" id="ms">${msgs.length?msgs.map(m=>`<div class="m ${m.sender==='admin'?'me':''}" style="${m.sender==='admin'?'':'align-self:flex-start'}">${esc(m.body)}<small>${dtt(m.created_at)}</small></div>`).join(''):'<div class="empty">No messages yet — say hello.</div>'}</div>${hasIncoming?`<div style="margin:0 12px 8px;padding:10px 12px;background:var(--goldl);border-radius:10px"><small style="color:var(--gold);font-weight:700">Suggested reply</small><p style="margin:4px 0 8px;color:var(--tx2)">${esc(proposal)}</p><button class="btn sm ok" id="ssend">Send suggested reply</button> <button class="btn sm" id="sedit">Edit first</button></div>`:''}<div class="reply"><textarea id="rt" rows="2" placeholder="${s.is_resolved?'Replying will reopen this conversation…':'Type a reply… (Enter to send)'}"></textarea><button class="btn pri" id="sn">Send</button></div>`;
     const ms=$('#ms',el);ms.scrollTop=ms.scrollHeight;
     const rt=$('#rt',el);rt.value=draft;if(had)rt.focus();
-    $('#rs',el).onclick=async()=>{await db.from('chat_sessions').update({is_resolved:!s.is_resolved}).eq('id',s.id);s.is_resolved=!s.is_resolved;paintThread();paintList();refreshBadges();};
-    const send=async()=>{const t=$('#rt',el);const b=t.value.trim();if(!b)return;t.value='';
-      if(s.is_resolved){await db.from('chat_sessions').update({is_resolved:false}).eq('id',s.id);s.is_resolved=false;}
+    $('#rs',el).onclick=async()=>{const{error}=await db.from('chat_sessions').update({is_resolved:!s.is_resolved}).eq('id',s.id);if(error){ui.toast('Could not update conversation: '+error.message,'err');return;}s.is_resolved=!s.is_resolved;paintThread();paintList();refreshBadges();};
+    const send=async(text)=>{const t=$('#rt',el);const b=(text===undefined?t.value:text).trim();if(!b)return;t.value='';
+      if(s.is_resolved){const{error}=await db.from('chat_sessions').update({is_resolved:false}).eq('id',s.id);if(error){ui.toast('Could not reopen conversation: '+error.message,'err');t.value=b;return;}s.is_resolved=false;}
       const{data,error}=await db.from('chat_messages').insert({session_id:s.id,sender:'admin',body:b}).select().single();if(error){ui.toast(error.message,'err');t.value=b;return;}
-      if(!msgs.some(m=>m.id===data.id))msgs.push(data);await db.from('chat_sessions').update({last_msg_at:new Date().toISOString()}).eq('id',s.id);paintThread();paintList();$('#rt',el)?.focus();};
+      if(!msgs.some(m=>m.id===data.id))msgs.push(data);const{error:touchError}=await db.from('chat_sessions').update({last_msg_at:new Date().toISOString()}).eq('id',s.id);if(touchError)ui.toast('Message sent, but the conversation timestamp could not be updated: '+touchError.message,'err');paintThread();paintList();$('#rt',el)?.focus();};
+    $('#ssend',el)?.addEventListener('click',()=>send(proposal));
+    $('#sedit',el)?.addEventListener('click',()=>{rt.value=proposal;rt.focus();});
     $('#sn',el).onclick=send;rt.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}};
   }
   async function open(id){
-    act=sessions.find(s=>s.id===id)||(await db.from('chat_sessions').select('*').eq('id',id).single()).data;if(!act)return;
-    await db.from('chat_sessions').update({unread_admin:0}).eq('id',id);act.unread_admin=0;
-    const{data}=await db.from('chat_messages').select('*').eq('session_id',id).order('created_at',{ascending:true});msgs=data||[];
-    const un=msgs.filter(m=>m.sender!=='admin'&&!m.read_at).map(m=>m.id);if(un.length)await db.from('chat_messages').update({read_at:new Date().toISOString()}).in('id',un);
+    let session=sessions.find(s=>s.id===id);
+    if(!session){const{data,error}=await db.from('chat_sessions').select('*').eq('id',id).single();if(error){ui.toast('Could not open conversation: '+error.message,'err');return;}session=data;}
+    const{data,error}=await db.from('chat_messages').select('*').eq('session_id',id).order('created_at',{ascending:true});
+    if(error){ui.toast('Could not load conversation messages: '+error.message,'err');return;}
+    if(ctx.cancelled)return;
+    act=session;msgs=data||[];
+    const{error:readError}=await db.from('chat_sessions').update({unread_admin:0}).eq('id',id);
+    if(readError)ui.toast('Messages loaded, but the unread count could not be cleared: '+readError.message,'err');
+    let readSucceeded=!readError;
+    const un=msgs.filter(m=>m.sender!=='admin'&&!m.read_at).map(m=>m.id);if(un.length){const readAt=new Date().toISOString(),{error:markError}=await db.from('chat_messages').update({read_at:readAt}).in('id',un);if(markError){readSucceeded=false;ui.toast('Messages loaded, but read status could not be updated: '+markError.message,'err');}else msgs.forEach(m=>{if(un.includes(m.id))m.read_at=readAt;});}
+    if(readSucceeded)act.unread_admin=0;
     paintThread();paintList();refreshBadges();
+    if(ctx.cancelled)return;
     if(ch)db.removeChannel(ch);
-    ch=db.channel('adm-thread-'+id).on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:`session_id=eq.${id}`},pl=>{if(msgs.some(m=>m.id===pl.new.id))return;msgs.push(pl.new);if(pl.new.sender!=='admin')db.from('chat_messages').update({read_at:new Date().toISOString()}).eq('id',pl.new.id);paintThread();}).subscribe();
+    ch=db.channel('adm-thread-'+id).on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:`session_id=eq.${id}`},pl=>{if(msgs.some(m=>m.id===pl.new.id))return;msgs.push(pl.new);if(pl.new.sender!=='admin'){db.from('chat_messages').update({read_at:new Date().toISOString()}).eq('id',pl.new.id).then(({error})=>{if(error)console.error('Could not mark incoming support message read:',error);});}paintThread();list();}).subscribe();
   }
   async function forSeller(id){
     const key=`seller_${id}_support`;let{data:s}=await db.from('chat_sessions').select('id').eq('session_key',key).maybeSingle();
     if(!s){const{data:pr}=await db.from('profiles').select('full_name').eq('id',id).single();const r=await db.from('chat_sessions').insert({session_key:key,session_type:'seller',seller_id:id,visitor_name:pr?.full_name||'Seller',page:'dashboard.html',topic:'Message from admin',status:'open',is_resolved:false,last_msg_at:new Date().toISOString()}).select().single();if(r.error)throw r.error;s=r.data;}
     return s.id;
   }
-  el.onclick=e=>{const c=e.target.closest('.ci');if(c)open(c.dataset.id);const f=e.target.closest('[data-f]');if(f){filter=f.dataset.f;paintList();}};
+  el.onclick=e=>{const retry=e.target.closest('[data-support-retry]');if(retry){refresh();return;}const c=e.target.closest('.ci');if(c)open(c.dataset.id);const f=e.target.closest('[data-f]');if(f){filter=f.dataset.f;paintList();}};
   $('#cq',el).oninput=e=>{q=e.target.value.toLowerCase();paintList();};
   await list();
-  const live=db.channel('adm-chat-list').on('postgres_changes',{event:'*',schema:'public',table:'chat_sessions'},()=>{list();refreshBadges();}).subscribe();
-  ctx.cleanup.push(()=>{db.removeChannel(live);if(ch)db.removeChannel(ch);});
+  const live=db.channel('adm-chat-list').on('postgres_changes',{event:'*',schema:'public',table:'chat_sessions'},()=>{list();refreshBadges();}).subscribe(status=>{if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED')console.warn('Admin support realtime status:',status,'— using periodic refresh.');});
+  if(ctx.cancelled){db.removeChannel(live);return;}
+  const poll=setInterval(()=>{if(!document.hidden)refresh();},30000);
+  ctx.cleanup.push(()=>{clearInterval(poll);db.removeChannel(live);if(ch)db.removeChannel(ch);});
   try{if(p.seller)await open(await forSeller(p.seller));else if(p.session)await open(p.session);}catch(e){ui.toast(e.message,'err');}
 }};
 
@@ -1514,17 +1581,20 @@ function openVerify(u,T){
 }
 /* ═════════ CONCIERGE INBOX (managed chat: admin replies to buyers as the seller) ═════════ */
 async function conciergeScope(){
-  const{data:sellers}=await db.from('profiles').select('id,full_name,email,phone,concierge_enabled_at').eq('concierge_enabled',true).order('concierge_enabled_at',{ascending:false});
+  const{data:sellers,error:sellerError}=await db.from('profiles').select('id,full_name,email,phone,concierge_enabled_at').eq('concierge_enabled',true).order('concierge_enabled_at',{ascending:false});
+  if(sellerError)throw sellerError;
   const ids=(sellers||[]).map(s=>s.id);if(!ids.length)return{sellers:[],listings:[]};
-  const{data:listings}=await db.from('listings').select('id,title,area,sub_area,price,price_type,is_multi_unit,listing_number,seller_id,listing_units(price)').in('seller_id',ids);
+  const{data:listings,error:listingError}=await db.from('listings').select('id,title,area,sub_area,price,price_type,is_multi_unit,listing_number,seller_id,listing_units(price)').in('seller_id',ids);
+  if(listingError)throw listingError;
   return{sellers:sellers||[],listings:listings||[]};
 }
 async function conciergeUnread(){
   try{
     const{listings}=await conciergeScope();const ids=listings.map(l=>l.id);if(!ids.length)return 0;
     const[a,b]=await Promise.all([db.from('enquiries').select('id',{count:'exact',head:true}).in('listing_id',ids).is('admin_read_at',null),db.from('messages').select('id',{count:'exact',head:true}).in('listing_id',ids).eq('sender','buyer').is('admin_read_at',null)]);
+    if(a.error)throw a.error;if(b.error)throw b.error;
     return(a.count||0)+(b.count||0);
-  }catch{return 0;}
+  }catch(error){console.error('Could not load concierge unread count:',error);return null;}
 }
 async function notifyBuyerIfOffline(buyerToken,listingTitle,text,listingId){
   if(!buyerToken)return;
@@ -1543,21 +1613,26 @@ const CC_QR=[
   {id:'thanks',label:'🙏 Thank you',match:['thank','asante'],body:c=>`You're most welcome, ${c.f}! Let us know if you have any other questions.`},
   {id:'followup',label:'👋 Follow-up',match:[],body:c=>`Hi ${c.f}, just checking in — are you still interested in ${c.t}? Happy to answer any questions.`}];
 VIEWS.concierge={title:'Concierge inbox',async mount(el,p,ctx){
-  let sellers=[],lmap={},threads=[],active=null,sf='all',q='',chans=[],pres=null,online=false,typingT=0,typingSent=0,drafts={},dFor=null;
-  el.innerHTML=`<div class="grid4" style="margin-bottom:12px" id="cst"></div><div class="card chat" style="height:calc(100vh - 220px)"><div class="cl"><div style="padding:10px;border-bottom:1px solid var(--bd)"><input class="in" id="cq" placeholder="Search buyer, listing or seller…"><div id="csc" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div></div><div id="cli"><div style="padding:20px"><div class="sk"></div></div></div></div><div class="ct" id="ct"><div class="empty" style="margin:auto"><h4>Select a conversation</h4><p>Replies appear to the buyer as coming from the seller.</p></div></div></div>`;
+  let sellers=[],lmap={},threads=[],active=null,sf='all',q='',chans=[],pres=null,online=false,typingT=0,typingSent=0,drafts={},dFor=null,refreshTimer=null,subscribedListingKey='';
+  el.innerHTML=`<div class="grid4" style="margin-bottom:12px" id="cst"></div><div id="cc-status" role="status" aria-live="polite" hidden style="margin-bottom:12px;color:var(--red)"></div><div class="card chat" style="height:calc(100vh - 220px)"><div class="cl"><div style="padding:10px;border-bottom:1px solid var(--bd)"><input class="in" id="cq" placeholder="Search buyer, listing or seller…"><div id="csc" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div></div><div id="cli"><div style="padding:20px"><div class="sk"></div></div></div></div><div class="ct" id="ct"><div class="empty" style="margin:auto"><h4>Select a conversation</h4><p>Replies appear to the buyer as coming from the seller.</p></div></div></div>`;
+  const setStatus=message=>{const node=$('#cc-status',el);if(node){node.hidden=!message;node.innerHTML=message?`${esc(message)} <button class="btn sm" data-cc-retry>Retry</button>`:'';}};
   const ctxOf=t=>{const l=t.listing||{};return{f:(t.buyerName||'there').split(' ')[0],t:l.title||'the listing',p:(l.listing_units||[]).length?`priced from ${priceOf(l)}`:priceOf(l),n:l.price_type==='rent'?"That's the monthly rent.":"That's the asking price.",a:l.area||'the area',s:l.sub_area||''};};
   const suggest=t=>{const last=[...t.msgs].reverse().find(m=>m.sender==='buyer'),tx=(last?.content||'').toLowerCase();const tpl=CC_QR.find(x=>x.match.some(k=>tx.includes(k)))||CC_QR.find(x=>x.id==='followup');return{tpl,body:tpl.body(ctxOf(t))};};
   async function load(){
-    const sc=await conciergeScope();sellers=sc.sellers;lmap=Object.fromEntries(sc.listings.map(l=>[l.id,l]));
+    try{
+    const sc=await conciergeScope();if(ctx.cancelled)return;sellers=sc.sellers;lmap=Object.fromEntries(sc.listings.map(l=>[l.id,l]));
     const ids=sc.listings.map(l=>l.id);
-    if(!ids.length){threads=[];paint();return;}
+    if(!ids.length){threads=[];paint();setStatus('');subscribe(ids);return;}
     const cut=new Date(Date.now()-120*864e5).toISOString();
     const[e,m]=await Promise.all([db.from('enquiries').select('*').in('listing_id',ids).gte('created_at',cut).order('created_at',{ascending:false}).limit(400),db.from('messages').select('*').in('listing_id',ids).gte('created_at',cut).order('created_at',{ascending:true}).limit(1000)]);
+    if(ctx.cancelled)return;
+    if(e.error)throw e.error;if(m.error)throw m.error;
     const map=new Map(),mk=(k,x,name)=>({key:k,listingId:x.listing_id,listing:lmap[x.listing_id],sellerId:lmap[x.listing_id]?.seller_id,token:x.buyer_token||null,phone:x.buyer_phone||'',buyerName:x.buyer_name||name,msgs:[],last:x.created_at});
     (e.data||[]).forEach(x=>{const k=`${x.listing_id}__${x.buyer_phone||x.buyer_token||x.id}`;if(!map.has(k)){const t=mk(k,x,'Unknown buyer');t.msgs.push({id:'enq-'+x.id,sender:'buyer',content:x.message||'',created_at:x.created_at,read:x.admin_read_at,tbl:'enquiries',raw:x.id});map.set(k,t);}});
     (m.data||[]).forEach(x=>{const k=`${x.listing_id}__${x.buyer_phone||x.buyer_token||''}`;let t=map.get(k);if(!t){t=mk(k,x,'Buyer');map.set(k,t);}if(!t.msgs.some(y=>y.id===x.id))t.msgs.push({id:x.id,sender:x.sender,content:x.content||x.message,created_at:x.created_at,read:x.admin_read_at,tbl:'messages',raw:x.id,byAdmin:!!x.sent_by_admin_id});if(new Date(x.created_at)>new Date(t.last))t.last=x.created_at;});
     threads=[...map.values()].map(t=>{t.msgs.sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));t.unread=t.msgs.filter(x=>x.sender==='buyer'&&!x.read).length;t.sellerName=sellers.find(s=>s.id===t.sellerId)?.full_name||'Seller';return t;}).sort((a,b)=>new Date(b.last)-new Date(a.last));
-    paint();subscribe(ids);
+    paint();subscribe(ids);setStatus('');
+    }catch(error){console.error('Concierge inbox refresh failed:',error);setStatus(`Could not load concierge conversations: ${error.message||error}. Retry the page or check your connection.`);}
   }
   const vis=()=>threads.filter(t=>(sf==='all'||t.sellerId===sf)&&(!q||`${t.buyerName} ${t.listing?.title} ${t.sellerName}`.toLowerCase().includes(q)));
   function paint(){
@@ -1600,11 +1675,17 @@ VIEWS.concierge={title:'Concierge inbox',async mount(el,p,ctx){
     const t=threads.find(x=>x.key===key);if(!t)return;active=t;join(t.listingId);thread();paint();
     if(t.unread){const n=new Date().toISOString(),b=t.msgs.filter(m=>m.sender==='buyer'&&!m.read);
       const ei=b.filter(m=>m.tbl==='enquiries').map(m=>m.raw),mi=b.filter(m=>m.tbl==='messages').map(m=>m.raw);
-      if(ei.length)await db.from('enquiries').update({admin_read_at:n}).in('id',ei);if(mi.length)await db.from('messages').update({admin_read_at:n}).in('id',mi);
-      b.forEach(m=>m.read=n);t.unread=0;paint();refreshBadges();}
+      let readSucceeded=true;
+      if(ei.length){const{error}=await db.from('enquiries').update({admin_read_at:n}).in('id',ei);if(error){readSucceeded=false;ui.toast('Conversation opened, but enquiry read status could not be updated: '+error.message,'err');}}
+      if(mi.length){const{error}=await db.from('messages').update({admin_read_at:n}).in('id',mi);if(error){readSucceeded=false;ui.toast('Conversation opened, but message read status could not be updated: '+error.message,'err');}}
+      if(readSucceeded){b.forEach(m=>m.read=n);t.unread=0;}paint();refreshBadges();}
   }
   function subscribe(ids){
+    const key=ids.join(',');
+    if(key===subscribedListingKey&&(chans.length||!ids.length))return;
     chans.forEach(c=>db.removeChannel(c));chans=[];
+    subscribedListingKey=key;
+    if(!ids.length)return;
     chans.push(db.channel('cc-inbox-'+Date.now()).on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:`listing_id=in.(${ids.join(',')})`},pl=>{
       const m=pl.new,k=`${m.listing_id}__${m.buyer_phone||m.buyer_token||''}`;let t=threads.find(x=>x.key===k);
       const rec={id:m.id,sender:m.sender,content:m.content||m.message,created_at:m.created_at,read:m.admin_read_at,tbl:'messages',raw:m.id,byAdmin:!!m.sent_by_admin_id};
@@ -1613,14 +1694,16 @@ VIEWS.concierge={title:'Concierge inbox',async mount(el,p,ctx){
       paint();if(active?.key===k)thread();if(m.sender==='buyer')ui.toast('New buyer message — '+t.buyerName,'ok');refreshBadges();}).subscribe());
   }
   el.onclick=e=>{
+    if(e.target.closest('[data-cc-retry]')){load();return;}
     const c=e.target.closest('.ci');if(c)return open(c.dataset.k);
     const s=e.target.closest('[data-s]');if(s){sf=s.dataset.s;paint();return;}
     const qk=e.target.closest('[data-q]');if(qk&&active){const x=CC_QR.find(y=>y.id===qk.dataset.q);send(x.body(ctxOf(active)));return;}
     const ed=e.target.closest('[data-e]');if(ed&&active){const x=CC_QR.find(y=>y.id===ed.dataset.e);const t=$('#rt',el);t.value=x.body(ctxOf(active));t.focus();}
   };
   $('#cq',el).oninput=debounce(e=>{q=e.target.value.toLowerCase();paint();},200);
-  ctx.cleanup.push(()=>{chans.forEach(c=>db.removeChannel(c));leave();});
-  await load();
+  ctx.cleanup.push(()=>{clearInterval(refreshTimer);chans.forEach(c=>db.removeChannel(c));leave();});
+  await load();if(ctx.cancelled)return;
+  refreshTimer=setInterval(()=>{if(!document.hidden)load();},30000);
 }};
 /* ═════════ OVERVIEW ═════════ */
 VIEWS.overview={title:'Dashboard',async mount(el){
@@ -1628,7 +1711,7 @@ VIEWS.overview={title:'Dashboard',async mount(el){
   const cnt=(t,f)=>f(db.from(t).select('id',{count:'exact',head:true})).then(r=>r.count||0,()=>0);
   const soon=new Date(Date.now()+3*864e5).toISOString();
   const[b,trial]=await Promise.all([refreshBadges(),cnt('listings',q=>q.eq('payment_status','trial').eq('recycle_bin',false).gt('trial_expires_at',new Date().toISOString()).lt('trial_expires_at',soon))]);
-  const items=[['Listings awaiting approval',b.pending,'listings',{tab:'pending'}],['Payments to confirm',b.payments,'payments',{tab:'pending'}],['Verifications to review',b.verification,'verification'],['Open reports',b.reports,'reports',{tab:'open'}],['Unread enquiries',b.enquiries,'enquiries',{tab:'unread'}],['Support messages waiting',b.support,'support'],['Platform reviews to answer',b.reviews,'reviews'],['Trials ending within 3 days',trial,'listings',{tab:'trial'}]];
+  const items=[['Listings awaiting approval',b.pending,'listings',{tab:'pending'}],['Payments to confirm',b.payments,'payments',{tab:'pending'}],['Verifications to review',b.verification,'verification'],['Role change requests',b.roleRequests,'role-requests'],['Open reports',b.reports,'reports',{tab:'open'}],['Unread enquiries',b.enquiries,'enquiries',{tab:'unread'}],['Support messages waiting',b.support,'support'],['Platform reviews to answer',b.reviews,'reviews'],['Trials ending within 3 days',trial,'listings',{tab:'trial'}]];
   const total=items.reduce((s,x)=>s+x[1],0);
   $('#att',el).outerHTML=`<div style="grid-column:1/-1;margin-bottom:6px"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px"><h3>${total?`${total} thing${total!==1?'s':''} need your attention`:'You’re all caught up ✓'}</h3>${b.pending?`<button class="btn pri" id="rq">Start review queue (${b.pending})</button>`:''}</div><div class="grid4" style="margin-bottom:0">${items.map(([l,n,v,p])=>`<a class="att ${n?'hot':''}" href="#/${v}${p?'?'+new URLSearchParams(p):''}"><b>${n}</b><span>${l}</span><i>›</i></a>`).join('')}</div></div>`;
   $('#rq',el)&&($('#rq',el).onclick=reviewQueue);
@@ -1790,8 +1873,8 @@ async function boot(){
   window.addEventListener('hashchange',route);await route();refreshBadges();db.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_OUT'){ui.toast('Your session ended. Please sign in again.','err');setTimeout(()=>location.reload(),2500);}});
   subscribeAdminRealtime();
   if(adminFallbackTimer)clearInterval(adminFallbackTimer);
-  adminFallbackTimer=setInterval(()=>{if(!document.hidden){refreshBadges();if($('#live-status')?.dataset.state!=='live')ui.active?.reload?.();}},60000);
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden){refreshBadges();if($('#live-status')?.dataset.state!=='live')subscribeAdminRealtime();}});
+  adminFallbackTimer=setInterval(()=>{if(!document.hidden){refreshBadges();ui.active?.reload?.();}},45000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden){refreshBadges();ui.active?.reload?.();if($('#live-status')?.dataset.state!=='live')subscribeAdminRealtime();}});
 }
 $('#lsp').onchange=e=>{$('#lpw').type=e.target.checked?'text':'password';};
 $('#lgf').onsubmit=async e=>{
