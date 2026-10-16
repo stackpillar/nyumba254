@@ -1379,11 +1379,16 @@ async function openReport(r,T){
       const listingIds=(listings||[]).map(x=>x.id);
       const queries=[db.from('reports').select('reason,status,details,created_at,target_type').eq('target_type','seller').eq('target_id',s.id).in('reason',[...VIEWING_FEE_REPORT_REASONS]).order('created_at',{ascending:false}).limit(10)];
       if(listingIds.length)queries.push(db.from('reports').select('reason,status,details,created_at,target_type').eq('target_type','listing').in('target_id',listingIds).in('reason',[...VIEWING_FEE_REPORT_REASONS]).order('created_at',{ascending:false}).limit(10));
-      const results=await Promise.all(queries),failure=results.find(x=>x.error);
-      if(failure)box.innerHTML=`<p role="alert"><small>Could not load report history: ${esc(failure.error.message)}</small></p>`;
+      const feeHistoryQuery=listingIds.length
+        ?db.from('viewing_fee_history').select('old_fee,new_fee,changed_at').eq('object_type','listing').in('object_id',listingIds).order('changed_at',{ascending:false}).limit(10)
+        :Promise.resolve({data:[],error:null});
+      const[results,feeHistoryResult]=await Promise.all([Promise.all(queries),feeHistoryQuery]);
+      const failure=results.find(x=>x.error);
+      if(failure||feeHistoryResult.error)box.innerHTML=`<p role="alert"><small>Could not load fee history: ${esc((failure||feeHistoryResult).error.message)}</small></p>`;
       else{
         const history=results.flatMap(x=>x.data||[]).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,10);
-        box.innerHTML=history.length?history.map(x=>`<div class="row"><span>${bd(x.status)}${x.details?' '+esc(x.details):''}</span><small>${dtt(x.created_at)}</small></div>`).join(''):'<small>No prior viewing-fee reports.</small>';
+        const fees=feeHistoryResult.data||[];
+        box.innerHTML=`<div class="sec">Past viewing-fee reports</div>${history.length?history.map(x=>`<div class="row"><span>${esc(REASON[x.reason]||x.reason)} · ${bd(x.status)}${x.details?' '+esc(x.details):''}</span><small>${dtt(x.created_at)}</small></div>`).join(''):'<small>No prior viewing-fee reports.</small>'}<div class="sec">Recent viewing-fee changes</div>${fees.length?fees.map(x=>`<div class="row"><span>${x.old_fee==null?'Initial':`KES ${x.old_fee}`} → ${x.new_fee===0?'Free viewing':`KES ${x.new_fee}`}</span><small>${dtt(x.changed_at)}</small></div>`).join(''):'<small>No viewing-fee changes recorded.</small>'}`;
       }
     }
   }

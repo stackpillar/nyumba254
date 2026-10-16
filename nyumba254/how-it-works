@@ -836,17 +836,17 @@
     <div class="trust-card">
       <div class="trust-icon g"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg></div>
       <h3>Every listing is reviewed</h3>
-      <p>Nothing goes live without a photo and a check from our team first. Sellers who complete identity and ownership verification carry a visible trust badge on their listings.</p>
+      <p>Listings are reviewed before publication. Listers who complete identity verification carry a visible identity badge; role verification is shown separately.</p>
     </div>
     <div class="trust-card">
       <div class="trust-icon gold"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
       <h3>Conversations stay safe</h3>
-      <p>Messages go through Nyumba254 first. A seller's number is only shared when a buyer chooses to reveal it. Anyone can report a suspicious listing or seller at any time.</p>
+      <p>Messages go through Nyumba254 first. A lister's number is only shared when a viewer chooses to reveal it. Anyone can report a suspicious listing or lister at any time.</p>
     </div>
     <div class="trust-card">
       <div class="trust-icon blue"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
       <h3>M-Pesa payments and clear fees</h3>
-      <p>Sellers pay listing fees via M-Pesa — no cards, no foreign platforms. Once your property sells or rents, that deal is entirely between you and the buyer, commission-free.</p>
+      <p>Listing fees are paid by M-Pesa and shown before payment. Nyumba254 charges no deal commission on a completed sale or rental; eligible listers set any viewing fee, which is paid directly to them.</p>
     </div>
   </div>
 

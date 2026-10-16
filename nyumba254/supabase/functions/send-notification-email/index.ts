@@ -353,7 +353,15 @@ function formatViewingFee(value: unknown): string {
 }
 
 async function resolveViewingFee(p: Payload): Promise<number | null> {
-  for (const candidate of [p.feeAtRequest, p.fee_at_request, p.viewingFee, p.viewing_fee]) {
+  for (const key of ["feeAtRequest", "fee_at_request"]) {
+    if (Object.prototype.hasOwnProperty.call(p, key)) {
+      const candidate = p[key];
+      if (candidate === null || candidate === undefined || candidate === "") return null;
+      const fee = Number(candidate);
+      return Number.isFinite(fee) && fee >= 0 ? fee : null;
+    }
+  }
+  for (const candidate of [p.viewingFee, p.viewing_fee]) {
     if (candidate !== null && candidate !== undefined && candidate !== "") {
       const fee = Number(candidate);
       return Number.isFinite(fee) && fee >= 0 ? fee : null;
@@ -1174,12 +1182,14 @@ const HANDLERS: Record<string, (p: Payload, ctx: EmailContext) => EmailOut[]> = 
       html: renderShell({
         heading: `Your viewing request was ${status}`,
         eyebrow: "Viewing request update",
-        preheader: `The lister ${status} your request for "${p.listingTitle || "a listing"}".`,
+        preheader: `Your viewing request was ${status}.`,
         bodyHtml:
           para(`Hi ${name},`) +
-          para(`The lister ${status} your request for <strong style="color:#161614;">"${title}"</strong>.`) +
+          para(`The status of your viewing request for <strong style="color:#161614;">"${title}"</strong> is now ${status}.`) +
           factCard([["Requested date", date], ["Time slot", time], ["Fee recorded for this request", escapeHtml(formatViewingFee(viewingFee))]]) +
-          tip(escapeHtml(VIEWING_FEE_SAFETY)),
+          tip(p.status === "cancelled"
+            ? "If you paid a viewing fee, the lister must refund it in full within 48 hours."
+            : escapeHtml(VIEWING_FEE_SAFETY)),
         ctaLabel: "View listing", ctaUrl: listingUrl,
         footerNote: "You're receiving this because you requested a property viewing on Nyumba254.",
         quickLinks: buyerLinks,

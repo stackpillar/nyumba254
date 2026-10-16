@@ -649,6 +649,13 @@ begin
 
   if v_current_type in ('agent', 'company')
      and p_account_type not in ('agent', 'company') then
+    insert into public.viewing_fee_history
+      (object_type, object_id, changed_by, old_fee, new_fee)
+    select 'listing', f.listing_id, v_user_id, f.viewing_fee, 0
+    from public.listing_viewing_fees f
+    join public.listings l on l.id = f.listing_id
+    where l.seller_id = v_user_id
+      and f.viewing_fee > 0;
     delete from public.listing_viewing_fees f
     using public.listings l
     where f.listing_id = l.id

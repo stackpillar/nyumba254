@@ -1135,7 +1135,10 @@ async function postEnquiry(x,kind){
     fetch(`${EDGE_URL}/send-sms-alert`,{method:'POST',headers:h,body:JSON.stringify({type:'new_enquiry',listingId:P.id,buyerName:x.name,messagePreview:x.message,listingTitle:P.title})}).catch(error=>console.error('[notification] Could not send enquiry SMS:',error));
   }
   lss('nk_last_listing_title_'+P.id,P.title);   // lets the chat widget name this conversation instantly
-  if(x.email&&x.notify!==false){try{db.from('buyer_contacts').upsert({buyer_token:token,full_name:x.name,email:x.email,phone:x.phone||null,notify_email:true,updated_at:new Date().toISOString()},{onConflict:'buyer_token'}).then(()=>{},()=>{})}catch(e){}}
+  if(x.email&&x.notify!==false){
+    const{error:contactError}=await db.from('buyer_contacts').upsert({buyer_token:token,full_name:x.name,email:x.email,phone:x.phone||null,notify_email:true,updated_at:new Date().toISOString()},{onConflict:'buyer_token'});
+    if(contactError)console.error('[notification] Could not save buyer contact email for viewing updates:',contactError);
+  }
   track(kind==='viewing'?'viewing_request':'message_sent');
   return {error:null};
 }
@@ -1250,7 +1253,7 @@ async function loadViewingFeedback(){
 /* ═══ 4. verified explainer ═══ */
 function openVerify(verified){
   $('vf-body').innerHTML=(verified?'<p><b>Identity verified</b> means Nyumba254 has checked this person’s identity.</p><p>That is a good sign, but it is not a guarantee about the property itself.</p>':'<p>This person has not completed identity verification yet.</p><p>That does not mean anything is wrong, but take extra care.</p>')+
-    '<ul class="vlist"><li>View the property in person first.</li><li>Meet the person you will pay, and ask for a receipt.</li><li>Never pay before you have viewed it. Nyumba254 never asks buyers for money.</li></ul>';
+    '<ul class="vlist"><li>View the property in person first.</li><li>Pay any listed viewing fee at the property to the person you meet, and ask for a receipt.</li><li>Never pay rent, a deposit, or another fee before viewing. Nyumba254 does not collect viewing fees.</li></ul>';
   nkOpenModal($('ov-verify'));
 }
 
@@ -1272,7 +1275,7 @@ async function unitAction(id,occupy){
 
 /* ═══ share / report / rate ═══ */
 async function openShare(){
-  const url=location.origin+'/listing?id='+pad(P.listing_number),txt=`${P.title} · ${where()} · ${basePrice()>0?money(basePrice())+(FREQ[freq()]||''):'Price on request'}`;
+  const url=location.origin+'/listing?id='+pad(P.listing_number),role=P.listed_by_type||P.profiles?.account_type,roleLabels={buyer:'Tenant / Buyer',owner:'Direct from owner',landlord:'Direct from owner',caretaker:'Caretaker',agent:'Agent',company:'Company'},roleChanged=!!role&&!!P.profiles?.account_type&&role!==P.profiles.account_type,roleVerified=!!role&&!roleChanged&&P.profiles?.verified_role===role,roleText=role?`${roleLabels[role]||'Lister'}${roleChanged?' (role changed)':roleVerified?' (verified)':' (not verified)'}`:'Lister (not verified)',txt=`${P.title} · ${where()} · ${basePrice()>0?money(basePrice())+(FREQ[freq()]||''):'Price on request'} · ${roleText} · ${viewingFeeText(P.viewing_fee)}`;
   if(navigator.share){try{await navigator.share({title:P.title,text:txt,url});return}catch(e){if(e&&e.name==='AbortError')return}}
   const e=encodeURIComponent,items=[['💬','WhatsApp',`https://wa.me/?text=${e(txt+'\n'+url)}`],['📘','Facebook',`https://www.facebook.com/sharer/sharer.php?u=${e(url)}`],['𝕏','X',`https://x.com/intent/tweet?text=${e(txt)}&url=${e(url)}`],['✈️','Telegram',`https://t.me/share/url?url=${e(url)}&text=${e(txt)}`],['✉️','Email',`mailto:?subject=${e(P.title)}&body=${e(txt+'\n'+url)}`]];
   $('share-grid').innerHTML=items.map(([i,n,h])=>`<a href="${escHtml(h)}" target="_blank" rel="noopener noreferrer"><span>${i}</span>${n}</a>`).join('')+`<button type="button" data-act="copy" data-url="${escHtml(url)}"><span>🔗</span>Copy link</button>`;

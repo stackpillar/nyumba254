@@ -876,7 +876,27 @@ function renderRoleTrustOverview(){
     !roleVerified?'Submit role-specific evidence to verify your current role.':
     'Your identity and current role are verified.';
   const cap=`${count} active${identityVerified?' (no unverified cap)':` of ${limit} unverified listing cap`}`;
-  target.innerHTML=`<div style="display:flex;gap:10px;flex-wrap:wrap"><span><strong>Role:</strong> ${escHtml(role)}</span><span><strong>Role verification:</strong> ${escHtml(roleVerified?'Verified':'Not verified')}</span><span><strong>Identity:</strong> ${escHtml(identityVerified?'Verified':'Not verified')}</span><span><strong>Listing cap used:</strong> ${escHtml(cap)}</span></div><p style="margin:8px 0 0;color:var(--text-2);font-size:12px">${escHtml(next)}</p>`;
+  const checklistKey=`ny_role_checklist_dismissed_${currentUser?.id||''}`;
+  let checklistDismissed=false;
+  try{checklistDismissed=localStorage.getItem(checklistKey)==='1'}catch(error){console.error('Could not read onboarding checklist preference:',error)}
+  const feeStepNeeded=['agent','company'].includes(profile?.account_type);
+  const feeStepDone=(profile?.default_viewing_fee!==null&&profile?.default_viewing_fee!==undefined)
+    ||(profile?.viewing_fee_policy_version===VIEWING_FEE_POLICY_VERSION&&allListings.some(listing=>Number(listing.viewing_fee)>0));
+  const steps=[
+    {label:'Verify your identity',done:identityVerified,action:"settingsJumpTo('verification-settings-section')"},
+    {label:'Add your first listing',done:allListings.length>0,action:"location.href='/post-listing'"},
+    ...(feeStepNeeded?[{label:'Set a viewing-fee default or keep viewings free',done:feeStepDone,action:"settingsJumpTo('viewing-fee-settings')"}]:[])
+  ];
+  const checklist=profile?.account_type&&profile.account_type!=='buyer'&&!checklistDismissed
+    ?`<div class="card" style="padding:14px;margin-top:14px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong style="font-size:13px">Getting started</strong><button type="button" class="btn btn-outline btn-sm" onclick="dismissRoleSetupChecklist()" aria-label="Dismiss getting started checklist">Dismiss</button></div><ol style="margin:8px 0 0;padding-left:20px">${steps.map(step=>`<li style="margin:7px 0;font-size:12px;color:var(--text-2)"><span>${step.done?'✓':'○'} ${escHtml(step.label)}</span>${step.done?'':` <button type="button" class="link" onclick="${step.action}" style="min-height:44px">${step.action.includes('post-listing')?'Add a listing':'Continue'}</button>`}</li>`).join('')}</ol></div>`
+    :'';
+  target.innerHTML=`<div style="display:flex;gap:10px;flex-wrap:wrap"><span><strong>Role:</strong> ${escHtml(role)}</span><span><strong>Role verification:</strong> ${escHtml(roleVerified?'Verified':'Not verified')}</span><span><strong>Identity:</strong> ${escHtml(identityVerified?'Verified':'Not verified')}</span><span><strong>Listing cap used:</strong> ${escHtml(cap)}</span></div><p style="margin:8px 0 0;color:var(--text-2);font-size:12px">${escHtml(next)}</p>${checklist}`;
+}
+
+function dismissRoleSetupChecklist(){
+  try{localStorage.setItem(`ny_role_checklist_dismissed_${currentUser?.id||''}`,'1')}
+  catch(error){console.error('Could not save onboarding checklist preference:',error);showToast('Could not save this checklist preference on this device.','error');return}
+  renderRoleTrustOverview();
 }
 
 async function acceptCurrentViewingFeePolicy(){
