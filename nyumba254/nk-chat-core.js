@@ -250,7 +250,7 @@
 
   /* ═════ opening a thread ═════ */
   const PAGE = 50;
-  const LIST_EXT = 'listing_number,title,price,price_frequency,area,county,category,status,address,latitude,longitude,details,profiles(verification_status),listing_photos(url,is_cover,position)';
+  const LIST_EXT = 'listing_number,title,price,price_frequency,area,county,category,status,address,latitude,longitude,details,listing_photos(url,is_cover,position)';
   const LIST_BASE = 'listing_number,title,price,price_frequency,area,status';
   const byTime = (a, b) => new Date(a.created_at) - new Date(b.created_at);
   async function fetchMessages(listingId, token, before) {
