@@ -386,13 +386,23 @@ function nkBuildVerifiedBadge(listing) {
   return identityVerified?`<span class="card-verified-badge" title="Nyumba254 checked this person’s identity. Their listed role is self-declared.">${icon}Identity checked</span>`:'';
 }
 
+/* Single source of truth for Lister Page URLs. Prefers /@handle; falls back to the legacy UUID URL. */
+function nkListerPageUrl(o) {
+  const x = o || {};
+  const path = x.handle
+    ? '/@' + encodeURIComponent(String(x.handle).toLowerCase())
+    : (x.user_id ? '/storefront?seller=' + encodeURIComponent(x.user_id) : '');
+  if (!path) return '';
+  return x.absolute ? location.origin + path : path;
+}
+
 async function nkHydratePublicProfiles(listings) {
   const rows=Array.isArray(listings)?listings:[];
   const ids=[...new Set(rows.map(row=>row.seller_id).filter(Boolean))];
   if(!ids.length)return rows;
-  const{data,error}=await db.from('public_account_profiles')
-    .select('id,full_name,created_at,identity_verified,account_type,verified_role')
-    .in('id',ids);
+  const cols='id,full_name,created_at,identity_verified,account_type,verified_role';
+  let{data,error}=await db.from('public_account_profiles').select(cols+',page_handle,page_visibility').in('id',ids);
+  if(error)({data,error}=await db.from('public_account_profiles').select(cols).in('id',ids));
   if(error)throw new Error(`Could not load public account details: ${error.message}`);
   const byId=new Map((data||[]).map(profile=>[profile.id,profile]));
   return rows.map(row=>({...row,profiles:byId.get(row.seller_id)||row.profiles||null}));

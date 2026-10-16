@@ -215,12 +215,19 @@
           </div>
           <div style="flex:1;min-width:200px">
             <div style="font-size:13px;font-weight:700">Your Lister Page is live</div>
-            <div style="font-size:12px;opacity:.85;word-break:break-all" id="storefront-banner-url">nyumba254.com/storefront?seller=…</div>
+            <div style="font-size:12px;opacity:.85;word-break:break-all" id="storefront-banner-url">nyumba254.com/…</div>
           </div>
           <div style="display:flex;gap:8px;flex-shrink:0">
             <button class="btn btn-sm" style="background:rgba(255,255,255,0.18);color:white" onclick="copyStorefrontLink()">📋 Copy link</button>
             <a class="btn btn-sm" style="background:white;color:#5b21b6;text-decoration:none" id="storefront-banner-open" href="#" rel="noopener">Open ↗</a>
           </div>
+        </div>
+      </div>
+      <div class="card" id="handle-nudge-card" style="display:none;padding:14px 18px;margin-bottom:20px;border:1.5px solid var(--green);background:var(--green-light,#f0faf4)">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div style="flex:1;min-width:200px;font-size:13px"><b>Claim your short link.</b> Pick a handle like nyumba254.com/@yourname so buyers can find all your listings on one easy page.</div>
+          <button class="btn btn-sm btn-primary" type="button" style="min-height:44px" onclick="showPage('lister-page')">Choose a handle</button>
+          <button class="btn btn-sm btn-outline" type="button" style="min-height:44px" onclick="dismissHandleNudge()">Not now</button>
         </div>
       </div>
       <div class="card" id="action-center-card" style="display:none;padding:16px 20px;margin-bottom:20px;border:1.5px solid var(--amber);background:var(--amber-light)"></div>

@@ -1231,7 +1231,22 @@ function loadSubscriptionUI(){
   loadRelationshipManager(sub);
   loadTeamSeats(sub);
   updateStorefrontBanner(sub);
+  renderHandleNudge();
   updateBnbStatusBanner();
+}
+
+function renderHandleNudge(){
+  const card=document.getElementById('handle-nudge-card');
+  if(!card)return;
+  const profile=ownerProfile||currentProfile;
+  let dismissed=false;
+  try{dismissed=localStorage.getItem('nk_handle_nudge_dismissed')==='1'}catch(e){}
+  card.style.display=LISTER_PAGE_FLAGS.pages&&profile&&!profile.handle&&!isTeamMember&&!dismissed?'block':'none';
+}
+function dismissHandleNudge(){
+  try{localStorage.setItem('nk_handle_nudge_dismissed','1')}catch(e){}
+  const card=document.getElementById('handle-nudge-card');
+  if(card)card.style.display='none';
 }
 
 // Surfaces the storefront link somewhere the seller can't miss it — a
@@ -1244,9 +1259,7 @@ async function updateStorefrontBanner(sub){
   let slug;
   try{slug=await ensureStorefrontSlug();}
   catch(error){console.error('Could not prepare public storefront link:',error);showToast('Could not prepare your public storefront link. Please try again.','error');return;}
-  const url = LISTER_PAGE_FLAGS.pages&&(ownerProfile||currentProfile)?.handle
-    ? `${location.origin}/@${encodeURIComponent((ownerProfile||currentProfile).handle)}`
-    : `${location.origin}/storefront?seller=${slug}`;
+  const url = nkListerPageUrl({handle:LISTER_PAGE_FLAGS.pages?(ownerProfile||currentProfile)?.handle:null,user_id:slug,absolute:true});
   const urlEl=document.getElementById('storefront-banner-url');
   const openEl=document.getElementById('storefront-banner-open');
   if(urlEl) urlEl.textContent = url.replace(/^https?:\/\//,'');
@@ -1256,9 +1269,7 @@ async function updateStorefrontBanner(sub){
 
 function listerPageUrl(){
   const profile=ownerProfile||currentProfile;
-  return profile?.handle
-    ? `${location.origin}/@${encodeURIComponent(profile.handle)}`
-    : `${location.origin}/storefront?seller=${encodeURIComponent(profile?.storefront_slug||effectiveSellerId)}`;
+  return nkListerPageUrl({handle:profile?.handle,user_id:profile?.storefront_slug||effectiveSellerId,absolute:true});
 }
 
 async function loadListerPageHub(){
@@ -1774,7 +1785,7 @@ function updateEliteSectionUI(sub){
     if(storefrontRow){
       storefrontRow.style.display = 'block';
       ensureStorefrontSlug().then(slug=>{
-        const url = `${location.origin}/storefront?seller=${slug}`;
+        const url = listerPageUrl();
         const urlEl=document.getElementById('storefront-settings-url');
         const openEl=document.getElementById('storefront-settings-open');
         if(urlEl) urlEl.textContent = url;
@@ -1794,7 +1805,7 @@ function updateEliteSectionUI(sub){
   if(storefrontRow)storefrontRow.style.display=storefrontAvailable?'block':'none';
   if(storefrontAvailable){
     ensureStorefrontSlug().then(slug=>{
-      const url=`${location.origin}/storefront?seller=${slug}`;
+      const url=listerPageUrl();
       const urlEl=document.getElementById('storefront-settings-url');
       const openEl=document.getElementById('storefront-settings-open');
       if(urlEl)urlEl.textContent=url;
@@ -4064,7 +4075,7 @@ async function copyStorefrontLink(){
   if(btn) btn.disabled = true;
   const slug = await ensureStorefrontSlug();
   if(btn) btn.disabled = false;
-  const url = `${location.origin}/storefront?seller=${slug}`;
+  const url = listerPageUrl();
   navigator.clipboard.writeText(url).then(()=>{
     showToast('Storefront link copied ✓','success');
   }).catch(()=>{

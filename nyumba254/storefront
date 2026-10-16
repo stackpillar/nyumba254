@@ -379,6 +379,7 @@
     document.getElementById('m-robots')?.setAttribute('content',
       profile.visibility==='public'&&items.length?'index,follow':'noindex,follow');
     if(profile.handle)document.querySelector('link[rel="canonical"]')?.setAttribute('href',`${location.origin}/@${encodeURIComponent(profile.handle)}`);
+    if(!handleParam)document.getElementById('m-robots')?.setAttribute('content','noindex,follow');
     trackListerEvent('page_view');
     const {data:quickAnswers,error:answersError}=handleParam
       ? await db.from('lister_quick_answers').select('question_key,answer').eq('lister_id',sellerId).is('listing_id',null).order('question_key')

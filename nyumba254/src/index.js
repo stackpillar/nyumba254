@@ -2,12 +2,13 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    if (url.pathname === '/storefront' && url.searchParams.has('seller')) {
-      const handle = await legacyStorefrontHandle(env, url.searchParams.get('seller'));
+    if (url.pathname === '/storefront' && (url.searchParams.has('seller') || url.searchParams.has('handle'))) {
+      const lookup = url.searchParams.get('seller') || url.searchParams.get('handle');
+      const handle = await legacyStorefrontHandle(env, lookup);
       if (handle) {
         const redirect = new URL(`/@${encodeURIComponent(handle)}`, request.url);
         for (const [key, value] of url.searchParams) {
-          if (key !== 'seller') redirect.searchParams.set(key, value);
+          if (key !== 'seller' && key !== 'handle') redirect.searchParams.set(key, value);
         }
         return Response.redirect(redirect, 301);
       }
@@ -16,7 +17,7 @@ export default {
     const listerRoute = url.pathname.match(/^\/(?:@|u\/)([a-z0-9._-]{3,30})\/?$/i);
     if (listerRoute) {
       const handle = listerRoute[1].toLowerCase();
-      if (url.pathname === '/u/' + listerRoute[1] || url.pathname === '/u/' + handle) {
+      if (url.pathname.startsWith('/u/') || url.pathname.endsWith('/') || listerRoute[1] !== handle) {
         url.pathname = '/@' + handle;
         return Response.redirect(url, 301);
       }
@@ -124,14 +125,14 @@ async function listerPageData(env, handle) {
 
 async function legacyStorefrontHandle(env, slug) {
   if (!slug || !env.NYUMBA254_SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) return null;
-  const response = await fetch(`${env.NYUMBA254_SUPABASE_URL}/rest/v1/rpc/get_lister_page_handle_by_slug`, {
+  const response = await fetch(`${env.NYUMBA254_SUPABASE_URL}/rest/v1/rpc/get_lister_page_handle`, {
     method: 'POST',
     headers: {
       apikey: env.SUPABASE_SERVICE_ROLE_KEY,
       Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ p_slug: slug }),
+    body: JSON.stringify({ p_lookup: slug }),
   });
   if (!response.ok) {
     console.error('Legacy Lister Page URL lookup failed:', response.status);
