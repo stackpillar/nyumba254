@@ -45,26 +45,10 @@
       <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#0F6E56" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0116 0v1"/></svg>
     </div>
     <h2>This is an admin account</h2>
-    <p>Admin accounts can't post or manage listings as a seller — this dashboard is for sellers only.</p>
+    <p>Admin accounts can’t post or manage listings from this dashboard.</p>
     <p class="emphasis">Admin accounts sign in separately and aren't accessible from this login.</p>
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:6px">
       <a href="/" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;text-decoration:none">Browse listings</a>
-    </div>
-    <div class="suspended-footer">Nyumba254 · Account Roles · <span onclick="doSignOut()" style="text-decoration:underline;cursor:pointer">Sign out instead</span></div>
-  </div>
-</div>
-
-<div id="buyer-blocked-screen">
-  <div class="suspended-card">
-    <div class="suspended-icon" style="background:var(--green-light)">
-      <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#0F6E56" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-    </div>
-    <h2>This dashboard is for sellers only</h2>
-    <p>You're signed in with a buyer account. Buyer accounts can save listings and message sellers, but can't access the seller dashboard.</p>
-    <p class="emphasis">Want to list a property instead? Create a free seller account.</p>
-    <div style="display:flex;flex-direction:column;gap:10px;margin-top:6px">
-      <a href="/buyer-account" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;text-decoration:none">Go to your account</a>
-      <a href="/login?tab=register" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;text-decoration:none">Create a seller account</a>
     </div>
     <div class="suspended-footer">Nyumba254 · Account Roles · <span onclick="doSignOut()" style="text-decoration:underline;cursor:pointer">Sign out instead</span></div>
   </div>
@@ -102,6 +86,10 @@
         <svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Enquiries
         <span class="badge-count" id="nav-badge-enquiries" style="display:none">0</span>
       </button>
+      <button class="nav-item" id="nav-viewings" onclick="showPage('viewings')">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h3M8 17h6"/></svg>Viewings
+        <span class="badge-count red" id="nav-badge-viewings" style="display:none">0</span>
+      </button>
       <button class="nav-item" id="nav-reviews" onclick="showPage('reviews')">
         <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Reviews
         <span class="badge-count" id="nav-badge-reviews" style="display:none" title="Reviews awaiting your response">0</span>
@@ -109,7 +97,7 @@
       <button class="nav-item" id="nav-payments" onclick="showPage('payments')">
         <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Payments
       </button>
-      <div class="nav-section-label" id="nav-elite-section" style="margin-top:8px">Elite tools</div>
+      <div class="nav-section-label" id="nav-elite-section" style="margin-top:8px">Management tools</div>
       <button class="nav-item" id="nav-rent-ledger" onclick="showPage('rent-ledger')">
         <svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 9h1M9 13h1M9 17h1M14 9h1M14 13h1M14 17h1"/></svg><span id="nav-rent-ledger-label">Rent Ledger</span>
         <span class="badge-count red" id="nav-badge-rentledger" style="display:none">0</span>
@@ -140,6 +128,7 @@
         <div class="sidebar-user-name" id="sidebar-name">Loading…</div>
         <div class="sidebar-user-email" id="sidebar-email">…</div>
         <div id="sidebar-verify-badge" style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);margin-top:2px">—</div>
+        <div id="sidebar-role-chip" style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.75);margin-top:2px">Role not selected</div>
         </div>
       </div>
       <button class="nav-item" onclick="doSignOut()" style="margin-top:4px;color:rgba(255,255,255,0.5)">
@@ -198,7 +187,7 @@
 
     <div id="verify-warning-banner" style="display:none;background:var(--red-light);border-bottom:1.5px solid #f5c6c2;padding:12px 28px;align-items:center;gap:14px;flex-wrap:wrap">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#c0392b" stroke-width="2" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      <span style="flex:1;font-size:13px;color:var(--red);font-weight:600;min-width:220px">Your account isn't verified yet — your active listings are limited to 2. Verify your account to unlock unlimited listings and a trust badge buyers can see.</span>
+      <span id="verify-warning-copy" style="flex:1;font-size:13px;color:var(--red);font-weight:600;min-width:220px">Your role has not been verified yet.</span>
       <button class="btn btn-sm" style="background:var(--red);color:white;flex-shrink:0" onclick="goToVerification()">Verify my account →</button>
     </div>
 
@@ -243,6 +232,10 @@
       <div class="card" id="smart-insight-card" style="display:none;padding:14px 20px;margin-bottom:20px;background:var(--gold-light);border:1px solid var(--gold)"></div>
       <div class="card" id="listing-performance-card" style="display:none;padding:18px 20px;margin-bottom:20px"></div>
       <div class="overview-grid">
+        <div class="card" id="overview-role-trust-card" style="padding:18px 20px">
+          <div class="section-head"><h2>Role and trust status</h2><button class="btn btn-outline btn-sm" onclick="showPage('settings')">Settings</button></div>
+          <div id="overview-role-trust-content" aria-live="polite">Loading role status…</div>
+        </div>
         <div class="card" id="overview-activity-card" style="padding:20px 24px">
           <div id="buyer-mode-card" class="card" hidden style="padding:18px 22px;margin-bottom:18px">
             <strong>Welcome to Nyumba254</strong>
@@ -329,7 +322,8 @@
           <button class="btn btn-outline btn-sm" style="color:#7c3aed;border-color:#7c3aed" onclick="bulkAiRewriteSelectedListings()">✨ AI rewrite</button>
           <button class="btn btn-outline btn-sm" style="color:var(--gold);border-color:var(--gold)" onclick="bulkFeatureSelectedListings()">⭐ Feature</button>
           <button class="btn btn-outline btn-sm" onclick="bulkShareSelectedListings()">🔗 Share</button>
-          <button class="btn btn-outline btn-sm" onclick="bulkSetViewingFeeSelectedListings()">Set viewing fee</button>
+          <button class="btn btn-outline btn-sm" id="bulk-set-viewing-fee-btn" onclick="bulkSetViewingFeeSelectedListings()" hidden>Set viewing fee</button>
+          <button class="btn btn-outline btn-sm" id="bulk-clear-viewing-fee-btn" onclick="bulkClearViewingFeeSelectedListings()" hidden>Clear viewing fee (make free)</button>
           <button class="btn btn-outline btn-sm" onclick="exportListingsCSV(true)">⬇️ CSV</button>
           <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="bulkDeleteSelectedListings()">🗑 Delete</button>
         </div>
@@ -385,7 +379,7 @@
     <!-- ENQUIRIES -->
     <div class="page" id="page-enquiries">
       <div class="section-head" style="flex-direction:column;align-items:flex-start;gap:6px">
-        <h2>Enquiries from buyers</h2>
+        <h2>Enquiries</h2>
         <p style="font-size:12.5px;color:var(--text-3);margin:0">A quick read-only feed of every buyer enquiry. To reply, open the full conversation in <a href="#" onclick="event.preventDefault();showAllMessages()" style="color:var(--green);font-weight:600">Messages</a>.</p>
       </div>
       <div class="section-head">
@@ -400,6 +394,16 @@
       </div>
       <div class="enquiries-stat-strip" id="enquiries-stat-strip"></div>
       <div class="enquiry-list" id="enquiry-list"><div style="text-align:center;padding:40px;color:var(--text-3);font-size:13px">Loading enquiries…</div></div>
+    </div>
+
+    <!-- VIEWING REQUESTS -->
+    <div class="page" id="page-viewings">
+      <div class="section-head">
+        <div><h2>Viewing requests</h2><p style="font-size:12.5px;color:var(--text-3);margin:5px 0 0">Confirm a time, cancel a request, or mark a completed viewing. The fee shown is the amount recorded when the buyer requested it.</p></div>
+        <button class="btn btn-outline btn-sm" type="button" onclick="loadViewingRequestsPage()">Refresh</button>
+      </div>
+      <div id="viewings-page-status" role="status" aria-live="polite" style="font-size:12px;color:var(--text-3);margin-bottom:12px"></div>
+      <div class="enquiry-list" id="viewings-list"><div style="text-align:center;padding:40px;color:var(--text-3);font-size:13px">Loading viewing requests…</div></div>
     </div>
 
     <!-- REVIEWS -->
@@ -585,6 +589,8 @@
       <div class="section-head" style="margin-bottom:12px"><h2>Account settings</h2></div>
       <div id="settings-quicknav" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;position:sticky;top:var(--topbar-h);background:var(--surface);padding:8px 0;z-index:10">
         <button type="button" class="filter-pill" onclick="settingsJumpTo('settings-profile-anchor')">👤 Profile</button>
+        <button type="button" class="filter-pill" onclick="settingsJumpTo('account-role-card')">Role</button>
+        <button type="button" class="filter-pill" onclick="settingsJumpTo('viewing-fee-settings')">Viewing fee</button>
         <button type="button" class="filter-pill" onclick="settingsJumpTo('verification-settings-section')">🛡️ Verification</button>
         <button type="button" class="filter-pill" onclick="settingsJumpTo('settings-contact-privacy-section')">🔒 Privacy</button>
         <button type="button" class="filter-pill" onclick="settingsJumpTo('settings-notifications-section')">🔔 Notifications</button>
@@ -599,8 +605,16 @@
           <p style="font-size:13px;color:var(--text-3);margin-bottom:18px;line-height:1.6">Edit your name, phone number, email address, and password from your dedicated profile page.</p>
           <a href="/profile" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;text-decoration:none"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="15" height="15"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit profile &amp; password</a>
           <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
-            <h4 style="font-size:14px;margin-bottom:4px">Your account type</h4>
-            <p style="font-size:12px;color:var(--text-3);line-height:1.5;margin-bottom:10px">Choose one account type. Verification is reviewed separately and does not grant admin access. Account type changes are limited to once every 7 days.</p>
+            <div class="card" id="account-role-card" style="padding:14px;margin:0 0 12px">
+              <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
+                <div><h4 style="font-size:14px;margin-bottom:4px">Your role</h4><strong id="account-role-label">Choose a role</strong><div id="account-role-description" style="font-size:12px;color:var(--text-3);margin-top:4px"></div><div id="account-role-verification" style="margin-top:8px;font-size:12px"></div><div id="account-role-set-date" style="margin-top:5px;font-size:12px;color:var(--text-3)"></div></div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <button type="button" class="btn btn-outline btn-sm" id="change-account-role-btn" onclick="openChangeRoleModal()" hidden>Change role</button>
+                  <button type="button" class="btn btn-outline btn-sm" id="verify-account-role-btn" onclick="goToVerification()" hidden>Verify this role</button>
+                </div>
+              </div>
+            </div>
+            <p style="font-size:12px;color:var(--text-3);line-height:1.5;margin-bottom:10px" id="account-role-picker-hint">Choose the role that best describes how you use Nyumba254. Verification is reviewed separately and does not grant admin access.</p>
             <div class="role-choice-list" id="account-role-options">
               <label class="role-choice"><input type="radio" name="account-type" value="buyer"/><div><strong>Tenant / Buyer</strong><span>Browse, save, and contact property listers</span></div></label>
               <label class="role-choice"><input type="radio" name="account-type" value="owner"/><div><strong>Property owner</strong><span>List rental or sale property</span></div></label>
@@ -610,16 +624,17 @@
             </div>
             <div id="account-role-status" aria-live="polite" style="font-size:12px;color:var(--text-3);margin-top:8px"></div>
             <button type="button" class="btn btn-outline btn-sm" id="save-account-roles-btn" onclick="saveAccountType()" style="width:100%;justify-content:center;margin-top:10px">Save account type</button>
-            <div id="account-role-history" style="margin-top:12px;font-size:12px;color:var(--text-3)"></div>
-            <div id="viewing-fee-settings" hidden style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
-              <h4 style="font-size:14px;margin-bottom:4px">Viewing fee defaults</h4>
-              <p style="font-size:12px;color:var(--text-3);line-height:1.5;margin-bottom:10px">Optional, for Agent and Company accounts only. Set KES 0–5,000. This is agreed and paid directly to you; Nyumba254 does not collect it.</p>
-              <label class="field-label" for="viewing-fee-default">Default fee (KES)</label>
-              <input class="form-input" id="viewing-fee-default" type="number" min="0" max="5000" step="1" inputmode="numeric" placeholder="Leave blank for free viewing"/>
-              <div id="viewing-fee-status" aria-live="polite" style="font-size:12px;color:var(--text-3);margin-top:6px"></div>
-              <button type="button" class="btn btn-outline btn-sm" onclick="saveViewingFeeDefault()" style="width:100%;justify-content:center;margin-top:8px">Save default</button>
-              <button type="button" class="btn btn-outline btn-sm" onclick="applyViewingFeeToActiveListings()" style="width:100%;justify-content:center;margin-top:8px">Apply to active listings…</button>
-            </div>
+            <details id="account-role-history-details" style="margin-top:12px;font-size:12px;color:var(--text-3)"><summary>Recent role changes</summary><div id="account-role-history" style="margin-top:8px"></div></details>
+          </div>
+          <div class="settings-section" id="viewing-fee-settings" hidden style="margin-top:14px">
+            <h3>Viewing fee defaults</h3>
+            <p style="font-size:12px;color:var(--text-3);line-height:1.5;margin-bottom:10px">Agents and companies set optional per-listing fees up to the platform limit. Fees are paid directly to the lister; Nyumba254 does not collect them.</p>
+            <label class="field-label" for="viewing-fee-default">Default fee (KES)</label>
+            <input class="form-input" id="viewing-fee-default" type="number" min="0" max="5000" step="1" inputmode="numeric" placeholder="0 for free viewing"/>
+            <label style="display:flex;gap:9px;align-items:flex-start;margin-top:10px;font-size:12px;line-height:1.5;color:var(--text-2)"><input type="checkbox" id="viewing-fee-policy-accepted" style="margin-top:2px"/><span>I have read and agree to the <a href="/viewing-fee-policy" target="_blank" rel="noopener">Viewing Fee Policy</a>.</span></label>
+            <div id="viewing-fee-status" aria-live="polite" style="font-size:12px;color:var(--text-3);margin-top:6px"></div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="saveViewingFeeDefault()" style="width:100%;justify-content:center;margin-top:8px">Save default</button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="applyViewingFeeToActiveListings()" style="width:100%;justify-content:center;margin-top:8px">Apply to active listings…</button>
           </div>
           <div class="settings-section" id="company-profile-settings" hidden>
             <h3>Company profile</h3>
@@ -700,7 +715,7 @@
                 </thead>
                 <tbody>
                   <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Managed chat</td><td style="text-align:center;padding:7px 10px;color:var(--gold);font-weight:700">✓</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
-                  <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Pro seller badge</td><td style="text-align:center;padding:7px 10px;color:var(--gold);font-weight:700">✓</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
+                  <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Pro lister badge</td><td style="text-align:center;padding:7px 10px;color:var(--gold);font-weight:700">✓</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
                   <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Scheduled publishing</td><td style="text-align:center;padding:7px 10px;color:var(--gold);font-weight:700">✓</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
                   <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Video walkthroughs</td><td colspan="2" style="text-align:center;padding:7px 10px;color:var(--green-dark);font-weight:700">✓ Free on every plan</td></tr>
                   <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Printable brochure</td><td style="text-align:center;padding:7px 10px;color:var(--gold);font-weight:700">✓</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
@@ -708,7 +723,7 @@
                   <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Unlimited listings</td><td style="text-align:center;padding:7px 10px;color:var(--text-3);font-weight:700">—</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
                   <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">AI Listing Assistant</td><td style="text-align:center;padding:7px 10px;color:var(--text-3);font-weight:700">—</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
                   <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Instant Valuation Tool</td><td style="text-align:center;padding:7px 10px;color:var(--text-3);font-weight:700">—</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
-                  <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Seller Storefront</td><td style="text-align:center;padding:7px 10px;color:var(--text-3);font-weight:700">—</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
+                  <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Storefront / Company page</td><td style="text-align:center;padding:7px 10px;color:var(--text-3);font-weight:700">—</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
                   <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Rent & Tenant Ledger</td><td style="text-align:center;padding:7px 10px;color:var(--text-3);font-weight:700">—</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
                   <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Demand Insights</td><td style="text-align:center;padding:7px 10px;color:var(--text-3);font-weight:700">—</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
                 </tbody>
@@ -725,7 +740,7 @@
               <span style="font-size:11px;font-weight:700;color:var(--gold);background:var(--gold-light);padding:3px 9px;border-radius:20px">Premium</span>
             </div>
             <div class="toggle-row">
-              <div class="toggle-label"><strong>Pro seller badge</strong><span>Show buyers you're a trusted, active seller</span></div>
+              <div class="toggle-label"><strong>Pro lister badge</strong><span>Show buyers you're a trusted, active lister</span></div>
               <span style="font-size:11px;font-weight:700;color:var(--gold);background:var(--gold-light);padding:3px 9px;border-radius:20px">Premium</span>
             </div>
             <div class="toggle-row">
@@ -775,7 +790,7 @@
               <span style="font-size:11px;font-weight:700;color:white;background:#7c3aed;padding:3px 9px;border-radius:20px">Elite</span>
             </div>
             <div class="toggle-row">
-              <div class="toggle-label"><strong>Seller Storefront</strong><span>A full branded page listing all your active properties</span></div>
+              <div class="toggle-label"><strong>Storefront / Company page</strong><span>A full branded page listing all your active properties</span></div>
               <span style="font-size:11px;font-weight:700;color:white;background:#7c3aed;padding:3px 9px;border-radius:20px">Elite</span>
             </div>
             <div class="toggle-row">
@@ -846,6 +861,22 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-change-role">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="change-role-title">
+    <div class="modal-head"><h3 id="change-role-title">Change your role</h3><button type="button" class="modal-close" onclick="closeModal('modal-change-role')" aria-label="Close">✕</button></div>
+    <div class="modal-body">
+      <div class="box" style="margin-bottom:14px">You can change your role only once every 7 days. Changing it resets your role verification. If you leave Agent or Company, your viewing fees stop showing publicly.</div>
+      <div id="change-role-locked" class="box" hidden></div>
+      <div id="change-role-options" class="role-choice-list"></div>
+      <div id="change-role-confirm-step" class="box" hidden>
+        <p>This uses your change for the next 7 days. Continue?</p>
+        <div style="display:flex;gap:8px;margin-top:10px"><button type="button" class="btn btn-outline" id="change-role-cancel">Cancel</button><button type="button" class="btn btn-primary" id="change-role-confirm">Confirm</button></div>
+      </div>
+      <div id="change-role-status" aria-live="polite" role="status" style="font-size:12px;margin-top:10px"></div>
+    </div>
+  </div>
+</div>
+
 <!-- EDIT MODAL -->
 <div class="modal-overlay" id="modal-edit">
   <div class="modal">
@@ -863,7 +894,7 @@
         </div>
         <div class="form-group" style="grid-column:1/-1;background:var(--gold-light);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--gold);margin-bottom:2px">🔒 Price, location, and category can only be changed by our team — contact us (via the chat bubble) to update these.</div>
         <div class="form-group"><label>Price (KES)</label><input type="number" id="edit-price" disabled title="Contact admin to change this"/></div>
-        <div class="form-group" id="edit-viewing-fee-wrap" hidden><label for="edit-viewing-fee">Viewing fee (KES, 0–5,000)</label><input type="number" id="edit-viewing-fee" min="0" max="5000" step="1" inputmode="numeric"/></div>
+        <div class="form-group" id="edit-viewing-fee-wrap" style="grid-column:1/-1" hidden><label for="edit-viewing-fee">Viewing fee (KES)</label><input type="number" id="edit-viewing-fee" min="0" max="5000" step="1" inputmode="numeric"/><div id="edit-viewing-fee-default" style="font-size:12px;color:var(--text-3);margin-top:5px"></div><div id="edit-viewing-fee-lock-notice" role="status" style="font-size:12px;color:var(--text-3);margin-top:5px" hidden><span id="edit-viewing-fee-lock-text">Viewing fee editing is locked.</span> <a href="/dashboard#verification-settings-section">Review verification</a></div><button type="button" class="link" id="edit-viewing-fee-reset">Reset to default</button><div id="edit-viewing-fee-warning" role="status" style="font-size:12px;color:var(--amber);margin-top:5px" hidden>Existing confirmed viewing requests keep the fee they were shown.</div></div>
         <div class="form-group"><label>Price type</label><select id="edit-price-type" disabled title="Contact admin to change this"><option value="sale">For sale</option><option value="rent">To let (monthly)</option></select></div>
          <div class="form-group"><label>Bedrooms</label><input type="number" id="edit-bedrooms" min="0" max="20"/></div>
         <div class="form-group"><label>Bathrooms</label><input type="number" id="edit-bathrooms" min="0" max="20"/></div>
@@ -1510,7 +1541,7 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════
-     ONBOARDING TOUR — shown once to first-time sellers on their
+     ONBOARDING TOUR — shown once to first-time listers on their
      first dashboard visit. See the Tour module in the script below.
 ══════════════════════════════════════════════════════════════ -->
 <div class="tour-overlay" id="tour-overlay">
@@ -1570,7 +1601,7 @@
   },1200);
 })();
 </script>
-<audio id="scw-notify-sound" preload="auto" src="/assetsnotify.mp3"></audio>
+<audio id="scw-notify-sound" preload="auto" src="/assets/notify.mp3"></audio>
 <script id="coming-soon-patch">
 (function(){
   var SELS = ['a[href^="/plans"]','#nav-premium-upgrade','#premium-upgrade-btn','#elite-upgrade-btn','[data-act="upgrade"]'];

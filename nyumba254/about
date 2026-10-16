@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>About Us — Nyumba254</title>
-<meta name="description" content="Nyumba254 is an open property marketplace in Kenya for buyers, tenants, owners, caretakers, agents, and companies, with no deal commission charged by the platform."/>
+<meta name="description" content="Nyumba254 is an open property platform with no deal commission, serving buyers, tenants and listers across Kenya."/>
 <meta name="theme-color" content="#0F6E56"/>
 <link rel="canonical" href="https://nyumba254.com/about"/>
 <meta property="og:type" content="website"/>
@@ -352,8 +352,7 @@ main{display:block}
       <article class="info-card"><div class="info-icon gold"><svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><h3>Reviews with a right of reply</h3><p>Buyers can review a lister after making contact, and listers can reply publicly under the review.</p></article>
       <article class="info-card"><div class="info-icon blue"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><h3>Request a viewing</h3><p>Check the viewing fee on the listing, pay only that fee to the person you meet, get a receipt, and never pay rent or deposit before viewing.</p></article>
       <article class="info-card"><div class="info-icon blue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div><h3>Report anything suspicious</h3><p>Every listing has a Report button. Our team reviews every report and can suspend accounts that break the rules.</p></article>
-      <article class="info-card"><div class="info-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h3>Clear viewing fees</h3><p>Agents and companies may set an optional viewing fee up to KES 5,000, shown on every listing. Listings without one say “Free viewing”. Pay any fee directly to the lister; Nyumba254 does not collect it.</p></article>
-      <article class="info-card"><div class="info-icon blue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div><h3>Report anything suspicious</h3><p>Every listing has a Report button. Our team reviews every report and can suspend accounts that break the rules.</p></article>
+      <article class="info-card"><div class="info-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h3>Clear viewing fees</h3><p>Agents and companies set their own viewing fee, which is shown on every listing. Listings without a fee say “Free viewing”. Pay any fee directly to the lister; Nyumba254 does not collect it.</p></article>
     </div>
     <div class="more-link"><a class="text-link" href="/how-it-works#trust-safety">See how safety and verification work</a></div>
   </div>
@@ -472,13 +471,13 @@ main{display:block}
       </div>
       <div class="footer-col"><h2>Browse</h2><a href="/listings">All listings</a><a href="/listings?category=apartment">Apartment</a><a href="/listings?category=house">House</a><a href="/listings?category=boarding">Boarding House</a><a href="/listings?category=airbnb">Airbnb / Holiday Rental</a><a href="/listings?category=commercial">Shops &amp; offices</a></div>
       <div class="footer-col"><h2>Counties</h2><div class="footer-counties" id="footer-counties"><a href="/listings">All counties</a></div></div>
-      <div class="footer-col"><h2>Platform</h2><a href="/post-listing">List a property</a><a href="/how-it-works">How it works</a><a href="/login">Sign in</a></div>
+      <div class="footer-col"><h2>Platform</h2><a href="/post-listing">List a property</a><a href="/how-it-works">How it works</a><a href="/viewing-fee-policy">Viewing Fee Policy</a><a href="/login">Sign in</a></div>
       <div class="footer-col"><h2>Company</h2><a href="/about">About us</a><a href="/contact">Contact us</a><a href="/terms">Terms of service</a><a href="/privacy">Privacy policy</a><a href="/faq">FAQ</a></div>
     </div>
     <div class="footer-divider"></div>
     <div class="footer-bottom">
       <p>© <span id="footer-year">2026</span> Nyumba254. All rights reserved. Built for Kenya.</p>
-      <div class="footer-bottom-links"><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/contact">Contact</a><a href="/sitemap">Sitemap</a></div>
+      <div class="footer-bottom-links"><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/viewing-fee-policy">Viewing Fee Policy</a><a href="/contact">Contact</a><a href="/sitemap">Sitemap</a></div>
     </div>
   </div>
 </footer>

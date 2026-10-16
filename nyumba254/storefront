@@ -184,9 +184,13 @@
   function buildCard(listing){
     const photos = listing.listing_photos || [];
     const cover = photos.find(p=>p.is_cover) || photos[0];
-    const roleLabels={buyer:'Tenant / Buyer',owner:'Property owner',caretaker:'Caretaker',agent:'Agent',company:'Company'};
-    const listedBy=roleLabels[SELLER_PROFILE?.account_type]||'Seller';
-    const viewingFee=Number(listing.public_viewing_fee)||0;
+    const roleLabels={buyer:'Tenant / Buyer',owner:'Direct from owner',landlord:'Direct from owner',caretaker:'Caretaker',agent:'Agent',company:'Company'};
+    const snapshotRole=listing.listed_by_type||SELLER_PROFILE?.account_type;
+    const currentRole=SELLER_PROFILE?.account_type;
+    const roleChanged=!!snapshotRole&&!!currentRole&&snapshotRole!==currentRole;
+    const roleVerified=!!snapshotRole&&!roleChanged&&SELLER_PROFILE?.verified_role===snapshotRole;
+    const listedBy=`${roleLabels[snapshotRole]||'Lister'}${roleChanged?' (role changed)':roleVerified?' ✓':' (not verified)'}`;
+    const viewingFee=listing.public_viewing_fee===null||listing.public_viewing_fee===undefined?null:Number(listing.public_viewing_fee);
     const imgHtml = cover
       ? `<img src="${esc(cover.url)}" alt="${esc(listing.title)}" loading="lazy"/>`
       : `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
@@ -197,7 +201,7 @@
           <div class="card-area">${esc(listing.area||'')}${listing.sub_area?' · '+esc(listing.sub_area):''}</div>
           <div class="card-title">${esc(listing.title)}</div>
           <div class="card-sub">Listed by ${esc(listedBy)}</div>
-          <div class="card-viewing-fee">${viewingFee>0?`Viewing fee: KES ${viewingFee.toLocaleString('en-KE')}`:'Free viewing'}</div>
+          <div class="card-viewing-fee">${viewingFee===null?'Viewing fee: confirm with the lister':viewingFee>0?`Viewing fee: KES ${viewingFee.toLocaleString('en-KE')}`:'Free viewing'}</div>
           <div class="card-price">${fmtPrice(listing.price, listing.price_type)}</div>
         </div>
       </div>`;
@@ -379,7 +383,7 @@
         </div>
         <div id="reviews-list">${ALL_REVIEWS.slice(0,8).map(buildReviewCard).join('')}</div>` : ''}
       </div>
-      <footer>Powered by <a href="/">Nyumba254</a> — Kenya's agent-free property marketplace</footer>
+      <footer>Powered by <a href="/">Nyumba254</a> — Kenya's open property platform</footer>
       ${(!hideContact && profile.phone) ? `<div class="sticky-contact-bar">
         <a class="contact-btn wa" style="flex:1" href="https://wa.me/${formatWaPhone(profile.phone)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>Chat on WhatsApp</a>
       </div>`:''}`;

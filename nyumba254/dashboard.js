@@ -182,6 +182,9 @@ applyStoredTheme();
 
 let currentUser=null,currentProfile=null,ownerProfile=null,effectiveSellerId=null,isTeamMember=false,allListings=[],allEnquiries=[],allPayments=[],allMessages=[],allReviews=[],threads=[],activeThread=null,listingFilter='all',enquiryFilter='all',deleteTargetId=null,occupiedTargetId=null,replyTargetEnquiry=null,msgPollTimer=null,threadListingFilter=null,messagesChannel=null,listingActionBusy=new Set(),notifPollTimer=null,bnbBookingsChannel=null,bnbPropertyIdSet=new Set();
 const ACCOUNT_TYPES=['buyer','owner','caretaker','agent','company'];
+const ACCOUNT_ROLE_LABELS={buyer:'Tenant / Buyer',owner:'Owner',caretaker:'Caretaker',agent:'Agent',company:'Company'};
+const ACCOUNT_ROLE_DESCRIPTIONS={buyer:'Browse, save and contact property listers.',owner:'List property you own.',caretaker:'Manage property on an owner’s behalf.',agent:'Connect buyers and tenants with properties.',company:'Represent an agency, developer or property manager.'};
+const roleDate=value=>value?new Date(value).toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'}):'';
 
 async function refreshBnbPropertyIdSet(){
   const{data,error}=await db.from('bnb_properties').select('id').eq('seller_id',effectiveSellerId);
@@ -263,6 +266,7 @@ async function init(){
       return;
     }
     await loadAllData();
+    void loadViewingRequestsPage(true);
     await refreshBnbPropertyIdSet();
     dashJoinAllPresence();
     loadPlatformPrices();
@@ -701,10 +705,16 @@ async function verifyAccountStillActive(){
 }
 
 let PLATFORM_VERIFY_SETTINGS = { enforce_verification_general: 0, unverified_listing_limit: 2 };
+let VIEWING_FEE_POLICY_VERSION='v1',VIEWING_FEE_MAX=5000,VIEWING_FEE_REQUIRES_IDENTITY=true;
 async function loadPlatformVerifySettings(){
-  const{data,error}=await db.from('platform_settings').select('key,value').in('key',['enforce_verification_general','unverified_listing_limit']);
+  const{data,error}=await db.from('platform_settings').select('key,value').in('key',['enforce_verification_general','unverified_listing_limit','viewing_fee_policy_version','viewing_fee_max','viewing_fee_requires_identity']);
   if(error) throw new Error(`Could not load verification settings: ${error.message}`);
-  (data||[]).forEach(r=>{ PLATFORM_VERIFY_SETTINGS[r.key]=Number(r.value); });
+  (data||[]).forEach(r=>{
+    if(r.key==='viewing_fee_policy_version')VIEWING_FEE_POLICY_VERSION=String(r.value??'v1');
+    else if(r.key==='viewing_fee_max')VIEWING_FEE_MAX=Math.min(5000,Number(r.value)||5000);
+    else if(r.key==='viewing_fee_requires_identity')VIEWING_FEE_REQUIRES_IDENTITY=Number(r.value)!==0;
+    else PLATFORM_VERIFY_SETTINGS[r.key]=Number(r.value);
+  });
 }
 function verificationEnforcedForMe(){
   return Number(PLATFORM_VERIFY_SETTINGS.enforce_verification_general)===1 || !!currentProfile?.verification_enforced;
@@ -749,6 +759,7 @@ async function loadProfile(){
   }else{
     ownerProfile=currentProfile;
   }
+  renderAccountType();
   renderViewingFeeSettings();
 
   // These are account-wide (owner) settings, not per-login — must read
@@ -775,37 +786,66 @@ async function loadProfile(){
 }
 
 function renderAccountType(){
-  const accountType=ACCOUNT_TYPES.includes(currentProfile?.account_type)?currentProfile.account_type:null;
-  document.querySelectorAll('input[name="account-type"]').forEach(input=>{input.checked=input.value===accountType;});
+  const roleProfile=isTeamMember?(ownerProfile||currentProfile):currentProfile;
+  const accountType=ACCOUNT_TYPES.includes(roleProfile?.account_type)?roleProfile.account_type:null;
+  document.querySelectorAll('input[name="account-type"]').forEach(input=>{input.checked=input.value===currentProfile?.account_type;});
   const status=document.getElementById('account-role-status');
   const saveButton=document.getElementById('save-account-roles-btn');
+  const options=document.getElementById('account-role-options');
+  const pickerHint=document.getElementById('account-role-picker-hint');
+  const roleLabel=document.getElementById('account-role-label');
+  const roleDescription=document.getElementById('account-role-description');
+  const roleVerification=document.getElementById('account-role-verification');
+  const roleSetDate=document.getElementById('account-role-set-date');
+  const roleChangeButton=document.getElementById('change-account-role-btn');
+  const roleVerifyButton=document.getElementById('verify-account-role-btn');
+  const sidebarRoleChip=document.getElementById('sidebar-role-chip');
+  const bulkSetFeeButton=document.getElementById('bulk-set-viewing-fee-btn');
+  const bulkClearFeeButton=document.getElementById('bulk-clear-viewing-fee-btn');
   const companySection=document.getElementById('company-profile-settings');
   const onboardingReminder=document.getElementById('account-onboarding-reminder');
   const buyerMode=accountType==='buyer';
   const buyerCard=document.getElementById('buyer-mode-card');
+  const roleVerified=!!accountType&&roleProfile?.verified_role===accountType;
+  const feeEligible=['agent','company'].includes(roleProfile?.account_type);
+  const policyAccepted=roleProfile?.viewing_fee_policy_version===VIEWING_FEE_POLICY_VERSION&&!!roleProfile?.viewing_fee_policy_accepted_at;
+  if(bulkSetFeeButton)bulkSetFeeButton.hidden=!feeEligible||!policyAccepted||VIEWING_FEE_REQUIRES_IDENTITY&&roleProfile?.verification_status!=='verified'||roleProfile?.viewing_fee_blocked===true;
+  if(bulkClearFeeButton)bulkClearFeeButton.hidden=!feeEligible;
+  if(sidebarRoleChip)sidebarRoleChip.textContent=accountType
+    ?`${ACCOUNT_ROLE_LABELS[accountType]}${roleVerified?' ✓':' (not verified)'}`
+    :'Role not selected';
+  if(roleLabel)roleLabel.textContent=accountType?ACCOUNT_ROLE_LABELS[accountType]:'Choose a role';
+  if(roleDescription)roleDescription.textContent=accountType?ACCOUNT_ROLE_DESCRIPTIONS[accountType]:'Choose one role to tailor your Nyumba254 experience.';
+  if(roleVerification)roleVerification.textContent=accountType?(roleVerified?`Verified ${ACCOUNT_ROLE_LABELS[accountType]} ✓`:`${ACCOUNT_ROLE_LABELS[accountType]} (not verified)`):'';
+  if(roleSetDate)roleSetDate.textContent=roleProfile?.account_type_set_at?`Role set ${roleDate(roleProfile.account_type_set_at)}`:'';
+  if(roleChangeButton)roleChangeButton.hidden=!accountType||isTeamMember;
+  if(roleVerifyButton)roleVerifyButton.hidden=!accountType||roleVerified||isTeamMember;
+  if(options)options.hidden=!!accountType;
+  if(pickerHint)pickerHint.hidden=!!accountType;
+  if(saveButton)saveButton.hidden=!!accountType;
   if(companySection)companySection.hidden=accountType!=='company';
   renderViewingFeeSettings();
   if(onboardingReminder)onboardingReminder.hidden=!!currentProfile?.onboarding_completed;
   if(buyerCard)buyerCard.hidden=!buyerMode;
-  ['nav-listings','nav-enquiries','nav-reviews','nav-payments','nav-rent-ledger','nav-demand-heatmap','nav-elite-section','nav-premium-upgrade'].forEach(id=>{
+  ['nav-listings','nav-enquiries','nav-viewings','nav-reviews','nav-payments','nav-rent-ledger','nav-demand-heatmap','nav-elite-section','nav-premium-upgrade'].forEach(id=>{
     const element=document.getElementById(id);if(element)element.hidden=buyerMode;
   });
   ['btn-new-listing-tour','btn-new-listing-small','btn-add-listing-empty'].forEach(id=>{
     const element=document.getElementById(id);if(element)element.hidden=buyerMode;
   });
-  document.querySelectorAll('#page-overview > *:not(#buyer-mode-card):not(#account-onboarding-reminder)').forEach(element=>{element.hidden=buyerMode;});
+  document.querySelectorAll('#page-overview > *').forEach(element=>{element.hidden=buyerMode&&!element.contains(buyerCard);});
+  document.querySelectorAll('#overview-grid > *').forEach(element=>{element.hidden=buyerMode&&!element.contains(buyerCard);});
+  const activityCard=document.getElementById('overview-activity-card');
+  activityCard?.querySelectorAll(':scope > *:not(#buyer-mode-card):not(#account-onboarding-reminder)').forEach(element=>{element.hidden=buyerMode;});
   window.syncAccountTypeNavigation?.();
-  if(saveButton)saveButton.textContent=accountType?'Save account type':'Complete account setup';
+  if(saveButton)saveButton.textContent='Complete account setup';
   if(!status)return;
   if(!currentProfile?.onboarding_completed){
     status.textContent='Choose one account type to complete account setup. You can still browse while you decide.';
     return;
   }
-  const changedAt=currentProfile.account_type_set_at?new Date(currentProfile.account_type_set_at):null;
-  const availableAt=changedAt?new Date(changedAt.getTime()+7*24*60*60*1000):null;
-  status.textContent=availableAt&&availableAt>Date.now()
-    ?`Current type: ${accountType}. You can change it after ${availableAt.toLocaleDateString()}.`
-    :`Current type: ${accountType}.`;
+  status.textContent=isTeamMember?'This role is managed by your company account.':`Your role is ${ACCOUNT_ROLE_LABELS[accountType]}.`;
+  renderRoleTrustOverview();
 }
 
 function renderViewingFeeSettings(){
@@ -815,18 +855,50 @@ function renderViewingFeeSettings(){
   const eligible=profile?.account_type==='agent'||profile?.account_type==='company';
   section.hidden=!eligible||isTeamMember;
   const input=document.getElementById('viewing-fee-default');
+  if(input){input.max=String(VIEWING_FEE_MAX);input.setAttribute('aria-describedby','viewing-fee-status');}
   if(input&&document.activeElement!==input)input.value=profile?.default_viewing_fee??'';
+  const accepted=document.getElementById('viewing-fee-policy-accepted');
+  if(accepted)accepted.checked=profile?.viewing_fee_policy_version===VIEWING_FEE_POLICY_VERSION&&!!profile?.viewing_fee_policy_accepted_at;
+}
+
+function renderRoleTrustOverview(){
+  const target=document.getElementById('overview-role-trust-content');
+  if(!target)return;
+  const profile=ownerProfile||currentProfile;
+  const role=ACCOUNT_TYPES.includes(profile?.account_type)?ACCOUNT_ROLE_LABELS[profile.account_type]:'Not selected';
+  const roleVerified=profile?.verified_role===profile?.account_type&&!!profile?.account_type;
+  const identityVerified=profile?.verification_status==='verified';
+  const count=allListings.filter(listing=>listing.status==='active'&&!listing.is_disabled&&!listing.recycle_bin).length;
+  const limit=Number(PLATFORM_VERIFY_SETTINGS.unverified_listing_limit)||2;
+  const next=!profile?.account_type?'Choose your role in Settings.':
+    profile.account_type==='buyer'?'Browse listings, save favourites and contact listers.':
+    !identityVerified?'Verify your identity to increase the applicable listing cap.':
+    !roleVerified?'Submit role-specific evidence to verify your current role.':
+    'Your identity and current role are verified.';
+  const cap=`${count} active${identityVerified?' (no unverified cap)':` of ${limit} unverified listing cap`}`;
+  target.innerHTML=`<div style="display:flex;gap:10px;flex-wrap:wrap"><span><strong>Role:</strong> ${escHtml(role)}</span><span><strong>Role verification:</strong> ${escHtml(roleVerified?'Verified':'Not verified')}</span><span><strong>Identity:</strong> ${escHtml(identityVerified?'Verified':'Not verified')}</span><span><strong>Listing cap used:</strong> ${escHtml(cap)}</span></div><p style="margin:8px 0 0;color:var(--text-2);font-size:12px">${escHtml(next)}</p>`;
+}
+
+async function acceptCurrentViewingFeePolicy(){
+  const checkbox=document.getElementById('viewing-fee-policy-accepted');
+  if(!checkbox?.checked)throw new Error('Read and accept the Viewing Fee Policy before setting a fee.');
+  const{error}=await db.rpc('accept_viewing_fee_policy',{p_policy_version:VIEWING_FEE_POLICY_VERSION});
+  if(error)throw new Error(error.message);
+  currentProfile={...currentProfile,viewing_fee_policy_version:VIEWING_FEE_POLICY_VERSION,viewing_fee_policy_accepted_at:new Date().toISOString()};
+  if(ownerProfile?.id===currentUser.id)ownerProfile=currentProfile;
+  renderAccountType();
 }
 
 async function saveViewingFeeDefault(){
   const input=document.getElementById('viewing-fee-default'),status=document.getElementById('viewing-fee-status');
   if(!input||!status)return;
   const raw=input.value.trim(),value=raw===''?null:Number(raw);
-  if(value!==null&&(!Number.isInteger(value)||value<0||value>5000)){
-    status.textContent='Enter a whole-number amount from KES 0 to KES 5,000, or leave it blank.';
+  if(value!==null&&(!Number.isInteger(value)||value<0||value>VIEWING_FEE_MAX)){
+    status.textContent=`Enter a whole-number amount from KES 0 to KES ${VIEWING_FEE_MAX.toLocaleString('en-KE')}, or leave it blank.`;
     showToast(status.textContent,'error');return;
   }
   try{
+    if(value>0)await acceptCurrentViewingFeePolicy();
     const{error}=await db.from('profiles').update({default_viewing_fee:value}).eq('id',currentUser.id);
     if(error)throw new Error(`Could not save your default viewing fee: ${error.message}`);
     currentProfile={...currentProfile,default_viewing_fee:value};
@@ -834,7 +906,7 @@ async function saveViewingFeeDefault(){
     status.textContent=value===null?'Default cleared.':'Default saved.';
     showToast('Viewing fee default saved ✓','success');
   }catch(error){
-    console.error('Viewing fee default update failed:',error);
+    console.error('[viewing-fee] Default fee update failed:',error);
     status.textContent=error.message||'Could not save your default viewing fee.';
     showToast(status.textContent,'error');
   }
@@ -844,13 +916,14 @@ async function applyViewingFeeToActiveListings(){
   const input=document.getElementById('viewing-fee-default'),status=document.getElementById('viewing-fee-status');
   if(!input||!status)return;
   const value=input.value.trim()===''?0:Number(input.value);
-  if(!Number.isInteger(value)||value<0||value>5000){
-    status.textContent='Enter a whole-number amount from KES 0 to KES 5,000 first.';
+  if(!Number.isInteger(value)||value<0||value>VIEWING_FEE_MAX){
+    status.textContent=`Enter a whole-number amount from KES 0 to KES ${VIEWING_FEE_MAX.toLocaleString('en-KE')} first.`;
     showToast(status.textContent,'error');return;
   }
   const confirmed=window.confirm(`Apply KES ${value.toLocaleString('en-KE')} viewing fee to all your active listings? Existing active listing fees will be replaced.`);
   if(!confirmed)return;
   try{
+    if(value>0)await acceptCurrentViewingFeePolicy();
     const ids=allListings.filter(l=>l.status==='active'&&!l.is_disabled&&!l.recycle_bin).map(l=>l.id);
     const{error}=await db.rpc('set_listing_viewing_fees',{p_listing_ids:ids,p_viewing_fee:value});
     if(error)throw new Error(`Could not apply the fee to active listings: ${error.message}`);
@@ -858,7 +931,7 @@ async function applyViewingFeeToActiveListings(){
     status.textContent='Fee applied to active listings.';
     showToast('Viewing fee applied to active listings ✓','success');
   }catch(error){
-    console.error('Bulk viewing fee update failed:',error);
+    console.error('[viewing-fee] Active-listing fee update failed:',error);
     status.textContent=error.message||'Could not apply the fee to active listings.';
     showToast(status.textContent,'error');
   }
@@ -867,7 +940,7 @@ async function applyViewingFeeToActiveListings(){
 async function loadAccountRoleHistory(){
   const target=document.getElementById('account-role-history');
   if(!target)return;
-  const{data,error}=await db.from('role_history').select('previous_account_type,new_account_type,changed_at').eq('profile_id',currentUser.id).order('changed_at',{ascending:false}).limit(5);
+  const{data,error}=await db.from('role_history').select('previous_account_type,new_account_type,changed_at').eq('profile_id',currentUser.id).order('changed_at',{ascending:false}).limit(3);
   if(error)throw new Error(`Could not load account type history: ${error.message}`);
   if(!data?.length){target.textContent='No account type changes yet.';return;}
   target.replaceChildren();
@@ -877,7 +950,7 @@ async function loadAccountRoleHistory(){
   data.forEach(row=>{
     const item=document.createElement('div');
     const previous=row.previous_account_type||'Not set';
-    item.textContent=`${previous} → ${row.new_account_type} · ${new Date(row.changed_at).toLocaleDateString()}`;
+    item.textContent=`${ACCOUNT_ROLE_LABELS[previous]||previous} → ${ACCOUNT_ROLE_LABELS[row.new_account_type]||row.new_account_type} · ${roleDate(row.changed_at)}`;
     target.appendChild(item);
   });
 }
@@ -907,10 +980,12 @@ async function saveAccountType(){
   const button=document.getElementById('save-account-roles-btn');
   if(button){button.disabled=true;button.textContent='Saving…';}
   try{
-    const{data,error}=await db.rpc('set_account_type',{p_account_type:accountType});
+    const{data,error}=await db.rpc('change_account_type',{p_account_type:accountType});
     if(error)throw new Error(`Could not save your account type: ${error.message}`);
     const result=Array.isArray(data)?data[0]:data;
-    currentProfile={...currentProfile,...result,account_type:accountType,onboarding_completed:true};
+    const{data:profile,error:profileError}=await db.from('profiles').select('*').eq('id',currentUser.id).single();
+    if(profileError)throw new Error(`Your role was saved, but could not be refreshed: ${profileError.message}`);
+    currentProfile={...currentProfile,...result,...profile,account_type:accountType,onboarding_completed:true};
     renderAccountType();
     await Promise.all([loadAccountRoleHistory(),loadCompanyProfileForSettings()]);
     showToast('Your account type was saved ✓','success');
@@ -922,6 +997,106 @@ async function saveAccountType(){
     if(button){button.disabled=false;button.textContent=currentProfile?.onboarding_completed?'Save account type':'Complete account setup';}
   }
 }
+
+let pendingAccountType=null;
+function openChangeRoleModal(){
+  const profile=isTeamMember?(ownerProfile||currentProfile):currentProfile;
+  if(!profile?.account_type||isTeamMember)return;
+  const lockedUntil=profile.account_type_cooldown_until?new Date(profile.account_type_cooldown_until):null;
+  const locked=!!lockedUntil&&lockedUntil>Date.now();
+  const options=document.getElementById('change-role-options');
+  const notice=document.getElementById('change-role-locked');
+  const confirmStep=document.getElementById('change-role-confirm-step');
+  const status=document.getElementById('change-role-status');
+  const confirm=document.getElementById('change-role-confirm');
+  pendingAccountType=null;
+  status.textContent='';
+  confirmStep.hidden=true;
+  notice.hidden=!locked;
+  notice.textContent=locked?`Locked until ${roleDate(lockedUntil)}. If you believe this is a mistake, contact support.`:'';
+  if(locked)notice.innerHTML=`Locked until ${escHtml(roleDate(lockedUntil))}. <a href="/contact">Contact support</a> if you made a genuine mistake.`;
+  options.replaceChildren();
+  ACCOUNT_TYPES.forEach(type=>{
+    const button=document.createElement('button');
+    button.type='button';
+    button.className='role-choice';
+    button.disabled=locked||type===profile.account_type;
+    button.setAttribute('aria-pressed','false');
+    button.dataset.role=type;
+    const current=type===profile.account_type;
+    button.innerHTML=`<strong>${escHtml(ACCOUNT_ROLE_LABELS[type])}${current?' · Current role':''}</strong><span>${escHtml(ACCOUNT_ROLE_DESCRIPTIONS[type])}</span>`;
+    button.addEventListener('click',()=>{
+      if(locked||current)return;
+      pendingAccountType=type;
+      options.querySelectorAll('button').forEach(card=>card.setAttribute('aria-pressed',String(card===button)));
+      confirmStep.hidden=false;
+      status.textContent='';
+      confirm.focus();
+    });
+    options.appendChild(button);
+  });
+  document.getElementById('change-role-cancel').onclick=()=>{
+    pendingAccountType=null;
+    confirmStep.hidden=true;
+    status.textContent='';
+    options.querySelector('[aria-pressed="true"]')?.focus();
+  };
+  confirm.onclick=confirmAccountTypeChange;
+  openModal('modal-change-role');
+}
+
+async function confirmAccountTypeChange(){
+  if(!ACCOUNT_TYPES.includes(pendingAccountType))return;
+  const button=document.getElementById('change-role-confirm');
+  const status=document.getElementById('change-role-status');
+  button.disabled=true;
+  button.textContent='Saving…';
+  status.textContent='';
+  try{
+    const nextType=pendingAccountType;
+    const{data,error}=await db.rpc('change_account_type',{p_account_type:nextType});
+    if(error)throw new Error(error.message);
+    const result=Array.isArray(data)?data[0]:data;
+    currentProfile={...currentProfile,...result,account_type:nextType,onboarding_completed:true,verified_role:null};
+    if(!isTeamMember)ownerProfile=currentProfile;
+    pendingAccountType=null;
+    renderAccountType();
+    closeModal('modal-change-role');
+    let refreshWarning='';
+    const{data:profile,error:profileError}=await db.from('profiles').select('*').eq('id',currentUser.id).single();
+    if(profileError)refreshWarning=` Role changed successfully; refresh the page to load the latest role details.`;
+    else{
+      currentProfile=profile;
+      if(!isTeamMember)ownerProfile=profile;
+      renderAccountType();
+    }
+    await loadAccountRoleHistory();
+    await loadCompanyProfileForSettings();
+    showToast(`Role changed to ${ACCOUNT_ROLE_LABELS[nextType]}.${refreshWarning}`,refreshWarning?'error':'success');
+  }catch(error){
+    console.error('Role change failed:',error);
+    status.textContent=error.message||'Could not change your role.';
+  }finally{
+    button.disabled=false;
+    button.textContent='Confirm';
+  }
+}
+
+document.addEventListener('keydown',event=>{
+  const dialog=document.getElementById('modal-change-role');
+  if(!dialog?.classList.contains('open'))return;
+  if(event.key==='Escape'){
+    event.preventDefault();
+    closeModal('modal-change-role');
+    return;
+  }
+  if(event.key!=='Tab')return;
+  const focusable=[...dialog.querySelectorAll('button:not(:disabled),a[href],input:not(:disabled),[tabindex]:not([tabindex="-1"])')].filter(el=>!el.hidden&&el.offsetParent!==null);
+  if(!focusable.length)return;
+  const first=focusable[0],last=focusable[focusable.length-1];
+  if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}
+  else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}
+});
 
 async function saveCompanyProfile(){
   const status=document.getElementById('company-profile-status');
@@ -954,13 +1129,23 @@ async function saveCompanyProfile(){
 function updateVerifyWarningBanner(){
   const banner=document.getElementById('verify-warning-banner');
   if(!banner)return;
-  const status=currentProfile?.verification_status||'unverified';
-  const applies = verificationEnforcedForMe() && (status==='unverified'||status==='rejected');
+  const roleProfile=ownerProfile||currentProfile;
+  const accountType=roleProfile?.account_type;
+  const status=roleProfile?.verification_status||'unverified';
+  const applies=!!accountType&&accountType!=='buyer'&&(
+    status==='unverified'||status==='rejected'||roleProfile?.verified_role!==accountType
+  );
   banner.style.display = applies ? 'flex' : 'none';
   if(applies){
     const limit = Number(PLATFORM_VERIFY_SETTINGS.unverified_listing_limit)||2;
     const textEl = banner.querySelector('span');
-    if(textEl) textEl.textContent = `Your account isn't verified yet — your active listings are limited to ${limit}. Verify your account to unlock unlimited listings and a trust badge buyers can see.`;
+    const copy={
+      owner:'Submit proof that you own the property to verify your Owner role.',
+      agent:'Verify your identity and submit your Agent credentials to verify this role.',
+      caretaker:'Submit a landlord authorization letter with the landlord’s name and phone to verify your Caretaker role.',
+      company:'Submit company registration documents to verify your Company role.'
+    };
+    if(textEl)textEl.textContent=`${copy[accountType]||'Complete verification for your role.'} When verification limits apply, unverified accounts may post up to ${limit} active listings.`;
   }
 }
 function goToVerification(){
@@ -4634,6 +4819,7 @@ function renderOverview(){
   const confirmed=allPayments.filter(p=>p.status==='confirmed'||p.status==='paid');
   const totalPaid=confirmed.reduce((s,p)=>s+(Number(p.amount)||0),0);
   const views=allListings.reduce((s,l)=>s+(Number(l.views)||0),0);
+  renderRoleTrustOverview();
   document.getElementById('stat-active').textContent=active;
   document.getElementById('stat-active-delta').textContent=`of ${allListings.length} total listing${allListings.length!==1?'s':''}`;
   const buyerThreadCount=threads.filter(t=>t.messages.some(m=>m.sender==='buyer')).length;
@@ -7093,12 +7279,21 @@ async function bulkSetViewingFeeSelectedListings(){
   if(!profile||!['agent','company'].includes(profile.account_type)){
     showToast('Only Agent and Company accounts can set viewing fees.','error');return;
   }
+  if(profile.viewing_fee_policy_version!==VIEWING_FEE_POLICY_VERSION||!profile.viewing_fee_policy_accepted_at){
+    showToast('Read and accept the current Viewing Fee Policy before setting a fee.','error');return;
+  }
+  if(VIEWING_FEE_REQUIRES_IDENTITY&&profile.verification_status!=='verified'){
+    showToast('Verify your identity before setting a viewing fee.','error');return;
+  }
+  if(profile.viewing_fee_blocked){
+    showToast('Your viewing fee privilege is paused. Contact support for help.','error');return;
+  }
   const rows=lcSelected();
   if(!rows.length){showToast('Select at least one listing.','error');return;}
-  const entered=window.prompt('Set a viewing fee in KES (0–5,000). Enter 0 for free viewing:',String(profile.default_viewing_fee??0));
+  const entered=window.prompt(`Set a viewing fee in KES (0–${VIEWING_FEE_MAX.toLocaleString('en-KE')}). Enter 0 for free viewing:`,String(profile.default_viewing_fee??0));
   if(entered===null)return;
   const fee=Number(entered.trim());
-  if(!Number.isInteger(fee)||fee<0||fee>5000){showToast('Enter a whole-number fee from KES 0 to KES 5,000.','error');return;}
+  if(!Number.isInteger(fee)||fee<0||fee>VIEWING_FEE_MAX){showToast(`Enter a whole-number fee from KES 0 to KES ${VIEWING_FEE_MAX.toLocaleString('en-KE')}.`,'error');return;}
   if(!window.confirm(`Apply KES ${fee.toLocaleString('en-KE')} to ${rows.length} selected listing${rows.length===1?'':'s'}?`))return;
   const ids=rows.map(l=>l.id);
   try{
@@ -7108,8 +7303,28 @@ async function bulkSetViewingFeeSelectedListings(){
     renderListingsTable();
     showToast('Viewing fees updated ✓','success');
   }catch(error){
-    console.error('Bulk viewing fee update failed:',error);
+    console.error('[viewing-fee] Bulk viewing fee update failed:',error);
     showToast(error.message||'Could not update viewing fees.','error');
+  }
+}
+async function bulkClearViewingFeeSelectedListings(){
+  const profile=ownerProfile||currentProfile;
+  if(!profile||!['agent','company'].includes(profile.account_type)){
+    showToast('Only Agent and Company accounts can manage viewing fees.','error');return;
+  }
+  const rows=lcSelected();
+  if(!rows.length){showToast('Select at least one listing.','error');return;}
+  if(!window.confirm(`Clear the viewing fee and mark ${rows.length} selected listing${rows.length===1?'':'s'} as free to view?`))return;
+  const ids=rows.map(l=>l.id);
+  try{
+    const{error}=await db.rpc('set_listing_viewing_fees',{p_listing_ids:ids,p_viewing_fee:0});
+    if(error)throw new Error(`Could not clear selected viewing fees: ${error.message}`);
+    allListings=allListings.map(l=>ids.includes(l.id)?{...l,viewing_fee:0}:l);
+    renderListingsTable();
+    showToast('Selected listings now show free viewing ✓','success');
+  }catch(error){
+    console.error('[viewing-fee] Bulk viewing fee clear failed:',error);
+    showToast(error.message||'Could not clear viewing fees.','error');
   }
 }
 function bulkShareSelectedListings(){
@@ -7542,9 +7757,23 @@ async function handleMvFileSelect(file){
 }
 function openEditModal(id){
   const l=allListings.find(l=>l.id===id);if(!l)return;
-  const feeEligible=['agent','company'].includes((ownerProfile||currentProfile)?.account_type);
+  const profile=ownerProfile||currentProfile,feeEligible=['agent','company'].includes(profile?.account_type);
+  const feeInput=document.getElementById('edit-viewing-fee');
+  const feeLocked=feeEligible&&(VIEWING_FEE_REQUIRES_IDENTITY&&profile?.verification_status!=='verified'||profile?.viewing_fee_blocked===true);
   document.getElementById('edit-viewing-fee-wrap').hidden=!feeEligible;
-  document.getElementById('edit-viewing-fee').value=l.viewing_fee??'';
+  feeInput.value=l.viewing_fee??0;
+  feeInput.max=String(VIEWING_FEE_MAX);
+  feeInput.disabled=feeLocked;
+  document.getElementById('edit-viewing-fee-default').textContent=`Default: KES ${Number(profile?.default_viewing_fee||0).toLocaleString('en-KE')}`;
+  const feeLockNotice=document.getElementById('edit-viewing-fee-lock-notice');
+  feeLockNotice.hidden=!feeLocked;
+  if(feeLocked)document.getElementById('edit-viewing-fee-lock-text').textContent=profile?.viewing_fee_blocked
+    ?'Your viewing fee privilege is paused. Contact support to appeal.'
+    :'Verify your identity to charge a viewing fee.';
+  document.getElementById('edit-viewing-fee-reset').disabled=feeLocked;
+  document.getElementById('edit-viewing-fee-warning').hidden=true;
+  document.getElementById('edit-viewing-fee-reset').onclick=()=>{feeInput.value=profile?.default_viewing_fee??0;feeInput.dispatchEvent(new Event('input',{bubbles:true}));};
+  feeInput.oninput=()=>{document.getElementById('edit-viewing-fee-warning').hidden=Number(feeInput.value||0)<=Number(l.viewing_fee||0);};
   editPhotosListingId=id;
   const ed = l.details || {};
   document.getElementById('edit-id').value=l.id;document.getElementById('edit-title').value=l.title||'';document.getElementById('edit-price').value=l.price||'';document.getElementById('edit-price-type').value=l.price_type||(l.price_frequency==='once'?'sale':'rent');document.getElementById('edit-bedrooms').value=ed.bedrooms||'';document.getElementById('edit-bathrooms').value=ed.bathrooms||'';document.getElementById('edit-size').value=ed.size_sqm||'';document.getElementById('edit-category').value=l.category||'apartment';document.getElementById('edit-address').value=l.address||'';document.getElementById('edit-description').value=l.description||'';document.getElementById('edit-furnished').checked=ed.furnished==='yes';document.getElementById('edit-contact_hidden').checked=l.contact_hidden||false;
@@ -7579,9 +7808,13 @@ async function saveEdit(){
   let viewingFeeToSave=null;
   if(feeEligible){
     const feeInput=document.getElementById('edit-viewing-fee'),feeRaw=feeInput.value.trim(),fee=feeRaw===''?null:Number(feeRaw);
-    if(fee!==null&&(!Number.isInteger(fee)||fee<0||fee>5000)){showToast('Enter a whole-number viewing fee from KES 0 to KES 5,000.','error');feeInput.focus();return;}
+    if(fee!==null&&(!Number.isInteger(fee)||fee<0||fee>VIEWING_FEE_MAX)){showToast(`Enter a whole-number viewing fee from KES 0 to KES ${VIEWING_FEE_MAX.toLocaleString('en-KE')}.`,'error');feeInput.focus();return;}
     viewingFeeToSave=fee??0;
+    if(viewingFeeToSave>0&&Number(original?.viewing_fee||0)!==viewingFeeToSave){
+      try{await acceptCurrentViewingFeePolicy()}catch(error){showToast(error.message,'error');settingsJumpTo('viewing-fee-settings');return;}
+    }
   }
+  const viewingFeeChanged=feeEligible&&Number(original?.viewing_fee||0)!==Number(viewingFeeToSave||0);
   const btn=document.getElementById('btn-save-edit');btn.disabled=true;btn.innerHTML='<span class="spinner-sm"></span> Saving…';
   const oldPrice=original?Number(original.price):null;
 
@@ -7608,9 +7841,9 @@ async function saveEdit(){
   const{error}=await db.from('listings').update(u).eq('id',id);
   btn.disabled=false;btn.innerHTML='Save changes';
   if(error){showToast('Could not save: '+error.message,'error');return;}
-  if(feeEligible){
+  if(viewingFeeChanged){
     const{error:feeError}=await db.rpc('set_listing_viewing_fees',{p_listing_ids:[id],p_viewing_fee:viewingFeeToSave});
-    if(feeError){showToast(`Listing details were saved, but the viewing fee was not: ${feeError.message}`,'error');return;}
+    if(feeError){console.error('[viewing-fee] Listing details saved but fee update failed:',feeError);showToast(`Listing details were saved, but the viewing fee was not: ${feeError.message}`,'error');return;}
     u.viewing_fee=viewingFeeToSave;
   }
   const idx=allListings.findIndex(l=>l.id===id);if(idx!==-1)allListings[idx]={...allListings[idx],...u};
@@ -8279,8 +8512,91 @@ async function generateBrochure(id){
   }
 }
 
-const pageTitles={overview:'Overview',listings:'My listings',messages:'Messages',enquiries:'Enquiries',reviews:'Reviews',payments:'Payments',settings:'Settings','rent-ledger':'Rent & Tenant Ledger','demand-heatmap':'Demand Insights',notifications:'Notifications'};
-function showPage(name){if(!document.getElementById('page-'+name))name='overview';sessionStorage.setItem('ny_last_page',name);if(!window.__navFromHash&&!document.getElementById('tour-overlay').classList.contains('open')&&location.hash!=='#'+name)history.pushState(null,'','#'+name);document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>{n.classList.remove('active');n.removeAttribute('aria-current');});document.getElementById('page-'+name).classList.add('active');const navEl=document.getElementById('nav-'+name);if(navEl){navEl.classList.add('active');navEl.setAttribute('aria-current','page');}document.getElementById('topbar-title').textContent=pageTitles[name]||name;if(name==='overview')renderOverview();if(name==='listings')renderListingsTable();if(name==='messages'){showThreadListMobile();renderThreadList();}if(name==='enquiries')renderEnquiries();if(name==='reviews')renderReviews();if(name==='payments')renderPayments();if(name==='rent-ledger'){ if(isBnbLedgerMode()) loadBnbLedger(); else loadRentalUnits(); }if(name==='demand-heatmap')loadDemandInsights();if(name==='notifications')renderNotificationsPage();closeSidebar();
+let viewingRequests=[];
+function renderViewingRequestsPage(){
+  const list=document.getElementById('viewings-list');
+  if(!list)return;
+  if(!viewingRequests.length){
+    list.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-3);font-size:13px">No viewing requests yet. New requests will appear here.</div>';
+    return;
+  }
+  const statusLabels={pending:'New',confirmed:'Confirmed',done:'Done',cancelled:'Cancelled'};
+  list.innerHTML=viewingRequests.map(request=>{
+    const fee=request.fee_at_request==null?'Viewing fee: confirm with the lister':Number(request.fee_at_request)===0?'Free viewing':`Viewing fee: KES ${Number(request.fee_at_request).toLocaleString('en-KE')}`;
+    const date=request.requested_date?new Date(`${request.requested_date}T00:00:00`).toLocaleDateString('en-KE',{weekday:'short',day:'numeric',month:'short',year:'numeric'}):'Date not provided';
+    const actions=request.request_status==='pending'
+      ?`<button type="button" class="btn btn-primary btn-sm" data-viewing-id="${escHtml(request.request_id)}" data-viewing-status="confirmed" style="min-height:44px">Confirm</button><button type="button" class="btn btn-outline btn-sm" data-viewing-id="${escHtml(request.request_id)}" data-viewing-status="cancelled" style="min-height:44px">Cancel</button>`
+      :request.request_status==='confirmed'
+        ?`<button type="button" class="btn btn-primary btn-sm" data-viewing-id="${escHtml(request.request_id)}" data-viewing-status="done" style="min-height:44px">Mark viewed</button><button type="button" class="btn btn-outline btn-sm" data-viewing-id="${escHtml(request.request_id)}" data-viewing-status="cancelled" style="min-height:44px">Cancel</button>`
+        :'';
+    return `<article class="card" style="padding:16px;margin-bottom:12px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div style="min-width:0;flex:1"><strong>${escHtml(request.listing_title||'Property viewing')}</strong><div style="font-size:13px;color:var(--text-2);margin-top:5px">${escHtml(request.buyer_name||'Buyer')} · ${escHtml(request.buyer_phone||'No phone provided')}</div><div style="font-size:12px;color:var(--text-3);margin-top:5px">${escHtml(date)} · ${escHtml(request.requested_time||'Time not provided')}</div><div style="font-size:12px;font-weight:700;margin-top:7px">${escHtml(fee)}</div><div style="font-size:12px;color:var(--text-3);margin-top:4px">${request.fee_acknowledged?'Buyer acknowledged the fee':'No fee acknowledgement recorded'} · ${escHtml(statusLabels[request.request_status]||request.request_status||'Status unknown')}</div>${request.notes?`<p style="font-size:12px;color:var(--text-2);margin:8px 0 0;white-space:pre-wrap">${escHtml(request.notes)}</p>`:''}</div><div style="display:flex;gap:8px;flex-wrap:wrap">${actions}</div></div></article>`;
+  }).join('');
+}
+
+async function loadViewingRequestsPage(silent=false){
+  const status=document.getElementById('viewings-page-status');
+  const page=document.getElementById('page-viewings');
+  if(!silent&&page?.classList.contains('active'))status.textContent='Loading viewing requests…';
+  const{data,error}=await db.rpc('get_seller_viewing_requests');
+  if(error){
+    console.error('[viewing-requests] Could not load viewing requests:',error);
+    if(status)status.textContent='Viewing requests could not be loaded. Please refresh and try again.';
+    return;
+  }
+  viewingRequests=Array.isArray(data)?data:[];
+  const pending=viewingRequests.filter(item=>item.request_status==='pending').length;
+  const badge=document.getElementById('nav-badge-viewings');
+  if(badge){badge.textContent=String(pending);badge.style.display=pending?'':'none';}
+  if(page?.classList.contains('active')){
+    if(status)status.textContent=viewingRequests.length?`${viewingRequests.length} recent request${viewingRequests.length===1?'':'s'} · ${pending} new`:'';
+    renderViewingRequestsPage();
+  }
+}
+
+async function updateViewingRequestStatus(requestId,nextStatus){
+  const request=viewingRequests.find(item=>item.request_id===requestId);
+  if(!request)return;
+  if(nextStatus==='cancelled'&&!window.confirm('Cancel this viewing request?'))return;
+  const status=document.getElementById('viewings-page-status');
+  if(status)status.textContent='Updating viewing request…';
+  try{
+    const{data,error}=await db.rpc('update_viewing_request_status',{p_request_id:requestId,p_status:nextStatus});
+    if(error)throw new Error(error.message);
+    const update=Array.isArray(data)?data[0]:data;
+    if(!update)throw new Error('The viewing request status was not returned.');
+    if(update.buyer_email){
+      const{error:emailError}=await db.functions.invoke('send-notification-email',{body:{
+        type:'viewing_request_status_update',
+        buyerEmail:update.buyer_email,
+        buyerName:update.buyer_name,
+        listingId:request.listing_id,
+        listingTitle:update.listing_title,
+        status:update.request_status,
+        requestedDate:update.requested_date,
+        requestedTime:update.requested_time,
+        feeAtRequest:update.fee_at_request
+      }});
+      if(emailError){
+        console.error('[viewing-requests] Status changed but buyer email could not be sent:',emailError);
+        showToast('Request updated, but the buyer email could not be sent.','error');
+      }
+    }
+    await loadViewingRequestsPage();
+    showToast(`Viewing request ${nextStatus==='done'?'marked done':nextStatus}.`,'success');
+  }catch(error){
+    console.error('[viewing-requests] Could not update viewing request:',error);
+    if(status)status.textContent=error.message||'Could not update the viewing request.';
+    showToast(error.message||'Could not update the viewing request.','error');
+  }
+}
+
+document.getElementById('viewings-list')?.addEventListener('click',event=>{
+  const button=event.target.closest('[data-viewing-id][data-viewing-status]');
+  if(button)updateViewingRequestStatus(button.dataset.viewingId,button.dataset.viewingStatus);
+});
+
+const pageTitles={overview:'Overview',listings:'My listings',messages:'Messages',enquiries:'Enquiries',viewings:'Viewings',reviews:'Reviews',payments:'Payments',settings:'Settings','rent-ledger':'Rent & Tenant Ledger','demand-heatmap':'Demand Insights',notifications:'Notifications'};
+function showPage(name){if(!document.getElementById('page-'+name))name='overview';sessionStorage.setItem('ny_last_page',name);if(!window.__navFromHash&&!document.getElementById('tour-overlay').classList.contains('open')&&location.hash!=='#'+name)history.pushState(null,'','#'+name);document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>{n.classList.remove('active');n.removeAttribute('aria-current');});document.getElementById('page-'+name).classList.add('active');const navEl=document.getElementById('nav-'+name);if(navEl){navEl.classList.add('active');navEl.setAttribute('aria-current','page');}document.getElementById('topbar-title').textContent=pageTitles[name]||name;if(name==='overview')renderOverview();if(name==='listings')renderListingsTable();if(name==='messages'){showThreadListMobile();renderThreadList();}if(name==='enquiries')renderEnquiries();if(name==='viewings')loadViewingRequestsPage();if(name==='reviews')renderReviews();if(name==='payments')renderPayments();if(name==='rent-ledger'){ if(isBnbLedgerMode()) loadBnbLedger(); else loadRentalUnits(); }if(name==='demand-heatmap')loadDemandInsights();if(name==='notifications')renderNotificationsPage();closeSidebar();
   const scwFabEl=document.getElementById('scw-fab');
   if(scwFabEl){
     if(name==='messages'){

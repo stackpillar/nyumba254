@@ -341,11 +341,42 @@ function tip(html: string): string {
 
 type EmailOut = { subject: string; html: string; to: string; toName: string; replyTo?: string };
 type Payload = Record<string, any>;
+type EmailContext = Awaited<ReturnType<typeof context>>;
+
+const VIEWING_FEE_SAFETY = "Pay only the listed viewing fee at the property, to the person you meet, and ask for a receipt. Never pay rent, a deposit, or another fee before viewing. Nyumba254 does not collect viewing fees.";
+
+function formatViewingFee(value: unknown): string {
+  if (value === null || value === undefined || value === "") return "Viewing fee: confirm with the lister";
+  const fee = Number(value);
+  if (!Number.isFinite(fee) || fee < 0) return "Viewing fee: confirm with the lister";
+  return fee === 0 ? "Free viewing" : `Viewing fee: ${fmtKES(fee)}`;
+}
+
+async function resolveViewingFee(p: Payload): Promise<number | null> {
+  for (const candidate of [p.feeAtRequest, p.fee_at_request, p.viewingFee, p.viewing_fee]) {
+    if (candidate !== null && candidate !== undefined && candidate !== "") {
+      const fee = Number(candidate);
+      return Number.isFinite(fee) && fee >= 0 ? fee : null;
+    }
+  }
+  if (!supabaseAdmin || !p.listingId) return null;
+  try {
+    const { data, error } = await supabaseAdmin.rpc("get_public_viewing_fees", {
+      p_listing_ids: [p.listingId],
+    });
+    if (error) throw error;
+    const value = data?.[0]?.viewing_fee;
+    return value === null || value === undefined ? null : Number(value);
+  } catch (error) {
+    console.error("[viewing-fee] Could not resolve fee for email:", error);
+    return null;
+  }
+}
 
 // HANDLERS receive ctx already resolved (listingUrl included) — see
 // context() further down, which is now async because it may need to
 // look up listing_number from Supabase.
-const HANDLERS: Record<string, (p: Payload, ctx: Awaited<ReturnType<typeof context>>) => EmailOut[]> = {
+const HANDLERS: Record<string, (p: Payload, ctx: EmailContext) => EmailOut[]> = {
   listing_scheduled: (p, { sellerName, listingTitle, listingUrl }) => {
     const when = p.publishAt ? new Date(p.publishAt).toLocaleString("en-KE", { dateStyle: "long", timeStyle: "short" }) : "the scheduled date";
     return [{
@@ -990,7 +1021,7 @@ const HANDLERS: Record<string, (p: Payload, ctx: Awaited<ReturnType<typeof conte
     }));
   },
 
-  new_buyer_enquiry: (p, { listingUrl, sellerName, sellerEmail }) => {
+  new_buyer_enquiry: (p, { listingUrl, sellerName, sellerEmail, viewingFee }) => {
     const name = escapeHtml(p.buyerName || "A buyer");
     const emailAddr = escapeHtml(p.buyerEmail || "—");
     const phone = escapeHtml(p.buyerPhone || "—");
@@ -1005,7 +1036,7 @@ const HANDLERS: Record<string, (p: Payload, ctx: Awaited<ReturnType<typeof conte
         preheader: `${p.buyerName || "A buyer"} enquired about "${p.listingTitle || "a listing"}".`,
         bodyHtml:
           para(`<strong style="color:#161614;">${name}</strong> sent an enquiry about <strong style="color:#161614;">"${listingTitleEsc}"</strong>.`) +
-          factCard([["Name", name], ["Phone", phone], ["Email", emailAddr]]) +
+          factCard([["Name", name], ["Phone", phone], ["Email", emailAddr], ["Viewing fee", escapeHtml(formatViewingFee(viewingFee))]]) +
           para(escapeHtml(p.message || "").replace(/\n/g, "<br/>")) +
           tip(`If they gave a real email, just hit Reply to respond directly. Otherwise use the phone number above.`),
         ctaLabel: "View listing", ctaUrl: listingUrl,
@@ -1025,7 +1056,7 @@ const HANDLERS: Record<string, (p: Payload, ctx: Awaited<ReturnType<typeof conte
           bodyHtml:
             para(`Hi ${sellerName},`) +
             para(`<strong style="color:#161614;">${name}</strong> sent an enquiry about <strong style="color:#161614;">"${listingTitleEsc}"</strong>.`) +
-            factCard([["Name", name], ["Phone", phone], ["Email", emailAddr]]) +
+            factCard([["Name", name], ["Phone", phone], ["Email", emailAddr], ["Viewing fee", escapeHtml(formatViewingFee(viewingFee))]]) +
             para(escapeHtml(p.message || "").replace(/\n/g, "<br/>")) +
             tip(`Reply from your dashboard, or call/WhatsApp them directly using the details above.`),
           ctaLabel: "Open your dashboard", ctaUrl: `${SITE_URL}/dashboard.html`,
@@ -1058,13 +1089,12 @@ const HANDLERS: Record<string, (p: Payload, ctx: Awaited<ReturnType<typeof conte
     }
     return emails;
   },
-  viewing_request: (p, { sellerName, sellerEmail, listingUrl }) => {
+  viewing_request: (p, { sellerName, sellerEmail, listingUrl, viewingFee }) => {
     const name = escapeHtml(p.buyerName || "A buyer");
     const phone = escapeHtml(p.buyerPhone || "—");
     const when = escapeHtml(p.date || "—");
     const slot = escapeHtml(p.time || "—");
-    const fee = Number(p.viewingFee);
-    const feeLabel = Number.isFinite(fee) && fee > 0 ? `KES ${fee.toLocaleString("en-KE")} (paid directly to the lister; not collected by Nyumba254)` : "Free";
+    const feeLabel = formatViewingFee(viewingFee);
     const notesHtml = p.notes ? para(escapeHtml(p.notes)) : "";
     const emails: EmailOut[] = ADMIN_EMAILS.map((addr) => ({
       to: addr, toName: "Admin",
@@ -1076,6 +1106,7 @@ const HANDLERS: Record<string, (p: Payload, ctx: Awaited<ReturnType<typeof conte
         bodyHtml:
           para(`<strong style="color:#161614;">${name}</strong> requested a viewing for <strong style="color:#161614;">"${escapeHtml(p.listingTitle || "a listing")}"</strong>.`) +
           factCard([["Name", name], ["Phone", phone], ["Preferred date", when], ["Time slot", slot], ["Viewing fee", escapeHtml(feeLabel)]]) +
+          tip(escapeHtml(VIEWING_FEE_SAFETY)) +
           notesHtml,
         ctaLabel: "View listing", ctaUrl: listingUrl,
         footerNote: "You're receiving this because a buyer requested a viewing on Nyumba254.",
@@ -1102,7 +1133,58 @@ const HANDLERS: Record<string, (p: Payload, ctx: Awaited<ReturnType<typeof conte
         }),
       });
     }
+    if (isValidEmail(p.buyerEmail)) {
+      emails.push({
+        to: p.buyerEmail.trim(), toName: p.buyerName || "there",
+        subject: `Viewing request received: ${p.listingTitle || "a listing"}`,
+        html: renderShell({
+          heading: "Your viewing request was sent",
+          eyebrow: "Viewing request confirmation",
+          preheader: `Your request to view "${p.listingTitle || "a listing"}" has been sent.`,
+          bodyHtml:
+            para(`Hi ${escapeHtml(p.buyerName || "there")},`) +
+            para(`Your request to view <strong style="color:#161614;">"${escapeHtml(p.listingTitle || "this property")}"</strong> has been sent to the lister.`) +
+            factCard([["Preferred date", when], ["Time slot", slot], ["Viewing fee", escapeHtml(feeLabel)]]) +
+            tip(escapeHtml(VIEWING_FEE_SAFETY)),
+          ctaLabel: "View listing", ctaUrl: listingUrl,
+          footerNote: "You're receiving this because you requested a property viewing on Nyumba254.",
+          quickLinks: buyerLinks,
+        }),
+      });
+    }
     return emails;
+  },
+
+  viewing_request_status_update: (p, { listingUrl, viewingFee }) => {
+    if (!isValidEmail(p.buyerEmail)) return [];
+    const labels: Record<string, string> = {
+      confirmed: "confirmed",
+      done: "marked as completed",
+      cancelled: "cancelled",
+    };
+    const status = labels[String(p.status || "")];
+    if (!status) return [];
+    const name = escapeHtml(p.buyerName || "there");
+    const title = escapeHtml(p.listingTitle || "your requested viewing");
+    const date = escapeHtml(p.requestedDate || "—");
+    const time = escapeHtml(p.requestedTime || "—");
+    return [{
+      to: p.buyerEmail.trim(), toName: p.buyerName || "there",
+      subject: `Viewing request ${status}: ${p.listingTitle || "a listing"}`,
+      html: renderShell({
+        heading: `Your viewing request was ${status}`,
+        eyebrow: "Viewing request update",
+        preheader: `The lister ${status} your request for "${p.listingTitle || "a listing"}".`,
+        bodyHtml:
+          para(`Hi ${name},`) +
+          para(`The lister ${status} your request for <strong style="color:#161614;">"${title}"</strong>.`) +
+          factCard([["Requested date", date], ["Time slot", time], ["Fee recorded for this request", escapeHtml(formatViewingFee(viewingFee))]]) +
+          tip(escapeHtml(VIEWING_FEE_SAFETY)),
+        ctaLabel: "View listing", ctaUrl: listingUrl,
+        footerNote: "You're receiving this because you requested a property viewing on Nyumba254.",
+        quickLinks: buyerLinks,
+      }),
+    }];
   },
 
   listings_paused: (p, { sellerName, dashboardUrl }) => [{
@@ -1579,6 +1661,7 @@ async function context(p: Payload) {
     listingTitle: escapeHtml(p.listingTitle || "the listing"),
     listingUrl: await resolveListingUrl(p),
     dashboardUrl: `${SITE_URL}/dashboard.html`,
+    viewingFee: await resolveViewingFee(p),
   };
 }
 

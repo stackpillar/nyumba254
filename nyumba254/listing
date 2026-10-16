@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>Listing — Nyumba254</title>
-<meta name="description" content="View property details on Nyumba254: photos, price, location, and message the seller directly."/>
+<meta name="description" content="View property details on Nyumba254: photos, price, location, lister role and viewing fee. Message the lister directly."/>
 <meta name="robots" id="m-robots" content="index,follow"/>
 <meta name="theme-color" content="#0F6E56"/>
 <link rel="canonical" id="m-canon" href="https://nyumba254.com/listings"/>
@@ -250,6 +250,7 @@ button.tchip svg:last-child,button.vbadge svg:last-child{opacity:.7;margin-left:
 .netbar button{border:1px solid currentColor;border-radius:20px;min-height:36px;padding:0 14px;font-weight:600;font-size:13px}
 .netbar.ok button{display:none}
 .tip{font-size:12.5px;color:var(--text-2);margin-top:14px;line-height:1.55;background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:var(--radius);padding:10px 12px}
+.fee-safety{font-weight:600}.fee-safety>div{display:flex;gap:12px;flex-wrap:wrap;margin-top:7px}.fee-safety .link{min-height:44px;text-align:left}
 .scard .report{display:block;margin:6px auto 0}
 .sent{text-align:center}
 .sent-ic{width:48px;height:48px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;margin:0 auto 10px}
@@ -295,7 +296,7 @@ a.lncard:hover{border-color:var(--green);background:var(--green-light)}
 .ctabar .btn:not(.ctabar-icon){flex:1;padding:0 12px}
 .ctabar .ctabar-wa{flex:1.4}
 .ctabar-price{flex:1.2}
-@media(max-width:479px){.ctabar-price{display:none}}
+@media(max-width:479px){.ctabar-price{display:block;flex:1;min-width:0}.ctabar .btn{padding:0 9px}.ctabar .ctabar-icon{flex-basis:42px}}
 
 /* lightbox */
 .lb{background:rgba(0,0,0,.96);flex-direction:column;padding:0}
@@ -356,10 +357,14 @@ a.lncard:hover{border-color:var(--green);background:var(--green-light)}
     <nav class="crumbs" id="crumbs" aria-label="Breadcrumb"></nav>
     <div class="tb-actions" id="tb-actions"></div>
   </div>
-  <div class="reach" id="reach" hidden role="status"><span>Did you manage to reach the seller?</span><button type="button" class="btn btn-primary" data-act="reach-yes">Yes</button><button type="button" class="btn btn-outline" data-act="reach-no">No</button></div>
+  <div class="reach" id="reach" hidden role="status"><span>Did you manage to reach the lister?</span><button type="button" class="btn btn-primary" data-act="reach-yes">Yes</button><button type="button" class="btn btn-outline" data-act="reach-no">No</button></div>
   <div id="view">
     <div class="layout"><div class="main-col"><div class="sk" style="aspect-ratio:16/10;margin-bottom:20px"></div><div class="sk" style="height:22px;width:40%;margin-bottom:12px"></div><div class="sk" style="height:38px;margin-bottom:12px"></div><div class="sk" style="height:34px;width:50%;margin-bottom:18px"></div><div class="sk" style="height:76px;margin-bottom:16px"></div><div class="sk" style="height:140px"></div></div><div class="sk" style="height:440px"></div></div>
   </div>
+  <section id="buyer-viewing-feedback" hidden aria-labelledby="buyer-viewing-feedback-title" style="margin:24px 0;padding:18px;border:1px solid var(--border);border-radius:14px;background:var(--surface)">
+    <h2 id="buyer-viewing-feedback-title" style="font-size:18px;margin:0 0 8px">How did the viewing go?</h2>
+    <div id="buyer-viewing-feedback-list" aria-live="polite"></div>
+  </section>
 </main>
 
 <div class="ctabar" id="ctabar" hidden></div>
@@ -379,7 +384,7 @@ a.lncard:hover{border-color:var(--green);background:var(--green-light)}
 <div class="nk-sheet-overlay" id="ov-contact-sheet">
   <div class="nk-sheet" role="dialog" aria-modal="true" aria-labelledby="cs-t">
     <div class="nk-sheet-handle" aria-hidden="true"></div>
-    <div class="sheet-head"><h2 id="cs-t">Contact seller</h2><button type="button" class="sheet-close" data-act="close" aria-label="Close">✕</button></div>
+    <div class="sheet-head"><h2 id="cs-t">Contact the lister</h2><button type="button" class="sheet-close" data-act="close" aria-label="Close">✕</button></div>
     <div class="sheet-body" id="contact-sheet-slot"></div>
   </div>
 </div>
@@ -393,14 +398,14 @@ a.lncard:hover{border-color:var(--green);background:var(--green-light)}
   <div class="notify-modal-body">
     <p class="notify-modal-sub">Fake listing, scam attempt or wrong details? We review every report.</p>
     <div class="nf-banner" id="rp-banner" role="alert"></div>
-    <div class="nf-field"><label for="rp-reason">Reason</label><select id="rp-reason"><option value="">Select a reason…</option><option value="fake_listing">This listing looks fake</option><option value="scam_attempt">Seller asked for money upfront</option><option value="viewing_fee_dispute">Viewing fee was not disclosed or differs from the listing</option><option value="unreasonable_fee">Legacy finder's-fee report</option><option value="wrong_info">Details don't match reality</option><option value="offensive">Offensive content</option><option value="other">Something else</option></select></div>
+    <div class="nf-field"><label for="rp-reason">Reason</label><select id="rp-reason"><option value="">Select a reason…</option><option value="fake_listing">This listing looks fake</option><option value="scam_attempt">Scam or other upfront payment</option><option value="viewing_fee_advance_payment">Asked for viewing-fee payment before viewing</option><option value="viewing_fee_dispute">Asked for more than the listed fee</option><option value="viewing_fee_free_listing">Charged after a free-viewing listing</option><option value="viewing_fee_not_refunded">Fee not refunded</option><option value="wrong_info">Details don't match reality</option><option value="offensive">Offensive content</option><option value="other">Something else</option></select></div>
     <div class="nf-field" id="rp-amt-wrap" hidden><label for="rp-amt">Amount asked (KES)</label><input type="number" id="rp-amt" min="0" inputmode="numeric"/></div>
     <div class="nf-field"><label for="rp-det">Details <span class="nf-optional">optional</span></label><textarea id="rp-det" maxlength="1000"></textarea></div>
   </div>
   <div class="notify-modal-foot"><button type="button" class="btn btn-outline" data-act="close">Cancel</button><button type="button" class="btn btn-primary" data-act="send-report">Send report</button></div></div></div>
 
 <div class="notify-modal-overlay" id="ov-rate"><div class="notify-modal" role="dialog" aria-modal="true" aria-labelledby="rt-t">
-  <div class="notify-modal-head"><h2 id="rt-t">Rate this seller</h2><button type="button" class="notify-modal-close" data-act="close" aria-label="Close">✕</button></div>
+  <div class="notify-modal-head"><h2 id="rt-t">Rate this lister</h2><button type="button" class="notify-modal-close" data-act="close" aria-label="Close">✕</button></div>
   <div class="notify-modal-body">
     <p class="notify-modal-sub">Your review helps other buyers know what to expect.</p>
     <div class="stars" id="rt-stars" role="group" aria-label="Rating"></div>
@@ -422,21 +427,22 @@ a.lncard:hover{border-color:var(--green);background:var(--green-light)}
         <div class="nf-field"><label for="vw-slot">Time</label><select id="vw-slot"><option value="Morning (8am–11am)">Morning, 8am to 11am</option><option value="Midday (11am–2pm)">Midday, 11am to 2pm</option><option value="Afternoon (2pm–5pm)">Afternoon, 2pm to 5pm</option><option value="Evening (5pm–7pm)">Evening, 5pm to 7pm</option></select></div>
       </div>
       <div class="nf-field"><label for="vw-name">Full name</label><input type="text" id="vw-name" autocomplete="name"/><div class="nf-err" id="vw-name-e" role="alert"></div></div>
+      <div class="nf-field"><label for="vw-email">Email for viewing updates <span class="nf-optional">optional</span></label><input type="email" id="vw-email" autocomplete="email"/><div class="nf-err" id="vw-email-e" role="alert"></div></div>
       <div class="nf-field" id="vw-phone-f"><label for="vw-phone">Phone</label><input type="tel" id="vw-phone" inputmode="tel" autocomplete="tel" placeholder="07XX XXX XXX"/><div class="nf-err" id="vw-phone-e" role="alert"></div></div>
       <div class="nf-field"><label for="vw-note">Note <span class="nf-optional">optional</span></label><textarea id="vw-note" maxlength="300" placeholder="e.g. I will come with my family"></textarea></div>
-      <label class="nf-check" id="vw-fee-ack-wrap" hidden><input type="checkbox" id="vw-fee-ack"/> I understand the listed viewing fee is agreed and paid directly to the lister; Nyumba254 does not collect it.</label>
+      <label class="nf-check" id="vw-fee-ack-wrap" hidden><input type="checkbox" id="vw-fee-ack"/> I have read and understand the viewing fee shown above.</label>
       <div class="hp" aria-hidden="true"><label for="vw-web">Leave empty</label><input id="vw-web" tabindex="-1" autocomplete="off"/></div>
-      <p class="tip">The lister confirms the time in your chat. Nyumba254 does not collect viewing fees. Verify the property and agree the terms directly with the lister.</p>
+      <p class="tip" id="vw-safety"></p>
     </div>
     <div class="notify-modal-foot"><button type="button" class="btn btn-outline" data-act="close">Cancel</button><button type="button" class="btn btn-primary" id="vw-send" data-act="send-viewing">Send request</button></div>
   </div>
-  <div class="notify-modal-body sent" id="vw-done" hidden><div class="sent-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></div><h3>Request sent</h3><p>The seller will confirm the time in your chat. You may also get a call.</p><button type="button" class="btn btn-primary" data-act="chat">Open conversation</button><button type="button" class="btn btn-outline" data-act="close">Close</button></div>
+  <div class="notify-modal-body sent" id="vw-done" hidden><div class="sent-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></div><h3>Request sent</h3><p>The lister will confirm the time in your chat. You may also get a call.</p><button type="button" class="btn btn-primary" data-act="chat">Open conversation</button><button type="button" class="btn btn-outline" data-act="close">Close</button></div>
 </div></div>
 
 <div class="notify-modal-overlay" id="ov-verify"><div class="notify-modal" role="dialog" aria-modal="true" aria-labelledby="vf-t">
   <div class="notify-modal-head"><h2 id="vf-t">What does Verified mean?</h2><button type="button" class="notify-modal-close" data-act="close" aria-label="Close">✕</button></div>
   <div class="notify-modal-body" id="vf-body"></div>
-  <div class="notify-modal-foot"><a class="link" href="/how-it-works" style="margin-right:auto">How Nyumba254 checks sellers</a><button type="button" class="btn btn-primary" data-act="close">Got it</button></div>
+  <div class="notify-modal-foot"><a class="link" href="/how-it-works" style="margin-right:auto">How role verification works</a><button type="button" class="btn btn-primary" data-act="close">Got it</button></div>
 </div></div>
 
 <footer>
@@ -456,7 +462,7 @@ a.lncard:hover{border-color:var(--green);background:var(--green-light)}
       </div>
       <div class="footer-col"><h2>Browse</h2><a href="/listings">All listings</a><a href="/listings?category=apartment">Apartment</a><a href="/listings?category=house">House</a><a href="/listings?category=boarding">Boarding House</a><a href="/listings?category=airbnb">Airbnb / Holiday Rental</a><a href="/listings?category=commercial">Shops &amp; offices</a></div>
       <div class="footer-col"><h2>Counties</h2><div class="footer-counties" id="footer-counties"></div></div>
-      <div class="footer-col"><h2>Platform</h2><a href="/post-listing">List a property</a><a href="/how-it-works">How it works</a><a href="/login">Seller login</a></div>
+      <div class="footer-col"><h2>Platform</h2><a href="/post-listing">List a property</a><a href="/how-it-works">How it works</a><a href="/viewing-fee-policy">Viewing Fee Policy</a><a href="/login">Sign in</a></div>
       <div class="footer-col"><h2>Company</h2><a href="/contact">Contact us</a><a href="/terms">Terms of service</a><a href="/privacy">Privacy policy</a><a href="/faq">FAQ</a></div>
     </div>
     <div class="footer-divider"></div>
@@ -482,8 +488,8 @@ const CFG={
   exactPin:true,                 // true: exact map pin (as you requested). false: ~100 m rounded pin inside a circle.
   staleDays:60,                  // show "confirm it is still available" after this many days
   viewTtlMs:864e5,               // a visitor counts as a new view once per 24 h
-  reachWindowMs:45*60*1000,      // "did you reach the seller?" prompt window
-  reviewAfterMs:864e5,           // "Rate this seller" unlocks 24 h after first contact
+  reachWindowMs:45*60*1000,      // "did you reach the lister?" prompt window
+  reviewAfterMs:864e5,           // "Rate this lister" unlocks 24 h after first contact
   /* Explicit columns keep phone/whatsapp/contact_email out of the public payload.
      If any name below does not exist in your table, the query silently retries with '*'. */
   listCols:'id,listing_number,seller_id,title,description,category,status,is_disabled,disabled_reason,recycle_bin,is_featured,price,price_frequency,county,area,address,latitude,longitude,details,amenities,contact_name,contact_hidden,views,created_at,payment_status,trial_expires_at,listed_by_type',
@@ -596,9 +602,9 @@ async function load(){
     const{data:publicProfile,error:profileError}=await db.rpc('get_public_account_profile',{p_profile_id:P.seller_id});
     if(profileError)throw new Error(`Could not load the public account profile: ${profileError.message}`);
     P.profiles=(Array.isArray(publicProfile)?publicProfile[0]:publicProfile)||P.profiles||{};
-    const{data:feeRows,error:feeError}=await db.rpc('get_public_viewing_fees',{p_listing_ids:[P.id]});
-    if(feeError)throw new Error(`Could not load the listing viewing fee: ${feeError.message}`);
-    P.viewing_fee=Number(feeRows?.[0]?.viewing_fee)||0;
+      const{data:feeRows,error:feeError}=await db.rpc('get_public_viewing_fees',{p_listing_ids:[P.id]});
+      if(feeError){console.error('[viewing-fee] Could not load listing fee:',feeError);P.viewing_fee=null}
+      else P.viewing_fee=Number.isFinite(Number(feeRows?.[0]?.viewing_fee))?Number(feeRows[0].viewing_fee):null;
     const s=sr&&sr.data;uid=(s&&s.session&&s.session.user&&s.session.user.id)||null;
     isOwner=!!uid&&P.seller_id===uid;
     const live=(P.status==='active'||P.status==='occupied')&&!P.is_disabled&&!P.recycle_bin;
@@ -612,7 +618,7 @@ async function load(){
     const c=photos.find(p=>p.is_cover);idx=c?Math.max(0,photos.indexOf(c)):0;
     units=(P.listing_units||[]).slice().sort((a,b)=>String(a.id||'').localeCompare(String(b.id||''),undefined,{numeric:true}));
     render();seo();
-    if(!preview){nkTrackRecentViewed(P.id);countView()}
+    if(!preview){nkTrackRecentViewed(P.id);countView();loadViewingFeedback()}
     loadSimilar();loadRating();loadReplySpeed();checkThread();maybeReach();loadNeighbours();
   }catch(e){console.error(e);unavailable('error')}
 }
@@ -754,14 +760,21 @@ function ownerHtml(){
     <div class="row"><a class="btn btn-primary" href="/dashboard?edit=${encodeURIComponent(P.id)}">Edit and manage</a><a class="btn btn-outline" href="/dashboard">View enquiries</a>${preview?'':`<button type="button" class="btn btn-outline" data-act="status">${occ?'Mark as available':sold?'Mark as sold':'Mark as occupied'}</button>`}</div></section>`;
 }
 function sellerHead(){
-  const p=P.profiles||{},company=p.account_type==='company',name=company?(p.company_name||P.contact_name||p.full_name||'Company'):(P.contact_name||p.full_name||'Seller'),ini=name.split(' ').filter(Boolean).map(x=>x[0]).join('').toUpperCase().slice(0,2)||'S',identityVerified=p.identity_verified===true,roleVerified=!!p.account_type&&p.verified_role===p.account_type,roleLabels={buyer:'Tenant / Buyer',owner:'Property owner',caretaker:'Caretaker',agent:'Agent',company:'Company'},listedBy=p.account_type;
+  const p=P.profiles||{},snapshotRole=P.listed_by_type||p.account_type,currentRole=p.account_type,company=snapshotRole==='company',name=company?(p.company_name||P.contact_name||p.full_name||'Company'):(P.contact_name||p.full_name||'Lister'),ini=name.split(' ').filter(Boolean).map(x=>x[0]).join('').toUpperCase().slice(0,2)||'L',identityVerified=p.identity_verified===true,roleChanged=!!snapshotRole&&!!currentRole&&snapshotRole!==currentRole,roleVerified=!!snapshotRole&&!roleChanged&&p.verified_role===snapshotRole,roleLabels={buyer:'Tenant / Buyer',owner:'Direct from owner',landlord:'Direct from owner',caretaker:'Caretaker',agent:'Agent',company:'Company'},listedBy=roleLabels[snapshotRole]||'Lister',roleText=`${listedBy}${roleChanged?' (role changed)':roleVerified?' ✓':' (not verified)'}`;
   const logo=company&&roleVerified&&p.company_logo_url?`<img src="${escHtml(p.company_logo_url)}" alt="" width="36" height="36" loading="lazy" style="object-fit:contain;border-radius:6px">`:'';
-  return `<div class="seller"><div class="av" aria-hidden="true">${escHtml(ini)}</div><div>${logo}<b>${escHtml(name)}${company&&!roleVerified?' (not verified)':''}</b>${roleVerified?`<small>${IC.check}Verified ${escHtml(roleLabels[p.account_type])}</small>`:''}<button type="button" class="vbadge${identityVerified?'':' no'}" data-act="verinfo" data-v="${identityVerified?1:0}" aria-haspopup="dialog" aria-label="${identityVerified?'Identity verified. What does this mean?':'Identity not yet verified. What does this mean?'}">${identityVerified?IC.check+'Identity verified':'Identity not yet verified'}${IC.info}</button><small class="js-rate"></small>${listedBy?`<small>Listed by ${escHtml(roleLabels[listedBy]||nkTitleCase(listedBy))}</small>`:''}${p.created_at?`<small>Member since ${escHtml(new Date(p.created_at).toLocaleDateString('en-KE',{month:'long',year:'numeric'}))}</small>`:''}${!isOwner&&canReview()?'<button type="button" class="link" data-act="rate">Rate this seller</button>':''}</div></div>`;
+  return `<div class="seller"><div class="av" aria-hidden="true">${escHtml(ini)}</div><div>${logo}<b>${escHtml(name)}</b><small>${escHtml(roleText)}</small><button type="button" class="vbadge${identityVerified?'':' no'}" data-act="verinfo" data-v="${identityVerified?1:0}" aria-haspopup="dialog" aria-label="${identityVerified?'Identity verified. What does this mean?':'Identity not yet verified. What does this mean?'}">${identityVerified?IC.check+'Identity verified':'Identity not yet verified'}${IC.info}</button><small class="js-rate"></small>${p.created_at?`<small>Member since ${escHtml(new Date(p.created_at).toLocaleDateString('en-KE',{month:'long',year:'numeric'}))}</small>`:''}${!isOwner&&canReview()?'<button type="button" class="link" data-act="rate">Rate this lister</button>':''}</div></div>`;
 }
-const SAFETY='Any viewing fee is agreed and paid directly to the lister; Nyumba254 does not collect it. Verify the property and terms with the lister before paying.';
+const SAFETY='Pay any listed viewing fee only at the property, to the person you meet, and ask for a receipt. Never pay rent, a deposit or any other fee before you have viewed the property. Nyumba254 does not collect viewing fees.';
+const viewingFeeText=fee=>fee==null?'Viewing fee: confirm with the lister':fee>0?`Viewing fee: ${money(fee)}`:'Free viewing';
+function viewingFeeSafetyText(fee){
+  if(fee==null)return `Viewing fee: confirm with the lister. ${SAFETY}`;
+  if(fee===0)return 'Viewing is free for this listing. Nobody should charge you to view it. Report it if you are asked to pay.';
+  return `This lister charges a viewing fee of ${money(fee)}. ${SAFETY} You should not be charged more than the listed fee.`;
+}
 function sidebarHtml(){
   const hidden=!!P.contact_hidden,cost=costLine(),viewingFee=Number(P.viewing_fee)||0;
-  const top=`<div class="s-top"><div class="s-price">${priceHtml()}</div>${cost?`<div class="s-cost">${escHtml(cost)}</div>`:''}<div class="s-cost">${viewingFee>0?`Viewing fee: ${money(viewingFee)}`:'Free viewing'}</div></div>${sellerHead()}`;
+  const feeUnknown=P.viewing_fee===null||P.viewing_fee===undefined;
+  const top=`<div class="s-top"><div class="s-price">${priceHtml()}</div>${cost?`<div class="s-cost">${escHtml(cost)}</div>`:''}<div class="s-cost">${escHtml(viewingFeeText(feeUnknown?null:viewingFee))}</div></div>${sellerHead()}`;
   if(isOwner)return `<div class="scard">${top}<p class="s-note">This is how buyers see you. Enquiries reach you in your chat inbox and dashboard.</p></div>`;
   if(P.status==='occupied')return `<div class="scard">${top}<h3 class="s-h">${isSale()?'This property has been sold':'This property is no longer available'}</h3><p class="s-note">See similar listings below, or browse more in ${escHtml(P.county?nkCountyLabel(P.county):'Kenya')}.</p><a class="btn btn-primary btn-block" href="${escHtml(nkBuildListingsUrl({county:P.county,category:P.category}))}">Browse similar listings</a></div>`;
   const opts=units.filter(u=>(u.quantity_available??0)>0),pr=nkGetBuyerProfile();
@@ -770,29 +783,31 @@ function sidebarHtml(){
     <div class="bnb-slot"></div>
     <div class="phone-panel" id="phone-panel" hidden></div>
     ${hidden?'':`<div class="cbtns"><button type="button" class="btn btn-wa" data-act="wa" data-src="sidebar">${IC.wa}WhatsApp</button><button type="button" class="btn btn-outline" data-act="call" data-src="sidebar">${IC.call}Call</button></div><div class="or">or send a message here</div>`}
-    <div id="sent" class="sent" hidden><div class="sent-ic">${IC.sent}</div><h3>Message sent</h3><p>The seller will reply in your chat. You may also get a call.</p><button type="button" class="btn btn-primary" data-act="chat">Open conversation</button><button type="button" class="btn btn-outline" data-act="viewing" data-src="sent">${IC.cal}Request a viewing</button><button type="button" class="link" data-act="again">Send another message</button></div>
+    <div id="sent" class="sent" hidden><div class="sent-ic">${IC.sent}</div><h3>Message sent</h3><p>The lister will reply in your chat. You may also get a call.</p><button type="button" class="btn btn-primary" data-act="chat">Open conversation</button><button type="button" class="btn btn-outline" data-act="viewing" data-src="sent">${IC.cal}${escHtml(viewingRequestButtonLabel())}</button><button type="button" class="link" data-act="again">Send another message</button></div>
     <div id="enq"><div class="nf-banner" id="q-banner" role="alert"></div>
       ${opts.length?`<div class="nf-field"><label for="q-unit">Unit type <span class="nf-optional">optional</span></label><select id="q-unit"><option value="">Any available unit</option>${opts.map(u=>`<option value="${escHtml(u.unit_label)}">${escHtml(u.unit_label)}${Number(u.price)>0?' · '+escHtml(money(u.price)):''}</option>`).join('')}</select></div>`:''}
       ${known?`<div class="csum" id="q-sum"><span>Sending as <b id="q-sum-t"></b></span><button type="button" class="link" data-act="edit-contact">Change</button></div>`:''}
       <div id="q-fields"${known?' hidden':''}>
         <div class="nf-field"><label for="q-name">Full name</label><input id="q-name" type="text" autocomplete="name"/><div class="nf-err" id="q-name-e" role="alert"></div></div>
         ${hidden?'':`<div class="nf-field"><label for="q-phone">Phone</label><input id="q-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="07XX XXX XXX"/><div class="nf-err" id="q-phone-e" role="alert"></div></div>`}
-        <details class="more"><summary>Add email (optional)</summary><div class="nf-field"><label for="q-email">Email</label><input id="q-email" type="email" autocomplete="email"/><div class="nf-err" id="q-email-e" role="alert"></div></div><label class="nf-check" for="q-notify"><input type="checkbox" id="q-notify" checked/>Email me when the seller replies</label></details>
+        <details class="more"><summary>Add email (optional)</summary><div class="nf-field"><label for="q-email">Email</label><input id="q-email" type="email" autocomplete="email"/><div class="nf-err" id="q-email-e" role="alert"></div></div><label class="nf-check" for="q-notify"><input type="checkbox" id="q-notify" checked/>Email me when the lister replies</label></details>
       </div>
       <div class="nf-field"><label for="q-msg">Message</label><div class="qchips" role="group" aria-label="Quick messages">${QMSG_BY(meta(),freq()).map((m,i)=>`<button type="button" class="qchip" data-act="qmsg" data-i="${i}">${escHtml(m)}</button>`).join('')}</div><textarea id="q-msg" maxlength="1000"></textarea></div>
       <div class="hp" aria-hidden="true"><label for="q-web">Leave empty</label><input id="q-web" tabindex="-1" autocomplete="off"/></div>
-      <div class="sendrow"><button type="button" class="btn btn-primary" id="q-send" data-act="send">Send message</button><button type="button" class="btn btn-outline" data-act="viewing" data-src="form">${IC.cal}Request viewing</button></div></div>
-    <p class="tip">${SAFETY}</p><button type="button" class="link report" data-act="report">Report this listing</button></div>`;
+      <div class="sendrow"><button type="button" class="btn btn-primary" id="q-send" data-act="send">Send message</button><button type="button" class="btn btn-outline" data-act="viewing" data-src="form">${IC.cal}${escHtml(viewingRequestButtonLabel())}</button></div></div>
+    <div class="tip fee-safety">${escHtml(viewingFeeSafetyText(P.viewing_fee))}<div><a class="link" href="/viewing-fee-policy">Read the Viewing Fee Policy</a><button type="button" class="link" data-act="report-fee">Report a fee problem</button></div></div><button type="button" class="link report" data-act="report">Report this listing</button></div>`;
 }
 function anchorsHtml(list){return `<nav class="anchors" id="anchors" aria-label="Page sections">${list.map(([id,l])=>`<a href="#${id}" data-anchor="${id}">${escHtml(l)}</a>`).join('')}</nav>`}
+function viewingRequestButtonLabel(){return `Request a viewing · ${P.viewing_fee===null?'fee to confirm':P.viewing_fee>0?money(P.viewing_fee):'Free'}`}
 function render(){
-  const m=meta(),f=facts(),strip=f.slice(0,3),rest=[...f.slice(3),...extraRows()],am=amenityLabels(),desc=(P.description||'').trim(),st=availState(),cost=costLine();
+  const m=meta(),f=facts(),strip=f.slice(0,3),rest=[...f.slice(3),...extraRows(),['Viewing fee',viewingFeeText(P.viewing_fee)]],am=amenityLabels(),desc=(P.description||'').trim(),st=availState(),cost=costLine();
   const ver=(P.profiles||{}).identity_verified===true,occ=P.status==='occupied';
   const pills=[`<span class="pill st${st.k==='bad'?' bad':st.k==='soon'?' soon':''}">${escHtml(st.t)}</span>`,`<span class="pill plain">${escHtml(m.label)}</span>`];
+  pills.push(`<span class="pill plain">${escHtml(viewingFeeText(P.viewing_fee))}</span>`);
   if(m.group==='boarding'&&(P.details||{}).institution)pills.push('<span class="pill plain">Student friendly</span>');
   const pv=preview?`<div class="notice warn" role="status"><b>Preview.</b> ${P.is_disabled?'Hidden by admin'+(P.disabled_reason?': '+escHtml(P.disabled_reason):'.'):P.recycle_bin?'This listing is in the recycle bin.':'Status: '+escHtml(nkTitleCase(P.status))+'. It is not public yet.'} Only you${isOwner?'':' and the admin team'} can see this page.</div>`:'';
   const stale=!preview&&!occ&&daysOld()>CFG.staleDays?`<div class="notice warn">This listing was posted ${Math.floor(daysOld())} days ago. Confirm it is still available before you visit.</div>`:'';
-  const inline=(!isOwner&&!occ)?`<div class="inline-cta md-only${P.contact_hidden?' two':''}" id="inline-cta">${P.contact_hidden?'':`<button type="button" class="btn btn-wa" data-act="wa" data-src="inline">${IC.wa}WhatsApp</button>`}<button type="button" class="btn ${P.contact_hidden?'btn-primary':'btn-outline'}" data-act="scroll">${IC.msg}Message</button>${P.contact_hidden?'':`<button type="button" class="btn btn-outline" data-act="call" data-src="inline">${IC.call}Call</button>`}<button type="button" class="btn btn-outline vbtn" data-act="viewing" data-src="inline">${IC.cal}Request a viewing</button></div>`:'';
+  const inline=(!isOwner&&!occ)?`<div class="inline-cta md-only${P.contact_hidden?' two':''}" id="inline-cta">${P.contact_hidden?'':`<button type="button" class="btn btn-wa" data-act="wa" data-src="inline">${IC.wa}WhatsApp</button>`}<button type="button" class="btn ${P.contact_hidden?'btn-primary':'btn-outline'}" data-act="scroll">${IC.msg}Message</button>${P.contact_hidden?'':`<button type="button" class="btn btn-outline" data-act="call" data-src="inline">${IC.call}Call</button>`}<button type="button" class="btn btn-outline vbtn" data-act="viewing" data-src="inline">${IC.cal}${escHtml(viewingRequestButtonLabel())}</button></div>`:'';
   const anchors=[];if(desc)anchors.push(['sec-about','About']);if(units.length)anchors.push(['sec-units','Units']);if(rest.length)anchors.push(['sec-details','Details']);if(am.length)anchors.push(['sec-amen','Amenities']);anchors.push(['sec-loc','Location'],['sim','Similar']);
   const rules=(P.details||{}).house_rules?String(P.details.house_rules).split(/\n/).map(r=>r.trim()).filter(Boolean):[];
   $('view').innerHTML=`${pv}<div class="layout"><div class="main-col">
@@ -812,9 +827,9 @@ function render(){
     <section class="sec" id="sec-loc">${secHead('loc','Location')}<div class="mapbox" id="mapbox"></div>
       <div class="maprow"><span class="addr">${escHtml(P.address||where())}</span><a class="link" id="maplink" href="#" target="_blank" rel="noopener">Open in Maps</a></div><p class="maphint" id="maphint" hidden>Pinch to zoom the map. Use Open in Maps for directions.</p></section>
     ${rules.length?`<section class="sec" id="sec-rules">${secHead('rules','House rules')}<ul class="rules">${rules.map(r=>`<li>${escHtml(r)}</li>`).join('')}</ul></section>`:''}
-    ${isOwner?'':`<section class="sec md-only">${secHead('seller','About the seller')}${sellerHead()}</section><section class="sec md-only safety">${secHead('safety','Stay safe')}<ul><li>View the property in person before you pay anything.</li><li>Pay only to the person you met, and ask for a receipt.</li><li>Nyumba254 never asks buyers for money.</li></ul><button type="button" class="link" data-act="report">Report this listing</button></section>`}
+    ${isOwner?'':`<section class="sec md-only">${secHead('seller','About the lister')}${sellerHead()}</section><section class="sec md-only safety">${secHead('safety','Viewing fee and safety')}<p>${escHtml(viewingFeeSafetyText(P.viewing_fee))}</p><a class="link" href="/viewing-fee-policy">Read the Viewing Fee Policy</a><button type="button" class="link" data-act="report-fee">Report a fee problem</button><ul><li>Verify the property and confirm it is available.</li><li>Never pay rent, a deposit or another fee before viewing.</li><li>Nyumba254 does not collect viewing fees.</li></ul></section>`}
     <div class="listnav" id="listnav" hidden></div>
-  </div><aside class="side" id="side" aria-label="Contact the seller">${sidebarHtml()}</aside></div>
+  </div><aside class="side" id="side" aria-label="Contact the lister">${sidebarHtml()}</aside></div>
   <section class="sim" id="sim" hidden><div class="sim-head"><h2>${occ?'Similar listings available now':'Similar listings nearby'}</h2><a class="link" href="${escHtml(nkBuildListingsUrl({category:P.category,county:P.county}))}">View all in ${escHtml(P.county?nkCountyLabel(P.county):'Kenya')}</a></div><div class="card-grid" id="sim-grid"><div class="sk" style="aspect-ratio:4/3"></div><div class="sk" style="aspect-ratio:4/3"></div><div class="sk" style="aspect-ratio:4/3"></div></div></section>`;
   tabActions();prefill();initMap();bnbCheck();ctaBar();initAnchors();initClamp();updateRating();
   if(typeof NKSaved!=='undefined'&&NKSaved.hydrate)NKSaved.hydrate($('view'));
@@ -876,7 +891,7 @@ function ctaBar(){
   const bar=$('ctabar');if(ctaObs){ctaObs.disconnect();ctaObs=null}
   if(!P||isOwner||P.status==='occupied'){bar.hidden=true;document.body.classList.remove('nk-cta','nk-cta-show');measureCta();tabbarSync();return}
   const hid=!!P.contact_hidden;
-  bar.innerHTML=`<div class="ctabar-price"><strong>${priceHtml()}</strong><span>${escHtml(P.title)}</span></div>${hid?'':`<button type="button" class="btn btn-outline ctabar-icon" data-act="call" data-src="bar" aria-label="Call seller">${IC.call}</button>`}<button type="button" class="btn ${hid?'btn-primary':'btn-outline'}" data-act="scroll">${IC.msg}Message</button>${hid?'':`<button type="button" class="btn btn-wa ctabar-wa" data-act="wa" data-src="bar">${IC.wa}WhatsApp</button>`}`;
+  bar.innerHTML=`<div class="ctabar-price"><strong>${priceHtml()}</strong><span>${escHtml(P.title)}</span><span>${escHtml(viewingFeeText(P.viewing_fee))}</span></div>${hid?'':`<button type="button" class="btn btn-outline ctabar-icon" data-act="call" data-src="bar" aria-label="Call lister">${IC.call}</button>`}<button type="button" class="btn ${hid?'btn-primary':'btn-outline'}" data-act="scroll">${IC.msg}Message</button>${hid?'':`<button type="button" class="btn btn-wa ctabar-wa" data-act="wa" data-src="bar">${IC.wa}WhatsApp</button>`}`;
   bar.hidden=false;document.body.classList.add('nk-cta');
   const show=on=>{bar.classList.toggle('show',on);document.body.classList.toggle('nk-cta-show',on)},inl=$('inline-cta');
   if(inl&&'IntersectionObserver' in window){ctaObs=new IntersectionObserver(([e])=>show(!e.isIntersecting),{rootMargin:'0px 0px -8px 0px'});ctaObs.observe(inl)}else show(true);
@@ -886,7 +901,7 @@ function ctaBar(){
 
 /* ═══ SEO ═══ */
 function seo(){
-  const t=P.title+' — Nyumba254',d=`${P.title} in ${where()}. ${basePrice()>0?money(basePrice())+(FREQ[freq()]||'')+'. ':''}Message the seller on Nyumba254.`,url=location.origin+'/listing?id='+pad(P.listing_number);
+  const t=P.title+' — Nyumba254',d=`${P.title} in ${where()}. ${basePrice()>0?money(basePrice())+(FREQ[freq()]||'')+'. ':''}${viewingFeeText(P.viewing_fee)}. Message the lister on Nyumba254.`,url=location.origin+'/listing?id='+pad(P.listing_number);
   document.title=t;document.querySelector('meta[name="description"]').setAttribute('content',d);
   if(preview)$('m-robots').setAttribute('content','noindex,nofollow');
   const img=photos.length?(photos.find(p=>p.is_cover)||photos[0]).url:'https://nyumba254.com/hero-photo.jpg';
@@ -975,6 +990,8 @@ async function loadSimilar(){
       (more||[]).forEach(l=>{if(list.length<4&&!have.has(l.id)){list.push(l);have.add(l.id)}});
     }
     if(!list.length)return noSim();
+    try{list=await nkHydratePublicProfiles(list)}catch(error){console.error('[listing] Could not hydrate similar-listing lister profiles:',error)}
+    list=await nkHydrateViewingFees(list);
     $('sim-grid').innerHTML=list.map(l=>nkBuildCard(l,{compact:true,imgWidth:480})).join('');
     if(typeof NKSaved!=='undefined'&&NKSaved.hydrate)NKSaved.hydrate($('sim-grid'));nkBindRecentViewedTracking($('sim-grid'));
   }catch(e){noSim()}
@@ -1024,9 +1041,9 @@ function showPhonePanel(){
   el.dataset.n=n;
 }
 async function reveal(channel){
-  if(P.contact_hidden){toast('This seller keeps contact on Nyumba254 chat. Send a message instead.');return openContactSheet()}
+  if(P.contact_hidden){toast('This lister keeps contact on Nyumba254 chat. Send a message instead.');return openContactSheet()}
   if(revealBusy)return;
-  if(!phoneRaw&&needNet("You're offline. Connect to the internet to see the seller's contact."))return;
+  if(!phoneRaw&&needNet("You're offline. Connect to the internet to see the lister's contact."))return;
   const wa=channel==='whatsapp';let win=null;
   /* Safari blocks window.open() after an await, so the tab is opened first, inside the tap, and pointed at WhatsApp afterwards. */
   if(wa&&!phoneRaw){win=window.open('about:blank','_blank');if(win)try{win.opener=null}catch(e){}}
@@ -1092,7 +1109,7 @@ function prefill(){
 function showSent(existing){
   const s=$('sent'),e=$('enq');if(!s||!e)return;e.hidden=true;s.hidden=false;
   s.querySelector('h3').textContent=existing?'You are already in touch':'Message sent';
-  s.querySelector('p').textContent=existing?'Continue the conversation with the seller in your chat, or ask about another unit.':'The seller will reply in your chat. You may also get a call.';
+  s.querySelector('p').textContent=existing?'Continue the conversation with the lister in your chat, or ask about another unit.':'The lister will reply in your chat. You may also get a call.';
   if(typeof NKGlobalChat!=='undefined'&&NKGlobalChat.refresh)NKGlobalChat.refresh();
 }
 function setErr(id,m){const e=$(id+'-e');if(e)e.textContent=m;const i=$(id);if(i)i.setAttribute('aria-invalid',m?'true':'false')}
@@ -1112,9 +1129,11 @@ async function postEnquiry(x,kind){
   if(r.error&&(r.error.code==='PGRST202'||r.error.code==='42883'||/could not find the function|does not exist/i.test(r.error.message||'')))r=await legacyEnquiry(q);
   if(r.error)return r;
   lss('nk_buyer_'+P.id,token);lss('nk_enq_ts_'+P.id,String(Date.now()));nkSaveBuyerProfile({name:x.name,phone:x.phone,email:x.email});
-  const h={'Content-Type':'application/json',apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY};
-  fetch(`${EDGE_URL}/send-notification-email`,{method:'POST',headers:h,body:JSON.stringify({type:'new_buyer_enquiry',buyerName:x.name,buyerPhone:x.phone,buyerEmail:x.email||null,message:x.message,listingId:P.id,listingTitle:P.title})}).catch(()=>{});
-  fetch(`${EDGE_URL}/send-sms-alert`,{method:'POST',headers:h,body:JSON.stringify({type:'new_enquiry',listingId:P.id,buyerName:x.name,messagePreview:x.message,listingTitle:P.title})}).catch(()=>{});
+  if(kind!=='viewing'){
+    const h={'Content-Type':'application/json',apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY};
+    fetch(`${EDGE_URL}/send-notification-email`,{method:'POST',headers:h,body:JSON.stringify({type:'new_buyer_enquiry',buyerName:x.name,buyerPhone:x.phone,buyerEmail:x.email||null,message:x.message,listingId:P.id,listingTitle:P.title})}).catch(error=>console.error('[notification] Could not send enquiry email:',error));
+    fetch(`${EDGE_URL}/send-sms-alert`,{method:'POST',headers:h,body:JSON.stringify({type:'new_enquiry',listingId:P.id,buyerName:x.name,messagePreview:x.message,listingTitle:P.title})}).catch(error=>console.error('[notification] Could not send enquiry SMS:',error));
+  }
   lss('nk_last_listing_title_'+P.id,P.title);   // lets the chat widget name this conversation instantly
   if(x.email&&x.notify!==false){try{db.from('buyer_contacts').upsert({buyer_token:token,full_name:x.name,email:x.email,phone:x.phone||null,notify_email:true,updated_at:new Date().toISOString()},{onConflict:'buyer_token'}).then(()=>{},()=>{})}catch(e){}}
   track(kind==='viewing'?'viewing_request':'message_sent');
@@ -1139,45 +1158,93 @@ async function sendEnquiry(){
   showSent(false);   // the chat opens only when the buyer taps "Open conversation", so two layers never compete
 }
 
-/* ═══ 3. request a viewing: a date and time slot, sent to the seller through the same enquiry path ═══ */
+/* ═══ 3. request a viewing: a date and time slot, sent to the lister through the same enquiry path ═══ */
 const localISO=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 function openViewing(){
   if(!P||isOwner||P.status==='occupied')return;
   const sheet=$('ov-contact-sheet');if(sheet&&sheet.classList.contains('open'))nkCloseModal(sheet);
-  ['vw-date','vw-name','vw-phone'].forEach(i=>setErr(i,''));$('vw-banner').textContent='';
-  const pr=nkGetBuyerProfile(),first=(P.contact_name||(P.profiles||{}).full_name||'the seller').split(' ')[0],t=new Date();
+  ['vw-date','vw-name','vw-email','vw-phone'].forEach(i=>setErr(i,''));$('vw-banner').textContent='';
+  const pr=nkGetBuyerProfile(),first=(P.contact_name||(P.profiles||{}).full_name||'the lister').split(' ')[0],t=new Date();
+  $('vw-t').textContent=viewingRequestButtonLabel();
   $('vw-sub').textContent=`Tell ${first} when you would like to see "${P.title}".`;
-  const fee=Number(P.viewing_fee)||0,feeAckWrap=$('vw-fee-ack-wrap');
-  feeAckWrap.hidden=fee<=0;
+  $('vw-safety').textContent=viewingFeeSafetyText(P.viewing_fee);
+  const fee=P.viewing_fee,feeAckWrap=$('vw-fee-ack-wrap');
+  feeAckWrap.hidden=fee===0;
+  feeAckWrap.querySelector('input').nextSibling.textContent=fee===null?'I understand the viewing fee needs to be confirmed directly with the lister before the visit.':'I understand the listed viewing fee is paid directly to the lister at the property; Nyumba254 does not collect it.';
   $('vw-fee-ack').checked=false;
   $('vw-date').min=localISO(t);t.setDate(t.getDate()+1);$('vw-date').value=localISO(t);
-  $('vw-name').value=pr.name||'';$('vw-phone').value=pr.phone||'';$('vw-note').value='';
+  $('vw-name').value=pr.name||'';$('vw-email').value=pr.email||'';$('vw-phone').value=pr.phone||'';$('vw-note').value='';
   $('vw-phone-f').hidden=!!P.contact_hidden;$('vw-form').hidden=false;$('vw-done').hidden=true;
   nkOpenModal($('ov-view'));
 }
 async function sendViewing(){
-  ['vw-date','vw-name','vw-phone'].forEach(i=>setErr(i,''));$('vw-banner').textContent='';
-  const hidden=!!P.contact_hidden,date=$('vw-date').value,slot=$('vw-slot').value,name=$('vw-name').value.trim(),phone=hidden?'':nkNormalizePhone($('vw-phone').value.trim()),note=$('vw-note').value.trim();let ok=true;
+  ['vw-date','vw-name','vw-email','vw-phone'].forEach(i=>setErr(i,''));$('vw-banner').textContent='';
+  const hidden=!!P.contact_hidden,date=$('vw-date').value,slot=$('vw-slot').value,name=$('vw-name').value.trim(),email=$('vw-email').value.trim(),phone=hidden?'':nkNormalizePhone($('vw-phone').value.trim()),note=$('vw-note').value.trim();let ok=true;
   if(!date){setErr('vw-date','Pick a date');ok=false}else if(date<localISO(new Date())){setErr('vw-date','Pick today or a later date');ok=false}
   if(name.length<2){setErr('vw-name','Enter your name');ok=false}
+  if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){setErr('vw-email','Enter a valid email address or leave this blank');ok=false}
   if(!hidden&&!okPhone(phone)){setErr('vw-phone','Enter a valid phone number, e.g. 0712 345 678');ok=false}
-  const viewingFee=Number(P.viewing_fee)||0;
-  if(viewingFee>0&&!$('vw-fee-ack').checked){$('vw-banner').textContent='Please acknowledge the viewing fee before sending your request.';ok=false}
+  const viewingFee=P.viewing_fee;
+  if(viewingFee!==0&&!$('vw-fee-ack').checked){$('vw-banner').textContent='Please acknowledge the viewing fee details before sending your request.';ok=false}
   if(!ok){const bad=document.querySelector('#vw-form [aria-invalid="true"]');if(bad)bad.focus();return}
   const done=()=>{$('vw-form').hidden=true;$('vw-done').hidden=false;showSent(false)};
   if($('vw-web').value){done();return}
   if(cooling()){$('vw-banner').textContent=COOLDOWN;return}
   if(needNet())return;
   const when=new Date(date+'T00:00:00').toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  const feeLine=viewingFee>0?`\nViewing fee: ${money(viewingFee)} (agreed and paid directly to the lister; not collected by Nyumba254)`: '\nViewing fee: Free';
-  const message=`📅 Viewing requested\nDate: ${when}\nTime: ${slot}${feeLine}${note?`\nNotes: ${note}`:''}`;
+  const feeLine=viewingFee===null?'\nViewing fee: confirm with the lister':viewingFee>0?`\nViewing fee: ${money(viewingFee)} (paid directly to the lister at the property; not collected by Nyumba254)`:'\nViewing fee: Free';
+  const message=`📅 Viewing requested\nDate: ${when}\nTime: ${slot}${feeLine}\n${SAFETY}${note?`\nNotes: ${note}`:''}`;
   const btn=$('vw-send');btn.disabled=true;btn.innerHTML='<span class="spin"></span>Sending…';
-  let r;try{r=await postEnquiry({name,phone,email:'',message},'viewing')}catch(e){r={error:e}}
+  let r;try{r=await postEnquiry({name,phone,email,message},'viewing')}catch(e){r={error:e}}
   btn.disabled=false;btn.textContent='Send request';
   if(r.error){if(isNetErr(r.error))showNet("You're offline. Your request is kept, so try again when you're back online.");$('vw-banner').textContent=enquiryFailure(r.error);return}
-  const{error:viewingError}=await db.from('viewing_requests').insert({id:uuid(),listing_id:P.id,buyer_token:lsg('nk_buyer_'+P.id),buyer_name:name,buyer_phone:phone,requested_date:date,requested_time:slot,notes:note||null,viewing_fee_acknowledged:viewingFee>0&&$('vw-fee-ack').checked});
-  if(viewingError){$('vw-banner').textContent='Your message was sent, but the viewing request could not be recorded. Please contact the lister directly.';console.error('Viewing request record failed:',viewingError);return}
+  const{error:viewingError}=await db.from('viewing_requests').insert({id:uuid(),listing_id:P.id,buyer_token:lsg('nk_buyer_'+P.id),buyer_name:name,buyer_phone:phone,requested_date:date,requested_time:slot,notes:note||null,viewing_fee_acknowledged:viewingFee!==0&&$('vw-fee-ack').checked,fee_at_request:viewingFee});
+  if(viewingError){done();console.error('[viewing-fee] Viewing request message sent but request record failed:',viewingError);toast('Your message was sent, but we could not save the viewing request. Please contact the lister directly.','error');return}
   done();
+  const{error:emailError}=await db.functions.invoke('send-notification-email',{body:{type:'viewing_request',buyerName:name,buyerPhone:phone,buyerEmail:email||null,date,time:slot,notes:note||null,listingId:P.id,listingTitle:P.title,feeAtRequest:viewingFee}});
+  if(emailError){console.error('[viewing-fee] Request saved but viewing notification email failed:',emailError);toast('Viewing request sent, but the email update could not be sent.','error')}
+}
+
+async function loadViewingFeedback(){
+  const section=$('buyer-viewing-feedback'),list=$('buyer-viewing-feedback-list'),token=lsg('nk_buyer_'+P.id);
+  if(!section||!list||!token)return;
+  try{
+    const{data,error}=await db.rpc('get_completed_viewing_fee_feedback',{p_listing_id:P.id,p_buyer_token:token});
+    if(error)throw error;
+    if(!data?.length){section.hidden=true;return}
+    section.hidden=false;
+    list.innerHTML=data.map(request=>{
+      const fee=request.fee_at_request==null?'confirm with the lister':Number(request.fee_at_request)===0?'Free viewing':`KES ${Number(request.fee_at_request).toLocaleString('en-KE')}`;
+      const id=escHtml(request.viewing_request_id);
+      return `<div class="viewing-feedback-row" data-feedback-row="${id}" style="padding:12px 0;border-top:1px solid var(--border)"><p style="margin:0 0 10px;font-size:13px">Was the viewing fee shown on the listing (${escHtml(fee)}) the amount you were asked to pay?</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn btn-primary btn-sm" data-feedback-yes="${id}" style="min-height:44px">Yes, it matched</button><button type="button" class="btn btn-outline btn-sm" data-feedback-no="${id}" style="min-height:44px">No, it did not</button></div><div data-feedback-details="${id}" hidden style="margin-top:10px"><label style="display:block;font-size:12px;margin-bottom:5px" for="feedback-note-${id}">What happened? (optional)</label><textarea id="feedback-note-${id}" maxlength="1000" style="width:100%;min-height:72px;padding:9px;border:1px solid var(--border);border-radius:8px"></textarea><button type="button" class="btn btn-primary btn-sm" data-feedback-submit="${id}" style="margin-top:8px;min-height:44px">Send feedback</button></div><div data-feedback-status="${id}" role="status" aria-live="polite" style="font-size:12px;margin-top:8px"></div></div>`;
+    }).join('');
+    if(list.dataset.feedbackBound)return;
+    list.dataset.feedbackBound='true';
+    list.addEventListener('click',async event=>{
+      const yes=event.target.closest('[data-feedback-yes]'),no=event.target.closest('[data-feedback-no]'),submit=event.target.closest('[data-feedback-submit]');
+      const rowId=yes?.dataset.feedbackYes||no?.dataset.feedbackNo||submit?.dataset.feedbackSubmit;
+      if(!rowId)return;
+      if(no){list.querySelector(`[data-feedback-details="${CSS.escape(rowId)}"]`).hidden=false;no.disabled=true;return}
+      const wasAsListed=!!yes;
+      const details=wasAsListed?'':list.querySelector(`#feedback-note-${CSS.escape(rowId)}`)?.value.trim()||'';
+      const status=list.querySelector(`[data-feedback-status="${CSS.escape(rowId)}"]`);
+      const buttons=list.querySelectorAll(`[data-feedback-yes="${CSS.escape(rowId)}"],[data-feedback-submit="${CSS.escape(rowId)}"]`);
+      buttons.forEach(button=>button.disabled=true);
+      try{
+        const{error:feedbackError}=await db.rpc('submit_viewing_fee_feedback',{p_viewing_request_id:rowId,p_buyer_token:token,p_was_as_listed:wasAsListed,p_details:details||null});
+        if(feedbackError)throw feedbackError;
+        const feedbackRow=list.querySelector(`[data-feedback-row="${CSS.escape(rowId)}"]`);
+        if(feedbackRow)feedbackRow.innerHTML='<p role="status" style="margin:0;font-size:13px">Thanks for sharing your feedback.</p>';
+      }catch(feedbackError){
+        console.error('[viewing-fee] Could not submit viewing feedback:',feedbackError);
+        if(status)status.textContent=feedbackError.message||'Could not send your feedback. Please try again.';
+        buttons.forEach(button=>button.disabled=false);
+      }
+    });
+  }catch(error){
+    console.error('[viewing-fee] Could not load completed viewing feedback:',error);
+    section.hidden=true;
+  }
 }
 
 /* ═══ 4. verified explainer ═══ */
@@ -1268,11 +1335,12 @@ document.addEventListener('click',e=>{
     case 'share':track('share');openShare();break;
     case 'copy':navigator.clipboard.writeText(t.dataset.url).then(()=>{t.innerHTML='<span>✓</span>Copied';toast('Link copied')},()=>toast('Could not copy the link','error'));break;
     case 'report':$('rp-reason').value='';$('rp-amt-wrap').hidden=true;$('rp-banner').textContent='';nkOpenModal($('ov-report'));break;
+    case 'report-fee':$('rp-reason').value=P?.viewing_fee===0?'viewing_fee_free_listing':'viewing_fee_dispute';$('rp-amt-wrap').hidden=false;$('rp-banner').textContent='';nkOpenModal($('ov-report'));break;
     case 'send-report':sendReport();break;
     case 'rate':stars=0;rateStars();$('rt-name').value=(nkGetBuyerProfile().name)||'';$('rt-banner').textContent='';nkOpenModal($('ov-rate'));break;
     case 'star':stars=Number(t.dataset.n);rateStars();break;case 'send-rate':sendRate();break;
     case 'reach-yes':lss('nk_reach_'+P.id,'1');$('reach').hidden=true;toast('Great. Good luck with the viewing.');break;
-    case 'reach-no':lss('nk_reach_'+P.id,'1');$('reach').hidden=true;toast('Send the seller a message here and they will reply in your chat.');openContactSheet();break;
+    case 'reach-no':lss('nk_reach_'+P.id,'1');$('reach').hidden=true;toast('Send the lister a message here and they will reply in your chat.');openContactSheet();break;
   }
 });
 document.addEventListener('keydown',e=>{
@@ -1280,7 +1348,7 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&$('mobile-nav').classList.contains('open')){closeMenu();$('mobile-menu-btn').focus();return}
   const g=$('gallery');if(P&&photos.length>1&&g&&g.contains(document.activeElement)){if(e.key==='ArrowLeft'){e.preventDefault();showPhoto(idx-1)}if(e.key==='ArrowRight'){e.preventDefault();showPhoto(idx+1)}}
 });
-document.addEventListener('change',e=>{if(e.target.id==='rp-reason')$('rp-amt-wrap').hidden=!/viewing_fee_dispute|unreasonable_fee|scam_attempt/.test(e.target.value)});
+document.addEventListener('change',e=>{if(e.target.id==='rp-reason')$('rp-amt-wrap').hidden=!/viewing_fee|scam_attempt/.test(e.target.value)});
 /* photo fallback: if a resized URL fails (transforms unavailable), fall back to the original file once */
 document.addEventListener('error',e=>{const im=e.target;if(im&&im.tagName==='IMG'&&im.dataset&&im.dataset.orig&&im.getAttribute('src')!==im.dataset.orig)im.src=im.dataset.orig},true);
 /* carousel: keep the counter and index in step with the native swipe */

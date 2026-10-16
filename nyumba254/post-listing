@@ -165,12 +165,20 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
         <div class="field" id="freq-f"><label for="price_frequency">Payment frequency <span class="req">*</span></label><select id="price_frequency"></select></div>
         <div class="field" id="lease-f" hidden><label for="comm_lease_type">Lease or sale <span class="req">*</span></label><select id="comm_lease_type"><option value="lease">Lease (monthly rent)</option><option value="sale">For sale</option></select></div>
       </div>
+      <div class="field" id="posting-role-line" hidden><strong id="posting-as"></strong></div>
       <div class="field" id="viewing-fee-field" hidden>
-        <label for="viewing_fee">Viewing fee (KES) <span class="opt">optional, KES 0–5,000</span></label>
-        <input id="viewing_fee" type="number" min="0" max="5000" step="1" inputmode="numeric" placeholder="Leave blank for free viewing"/>
-        <div class="field-hint">Only Agent and Company accounts can set a fee. It is agreed and paid directly to you; Nyumba254 does not collect it.</div>
+        <h3 style="font-size:16px;margin-bottom:8px">Viewing fee</h3>
+        <label style="display:flex;gap:9px;align-items:flex-start;font-weight:500;font-size:13px;color:var(--text-2);margin:8px 0"><input type="checkbox" id="viewing-fee-free" checked style="width:18px;height:18px;accent-color:var(--green)"/>Free viewing</label>
+        <label for="viewing_fee">Fee amount (KES) <span class="opt">up to KES 5,000</span></label>
+        <input id="viewing_fee" type="number" min="0" max="5000" step="1" inputmode="numeric" placeholder="0"/>
+        <div class="field-hint">The fee is shown on your listing and paid directly to you at the property. Nyumba254 does not collect viewing fees.</div>
+        <div class="field-hint" id="viewing-fee-locked" hidden>Verify your identity to charge a viewing fee. <a href="/dashboard#verification-settings-section">Verify identity</a></div>
         <div class="field-error" id="e-viewing_fee" role="alert"></div>
+        <div id="viewing-fee-preview" class="box" aria-live="polite" style="margin-top:8px">Buyers will see: Free viewing</div>
+        <label style="display:flex;gap:9px;align-items:flex-start;font-weight:400;font-size:12px;color:var(--text-2);margin-top:10px"><input type="checkbox" id="viewing-fee-policy-accept" style="width:18px;height:18px;accent-color:var(--green)"/>I have read and agree to the <a href="/viewing-fee-policy" target="_blank" rel="noopener">Viewing Fee Policy</a>.</label>
+        <div class="field-hint" style="margin-top:8px">Safety preview: Pay any listed viewing fee only at the property, to the person you meet, and ask for a receipt. Never pay rent, a deposit or any other fee before you have viewed the property.</div>
       </div>
+      <div class="field-hint" id="viewing-free-note" hidden>Viewing is free for this listing. Only agents and companies can charge a viewing fee.</div>
       <div class="grid-2">
         <div class="field" id="deposit-f"><label for="deposit">Deposit <span class="opt">optional</span></label><select id="deposit"><option value="">Not specified</option><option value="0">No deposit</option><option value="1">1 month</option><option value="2">2 months</option><option value="3">3 months</option><option value="4">4 months</option><option value="5">5 months</option><option value="6">6 months</option></select></div>
         <div class="field"><label for="available_from">Available from <span class="opt">optional</span></label><input type="date" id="available_from"/></div>
@@ -326,11 +334,11 @@ const PRICE_HINT={standard:'Digits only. Choose the payment frequency alongside 
 const LABEL={furnished:{yes:'Fully furnished',partial:'Partly furnished',no:'Unfurnished'},parking:{private:'Private',shared:'Shared compound',street:'Street only',none:'None'},security:{gated_guard_cctv:'Gated, guarded and CCTV',gated_guard:'Gated with guard',gated_cctv:'Gated with CCTV',gated:'Gated, no guard',cctv:'CCTV only',none:'None'}};
 const FREQ_SUFFIX={month:'/month',once:'',night:'/night',term:'/term',semester:'/semester',week:'/week'};
 const FIELD_IDS=['title','description','county','area','area_custom','address','price','price_frequency','comm_lease_type','deposit','available_from','viewing_fee','std_bathrooms','std_bedrooms','std_size','std_furnished','std_parking','std_security','board_gender','board_institution','air_guests','air_bedrooms','air_bathrooms','air_min_stay','air_checkin','air_rules','std_rules','comm_type','comm_size','comm_parking','comm_condition','comm_units','comm_frontage','video_url','contact_name','phone','whatsapp','contact_email'];
-const PS={sale_standard_pct:.1,rent_standard_pct:3,standard_min_fee:500,standard_max_fee:18000,standard_fee_per_unit:50,trial_days:14,bnb_basic_price:700,enforce_verification_general:0,unverified_listing_limit:2};
+const PS={sale_standard_pct:.1,rent_standard_pct:3,standard_min_fee:500,standard_max_fee:18000,standard_fee_per_unit:50,trial_days:14,bnb_basic_price:700,enforce_verification_general:0,unverified_listing_limit:2,viewing_fee_max:5000,viewing_fee_requires_identity:1,viewing_fee_policy_version:'v1'};
 const DRAFT_KEY='nk_post_listing_draft_v3';
 
 /* ═══ STATE ═══ */
-const S={step:1,max:1,cat:'apartment',amen:new Set(),custom:[],tiers:[],seq:0,pin:null,photos:[],cover:0,video:null,user:null,effectiveSellerId:null,userName:'',first:true,cov:{rental:false,bnb:false},accountType:null,defaultViewingFee:null,ready:false,busy:false,guestBlocked:false,
+const S={step:1,max:1,cat:'apartment',amen:new Set(),custom:[],tiers:[],seq:0,pin:null,photos:[],cover:0,video:null,user:null,effectiveSellerId:null,userName:'',first:true,cov:{rental:false,bnb:false},accountType:null,roleVerified:false,identityVerified:false,viewingFeeBlocked:false,policyAccepted:false,defaultViewingFee:null,ready:false,busy:false,guestBlocked:false,
   sub:{listingId:null,urls:{},unitsDone:false,photosDone:false,videoLinked:false}};
 const group=()=>(NK_CATEGORIES[S.cat]||{}).group;
 let toastT;function toast(m,k){const t=$('toast');t.textContent=m;t.className='toast show '+(k||'');clearTimeout(toastT);toastT=setTimeout(()=>t.className='toast',4200)}
@@ -643,7 +651,7 @@ async function uploadVideo(listingId){
 }
 
 /* ═══ PRICING (estimate only; nothing is charged here) ═══ */
-async function loadSettings(){const {data}=await db.from('platform_settings').select('key,value').in('key',Object.keys(PS));(data||[]).forEach(r=>{PS[r.key]=Number(r.value)})}
+async function loadSettings(){const {data,error}=await db.from('platform_settings').select('key,value').in('key',Object.keys(PS));if(error)throw new Error(`Could not load platform settings: ${error.message}`);(data||[]).forEach(r=>{PS[r.key]=r.key==='viewing_fee_policy_version'?String(r.value??'v1'):Number(r.value)})}
 function fee(price,type){price=Math.max(0,Number(price)||0);const pct=Number(PS[type==='rent'?'rent_standard_pct':'sale_standard_pct'])||0;return Math.round(Math.max(Number(PS.standard_min_fee)||0,Math.min(Number(PS.standard_max_fee)||Infinity,price*pct/100)))}
 function updateKicker(){const k=$('page-kicker');k.textContent=S.first?`Your first listing is free for ${PS.trial_days} days`:S.cat==='airbnb'?'Holiday rentals run on a monthly BNB plan':'Getting started takes just a few minutes'}
 function feeBox(){
@@ -661,10 +669,15 @@ function feeBox(){
 async function checkGate(){
   if(!S.user)return {blocked:false};
   const sellerId=await resolveEffectiveSellerId();
-  const {data:p,error}=await db.from('profiles').select('verification_status,verification_enforced,account_type,onboarding_completed').eq('id',sellerId).maybeSingle();
+  const {data:p,error}=await db.from('profiles').select('verification_status,verification_enforced,account_type,verified_role,onboarding_completed,default_viewing_fee,viewing_fee_blocked,viewing_fee_policy_version,viewing_fee_policy_accepted_at').eq('id',sellerId).maybeSingle();
   if(error)throw new Error(`Could not check account permissions: ${error.message}`);
   if(!p)return {blocked:false,accountBlocked:'Complete account setup before posting a listing.'};
   S.accountType=p.account_type||null;
+  S.roleVerified=p.verified_role===p.account_type;
+  S.identityVerified=p.verification_status==='verified';
+  S.viewingFeeBlocked=p.viewing_fee_blocked===true;
+  S.policyAccepted=p.viewing_fee_policy_version===PS.viewing_fee_policy_version&&!!p.viewing_fee_policy_accepted_at;
+  S.defaultViewingFee=p.default_viewing_fee??null;
   syncViewingFeeField();
   const{data:canList,error:capabilityError}=await db.rpc('can_create_listing',{p_profile_id:sellerId});
   if(capabilityError)throw new Error(`Could not check listing permissions: ${capabilityError.message}`);
@@ -681,17 +694,32 @@ async function loadAccount(){
   if(!S.user){S.first=true;return}
   const sellerId=await resolveEffectiveSellerId();
   const {count,error:countError}=await db.from('listings').select('id',{count:'exact',head:true}).eq('seller_id',sellerId);if(countError)throw new Error(`Could not check your existing listings: ${countError.message}`);S.first=(count||0)===0;
-  const {data:p,error}=await db.from('profiles').select('has_bnb_capacity,has_rental_capacity,bnb_expires_at,subscription_expires_at,subscription_plan,subscription_tier,account_type,onboarding_completed,default_viewing_fee').eq('id',sellerId).maybeSingle();if(error)throw new Error(`Could not load your listing account: ${error.message}`);if(!p)return;
-  S.accountType=p.account_type||null;S.defaultViewingFee=p.default_viewing_fee??null;syncViewingFeeField();
+  const {data:p,error}=await db.from('profiles').select('has_bnb_capacity,has_rental_capacity,bnb_expires_at,subscription_expires_at,subscription_plan,subscription_tier,account_type,verified_role,verification_status,onboarding_completed,default_viewing_fee,viewing_fee_blocked,viewing_fee_policy_version,viewing_fee_policy_accepted_at').eq('id',sellerId).maybeSingle();if(error)throw new Error(`Could not load your listing account: ${error.message}`);if(!p)return;
+  S.accountType=p.account_type||null;S.roleVerified=p.verified_role===p.account_type;S.identityVerified=p.verification_status==='verified';S.viewingFeeBlocked=p.viewing_fee_blocked===true;S.policyAccepted=p.viewing_fee_policy_version===PS.viewing_fee_policy_version&&!!p.viewing_fee_policy_accepted_at;S.defaultViewingFee=p.default_viewing_fee??null;syncViewingFeeField();
   const live=!p.subscription_expires_at||new Date(p.subscription_expires_at)>new Date(),paid=!!p.subscription_tier&&p.subscription_tier!=='none',elite=paid&&p.subscription_plan==='elite'&&live;
   S.cov={rental:(!!p.has_rental_capacity&&paid&&live)||elite,bnb:(!!p.has_bnb_capacity&&p.bnb_expires_at&&new Date(p.bnb_expires_at)>new Date())||elite};
 }
 function syncViewingFeeField(){
-  const wrap=$('viewing-fee-field'),input=$('viewing_fee');
+  const wrap=$('viewing-fee-field'),input=$('viewing_fee'),free=$('viewing-fee-free'),lock=$('viewing-fee-locked'),note=$('viewing-free-note');
   const eligible=!!S.user&&['agent','company'].includes(S.accountType);
   if(wrap)wrap.hidden=!eligible;
-  if(input&&eligible&&document.activeElement!==input&&input.value==='')input.value=S.defaultViewingFee??'';
+  if(note)note.hidden=!S.user||eligible||!['owner','caretaker'].includes(S.accountType);
+  const roleLine=$('posting-role-line'),role=$('posting-as');
+  if(roleLine)roleLine.hidden=!S.user;
+  if(role)role.textContent=`Posting as: ${S.accountType?({buyer:'Tenant / Buyer',owner:'Owner',caretaker:'Caretaker',agent:'Agent',company:'Company'}[S.accountType]||S.accountType):'Role not selected'}${S.roleVerified?' ✓':' (not verified)'}`;
+  const locked=eligible&&((PS.viewing_fee_requires_identity===1&&!S.identityVerified)||S.viewingFeeBlocked);
+  if(lock)lock.hidden=!locked;
+  const policyBox=$('viewing-fee-policy-accept');
+  if(policyBox)policyBox.checked=S.policyAccepted;
+  if(input&&eligible){
+    if(document.activeElement!==input&&input.value==='')input.value=S.defaultViewingFee??'';
+    input.max=String(Math.min(5000,Number(PS.viewing_fee_max)||5000));
+    input.disabled=locked||!!free?.checked;
+  }
+  updateViewingFeePreview();
 }
+function selectedViewingFee(){return !['agent','company'].includes(S.accountType)||$('viewing-fee-free')?.checked?0:(val('viewing_fee')===''?0:Number(val('viewing_fee')))}
+function updateViewingFeePreview(){const preview=$('viewing-fee-preview');if(!preview)return;const fee=selectedViewingFee();preview.textContent=`Buyers will see: ${fee>0?`Viewing fee KES ${fee.toLocaleString('en-KE')}`:'Free viewing'}`}
 function checkPlan(){
   const el=$('plan-banner'),need=S.cat==='airbnb'?'bnb':'rental';
   if(S.cov[need]||(!S.cov.rental&&!S.cov.bnb)){el.hidden=true;return}
@@ -720,8 +748,8 @@ function renderReview(){
   const g=group(),sec=(t,n,rows)=>`<div class="review-title"><span>${t}</span><button type="button" class="linkbtn" data-act="go" data-n="${n}">Edit</button></div>`+rows.map(([k,v])=>`<div class="sum"><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join('');
   const price=g==='boarding'?'From '+money(boardingPrice()):money(priceVal());
   const am=[...NK_AMENITIES.filter(a=>S.amen.has(a.key)).map(a=>a.label),...S.custom].join(', ')||'None selected';
-  const viewingFee=val('viewing_fee');
-  $('review').innerHTML=sec('Property',2,[['Type',NK_CATEGORIES[S.cat].label],['Title',val('title')],['Price',price+(FREQ_SUFFIX[freq()]||'')],['Viewing fee',viewingFee&&Number(viewingFee)>0?money(viewingFee):'Free viewing'],['Location',[areaName(),nkCountyLabel(val('county'))].filter(Boolean).join(', ')],['Address',val('address')],['Map pin',S.pin?'Exact pin set':'Approximate area only']])+
+  const viewingFee=selectedViewingFee();
+  $('review').innerHTML=sec('Property',2,[['Type',NK_CATEGORIES[S.cat].label],['Title',val('title')],['Price',price+(FREQ_SUFFIX[freq()]||'')],['Viewing fee',viewingFee>0?money(viewingFee):'Free viewing'],['Location',[areaName(),nkCountyLabel(val('county'))].filter(Boolean).join(', ')],['Address',val('address')],['Map pin',S.pin?'Exact pin set':'Approximate area only']])+
     sec('Details',3,[...detailRows(),['Amenities',am]])+
     `<div class="review-title"><span>Photos</span><button type="button" class="linkbtn" data-act="go" data-n="4">Edit</button></div><div class="rev-photos">${S.photos.map((p,i)=>`<img src="${p.url}" alt="Photo ${i+1}"/>`).join('')||'<span style="font-size:13px;color:var(--text-3)">No photos</span>'}</div>`+
     sec('Contact',5,[['Name',val('contact_name')||'-'],['Phone',val('phone')||'-'],['Email',val('contact_email')||'-'],['Buyers reach you via',chk('contact_hidden')?'Nyumba254 chat only':'Chat, call and WhatsApp']]);
@@ -730,7 +758,7 @@ function renderReview(){
 
 /* ═══ DRAFT (localStorage + server for signed-in sellers) ═══ */
 let dTimer,sTimer;
-function collect(){const f={};FIELD_IDS.forEach(id=>{f[id]=val(id)});f.std_has_units=chk('std_has_units');f.contact_hidden=chk('contact_hidden');
+function collect(){const f={};FIELD_IDS.forEach(id=>{f[id]=val(id)});f.viewing_fee_free=chk('viewing-fee-free');f.std_has_units=chk('std_has_units');f.contact_hidden=chk('contact_hidden');
   return {step:S.step,sub:{listingId:S.sub.listingId,unitsDone:S.sub.unitsDone,photosDone:S.sub.photosDone,videoLinked:S.sub.videoLinked},cat:S.cat,amen:[...S.amen],custom:S.custom,tiers:S.tiers,seq:S.seq,pin:S.pin,fields:f,savedAt:Date.now()}}
 const sane=d=>d&&d.fields&&String(d.fields.title||'').length<200&&!/<!DOCTYPE|<html|<script/i.test(d.fields.title||'');
 const hasContent=d=>{const f=d.fields||{};return !!(f.title||f.description||f.price)};
@@ -753,6 +781,7 @@ function applyDraft(d){
   S.tiers=Array.isArray(d.tiers)?d.tiers:[];S.seq=Math.max(d.seq||0,...S.tiers.map(t=>t.id||0));
   const f=d.fields||{};if(f.county){$('county').value=f.county;fillAreas(f.county)}
   $('std_has_units').checked=!!f.std_has_units;$('contact_hidden').checked=!!f.contact_hidden;
+  $('viewing-fee-free').checked=f.viewing_fee_free!==false;
   applyCat();
   FIELD_IDS.forEach(id=>{if(id==='county'||(S.user&&id==='contact_email'))return;const e=$(id);if(e&&f[id]!=null)e.value=f[id]});areaChanged();if($('price').value)fmtPrice($('price'));
   renderAmenities();renderTiers();S.pin=d.pin||null;if(S.pin){setPin(S.pin.lat,S.pin.lng,15)}
@@ -789,8 +818,13 @@ async function submit(){
   if(gate.accountBlocked){toast(gate.accountBlocked,'error');setTimeout(()=>{location.href='/dashboard#settings'},1200);saveDraftNow();return}
   if(gate.blocked){toast(`Verify your account first: unverified sellers are limited to ${gate.limit} listing(s).`,'error');saveDraftNow();return setTimeout(()=>{location.href='/dashboard?verify=1&limit='+gate.limit},1200)}
   let ok=true;
-  const viewingFee=val('viewing_fee');
-  ok=fail('viewing_fee',!viewingFee||(Number.isInteger(Number(viewingFee))&&Number(viewingFee)>=0&&Number(viewingFee)<=5000)?'':'Enter a whole-number viewing fee from KES 0 to KES 5,000')&&ok;
+  const feeEligible=['agent','company'].includes(S.accountType),viewingFee=selectedViewingFee();
+  ok=fail('viewing_fee',!feeEligible||Number.isInteger(viewingFee)&&viewingFee>=0&&viewingFee<=Math.min(5000,Number(PS.viewing_fee_max)||5000)?'':`Enter a whole-number viewing fee from KES 0 to KES ${Math.min(5000,Number(PS.viewing_fee_max)||5000).toLocaleString('en-KE')}`)&&ok;
+  if(feeEligible&&viewingFee>0){
+    if(S.viewingFeeBlocked)ok=fail('viewing_fee','Your viewing fee privilege is paused. Contact support for help.')&&ok;
+    else if(PS.viewing_fee_requires_identity===1&&!S.identityVerified)ok=fail('viewing_fee','Verify your identity before charging a viewing fee.')&&ok;
+    else if(!S.policyAccepted&&!chk('viewing-fee-policy-accept'))ok=fail('viewing_fee','Read and accept the Viewing Fee Policy before setting a fee.')&&ok;
+  }
   ok=fail('contact_name',val('contact_name').length>1?'':'Enter your full name')&&ok;
   ok=fail('phone',okPhone(val('phone'))?'':'Enter a valid phone number, e.g. 0712 345 678')&&ok;
   ok=fail('whatsapp',!val('whatsapp')||okPhone(val('whatsapp'))?'':'Enter a valid WhatsApp number or leave it blank')&&ok;
@@ -800,13 +834,18 @@ async function submit(){
   if(!S.user){await checkGuestEmail();if(S.guestBlocked){openSignIn();return}}
   S.busy=true;const btn=$('btn-submit');btn.disabled=true;btn.textContent='Submitting…';
   try{
+    if(feeEligible&&viewingFee>0&&!S.policyAccepted){
+      const{error:policyError}=await db.rpc('accept_viewing_fee_policy',{p_policy_version:PS.viewing_fee_policy_version});
+      if(policyError)throw new Error(`Could not record policy acceptance: ${policyError.message}`);
+      S.policyAccepted=true;
+    }
     const data=payload(),units=unitTiers(),link=val('video_url');let id=S.sub.listingId;
     if(S.user){
       if(!id){const {data:row,error}=await db.from('listings').insert(data).select().single();if(error)throw error;id=S.sub.listingId=row.id;saveDraftNow()}
-      if(['agent','company'].includes(S.accountType)){
-        const fee=val('viewing_fee')===''?0:Number(val('viewing_fee'));
+      if(feeEligible){
+        const fee=viewingFee;
         const{error}=await db.rpc('set_listing_viewing_fees',{p_listing_ids:[id],p_viewing_fee:fee});
-        if(error)throw new Error(`Listing created, but its viewing fee could not be saved: ${error.message}`);
+        if(error){console.error('[viewing-fee] Listing created but fee save failed:',error);throw new Error(`Listing created, but its viewing fee could not be saved: ${error.message}`);}
       }
       if(units.length&&!S.sub.unitsDone){const {error}=await db.from('listing_units').insert(units.map(t=>({listing_id:id,unit_label:t.label.trim(),bedrooms:group()==='standard'&&t.cap!==''?parseInt(t.cap):null,quantity_available:parseInt(t.qty),quantity_total:parseInt(t.qty),price:parseFloat(t.price)})));if(error)throw error;S.sub.unitsDone=true;saveDraftNow()}
       if(!S.sub.photosDone){const bad=await uploadPhotos(id);
@@ -823,7 +862,7 @@ async function submit(){
     }
     await clearDraft();S.ready=false;done(!S.user);
   }catch(err){
-    console.error(err);S.busy=false;btn.disabled=false;btn.textContent=S.sub.listingId?'Retry submit':'Submit for review';
+    console.error(err.message?.includes('viewing fee')?'[viewing-fee] Listing submission fee step failed:':'Listing submission failed:',err);S.busy=false;btn.disabled=false;btn.textContent=S.sub.listingId?'Retry submit':'Submit for review';
 if(!S.user&&/already (been )?registered|already exists/i.test(err.message||'')){S.guestBlocked=true;$('email-exists').hidden=false;$('submit-error').textContent='';openSignIn();return}
     $('submit-error').textContent='We could not finish submitting: '+(err.message||'unknown error')+'. Your details are saved. Tap the button to try again'+(S.sub.listingId?'; nothing will be duplicated.':'.');
   }
@@ -902,6 +941,7 @@ const flow=$('flow');
 flow.addEventListener('input',e=>{
   const t=e.target;
   if(t.id==='price')fmtPrice(t);
+  if(t.id==='viewing_fee')updateViewingFeePreview();
   if(S.step===5&&/^(contact_name|phone|whatsapp|contact_email)$/.test(t.id))renderReview();
   if(t.id==='address'||t.id==='area_custom')followSoon();
   if(t.id==='description')$('desc-count').textContent=`${t.value.trim().length} / 30 minimum`;
@@ -911,6 +951,8 @@ flow.addEventListener('input',e=>{
 });
 flow.addEventListener('change',e=>{
   const t=e.target;
+  if(t.id==='viewing-fee-free'){syncViewingFeeField();updateViewingFeePreview()}
+  if(t.id==='viewing-fee-policy-accept')S.policyAccepted=t.checked&&S.policyAccepted;
   if(t.id==='county'){fillAreas(t.value);followSoon()}
   if(t.id==='area'){areaChanged();followSoon()}
   if(t.id==='std_has_units'){$('std-units').hidden=!t.checked;if(t.checked)renderTiers()}

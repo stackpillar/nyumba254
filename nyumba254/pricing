@@ -840,7 +840,7 @@
   <div class="cta-inner">
     <div class="section-eyebrow">Ready to list?</div>
     <h2 class="section-title">Your next tenant or buyer<br>is already searching</h2>
-    <p>Start with <span id="cta-std-price">KES 500</span> and be live in 10 minutes. Or go Featured for <span id="cta-feat-price">KES 1,500</span> and be the first listing they see. Either way, you're in control — no agents, no commissions, no waiting.</p>
+    <p>Start with <span id="cta-std-price">KES 500</span> and be live in 10 minutes. Or go Featured for <span id="cta-feat-price">KES 1,500</span> and be the first listing they see. Choose the listing plan that works for you, and show viewers your role and any viewing fee upfront.</p>
     <div class="cta-buttons">
       <a href="/post-listing?plan=featured" class="btn-cta-primary">
         <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -866,7 +866,7 @@
           </div>
           Nyumba254
         </div>
-        <p class="footer-tagline">The easiest way to find and list apartments, shops, and offices across Kenya — without agents or commissions.</p>
+        <p class="footer-tagline">An open property platform for people across Kenya, with listing roles and viewing fees shown clearly.</p>
         <div class="footer-social">
           <a href="https://wa.me/254739348560" target="_blank" rel="noopener" title="WhatsApp">
             <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
@@ -901,7 +901,7 @@
         <a href="/post-listing">List a property</a>
         <a href="/pricing">Pricing</a>
         <a href="/how-it-works">How it works</a>
-        <a href="/login">Seller login</a>
+        <a href="/login">Sign in</a>
       </div>
 
       <!-- Company -->

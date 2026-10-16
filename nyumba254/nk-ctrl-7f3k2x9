@@ -217,11 +217,11 @@ IC.mute='<path d="M11 5 6 9H3v6h3l5 4z"/><line x1="16" y1="9" x2="22" y2="15"/><
 const icon=(n,s=16)=>`<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]||''}</svg>`;
 
 /* ───── app state + settings ───── */
-const S={user:null,me:null,cfg:{sale_standard_pct:.1,sale_featured_pct:.15,rent_standard_pct:3,rent_featured_pct:6,standard_min_fee:500,standard_max_fee:18000,featured_min_fee:1200,featured_max_fee:28000,standard_fee_per_unit:50,featured_fee_per_unit:150,trial_days:14,standard_duration_days:60,featured_duration_days:90,recycle_bin_days:30,premium_monthly_price:1200,premium_yearly_price:12000,elite_monthly_price:3000,elite_yearly_price:30000,elite_ai_listing_uses_monthly:20,elite_valuation_uses_monthly:20,bnb_basic_price:700,bnb_bundle_price:2000,require_payment_to_publish:1,enforce_verification_general:0,unverified_listing_limit:2},social:{facebook:false,instagram:false,tiktok:false}};
+const S={user:null,me:null,cfg:{sale_standard_pct:.1,sale_featured_pct:.15,rent_standard_pct:3,rent_featured_pct:6,standard_min_fee:500,standard_max_fee:18000,featured_min_fee:1200,featured_max_fee:28000,standard_fee_per_unit:50,featured_fee_per_unit:150,trial_days:14,standard_duration_days:60,featured_duration_days:90,recycle_bin_days:30,premium_monthly_price:1200,premium_yearly_price:12000,elite_monthly_price:3000,elite_yearly_price:30000,elite_ai_listing_uses_monthly:20,elite_valuation_uses_monthly:20,bnb_basic_price:700,bnb_bundle_price:2000,require_payment_to_publish:1,enforce_verification_general:0,unverified_listing_limit:2,viewing_fee_max:5000,viewing_fee_requires_identity:1,viewing_fee_policy_version:'v1'},social:{facebook:false,instagram:false,tiktok:false}};
 async function loadSettings(){
   const{data}=await db.from('platform_settings').select('key,value');
   (data||[]).forEach(r=>{
-    if(r.key in S.cfg)S.cfg[r.key]=Number(r.value);
+    if(r.key in S.cfg)S.cfg[r.key]=typeof S.cfg[r.key]==='string'?String(r.value??S.cfg[r.key]):Number(r.value);
     const m=/^auto_post_(facebook|instagram|tiktok)$/.exec(r.key);if(m)S.social[m[1]]=r.value==='1'||r.value===1;
   });
 }
@@ -234,6 +234,18 @@ function upgradeAmount(l,plan){
   const type=l.price_type==='rent'?'rent':'sale',f=plan==='featured'?'featured':'standard',u=l.listing_units||[];
   if(u.length){const pv=u.reduce((s,x)=>s+Number(x.price||0)*Number(x.quantity_total??x.quantity_available??1),0);return calcFee(pv,type,f)+S.cfg[f+'_fee_per_unit']*u.length;}
   return calcFee(l.price,type,f);
+}
+function listingRoleText(l){
+  const profile=l.profiles||{},role=l.listed_by_type||profile.account_type;
+  const labels={owner:'Direct from owner',caretaker:'Caretaker',agent:'Agent',company:'Company',buyer:'Buyer'};
+  if(!role)return 'Role not set';
+  const verified=profile.account_type===role&&profile.verified_role===role;
+  return `${labels[role]||role}${verified?' · verified':' · not verified'}${profile.account_type&&profile.account_type!==role?' · role changed':''}`;
+}
+async function emailViewingFeeNotice(profile,subject,message){
+  if(!profile?.email)return;
+  const result=await notifyByEmail('admin_seller_notice',{audience:'seller',noticeType:'viewing_fee_policy',subject,message,sellerName:profile.full_name,sellerEmail:profile.email});
+  if(!result.ok)ui.toast('Viewing-fee email notification failed: '+(result.body?.error||result.body?.failedRecipients?.[0]?.error||'HTTP '+result.status),'err');
 }
 
 /* ───── backend notifications ───── */
@@ -744,6 +756,29 @@ const LA={
     if(l.profiles?.email)notifySeller('listing_extended',{listingId:l.id,listingTitle:l.title,days,newExpiry:ne,sellerName:l.profiles.full_name,sellerEmail:l.profiles.email});
     notifyInApp(l.seller_id,'listing_approved','Listing extended',`"${l.title}" was extended by ${days} day(s).`,'/dashboard.html');
   },
+  async setViewingFee(l){
+    const max=Math.min(5000,Number(S.cfg.viewing_fee_max)||5000);
+    const amount=await ui.ask({title:'Set or clear viewing fee',message:`Current fee: <b>${l.viewing_fee==null?'not available':l.viewing_fee===0?'Free viewing':KES(l.viewing_fee)}</b>. The platform cap is KES ${max}. Enter 0 to clear the fee.`,label:'New viewing fee (KES)',type:'number',confirm:'Continue'});
+    if(amount===null)return false;
+    const fee=Number(amount);
+    if(!Number.isInteger(fee)||fee<0||fee>max)throw new Error(`Enter a whole amount from KES 0 to KES ${max}`);
+    const reason=await ui.ask({title:'Reason for fee change',message:'This reason is included in the audit log and user notification.',label:'Reason (at least 5 characters)',confirm:'Save fee'});
+    if(reason===null)return false;
+    const{error}=await db.rpc('admin_set_listing_viewing_fee',{p_listing_id:l.id,p_viewing_fee:fee,p_reason:reason});
+    if(error)throw error;
+    await emailViewingFeeNotice(l.profiles,'Nyumba254 updated your listing viewing fee',`An administrator set the viewing fee for “${l.title}” to ${fee===0?'Free viewing':`KES ${fee}`}. Reason: ${reason}`);
+    ui.toast('Viewing fee updated','ok');
+  },
+  async setViewingFeePrivilege(profile){
+    if(!profile?.id)throw new Error('Lister profile is unavailable');
+    const blocked=profile.viewing_fee_blocked===true;
+    const reason=await ui.ask({title:blocked?'Restore viewing-fee privilege?':'Pause viewing-fee privilege?',message:`This changes the lister’s ability to charge a viewing fee. ${blocked?'Their current block will be removed.':'Their current fees will no longer be shown as payable.'}`,label:'Reason (at least 5 characters)',confirm:blocked?'Restore privilege':'Pause privilege',danger:!blocked});
+    if(reason===null)return false;
+    const{error}=await db.rpc('admin_set_viewing_fee_privilege',{p_profile_id:profile.id,p_blocked:!blocked,p_reason:reason});
+    if(error)throw error;
+    await emailViewingFeeNotice(profile,blocked?'Nyumba254 restored your viewing-fee privilege':'Nyumba254 paused your viewing-fee privilege',`${blocked?'Your viewing-fee privilege has been restored.':'Your viewing-fee privilege has been paused.'} Reason: ${reason}`);
+    ui.toast(blocked?'Viewing-fee privilege restored':'Viewing-fee privilege paused','ok');
+  },
   async recycle(l,T){
     const r=await ui.ask({title:'Move to recycle bin?',message:`<b>${esc(l.title)}</b> is hidden and permanently deleted after ${S.cfg.recycle_bin_days} days. You can undo this right after.`,label:'Reason',confirm:'Move to recycle bin',danger:true});if(r===null)return false;
     await LA.recycleRaw(l,r);
@@ -828,6 +863,9 @@ function listingActions(l){
     {label:l.is_disabled?'Activate':'Deactivate',fn:()=>l.is_disabled?LA.activate(l):LA.deactivate(l)},
     {label:'Mark occupied / sold',hide:!(l.status==='active'&&!l.is_disabled),fn:()=>LA.occupied(l)},
     {label:'Mark available again',hide:!(l.status==='occupied'&&!l.is_disabled),fn:()=>LA.free(l)},
+    {sep:'Viewing fees'},
+    {label:'Set or clear viewing fee',fn:()=>LA.setViewingFee(l)},
+    {label:l.profiles?.viewing_fee_blocked?'Restore lister fee privilege':'Pause lister fee privilege',hide:!l.profiles||!['agent','company'].includes(l.profiles.account_type),danger:!l.profiles?.viewing_fee_blocked,fn:()=>LA.setViewingFeePrivilege(l.profiles)},
     {sep:'Share'},
     ...['facebook','instagram','tiktok'].map(p=>({label:'Post to '+p[0].toUpperCase()+p.slice(1),hide:lk,fn:()=>LA.post(l,p)})),
     {sep:'Remove'},
@@ -836,14 +874,15 @@ function listingActions(l){
   ].filter(a=>!a.hide);
 }
 async function openListing(l,T){
-  const[{data:posts},{data:logs}]=await Promise.all([db.from('social_posts').select('platform,status,created_at').eq('listing_id',l.id).eq('status','posted'),db.from('admin_logs').select('*').eq('target_id',String(l.id)).order('created_at',{ascending:false}).limit(5)]);
+  const[{data:posts},{data:logs},{data:feeHistory,error:feeHistoryError}]=await Promise.all([db.from('social_posts').select('platform,status,created_at').eq('listing_id',l.id).eq('status','posted'),db.from('admin_logs').select('*').eq('target_id',String(l.id)).order('created_at',{ascending:false}).limit(5),db.from('viewing_fee_history').select('old_fee,new_fee,changed_at,changed_by').eq('object_type','listing').eq('object_id',l.id).order('changed_at',{ascending:false}).limit(10)]);
   const photos=l.listing_photos||[],pr=l.profiles||{};
   const d=ui.drawer(l.title,`
     <div class="sec" style="margin-top:0">Photos</div><div id="ph"></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${bd(l.status)}${l.is_disabled?bd(l.recycle_bin?'recycle bin':'disabled','bad'):''}${l.is_featured?bd('featured','warn'):''}${bd(l.payment_status||'unpaid')}${l.is_multi_unit?bd('multi-unit','pur'):''}</div>
     <dl class="kv"><dt>Price</dt><dd>${esc(priceOf(l))}</dd><dt>Category</dt><dd>${esc(CAT[l.category]||l.category)}</dd><dt>Location</dt><dd>${esc(locOf(l))}${l.sub_area?' — '+esc(l.sub_area):''}</dd><dt>Bedrooms</dt><dd>${l.bedrooms==0?'Studio':esc(l.bedrooms??l.details?.bedrooms??'—')}</dd><dt>Plan</dt><dd>${l.payment_status==='trial'?S.cfg.trial_days+'-day free trial':l.is_featured?'Featured':'Standard'} · fee ${KES(upgradeAmount(l,l.is_featured?'featured':'basic'))}</dd><dt>Expires</dt><dd>${expiryOf(l)}</dd><dt>Posted</dt><dd>${dt(l.created_at)}</dd><dt>Listing no.</dt><dd>${numOf(l)||'—'}</dd></dl>
     ${(l.listing_units||[]).length?`<div class="sec">Unit types</div>${l.listing_units.map(u=>`<div class="row"><span>${esc(u.unit_label)}</span><span>${KES(u.price)} · ${u.quantity_available??0}/${u.quantity_total??'—'} free</span></div>`).join('')}`:''}
-    <div class="sec">Seller</div><dl class="kv"><dt>Name</dt><dd>${esc(pr.full_name||'—')}</dd><dt>Email</dt><dd>${esc(pr.email||'—')}</dd><dt>Phone</dt><dd>${esc(pr.phone||'—')}</dd></dl>
+    <div class="sec">Lister & viewing fee</div><dl class="kv"><dt>Listed as</dt><dd>${esc(listingRoleText(l))}</dd><dt>Viewing fee</dt><dd>${l.viewing_fee==null?'Fee lookup unavailable':l.viewing_fee===0?'Free viewing':KES(l.viewing_fee)}</dd><dt>Fee privilege</dt><dd>${pr.viewing_fee_blocked?'Paused'+(pr.viewing_fee_block_reason?': '+esc(pr.viewing_fee_block_reason):''):'Available'}</dd><dt>Name</dt><dd>${esc(pr.full_name||'—')}</dd><dt>Email</dt><dd>${esc(pr.email||'—')}</dd><dt>Phone</dt><dd>${esc(pr.phone||'—')}</dd></dl>
+    <div class="sec">Viewing fee history</div>${feeHistoryError?`<p role="alert"><small>Could not load fee history: ${esc(feeHistoryError.message)}</small></p>`:(feeHistory||[]).length?feeHistory.map(x=>`<div class="row"><span>${x.old_fee==null?'Initial':`KES ${x.old_fee}`} → ${x.new_fee===0?'Free viewing':`KES ${x.new_fee}`}</span><small>${dtt(x.changed_at)}</small></div>`).join(''):'<small>No fee changes recorded</small>'}
     ${l.description?`<div class="sec">Description</div><p style="white-space:pre-wrap;color:var(--tx2)">${esc(l.description)}</p>`:''}
     <div class="sec">Video walkthrough</div><div id="vd"><small>Loading…</small></div><div class="sec">Social</div><p>${(posts||[]).length?(posts||[]).map(p=>bd(p.platform+' · '+dt(p.created_at),'ok')).join(' '):'<small>Not posted yet</small>'}</p>
     <div class="sec">Recent admin activity</div>${(logs||[]).length?logs.map(x=>`<div class="row"><span>${esc(String(x.action).replace(/_/g,' '))}${x.details?' — '+esc(x.details):''}</span><small>${ago(x.created_at)}</small></div>`).join(''):'<small>None</small>'}`,
@@ -867,7 +906,15 @@ function listingsView(el,p){
       const s=safe(st.q);if(s){const num=s.replace(/^#/,'');q=/^\d+$/.test(num)?q.or(`title.ilike.%${s}%,area.ilike.%${s}%,listing_number.eq.${parseInt(num,10)}`):q.or(`title.ilike.%${s}%,area.ilike.%${s}%`);}
       const sk=st.sort||{key:'created_at',dir:'desc'};
       const{data,error,count}=await q.order(sk.key,{ascending:sk.dir==='asc'}).range(st.page*st.size,st.page*st.size+st.size-1);
-      if(error)throw error;return{rows:data,count};
+      if(error)throw error;
+      const rows=data||[];
+      if(rows.length){
+        const{data:fees,error:feeError}=await db.rpc('get_public_viewing_fees',{p_listing_ids:rows.map(l=>l.id)});
+        if(feeError)throw feeError;
+        const byId=Object.fromEntries((fees||[]).map(f=>[f.listing_id,f.viewing_fee]));
+        rows.forEach(l=>l.viewing_fee=byId[l.id]??null);
+      }
+      return{rows,count};
     },
     async tabCounts(){
       const ids=['all','pending','active','trial','featured','multiunit','inactive'];
@@ -875,11 +922,12 @@ function listingsView(el,p){
       return Object.fromEntries(ids.map((id,i)=>[id,r[i]]));
     },
     columns:[
-      {label:'Property',nl:1,render:l=>{const c=coverOf(l);return `<div class="th"><div class="im">${c?`<img src="${esc(c.url)}" alt="" loading="lazy">`:icon('img')}</div><div style="min-width:0"><b>${esc(l.title)}</b><small>${esc(l.profiles?.full_name||'—')}${numOf(l)?' · #'+numOf(l):''}${l.is_multi_unit?' · multi-unit':''}${l.is_featured?' · ★':''}</small></div></div>`;}},
+      {label:'Property & role',nl:1,render:l=>{const c=coverOf(l);return `<div class="th"><div class="im">${c?`<img src="${esc(c.url)}" alt="" loading="lazy">`:icon('img')}</div><div style="min-width:0"><b>${esc(l.title)}</b><small>${esc(l.profiles?.full_name||'—')} · ${esc(listingRoleText(l))}${numOf(l)?' · #'+numOf(l):''}${l.is_multi_unit?' · multi-unit':''}${l.is_featured?' · ★':''}</small></div></div>`;}},
       {label:'Location',render:l=>esc(locOf(l))},{label:'Price',sort:'price',render:l=>`<b style="color:var(--tx)">${esc(priceOf(l))}</b>`},
       {label:'Category',render:l=>esc(CAT[l.category]||l.category)},{label:'Status',render:l=>bd(l.is_disabled?'disabled':l.status)},
+      {label:'Viewing fee',render:l=>l.viewing_fee==null?bd('Unavailable','bad'):bd(l.viewing_fee===0?'Free viewing':KES(l.viewing_fee),l.viewing_fee?'warn':'ok')},
       {label:'Payment',render:l=>bd(l.payment_status||'unpaid')},{label:'Posted',sort:'created_at',render:l=>dt(l.created_at)},{label:'Expires',render:expiryOf}],
-    card:l=>{const c=coverOf(l),status=l.is_disabled?'disabled':l.status;return `<div class="lc-media">${c?`<img src="${esc(c.url)}" alt="" loading="lazy">`:icon('img',24)}<span class="lc-status">${bd(status)}</span></div><div class="lc-body"><div class="lc-title">${esc(l.title||'Untitled listing')}</div><div class="lc-sub">${esc(l.profiles?.full_name||'Unknown seller')}${numOf(l)?` · #${numOf(l)}`:''}</div><div class="lc-price">${esc(priceOf(l))}</div><div class="lc-sub">${esc(locOf(l))}</div><div class="lc-facts">${bd(CAT[l.category]||l.category)}${bd(l.payment_status||'unpaid')}${l.is_featured?bd('featured','pur'):''}${l.is_multi_unit?bd('multi-unit','info'):''}</div><div class="lc-meta"><span>Posted ${dt(l.created_at)}</span><span>${expiryOf(l)}</span></div></div>`;},
+    card:l=>{const c=coverOf(l),status=l.is_disabled?'disabled':l.status;return `<div class="lc-media">${c?`<img src="${esc(c.url)}" alt="" loading="lazy">`:icon('img',24)}<span class="lc-status">${bd(status)}</span></div><div class="lc-body"><div class="lc-title">${esc(l.title||'Untitled listing')}</div><div class="lc-sub">${esc(l.profiles?.full_name||'Unknown lister')} · ${esc(listingRoleText(l))}${numOf(l)?` · #${numOf(l)}`:''}</div><div class="lc-price">${esc(priceOf(l))}</div><div class="lc-sub">${esc(locOf(l))}</div><div class="lc-facts">${bd(CAT[l.category]||l.category)}${bd(l.payment_status||'unpaid')}${bd(l.viewing_fee==null?'Fee unavailable':l.viewing_fee===0?'Free viewing':KES(l.viewing_fee),l.viewing_fee?'warn':'ok')}${l.is_featured?bd('featured','pur'):''}${l.is_multi_unit?bd('multi-unit','info'):''}</div><div class="lc-meta"><span>Posted ${dt(l.created_at)}</span><span>${expiryOf(l)}</span></div></div>`;},
     rowClass:l=>l.status==='pending'&&Date.now()-new Date(l.created_at)>864e5?'urgent':'',
     actions:listingActions,open:(l,T)=>openListing(l,T),keys:{a:l=>l.status==='pending'?LA.approveFlow(l):false,r:l=>l.status==='pending'?LA.rejectFlow(l):false},
     bulk:[
@@ -1291,27 +1339,58 @@ VIEWS.support={title:'Support chat',async mount(el,p,ctx){
 }};
 
 /* ═════════ REPORTS ═════════ */
-const REASON={fake_listing:'Fake listing',scam_attempt:'Scam / money upfront',viewing_fee_dispute:'Viewing fee disclosure or amount dispute',unreasonable_fee:"Legacy finder's-fee report",wrong_info:'Details don’t match',offensive:'Offensive content',other:'Other'};
-async function setReport(r,status,notes){
-  const up={status};if(notes!==undefined)up.admin_notes=notes||null;if(status==='resolved'||status==='dismissed')up.resolved_at=new Date().toISOString();
-  const{error}=await db.from('reports').update(up).eq('id',r.id);if(error)throw error;logAction('update_report','report',r.id,status);ui.toast('Report marked '+status,'ok');
+const VIEWING_FEE_REPORT_REASONS=new Set(['viewing_fee_dispute','viewing_fee_free_listing','viewing_fee_not_refunded','viewing_fee_advance_payment']);
+const REASON={fake_listing:'Fake listing',scam_attempt:'Scam / other upfront payment',viewing_fee_dispute:'Asked for more than the listed fee',viewing_fee_free_listing:'Charged after a free-viewing listing',viewing_fee_not_refunded:'Viewing fee not refunded',viewing_fee_advance_payment:'Asked for viewing-fee payment before viewing',unreasonable_fee:"Legacy finder's-fee report",wrong_info:'Details don’t match',offensive:'Offensive content',other:'Other'};
+async function setReport(r,status,notes,feeValid){
+  const up={status};if(notes!==undefined)up.admin_notes=notes||null;if(feeValid!==undefined)up.fee_report_valid=feeValid;if(status==='resolved'||status==='dismissed')up.resolved_at=new Date().toISOString();
+  const{error}=await db.from('reports').update(up).eq('id',r.id);if(error)throw error;
+  logAction('update_report','report',r.id,`${status}${feeValid===true?' · validated viewing-fee report':''}`);
+  let escalationEmailFailed=false;
+  if(status==='resolved'&&feeValid===true&&r._s?.id&&!r._s.viewing_fee_blocked){
+    const{data:profile,error:profileError}=await db.from('profiles').select('id,full_name,email,viewing_fee_blocked').eq('id',r._s.id).maybeSingle();
+    if(profileError)ui.toast('Report saved, but the lister fee status could not be checked: '+profileError.message,'err');
+    else if(profile?.viewing_fee_blocked){
+      const email=await notifyByEmail('admin_seller_notice',{audience:'seller',noticeType:'viewing_fee_policy',subject:'Nyumba254 paused your viewing-fee privilege',message:'Your viewing-fee privilege was paused after two valid reports within 90 days. Contact support if you believe this is incorrect.',sellerName:profile.full_name,sellerEmail:profile.email});
+      escalationEmailFailed=!email.ok;
+    }
+  }
+  if(escalationEmailFailed)ui.toast('Report resolved and fee privilege paused, but the email notification failed.','err');
+  else ui.toast('Report marked '+status,'ok');
 }
-function openReport(r,T){
+async function openReport(r,T){
   const l=r._l,s=r._s;
   const d=ui.drawer('Report — '+r.target_type,`<div style="display:flex;gap:6px;margin-bottom:12px">${bd(r.status)}${r._n>1?bd(r._n+' reports on this seller','bad'):''}${s?.is_disabled?bd('suspended','bad'):''}</div>
     <dl class="kv"><dt>Reason</dt><dd>${esc(REASON[r.reason]||r.reason)}</dd><dt>Details</dt><dd>${esc(r.details||'—')}</dd><dt>Reporter</dt><dd>${esc(r.reporter_name||'Anonymous')}${r.reporter_contact?' · '+esc(r.reporter_contact):''}</dd><dt>Submitted</dt><dd>${dtt(r.created_at)}</dd></dl>
     ${l?`<div class="sec">Reported listing</div><dl class="kv"><dt>Title</dt><dd>${esc(l.title)}</dd><dt>Price</dt><dd>${esc(priceOf(l))}</dd><dt>Location</dt><dd>${esc(locOf(l))}</dd><dt>Status</dt><dd>${bd(l.status)}${l.is_disabled?' '+bd('disabled','bad'):''}</dd><dt>Listed</dt><dd>${dt(l.created_at)}</dd></dl>`:r.target_type==='listing'?'<p><small>Listing not found — it may have been deleted.</small></p>':''}
-    ${s?`<div class="sec">Seller</div><dl class="kv"><dt>Name</dt><dd>${esc(s.full_name||'—')}</dd><dt>Phone</dt><dd>${esc(s.phone||'—')}</dd><dt>Email</dt><dd>${esc(s.email||'—')}</dd><dt>Since</dt><dd>${dt(s.created_at)}</dd></dl>`:''}
+    ${s?`<div class="sec">Lister</div><dl class="kv"><dt>Name</dt><dd>${esc(s.full_name||'—')}</dd><dt>Role</dt><dd>${esc(s.account_type||'—')} · ${s.verified_role===s.account_type&&s.account_type?'verified':'not verified'}</dd><dt>Fee privilege</dt><dd>${s.viewing_fee_blocked?'Paused':'Available'}${s.viewing_fee_block_reason?': '+esc(s.viewing_fee_block_reason):''}</dd><dt>Phone</dt><dd>${esc(s.phone||'—')}</dd><dt>Email</dt><dd>${esc(s.email||'—')}</dd><dt>Since</dt><dd>${dt(s.created_at)}</dd></dl>`:''}
+    ${VIEWING_FEE_REPORT_REASONS.has(r.reason)?`<div class="fld"><label class="chk"><input type="checkbox" id="rfee" ${r.fee_report_valid?'checked':''}><span><b>Validate this viewing-fee report</b><br><small>Two valid reports within 90 days pause the lister’s fee privilege.</small></span></label></div><div class="sec">Recent viewing-fee reports for this lister</div><div id="fee-report-history"><small>Loading report history…</small></div>`:''}
     <div class="fld"><label>Admin notes (internal only)</label><textarea class="in" id="rn" rows="3">${esc(r.admin_notes||'')}</textarea></div>`,
-    `${s&&!s.is_disabled?'<button class="btn bad" data-su>Suspend seller</button>':''}${l&&!l.is_disabled?'<button class="btn bad" data-rc>Recycle listing</button>':''}<button class="btn" data-st="dismissed">Dismiss</button><button class="btn" data-st="reviewing">Reviewing</button><button class="btn ok" data-st="resolved">Resolve</button>`);
+    `${s&&!s.is_disabled?'<button class="btn bad" data-su>Suspend lister</button>':''}${s&&['agent','company'].includes(s.account_type)?`<button class="btn ${s.viewing_fee_blocked?'ok':'bad'}" data-freeze-fees>${s.viewing_fee_blocked?'Restore fee privilege':'Pause fee privilege'}</button>`:''}${l&&!l.is_disabled?'<button class="btn bad" data-rc>Recycle listing</button>':''}<button class="btn" data-st="dismissed">Dismiss</button><button class="btn" data-st="reviewing">Reviewing</button><button class="btn ok" data-st="resolved">Resolve</button>`);
   const act=async f=>{try{if(await f()!==false){d.close();T.reload();refreshBadges();}}catch(e){ui.toast(e.message,'err');}};
-  $$('[data-st]',d.foot).forEach(b=>b.onclick=()=>act(()=>setReport(r,b.dataset.st,$('#rn',d.el).value.trim())));
+  $$('[data-st]',d.foot).forEach(b=>b.onclick=()=>act(()=>setReport(r,b.dataset.st,$('#rn',d.el).value.trim(),$('#rfee',d.el)?.checked)));
   $('[data-su]',d.foot)&&($('[data-su]',d.foot).onclick=()=>act(()=>suspendSeller(s)));
   $('[data-rc]',d.foot)&&($('[data-rc]',d.foot).onclick=()=>act(()=>LA.recycle(l,T)));
+  $('[data-freeze-fees]',d.foot)&&($('[data-freeze-fees]',d.foot).onclick=()=>act(()=>LA.setViewingFeePrivilege(s)));
+  if(VIEWING_FEE_REPORT_REASONS.has(r.reason)&&s?.id){
+    const box=$('#fee-report-history',d.el);
+    const{data:listings,error:listingsError}=await db.from('listings').select('id').eq('seller_id',s.id);
+    if(listingsError)box.innerHTML=`<p role="alert"><small>Could not load this lister’s listings: ${esc(listingsError.message)}</small></p>`;
+    else{
+      const listingIds=(listings||[]).map(x=>x.id);
+      const queries=[db.from('reports').select('reason,status,details,created_at,target_type').eq('target_type','seller').eq('target_id',s.id).in('reason',[...VIEWING_FEE_REPORT_REASONS]).order('created_at',{ascending:false}).limit(10)];
+      if(listingIds.length)queries.push(db.from('reports').select('reason,status,details,created_at,target_type').eq('target_type','listing').in('target_id',listingIds).in('reason',[...VIEWING_FEE_REPORT_REASONS]).order('created_at',{ascending:false}).limit(10));
+      const results=await Promise.all(queries),failure=results.find(x=>x.error);
+      if(failure)box.innerHTML=`<p role="alert"><small>Could not load report history: ${esc(failure.error.message)}</small></p>`;
+      else{
+        const history=results.flatMap(x=>x.data||[]).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,10);
+        box.innerHTML=history.length?history.map(x=>`<div class="row"><span>${bd(x.status)}${x.details?' '+esc(x.details):''}</span><small>${dtt(x.created_at)}</small></div>`).join(''):'<small>No prior viewing-fee reports.</small>';
+      }
+    }
+  }
 }
 VIEWS.reports={title:'Reports',mount(el,p){
   return Table({route:'reports',params:p,id:r=>r.id,local:true,search:'Search reports…',sort:{key:'created_at',dir:'desc'},
-    tabs:['open','reviewing','resolved','dismissed','all'].map(id=>({id,label:id[0].toUpperCase()+id.slice(1)})),tabFilter:(r,t)=>t==='all'||r.status===t,
+    tabs:[['open','Open'],['reviewing','Reviewing'],['resolved','Resolved'],['dismissed','Dismissed'],['fee_disputes','Fee disputes'],['all','All']].map(([id,label])=>({id,label})),tabFilter:(r,t)=>t==='all'||(t==='fee_disputes'?VIEWING_FEE_REPORT_REASONS.has(r.reason):r.status===t),
     async fetch(){
       const{data,error}=await db.from('reports').select('*').order('created_at',{ascending:false}).limit(500);if(error)throw error;
       const lids=[...new Set(data.filter(r=>r.target_type==='listing'&&r.target_id).map(r=>r.target_id))],sids=[...new Set(data.filter(r=>r.target_type==='seller'&&r.target_id).map(r=>r.target_id))];
@@ -1522,6 +1601,7 @@ const SET_GROUPS=[
   {t:'Listing fees',d:'Percentage of price, clamped between a minimum and maximum.',f:[['sale_standard_pct','Sale — Standard (%)',.01],['sale_featured_pct','Sale — Featured (%)',.01],['rent_standard_pct','Rent — Standard (%)',.01],['rent_featured_pct','Rent — Featured (%)',.01],['standard_min_fee','Standard — min fee (KES)'],['standard_max_fee','Standard — max fee (KES)'],['featured_min_fee','Featured — min fee (KES)'],['featured_max_fee','Featured — max fee (KES)'],['standard_fee_per_unit','Standard — per extra unit (KES)'],['featured_fee_per_unit','Featured — per extra unit (KES)']]},
   {t:'Durations',d:'How long plans and the recycle bin last.',f:[['trial_days','Free trial (days)'],['standard_duration_days','Standard plan (days)'],['featured_duration_days','Featured plan (days)'],['recycle_bin_days','Recycle bin retention (days)']]},
   {t:'Subscriptions',d:'Prices shown to sellers and used when payments are auto-matched to a billing period.',f:[['premium_monthly_price','Premium — monthly (KES)'],['premium_yearly_price','Premium — yearly (KES)'],['elite_monthly_price','Elite — monthly (KES)'],['elite_yearly_price','Elite — yearly (KES)'],['elite_ai_listing_uses_monthly','Elite — AI listing uses / month'],['elite_valuation_uses_monthly','Elite — valuation uses / month'],['bnb_basic_price','BNB Basic — monthly (KES)'],['bnb_bundle_price','BNB Bundle — monthly (KES, up to 5)']]},
+  {t:'Viewing-fee policy',d:'Agents and companies may disclose a fee shown on each listing. Buyers pay the lister directly; Nyumba254 does not collect viewing fees.',f:[['viewing_fee_max','Maximum viewing fee (KES)'],['viewing_fee_policy_version','Policy version','text']]},
   {t:'Relationship manager',d:'Shown to yearly subscribers.',f:[['rm_name','Name','text'],['rm_phone','Phone','text']]},
 ];
 VIEWS.settings={title:'Settings',async mount(el){
@@ -1533,12 +1613,13 @@ VIEWS.settings={title:'Settings',async mount(el){
   <div class="card" style="padding:18px;margin-bottom:16px"><h3 style="margin-bottom:12px">Platform controls</h3>
     ${chk('require_payment_to_publish','Require payment before listings go live','On: pay or trial before going active. Off: every approved listing goes live free.')}
     ${chk('enforce_verification_general','Enforce verification limit for all sellers','Caps unverified sellers at the limit below and sends them to KYC.')}
+    ${chk('viewing_fee_requires_identity','Require identity verification before charging a viewing fee','When enabled, agents and companies must have verified identity before setting a fee.')}
     <div class="fld" style="max-width:260px"><label>Unverified listing limit</label><input class="in" type="number" min="0" id="s_unverified_listing_limit" value="${esc(val('unverified_listing_limit'))}"></div></div>
   ${SET_GROUPS.map(g=>`<div class="card" style="padding:18px;margin-bottom:16px"><h3>${g.t}</h3><p class="intro" style="margin:2px 0 12px"><small>${g.d}</small></p><div class="g2">${g.f.map(([k,l,s])=>`<div class="fld"><label for="s_${k}">${l}</label><input class="in" id="s_${k}" ${s==='text'?'type="text"':`type="number" step="${s||1}"`} value="${esc(val(k))}"></div>`).join('')}</div></div>`).join('')}
   <div class="card" style="padding:18px"><h3 style="margin-bottom:4px">Social auto-posting</h3><p class="intro"><small>New listings are posted to Nyumba254's own Facebook, Instagram and TikTok when approved. You can always post manually from a listing.</small></p>
     ${['facebook','instagram','tiktok'].map(k=>`<label class="chk"><input type="checkbox" id="a_${k}" ${auto(k)?'checked':''}> Auto-post to ${k[0].toUpperCase()+k.slice(1)}${k==='tiktok'?' <small>(private until TikTok’s audit clears)</small>':''}</label>`).join('')}</div>
   <div class="savebar" id="sv" hidden><span id="svn"></span><span><button class="btn ghost" style="color:inherit" id="rs">Discard</button> <button class="btn pri" id="sa">Save changes</button></span></div></div>`;
-  const keys=[...SET_GROUPS.flatMap(g=>g.f.map(f=>f[0])),'unverified_listing_limit'],flags=['require_payment_to_publish','enforce_verification_general'];
+  const keys=[...SET_GROUPS.flatMap(g=>g.f.map(f=>f[0])),'unverified_listing_limit'],flags=['require_payment_to_publish','enforce_verification_general','viewing_fee_requires_identity'];
   const read=()=>{const o={};keys.forEach(k=>{const e=$('#s_'+k,el);o[k]=SET_GROUPS.find(g=>g.f.find(f=>f[0]===k&&f[2]==='text'))?e.value.trim():(e.value===''?val(k):Number(e.value));});flags.forEach(k=>o[k]=$('#s_'+k,el).checked?1:0);['facebook','instagram','tiktok'].forEach(k=>o['auto_post_'+k]=$('#a_'+k,el).checked?'1':'0');return o;};
   const changed=()=>{const o=read();return Object.entries(o).filter(([k,v])=>String(v)!==String(k.startsWith('auto_post_')?(auto(k.slice(10))?'1':'0'):(flags.includes(k)?(Number(val(k))?1:0):val(k))));};
   const upd=()=>{const c=changed();window.onbeforeunload=c.length?()=>'':null;$('#sv',el).hidden=!c.length;$('#svn',el).textContent=`${c.length} unsaved change${c.length!==1?'s':''}`;};
@@ -1548,6 +1629,8 @@ VIEWS.settings={title:'Settings',async mount(el){
     const c=changed(),now=new Date().toISOString();const o=read();
 if([['standard_min_fee','standard_max_fee'],['featured_min_fee','featured_max_fee']].some(([a,b])=>o[a]>o[b]))return ui.toast('Minimum fee can’t be higher than the maximum fee','err');
 if(['sale_standard_pct','sale_featured_pct','rent_standard_pct','rent_featured_pct'].some(k=>o[k]<0||o[k]>100))return ui.toast('Percentages must be between 0 and 100','err');
+if(!Number.isInteger(o.viewing_fee_max)||o.viewing_fee_max<0||o.viewing_fee_max>5000)return ui.toast('The viewing-fee cap must be a whole amount from KES 0 to KES 5,000','err');
+if(!String(o.viewing_fee_policy_version||'').trim())return ui.toast('Enter a viewing-fee policy version','err');
     const risky=c.filter(([k])=>/price|pct|fee|require_payment/.test(k));
     if(risky.length&&!await ui.confirm({title:'Change pricing or payment rules?',message:`This affects what sellers pay from now on: <b>${risky.map(([k])=>k.replace(/_/g,' ')).join(', ')}</b>.`,confirm:'Save changes'}))return;
     const{error}=await db.from('platform_settings').upsert(c.map(([key,value])=>({key,value,updated_at:now,updated_by:S.user.id})),{onConflict:'key'});

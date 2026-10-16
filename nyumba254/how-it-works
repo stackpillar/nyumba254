@@ -536,7 +536,7 @@
   <div class="section">
     <div class="section-eyebrow">For buyers &amp; renters</div>
     <h2 class="section-title">Find your next place in <em>four steps</em></h2>
-    <p class="section-sub">From searching to moving in — the whole process is straightforward, safe, and agent-free.</p>
+    <p class="section-sub">From searching to moving in — see who listed each home and what a viewing costs before you get in touch.</p>
 
     <div class="steps-wrap">
       <div class="steps-row">
@@ -689,7 +689,7 @@
 <div class="section" id="messaging">
   <div class="section-eyebrow">Section 3 — Messaging, calls &amp; viewings</div>
   <h2 class="section-title">Every conversation, <em>in one thread</em></h2>
-  <p class="section-sub">Whether you're enquiring as a buyer or replying as a seller, all of it happens in the same place — no separate app to install.</p>
+  <p class="section-sub">Whether you're enquiring as a buyer or replying as a lister, all of it happens in the same place — no separate app to install.</p>
 
   <div class="guide-two-col">
     <div>
@@ -702,12 +702,12 @@
         <div class="feature-card">
           <div class="feature-card-icon"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.12 1.2 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg></div>
           <h3>Calling or WhatsApp</h3>
-          <p>If a seller has allowed direct contact, a "Reveal number" option appears so you can call or open WhatsApp with a pre-filled message. Some sellers keep conversations chat-only for extra privacy — you'll see that clearly on the listing.</p>
+          <p>If a lister has allowed direct contact, a "Reveal number" option appears so you can call or open WhatsApp with a pre-filled message. Some listers keep conversations chat-only for extra privacy — you'll see that clearly on the listing.</p>
         </div>
         <div class="feature-card">
           <div class="feature-card-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
           <h3>Booking a viewing</h3>
-          <p>From a conversation, request a viewing with your preferred date and time. The seller confirms directly with you — Nyumba254 doesn't schedule or attend viewings on your behalf.</p>
+          <p>From a conversation, request a viewing with your preferred date and time. The lister confirms directly with you — Nyumba254 doesn't schedule or attend viewings on your behalf. Check the listing for its viewing fee: agents and companies set any fee themselves, it is paid directly to the person you meet, and Nyumba254 does not collect it. Read the <a href="/viewing-fee-policy">Viewing Fee Policy draft</a> (needs legal review before launch).</p>
         </div>
         <div class="feature-card">
           <div class="feature-card-icon"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="13" rx="1"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>
@@ -720,9 +720,9 @@
       <h4><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg>Good habits, either side</h4>
       <ul>
         <li>Keep the exchange on Nyumba254 as long as possible — it's how disputes and reports get resolved.</li>
-        <li>Never send a deposit or "booking fee" before you've physically viewed the property and verified ownership.</li>
-        <li>Sellers: replying quickly and clearly is the single biggest factor in getting a deal closed.</li>
-        <li>Buyers: mention move-in date and budget up front — it speeds up the seller's reply.</li>
+        <li>Never pay rent, a deposit, or any unlisted fee before you've physically viewed the property and verified the lister.</li>
+        <li>Listers: replying quickly and clearly helps home seekers make informed decisions.</li>
+        <li>Buyers and tenants: mention move-in date and budget up front — it speeds up the lister's reply.</li>
       </ul>
     </div>
   </div>
@@ -845,7 +845,7 @@
     </div>
     <div class="trust-card">
       <div class="trust-icon blue"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
-      <h3>M-Pesa native, no commission</h3>
+      <h3>M-Pesa payments and clear fees</h3>
       <p>Sellers pay listing fees via M-Pesa — no cards, no foreign platforms. Once your property sells or rents, that deal is entirely between you and the buyer, commission-free.</p>
     </div>
   </div>
@@ -919,7 +919,7 @@
       <a href="/login" class="pricing-cta outline" style="width:auto;padding:10px 20px;white-space:nowrap">Sign in to see plans</a>
     </div>
 
-    <p class="pricing-fineprint">Nyumba254 never charges buyers to browse, message a seller, or view a listing. Sellers only ever pay for the listing itself — there's no commission taken from the sale price or rent you agree with a buyer. Exact fees are always shown before you're asked to pay.</p>
+    <p class="pricing-fineprint">Nyumba254 charges no commission on a sale or rental deal. Listing and plan fees are shown before payment. Agents and companies may set a viewing fee, shown on the listing and paid directly to the lister; Nyumba254 does not collect it.</p>
   </div>
 </div>
 
@@ -1113,7 +1113,8 @@
         <h2>Platform</h2>
         <a href="/post-listing">List a property</a>
         <a href="/how-it-works">How it works</a>
-        <a href="/login">Seller login</a>
+        <a href="/viewing-fee-policy">Viewing Fee Policy (draft)</a>
+        <a href="/login">Sign in</a>
       </div>
       <div class="footer-col">
         <h2>Company</h2>

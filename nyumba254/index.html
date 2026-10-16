@@ -474,16 +474,16 @@
     <div class="hero-stats">
       <div class="hero-stat"><div class="hero-stat-val" id="stat-listings">—</div><div class="hero-stat-lbl">Active listings</div></div>
       <div class="hero-stat"><div class="hero-stat-val" id="stat-areas">—</div><div class="hero-stat-lbl">Counties with listings</div></div>
-      <div class="hero-stat"><div class="hero-stat-val">0%</div><div class="hero-stat-lbl">Agent commission</div></div>
+      <div class="hero-stat"><div class="hero-stat-val">0%</div><div class="hero-stat-lbl">Deal commission (Nyumba254)</div></div>
     </div>
   </div>
 </section>
 
 <!-- ── TRUST BAR (seeker-only messaging; seller messaging lives in the CTA banner) ── -->
 <div class="trust-bar">
-  <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Open to all property roles</div>
-  <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.12 1.2 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>Message sellers directly</div>
-  <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>Verified sellers</div>
+  <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>See who is listing and what a viewing costs</div>
+  <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.12 1.2 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>Role-verified listers</div>
+  <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>No deal commission from Nyumba254</div>
 </div>
 
 <!-- ── RECENTLY VIEWED ── -->
@@ -592,8 +592,8 @@
   <div class="section-header"><h2 class="section-title" id="how-title">How it works</h2></div>
   <div class="steps-strip">
     <div class="step-card"><div class="step-num">1</div><h3>Search or browse</h3><p>Filter by county, area, price and category to find places that match what you need.</p></div>
-    <div class="step-card"><div class="step-num">2</div><h3>Message the lister</h3><p>Contact the owner, caretaker, agent, or company listing the property. Nyumba254 charges no commission on your agreement.</p></div>
-    <div class="step-card"><div class="step-num">3</div><h3>Go view it</h3><p>Arrange a viewing, agree terms directly with the seller, and move in.</p></div>
+    <div class="step-card"><div class="step-num">2</div><h3>Message the lister</h3><p>Contact the owner, caretaker, agent, or company listing the property. Nyumba254 charges no deal commission on your agreement.</p></div>
+    <div class="step-card"><div class="step-num">3</div><h3>Go view it</h3><p>Check the viewing fee on the listing, arrange a viewing with the lister, and agree terms directly.</p></div>
   </div>
   <div id="reviews-section-wrap" hidden>
     <div class="section-header"><h2 class="section-title">What people are saying</h2></div>
@@ -653,6 +653,7 @@
         <h2>Company</h2>
         <a href="/contact">Contact us</a>
         <a href="/terms">Terms of service</a>
+        <a href="/viewing-fee-policy">Viewing Fee Policy (draft)</a>
         <a href="/privacy">Privacy policy</a>
         <a href="/faq">FAQ</a>
       </div>
@@ -848,8 +849,19 @@ function setLatestArea(area) { latest.area = area; renderAreaPills(); loadLatest
 
 async function renderRecentlyViewed() {
   const section = $('recently-viewed-section');
-  let list = []; try { list = await nkFetchRecentlyViewed(); } catch (e) {}
+  let list = [];
+  try {
+    list = await nkFetchRecentlyViewed();
+  } catch (error) {
+    console.error('[recently-viewed] Could not load recently viewed listings:', error);
+  }
   if (!list.length) { section.classList.remove('has-items'); return; }
+  try {
+    list = await nkHydratePublicProfiles(list);
+  } catch (error) {
+    console.error('[recently-viewed] Could not load lister roles:', error);
+  }
+  list = await nkHydrateViewingFees(list);
   section.classList.add('has-items');
   renderListings('recently-viewed-listings', list.slice(0, 10), 400);
 }

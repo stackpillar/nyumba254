@@ -56,7 +56,7 @@ function buildCaption(listing: any): string {
     "",
     `View this listing: ${url}`,
     "",
-    "Nyumba254 — no agents, no commission.",
+    "Nyumba254 — an open property platform with clear listing roles and viewing fees.",
   ].filter(Boolean).join("\n");
 }
 

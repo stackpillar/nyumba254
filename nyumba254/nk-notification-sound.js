@@ -18,7 +18,7 @@
 
   function getAudio() {
     if (!audio) {
-      audio = document.getElementById('scw-notify-sound') || new Audio('/assetsnotify.mp3');
+      audio = document.getElementById('scw-notify-sound') || new Audio('/assets/notify.mp3');
       audio.preload = 'auto';
       audio.volume = 0.65;
     }

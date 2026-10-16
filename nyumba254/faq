@@ -425,7 +425,7 @@
             <div class="faq-q-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
           </div>
           <div class="faq-a"><div class="faq-a-inner">
-            <p>No. Nyumba254 is a listing platform, not an agent — we don't arrange viewings, negotiate on your behalf, or handle any money between you and a seller. All of that happens directly between the two of you, off-platform.</p>
+            <p>No. Nyumba254 is an open property platform. We don't arrange viewings, negotiate on your behalf, or handle money between you and a lister. Agents and companies may show a viewing fee on a listing; it is paid directly to the person conducting the viewing, not to Nyumba254. Review the <a href="/viewing-fee-policy">Viewing Fee Policy draft</a> before arranging a paid viewing. It needs legal review before launch.</p>
           </div></div>
         </div>
 
@@ -693,7 +693,7 @@
     <div class="footer-top">
       <div>
         <div class="footer-logo">Nyumba254</div>
-        <p class="footer-tagline">Find and list apartments across Kenya — no agents, no commission.</p>
+        <p class="footer-tagline">Find and list property across Kenya, with open account roles and no deal commission.</p>
       </div>
       <div class="footer-col">
         <h4>Browse</h4>
@@ -708,7 +708,8 @@
         <h4>Platform</h4>
         <a href="/post-listing">List a property</a>
         <a href="/how-it-works">How it works</a>
-        <a href="/login">Seller login</a>
+        <a href="/viewing-fee-policy">Viewing Fee Policy (draft)</a>
+        <a href="/login">Sign in</a>
       </div>
       <div class="footer-col">
         <h4>Company</h4>

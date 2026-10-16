@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <title id="nk-doc-title">Browse Listings — Nyumba254</title>
-  <meta name="description" id="nk-doc-desc" content="Browse apartments, houses, boarding houses, Airbnb rentals and shops across Kenya. Filter by county, area, price and category. No agents, no commission."/>
+  <meta name="description" id="nk-doc-desc" content="Browse property listings across Kenya. See who listed each property and what viewing costs before you get in touch. Nyumba254 charges no deal commission."/>
   <meta name="robots" id="nk-robots" content="index,follow"/>
   <meta name="theme-color" content="#0F6E56"/>
   <link rel="canonical" id="nk-canonical" href="https://nyumba254.com/listings"/>
@@ -662,12 +662,19 @@
       <div class="filter-section">
         <label class="filter-label" for="listed-by-select">Listed by</label>
         <select class="form-input" id="listed-by-select">
-          <option value="">Any account type</option>
-          <option value="owner">Property owner</option>
-          <option value="caretaker">Caretaker</option>
-          <option value="agent">Agent</option>
-          <option value="company">Company</option>
-          <option value="seller">Legacy seller</option>
+          <option value="">All listers</option>
+          <option value="verified_owner">Direct from owner (verified owners only)</option>
+          <option value="other_listers">Agents, caretakers and companies</option>
+        </select>
+      </div>
+      <div class="filter-section">
+        <label class="filter-label" for="viewing-fee-select">Viewing fee</label>
+        <select class="form-input" id="viewing-fee-select">
+          <option value="">Any</option>
+          <option value="free">Free only</option>
+          <option value="500">Up to KES 500</option>
+          <option value="1000">Up to KES 1,000</option>
+          <option value="2000">Up to KES 2,000</option>
         </select>
       </div>
     </div>
@@ -734,9 +741,9 @@
 
 <!-- Seeker-only trust messaging, moved below the results so listings sit higher on the screen -->
 <div class="trust-bar">
-  <span>✓ No agents or middlemen</span>
-  <span>✓ Message sellers directly</span>
-  <span>✓ Verified sellers</span>
+  <span>✓ See who is listing and what a viewing costs</span>
+  <span>✓ Role-verified listers</span>
+  <span>✓ No deal commission from Nyumba254</span>
 </div>
 
 <!-- ── FOOTER ── -->
@@ -745,7 +752,7 @@
     <div class="footer-top">
       <div>
         <div class="footer-logo"><div class="footer-logo-icon"><img src="/logo-icon.png" alt="" width="40" height="40"/></div>Nyumba254</div>
-        <p class="footer-tagline">The easiest way to find and list apartments, houses, boarding rooms, Airbnb rentals and commercial spaces across Kenya, without agents or commissions.</p>
+        <p class="footer-tagline">Find and list property across Kenya, with open account roles and no deal commission.</p>
         <div class="footer-social">
           <a href="https://wa.me/254739348560" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></a>
           <a href="https://www.instagram.com/nyumba.254?igsh=Z2VhNzJkMm1td2Jz" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
@@ -772,7 +779,8 @@
         <h2>Platform</h2>
         <a href="/post-listing">List a property</a>
         <a href="/how-it-works">How it works</a>
-        <a href="/login">Seller login</a>
+        <a href="/viewing-fee-policy">Viewing Fee Policy (draft)</a>
+        <a href="/login">Sign in</a>
       </div>
       <div class="footer-col">
         <h2>Company</h2>
@@ -839,7 +847,7 @@
 <!-- ══ ENQUIRY MODAL ══ -->
 <div class="notify-modal-overlay" id="ci-overlay">
   <div class="notify-modal" style="max-width:440px" role="dialog" aria-modal="true" aria-labelledby="ci-title">
-    <div class="notify-modal-head"><h2 id="ci-title">Contact the seller</h2><button type="button" class="notify-modal-close" data-close="ci-overlay" aria-label="Close">✕</button></div>
+    <div class="notify-modal-head"><h2 id="ci-title">Contact the lister</h2><button type="button" class="notify-modal-close" data-close="ci-overlay" aria-label="Close">✕</button></div>
     <div class="notify-modal-body">
       <p class="notify-modal-sub" id="ci-listing-title">About this listing</p>
       <div id="ci-form">
@@ -852,12 +860,12 @@
         <div class="nf-field"><label for="ci-message">Message</label><textarea id="ci-message" rows="3" maxlength="1000"></textarea><div class="nf-err" id="ci-message-err" role="alert"></div></div>
         <div class="hp-field" aria-hidden="true"><label for="ci-website">Leave this field empty</label><input type="text" id="ci-website" name="website" tabindex="-1" autocomplete="off"/></div>
         <button type="button" class="ci-submit" id="ci-submit">Send enquiry</button>
-        <p class="enquiry-note">Your contact details are shared only with the seller of this listing.</p>
+        <p class="enquiry-note">Your contact details are shared only with the lister of this listing.</p>
       </div>
       <div class="ci-success" id="ci-success">
         <div class="ci-success-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></div>
         <h3>Enquiry sent</h3>
-        <p>The seller will reply here. You can continue the conversation from the listing page.</p>
+        <p>The lister will reply here. You can continue the conversation from the listing page.</p>
       </div>
     </div>
   </div>
@@ -934,7 +942,7 @@ const NK_CLEAN_ROUTES = false;   // flip to true once /listings/<county>/<catego
 // WhatsApp: adjust these two lines to your real column names. Cards fall back to the enquiry form if absent.
 const NK_WHATSAPP = { enabled: l => !!(l.allow_whatsapp && l.whatsapp_number), number: l => l.whatsapp_number };
 const LISTING_SELECT = '*, listing_photos(*), listing_units(*), profiles(verification_status,account_type,verified_role)';
-const MAP_SELECT = 'id, listing_number, seller_id, title, area, county, price, price_frequency, category, latitude, longitude';
+const MAP_SELECT = 'id, listing_number, seller_id, listed_by_type, title, area, county, price, price_frequency, category, latitude, longitude';
 const MAP_LIMIT = 300;
 const AUTO_PAGES = 3;                       // mobile: auto-load this many pages, then show "Load more"
 const CTX_KEY = 'nk_results_ctx';           // read by listing.html for "Back to results" / "Next listing"
@@ -951,8 +959,8 @@ const CAT_SLUG_OUT = { apartment: 'apartments', house: 'houses', boarding: 'boar
 const FREQ_CHOICES = [['', 'All'], ['month', 'Monthly'], ['night', 'Nightly'], ['week', 'Weekly'], ['term', 'Per term'], ['once', 'One-time (sale)']];
 const BEDS_CHOICES = [['', 'Any'], ['0', 'Studio'], ['1', '1'], ['2', '2'], ['3', '3'], ['4', '4+']];
 const FURN_CHOICES = [['', 'Any'], ['true', 'Furnished'], ['false', 'Unfurnished']];
-const SORT_CHOICES = [['', 'Newest first'], ['price_asc', 'Price: low to high'], ['price_desc', 'Price: high to low'], ['featured', 'Featured first']];
-const SORT_SHORT = { '': 'Sort', price_asc: 'Price ↑', price_desc: 'Price ↓', featured: 'Featured' };
+const SORT_CHOICES = [['', 'Newest first'], ['price_asc', 'Price: low to high'], ['price_desc', 'Price: high to low'], ['fee_asc', 'Viewing fee: low to high'], ['featured', 'Featured first']];
+const SORT_SHORT = { '': 'Sort', price_asc: 'Price ↑', price_desc: 'Price ↓', fee_asc: 'Fee ↑', featured: 'Featured' };
 
 /* Price presets depend on the payment frequency: "Under 10K" is meaningless for a sale. */
 const PRICE_PRESETS = {
@@ -994,11 +1002,11 @@ function toast(msg, kind) {
    1. STATE  (one object; every control renders from it)
    S = committed filters. D = staged draft while the mobile drawer is open.
    ═══════════════════════════════════════════════════════════════ */
-const S = { category: '', freq: '', county: '', areas: [], minPrice: '', maxPrice: '', beds: '', furn: '', amen: [], q: '', sort: '', occ: false, listedBy: '', view: 'grid', page: 1, mapIds: null };
+const S = { category: '', freq: '', county: '', areas: [], minPrice: '', maxPrice: '', beds: '', furn: '', amen: [], q: '', sort: '', occ: false, listedBy: '', viewingFee: '', view: 'grid', page: 1, mapIds: null };
 let D = null;
 const cur = () => D || S;
 const cloneState = s => ({ ...s, areas: [...s.areas], amen: [...s.amen], mapIds: s.mapIds ? [...s.mapIds] : null });
-const BLANK = () => ({ category: '', freq: '', county: '', areas: [], minPrice: '', maxPrice: '', beds: '', furn: '', amen: [], q: '', occ: false, listedBy: '', mapIds: null });
+const BLANK = () => ({ category: '', freq: '', county: '', areas: [], minPrice: '', maxPrice: '', beds: '', furn: '', amen: [], q: '', sort: '', occ: false, listedBy: '', viewingFee: '', mapIds: null });
 
 function normalize(f) {
   const g = groupOf(f.category);
@@ -1031,9 +1039,10 @@ function readUrl() {
   S.furn = ['true', 'false'].includes(p.furn) ? p.furn : '';
   S.amen = (p.amen || []).filter(k => NK_AMENITIES.some(a => a.key === k));
   S.q = safeQ(p.q || '').slice(0, 80);
-  S.sort = ['price_asc', 'price_desc', 'featured'].includes(p.sort) ? p.sort : '';
+  S.sort = ['price_asc', 'price_desc', 'fee_asc', 'featured'].includes(p.sort) ? p.sort : '';
   S.occ = p.occ === '1';
-  S.listedBy = ['owner','caretaker','agent','company','seller'].includes(p.listedBy) ? p.listedBy : '';
+  S.listedBy = ['verified_owner','other_listers'].includes(p.listedBy) ? p.listedBy : '';
+  S.viewingFee = ['', 'free', '500', '1000', '2000'].includes(p.viewingFee) ? p.viewingFee : '';
   S.view = p.view === 'map' ? 'map' : 'grid';
   S.page = Math.max(1, parseInt(p.page, 10) || 1);
   // Area given without a county (older links): infer the county only when the name is unambiguous.
@@ -1042,7 +1051,7 @@ function readUrl() {
 }
 
 function urlObject(f) {
-  return { category: f.category, freq: f.freq, county: f.county, area: f.areas, minPrice: f.minPrice, maxPrice: f.maxPrice, beds: f.beds, furn: f.furn, amen: f.amen, q: f.q, sort: f.sort, listedBy: f.listedBy };
+  return { category: f.category, freq: f.freq, county: f.county, area: f.areas, minPrice: f.minPrice, maxPrice: f.maxPrice, beds: f.beds, furn: f.furn, amen: f.amen, q: f.q, sort: f.sort, listedBy: f.listedBy, viewingFee: f.viewingFee };
 }
 function writeUrl() {
   nkSyncUrl({ ...urlObject(S), page: (!isMobileFeed() && S.page > 1) ? S.page : '', view: S.view === 'map' ? 'map' : '', occ: S.occ ? '1' : '' });
@@ -1062,8 +1071,8 @@ const SEARCH_FIELDS = ['title', 'description', 'area', 'address', 'county'];
 
 function applyFilters(query, f) {
   query = f.occ ? query.in('status', ['active', 'occupied']) : query.eq('status', 'active');
-  if(f.listedBy==='seller')query=query.or('listed_by_type.eq.seller,listed_by_type.is.null');
-  else if(f.listedBy)query=query.eq('profiles.account_type',f.listedBy);
+  if(f.listedBy==='verified_owner')query=query.eq('listed_by_type','owner').eq('profiles.verified_role','owner');
+  else if(f.listedBy==='other_listers')query=query.in('listed_by_type',['agent','caretaker','company']);
   if (f.freq) query = query.eq('price_frequency', f.freq);
   if (f.category) query = query.eq('category', f.category);
   query = bedsFilter(query, f.beds);
@@ -1088,15 +1097,30 @@ function applySort(query, f) {
   else query = query.order('created_at', { ascending: false });
   return query.order('id', { ascending: true });                          // tiebreaker: stable pages
 }
-function fetchPage(f, page) {
-  const from = (page - 1) * PAGE_SIZE;
-  const select=f.listedBy&&f.listedBy!=='seller'?'*, listing_photos(*), listing_units(*), profiles!inner(verification_status,account_type,verified_role)':LISTING_SELECT;
-  return applySort(applyFilters(db.from('listings').select(select, { count: 'exact' }), f), f).range(from, from + PAGE_SIZE - 1);
+function listingSearchArgs(f, offset, limit) {
+  return {
+    p_category:f.category||'',p_frequency:f.freq||'',p_county:f.county||'',p_areas:f.areas,
+    p_min_price:f.minPrice===''?null:Number(f.minPrice),p_max_price:f.maxPrice===''?null:Number(f.maxPrice),
+    p_bedrooms:f.beds||'',p_furnished:f.furn||'',p_amenities:f.amen,p_search:safeQ(f.q),
+    p_include_occupied:!!f.occ,p_lister_filter:f.listedBy||'',p_viewing_fee_filter:f.viewingFee||'',
+    p_sort:f.sort||'',p_map_ids:f.mapIds||[],p_offset:offset,p_limit:limit
+  };
+}
+async function fetchPage(f, page) {
+  const {data:matches,error:searchError}=await db.rpc('search_public_listing_ids',listingSearchArgs(f,(page-1)*PAGE_SIZE,PAGE_SIZE));
+  if(searchError)return {data:null,count:null,error:searchError};
+  const ids=(matches||[]).map(row=>row.listing_id).filter(Boolean);
+  const count=Number(matches?.[0]?.total_count)||0;
+  if(!ids.length)return {data:[],count,error:null};
+  const {data,error}=await db.from('listings').select(LISTING_SELECT).in('id',ids);
+  if(error)return {data:null,count:null,error};
+  const byId=new Map((data||[]).map(row=>[row.id,row]));
+  return {data:ids.map(id=>byId.get(id)).filter(Boolean),count,error:null};
 }
 async function countOnly(f) {
-  const select=f.listedBy&&f.listedBy!=='seller'?'id, profiles!inner(account_type)':'id';
-  const { count, error } = await applyFilters(db.from('listings').select(select, { count: 'exact', head: true }), f);
-  return error ? null : (count || 0);
+  const {data,error}=await db.rpc('search_public_listing_ids',listingSearchArgs(f,0,1));
+  if(error){console.error('[listing-search] Could not count matching listings:',error);return null}
+  return Number(data?.[0]?.total_count)||0;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1120,7 +1144,8 @@ function tagList(f) {
   if (f.minPrice !== '' || f.maxPrice !== '') t.push({ key: 'price', label: priceLabel(f) });
   if (f.q) t.push({ key: 'q', label: `“${f.q}”` });
   if (f.occ) t.push({ key: 'occ', label: 'Incl. occupied / sold' });
-  if (f.listedBy) t.push({ key: 'listedBy', label: `Listed by ${({owner:'Property owner',caretaker:'Caretaker',agent:'Agent',company:'Company',seller:'Legacy seller'})[f.listedBy]}` });
+  if (f.listedBy) t.push({ key: 'listedBy', label: `Listed by ${f.listedBy==='verified_owner'?'verified owners':'agents, caretakers and companies'}` });
+  if (f.viewingFee) t.push({ key: 'viewingFee', label: `Viewing fee: ${f.viewingFee==='free'?'Free only':`up to KES ${Number(f.viewingFee).toLocaleString('en-KE')}`}` });
   if (f.mapIds && f.mapIds.length) t.push({ key: 'map', label: 'Map area' });
   return t;
 }
@@ -1150,7 +1175,7 @@ function updateHeading(f) {
   const h = headingFor(f);
   $('page-title').textContent = h || 'Browse listings';
   $('page-desc').textContent = h
-    ? `${h}: verified listings on Nyumba254. Message sellers directly, no agents and no commission.`
+    ? `${h}: see who listed each property and what viewing costs before contacting the lister. Nyumba254 charges no deal commission.`
     : 'Apartments, houses, boarding houses, Airbnb rentals and shops across Kenya';
   const title = h ? h + ' — Nyumba254' : 'Browse Listings — Nyumba254';
   document.title = title;
@@ -1293,9 +1318,14 @@ function cardHtml(l, i) {
       `<button type="button" class="card-carousel-arrow next" data-photo-nav="1" data-id="${id}" aria-label="Next photo">${IC.chevR}</button>` +
       `<div class="card-photo-counter" id="ctr-${id}" aria-hidden="true">${idx + 1}/${photos.length}</div>` : '';
   const sub = l.address ? l.address : (l.county ? `${l.area || ''}${l.area ? ', ' : ''}${nkCountyLabel(l.county)}` : (l.area || 'Kenya'));
-  const listedByLabels={buyer:'Tenant / Buyer',owner:'Property owner',caretaker:'Caretaker',agent:'Agent',company:'Company',seller:'Legacy seller'};
-  const listedBy=listedByLabels[l.profiles?.account_type||(l.seller_id?'seller':'')];
-  const viewingFee=Number(l.public_viewing_fee)||0;
+  const listedByLabels={buyer:'Tenant / Buyer',owner:'Direct from owner',landlord:'Direct from owner',caretaker:'Caretaker',agent:'Agent',company:'Company'};
+  const listedByType=l.listed_by_type||l.profiles?.account_type||'';
+  const listedBy=listedByLabels[listedByType]||'Lister';
+  const currentRole=l.profiles?.account_type;
+  const roleChanged=!!listedByType&&!!currentRole&&listedByType!==currentRole;
+  const roleVerified=!roleChanged&&!!listedByType&&l.profiles?.verified_role===listedByType;
+  const roleText=`${listedBy}${roleChanged?' (role changed)':roleVerified?' ✓':' (not verified)'}`;
+  const viewingFee=l.viewing_fee_status==='error'||l.public_viewing_fee==null?null:Number(l.public_viewing_fee);
   const heart = (typeof NKSaved !== 'undefined' && NKSaved.buildHeartBtn) ? NKSaved.buildHeartBtn(l.id) : '';
   const middle = meta.group === 'boarding' ? boardingHtml(l, d) : specsHtml(meta, d);
   return `<article class="card${occupied ? ' is-occupied' : ''}" data-listing-id="${id}">
@@ -1309,8 +1339,9 @@ function cardHtml(l, i) {
     <div class="card-body">
       <div class="card-area">${escHtml(l.area)} ${nkBuildVerifiedBadge(l)}</div>
       <h3 class="card-title"><a class="card-link" href="${listingHref(l)}">${title}</a></h3>
-      <div class="card-sub">${escHtml(sub)}${listedBy?` · Listed by ${escHtml(listedBy)}`:''}</div>
-      <div class="card-viewing-fee">${viewingFee>0?`Viewing fee: KES ${viewingFee.toLocaleString('en-KE')}`:'Free viewing'}</div>
+      <div class="card-sub">${escHtml(sub)}</div>
+      <div class="card-role">${escHtml(roleText)}</div>
+      <div class="card-viewing-fee">${viewingFee===null?'Viewing fee: confirm with the lister':viewingFee>0?`Viewing fee: KES ${viewingFee.toLocaleString('en-KE')}`:'Free viewing'}</div>
       <div class="card-price">${formatPrice(l, { showFromPrefix: true })}</div>
       ${middle}${amenitiesHtml(l)}
       <div class="card-foot">
@@ -1358,7 +1389,8 @@ async function runSearch(opts) {
   feed.loading = false;
   if (error) { console.error(error); renderError(); return; }
   let list = data || [];
-  try{list=await nkHydratePublicProfiles(list);list=await nkHydrateViewingFees(list);}catch(profileError){console.error(profileError);}
+  try{list=await nkHydratePublicProfiles(list)}catch(profileError){console.error('[listing-search] Could not hydrate public lister profiles:',profileError)}
+  list=await nkHydrateViewingFees(list);
   if (my !== reqId) return;
   feed.total = count || 0;
   if (!append && !list.length && feed.total > 0 && page > 1) { S.page = 1; return runSearch(opts); }   // stale ?page=99
@@ -1585,6 +1617,7 @@ function syncSidebar() {
   qsa('#amen-checks input').forEach(i => { i.checked = f.amen.includes(i.value); });
   $('occ-check').checked = f.occ;
   $('listed-by-select').value = f.listedBy;
+  $('viewing-fee-select').value = f.viewingFee;
   const g = groupOf(f.category);
   $('sec-beds').hidden = g === 'boarding' || g === 'commercial';
   $('sec-furn').hidden = g === 'boarding' || g === 'airbnb' || g === 'commercial';
@@ -1603,6 +1636,7 @@ function onSidebarChange(e) {
   if (t.closest('#amen-checks')) { const f = cur(); return setFilter({ amen: t.checked ? [...f.amen, t.value] : f.amen.filter(a => a !== t.value) }); }
   if (t.id === 'occ-check') return setFilter({ occ: t.checked }, { immediate: !D });
   if (t.id === 'listed-by-select') return setFilter({ listedBy: t.value }, { immediate: !D });
+  if (t.id === 'viewing-fee-select') return setFilter({ viewingFee: t.value }, { immediate: !D });
 }
 function onSidebarInput(e) {
   if (e.target.id === 'price-min') setFilter({ minPrice: digitsOnly(e.target.value) });
@@ -1690,6 +1724,7 @@ function removeTag(key, val) {
     case 'q': { const i = $('search-q'); i.value = ''; delete i.dataset.priceValue; return setFilter({ q: '' }, imm); }
     case 'occ': return setFilter({ occ: false }, imm);
     case 'listedBy': return setFilter({ listedBy: '' }, imm);
+    case 'viewingFee': return setFilter({ viewingFee: '' }, imm);
     case 'map': return setFilter({ mapIds: null }, imm);
   }
 }
@@ -1934,21 +1969,32 @@ async function refreshMap(opts) {
   }
   setTimeout(() => MAP.inst.invalidateSize(), 150);
   const f = { ...cloneState(S), mapIds: null };
-  const mapSelect=f.listedBy&&f.listedBy!=='seller'?MAP_SELECT+', profiles!inner(account_type)':MAP_SELECT;
-  const [res] = await Promise.all([applySort(applyFilters(db.from('listings').select(mapSelect).limit(MAP_LIMIT), f), f), loadCentroids()]);
+  const [{data:matches,error:searchError}] = await Promise.all([
+    db.rpc('search_public_listing_ids',listingSearchArgs(f,0,MAP_LIMIT)),
+    loadCentroids()
+  ]);
+  if(searchError){console.error('[listing-search] Could not load map listing filters:',searchError);load.textContent='Listings could not be loaded. Try again.';return}
+  const ids=(matches||[]).map(row=>row.listing_id).filter(Boolean);
+  const {data:mapRows,error:mapError}=ids.length?await db.from('listings').select(MAP_SELECT).in('id',ids):{data:[],error:null};
+  if(mapError){console.error('[listing-search] Could not load map listings:',mapError);load.textContent='Listings could not be loaded. Try again.';return}
   if (my !== MAP.token) return;
   MAP.layer.clearLayers(); MAP.pins = {}; MAP.points = [];
-  let mapListings=res.data||[];
+  const byId=new Map((mapRows||[]).map(row=>[row.id,row]));
+  let mapListings=ids.map(id=>byId.get(id)).filter(Boolean);
   if(mapListings.length){
-    try{mapListings=await nkHydratePublicProfiles(mapListings);mapListings=await nkHydrateViewingFees(mapListings);}
-    catch(hydrationError){console.error('Could not hydrate map listing details:',hydrationError);}
+    try{mapListings=await nkHydratePublicProfiles(mapListings)}catch(hydrationError){console.error('[listing-search] Could not hydrate map lister profiles:',hydrationError)}
+    mapListings=await nkHydrateViewingFees(mapListings);
   }
   mapListings.forEach(l => {
     const pos = positionFor(l); if (!pos) return;
     const icon = L.divIcon({ className: 'nk-pin', html: `<span>${escHtml(shortPrice(Number(l.price)))}</span>`, iconSize: [0, 0] });
     const m = L.marker(pos.ll, { icon, riseOnHover: true }).addTo(MAP.layer);
-    const fee=Number(l.public_viewing_fee)||0;
-    m.bindPopup(`<div class="nk-pop"><div class="nk-pop-title">${escHtml(l.title)}</div><div class="nk-pop-sub">${escHtml(fmtKES(l.price))}${escHtml(NK_FREQ_LABEL[l.price_frequency] || '')} · ${escHtml(l.area)}${pos.approx ? ' (approximate location)' : ''}<br/>${fee>0?'Viewing fee: '+escHtml(fmtKES(fee)):'Free viewing'}</div><a href="${listingHref(l)}">View listing</a></div>`, { maxWidth: 240 });
+    const fee=l.viewing_fee_status==='error'||l.public_viewing_fee==null?null:Number(l.public_viewing_fee);
+    const roleLabels={owner:'Direct from owner',landlord:'Direct from owner',caretaker:'Caretaker',agent:'Agent',company:'Company',buyer:'Tenant / Buyer'};
+    const role=l.listed_by_type||l.profiles?.account_type||'',current=l.profiles?.account_type,roleChanged=!!role&&!!current&&role!==current,roleVerified=!roleChanged&&!!role&&l.profiles?.verified_role===role;
+    const roleText=`${roleLabels[role]||'Lister'}${roleChanged?' (role changed)':roleVerified?' ✓':' (not verified)'}`;
+    const feeText=fee===null?'Viewing fee: confirm with the lister':fee>0?`Viewing fee: ${fmtKES(fee)}`:'Free viewing';
+    m.bindPopup(`<div class="nk-pop"><div class="nk-pop-title">${escHtml(l.title)}</div><div class="nk-pop-sub">${escHtml(fmtKES(l.price))}${escHtml(NK_FREQ_LABEL[l.price_frequency] || '')} · ${escHtml(l.area)}${pos.approx ? ' (approximate location)' : ''}<br/>${escHtml(roleText)}<br/>${escHtml(feeText)}</div><a href="${listingHref(l)}">View listing</a></div>`, { maxWidth: 240 });
     m.on('mouseover', () => cardHover(l.id, true)); m.on('mouseout', () => cardHover(l.id, false));
     m.on('click', () => { const c = cardHover(l.id, true); if (c) c.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); setTimeout(() => cardHover(l.id, false), 2200); });
     MAP.pins[l.id] = m; MAP.points.push({ id: l.id, ll: pos.ll });
@@ -2097,7 +2143,7 @@ async function submitInquiry() {
   if (name.length < 2) { setErr('ci-name-err', 'Please enter your name'); ok = false; }
   if (!hidden && !validPhone(phone)) { setErr('ci-phone-err', 'Enter a valid phone number, e.g. 0712 345 678'); ok = false; }
   if (email && !validEmail(email)) { setErr('ci-email-err', 'That email address does not look right'); ok = false; }
-  if (!message) { setErr('ci-message-err', 'Write a short message to the seller'); ok = false; }
+  if (!message) { setErr('ci-message-err', 'Write a short message to the lister'); ok = false; }
   if (!ok) { focusFirstInvalid(root); return; }
   const done = () => { refreshCta(ci.id); $('ci-form').style.display = 'none'; $('ci-success').style.display = 'block'; setTimeout(() => nkCloseModal(root), 2200); };
   if ($('ci-website').value) { done(); return; }                                    // honeypot: bots get a fake success
@@ -2159,8 +2205,19 @@ function openCompare() {
   const labelOf = k => (NK_AMENITIES.find(a => a.key === k) || {}).label || k;
   const common = amenKeys.filter(k => ls.every(l => has(l, k))), diff = amenKeys.filter(k => !common.includes(k));
   const row = (label, fn) => `<tr><th scope="row">${escHtml(label)}</th>${cell(fn)}</tr>`;
+  const roleFor = l => {
+    const snapshot=l.listed_by_type||l.profiles?.account_type||'';
+    const current=l.profiles?.account_type;
+    const labels={buyer:'Tenant / Buyer',owner:'Direct from owner',landlord:'Direct from owner',caretaker:'Caretaker',agent:'Agent',company:'Company'};
+    if(!snapshot)return 'Lister (not verified)';
+    if(current&&snapshot!==current)return `${labels[snapshot]||'Lister'} (role changed)`;
+    return `${labels[snapshot]||'Lister'}${l.profiles?.verified_role===snapshot?' ✓':' (not verified)'}`;
+  };
+  const feeFor = l => l.viewing_fee_status==='error'||l.public_viewing_fee==null?'Viewing fee: confirm with the lister':Number(l.public_viewing_fee)>0?`Viewing fee: ${fmtKES(l.public_viewing_fee)}`:'Free viewing';
   $('cmp-body').innerHTML = `<table class="cmp-table"><thead><tr><th></th>${ls.map(l => `<th scope="col"><a href="${listingHref(l)}">${escHtml(l.title)}</a></th>`).join('')}</tr></thead><tbody>
     ${row('Location', l => escHtml([l.area, l.county && nkCountyLabel(l.county)].filter(Boolean).join(', ')))}
+    ${row('Lister role', l => escHtml(roleFor(l)))}
+    ${row('Viewing fee', l => escHtml(feeFor(l)))}
     ${row('Price', l => `<strong>${escHtml(fmtKES(l.price))}${escHtml(suffix(l))}</strong>`)}
     ${row('Category', l => escHtml((NK_CATEGORIES[l.category] || {}).label || l.category))}
     ${row('Bedrooms', l => { const b = bedsOf(l); return b === null ? '—' : b === 0 ? 'Studio' : escHtml(b); })}

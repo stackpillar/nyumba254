@@ -413,7 +413,7 @@
             Is there a commission when my property sells?
             <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
-          <div class="faq-a">No. You only ever pay the listing fee, shown to you before you submit — and that's it. No commission, no hidden charges. Buyers contact you directly and any deal is between you and them.</div>
+          <div class="faq-a">Nyumba254 charges no commission on a sale or rental deal. Listing and plan fees are shown before you pay. Agents and companies may set a viewing fee, which is shown on the listing and paid directly to the lister, not Nyumba254.</div>
         </div>
 
         <div class="faq-item">
@@ -437,7 +437,7 @@
             How do I contact a seller directly?
             <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
-          <div class="faq-a">Open any listing and use the "Contact seller" button to call, WhatsApp, or send a message — no middlemen or agents involved. Sellers see and reply to buyer messages from their own dashboard.</div>
+          <div class="faq-a">Open any listing and use the contact options to call, WhatsApp, or message the lister. Each listing shows who listed it and any viewing fee before you make contact. Listers see and reply to messages from their dashboard.</div>
         </div>
 
         <div class="faq-item">
@@ -595,7 +595,7 @@
         <h4>Platform</h4>
         <a href="/post-listing">List a property</a>
         <a href="/how-it-works">How it works</a>
-        <a href="/login">Seller login</a>
+        <a href="/login">Sign in</a>
       </div>
 
       <!-- Company -->

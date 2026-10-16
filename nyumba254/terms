@@ -345,7 +345,7 @@
       </div>
       <p>Fees are subject to change. Any fee changes will be announced at least 14 days in advance on the platform. Your existing paid listing duration will not be affected by fee changes.</p>
       <p>Nyumba254 does not charge commission on sales or rental agreements. The listing fee is the only charge from Nyumba254.</p>
-      <p>Agents and companies may display an optional viewing fee of up to KES 5,000 per listing. Any such fee is agreed and paid directly between the viewer and the lister; Nyumba254 does not collect, process, guarantee, or refund it. Buyers should review the disclosed fee and confirm the arrangement directly with the lister before requesting a viewing.</p>
+      <p>Agents and companies may display an optional viewing fee of up to the platform cap per listing. The fee is paid directly to the person conducting the viewing; Nyumba254 does not collect, process, guarantee, or refund it. Review the <a href="/viewing-fee-policy">draft Viewing Fee Policy</a> and confirm the disclosed amount before arranging a visit. Draft policy clauses need legal review before launch.</p>
     </div>
     <div class="section-divider"></div>
 
@@ -355,14 +355,14 @@
       <h2>Buyers & renters</h2>
       <p>Browsing listings and sending enquiries through Nyumba254 is free. A lister may separately disclose an optional viewing fee. As a buyer or renter using Nyumba254 you agree to:</p>
       <ul>
-        <li>Contact sellers only for genuine enquiries about properties you are interested in</li>
-        <li>Not send spam, unsolicited commercial messages, or abusive content to sellers</li>
+        <li>Contact listers only for genuine enquiries about properties you are interested in</li>
+        <li>Not send spam, unsolicited commercial messages, or abusive content to listers</li>
         <li>Verify the property and lister before making any payment, and confirm any disclosed viewing fee directly with the lister</li>
         <li>Conduct your own due diligence on any property before entering into an agreement</li>
       </ul>
       <div class="warning">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span><strong>Safety warning:</strong> Do not send unlisted deposits or reservation payments. If a listing displays a viewing fee, confirm its amount and payment arrangement directly with the lister; Nyumba254 does not collect it. Verify the property and lister, request a receipt for any payment, and report suspected fraud immediately.</span>
+        <span><strong>Safety warning:</strong> Do not pay rent, a deposit, or another fee before viewing the property in person. If a listing displays a viewing fee, pay only the listed amount at the property to the person you meet, ask for a receipt, and report suspected fraud immediately. Nyumba254 does not collect viewing fees. See the <a href="/viewing-fee-policy">draft Viewing Fee Policy</a>; its clauses need legal review before launch.</span>
       </div>
       <p>Nyumba254 does not verify the identity of all sellers or the accuracy of all listings. We encourage buyers to exercise caution and common sense in all property transactions.</p>
     </div>
@@ -509,7 +509,8 @@
         <a href="/post-listing">List a property</a>
         <a href="/how-it-works">How it works</a>
         <a href="/contact">Contact us</a>
-        <a href="/login">Seller login</a>
+        <a href="/viewing-fee-policy">Viewing Fee Policy (draft)</a>
+        <a href="/login">Sign in</a>
       </div>
       <div class="footer-col">
         <h4>Legal</h4>

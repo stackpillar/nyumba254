@@ -213,7 +213,7 @@ function nkCountyEq(query, county) {
 }
 
 /* ---------- B1: one URL contract shared by index and listings ---------- */
-const NK_URL_KEYS = ['category','freq','county','area','minPrice','maxPrice','beds','furn','amen','q','sort','page','view','listedBy'];
+const NK_URL_KEYS = ['category','freq','county','area','minPrice','maxPrice','beds','furn','amen','q','sort','page','view','listedBy','viewingFee'];
 function nkBuildListingsUrl(f) {
   const p = new URLSearchParams();
   NK_URL_KEYS.forEach(k => {
@@ -381,11 +381,12 @@ function nkCardCoverPhoto(listing) {
 
 function nkBuildVerifiedBadge(listing) {
   const profile=listing?.profiles||{};
-  const roleLabels={buyer:'Tenant / Buyer',owner:'Property owner',caretaker:'Caretaker',agent:'Agent',company:'Company'};
-  const roleVerified=!!profile.account_type&&profile.verified_role===profile.account_type;
+  const roleLabels={buyer:'Tenant / Buyer',owner:'Direct from owner',landlord:'Direct from owner',caretaker:'Caretaker',agent:'Agent',company:'Company'};
+  const snapshotRole=listing?.listed_by_type||profile.account_type;
+  const roleVerified=!!snapshotRole&&profile.account_type===snapshotRole&&profile.verified_role===snapshotRole;
   const identityVerified=profile.identity_verified===true||profile.verification_status==='verified';
   const icon='<svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>';
-  return `${roleVerified?`<span class="card-role-badge" title="Nyumba254 verified this account as ${escHtml(roleLabels[profile.account_type]||profile.account_type)}">${icon}Verified ${escHtml(roleLabels[profile.account_type]||profile.account_type)}</span>`:''}${identityVerified?`<span class="card-verified-badge" title="This person’s identity has been verified by Nyumba254">${icon}Identity verified</span>`:''}`;
+  return `${roleVerified?`<span class="card-role-badge" title="Nyumba254 verified this account as ${escHtml(roleLabels[snapshotRole]||snapshotRole)}">${icon}Verified ${escHtml(roleLabels[snapshotRole]||snapshotRole)}</span>`:''}${identityVerified?`<span class="card-verified-badge" title="This person’s identity has been verified by Nyumba254">${icon}Identity verified</span>`:''}`;
 }
 
 async function nkHydratePublicProfiles(listings) {
@@ -404,10 +405,15 @@ async function nkHydrateViewingFees(listings) {
   const rows=Array.isArray(listings)?listings:[];
   const ids=[...new Set(rows.map(row=>row.id).filter(Boolean))];
   if(!ids.length)return rows;
-  const{data,error}=await db.rpc('get_public_viewing_fees',{p_listing_ids:ids});
-  if(error)throw new Error(`Could not load public viewing fees: ${error.message}`);
-  const byId=new Map((data||[]).map(row=>[row.listing_id,Number(row.viewing_fee)||0]));
-  return rows.map(row=>({...row,public_viewing_fee:byId.get(row.id)??0}));
+  try{
+    const{data,error}=await db.rpc('get_public_viewing_fees',{p_listing_ids:ids});
+    if(error)throw error;
+    const byId=new Map((data||[]).map(row=>[row.listing_id,Number(row.viewing_fee)||0]));
+    return rows.map(row=>({...row,public_viewing_fee:byId.has(row.id)?byId.get(row.id):null,viewing_fee_status:byId.has(row.id)?'loaded':'error'}));
+  }catch(error){
+    console.error('[viewing-fee] Could not load public viewing fees:',error);
+    return rows.map(row=>({...row,public_viewing_fee:null,viewing_fee_status:'error'}));
+  }
 }
 
 function nkImgSrc(url, width) {
@@ -452,9 +458,15 @@ function nkBuildCard(listing, opts) {
 
   const heart = (typeof NKSaved !== 'undefined' && NKSaved.buildHeartBtn) ? NKSaved.buildHeartBtn(listing.id) : '';
   const verifiedBadge = nkBuildVerifiedBadge(listing);
-  const listedByLabels={buyer:'Tenant / Buyer',owner:'Property owner',caretaker:'Caretaker',agent:'Agent',company:'Company',seller:'Seller'};
-  const listedBy=listedByLabels[listing.profiles?.account_type||(listing.seller_id?'seller':'')];
-  const viewingFee=Number(listing.public_viewing_fee)||0;
+  const listedByLabels={buyer:'Tenant / Buyer',owner:'Direct from owner',landlord:'Direct from owner',caretaker:'Caretaker',agent:'Agent',company:'Company',seller:'Lister'};
+  const listedByType=listing.listed_by_type||listing.profiles?.account_type||'';
+  const listedBy=listedByLabels[listedByType]||'Lister';
+  const currentRole=listing.profiles?.account_type;
+  const roleChanged=!!listedByType&&!!currentRole&&currentRole!==listedByType;
+  const roleVerified=!!listedByType&&!roleChanged&&listing.profiles?.verified_role===listedByType;
+  const roleText=listedByType?`${listedBy}${roleChanged?' (role changed)':roleVerified?' ✓':' (not verified)'}`:'Lister (not verified)';
+  const feeLoaded=listing.viewing_fee_status!=='error'&&listing.public_viewing_fee!==null&&listing.public_viewing_fee!==undefined;
+  const viewingFee=feeLoaded?Number(listing.public_viewing_fee)||0:null;
 
   return `
     <a class="card" href="${href}" aria-label="${safeTitle}" data-listing-id="${escHtml(listing.id)}" style="${isOccupied ? 'opacity:.7' : ''}">
@@ -467,8 +479,9 @@ function nkBuildCard(listing, opts) {
       <div class="card-body">
         <div class="card-area">${escHtml(listing.area)} ${verifiedBadge}</div>
         <div class="card-title">${safeTitle}</div>
-        <div class="card-sub">${escHtml(subText)}${listedBy?` · Listed by ${escHtml(listedBy)}`:''}</div>
-        <div class="card-viewing-fee">${viewingFee>0?`Viewing fee: KES ${viewingFee.toLocaleString('en-KE')}`:'Free viewing'}</div>
+        <div class="card-sub">${escHtml(subText)}</div>
+        <div class="card-role">${escHtml(roleText)}</div>
+        <div class="card-viewing-fee">${viewingFee===null?'Viewing fee: confirm with the lister':viewingFee>0?`Viewing KES ${viewingFee.toLocaleString('en-KE')}`:'Free viewing'}</div>
         <div class="card-price">${formatPrice(listing, { showFromPrefix: !compact })}</div>
       </div>
     </a>`;
