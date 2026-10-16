@@ -4183,7 +4183,13 @@ async function generateAiListing(){
       headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${session.access_token}`},
       body:JSON.stringify(payload),
     });
-    const body=await res.json();
+    const responseText=await res.text();
+    let body;
+    try{
+      body=JSON.parse(responseText);
+    }catch{
+      throw new Error(`The AI service returned an unreadable response (HTTP ${res.status}). Please try again shortly.`);
+    }
     if(!res.ok||body.error) throw new Error(body.error||`Generation failed (${res.status})`);
     if(!body.title&&!body.description)throw new Error('The AI service returned no listing text. Please try again.');
 
