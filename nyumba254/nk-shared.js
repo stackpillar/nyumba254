@@ -394,7 +394,7 @@ async function nkHydratePublicProfiles(listings) {
   const ids=[...new Set(rows.map(row=>row.seller_id).filter(Boolean))];
   if(!ids.length)return rows;
   const{data,error}=await db.from('public_account_profiles')
-    .select('id,full_name,created_at,identity_verified,account_type,verified_role,company_name,company_type,company_logo_url,company_description,company_website')
+    .select('id,full_name,created_at,identity_verified,account_type,verified_role')
     .in('id',ids);
   if(error)throw new Error(`Could not load public account details: ${error.message}`);
   const byId=new Map((data||[]).map(profile=>[profile.id,profile]));

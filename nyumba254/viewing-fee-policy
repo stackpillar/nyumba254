@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0F6E56"/>
   <meta name="robots" content="index,follow"/>
   <title>Viewing Fee Policy — Nyumba254</title>
-  <meta name="description" content="Draft viewing-fee rules for listers and home seekers on Nyumba254. This policy needs legal review before launch."/>
+  <meta name="description" content="The approved Nyumba254 rules for disclosed property viewing fees, payment, receipts, refunds, and reporting."/>
   <link rel="canonical" href="https://nyumba254.com/viewing-fee-policy"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -25,8 +25,6 @@
     .policy-main ol{padding-left:24px}
     .policy-main li{padding:14px 16px;margin:10px 0;background:var(--white);border:1px solid var(--border);border-radius:12px}
     .policy-main li strong{display:block;color:var(--text);margin-bottom:5px}
-    .draft-note{font-size:12px;font-weight:700;color:var(--amber);margin:8px 0 0!important}
-    .policy-alert{padding:14px 16px;border:1px solid var(--amber-border);border-radius:12px;background:var(--amber-bg);color:var(--amber);font-weight:700;margin:18px 0 28px}
     .policy-footer{border-top:1px solid var(--border);padding:22px;text-align:center;color:var(--text-3)}
     .policy-footer a{color:var(--green-dark);font-weight:600}
     @media(max-width:600px){.policy-main{padding:28px 16px 48px}.policy-main li{padding:13px}.policy-nav{padding-inline:16px}}
@@ -40,29 +38,28 @@
   </nav>
   <main class="policy-main">
     <h1>The Viewing Fee Policy</h1>
-    <p>These draft rules apply to agents and companies who choose to charge for a property viewing. Nyumba254 does not collect, hold, or guarantee viewing fees.</p>
-    <div class="policy-alert" role="note">Draft — needs legal review before launch. This page is not legal advice.</div>
+    <p>This approved policy applies to agents and companies who choose to charge for a property viewing. Nyumba254 does not collect, hold, or guarantee viewing fees.</p>
     <p>Anyone who sets a viewing fee agrees to each clause below.</p>
     <ol>
-      <li><strong>1. Disclosure first.</strong>The fee must be visible on the listing before contact. The amount charged must equal the amount shown. A listing marked “Free viewing” must never be charged for.<p class="draft-note">Draft — needs legal review before launch.</p></li>
-      <li><strong>2. Viewing only.</strong>The fee covers one viewing visit for one household at one property. It is not a booking, reservation, deposit, finder’s, commitment, agreement, administration, or key fee. No other pre-contract charge may be demanded. Any other cost must be stated in the listing description.<p class="draft-note">Draft — needs legal review before launch.</p></li>
-      <li><strong>3. No gating.</strong>Contact details, price, and location must not be withheld until a fee is paid. Messaging and requesting a viewing are always free.<p class="draft-note">Draft — needs legal review before launch.</p></li>
-      <li><strong>4. Payment at the viewing.</strong>The fee is paid at the property, to the person who meets the home seeker, after availability has been confirmed. Advance payment must not be required. A written or M-Pesa receipt must be issued.<p class="draft-note">Draft — needs legal review before launch.</p></li>
-      <li><strong>5. Refunds.</strong>If the lister cancels, does not attend, the property is unavailable, or it is materially different from the listing, the fee must be refunded in full within 48 hours.<p class="draft-note">Draft — needs legal review before launch.</p></li>
-      <li><strong>6. No price changes after confirmation.</strong>A confirmed viewing request keeps the fee shown when it was requested. The lister cannot raise that fee afterwards.<p class="draft-note">Draft — needs legal review before launch.</p></li>
-      <li><strong>7. One fee per visit.</strong>Showing several units at the same property on the same visit is one fee. A repeat viewing within 14 days is free by default.<p class="draft-note">Draft — needs legal review before launch.</p></li>
-      <li><strong>8. Available properties only.</strong>No viewing fee may be charged for a property that is already let, sold, or fictitious.<p class="draft-note">Draft — needs legal review before launch.</p></li>
-      <li><strong>9. Honest identity.</strong>The lister must use their true role and, for companies, their registered name. Posing as an owner is prohibited.<p class="draft-note">Draft — needs legal review before launch.</p></li>
-      <li><strong>10. Maximum.</strong>The platform viewing-fee cap applies. Fees above the current cap are blocked by the system.<p class="draft-note">Draft — needs legal review before launch.</p></li>
-      <li><strong>11. No pressure or threats.</strong>Harassment, intimidation, and linking the fee to signing anything are prohibited.<p class="draft-note">Draft — needs legal review before launch.</p></li>
-      <li><strong>12. Cooperation.</strong>Listers must keep receipts and respond to viewing-fee disputes within three working days.<p class="draft-note">Draft — needs legal review before launch.</p></li>
+      <li><strong>1. Disclosure first.</strong>The fee must be visible on the listing before contact. The amount charged must equal the amount shown. A listing marked “Free viewing” must never be charged for.</li>
+      <li><strong>2. Viewing only.</strong>The fee covers one viewing visit for one household at one property. It is not a booking, reservation, deposit, finder’s, commitment, agreement, administration, or key fee. No other pre-contract charge may be demanded. Any other cost must be stated in the listing description.</li>
+      <li><strong>3. No gating.</strong>Contact details, price, and location must not be withheld until a fee is paid. Messaging and requesting a viewing are always free.</li>
+      <li><strong>4. Payment at the viewing.</strong>The fee is paid at the property, to the person who meets the home seeker, after availability has been confirmed. Advance payment must not be required. A written or M-Pesa receipt must be issued.</li>
+      <li><strong>5. Refunds.</strong>If the lister cancels, does not attend, the property is unavailable, or it is materially different from the listing, the fee must be refunded in full within 48 hours.</li>
+      <li><strong>6. No price changes after confirmation.</strong>A confirmed viewing request keeps the fee shown when it was requested. The lister cannot raise that fee afterwards.</li>
+      <li><strong>7. One fee per visit.</strong>Showing several units at the same property on the same visit is one fee. A repeat viewing within 14 days is free by default.</li>
+      <li><strong>8. Available properties only.</strong>No viewing fee may be charged for a property that is already let, sold, or fictitious.</li>
+      <li><strong>9. Honest identity.</strong>The lister must use their true role and, for companies, their registered name. Posing as an owner is prohibited.</li>
+      <li><strong>10. Maximum.</strong>The platform viewing-fee cap applies. Fees above the current cap are blocked by the system.</li>
+      <li><strong>11. No pressure or threats.</strong>Harassment, intimidation, and linking the fee to signing anything are prohibited.</li>
+      <li><strong>12. Cooperation.</strong>Listers must keep receipts and respond to viewing-fee disputes within three working days.</li>
     </ol>
     <h2>Reports and enforcement</h2>
     <ol>
-      <li><strong>Valid report.</strong>A valid report may result in a warning and a request for evidence.<p class="draft-note">Draft — needs legal review before launch.</p></li>
-      <li><strong>Repeated reports.</strong>Two valid reports within 90 days may freeze the lister’s viewing-fee privilege. Their listings will show as free while that privilege is paused.<p class="draft-note">Draft — needs legal review before launch.</p></li>
-      <li><strong>Serious or repeated breaches.</strong>Serious or repeated breaches may result in listings being hidden and, where warranted, account suspension.<p class="draft-note">Draft — needs legal review before launch.</p></li>
-      <li><strong>Platform role.</strong>Nyumba254 does not collect or guarantee viewing fees. Fee disputes are handled through reporting and moderation; Nyumba254 does not mediate payments or refunds.<p class="draft-note">Draft — needs legal review before launch.</p></li>
+      <li><strong>Valid report.</strong>A valid report may result in a warning and a request for evidence.</li>
+      <li><strong>Repeated reports.</strong>Two valid reports within 90 days may freeze the lister’s viewing-fee privilege. Their listings will show as free while that privilege is paused.</li>
+      <li><strong>Serious or repeated breaches.</strong>Serious or repeated breaches may result in listings being hidden and, where warranted, account suspension.</li>
+      <li><strong>Platform role.</strong>Nyumba254 does not collect or guarantee viewing fees. Fee disputes are handled through reporting and moderation; Nyumba254 does not mediate payments or refunds.</li>
     </ol>
     <p>Fee amounts are paid directly to the person conducting the viewing. Never pay rent, a deposit, or another charge before viewing the property in person.</p>
   </main>

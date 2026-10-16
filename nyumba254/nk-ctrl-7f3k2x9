@@ -538,7 +538,7 @@ let B={};
 const NAV=[
   {g:'Overview',i:[['overview','Dashboard','grid']]},
   {g:'Marketplace',i:[['listings','Listings','home','pending'],['recycle','Recycle bin','trash'],['payments','Payments','card','payments']]},
-  {g:'People',i:[['sellers','Sellers','users'],['verification','Verification','shield','verification'],['premium','Premium sellers','star'],['enquiries','Enquiries','msg','enquiries'],['concierge','Concierge inbox','msg','concierge'],['support','Support chat','life','support']]},
+  {g:'People',i:[['sellers','Sellers','users'],['verification','Verification','shield','verification'],['role-verification','Role verification','shield'],['role-requests','Role change requests','users'],['premium','Premium sellers','star'],['enquiries','Enquiries','msg','enquiries'],['concierge','Concierge inbox','msg','concierge'],['support','Support chat','life','support']]},
   {g:'Trust & safety',i:[['reports','Reports','flag','reports'],['reviews','Reviews','star','reviews'],['reveals','Contact reveals','phone']]},
   {g:'Insights',i:[['analytics','Site visits','chart'],['activity','Activity log','clock']]},
   {g:'Platform',i:[['updates','Platform updates','bell'],['settings','Settings','gear']]},
@@ -1207,7 +1207,6 @@ VIEWS.verification={title:'Verification',mount(el,p){
     searchText:u=>`${u.full_name} ${u.email}`,
     columns:[{label:'Account',nl:1,render:u=>`<b style="color:var(--tx)">${esc(u.full_name||'—')}</b><br><small>${esc(u.email||'')}</small>`},{label:'Identity',render:u=>u.verification_status==='verified'?bd('ID verified'):bd(u.verification_status||'unverified')},{label:'Account type',render:u=>`${esc(u.account_type||'Not selected')}${u.account_type&&u.verified_role===u.account_type?` ${bd('role verified','ok')}`:''}`},{label:'Submitted',render:u=>dt(u.verification_submitted_at)}],
     actions:u=>{const pend=u.verification_status==='pending',ver=u.verification_status==='verified',roleVerified=!!u.account_type&&u.verified_role===u.account_type;return[
-      {label:`Approve ${u.account_type||'account'} role`,primary:true,cls:'ok',hide:!u.account_type||roleVerified||(!pend&&!ver),fn:async()=>{const{error}=await db.rpc('admin_approve_account_role',{p_profile_id:u.id,p_approved:true});if(error)throw error;u.verified_role=u.account_type;ui.toast(`${u.account_type} role verified`,'ok');}},
       {label:'Revoke role verification',danger:true,hide:!roleVerified,fn:async()=>{const{error}=await db.rpc('admin_approve_account_role',{p_profile_id:u.id,p_approved:false});if(error)throw error;u.verified_role=null;ui.toast('Role verification revoked','ok');}},
       {label:'Clear company duplicate review',cls:'ok',hide:!u.duplicate_review_required,fn:async()=>{const{error}=await db.rpc('admin_review_company_duplicate',{p_profile_id:u.id,p_clear_flag:true});if(error)throw error;u.duplicate_review_required=false;ui.toast('Company duplicate review cleared','ok');}},
       {label:'Approve',primary:pend,cls:'ok',hide:!pend,fn:async()=>{const{error}=await db.from('profiles').update({verification_status:'verified',verification_reviewed_at:new Date().toISOString(),verification_reviewed_by:S.user.id}).eq('id',u.id);if(error)throw error;await db.from('verification_activity_log').insert({seller_id:u.id,action:'approved',admin_id:S.user.id});notifySeller('verification_approved',{sellerName:u.full_name,sellerEmail:u.email});notifyInApp(u.id,'profile','Your identity is verified ✓','Identity verification is separate from verification of your selected account type.','/dashboard.html');ui.toast('Identity verified','ok');}},
@@ -1218,6 +1217,77 @@ VIEWS.verification={title:'Verification',mount(el,p){
       {label:'Revoke verification',danger:true,hide:!ver,fn:async()=>{const r=await ui.ask({title:'Revoke verification?',message:`${esc(u.full_name||'This seller')} loses their badge and returns to the unverified listing limit.`,label:'Internal note',confirm:'Revoke',danger:true});if(r===null)return false;await db.from('profiles').update({verification_status:'unverified',verification_reviewed_at:new Date().toISOString(),verification_reviewed_by:S.user.id}).eq('id',u.id);await db.from('verification_activity_log').insert({seller_id:u.id,action:'revoked',detail:r,admin_id:S.user.id});ui.toast('Verification revoked');}}];},
     open:(u,T)=>openVerify(u,T),
     empty:['Nothing to review','New verification submissions appear here.']
+  }).mount(el);
+}};
+
+async function openRoleVerificationDocument(path){
+  if(typeof path!=='string'||!path)throw new Error('No role-verification document was uploaded');
+  const documentWindow=window.open('about:blank','_blank');
+  if(!documentWindow)throw new Error('Allow pop-ups to open this verification document');
+  documentWindow.opener=null;
+  try{
+    const{data,error}=await db.storage.from('verification-docs').createSignedUrl(path,3600);
+    if(error||!data?.signedUrl)throw new Error(error?.message||'Could not open role-verification document');
+    documentWindow.location.href=data.signedUrl;
+    return false;
+  }catch(error){
+    documentWindow.close();
+    throw error;
+  }
+}
+VIEWS['role-verification']={title:'Role verification',mount(el,p){
+  return Table({route:'role-verification',params:p,id:r=>r.id,local:true,search:'Search applicants…',
+    async fetch(){
+      const{data:submissions,error}=await db.from('role_verification_submissions').select('*').eq('status','pending').order('submitted_at',{ascending:true}).limit(500);
+      if(error)throw error;
+      const ids=[...new Set((submissions||[]).map(item=>item.profile_id))];
+      if(!ids.length)return[];
+      const{data:profiles,error:profileError}=await db.from('profiles').select('id,full_name,email,phone,account_type,verified_role,verification_status').in('id',ids);
+      if(profileError)throw profileError;
+      const byId=new Map((profiles||[]).map(profile=>[profile.id,profile]));
+      return(submissions||[]).map(item=>({...item,profile:byId.get(item.profile_id)||{}}));
+    },
+    searchText:r=>`${r.profile.full_name||''} ${r.profile.email||''} ${r.account_type} ${r.applicant_note||''}`,
+    columns:[
+      {label:'Applicant',nl:1,render:r=>`<b style="color:var(--tx)">${esc(r.profile.full_name||'—')}</b><br><small>${esc(r.profile.email||'')}</small>`},
+      {label:'Role',render:r=>`${esc(r.account_type)}${r.profile.verification_status==='verified'?` ${bd('identity verified','ok')}`:` ${bd('identity not verified','warn')}`}`},
+      {label:'Documents',render:r=>r.document_paths.length},
+      {label:'Applicant note',render:r=>esc(r.applicant_note||'—')},
+      {label:'Submitted',render:r=>dt(r.submitted_at)}
+    ],
+    actions:r=>[
+      ...r.document_paths.map((path,i)=>({label:`Open document ${i+1}`,fn:()=>openRoleVerificationDocument(path)})),
+      {sep:'Review'},
+      {label:'Approve role',primary:true,cls:'ok',fn:async()=>{const ok=await ui.confirm({title:'Verify this role?',message:`Approve the ${esc(r.account_type)} role claim for <b>${esc(r.profile.full_name||'this lister')}</b>? This is separate from identity verification.`,confirm:'Verify role'});if(!ok)return false;const{error}=await db.rpc('admin_review_role_verification',{p_submission_id:r.id,p_approved:true,p_admin_note:null});if(error)throw error;ui.toast(`${r.account_type} role verified`,'ok');}},
+      {label:'Request changes / reject',cls:'bad',fn:async()=>{const note=await ui.ask({title:'Request changes to role verification',message:`Tell ${esc(r.profile.full_name||'the applicant')} what supporting evidence is needed.`,label:'Reason',confirm:'Send update'});if(note===null)return false;if(note.trim().length<5)return ui.toast('Add a clear reason of at least 5 characters','err');const{error}=await db.rpc('admin_review_role_verification',{p_submission_id:r.id,p_approved:false,p_admin_note:note.trim()});if(error)throw error;ui.toast('Role verification returned for changes','ok');}}
+    ],
+    empty:['No role-verification submissions','New submissions will appear here for review.']
+  }).mount(el);
+}};
+VIEWS['role-requests']={title:'Role change requests',mount(el,p){
+  return Table({route:'role-requests',params:p,id:r=>r.id,local:true,search:'Search role requests…',
+    async fetch(){
+      const{data:requests,error}=await db.from('account_type_change_requests').select('*').eq('status','pending').order('submitted_at',{ascending:true}).limit(500);
+      if(error)throw error;
+      const ids=[...new Set((requests||[]).map(item=>item.profile_id))];
+      if(!ids.length)return[];
+      const{data:profiles,error:profileError}=await db.from('profiles').select('id,full_name,email,phone,account_type').in('id',ids);
+      if(profileError)throw profileError;
+      const byId=new Map((profiles||[]).map(profile=>[profile.id,profile]));
+      return(requests||[]).map(item=>({...item,profile:byId.get(item.profile_id)||{}}));
+    },
+    searchText:r=>`${r.profile.full_name||''} ${r.profile.email||''} ${r.current_account_type} ${r.requested_account_type} ${r.reason}`,
+    columns:[
+      {label:'Lister',nl:1,render:r=>`<b style="color:var(--tx)">${esc(r.profile.full_name||'—')}</b><br><small>${esc(r.profile.email||'')}</small>`},
+      {label:'Requested change',render:r=>`${esc(r.current_account_type)} → <b>${esc(r.requested_account_type)}</b>`},
+      {label:'Reason',render:r=>esc(r.reason)},
+      {label:'Submitted',render:r=>dt(r.submitted_at)}
+    ],
+    actions:r=>[
+      {label:'Approve role change',primary:true,cls:'ok',fn:async()=>{const ok=await ui.confirm({title:'Approve role correction?',message:`Change ${esc(r.profile.full_name||'this account')}'s role from <b>${esc(r.current_account_type)}</b> to <b>${esc(r.requested_account_type)}</b>? This approval bypasses the user cooldown and starts a fresh 7-day cooldown.`,confirm:'Approve change'});if(!ok)return false;const{error}=await db.rpc('admin_review_account_type_change_request',{p_request_id:r.id,p_approved:true,p_admin_note:null});if(error)throw error;ui.toast(`Role changed to ${r.requested_account_type}`,'ok');}},
+      {label:'Reject request',cls:'bad',fn:async()=>{const note=await ui.ask({title:'Decline role change request',message:`Explain why ${esc(r.profile.full_name||'the lister')} cannot change roles yet.`,label:'Reason',confirm:'Decline request'});if(note===null)return false;if(note.trim().length<5)return ui.toast('Add a clear reason of at least 5 characters','err');const{error}=await db.rpc('admin_review_account_type_change_request',{p_request_id:r.id,p_approved:false,p_admin_note:note.trim()});if(error)throw error;ui.toast('Role change request declined','ok');}}
+    ],
+    empty:['No pending role change requests','New requests from listers will appear here.']
   }).mount(el);
 }};
 
@@ -1619,12 +1689,13 @@ VIEWS.settings={title:'Settings',async mount(el){
     ${chk('require_payment_to_publish','Require payment before listings go live','On: pay or trial before going active. Off: every approved listing goes live free.')}
     ${chk('enforce_verification_general','Enforce verification limit for all sellers','Caps unverified sellers at the limit below and sends them to KYC.')}
     ${chk('viewing_fee_requires_identity','Require identity verification before charging a viewing fee','When enabled, agents and companies must have verified identity before setting a fee.')}
+    ${chk('storefront_free_enabled','Make public lister storefronts free','When enabled, every lister can use a public profile page with their active listings. When disabled, active Elite subscribers retain storefront access.')}
     <div class="fld" style="max-width:260px"><label>Unverified listing limit</label><input class="in" type="number" min="0" id="s_unverified_listing_limit" value="${esc(val('unverified_listing_limit'))}"></div></div>
   ${SET_GROUPS.map(g=>`<div class="card" style="padding:18px;margin-bottom:16px"><h3>${g.t}</h3><p class="intro" style="margin:2px 0 12px"><small>${g.d}</small></p><div class="g2">${g.f.map(([k,l,s])=>`<div class="fld"><label for="s_${k}">${l}</label><input class="in" id="s_${k}" ${s==='text'?'type="text"':`type="number" step="${s||1}"`} value="${esc(val(k))}"></div>`).join('')}</div></div>`).join('')}
   <div class="card" style="padding:18px"><h3 style="margin-bottom:4px">Social auto-posting</h3><p class="intro"><small>New listings are posted to Nyumba254's own Facebook, Instagram and TikTok when approved. You can always post manually from a listing.</small></p>
     ${['facebook','instagram','tiktok'].map(k=>`<label class="chk"><input type="checkbox" id="a_${k}" ${auto(k)?'checked':''}> Auto-post to ${k[0].toUpperCase()+k.slice(1)}${k==='tiktok'?' <small>(private until TikTok’s audit clears)</small>':''}</label>`).join('')}</div>
   <div class="savebar" id="sv" hidden><span id="svn"></span><span><button class="btn ghost" style="color:inherit" id="rs">Discard</button> <button class="btn pri" id="sa">Save changes</button></span></div></div>`;
-  const keys=[...SET_GROUPS.flatMap(g=>g.f.map(f=>f[0])),'unverified_listing_limit'],flags=['require_payment_to_publish','enforce_verification_general','viewing_fee_requires_identity'];
+  const keys=[...SET_GROUPS.flatMap(g=>g.f.map(f=>f[0])),'unverified_listing_limit','storefront_free_enabled'],flags=['require_payment_to_publish','enforce_verification_general','viewing_fee_requires_identity','storefront_free_enabled'];
   const read=()=>{const o={};keys.forEach(k=>{const e=$('#s_'+k,el);o[k]=SET_GROUPS.find(g=>g.f.find(f=>f[0]===k&&f[2]==='text'))?e.value.trim():(e.value===''?val(k):Number(e.value));});flags.forEach(k=>o[k]=$('#s_'+k,el).checked?1:0);['facebook','instagram','tiktok'].forEach(k=>o['auto_post_'+k]=$('#a_'+k,el).checked?'1':'0');return o;};
   const changed=()=>{const o=read();return Object.entries(o).filter(([k,v])=>String(v)!==String(k.startsWith('auto_post_')?(auto(k.slice(10))?'1':'0'):(flags.includes(k)?(Number(val(k))?1:0):val(k))));};
   const upd=()=>{const c=changed();window.onbeforeunload=c.length?()=>'':null;$('#sv',el).hidden=!c.length;$('#svn',el).textContent=`${c.length} unsaved change${c.length!==1?'s':''}`;};

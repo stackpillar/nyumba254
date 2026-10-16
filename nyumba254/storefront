@@ -45,6 +45,9 @@
   .s-badge.verified{background:rgba(255,255,255,0.18);color:white}
   .s-badge svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5}
   .seller-sub{font-size:14px;color:rgba(255,255,255,0.75);max-width:440px;margin:0 auto}
+  .seller-profile-details{max-width:700px;margin:16px auto 0;color:rgba(255,255,255,.9);font-size:13px}
+  .seller-profile-details p{margin:5px 0}
+  .seller-profile-details a{color:#fff;text-decoration:underline;text-underline-offset:3px}
   .seller-contact-row{display:flex;justify-content:center;gap:10px;margin-top:20px;flex-wrap:wrap}
   .contact-btn{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;padding:10px 18px;border-radius:var(--radius);transition:all .15s}
   .contact-btn.wa{background:#25D366;color:white}
@@ -152,12 +155,18 @@
   const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
   function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function safeExternalUrl(value){
+    try{
+      const url=new URL(String(value||''));
+      return url.protocol==='https:'||url.protocol==='http:'?url.href:'';
+    }catch{return '';}
+  }
   function fmtPrice(price, type){
     const p = Number(price||0).toLocaleString('en-KE');
     return type === 'rent' ? `KES ${p}<span>/mo</span>` : `KES ${p}`;
   }
   function formatWaPhone(p){
-    const clean = (p||'').replace(/[\s+]/g,'');
+    const clean = String(p||'').replace(/\D/g,'');
     return /^0\d{9}$/.test(clean) ? '254'+clean.slice(1) : clean;
   }
   function initialsOf(name){
@@ -172,13 +181,6 @@
         <p>${esc(msg)}</p>
         <a href="/listings" class="topbar-cta" style="display:inline-block">Browse all listings</a>
       </div>`;
-  }
-
-  function subscriptionActive(profile){
-    const tier = profile?.subscription_tier || 'none';
-    const expiresAt = profile?.subscription_expires_at;
-    const notExpired = !expiresAt || new Date(expiresAt) > new Date();
-    return tier !== 'none' && !!tier && notExpired;
   }
 
   function buildCard(listing){
@@ -207,8 +209,6 @@
       </div>`;
   }
 
-  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
   let ALL_ITEMS = [];
   let ALL_REVIEWS = [];
   let SELLER_PROFILE = null;
@@ -226,7 +226,7 @@
       </div>
       <div class="review-stars">${starGlyphs(r.rating)}</div>
       <div class="review-comment">${esc(r.comment||'(No comment left — rating only)')}</div>
-      ${r.response_text?`<div class="review-response"><strong>Seller response:</strong> ${esc(r.response_text)}</div>`:''}
+      ${r.response_text?`<div class="review-response"><strong>Lister response:</strong> ${esc(r.response_text)}</div>`:''}
     </div>`;
   }
 
@@ -283,26 +283,33 @@
     const sellerParam = params.get('seller');
     if (!sellerParam) { renderNotAvailable("No seller was specified in this link."); return; }
 
-    const lookupField = UUID_RE.test(sellerParam) ? 'id' : 'storefront_slug';
-    const { data: profile, error: profErr } = await db.from('profiles').select('*').eq(lookupField, sellerParam).single();
-    if (profErr || !profile) { renderNotAvailable("We couldn't find this seller — the link may be incorrect."); return; }
+    const { data: profileData, error: profileError } = await db.rpc('get_public_storefront_profile', { p_lookup: sellerParam });
+    if (profileError) {
+      console.error('Could not load public storefront profile:', profileError);
+      renderNotAvailable('Public profile details are temporarily unavailable. Please try again later.');
+      return;
+    }
+    const profile = Array.isArray(profileData) ? profileData[0] : profileData;
+    if (!profile) { renderNotAvailable("We couldn't find this lister — the link may be incorrect."); return; }
     const sellerId = profile.id;
-    const{data:publicProfile,error:publicProfileError}=await db.rpc('get_public_account_profile',{p_profile_id:sellerId});
-    if(publicProfileError){console.error('Could not load public account details:',publicProfileError);renderNotAvailable('Public account details are temporarily unavailable. Please try again later.');return;}
-    Object.assign(profile,Array.isArray(publicProfile)?publicProfile[0]||{}:publicProfile||{});
     SELLER_PROFILE = profile;
-    if (profile.is_disabled) { renderNotAvailable("This seller's account is currently unavailable."); return; }
-    if (!subscriptionActive(profile) || profile.subscription_plan !== 'elite') {
-      renderNotAvailable("This seller hasn't set up a storefront yet.");
+    if (!profile.storefront_available) {
+      renderNotAvailable("This lister's public storefront isn't currently available.");
       return;
     }
 
-    const [{ data: listings, error: listErr }, { data: reviews }] = await Promise.all([
+    const [{ data: listings, error: listErr }, { data: reviews, error: reviewError }] = await Promise.all([
       db.from('listings').select('*, listing_photos(*)').eq('seller_id', sellerId).eq('status', 'active').eq('is_disabled', false).order('is_featured', { ascending: false }).order('created_at', { ascending: false }),
       db.from('reviews').select('*').eq('review_type','seller').eq('target_seller_id', sellerId).order('created_at',{ascending:false}),
     ]);
 
-    let items = listErr ? [] : (listings || []);
+    if(listErr){
+      console.error('Could not load public storefront listings:',listErr);
+      renderNotAvailable('This lister’s active listings are temporarily unavailable. Please try again later.');
+      return;
+    }
+    if(reviewError)console.error('Could not load public storefront reviews:',reviewError);
+    let items = listings || [];
     if(items.length){
       try{items=await nkHydrateViewingFees(items);}catch(feeError){console.error('Could not load storefront viewing fees:',feeError);}
     }
@@ -311,11 +318,12 @@
 
     const isCompany=profile.account_type==='company';
     const name = isCompany?(profile.company_name||profile.full_name||'Company'):(profile.full_name||'Seller');
-    const roleLabels={buyer:'Tenant / Buyer',owner:'Property owner',caretaker:'Caretaker',agent:'Agent',company:'Company'};
+    const roleLabels={buyer:'Tenant / Buyer',owner:'Direct from owner',caretaker:'Caretaker',agent:'Agent',company:'Company'};
     const roleVerified=!!profile.account_type&&profile.verified_role===profile.account_type;
-    const isVerified = profile.identity_verified===true||profile.verification_status === 'verified';
-    const isPro = !!profile.is_pro;
-    const hideContact = !!profile.hide_buyer_contact;
+    const isVerified = profile.identity_verified===true;
+    const publicPhone = profile.public_phone || '';
+    const hideContact = !publicPhone;
+    const companyWebsite=safeExternalUrl(profile.company_website);
     const totalViews = items.reduce((s,l)=>s+(Number(l.views)||0),0);
     const avgRating = ALL_REVIEWS.length ? (ALL_REVIEWS.reduce((s,r)=>s+r.rating,0)/ALL_REVIEWS.length) : 0;
 
@@ -325,10 +333,10 @@
     document.getElementById('og-title')?.setAttribute('content', `${name} — Nyumba254 Storefront`);
     document.getElementById('og-description')?.setAttribute('content', descText);
 
-    const contactRow = hideContact
+    const contactRow = !publicPhone
       ? `<div class="seller-contact-row"><span class="contact-btn chat" style="cursor:default"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Message via listing chat</span><button class="share-btn" onclick="shareStorefront()"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share</button></div>`
       : `<div class="seller-contact-row">
-          ${profile.phone?`<a class="contact-btn wa" href="https://wa.me/${formatWaPhone(profile.phone)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>WhatsApp</a>`:''}
+          ${publicPhone?`<a class="contact-btn wa" href="https://wa.me/${formatWaPhone(publicPhone)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>WhatsApp</a>`:''}
           <button class="share-btn" onclick="shareStorefront()"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share</button>
         </div>`;
 
@@ -339,14 +347,21 @@
     document.getElementById('app-root').innerHTML = `
       <div class="seller-header">
         <div class="seller-avatar">${isCompany&&roleVerified&&profile.company_logo_url?`<img src="${esc(profile.company_logo_url)}" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:50%">`:esc(initialsOf(name))}</div>
-        <div class="seller-name">${esc(name)}${isCompany&&!roleVerified?' (not verified)':''}</div>
+        <div class="seller-name">${esc(name)}${profile.account_type&&!roleVerified?' (not verified)':''}</div>
         <div class="seller-badges">
-          ${isPro?'<span class="s-badge pro"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Pro seller</span>':''}
           ${roleVerified?`<span class="s-badge verified">${esc(roleLabels[profile.account_type]||profile.account_type)} verified</span>`:''}
           ${isVerified?'<span class="s-badge verified"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>Identity verified</span>':''}
           ${ALL_REVIEWS.length?`<span class="s-badge verified">⭐ ${avgRating.toFixed(1)} (${ALL_REVIEWS.length} review${ALL_REVIEWS.length!==1?'s':''})</span>`:''}
         </div>
-        <p class="seller-sub">Browse every active listing from ${esc(name)}, all in one place.</p>
+        <p class="seller-sub">One organized place for ${esc(name)}'s property details and active listings.</p>
+        <div class="seller-profile-details">
+          ${profile.account_type?`<p>${esc(roleLabels[profile.account_type]||profile.account_type)} · ${roleVerified?'role verified':'(not verified)'}</p>`:''}
+          ${profile.profile_location?`<p>${esc(profile.profile_location)}</p>`:''}
+          ${profile.bio?`<p>${esc(profile.bio)}</p>`:''}
+          ${profile.company_description?`<p>${esc(profile.company_description)}</p>`:''}
+          ${companyWebsite?`<p><a href="${esc(companyWebsite)}" target="_blank" rel="noopener noreferrer">Visit company website</a></p>`:''}
+          <p>Member since ${esc(new Date(profile.created_at).toLocaleDateString('en-KE',{month:'long',year:'numeric'}))}</p>
+        </div>
         ${contactRow}
       </div>
       <div class="content">

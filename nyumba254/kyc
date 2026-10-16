@@ -155,6 +155,7 @@
       <div class="kyc-stepper" id="kyc-stepper"></div>
 
       <div class="kyc-body">
+        <div id="role-verification-content"></div>
         <div id="kyc-body-content"></div>
       </div>
 
@@ -209,6 +210,8 @@ async function init(){
     document.getElementById('app').style.display='block';
 
     loadVerificationUI();
+    await loadRoleVerificationUI();
+    if(location.hash==='#role-verification')document.getElementById('role-verification-content')?.scrollIntoView({behavior:'smooth',block:'start'});
   }catch(err){
     console.error('Init error:',err);
     document.getElementById('loading-screen').innerHTML =
@@ -223,6 +226,110 @@ function kycStatusMeta(status){
     verified:   {pill:'verified',pillLabel:'Verified ✓',dotIdx:2},
     rejected:   {pill:'rejected',pillLabel:'Needs changes',dotIdx:0},
   }[status] || {pill:'unverified',pillLabel:'Not started',dotIdx:0};
+}
+
+function roleVerificationLabel(role){
+  return {
+    owner:'Direct from owner',
+    caretaker:'Caretaker',
+    agent:'Agent',
+    company:'Company'
+  }[role]||role;
+}
+
+function roleVerificationRequirements(role){
+  return {
+    owner:'A document supporting your ownership claim, such as a title, lease, or other property record.',
+    caretaker:'Written authorization from the owner or property manager.',
+    agent:'Evidence of your agency affiliation or authorization to represent the properties you list.',
+    company:'Company registration or other evidence that you are authorized to represent the company.'
+  }[role]||'Documents that support your selected role.';
+}
+
+async function loadRoleVerificationUI(){
+  const root=document.getElementById('role-verification-content');
+  if(!root)return;
+  const role=currentProfile?.account_type;
+  if(!role||role==='buyer'){
+    root.innerHTML=`<section class="kyc-checklist" id="role-verification" style="margin-bottom:20px"><div class="kyc-section-title">Role verification</div><p style="font-size:13px;color:var(--text-2)">Choose an owner, caretaker, agent, or company role in your dashboard before submitting role evidence. A selected role is a claim; verification is proof.</p><a class="btn btn-outline" style="margin-top:12px" href="/dashboard#settings">Choose or review my role</a></section>`;
+    return;
+  }
+
+  let latest=null;
+  try{
+    const{data,error}=await db.from('role_verification_submissions').select('account_type,status,admin_note,submitted_at').eq('profile_id',currentUser.id).order('submitted_at',{ascending:false}).limit(1);
+    if(error)throw error;
+    latest=data?.[0]||null;
+  }catch(error){
+    console.error('Could not load role-verification status:',error);
+    root.innerHTML='<section class="kyc-checklist" id="role-verification" style="margin-bottom:20px"><div class="kyc-section-title">Role verification</div><p style="font-size:13px;color:var(--text-2)">Role-verification status is temporarily unavailable. Your identity verification remains available below.</p></section>';
+    return;
+  }
+
+  const verified=currentProfile?.verified_role===role;
+  const pending=latest?.status==='pending'&&latest.account_type===role;
+  const requirements=roleVerificationRequirements(role);
+  root.innerHTML=`<section class="kyc-checklist" id="role-verification" style="margin-bottom:20px">
+    <div class="kyc-section-title">Role verification · ${escHtml(roleVerificationLabel(role))}</div>
+    <p style="font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:12px">Your selected role is a claim; verification is proof. This review is separate from identity KYC, so accounts already identity-verified can submit role evidence here.</p>
+    ${verified?'<div class="kyc-checklist-item"><svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>Your current role is verified.</div>':pending?`<div class="kyc-checklist-item"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Your role documents were submitted on ${escHtml(new Date(latest.submitted_at).toLocaleDateString('en-KE'))} and are awaiting review.</div>`:''}
+    ${latest?.status==='rejected'&&latest.account_type===role&&latest.admin_note?`<p style="font-size:13px;color:var(--red);margin:8px 0">Review note: ${escHtml(latest.admin_note)}</p>`:''}
+    ${!verified&&!pending?`<p style="font-size:13px;color:var(--text-2);margin-bottom:10px">${escHtml(requirements)}</p>
+      <label for="role-verification-files" style="display:block;font-size:13px;font-weight:600;margin:10px 0 6px">Supporting documents (1–5 files)</label>
+      <input id="role-verification-files" type="file" accept="image/*,.pdf" multiple/>
+      <label for="role-verification-note" style="display:block;font-size:13px;font-weight:600;margin:12px 0 6px">Optional note</label>
+      <textarea id="role-verification-note" maxlength="1000" rows="3" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font:inherit" placeholder="Add context that helps our team review your role evidence."></textarea>
+      <button class="btn btn-primary" style="margin-top:12px" type="button" id="role-verification-submit" onclick="submitRoleVerification()">Submit role evidence</button>`:''}
+    <p id="role-verification-status" role="status" aria-live="polite" style="font-size:12px;color:var(--text-3);margin-top:8px"></p>
+  </section>`;
+}
+
+async function submitRoleVerification(){
+  const fileInput=document.getElementById('role-verification-files');
+  const files=[...(fileInput?.files||[])];
+  const status=document.getElementById('role-verification-status');
+  const button=document.getElementById('role-verification-submit');
+  if(!files.length||files.length>5){if(status)status.textContent='Choose between one and five supporting documents.';return;}
+  const maxSize=10*1024*1024;
+  if(files.some(file=>file.size>maxSize||!(file.type==='application/pdf'||file.type.startsWith('image/')))){
+    if(status)status.textContent='Each file must be an image or PDF no larger than 10 MB.';
+    return;
+  }
+  if(button){button.disabled=true;button.textContent='Uploading…';}
+  if(status)status.textContent='Upload in progress. Keep this page open.';
+  const uploadedPaths=[];
+  try{
+    for(const [index,file] of files.entries()){
+      const extension=(file.name.split('.').pop()||'file').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,8)||'file';
+      const path=`${currentUser.id}/role-verification/${Date.now()}-${index}.${extension}`;
+      const{error}=await db.storage.from(VERIFY_BUCKET).upload(path,file,{upsert:false});
+      if(error)throw error;
+      uploadedPaths.push(path);
+    }
+    const note=document.getElementById('role-verification-note')?.value.trim()||null;
+    const{error}=await db.rpc('submit_role_verification',{p_document_paths:uploadedPaths,p_applicant_note:note});
+    if(error)throw error;
+    status.textContent='Your role documents were submitted for review.';
+    await loadRoleVerificationUI();
+  }catch(error){
+    console.error('Role-verification submission failed:',error);
+    let message=error.message||'Could not submit role documents. Please try again.';
+    if(uploadedPaths.length){
+      try{
+        const{error:cleanupError}=await db.storage.from(VERIFY_BUCKET).remove(uploadedPaths);
+        if(cleanupError){
+          console.error('Could not remove role-verification documents after submission failed:',cleanupError);
+          message+=' Some uploaded documents could not be removed; contact support before retrying.';
+        }
+      }catch(cleanupError){
+        console.error('Could not remove role-verification documents after submission failed:',cleanupError);
+        message+=' Some uploaded documents could not be removed; contact support before retrying.';
+      }
+    }
+    if(status)status.textContent=message;
+  }finally{
+    if(button){button.disabled=false;button.textContent='Submit role evidence';}
+  }
 }
 
 function loadVerificationUI() {

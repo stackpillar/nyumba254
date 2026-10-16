@@ -705,12 +705,14 @@ async function verifyAccountStillActive(){
 }
 
 let PLATFORM_VERIFY_SETTINGS = { enforce_verification_general: 0, unverified_listing_limit: 2 };
+let STOREFRONT_FREE_ENABLED=false;
 let VIEWING_FEE_POLICY_VERSION='v1',VIEWING_FEE_MAX=5000,VIEWING_FEE_REQUIRES_IDENTITY=true;
 async function loadPlatformVerifySettings(){
-  const{data,error}=await db.from('platform_settings').select('key,value').in('key',['enforce_verification_general','unverified_listing_limit','viewing_fee_policy_version','viewing_fee_max','viewing_fee_requires_identity']);
+  const{data,error}=await db.from('platform_settings').select('key,value').in('key',['enforce_verification_general','unverified_listing_limit','viewing_fee_policy_version','viewing_fee_max','viewing_fee_requires_identity','storefront_free_enabled']);
   if(error) throw new Error(`Could not load verification settings: ${error.message}`);
   (data||[]).forEach(r=>{
-    if(r.key==='viewing_fee_policy_version')VIEWING_FEE_POLICY_VERSION=String(r.value??'v1');
+    if(r.key==='storefront_free_enabled')STOREFRONT_FREE_ENABLED=Number(r.value)===1;
+    else if(r.key==='viewing_fee_policy_version')VIEWING_FEE_POLICY_VERSION=String(r.value??'v1');
     else if(r.key==='viewing_fee_max')VIEWING_FEE_MAX=Math.min(5000,Number(r.value)||5000);
     else if(r.key==='viewing_fee_requires_identity')VIEWING_FEE_REQUIRES_IDENTITY=Number(r.value)!==0;
     else PLATFORM_VERIFY_SETTINGS[r.key]=Number(r.value);
@@ -1019,6 +1021,7 @@ async function saveAccountType(){
 }
 
 let pendingAccountType=null;
+let pendingRoleChangeRequest=false;
 function openChangeRoleModal(){
   const profile=isTeamMember?(ownerProfile||currentProfile):currentProfile;
   if(!profile?.account_type||isTeamMember)return;
@@ -1030,26 +1033,36 @@ function openChangeRoleModal(){
   const status=document.getElementById('change-role-status');
   const confirm=document.getElementById('change-role-confirm');
   pendingAccountType=null;
+  pendingRoleChangeRequest=locked;
   status.textContent='';
   confirmStep.hidden=true;
   notice.hidden=!locked;
   notice.textContent=locked?`Locked until ${roleDate(lockedUntil)}. If you believe this is a mistake, contact support.`:'';
-  if(locked)notice.innerHTML=`Locked until ${escHtml(roleDate(lockedUntil))}. <a href="/contact">Contact support</a> if you made a genuine mistake.`;
+  if(locked)notice.innerHTML=`Role changes are locked until ${escHtml(roleDate(lockedUntil))}. Select the accurate role below to request an admin-reviewed correction.`;
   options.replaceChildren();
   ACCOUNT_TYPES.forEach(type=>{
     const button=document.createElement('button');
     button.type='button';
     button.className='role-choice';
-    button.disabled=locked||type===profile.account_type;
+    button.disabled=type===profile.account_type;
     button.setAttribute('aria-pressed','false');
     button.dataset.role=type;
     const current=type===profile.account_type;
     button.innerHTML=`<strong>${escHtml(ACCOUNT_ROLE_LABELS[type])}${current?' · Current role':''}</strong><span>${escHtml(ACCOUNT_ROLE_DESCRIPTIONS[type])}</span>`;
     button.addEventListener('click',()=>{
-      if(locked||current)return;
+      if(current)return;
       pendingAccountType=type;
       options.querySelectorAll('button').forEach(card=>card.setAttribute('aria-pressed',String(card===button)));
       confirmStep.hidden=false;
+      const requestReason=document.getElementById('change-role-reason-wrap');
+      const confirmCopy=document.getElementById('change-role-confirm-copy');
+      const reasonField=document.getElementById('change-role-reason');
+      if(requestReason)requestReason.hidden=!locked;
+      if(reasonField)reasonField.value='';
+      if(confirmCopy)confirmCopy.textContent=locked
+        ?`Request an administrator to correct your role to ${ACCOUNT_ROLE_LABELS[type]}. Your role will not change unless the request is approved.`
+        :'This uses your change for the next 7 days. Continue?';
+      confirm.textContent=locked?'Submit request':'Confirm';
       status.textContent='';
       confirm.focus();
     });
@@ -1074,6 +1087,16 @@ async function confirmAccountTypeChange(){
   status.textContent='';
   try{
     const nextType=pendingAccountType;
+    if(pendingRoleChangeRequest){
+      const reason=document.getElementById('change-role-reason')?.value.trim()||'';
+      if(reason.length<10){status.textContent='Please explain the correction in at least 10 characters.';document.getElementById('change-role-reason')?.focus();return;}
+      const{error}=await db.rpc('submit_account_type_change_request',{p_account_type:nextType,p_reason:reason});
+      if(error)throw new Error(error.message);
+      pendingAccountType=null;
+      closeModal('modal-change-role');
+      showToast('Role correction request sent to our team for review.','success');
+      return;
+    }
     const{data,error}=await db.rpc('change_account_type',{p_account_type:nextType});
     if(error)throw new Error(error.message);
     const result=Array.isArray(data)?data[0]:data;
@@ -1171,6 +1194,9 @@ function updateVerifyWarningBanner(){
 function goToVerification(){
   openKycModal();
 }
+function goToRoleVerification(){
+  window.open('/kyc.html#role-verification','_blank','noopener,noreferrer');
+}
 function openKycModal(){ openModal('modal-kyc'); }
 function closeKycModal(){ closeModal('modal-kyc'); }
 function openKycFullPage(){ window.open('/kyc.html','_blank','noopener,noreferrer'); }
@@ -1212,8 +1238,10 @@ async function updateStorefrontBanner(sub){
   const card=document.getElementById('storefront-banner-card');
   if(!card)return;
   const isElite = sub.active && sub.plan==='elite';
-  if(!isElite){card.style.display='none';return;}
-  const slug = await ensureStorefrontSlug();
+  if(!isElite&&!STOREFRONT_FREE_ENABLED){card.style.display='none';return;}
+  let slug;
+  try{slug=await ensureStorefrontSlug();}
+  catch(error){console.error('Could not prepare public storefront link:',error);showToast('Could not prepare your public storefront link. Please try again.','error');return;}
   const url = `${location.origin}/storefront?seller=${slug}`;
   const urlEl=document.getElementById('storefront-banner-url');
   const openEl=document.getElementById('storefront-banner-open');
@@ -1538,6 +1566,17 @@ function updateEliteSectionUI(sub){
     if(storefrontRow) storefrontRow.style.display = 'none';
     if(valuationBtn) valuationBtn.style.display = 'none';
     if(aiListingBtn) aiListingBtn.style.display = 'none';
+  }
+  const storefrontAvailable=(sub.active&&sub.plan==='elite')||STOREFRONT_FREE_ENABLED;
+  if(storefrontRow)storefrontRow.style.display=storefrontAvailable?'block':'none';
+  if(storefrontAvailable){
+    ensureStorefrontSlug().then(slug=>{
+      const url=`${location.origin}/storefront?seller=${slug}`;
+      const urlEl=document.getElementById('storefront-settings-url');
+      const openEl=document.getElementById('storefront-settings-open');
+      if(urlEl)urlEl.textContent=url;
+      if(openEl)openEl.href=url;
+    }).catch(error=>console.error('Could not prepare public storefront link:',error));
   }
 }
 

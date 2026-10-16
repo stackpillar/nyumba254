@@ -523,8 +523,21 @@
               <div class="input-icon" style="top:14px;transform:none"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
               <textarea id="bio" placeholder="e.g. Property owner with 3 apartments in Milimani and Maseno." style="min-height:72px; padding-top:11px; resize:vertical"></textarea>
             </div>
-            <div class="field-hint">Shown on your listings. Keep it brief and factual.</div>
+            <div class="field-hint">Shown on your public lister profile. Keep it brief and factual.</div>
           </div>
+          <div class="form-group">
+            <label for="profile-location">Public location <span class="label-hint">(optional)</span></label>
+            <div class="input-wrap">
+              <div class="input-icon"><svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1116 0z"/><circle cx="12" cy="10" r="2.5"/></svg></div>
+              <input type="text" id="profile-location" maxlength="120" placeholder="e.g. Kisumu County"/>
+            </div>
+            <div class="field-hint">Only share a county, town, or area — never a private home address.</div>
+          </div>
+          <label for="public-phone-visible" style="display:flex;align-items:flex-start;gap:10px;margin:0 0 14px;font-size:13px;color:var(--text-2)">
+            <input type="checkbox" id="public-phone-visible" style="margin-top:3px;flex:0 0 auto"/>
+            <span><strong style="display:block;color:var(--text)">Show my phone on my public profile</strong>Optional. Your existing contact-visibility setting can still hide it.</span>
+          </label>
+          <div class="field-hint" style="margin:-8px 0 18px">Your email, identity documents, and private account details are never shown on your storefront.</div>
           <div class="save-row">
             <span class="save-row-hint">Changes apply to all your listings immediately.</span>
             <button class="btn-save" id="btn-save-personal" onclick="savePersonal()">
@@ -969,6 +982,8 @@
     document.getElementById('first-name').value = firstName;
     document.getElementById('last-name').value  = lastName;
     document.getElementById('bio').value        = bio;
+    document.getElementById('profile-location').value = profileData.profile_location || '';
+    document.getElementById('public-phone-visible').checked = profileData.public_phone_visible === true;
     document.getElementById('email').value      = email;
     document.getElementById('phone').value      = phone;
 
@@ -1015,6 +1030,8 @@
     const firstName = document.getElementById('first-name').value.trim();
     const lastName  = document.getElementById('last-name').value.trim();
     const bio       = document.getElementById('bio').value.trim();
+    const profileLocation = document.getElementById('profile-location').value.trim();
+    const publicPhoneVisible = document.getElementById('public-phone-visible').checked;
     let valid = true;
     if (!firstName) { showErr('err-first-name'); showErr('first-name','input'); valid = false; }
     if (!lastName)  { showErr('err-last-name');  showErr('last-name','input');  valid = false; }
@@ -1022,16 +1039,25 @@
 
     setLoading('btn-save-personal', true);
     const fullName = `${firstName} ${lastName}`;
-    const { error } = await db.from('profiles').upsert({ id: currentUser.id, full_name: fullName, bio });
+    const { error } = await db.from('profiles').upsert({
+      id: currentUser.id,
+      full_name: fullName,
+      bio,
+      profile_location: profileLocation || null,
+      public_phone_visible: publicPhoneVisible,
+    });
     setLoading('btn-save-personal', false);
     if (error) { console.error('savePersonal error:', error); showBanner('personal-banner','personal-banner-msg','error', error.message || 'Could not save — please try again.'); return; }
-    profileData.full_name = fullName; profileData.bio = bio;
+    profileData.full_name = fullName;
+    profileData.bio = bio;
+    profileData.profile_location = profileLocation;
+    profileData.public_phone_visible = publicPhoneVisible;
     document.getElementById('nav-name').textContent = fullName;
     const initials = ((firstName[0]||'')+(lastName[0]||'')).toUpperCase();
     document.getElementById('nav-avatar').innerHTML =
       initials + `<div class="avatar-edit-badge"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>`;
-    showBanner('personal-banner','personal-banner-msg','success', 'Name updated successfully.');
-    notifyProfileUpdated('Name and bio');
+    showBanner('personal-banner','personal-banner-msg','success', 'Public profile details updated successfully.');
+    notifyProfileUpdated('Public profile details');
   }
 
   // ─────────────────────────────────────────

@@ -935,7 +935,7 @@
     <div class="feature-card">
       <div class="feature-card-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
       <h3>Profile details</h3>
-      <p>Update your name, phone number, email, and password from your profile page at any time. Changing your email sends a verification link to the new address before it takes effect.</p>
+      <p>Update your name, phone number, email, and password from your profile page at any time. Listers can also keep a public bio and area with their active properties in one shareable storefront, making their listing details easier to organize and find. Changing your email sends a verification link to the new address before it takes effect.</p>
     </div>
     <div class="feature-card">
       <div class="feature-card-icon"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
