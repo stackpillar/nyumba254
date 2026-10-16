@@ -126,7 +126,7 @@ h1.title{font-family:'Playfair Display',serif;font-size:clamp(25px,5.4vw,34px);l
 
 /* inline action row (phones: the fixed bar takes over once this scrolls out of view) */
 .inline-cta{grid-template-columns:1.4fr 1fr 1fr;gap:8px;margin-bottom:18px}
-.inline-cta .vbtn{grid-column:1/-1;min-height:44px;font-size:13.5px}
+.inline-cta .vbtn{grid-column:1/-1;min-height:48px;font-size:14px;font-weight:700;border-color:var(--green-dark);color:var(--green-dark);background:rgba(22,163,74,.08)}.inline-cta .vbtn:hover{background:rgba(22,163,74,.16)}.inline-cta .btn:focus-visible,.ctabar .btn:focus-visible{outline:3px solid var(--green-dark);outline-offset:2px}
 .inline-cta.two{grid-template-columns:1fr}
 .inline-cta .btn{padding:0 8px;min-height:48px}
 @media(max-width:400px){.inline-cta .btn{font-size:13.5px}.inline-cta .btn svg{display:none}}
@@ -906,7 +906,7 @@ function ctaBar(){
   const bar=$('ctabar');if(ctaObs){ctaObs.disconnect();ctaObs=null}
   if(!P||isOwner||P.status==='occupied'){bar.hidden=true;document.body.classList.remove('nk-cta','nk-cta-show');measureCta();tabbarSync();return}
   const hid=!!P.contact_hidden;
-  bar.innerHTML=`<div class="ctabar-price"><strong>${priceHtml()}</strong><span>${escHtml(P.title)}</span><span>${escHtml(viewingFeeText(P.viewing_fee))}</span></div>${hid?'':`<button type="button" class="btn btn-outline ctabar-icon" data-act="call" data-src="bar" aria-label="Call lister">${IC.call}</button>`}<button type="button" class="btn ${hid?'btn-primary':'btn-outline'}" data-act="scroll">${IC.msg}Message</button>${hid?'':`<button type="button" class="btn btn-wa ctabar-wa" data-act="wa" data-src="bar">${IC.wa}WhatsApp</button>`}`;
+  bar.innerHTML=`<div class="ctabar-price"><strong>${priceHtml()}</strong><span>${escHtml(P.title)}</span><span>${escHtml(viewingFeeText(P.viewing_fee))}</span></div><button type="button" class="btn btn-outline ctabar-icon" data-act="viewing" data-src="bar" aria-label="${escHtml(viewingRequestButtonLabel())}">${IC.cal}</button>${hid?'':`<button type="button" class="btn btn-outline ctabar-icon" data-act="call" data-src="bar" aria-label="Call lister">${IC.call}</button>`}<button type="button" class="btn ${hid?'btn-primary':'btn-outline'}" data-act="scroll">${IC.msg}Message</button>${hid?'':`<button type="button" class="btn btn-wa ctabar-wa" data-act="wa" data-src="bar">${IC.wa}WhatsApp</button>`}`;
   bar.hidden=false;document.body.classList.add('nk-cta');
   const show=on=>{bar.classList.toggle('show',on);document.body.classList.toggle('nk-cta-show',on)},inl=$('inline-cta');
   if(inl&&'IntersectionObserver' in window){ctaObs=new IntersectionObserver(([e])=>show(!e.isIntersecting),{rootMargin:'0px 0px -8px 0px'});ctaObs.observe(inl)}else show(true);
