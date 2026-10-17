@@ -48,6 +48,12 @@
   .hero-eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8a5a12;background:var(--gold-light);padding:6px 16px;border-radius:20px;margin-bottom:20px}
   .hero h1{font-family:'Playfair Display',serif;font-weight:700;font-size:clamp(30px,4.6vw,44px);color:var(--text);line-height:1.14;margin-bottom:16px;letter-spacing:-.01em}
   .hero p{font-size:16px;color:var(--text-2);line-height:1.75}
+  .role-chip-wrap{margin-top:16px;display:flex;flex-direction:column;align-items:center;gap:8px;font-size:13px;color:var(--text-2)}
+  .role-chip{display:inline-flex;align-items:center;gap:6px;background:var(--green-light,#e8f3ec);color:var(--green-dark);font-weight:700;border-radius:20px;padding:6px 14px;font-size:13px}
+  .role-pick{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+  .role-pick button{min-height:44px;padding:0 16px;border-radius:22px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-weight:600;cursor:pointer}
+  .role-pick button[aria-pressed="true"]{border-color:var(--green);background:var(--green);color:#fff}
+  .plan-cta[aria-disabled="true"]{opacity:.6;cursor:not-allowed}
 
   .plans-trust{display:flex;justify-content:center;gap:28px;flex-wrap:wrap;margin:30px auto 0;padding:16px 20px;background:var(--white);border:1px solid var(--border);border-radius:999px;max-width:fit-content;box-shadow:0 1px 2px rgba(0,0,0,0.03)}
   .plans-trust-item{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--text-2);white-space:nowrap}
@@ -198,7 +204,8 @@
   <div class="hero">
     <div class="hero-eyebrow">✨ Pricing</div>
     <h1>Simple, category-based pricing</h1>
-    <p>How much you pay depends on what you're listing — a house for sale, a room to rent, or a BNB you'll keep live all year. No agent commission, ever.</p>
+    <p>How much you pay depends on what you're listing — a house for sale, a room to rent, or a BNB you'll keep live all year. Nyumba254 never takes a cut of your rent or sale.</p>
+    <div id="role-chip-wrap" class="role-chip-wrap" aria-live="polite"></div>
   </div>
 
   <div class="plans-trust">
@@ -226,7 +233,7 @@
   </div>
 
   <!-- ═══ BNB / AIRBNB SUBSCRIPTION ═══ -->
-  <div class="section-block">
+  <div class="section-block" id="bnb-section">
     <div class="section-head">
       <div class="kicker">Airbnb &amp; short-stay hosts</div>
       <h2>BNB plans — one flat monthly fee</h2>
@@ -280,7 +287,7 @@
       <span class="bt-label active" id="label-monthly">Monthly</span>
       <button class="bt-switch" id="billing-switch" onclick="toggleBilling()" aria-label="Toggle yearly billing" aria-pressed="false"></button>
       <span class="bt-label" id="label-yearly">Yearly</span>
-      <span class="bt-save">Save ~17%</span>
+      <span class="bt-save" id="bt-save" hidden></span>
     </div>
 
     <div class="plans" id="plans-grid">
@@ -296,7 +303,7 @@
           <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span>Buyers message you directly — chat &amp; WhatsApp</span></li>
           <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>Managed chat</strong> included free with any active BNB plan</span></li>
           <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span>Buyer contact privacy toggle</span></li>
-          <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span>0% commission — no cut of your rent or sale</span></li>
+          <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span>Nyumba254 never takes a cut of your rent or sale</span></li>
         </ul>
       </div>
 
@@ -305,10 +312,11 @@
         <div class="plan-eyebrow">Premium</div>
         <div class="plan-name">For active sellers</div>
         <p class="plan-desc">Everything you need to look credible, get found, and get replies faster.</p>
-        <div class="plan-price"><span class="amount" data-monthly="KES 1,200" data-yearly="KES 1,000">KES 1,200</span><span class="period">/ month</span></div>
-        <div class="plan-price-note" data-monthly-note="Billed monthly" data-yearly-note="KES 12,000 billed yearly">Billed monthly</div>
-        <a href="#" class="plan-cta" onclick="startSubscriptionCheckout('premium');return false">Get Premium</a>
+        <div class="plan-price">        <span class="amount" data-monthly="KES —" data-yearly="KES —">KES —</span><span class="period">/ month</span></div>
+                <div class="plan-price-note" data-monthly-note="Billed monthly" data-yearly-note="">Billed monthly</div>
+                <a href="#" class="plan-cta" id="cta-premium" onclick="startSubscriptionCheckout('premium');return false">Get Premium</a>
         <ul class="feat-list">
+          <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>Standard listing fees covered</strong> while you are subscribed (Featured is a discounted upgrade)</span></li>
           <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>Managed chat</strong> — our team replies to buyers for you</span></li>
           <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>Pro seller badge</strong> on your listings and profile</span></li>
           <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>SMS enquiry alerts</strong> the moment a buyer messages</span></li>
@@ -323,21 +331,25 @@
         <div class="plan-eyebrow">Elite</div>
         <div class="plan-name">For landlords &amp; agencies</div>
         <p class="plan-desc">Everything in Premium, plus unlimited active rental listings — built for managing many units at once.</p>
-        <div class="plan-price"><span class="amount" data-monthly="KES 3,000" data-yearly="KES 2,500">KES 3,000</span><span class="period">/ month</span></div>
-        <div class="plan-price-note" data-monthly-note="Billed monthly" data-yearly-note="KES 30,000 billed yearly">Billed monthly</div>
-        <a href="#" class="plan-cta" onclick="startSubscriptionCheckout('elite');return false">Get Elite</a>
+        <div class="plan-price">        <span class="amount" data-monthly="KES —" data-yearly="KES —">KES —</span><span class="period">/ month</span></div>
+                <div class="plan-price-note" data-monthly-note="Billed monthly" data-yearly-note="">Billed monthly</div>
+                <a href="#" class="plan-cta" id="cta-elite" onclick="startSubscriptionCheckout('elite');return false">Get Elite</a>
         <ul class="feat-list">
           <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span>Everything in <strong>Premium</strong></span></li>
           <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>Unlimited active listings</strong> — rental and BNB both, no per-listing fee or separate BNB plan while subscribed</span></li>
           <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>Rent Ledger</strong> — deposits, reminders, expenses, rent roll</span></li>
           <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>AI listing assistant</strong> — auto-write titles, descriptions, suggested price</span></li>
           <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>Dedicated relationship manager</strong> — direct phone/WhatsApp line</span></li>
-          <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span><strong>5 team seats</strong> for agencies</span></li>
+          <li><span class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></span><span id="elite-seats-line"><strong>Team seats</strong> for your role</span></li>
         </ul>
         <div class="plan-divider"></div>
         <p class="plan-footnote">Best for landlords or agencies managing 10+ active rental listings.</p>
       </div>
     </div>
+  </div>
+
+  <div class="compare-note" id="addons-note">
+    <strong>Add-ons:</strong> Standard listing fees are covered while you are subscribed. Featured is a discounted upgrade, charged per listing.
   </div>
 
   <div class="compare-note">
@@ -375,6 +387,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 <script src="saved-listings.js"></script>
+<script src="nk-pricing.js"></script>
 <script src="nav-badge.js"></script>
 <script>
   const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
@@ -387,35 +400,33 @@
      nothing below is a hardcoded fee. Every number rendered starts as
      a "—" and is filled in once loadLivePrices() resolves.
      ══════════════════════════════════════════════════════════════ */
-  const SETTINGS_KEYS_NEEDED = [
-    'sale_standard_pct','rent_standard_pct',
-    'standard_min_fee','standard_max_fee',
-    'standard_fee_per_unit',
-    'premium_monthly_price','premium_yearly_price',
-    'elite_monthly_price','elite_yearly_price',
-    'bnb_basic_price','bnb_bundle_price',
-  ];
-  let SETTINGS = {};
+  let SETTINGS = {};      // raw platform_settings, used only for fee-rule inputs
+  let PRICING = null;     // role-resolved pricing from the database
+  let ME = null;          // { roles, full_name, phone, onboarding_completed }
+  let VIEW_ROLE = null;   // role shown to guests and Buyers
+  const NKP = window.NKPricing;
+  const ROLE_PICK = ['owner','caretaker','agent','company'];
 
-  function fmtKES(n){ return 'KES ' + Number(n||0).toLocaleString('en-KE'); }
+  const fmtKES = (n) => NKP.money(n);
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : null; };
 
-  function calcExampleFee(price, pctKey){
-    const pct = Number(SETTINGS[pctKey]) || 0;
-    const min = Number(SETTINGS.standard_min_fee) || 0;
-    const max = Number(SETTINGS.standard_max_fee) || Infinity;
-    return Math.round(Math.max(min, Math.min(max, price * (pct/100))));
+  function profileComplete(){
+    return !!(ME && ME.roles.length && ME.full_name && ME.phone && ME.onboarding_completed);
   }
 
   function renderFeeTable(){
-    const salePct = Number(SETTINGS.sale_standard_pct)||0;
-    const rentPct = Number(SETTINGS.rent_standard_pct)||0;
-    const perUnit = Number(SETTINGS.standard_fee_per_unit)||0;
+    const role = PRICING && PRICING.role;
+    const mult = PRICING ? PRICING.listing_fee_multiplier : 1;
+    const fee = (price, type, units) => NKP.listingFee(SETTINGS, { price, type, plan:'standard', units, multiplier: mult });
+    const salePct = num(SETTINGS.sale_standard_pct), rentPct = num(SETTINGS.rent_standard_pct);
+    const perUnit = num(SETTINGS.standard_fee_per_unit) || 0;
     const rows = [
-      { name:'House / Land — for sale', sub:'One-time · stays live until sold', example:'3,000,000 property', fee: calcExampleFee(3000000,'sale_standard_pct'), note:`${salePct}% of price` },
-      { name:'House / Land — high value', sub:'One-time · stays live until sold', example:'25,000,000 property', fee: calcExampleFee(25000000,'sale_standard_pct'), note:`${salePct}% of price, capped at ${fmtKES(SETTINGS.standard_max_fee)}` },
-      { name:'Apartment / House — for rent', sub:'One-time · stays live until occupied', example:'15,000/month rent', fee: calcExampleFee(15000,'rent_standard_pct'), note:`${rentPct}% of monthly rent` },
-      { name:'Boarding house / bed spaces', sub:'One-time · stays live until occupied', example:'10 rooms, avg 1,800/mo', fee: calcExampleFee(18000,'rent_standard_pct') + perUnit*10, note:`${rentPct}% of total room value + ${fmtKES(perUnit)}/room` },
-      { name:'Shop / office — to lease', sub:'One-time · stays live until occupied', example:'40,000/month lease', fee: calcExampleFee(40000,'rent_standard_pct'), note:`${rentPct}% of monthly lease` },
+      { name:'House / Land — for sale', sub:'One-time · stays live until sold', example:'3,000,000 property', fee: fee(3000000,'sale'), note:`${salePct}% of price` },
+      { name:'House / Land — high value', sub:'One-time · stays live until sold', example:'25,000,000 property', fee: fee(25000000,'sale'), note:`${salePct}% of price, with a ceiling` },
+      { name:'Apartment / House — for rent', sub:'One-time · stays live until occupied', example:'15,000/month rent', fee: fee(15000,'rent'), note:`${rentPct}% of monthly rent` },
+      { name:'Boarding house / bed spaces', sub:'One-time · stays live until occupied', example:'10 rooms, avg 1,800/mo', fee: fee(18000,'rent',10), note:`${rentPct}% of total room value + ${fmtKES(Math.round(perUnit*mult))}/room` },
+      { name:'Shop / office — to lease', sub:'One-time · stays live until occupied', example:'40,000/month lease', fee: fee(40000,'rent'), note:`${rentPct}% of monthly lease` },
       { name:'Shop / office — for sale', sub:'One-time · stays live until sold', example:'Same as House/Land — for sale', fee: null, note:'Priced the same way as a house/land sale, by price bracket' },
     ];
     document.getElementById('fee-table-body').innerHTML = rows.map(r => `
@@ -425,31 +436,77 @@
         <td>${r.example}</td>
         <td class="fee-amt">${r.fee!=null ? fmtKES(r.fee) : '—'}</td>
       </tr>`).join('');
+    const fn = document.getElementById('fee-footnote');
+    if (fn && role) fn.textContent = `Fees shown are for your ${NKP.ROLE_LABEL[role]} role. While you hold an active Premium or Elite plan, Standard listing fees are covered.`;
   }
 
-  function renderBnbPrices(){
-    document.getElementById('bnb-basic-price').textContent = fmtKES(SETTINGS.bnb_basic_price);
-    document.getElementById('bnb-bundle-price').textContent = fmtKES(SETTINGS.bnb_bundle_price);
+  function renderBnb(){
+    const sec = document.getElementById('bnb-section');
+    const b = PRICING && PRICING.bnb;
+    if (!PRICING || !PRICING.role) { sec.hidden = false; return; }
+    if (!b || !b.allowed) {
+      sec.hidden = false;
+      document.getElementById('bnb-plans-grid').hidden = true;
+      sec.querySelector('.section-head p').textContent = 'Holiday rentals (BNB) are available to Owners and Companies. Choose the Owner or Company role in your dashboard settings to host short stays.';
+      return;
+    }
+    document.getElementById('bnb-plans-grid').hidden = false;
+    document.getElementById('bnb-basic-price').textContent = fmtKES(b.basic);
+    document.getElementById('bnb-bundle-price').textContent = fmtKES(b.bundle);
   }
 
-  function applySellerPlanPrice(planClass, monthlyKey, yearlyKey){
-    const amountEl = document.querySelector(`.plan.${planClass} .amount`);
-    const noteEl = document.querySelector(`.plan.${planClass} .plan-price-note`);
-    const monthly = Number(SETTINGS[monthlyKey]);
-    const yearly = Number(SETTINGS[yearlyKey]);
-    if (amountEl && monthly) { amountEl.dataset.monthly = fmtKES(monthly); amountEl.textContent = fmtKES(monthly); }
-    if (amountEl && yearly)  amountEl.dataset.yearly = fmtKES(Math.round(yearly/12));
-    if (noteEl && yearly)    noteEl.dataset.yearlyNote = `${fmtKES(yearly)} billed yearly`;
+  function renderPlans(){
+    const open = !!(PRICING && PRICING.paid_plans_open);
+    ['premium','elite'].forEach(t => {
+      const amountEl = document.querySelector(`.plan.${t} .amount`);
+      const noteEl = document.querySelector(`.plan.${t} .plan-price-note`);
+      const m = NKP.planPrice(PRICING, t, 'monthly'), y = NKP.planPrice(PRICING, t, 'yearly');
+      if (amountEl && m != null) { amountEl.dataset.monthly = fmtKES(m); amountEl.textContent = yearly && y != null ? fmtKES(Math.round(y/12)) : fmtKES(m); }
+      if (amountEl && y != null) amountEl.dataset.yearly = fmtKES(Math.round(y/12));
+      if (noteEl && y != null) noteEl.dataset.yearlyNote = `${fmtKES(y)} billed yearly`;
+      const cta = document.getElementById('cta-' + t);
+      if (cta) {
+        cta.setAttribute('aria-disabled', open && PRICING.role ? 'false' : 'true');
+        if (!open) cta.textContent = 'Opening soon';
+        else cta.textContent = 'Get ' + (t === 'elite' ? 'Elite' : 'Premium');
+      }
+    });
+    const m = NKP.planPrice(PRICING, 'premium', 'monthly'), y = NKP.planPrice(PRICING, 'premium', 'yearly');
+    const pct = NKP.yearlySavingPct(m, y), sv = document.getElementById('bt-save');
+    sv.hidden = !pct; sv.textContent = pct ? `Save ${pct}%` : '';
+    const seats = NKP.seats(PRICING, 'elite');
+    document.getElementById('elite-seats-line').innerHTML = seats ? `<strong>${seats} team seat${seats === 1 ? '' : 's'}</strong> included` : '<strong>Solo account</strong> — no team seats for this role';
   }
+
+  function renderRoleChip(){
+    const wrap = document.getElementById('role-chip-wrap');
+    if (ME && ME.roles.length) {
+      const two = ME.roles.length > 1;
+      wrap.innerHTML = `<span class="role-chip">Pricing for: ${esc(NKP.rolesLabel(PRICING && PRICING.role ? [PRICING.role] : ME.roles))}</span>` +
+        (two ? `<span>You hold two roles. Plans are priced at the higher-priced role (${esc(NKP.ROLE_LABEL[PRICING.role])}), and one plan covers both.</span>` : '');
+      return;
+    }
+    const label = ME ? 'You have not chosen a role yet. Pick one to see prices, then set it up in your dashboard.' : 'Choose your role to see your prices.';
+    wrap.innerHTML = `<span>${label}</span><div class="role-pick" role="group" aria-label="Choose a role">` +
+      ROLE_PICK.map(r => `<button type="button" data-role="${r}" aria-pressed="${VIEW_ROLE === r}">${NKP.ROLE_LABEL[r]}</button>`).join('') + '</div>';
+    wrap.querySelectorAll('button').forEach(b => b.addEventListener('click', async () => {
+      VIEW_ROLE = b.dataset.role;
+      PRICING = await NKP.loadPublicPricing(db, VIEW_ROLE);
+      renderAll();
+    }));
+  }
+
+  function renderAll(){ renderRoleChip(); renderFeeTable(); renderBnb(); renderPlans(); }
 
   async function loadLivePrices(){
-    const { data, error } = await db.from('platform_settings').select('key,value').in('key', SETTINGS_KEYS_NEEDED);
-    if (error) { console.error('Could not load pricing settings:', error); return; }
-    (data||[]).forEach(r => { SETTINGS[r.key] = Number(r.value); });
-    renderFeeTable();
-    renderBnbPrices();
-    applySellerPlanPrice('premium','premium_monthly_price','premium_yearly_price');
-    applySellerPlanPrice('elite','elite_monthly_price','elite_yearly_price');
+    await NKP.loadSettings(db).then(c => { SETTINGS = {}; Object.keys(c).forEach(k => { SETTINGS[k] = c[k]; }); });
+    const { data: { session } } = await db.auth.getSession();
+    if (session) {
+      const { data: p } = await db.from('profiles').select('account_roles,full_name,phone,onboarding_completed').eq('id', session.user.id).maybeSingle();
+      ME = { roles: (p && p.account_roles) || [], full_name: p && p.full_name, phone: p && p.phone, onboarding_completed: !!(p && p.onboarding_completed) };
+      if (ME.roles.length) PRICING = await NKP.loadPricing(db);
+    }
+    renderAll();
   }
   loadLivePrices();
   if (typeof NKSaved !== 'undefined') NKSaved.init();
