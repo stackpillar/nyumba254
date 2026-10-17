@@ -67,6 +67,14 @@ export default {
       });
     }
 
+    // Extensionless pages must never reach the browser without a type, or Chrome downloads them.
+    const lastSegment = url.pathname.split('/').pop();
+    if (response.ok && !lastSegment.includes('.') && !response.headers.get('content-type')) {
+      const fixed = new Response(response.body, response);
+      fixed.headers.set('Content-Type', 'text/html; charset=utf-8');
+      return fixed;
+    }
+
     return response;
   },
 

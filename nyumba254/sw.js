@@ -9,7 +9,7 @@
  *
  * Bump VERSION whenever you change this file or the precache list.
  */
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL_CACHE = `nyumba254-shell-${VERSION}`;
 const ASSET_CACHE = `nyumba254-assets-${VERSION}`;
 
