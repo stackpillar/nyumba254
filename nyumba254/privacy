@@ -597,6 +597,29 @@
     </div>
     <div class="section-divider"></div>
 
+    <!-- 9A -->
+    <div class="section" id="kenya-dpa">
+      <div class="section-num">Section 9A</div>
+      <h2>Kenya Data Protection Act, 2019</h2>
+      <p><strong>Draft, needs legal review.</strong> This section describes how we intend to meet the Data Protection Act, 2019 and may change after review.</p>
+      <table class="data-table">
+        <thead><tr><th>What we do with data</th><th>Lawful basis (draft)</th></tr></thead>
+        <tbody>
+          <tr><td>Create and run your account, listings, enquiries and viewing requests</td><td>Performance of the service you asked for</td></tr>
+          <tr><td>Identity and role verification</td><td>Your consent, and our legitimate interest in keeping the platform safe</td></tr>
+          <tr><td>Payment and tax records</td><td>Legal obligation</td></tr>
+          <tr><td>Fraud prevention, reports and moderation</td><td>Legitimate interest</td></tr>
+          <tr><td>Optional analytics and advertising cookies (if ever used)</td><td>Your consent, which you can change under Cookie settings</td></tr>
+          <tr><td>Account activity history you can view and download</td><td>Performance of the service, and your right of access</td></tr>
+        </tbody>
+      </table>
+      <p>Your rights are listed in Section 9. You can see and download a readable copy of your account activity from Activity in your dashboard or profile. You may also complain to the Office of the Data Protection Commissioner (ODPC) if you think we have mishandled your data.</p>
+      <div class="highlight">
+        <strong>Data Protection Officer contact:</strong> hello@nyumba254.co.ke (a named officer is to be confirmed).<br>
+        <strong>ODPC registration status:</strong> to be confirmed before launch. We will state the registration status here once it is confirmed.
+      </div>
+    </div>
+    <div class="section-divider"></div>
     <!-- 10 -->
     <div class="section" id="children">
       <div class="section-num">Section 10</div>
