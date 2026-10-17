@@ -1330,6 +1330,43 @@ async function updateStorefrontBanner(sub){
   card.style.display='block';
 }
 
+const LISTER_VIS_INFO={
+  public:['Public','Anyone can find your page in search and open it with the link.'],
+  unlisted:['Unlisted','Hidden from search; anyone with the link can open it.'],
+  hidden:['Hidden','Nobody can open your page until you change this.']
+};
+function updateListerVisibilityHint(){
+  const sel=document.getElementById('lister-page-visibility');
+  const v=sel?.value||'public';
+  const hint=document.getElementById('lister-visibility-hint');
+  if(hint)hint.textContent=LISTER_VIS_INFO[v]?LISTER_VIS_INFO[v][1]:'';
+  const pill=document.getElementById('lister-page-pill');
+  if(pill){pill.dataset.state=v;pill.textContent=LISTER_VIS_INFO[v]?LISTER_VIS_INFO[v][0]:v;}
+}
+function validateListerHandleInput(){
+  const input=document.getElementById('lister-page-handle');
+  const hint=document.getElementById('lister-handle-hint');
+  const count=document.getElementById('lister-handle-count');
+  if(!input||!hint)return;
+  const v=input.value.trim().toLowerCase();
+  if(count)count.textContent=v.length+'/30';
+  const msg=hint.firstElementChild;
+  if(!v){hint.dataset.state='';return;}
+  const ok=/^[a-z0-9][a-z0-9._-]{1,28}[a-z0-9]\$/.test(v);
+  hint.dataset.state=ok?'ok':'bad';
+  if(msg)msg.textContent=ok?'Looks good. Availability is checked when you save.':'Use 3–30 lowercase letters, numbers, dots, underscores or hyphens; start and end with a letter or number.';
+}
+async function shareListerPage(){
+  const link=listerPageUrl();
+  try{await navigator.share({title:'My Lister Page on Nyumba254',url:link});}
+  catch(e){if(e&&e.name!=='AbortError')copyListerPageLink();}
+}
+async function copyListerCaption(){
+  const text=document.getElementById('lister-share-caption')?.textContent||listerPageUrl();
+  try{await navigator.clipboard.writeText(text);showToast('Caption copied.','success');}
+  catch(e){window.prompt('Copy your caption',text);}
+}
+
 function listerPageUrl(){
   const profile=ownerProfile||currentProfile;
   return nkListerPageUrl({handle:profile?.handle,user_id:profile?.storefront_slug||effectiveSellerId,absolute:true});
@@ -1346,6 +1383,13 @@ async function loadListerPageHub(){
   if(handleInput)handleInput.value=profile.handle||'';
   if(visibility)visibility.value=profile.lister_page_visibility||'public';
   if(open)open.href=link;
+  const urlEl2=document.getElementById('lister-page-url');
+  if(urlEl2)urlEl2.textContent=link.replace(/^https?:\/\//,'');
+  const shareBtn=document.getElementById('lister-page-share');
+  if(shareBtn)shareBtn.hidden=!navigator.share;
+  const qrPrev=document.getElementById('lister-qr-preview');
+  try{if(qrPrev)qrPrev.src=nkQrSvgDataUrl(link)}catch(e){}
+  updateListerVisibilityHint();validateListerHandleInput();
   if(status)status.textContent=LISTER_PAGE_FLAGS.pages
     ? 'Your Lister Page is available. Role information is a lister claim; verification is shown separately.'
     : 'Your existing public page remains available. Handle-based Lister Pages are not enabled yet.';

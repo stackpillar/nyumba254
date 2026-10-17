@@ -288,43 +288,87 @@
         <h2>Your Lister Page</h2>
         <p>One link for all your properties. Organise your listings, share them anywhere, and let people view, ask and book in one place.</p>
       </div>
-      <div class="card" style="padding:20px;margin-bottom:18px">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
-          <div><h3 style="margin:0 0 6px">Your shareable page</h3><p id="lister-page-status" style="font-size:13px;color:var(--text-3)">Loading your page settings…</p></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-outline" type="button" onclick="copyListerPageLink()">Copy link</button>
-            <a class="btn btn-primary" id="lister-page-open" href="/storefront" rel="noopener">Preview page</a>
-          </div>
-        </div>
-        <div class="settings-grid" style="margin-top:18px">
-          <div class="settings-section">
-            <label class="field-label" for="lister-page-handle">Page handle</label>
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-              <span style="font-size:13px;color:var(--text-3)">nyumba254.com/@</span>
-              <input class="form-input" id="lister-page-handle" maxlength="30" autocomplete="off" placeholder="your-name"/>
-              <button class="btn btn-outline btn-sm" type="button" onclick="saveListerPageHandle()">Save handle</button>
+<style>
+#page-lister-page .lp-hero{padding:0;overflow:hidden;margin-bottom:18px;border:1px solid var(--border,rgba(128,128,128,.25))}
+#page-lister-page .lp-hero-top{display:grid;grid-template-columns:1fr auto;gap:20px;padding:22px;align-items:center}
+#page-lister-page .lp-eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);font-weight:700}
+#page-lister-page .lp-hero h3{margin:4px 0 10px;font-size:20px}
+#page-lister-page .lp-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:var(--surface);color:var(--text-2,var(--text-3))}
+#page-lister-page .lp-pill::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--text-3)}
+#page-lister-page .lp-pill[data-state=public]::before{background:#16a34a}
+#page-lister-page .lp-pill[data-state=unlisted]::before{background:#d97706}
+#page-lister-page .lp-pill[data-state=hidden]::before{background:#dc2626}
+#page-lister-page .lp-url{display:flex;align-items:center;gap:8px;margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--border,rgba(128,128,128,.25));min-width:0}
+#page-lister-page .lp-url code{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+#page-lister-page .lp-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+#page-lister-page .lp-actions .btn{min-height:44px}
+#page-lister-page .lp-qr{width:116px;height:116px;border-radius:12px;background:#fff;padding:8px;border:1px solid var(--border,rgba(128,128,128,.25))}
+#page-lister-page .lp-qr img{width:100%;height:100%;display:block}
+#page-lister-page .lp-note{padding:12px 22px;font-size:12.5px;color:var(--text-3);background:var(--surface);border-top:1px solid var(--border,rgba(128,128,128,.2))}
+#page-lister-page .lp-card{padding:20px;margin-bottom:18px}
+#page-lister-page .lp-card h3{margin:0 0 6px}
+#page-lister-page .lp-sub{font-size:13px;color:var(--text-3);margin:0 0 14px}
+#page-lister-page .lp-handle{display:flex;align-items:center;gap:0;border:1px solid var(--border,rgba(128,128,128,.35));border-radius:10px;overflow:hidden;background:var(--bg,transparent)}
+#page-lister-page .lp-handle span{padding:0 10px;font-size:13px;color:var(--text-3);white-space:nowrap;background:var(--surface);align-self:stretch;display:flex;align-items:center}
+#page-lister-page .lp-handle input{border:0;border-radius:0;flex:1;min-width:0;min-height:44px;box-shadow:none}
+#page-lister-page .lp-hint{font-size:12px;margin-top:6px;color:var(--text-3);display:flex;justify-content:space-between;gap:8px}
+#page-lister-page .lp-hint[data-state=bad]{color:#dc2626}
+#page-lister-page .lp-hint[data-state=ok]{color:#16a34a}
+#page-lister-page .lp-save{margin-top:10px;min-height:44px}
+#page-lister-page .lp-share{display:flex;gap:8px;flex-wrap:wrap}
+#page-lister-page .lp-share .btn{min-height:44px;display:inline-flex;align-items:center}
+#page-lister-page .lp-caption{font-size:13px;background:var(--surface);padding:12px;border-radius:10px;margin-top:12px;word-break:break-word}
+#page-lister-page .card h3{font-size:16px}
+@media (max-width:640px){#page-lister-page .lp-hero-top{grid-template-columns:1fr;padding:16px}#page-lister-page .lp-qr{display:none}#page-lister-page .lp-actions .btn{flex:1 1 45%;justify-content:center}}
+</style>
+      <div class="card lp-hero">
+        <div class="lp-hero-top">
+          <div style="min-width:0">
+            <div class="lp-eyebrow">Your shareable page</div>
+            <h3>One link for every property</h3>
+            <span class="lp-pill" id="lister-page-pill" data-state="loading">Loading…</span>
+            <div class="lp-url"><code id="lister-page-url">nyumba254.com/@…</code></div>
+            <div class="lp-actions">
+              <button class="btn btn-primary" type="button" onclick="copyListerPageLink()">Copy link</button>
+              <a class="btn btn-outline" id="lister-page-open" href="/storefront" target="_blank" rel="noopener">Preview page</a>
+              <button class="btn btn-outline" type="button" id="lister-page-share" onclick="shareListerPage()" hidden>Share</button>
             </div>
-            <p style="font-size:12px;color:var(--text-3);margin-top:6px">3–30 lowercase letters, numbers, dots, underscores or hyphens. Handle changes are limited to once every 30 days.</p>
           </div>
-          <div class="settings-section">
-            <label class="field-label" for="lister-page-visibility">Page visibility</label>
-            <select class="form-input" id="lister-page-visibility">
-              <option value="public">Public — searchable</option>
-              <option value="unlisted">Unlisted — anyone with the link</option>
-              <option value="hidden">Hidden</option>
-            </select>
-            <button class="btn btn-outline btn-sm" type="button" style="margin-top:8px" onclick="saveListerPageVisibility()">Save visibility</button>
-          </div>
+          <div class="lp-qr" aria-hidden="true"><img id="lister-qr-preview" alt="" /></div>
+        </div>
+        <div class="lp-note" id="lister-page-status" aria-live="polite">Loading your page settings…</div>
+      </div>
+      <div class="settings-grid" style="margin-bottom:18px">
+        <div class="card lp-card" style="margin-bottom:0">
+          <h3>Page handle</h3>
+          <p class="lp-sub">Your handle is the end of your link. Choose something people will recognise.</p>
+          <label class="field-label" for="lister-page-handle">Handle</label>
+          <div class="lp-handle"><span>nyumba254.com/@</span><input class="form-input" id="lister-page-handle" maxlength="30" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="your-name" aria-describedby="lister-handle-hint" oninput="validateListerHandleInput()"/></div>
+          <div class="lp-hint" id="lister-handle-hint"><span>3–30 lowercase letters, numbers, dots, underscores or hyphens. Changes limited to once every 30 days.</span><span id="lister-handle-count">0/30</span></div>
+          <button class="btn btn-primary lp-save" type="button" onclick="saveListerPageHandle()">Save handle</button>
+        </div>
+        <div class="card lp-card" style="margin-bottom:0">
+          <h3>Page visibility</h3>
+          <p class="lp-sub">Control who can find and open your page.</p>
+          <label class="field-label" for="lister-page-visibility">Visibility</label>
+          <select class="form-input" id="lister-page-visibility" style="min-height:44px" aria-describedby="lister-visibility-hint" onchange="updateListerVisibilityHint()">
+            <option value="public">Public — searchable</option>
+            <option value="unlisted">Unlisted — anyone with the link</option>
+            <option value="hidden">Hidden</option>
+          </select>
+          <div class="lp-hint" id="lister-visibility-hint"></div>
+          <button class="btn btn-primary lp-save" type="button" onclick="saveListerPageVisibility()">Save visibility</button>
         </div>
       </div>
-      <div class="card" style="padding:20px;margin-bottom:18px">
-        <h3 style="margin:0 0 10px">Share kit</h3>
-        <p style="font-size:13px;color:var(--text-3);margin-bottom:12px">Share the same page from your WhatsApp status, Instagram bio, Facebook page, TikTok profile or a printed QR code.</p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <div class="card lp-card">
+        <h3>Share kit</h3>
+        <p class="lp-sub">Share the same page from your WhatsApp status, Instagram bio, Facebook page, TikTok profile or a printed QR code.</p>
+        <div class="lp-share">
           <a class="btn btn-outline btn-sm" id="lister-qr-png" href="#" download="nyumba254-lister-page-qr.png">Download QR (PNG)</a>
           <a class="btn btn-outline btn-sm" id="lister-qr-svg" href="#" download="nyumba254-lister-page-qr.svg">Download QR (SVG)</a>
+          <button class="btn btn-outline btn-sm" type="button" onclick="copyListerCaption()">Copy caption</button>
         </div>
-        <p id="lister-share-caption" style="font-size:13px;background:var(--surface);padding:12px;border-radius:8px;margin-top:12px"></p>
+        <p id="lister-share-caption" class="lp-caption"></p>
       </div>
       <div class="card" id="lister-social-hub" style="padding:20px;margin-bottom:18px" hidden>
         <h3 style="margin:0 0 8px">Social links</h3>
