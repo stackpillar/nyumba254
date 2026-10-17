@@ -1,6 +1,5 @@
 /*
   Strict-Transport-Security: max-age=31536000
-  X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(self), payment=(), usb=()
   Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://pagead2.googlesyndication.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' https: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://nominatim.openstreetmap.org; frame-src 'self' https://www.youtube.com https://www.openstreetmap.org; object-src 'none'; base-uri 'self'; frame-ancestors 'self'
@@ -20,3 +19,54 @@
   Content-Type: application/vnd.android.package-archive
   Content-Disposition: attachment; filename="nyumba254.apk"
   Cache-Control: no-cache
+
+/about
+  Content-Type: text/html; charset=utf-8
+/accept-invite
+  Content-Type: text/html; charset=utf-8
+/admin-chat
+  Content-Type: text/html; charset=utf-8
+/contact
+  Content-Type: text/html; charset=utf-8
+/dashboard
+  Content-Type: text/html; charset=utf-8
+/faq
+  Content-Type: text/html; charset=utf-8
+/how-it-works
+  Content-Type: text/html; charset=utf-8
+/inbox
+  Content-Type: text/html; charset=utf-8
+/kyc
+  Content-Type: text/html; charset=utf-8
+/listing
+  Content-Type: text/html; charset=utf-8
+/listings
+  Content-Type: text/html; charset=utf-8
+/login
+  Content-Type: text/html; charset=utf-8
+/nk-ctrl-7f3k2x9
+  Content-Type: text/html; charset=utf-8
+/plans
+  Content-Type: text/html; charset=utf-8
+/post-listing
+  Content-Type: text/html; charset=utf-8
+/pricing
+  Content-Type: text/html; charset=utf-8
+/privacy
+  Content-Type: text/html; charset=utf-8
+/profile
+  Content-Type: text/html; charset=utf-8
+/reset-confirm
+  Content-Type: text/html; charset=utf-8
+/saved
+  Content-Type: text/html; charset=utf-8
+/sitevisit
+  Content-Type: text/html; charset=utf-8
+/storefront
+  Content-Type: text/html; charset=utf-8
+/terms
+  Content-Type: text/html; charset=utf-8
+/trust-and-safety
+  Content-Type: text/html; charset=utf-8
+/viewing-fee-policy
+  Content-Type: text/html; charset=utf-8
