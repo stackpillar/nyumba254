@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="theme-color" content="#0F6E56"/>
+  <meta name="robots" content="index,follow"/>
+  <title>Trust &amp; Safety — Nyumba254</title>
+  <meta name="description" content="How roles and verification work on Nyumba254, how to protect yourself from common property scams in Kenya, and how to report a problem."/>
+  <link rel="canonical" href="https://nyumba254.com/trust-and-safety"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/theme.css"/>
+  <link rel="stylesheet" href="/nk-shared.css"/>
+  <style>
+    body{min-height:100vh;background:var(--surface);color:var(--text);font:15px/1.65 Inter,system-ui,sans-serif}
+    .policy-nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px max(20px,calc((100vw - 1080px)/2));background:var(--white);border-bottom:1px solid var(--border)}
+    .policy-nav a{min-height:44px;display:inline-flex;align-items:center;color:var(--green-dark);font-weight:600}
+    .policy-main{max-width:900px;margin:0 auto;padding:42px 22px 72px}
+    .policy-main h1,.policy-main h2{font-family:'Playfair Display',Georgia,serif;color:var(--green-dark);line-height:1.2}
+    .policy-main h1{font-size:clamp(30px,5vw,44px);margin-bottom:12px}
+    .policy-main h2{font-size:23px;margin:28px 0 10px}
+    .policy-main p{margin:0 0 12px;color:var(--text-2)}
+    .policy-main ul{padding-left:0;list-style:none}
+    .policy-main li{padding:14px 16px;margin:10px 0;background:var(--white);border:1px solid var(--border);border-radius:12px;color:var(--text-2)}
+    .policy-main li strong{display:block;color:var(--text);margin-bottom:5px}
+    .policy-main a{color:var(--green-dark);font-weight:600}
+    .draft-note{padding:12px 16px;border:1px solid var(--border);border-left:4px solid var(--gold,#b7791f);border-radius:8px;background:var(--white);font-size:13px}
+    .policy-footer{border-top:1px solid var(--border);padding:22px;text-align:center;color:var(--text-3)}
+    .policy-footer a{color:var(--green-dark);font-weight:600}
+    @media(max-width:600px){.policy-main{padding:28px 16px 48px}.policy-main li{padding:13px}.policy-nav{padding-inline:16px}}
+  </style>
+  <script src="/theme.js" defer></script>
+  <meta property="og:type" content="website"/>
+  <meta property="og:site_name" content="Nyumba254"/>
+  <meta property="og:title" content="Trust &amp; Safety — Nyumba254"/>
+  <meta property="og:description" content="How roles and verification work, common property scams in Kenya, and how to report a problem."/>
+  <meta property="og:url" content="https://nyumba254.com/trust-and-safety"/>
+  <meta property="og:image" content="https://nyumba254.com/hero-photo.jpg"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+</head>
+<body>
+  <nav class="policy-nav" aria-label="Main navigation">
+    <a href="/" aria-label="Nyumba254 home">Nyumba254</a>
+    <div><a href="/listings">Browse listings</a><a href="/how-it-works" style="margin-left:16px">How it works</a></div>
+  </nav>
+  <main class="policy-main">
+    <h1>Trust &amp; Safety</h1>
+    <p>Nyumba254 is Kenya’s open platform to list, find and manage property. Every listing shows who listed it and what a viewing costs, before you get in touch.</p>
+    <p class="draft-note"><strong>Draft, needs legal review.</strong> This page explains our approach in plain language. It is not a legal agreement and may change.</p>
+
+    <h2>Roles and verification</h2>
+    <ul>
+      <li><strong>A role is a claim.</strong>Each account says whether it is an owner, caretaker, agent or company. This is self-declared when the account is created.</li>
+      <li><strong>Verification is proof.</strong>A role badge appears only after Nyumba254 has checked the supporting documents for that role. Listers without verification show “(not verified)”. An identity check confirms who the account holder is; it does not guarantee a property or a transaction.</li>
+      <li><strong>Social links are self-declared.</strong>Links a lister adds to their Lister Page are not verified by Nyumba254.</li>
+    </ul>
+
+    <h2>Viewing fees</h2>
+    <p>Where an agent or company charges for a viewing, the fee is shown on the listing before you make contact. You pay only that fee, at the property, to the person you meet, and you ask for a receipt. Read the full <a href="/viewing-fee-policy">Viewing Fee Policy</a>.</p>
+
+    <h2>Common scams in Kenya and what to do</h2>
+    <ul>
+      <li><strong>A “caretaker” asks for a deposit before you view.</strong>Never pay rent or a deposit before you have seen the property in person and met the person you are paying.</li>
+      <li><strong>“Booking” or “reservation” fees.</strong>The only fee a lister may ask for is the disclosed viewing fee, paid at the property. Other pre-contract charges are against our policy.</li>
+      <li><strong>M-Pesa “reversal” requests.</strong>If someone says they sent money by mistake and asks you to send it back, do not reply with money. Check your M-Pesa message and contact Safaricom.</li>
+      <li><strong>Photos copied from other listings.</strong>If photos look too good, or the lister cannot show you the actual unit, treat it as a warning sign.</li>
+      <li><strong>Urgency and pressure.</strong>“Many people are coming today” is a common push to pay fast. A genuine lister will let you view first.</li>
+      <li><strong>Payment requests through social media or direct messages.</strong>Pay viewing fees only at the property, never through direct messages.</li>
+    </ul>
+
+    <h2>How to report</h2>
+    <p>Use the report option on any listing or Lister Page, or <a href="/contact">contact us</a>. Include the listing, what was asked for, and any screenshots or receipts. Do not delete messages.</p>
+
+    <h2>What Nyumba254 will and will not do</h2>
+    <ul>
+      <li><strong>We will</strong>review reports, hide listings or social links that break the rules, and suspend accounts for serious or repeated breaches.</li>
+      <li><strong>We will not</strong>collect or hold viewing fees, rent or deposits, mediate payments or refunds, or take a commission from your agreement.</li>
+    </ul>
+  </main>
+  <footer class="policy-footer"><a href="/terms">Terms</a> · <a href="/faq">FAQ</a> · <a href="/viewing-fee-policy">Viewing Fee Policy</a> · <a href="/contact">Contact support</a></footer>
+</body>
+</html>

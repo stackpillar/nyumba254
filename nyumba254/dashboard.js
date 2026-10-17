@@ -1260,6 +1260,7 @@ function loadSubscriptionUI(){
   loadTeamSeats(sub);
   updateStorefrontBanner(sub);
   renderHandleNudge();
+  renderWelcomeCard();
   updateBnbStatusBanner();
 }
 
@@ -1270,6 +1271,40 @@ function renderHandleNudge(){
   let dismissed=false;
   try{dismissed=localStorage.getItem('nk_handle_nudge_dismissed')==='1'}catch(e){}
   card.style.display=LISTER_PAGE_FLAGS.pages&&profile&&!profile.handle&&!isTeamMember&&!dismissed?'block':'none';
+}
+function renderWelcomeCard(){
+  const card=document.getElementById('welcome-card');
+  if(!card)return;
+  const profile=ownerProfile||currentProfile;
+  let dismissed=false;
+  try{dismissed=localStorage.getItem('nk_welcome_dismissed')==='1'}catch(e){}
+  if(!profile||dismissed){card.style.display='none';return;}
+  const type=profile.account_type;
+  const labels={buyer:'Tenant / Buyer',owner:'Direct from owner',caretaker:'Caretaker',agent:'Agent',company:'Company'};
+  const can={
+    buyer:'save listings and searches, message listers and request viewings.',
+    owner:'list your properties, answer enquiries and manage your property from this dashboard.',
+    caretaker:'list the properties you look after, answer enquiries and manage them from this dashboard.',
+    agent:'list properties, answer enquiries, show a disclosed viewing fee on your listings and manage your work from this dashboard.',
+    company:'list properties, add team members, show a disclosed viewing fee and manage your company’s work from this dashboard.'
+  };
+  if(!labels[type]){
+    card.innerHTML=`<strong>Welcome to Nyumba254</strong><p style="font-size:13px;margin:6px 0 10px">Choose how you use Nyumba254 so your dashboard shows the right tools.</p><button class="btn btn-primary btn-sm" onclick="showPage('settings')">Choose your role</button> <button class="btn btn-outline btn-sm" onclick="dismissWelcomeCard()">Dismiss</button>`;
+    card.style.display='block';return;
+  }
+  const verified=profile.verified_role===type;
+  let step={text:'Post your first listing',href:'/post-listing'};
+  if(type==='buyer')step={text:'Browse listings',href:'/listings'};
+  else if(!verified)step={text:'Verify your role',onclick:"showPage('settings')"};
+  else if(LISTER_PAGE_FLAGS.pages&&!profile.handle&&!isTeamMember)step={text:'Claim your Lister Page link',onclick:"showPage('lister-page')"};
+  const action=step.href?`<a class="btn btn-primary btn-sm" href="${step.href}">${step.text}</a>`:`<button class="btn btn-primary btn-sm" onclick="${step.onclick}">${step.text}</button>`;
+  card.innerHTML=`<strong>You are signed in as: ${labels[type]}${verified?'':' (role not verified)'}</strong><p style="font-size:13px;margin:6px 0 10px">You can ${can[type]} A role is a claim; verification is proof. <a href="/trust-and-safety" target="_blank" rel="noopener">Trust &amp; Safety</a></p>${action} <button class="btn btn-outline btn-sm" onclick="dismissWelcomeCard()">Dismiss</button>`;
+  card.style.display='block';
+}
+function dismissWelcomeCard(){
+  try{localStorage.setItem('nk_welcome_dismissed','1')}catch(e){}
+  const card=document.getElementById('welcome-card');
+  if(card)card.style.display='none';
 }
 function dismissHandleNudge(){
   try{localStorage.setItem('nk_handle_nudge_dismissed','1')}catch(e){}

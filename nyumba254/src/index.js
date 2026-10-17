@@ -235,7 +235,7 @@ async function renderListerCard(request, env, handle) {
 }
 
 async function renderSitemapXml(origin, env) {
-  const staticPaths = ['/', '/plans', '/faq', '/how-it-works', '/terms', '/privacy', '/viewing-fee-policy', '/sitemap'];
+  const staticPaths = ['/', '/plans', '/faq', '/how-it-works', '/terms', '/privacy', '/viewing-fee-policy', '/trust-and-safety', '/sitemap'];
   const urls = staticPaths.map((path) => ({ loc: origin + path }));
   if (env.NYUMBA254_SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY) {
     try {

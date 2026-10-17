@@ -278,6 +278,7 @@ main{display:block}
       <div class="eyebrow on-dark">Our mission</div>
       <h2 class="section-title" id="mission-title">Connect people to homes across Kenya, with transparency for everyone</h2>
       <div class="section-body">
+        <p><strong>Nyumba254 is Kenya&rsquo;s open platform to list, find and manage property. Every listing shows who listed it and what a viewing costs, before you get in touch.</strong></p>
         <p>Finding or listing property in Kenya should be open to everyone involved: buyers, tenants, owners, caretakers, agents, and companies. People should be able to discover properties and understand the terms before making contact.</p>
         <p>Nyumba254 brings listings and enquiries together in one marketplace. There is no commission charged by Nyumba254 on a sale or rental agreement. Agents and companies may optionally disclose a viewing fee on a listing; any fee is agreed and paid directly to the lister, not collected by the platform.</p>
         <p>We believe the rental and property market in every corner of Kenya, not just the big cities, deserves a modern platform that lets people choose how they participate and connect with one another.</p>
@@ -325,12 +326,13 @@ main{display:block}
         </ol>
       </div>
       <div class="belief-card">
-        <h2>What we believe</h2>
+        <h2>Our five aims</h2>
         <ul class="belief-list">
-          <li class="belief"><span class="belief-tick" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span><div><h3>Everyone deserves fair housing access</h3><p>People should be free to choose how they find or offer a home, with clear information whatever role they work with.</p></div></li>
-          <li class="belief"><span class="belief-tick" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span><div><h3>Be honest about fees and roles</h3><p>We make roles clear and explain platform charges and viewing fees so people can decide with the facts.</p></div></li>
-          <li class="belief"><span class="belief-tick" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span><div><h3>Local relevance, everywhere</h3><p>A national platform still needs to understand each area's prices, neighbourhoods and needs. That care is what we bring to every county.</p></div></li>
-          <li class="belief"><span class="belief-tick" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span><div><h3>Transparency builds trust</h3><p>People can see the lister's role and any viewing fee on the listing before they make contact.</p></div></li>
+          <li class="belief"><span class="belief-tick" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span><div><h3>Transparency</h3><p>Every listing shows the lister&rsquo;s role and the viewing fee before you make contact.</p></div></li>
+          <li class="belief"><span class="belief-tick" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span><div><h3>Safety</h3><p>Verification per role, a strict Viewing Fee Policy and easy reporting.</p></div></li>
+          <li class="belief"><span class="belief-tick" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span><div><h3>Management for everyone</h3><p>Owners, caretakers, agents and companies run their property from one dashboard.</p></div></li>
+          <li class="belief"><span class="belief-tick" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span><div><h3>Access</h3><p>Works across all 47 counties, on any phone, and on low data.</p></div></li>
+          <li class="belief"><span class="belief-tick" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span><div><h3>Fairness</h3><p>Small listers and large companies get the same visibility rules, and no deal commission is taken from your agreement.</p></div></li>
         </ul>
       </div>
     </div>
@@ -471,7 +473,7 @@ main{display:block}
       </div>
       <div class="footer-col"><h2>Browse</h2><a href="/listings">All listings</a><a href="/listings?category=apartment">Apartment</a><a href="/listings?category=house">House</a><a href="/listings?category=boarding">Boarding House</a><a href="/listings?category=airbnb">Airbnb / Holiday Rental</a><a href="/listings?category=commercial">Shops &amp; offices</a></div>
       <div class="footer-col"><h2>Counties</h2><div class="footer-counties" id="footer-counties"><a href="/listings">All counties</a></div></div>
-      <div class="footer-col"><h2>Platform</h2><a href="/post-listing">List a property</a><a href="/how-it-works">How it works</a><a href="/viewing-fee-policy">Viewing Fee Policy</a><a href="/login">Sign in</a></div>
+      <div class="footer-col"><h2>Platform</h2><a href="/post-listing">List a property</a><a href="/how-it-works">How it works</a><a href="/viewing-fee-policy">Viewing Fee Policy</a><a href="/trust-and-safety">Trust &amp; Safety (draft)</a><a href="/login">Sign in</a></div>
       <div class="footer-col"><h2>Company</h2><a href="/about">About us</a><a href="/contact">Contact us</a><a href="/terms">Terms of service</a><a href="/privacy">Privacy policy</a><a href="/faq">FAQ</a></div>
     </div>
     <div class="footer-divider"></div>

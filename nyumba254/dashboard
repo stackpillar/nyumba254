@@ -234,6 +234,7 @@
         </div>
       </div>
       <div class="card" id="action-center-card" style="display:none;padding:16px 20px;margin-bottom:20px;border:1.5px solid var(--amber);background:var(--amber-light)"></div>
+      <div class="card" id="welcome-card" style="display:none;padding:16px 20px;margin-bottom:20px;border:1px solid var(--green);background:var(--green-light)" aria-live="polite"></div>
       <div class="stat-grid">
         <div class="stat-card" style="cursor:pointer" onclick="showPage('listings');filterListings('active')"><div class="stat-label">Active listings</div><div class="stat-val" id="stat-active">—</div><div class="stat-delta" id="stat-active-delta">of your total listings</div><div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div></div>
         <div class="stat-card gold" style="cursor:pointer" onclick="showAllMessages()"><div class="stat-label">Total enquiries</div><div class="stat-val" id="stat-enquiries">—</div><div class="stat-delta" id="stat-enquiries-delta">buyers reached out</div><div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div></div>
@@ -1658,6 +1659,7 @@
         <input class="scw-search-input" id="scw-help-search" placeholder="Search help articles…" oninput="scwRenderHelp(this.value)"/>
       </div>
       <div class="scw-faq-list" id="scw-faq-list"></div>
+      <p style="font-size:12.5px;margin:10px 14px"><a href="/trust-and-safety" target="_blank" rel="noopener">Trust &amp; Safety: roles, scams to avoid, how to report</a></p>
     </div>
   </div>
 
