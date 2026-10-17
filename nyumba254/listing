@@ -1035,9 +1035,9 @@ let replyText='';
 async function loadReplySpeed(){
   if(!P.seller_id)return;
   try{
-    const {data,error}=await db.from('enquiries').select('created_at,first_reply_at').eq('seller_id',P.seller_id).not('first_reply_at','is',null).order('created_at',{ascending:false}).limit(20);
-    if(error||!data||data.length<3)return;
-    const mins=data.map(e=>(new Date(e.first_reply_at)-new Date(e.created_at))/60000).filter(n=>n>0&&n<10080);
+    const {data,error}=await db.rpc('get_lister_reply_speed',{p_seller:P.seller_id});
+    if(error||!Array.isArray(data)||data.length<3)return;
+    const mins=data.map(Number).filter(n=>n>0&&n<10080);
     if(mins.length<3)return;
     const med=mins.sort((a,b)=>a-b)[Math.floor(mins.length/2)];
     replyText=med<60?`Typically replies within ${Math.round(med)} min`:med<1440?`Typically replies within ${Math.round(med/60)} hr`:`Typically replies within a day`;

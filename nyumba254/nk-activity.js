@@ -91,7 +91,7 @@
       '.nka-day{font-weight:700;font-size:12.5px;color:var(--text-2,#444);margin:16px 0 6px}' +
       '.nka-item{display:flex;gap:12px;padding:10px 12px;border:1px solid var(--border,#ddd);border-radius:12px;background:var(--white,#fff);margin-bottom:6px;align-items:flex-start}' +
       '.nka-ic{flex:none;width:34px;height:34px;border-radius:50%;background:var(--green-light,#E1F5EE);display:flex;align-items:center;justify-content:center;font-size:16px}' +
-      '.nka-main{flex:1;min-width:0}.nka-sum{font-size:13.5px;word-break:break-word}' +
+      '.nka-main{flex:1;min-width:0}.nka-sum{font-size:13.5px;word-break:break-word}.nka-msg{font-size:12.5px;margin:4px 0;padding:6px 10px;border-left:3px solid var(--border,#ccc);background:var(--surface,transparent);white-space:pre-wrap;word-break:break-word}' +
       '.nka-meta{font-size:11.5px;color:var(--text-3,#666);margin-top:2px}' +
       '.nka-tag{display:inline-block;font-size:10.5px;border:1px solid var(--border,#ccc);border-radius:6px;padding:0 5px;margin-left:6px;color:var(--text-3,#666)}' +
       '.nka-empty{padding:36px 12px;text-align:center;color:var(--text-3,#666);font-size:13px}' +
@@ -132,7 +132,7 @@
       (readOnly ? '' : '<button type="button" class="nka-btn p nka-dl">Download report</button>') + '</div></div>' +
       '<div class="nka-body" aria-live="polite"></div>' +
       '<div class="nka-more" style="text-align:center;margin:14px 0"></div>' +
-      '<p class="nka-note">Dates and times are East Africa Time. Rows marked “earlier record” were rebuilt from older account data. Message text, other people’s contact details, passwords and internal notes are never shown here.</p>';
+      '<p class="nka-note">Dates and times are East Africa Time. Rows marked “earlier record” were rebuilt from older account data. Your own message text is shown only to you and is included in your downloads; it is never shown to staff or teammates. Other people’s contact details, passwords and internal notes are never shown here.</p>';
 
     var chipsEl = el.querySelector('.nka-chips'), datesEl = el.querySelector('.nka-dates'),
       bodyEl = el.querySelector('.nka-body'), moreEl = el.querySelector('.nka-more');
@@ -173,7 +173,7 @@
           var d = fmtDay(r.created_at);
           if (d !== day) { day = d; out += '<div class="nka-day">' + esc(d) + '</div>'; }
           var c = catOf(r.category);
-          out += '<div class="nka-item"><div class="nka-ic" aria-hidden="true">' + c.icon + '</div><div class="nka-main"><div class="nka-sum">' + esc(r.summary) + '</div><div class="nka-meta">' + esc(c.label) + ' · ' + esc(fmtTime(r.created_at)) + (r.source === 'derived' ? '<span class="nka-tag">earlier record</span>' : '') + '</div></div></div>';
+          out += '<div class="nka-item"><div class="nka-ic" aria-hidden="true">' + c.icon + '</div><div class="nka-main"><div class="nka-sum">' + esc(r.summary) + '</div>' + (r.meta && r.meta.message_text ? '<div class="nka-msg">' + esc(r.meta.message_text) + '</div>' : '') + '<div class="nka-meta">' + esc(c.label) + ' · ' + esc(fmtTime(r.created_at)) + (r.source === 'derived' ? '<span class="nka-tag">earlier record</span>' : '') + '</div></div></div>';
         });
         bodyEl.innerHTML = out;
       }

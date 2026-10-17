@@ -264,6 +264,27 @@ function mountActivityPage(){
   activityMounted=true;
   const buyer=(ownerProfile||currentProfile)?.account_type==='buyer';
   window.NKActivity.mount(host,{db,role:buyer?'buyer':'lister',buyer});
+  if(isTeamMember)mountCompanyActivity();
+}
+async function mountCompanyActivity(){
+  const section=document.getElementById('company-activity-section');
+  const host=document.getElementById('company-activity-host');
+  if(!section||!host||!window.NKActivity)return;
+  try{
+    const{data,error}=await db.rpc('my_company_activity_access');
+    if(error||data!==true)return;
+    section.hidden=false;
+    window.NKActivity.mount(host,{db,role:'lister',source:{
+      page:p=>db.rpc('get_company_activity',{p_categories:p.categories,p_from:p.from,p_to:p.to,p_limit:p.limit||100,p_cursor:p.cursor}),
+      count:p=>db.rpc('count_company_activity',{p_categories:p.categories,p_from:p.from,p_to:p.to})
+    }});
+  }catch(e){console.warn('Company activity unavailable:',e);}
+}
+async function setTeamPermission(id,field,value){
+  if(!['can_view_activity','can_edit_social_links'].includes(field))return;
+  const{error}=await db.from('team_members').update({[field]:!!value}).eq('id',id).eq('owner_id',currentUser.id);
+  if(error){console.error('Could not update team permission:',error);showToast(error.message||'Could not update permission.','error');loadTeamSeats(subscriptionInfo());return;}
+  showToast('Team permission saved.','success');
 }
 async function init(){
   try{
@@ -1415,7 +1436,10 @@ async function loadListerPageHub(){
   if(socialHub&&window.NKSocial&&LISTER_PAGE_FLAGS.pages&&profile.account_type!=='buyer'&&!socialHub.dataset.mounted){
     socialHub.dataset.mounted='1';
     const socialHost=document.getElementById('lister-social-host');
-    NKSocial.mountEditor(socialHost,{db,toast:showToast}).then(ok=>{socialHub.hidden=!ok;}).catch(()=>{socialHub.hidden=true;});
+    let canEditSocial=true;
+    if(isTeamMember){try{const{data:ok}=await db.rpc('my_social_edit_access');canEditSocial=ok!==false;}catch(e){}}
+    if(!canEditSocial){socialHub.hidden=true;}
+    else NKSocial.mountEditor(socialHost,{db,toast:showToast}).then(ok=>{socialHub.hidden=!ok;}).catch(()=>{socialHub.hidden=true;});
   }
   if(LISTER_PAGE_FLAGS.quickAnswers)await loadListerQuickAnswers();
   if(LISTER_PAGE_FLAGS.availability)await loadListerAvailability();
@@ -1616,9 +1640,13 @@ async function loadTeamSeats(sub){
   const listEl=document.getElementById('team-members-list');
   if(error){listEl.innerHTML=`<div style="font-size:12px;color:var(--red)">Could not load team: ${escHtml(error.message)}</div>`;return;}
   listEl.innerHTML=members.length?members.map(m=>`
-    <div class="toggle-row">
+    <div class="toggle-row" style="flex-wrap:wrap">
       <div class="toggle-label"><strong>${escHtml(m.member_email)}</strong><span>${m.status==='active'?'Active — joined '+new Date(m.joined_at).toLocaleDateString('en-KE'):'Invited — awaiting sign-up'}</span></div>
       <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="removeTeamMember(${m.id})">Remove</button>
+      <div style="flex-basis:100%;display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:12.5px">
+        <label style="display:flex;gap:6px;align-items:center;min-height:32px"><input type="checkbox" ${m.can_view_activity?'checked':''} onchange="setTeamPermission(${m.id},'can_view_activity',this.checked)"/> Can view company activity</label>
+        <label style="display:flex;gap:6px;align-items:center;min-height:32px"><input type="checkbox" ${m.can_edit_social_links!==false?'checked':''} onchange="setTeamPermission(${m.id},'can_edit_social_links',this.checked)"/> Can edit social links</label>
+      </div>
     </div>`).join(''):'<div style="font-size:12.5px;color:var(--text-3)">No teammates invited yet.</div>';
 }
 

@@ -736,6 +736,11 @@
       <div class="section-head"><h2>Activity</h2></div>
       <p style="font-size:13px;color:var(--text-2);margin-bottom:12px">A categorised history of what happened on your account. Download it as a report you can keep or print.</p>
       <div id="activity-host"><div style="text-align:center;padding:40px;color:var(--text-3);font-size:13px">Loading…</div></div>
+      <div id="company-activity-section" hidden style="margin-top:28px">
+        <div class="section-head"><h2>Company activity</h2></div>
+        <p style="font-size:13px;color:var(--text-2);margin-bottom:12px">Shared by the account owner: listings, viewings, enquiries and team changes. Payments, sign-in details and message text are not included.</p>
+        <div id="company-activity-host"></div>
+      </div>
     </div>
 
     <!-- SETTINGS -->
