@@ -125,18 +125,19 @@
     inbox: '<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>',
     money: '<rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="12" cy="12" r="3"/>',
     more: '<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>',
+    cal: '<rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
   };
   const TABS = [
     { id: 'home', label: 'Home', icon: ICON.home, go: () => showPage('overview') },
     { id: 'listings', label: 'Listings', icon: ICON.list, go: () => showPage('listings') },
     { id: 'inbox', label: 'Inbox', icon: ICON.inbox, go: () => showAllMessages() },
-    { id: 'money', label: 'Money', icon: ICON.money, go: () => showPage('payments') },
+    { id: 'viewings', label: 'Viewings', icon: ICON.cal, go: () => showPage('viewings') },
     { id: 'more', label: 'More', icon: ICON.more, go: () => toggleSidebar() },
   ];
   const PAGE_TO_TAB = {
     overview: 'home', listings: 'listings',
     messages: 'inbox', enquiries: 'inbox', reviews: 'inbox',
-    payments: 'money', 'rent-ledger': 'money', 'demand-heatmap': 'money',
+    viewings: 'viewings',
   };
 
   function buildTabBar() {
@@ -661,6 +662,15 @@
   const _updateNavBadges = window.updateNavBadges;
   window.updateNavBadges = function () { const r = _updateNavBadges.apply(this, arguments); safe(() => syncTabBar()); return r; };
 
+   /* Payments page: transaction history only (no "Total collected / Pending / Avg" cards) */
+  const _renderPayments = window.renderPayments;
+  window.renderPayments = function () {
+    const r = _renderPayments.apply(this, arguments);
+    const s = $('payment-summary');
+    if (s) { s.innerHTML = ''; s.style.display = 'none'; }
+    return r;
+  };
+  
   /* ── boot: wait until the dashboard has finished loading ── */
   buildTabBar();
   safe(setupInboxChrome);
