@@ -6527,7 +6527,7 @@ function lcCardHtml(l,showHint){
 
   let btns='';
   btns+=B('preview','Details','<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>');
-  const canEdit=(lcIsLive(l)||l.status==='paused'||l.status==='occupied')&&!l.is_disabled;
+  const canEdit=lcCanEdit(l);
   btns+=canEdit
     ? B('edit','Edit','<path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>')
     : `<button type="button" class="lc-btn lc-btn-locked" disabled title="Editing unlocks once this listing is live or paused" aria-label="Editing locked until this listing is live or paused"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><span class="lc-btn-label">Edit</span></button>`;
@@ -10995,5 +10995,134 @@ init();
       if (document.getElementById('page-payments')?.classList.contains('active')) renderPayments();
     } catch (e) { console.error(e); }
     return r;
+  };
+})();
+
+
+/* ===== Rejected listings: edit, check readiness, resubmit ===== */
+function lcCanEdit(l){
+  return !l.is_disabled && !l.recycle_bin &&
+    (lcIsLive(l) || l.status === 'paused' || l.status === 'occupied' || l.status === 'rejected');
+}
+
+(function () {
+  if (window.__nyResubmit) return;
+  window.__nyResubmit = true;
+
+  const MIN_READINESS = 80;
+  const MIN_PHOTOS = 3;
+
+  function fingerprint(l) {
+    const d = l.details || {};
+    return JSON.stringify([
+      l.title, l.description, l.address,
+      (l.amenities || []).slice().sort(),
+      (l.listing_photos || []).map(p => String(p.id)).sort(),
+      d.bedrooms, d.bathrooms, d.size_sqm, d.furnished
+    ]);
+  }
+
+  function wasEdited(l) {
+    const key = 'ny_rej_fp_' + l.id;
+    const now = fingerprint(l);
+    try {
+      const base = localStorage.getItem(key);
+      if (base === null) { localStorage.setItem(key, now); return false; }
+      return base !== now;
+    } catch (e) { return true; }
+  }
+
+  function readiness(l) {
+    const photos = lcPhotoCount(l);
+    const words = (l.description || '').trim().split(/\s+/).filter(Boolean).length;
+    const am = (l.amenities || []).length;
+    const pPts = photos >= 6 ? 30 : photos >= 3 ? 19 : photos * 5;
+    const dPts = words >= 80 ? 25 : words >= 35 ? 15 : (words ? 6 : 0);
+    const aPts = am >= 5 ? 15 : am >= 2 ? 9 : 0;
+    const pct = Math.round((pPts + dPts + aPts) / 70 * 100);
+
+    const missing = [];
+    const d = l.details || {};
+    if (!(l.title || '').trim()) missing.push('title');
+    if (!(Number(l.price) > 0)) missing.push('price');
+    if (!l.area) missing.push('area');
+    if (!l.category) missing.push('category');
+    if (!(l.address || '').trim()) missing.push('address');
+    if (!(l.description || '').trim()) missing.push('description');
+    if (photos < MIN_PHOTOS) missing.push(`at least ${MIN_PHOTOS} photos (you have ${photos})`);
+    if (!lcHasUnits(l) && ['apartment', 'house'].includes(l.category) &&
+        (d.bedrooms === undefined || d.bedrooms === null || d.bedrooms === '')) missing.push('bedrooms');
+    if (pct < MIN_READINESS) {
+      const tips = [];
+      if (photos < 6) tips.push('more photos (6+ is best)');
+      if (words < 80) tips.push(`a longer description (${words}/80 words)`);
+      if (am < 5) tips.push(`more amenities (${am}/5)`);
+      missing.push('improve: ' + tips.join(', '));
+    }
+    const edited = wasEdited(l);
+    return { pct, missing, edited, ok: edited && !missing.length };
+  }
+
+  // Alert chip on the listing card
+  const _buildAlerts = window.lcBuildAlerts;
+  window.lcBuildAlerts = function (l) {
+    const a = _buildAlerts.apply(this, arguments);
+    if (l.status === 'rejected' && !l.is_disabled && !l.recycle_bin) {
+      const r = readiness(l);
+      const reason = l.rejection_reason || l.rejected_reason || l.reject_reason || l.admin_note || '';
+      const todo = !r.edited ? 'Edit the listing to fix the issues, then resubmit.'
+        : r.missing.length ? 'Still needed: ' + escHtml(r.missing.join('; ')) + '.'
+        : 'Ready to resubmit ✓';
+      a.unshift({
+        sev: r.ok ? 1 : 0,
+        html: `🚫 Rejected${reason ? ': ' + escHtml(reason) : ''}. Readiness <strong>${r.pct}%</strong> (need ${MIN_READINESS}%). ${todo} ` +
+          `<button type="button" class="lc-alert-link" data-act="edit" data-id="${l.id}">Edit</button> ` +
+          `<button type="button" class="lc-alert-link" data-act="resubmit" data-id="${l.id}" style="${r.ok ? '' : 'opacity:.55'}">Resubmit →</button>`
+      });
+    }
+    return a;
+  };
+
+  // Route the new "resubmit" action
+  const _lcAction = window.lcAction;
+  window.lcAction = function (act, id, el) {
+    if (act === 'resubmit') { window.resubmitRejectedListing(id); return; }
+    return _lcAction.apply(this, arguments);
+  };
+
+  window.resubmitRejectedListing = async function (id) {
+    if (listingActionBusy.has(id)) return;
+    const l = allListings.find(x => String(x.id) === String(id));
+    if (!l || l.status !== 'rejected') return;
+    const r = readiness(l);
+    if (!r.edited) {
+      showToast('Edit your listing first — it can only be resubmitted after changes.', 'error');
+      openEditModal(id); return;
+    }
+    if (r.missing.length) {
+      showToast('Not ready yet: ' + r.missing.join('; '), 'error');
+      openEditModal(id); return;
+    }
+    if (!await lcConfirm({
+      title: 'Resubmit for review?',
+      message: `<strong>${escHtml(l.title)}</strong> scored <strong>${r.pct}%</strong> and will be sent back to our team for approval.`,
+      confirmLabel: 'Resubmit'
+    })) return;
+
+    listingActionBusy.add(id);
+    try {
+      const { data, error } = await db.from('listings').update({ status: 'pending' })
+        .eq('seller_id', effectiveSellerId).eq('id', id).eq('status', 'rejected').select('id');
+      if (error) { showToast('Could not resubmit: ' + error.message, 'error'); return; }
+      if (!data?.length) { showToast('This listing changed elsewhere. Refresh and try again.', 'error'); return; }
+      l.status = 'pending';
+      try { localStorage.removeItem('ny_rej_fp_' + id); } catch (e) {}
+      renderListingsTable(); renderOverview();
+      showToast('Resubmitted for review ✓', 'success');
+      notifyAdmin('listing_pending', {
+        listingId: id, listingTitle: l.title,
+        sellerName: currentProfile?.full_name || currentUser?.email, sellerEmail: currentUser?.email
+      });
+    } finally { listingActionBusy.delete(id); }
   };
 })();
