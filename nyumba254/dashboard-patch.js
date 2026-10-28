@@ -685,8 +685,8 @@
   window.addEventListener('focus', () => safe(() => { if (leadsReady) loadViewings().then(renderToday); }));
 })();
 
-/* ═══════════════════════════════════════════════════════════════
-   Nyumba254 dashboard — patch-money.js
+/* ===============================================================
+   Nyumba254 dashboard - patch-money.js
    Load AFTER /patch.js:
      <script src="/patch.js"></script>
      <script src="/patch-money.js"></script>
@@ -694,23 +694,23 @@
    1. Removes "total money collected" from Overview and Payments
    2. Makes Payments a "Transactions" history (no totals/summary cards)
    3. Overview weekly momentum shows enquiries only (no KES figures)
-   4. Mobile bottom bar: "Money" tab → "Viewings" tab (with badge)
+   4. Mobile bottom bar: "Money" tab to "Viewings" tab (with badge)
 
    Rollback: remove this script tag. Nothing else depends on it.
-═══════════════════════════════════════════════════════════════ */
+=============================================================== */
 (function () {
   'use strict';
   if (window.__nyMoneyPatch) return;
   if (!document.getElementById('app-shell') || !document.getElementById('page-overview')) return;
   window.__nyMoneyPatch = true;
 
-  /* ── Settings ── */
+  /* -- Settings -- */
   const HIDE_LEDGER_MONEY = false; // true = also hide "Collected / Rent roll" cards in Rent & BNB ledgers
 
   const $ = (id) => document.getElementById(id);
   const safe = (fn) => { try { return fn(); } catch (e) { console.error('[patch-money.js]', e); } };
 
-  /* ── CSS ── */
+  /* -- CSS -- */
   const css = document.createElement('style');
   css.id = 'ny-money-css';
   css.textContent = `
@@ -735,10 +735,10 @@
     if (!thisWk && !prevWk) { card.style.display = 'none'; return; }
     const diff = thisWk - prevWk;
     card.style.display = 'block';
-    card.innerHTML = `<div style="font-size:13px;color:var(--green-dark);font-weight:600">📈 This week: <strong style="color:${diff >= 0 ? '#065f46' : 'var(--red)'}">${diff >= 0 ? '↑' : '↓'} ${Math.abs(diff)} ${Math.abs(diff) === 1 ? 'enquiry' : 'enquiries'}</strong> vs last week</div>`;
+    card.innerHTML = `<div style="font-size:13px;color:var(--green-dark);font-weight:600">\uD83D\uDCC8 This week: <strong style="color:${diff >= 0 ? '#065f46' : 'var(--red)'}">${diff >= 0 ? '\u2191' : '\u2193'} ${Math.abs(diff)} ${Math.abs(diff) === 1 ? 'enquiry' : 'enquiries'}</strong> vs last week</div>`;
   };
 
-  /* 2. Payments → "Transactions" (history only) */
+  /* 2. Payments to "Transactions" (history only) */
   function renameTransactions() {
     if (typeof pageTitles !== 'undefined') pageTitles.payments = 'Transactions';
     const nav = $('nav-payments');
@@ -758,7 +758,7 @@
     });
   }
 
-  /* 3. Mobile tab bar: Money → Viewings */
+  /* 3. Mobile tab bar: Money to Viewings */
   const CAL = '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>';
 
   function swapTab() {
