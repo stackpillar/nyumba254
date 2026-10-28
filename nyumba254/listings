@@ -523,6 +523,59 @@
     }
     @media (max-width: 480px) { .footer-top { grid-template-columns: 1fr; } }
     @media (max-width: 1024px) and (min-width: 769px) { .footer-top { grid-template-columns: 2fr 1fr 1fr; } .footer-top > :nth-child(n+4) { display: none; } }
+  .card-img{aspect-ratio:3/2}
+
+    .skeleton-img{aspect-ratio:3/2}
+
+    .card-body{padding:12px 14px 12px}
+
+    .card-area{margin-bottom:4px}
+
+    .card-title{font-size:15px;line-height:1.3;margin-bottom:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+
+    .card-sub{font-size:12.5px;margin-bottom:6px}
+
+    .card-price{font-size:18px;line-height:1.25;margin-bottom:6px}
+
+    .card-trust{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-bottom:8px;font-size:12px;line-height:1.35}
+
+    .card-role{color:var(--text-2);font-weight:500}
+
+    .card-viewing-fee{display:inline-block;max-width:100%;font-size:11.5px;font-weight:700;line-height:1.35;padding:2px 9px;border-radius:20px;background:var(--surface);border:1px solid var(--border);color:var(--text-2)}
+
+    .card-viewing-fee.free{background:var(--green-light);border-color:#9FE1CB;color:var(--green-dark)}
+
+    .card-specs-chips{gap:5px;margin-bottom:8px}
+
+    .card-spec-chip{padding:3px 8px;font-size:11.5px}
+
+    .card-meta{margin-bottom:8px}
+
+    .card-roomtypes{margin-bottom:8px}
+
+    .card-amenities{flex-wrap:nowrap;overflow:hidden;gap:5px;margin-bottom:10px;padding-top:8px}
+
+    .card-amenity-chip{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px 8px}
+
+    .card-amenity-chip.more{flex:none}
+
+    .card-foot{gap:6px;padding-top:2px}
+
+    .nk-compare-check,.card-inquire-btn,.card-wa-btn,.card-msg-btn{min-height:38px}
+
+    .nk-compare-check{padding:0 9px;font-size:12px}
+
+    .card-msg-btn{width:42px}
+
+    @media (max-width:768px){
+
+      .nk-compare-check,.card-inquire-btn,.card-wa-btn,.card-msg-btn{min-height:44px}
+
+      .card-msg-btn{width:46px}
+
+      .card-body{padding:12px 14px 14px}
+
+    }
   </style>
   <link rel="stylesheet" href="/theme.css"/>
   <script src="/theme.js"></script>
@@ -1282,11 +1335,12 @@ function boardingHtml(l, d) {
   return `<div class="card-meta">${items.join('')}</div>${rooms}`;
 }
 function amenitiesHtml(l) {
-  const list = Array.isArray(l.amenities) ? l.amenities : [];
+  const rawAm = Array.isArray(l.amenities) ? l.amenities : [], want = S.amen || [];
+  const list = [...rawAm.filter(k => want.includes(k)), ...rawAm.filter(k => !want.includes(k))];
   const labels = list.map(k => (NK_AMENITIES.find(a => a.key === k) || {}).label).filter(Boolean);
   if (!labels.length) return '';
-  const extra = labels.length - 3;
-  return `<div class="card-amenities">${labels.slice(0, 3).map(x => `<span class="card-amenity-chip">${escHtml(x)}</span>`).join('')}${extra > 0 ? `<span class="card-amenity-chip more">+${extra} more</span>` : ''}</div>`;
+  const extra = labels.length - 2;
+  return `<div class="card-amenities">${labels.slice(0, 2).map(x => `<span class="card-amenity-chip">${escHtml(x)}</span>`).join('')}${extra > 0 ? `<span class="card-amenity-chip more">+${extra} more</span>` : ''}</div>`;
 }
 function ctaHtml(l) {
   if (l.status === 'occupied') return `<button type="button" class="card-inquire-btn" disabled>${IC.msg}<span>No longer available</span></button>`;
@@ -1309,7 +1363,7 @@ function cardHtml(l, i) {
   const isNew = l.created_at && (Date.now() - new Date(l.created_at).getTime()) < 3 * 864e5;
   const saver = document.body.classList.contains('nk-datasaver');
   const img = current
-    ? `<img id="img-${id}" src="${escHtml(nkImgSrc(current.url, 520))}" alt="${title}" width="360" height="270" ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async"/>`
+    ? `<img id="img-${id}" src="${escHtml(nkImgSrc(current.url, 520))}" alt="${title}" width="360" height="240" ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async"/>`
     : `<div class="card-img-placeholder" id="img-${id}">${IC.img}<span>No photo yet</span></div>`;
   const top = occupied ? `<span class="badge-occ">${l.price_frequency === 'once' ? 'Sold' : 'Occupied'}</span>`
     : l.is_featured ? '<span class="badge-featured">Featured</span>' : isNew ? '<span class="badge-new">New</span>' : '';
@@ -1340,9 +1394,9 @@ function cardHtml(l, i) {
       <div class="card-area">${escHtml(l.area)} ${nkBuildVerifiedBadge(l)}</div>
       <h3 class="card-title"><a class="card-link" href="${listingHref(l)}">${title}</a></h3>
       <div class="card-sub">${escHtml(sub)}</div>
-      <div class="card-role" title="Role claims are self-declared. Identity checks do not verify property ownership or authority to list.">${escHtml(roleText)}</div>
-      <div class="card-viewing-fee">${viewingFee===null?'Viewing fee: confirm with the lister':viewingFee>0?`Viewing fee: KES ${viewingFee.toLocaleString('en-KE')}`:'Free viewing'}</div>
+      
       <div class="card-price">${formatPrice(l, { showFromPrefix: true })}</div>
+      <div class="card-trust" title="Role claims are self-declared. Identity checks do not verify property ownership or authority to list."><span class="card-role">${escHtml(roleText)}</span><span class="card-viewing-fee${viewingFee===0?' free':''}">${viewingFee===null?'Viewing fee: confirm with the lister':viewingFee>0?'Viewing fee: KES '+viewingFee.toLocaleString('en-KE'):'Free viewing'}</span></div>
       ${middle}${amenitiesHtml(l)}
       <div class="card-foot">
         ${occupied ? '' : `<label class="nk-compare-check" for="cmp-${id}"><input type="checkbox" id="cmp-${id}" data-compare="${id}" ${compare.has(l.id) ? 'checked' : ''}/><span>Compare</span></label>`}
