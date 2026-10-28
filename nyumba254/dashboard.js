@@ -10740,3 +10740,145 @@ function settingsJumpTo(id){
 settingsApplyTab('profile','settings-profile-anchor');
 window.addEventListener('popstate',()=>{const n=location.hash.slice(1);if(n&&document.getElementById('page-'+n)){window.__navFromHash=true;showPage(n);window.__navFromHash=false;}});
 init();
+
+/* ===============================================================
+   Nyumba254 dashboard - patch-money.js
+   Load AFTER /patch.js:
+     <script src="/patch.js"></script>
+     <script src="/patch-money.js"></script>
+
+   1. Removes "total money collected" from Overview and Payments
+   2. Makes Payments a "Transactions" history (no totals/summary cards)
+   3. Overview weekly momentum shows enquiries only (no KES figures)
+   4. Mobile bottom bar: "Money" tab to "Viewings" tab (with badge)
+
+   Rollback: remove this script tag. Nothing else depends on it.
+=============================================================== */
+(function () {
+  'use strict';
+  if (window.__nyMoneyPatch) return;
+  if (!document.getElementById('app-shell') || !document.getElementById('page-overview')) return;
+  window.__nyMoneyPatch = true;
+
+  /* -- Settings -- */
+  const HIDE_LEDGER_MONEY = false; // true = also hide "Collected / Rent roll" cards in Rent & BNB ledgers
+
+  const $ = (id) => document.getElementById(id);
+  const safe = (fn) => { try { return fn(); } catch (e) { console.error('[patch-money.js]', e); } };
+
+  /* -- CSS -- */
+  const css = document.createElement('style');
+  css.id = 'ny-money-css';
+  css.textContent = `
+    #payment-summary{display:none !important}
+    #stat-paid{display:none}
+  `;
+  document.head.appendChild(css);
+
+  /* 1. Overview: remove the "total money" stat card */
+  function hideMoneyStat() {
+    const card = $('stat-paid') && $('stat-paid').closest('.stat-card');
+    if (card) card.style.display = 'none';
+  }
+
+  /* Weekly momentum: enquiries only, no KES collected */
+  window.renderWeekMomentum = function () {
+    const card = $('week-momentum-card');
+    if (!card) return;
+    const now = Date.now(), d7 = 7 * 864e5;
+    const thisWk = allEnquiries.filter((e) => now - new Date(e.created_at) < d7).length;
+    const prevWk = allEnquiries.filter((e) => { const a = now - new Date(e.created_at); return a >= d7 && a < 2 * d7; }).length;
+    if (!thisWk && !prevWk) { card.style.display = 'none'; return; }
+    const diff = thisWk - prevWk;
+    card.style.display = 'block';
+    card.innerHTML = `<div style="font-size:13px;color:var(--green-dark);font-weight:600">\uD83D\uDCC8 This week: <strong style="color:${diff >= 0 ? '#065f46' : 'var(--red)'}">${diff >= 0 ? '\u2191' : '\u2193'} ${Math.abs(diff)} ${Math.abs(diff) === 1 ? 'enquiry' : 'enquiries'}</strong> vs last week</div>`;
+  };
+
+  /* 2. Payments to "Transactions" (history only) */
+  function renameTransactions() {
+    if (typeof pageTitles !== 'undefined') pageTitles.payments = 'Transactions';
+    const nav = $('nav-payments');
+    if (nav) nav.childNodes.forEach((n) => { if (n.nodeType === 3 && n.textContent.trim() === 'Payments') n.textContent = ' Transactions'; });
+    const page = document.querySelector('.page.active');
+    if (page && page.id === 'page-payments') $('topbar-title').textContent = 'Transactions';
+  }
+
+  /* Optional: hide collected/rent-roll figures in the ledgers */
+  function hideLedgerMoney() {
+    if (!HIDE_LEDGER_MONEY) return;
+    ['rl-summary-grid', 'bnb-summary-grid'].forEach((id) => {
+      document.querySelectorAll('#' + id + ' .rl-stat').forEach((s) => {
+        const label = (s.querySelector('.rl-label') || {}).textContent || '';
+        if (/collected|rent roll|revenue/i.test(label)) s.style.display = 'none';
+      });
+    });
+  }
+
+  /* 3. Mobile tab bar: Money to Viewings */
+  const CAL = '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>';
+
+  function swapTab() {
+    const old = document.querySelector('.nyb-tab[data-tab="money"]');
+    if (!old) return;
+    const btn = old.cloneNode(false);
+    btn.dataset.tab = 'viewings';
+    btn.setAttribute('aria-label', 'Viewings');
+    btn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${CAL}</svg><span>Viewings</span><span class="nyb-badge" id="nyb-badge-viewings"></span>`;
+    old.replaceWith(btn);
+    btn.addEventListener('click', () => showPage('viewings'));
+  }
+
+  function syncViewingsBadge() {
+    const src = $('nav-badge-viewings'), bd = $('nyb-badge-viewings');
+    if (!bd) return;
+    const n = parseInt((src && src.textContent) || '0', 10) || 0;
+    bd.textContent = n > 99 ? '99+' : n;
+    bd.classList.toggle('show', n > 0);
+  }
+
+  function syncTabActive() {
+    const pageEl = document.querySelector('.page.active');
+    const page = pageEl ? pageEl.id.replace('page-', '') : 'overview';
+    const tabs = document.querySelectorAll('.nyb-tab');
+    if (page === 'viewings') {
+      tabs.forEach((b) => b.classList.toggle('active', b.dataset.tab === 'viewings'));
+    } else if (['payments', 'rent-ledger', 'demand-heatmap'].includes(page)) {
+      tabs.forEach((b) => b.classList.toggle('active', b.dataset.tab === 'more'));
+    }
+    syncViewingsBadge();
+  }
+
+  /* Wiring */
+  const _showPage = window.showPage;
+  window.showPage = function () {
+    const r = _showPage.apply(this, arguments);
+    safe(syncTabActive); safe(renameTransactions);
+    return r;
+  };
+  const _updateNavBadges = window.updateNavBadges;
+  window.updateNavBadges = function () {
+    const r = _updateNavBadges.apply(this, arguments);
+    safe(syncTabActive);
+    return r;
+  };
+  const _renderOverview = window.renderOverview;
+  window.renderOverview = function () {
+    const r = _renderOverview.apply(this, arguments);
+    safe(hideMoneyStat);
+    return r;
+  };
+  ['renderRentLedgerSummary', 'renderBnbSummary'].forEach((fn) => {
+    const orig = window[fn];
+    if (typeof orig !== 'function') return;
+    window[fn] = function () { const r = orig.apply(this, arguments); safe(hideLedgerMoney); return r; };
+  });
+
+  const vb = $('nav-badge-viewings');
+  if (vb) new MutationObserver(() => safe(syncViewingsBadge)).observe(vb, { childList: true, characterData: true, subtree: true, attributes: true });
+
+  safe(swapTab);
+  safe(hideMoneyStat);
+  safe(renameTransactions);
+  safe(syncTabActive);
+  safe(() => window.renderWeekMomentum());
+})();
