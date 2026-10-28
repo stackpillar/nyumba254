@@ -11624,3 +11624,131 @@ function lcCanEdit(l){
     return r;
   };
 })();
+
+/* ===== Social links: show 1 sample + "Add social" picker ===== */
+(function () {
+  if (window.__nySocialAdd) return;
+  window.__nySocialAdd = true;
+
+  const host = document.getElementById('lister-social-host');
+  if (!host) return;
+
+  const css = document.createElement('style');
+  css.textContent = `
+    .nysoc-hidden{display:none!important}
+    .nysoc-addwrap{position:relative;margin-top:14px}
+    .nysoc-menu{display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:50;min-width:240px;max-height:300px;overflow-y:auto;
+      background:var(--white);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);padding:6px}
+    .nysoc-menu.open{display:block}
+    .nysoc-item{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;background:none;
+      color:var(--text);font:inherit;font-size:13.5px;font-weight:600;border-radius:8px;cursor:pointer;text-align:left;min-height:44px}
+    .nysoc-item:hover{background:var(--surface)}
+    .nysoc-item svg{width:18px;height:18px;flex-shrink:0}
+    .nysoc-empty{padding:10px 12px;font-size:12.5px;color:var(--text-3)}
+    .nysoc-remove{margin-left:8px;background:none;border:1px solid var(--border);color:var(--red);border-radius:8px;
+      padding:0 10px;min-height:36px;font-size:12px;font-weight:600;cursor:pointer}
+  `;
+  document.head.appendChild(css);
+
+  const revealed = new Set();   // platforms the user chose to add this session
+  let rows = [];                // [{name, el, input, icon}]
+  let addWrap = null, menu = null, busy = false;
+
+  const inputsIn = (el) => el.querySelectorAll('input[type="text"],input[type="url"],input:not([type])').length;
+
+  function findRows() {
+    const out = [];
+    host.querySelectorAll('input[type="text"],input[type="url"],input:not([type])').forEach((input) => {
+      let el = input;
+      while (el.parentElement && el.parentElement !== host && inputsIn(el.parentElement) === 1) el = el.parentElement;
+      if (el === input) return;
+      const clone = el.cloneNode(true);
+      clone.querySelectorAll('input,button,select,textarea,svg').forEach((n) => n.remove());
+      const name = (clone.textContent || '').replace(/\s+/g, ' ').replace(/Show/i, '').trim().split(' ')[0] || 'Link';
+      out.push({ name, el, input, icon: el.querySelector('svg') });
+    });
+    return out;
+  }
+
+  function hasValue(r) { return r.input.value.trim() !== ''; }
+
+  function apply() {
+    if (busy) return;
+    busy = true;
+    mo.disconnect();
+    try {
+      rows = findRows();
+      if (!rows.length) return;
+
+      rows.forEach((r, i) => {
+        const show = i === 0 || hasValue(r) || revealed.has(r.name);
+        r.el.classList.toggle('nysoc-hidden', !show);
+        if (show && i !== 0 && !r.el.querySelector('.nysoc-remove')) {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'nysoc-remove';
+          b.textContent = 'Remove';
+          b.addEventListener('click', () => {
+            r.input.value = '';
+            r.input.dispatchEvent(new Event('input', { bubbles: true }));
+            r.input.dispatchEvent(new Event('change', { bubbles: true }));
+            revealed.delete(r.name);
+            apply();
+          });
+          r.el.appendChild(b);
+        }
+      });
+
+      if (!addWrap || !host.contains(addWrap)) {
+        addWrap = document.createElement('div');
+        addWrap.className = 'nysoc-addwrap';
+        addWrap.innerHTML = '<button type="button" class="btn btn-outline btn-sm" style="min-height:44px">+ Add social link</button><div class="nysoc-menu" role="menu"></div>';
+        menu = addWrap.querySelector('.nysoc-menu');
+        addWrap.querySelector('button').addEventListener('click', (e) => {
+          e.stopPropagation();
+          menu.classList.toggle('open');
+        });
+        const last = rows[rows.length - 1].el;
+        last.parentNode.insertBefore(addWrap, last.nextSibling);
+      }
+
+      const hidden = rows.filter((r, i) => i !== 0 && r.el.classList.contains('nysoc-hidden'));
+      menu.innerHTML = '';
+      if (!hidden.length) {
+        menu.innerHTML = '<div class="nysoc-empty">All platforms added</div>';
+      } else {
+        hidden.forEach((r) => {
+          const item = document.createElement('button');
+          item.type = 'button';
+          item.className = 'nysoc-item';
+          item.setAttribute('role', 'menuitem');
+          if (r.icon) item.appendChild(r.icon.cloneNode(true));
+          item.appendChild(document.createTextNode(r.name));
+          item.addEventListener('click', () => {
+            revealed.add(r.name);
+            menu.classList.remove('open');
+            apply();
+            r.input.focus();
+            r.el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          });
+          menu.appendChild(item);
+        });
+      }
+    } catch (e) {
+      console.error('[social-add]', e);
+    } finally {
+      busy = false;
+      mo.observe(host, { childList: true, subtree: true });
+    }
+  }
+
+  let t;
+  const mo = new MutationObserver(() => { clearTimeout(t); t = setTimeout(apply, 60); });
+  mo.observe(host, { childList: true, subtree: true });
+
+  document.addEventListener('click', (e) => {
+    if (menu && !addWrap.contains(e.target)) menu.classList.remove('open');
+  });
+
+  apply();
+})();
