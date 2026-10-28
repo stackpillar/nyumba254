@@ -393,6 +393,13 @@
     @media (max-width:768px){.hero{padding:22px 16px 26px}.section{padding:28px 16px}#categories.section{padding:14px 16px 4px}#featured-section,#latest-section{padding-top:20px}.categories .cat-card{flex:0 0 auto;max-width:none}}
     @media (max-width:560px){.hero-sub{display:none}.sb-more{display:block;width:100%;font-size:13px;font-weight:600;color:var(--green-dark);background:var(--green-light);border-radius:8px;min-height:40px}.search-box:not(.open) .sb-filters{display:none}}
 .hero-slide { object-position: center 60%; }
+
+    /* Mobile polish v3 */
+    @media (max-width:768px){
+      .scroll-hint{display:none!important}
+      .hero-slide{object-position:75% 60%}
+      .hero-overlay{background:linear-gradient(180deg,rgba(4,52,44,.84) 0%,rgba(4,52,44,.58) 45%,rgba(4,52,44,.30) 72%,rgba(4,52,44,.72) 100%)}
+    }
 </style>
   <link rel="stylesheet" href="/theme.css"/>
   <script src="/theme.js"></script>
@@ -536,15 +543,6 @@
   </div>
 </section>
 
-<!-- ── RECENTLY VIEWED ── -->
-<section class="section nk-recently-viewed" id="recently-viewed-section" aria-labelledby="rv-title">
-  <div class="section-header"><h2 class="section-title" id="rv-title">Recently viewed</h2></div>
-  <div class="scroll-wrap">
-    <div id="recently-viewed-listings"></div>
-    <button type="button" class="scroll-hint left" data-scroll="-1" aria-label="Scroll to previous recently viewed"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 6 9 12 15 18"/></svg></button>
-    <button type="button" class="scroll-hint right" data-scroll="1" aria-label="Scroll for more recently viewed"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg></button>
-  </div>
-</section>
 
 <!-- ── FEATURED (hidden automatically when there are none) ── -->
 <section class="section section-alt" id="featured-section" aria-labelledby="feat-title">
@@ -586,6 +584,16 @@
     </div>
     <button type="button" class="scroll-hint left" data-scroll="-1" aria-label="Scroll to previous listings"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 6 9 12 15 18"/></svg></button>
     <button type="button" class="scroll-hint right" data-scroll="1" aria-label="Scroll for more listings"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg></button>
+  </div>
+</section>
+
+<!-- ── RECENTLY VIEWED ── -->
+<section class="section nk-recently-viewed" id="recently-viewed-section" aria-labelledby="rv-title">
+  <div class="section-header"><h2 class="section-title" id="rv-title">Recently viewed</h2></div>
+  <div class="scroll-wrap">
+    <div id="recently-viewed-listings"></div>
+    <button type="button" class="scroll-hint left" data-scroll="-1" aria-label="Scroll to previous recently viewed"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 6 9 12 15 18"/></svg></button>
+    <button type="button" class="scroll-hint right" data-scroll="1" aria-label="Scroll for more recently viewed"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg></button>
   </div>
 </section>
 
@@ -998,7 +1006,7 @@ function parseIntent(raw) {
     patch.area = area; if (c) patch.county = c; labels.push(c ? `${area}, ${c}` : area);
   } else if (county) { patch.county = county; labels.push(nkCountyLabel(county)); }
   let t = ' ' + low + ' ';
-  t = t.replace(/(\d+)\s*(?:bedroom|bed|br)\b/g, ' ').replace(/\b(bedsitter|studio)\b/g, ' ').replace(/\bunder\s*(?:kes\s*)?[\d,]+k?\b/g, ' ')
+  t = t.replace(/(\d+)\s*(?:bedroom|bed|br)\b/g, ' ').replace(/\b(bedsitter|studio)\b/g, ' ').replace(/\bunder\s*(?:kes\s*)?[\d,]+k?\b/g, ' ').replace(/\b(kes|kshs?|shillings?)\b/g, ' ')
     .replace(/\b(hostel|boarding|shop|office|commercial|airbnb|holiday|short\s*stay|house|apartment|flat)s?\b/g, ' ').replace(/\b(for sale|to buy|buy|nightly|per night)\b/g, ' ');
   if (area) t = t.replace(area.toLowerCase(), ' '); if (county) t = t.replace(county.toLowerCase(), ' ');
   t = t.replace(/\b(near|in|at|around|for|the|a|an|with|and|to)\b/g, ' ').replace(/[^\p{L}\p{N}\s'-]/gu, ' ').replace(/\s+/g, ' ').trim();
