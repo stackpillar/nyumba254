@@ -400,6 +400,13 @@
       .hero-slide{object-position:75% 60%}
       .hero-overlay{background:linear-gradient(180deg,rgba(4,52,44,.84) 0%,rgba(4,52,44,.58) 45%,rgba(4,52,44,.30) 72%,rgba(4,52,44,.72) 100%)}
     }
+
+    /* Mobile polish v4 */
+    .hero h1{text-wrap:balance}
+    @media (max-width:768px){
+      #featured-section .section-subtitle,#latest-section .section-subtitle{display:none}
+      .listings-grid .card-img{aspect-ratio:3/2}
+    }
 </style>
   <link rel="stylesheet" href="/theme.css"/>
   <script src="/theme.js"></script>
@@ -820,7 +827,7 @@ async function loadStats() {
   if (!stats) { try { stats = await legacyStats(); } catch (e) { return; } }
   ['apartment', 'house', 'boarding', 'airbnb', 'commercial'].forEach(c => {
     const n = (stats.categories || {})[c] || 0, el = $('count-' + c);
-    if (el) el.textContent = n === 0 ? 'Be the first to list' : `${n} listing${n === 1 ? '' : 's'} available`;
+    if (el) el.textContent = n === 0 ? '' : String(n);
   });
   countyCounts = stats.counties || {};
   $('stat-listings').dataset.target = stats.total || 0;
@@ -941,7 +948,7 @@ function initScrollWrap(wrap) {
     sc.addEventListener('scroll', () => { if (tick) return; tick = true; requestAnimationFrame(() => { updateHints(wrap); tick = false; }); }, { passive: true });
   }
   const key = sc.id || (sc.closest('[id]') || {}).id;                       // remember horizontal position when coming back
-  if (key && !sc.dataset.mem) {
+  if (key && key !== 'categories-row' && !sc.dataset.mem) {
     sc.dataset.mem = '1';
     try { const v = sessionStorage.getItem('nk_scroll_' + key); if (v) sc.scrollLeft = parseInt(v, 10) || 0; } catch (e) {}
     let t = false; sc.addEventListener('scroll', () => { if (t) return; t = true; requestAnimationFrame(() => { try { sessionStorage.setItem('nk_scroll_' + key, sc.scrollLeft); } catch (e) {} t = false; }); }, { passive: true });
