@@ -427,6 +427,19 @@
     @media (max-width: 768px) {
       .listings-grid .card { flex: 0 0 74%; max-width: 290px; }
     }
+  
+    /* Compact counties mobile v1 */
+    @media (max-width: 768px) {
+      #areas.section { padding-top: 24px; padding-bottom: 20px; }
+      .areas { grid-template-rows: repeat(3, auto); grid-auto-columns: max-content; gap: 8px; padding-bottom: 4px; }
+      .area-card { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; white-space: nowrap; text-align: left; }
+      .area-card-name { font-size: 13px; margin: 0; }
+      .area-card-count { font-size: 11.5px; }
+      .area-card.zero-listings .area-card-count, .area-card.coming-soon .area-card-count { display: none; }
+      .quicklinks { margin-top: 12px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+      .quicklinks::-webkit-scrollbar { display: none; }
+      .quicklink, .quicklinks-label { flex-shrink: 0; white-space: nowrap; }
+    }
   </style>
   <link rel="stylesheet" href="/theme.css"/>
   <script src="/theme.js"></script>
@@ -571,6 +584,16 @@
 </section>
 
 
+<!-- ── RECENTLY VIEWED ── -->
+<section class="section nk-recently-viewed" id="recently-viewed-section" aria-labelledby="rv-title">
+  <div class="section-header"><h2 class="section-title" id="rv-title">Recently viewed</h2></div>
+  <div class="scroll-wrap">
+    <div id="recently-viewed-listings"></div>
+    <button type="button" class="scroll-hint left" data-scroll="-1" aria-label="Scroll to previous recently viewed"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 6 9 12 15 18"/></svg></button>
+    <button type="button" class="scroll-hint right" data-scroll="1" aria-label="Scroll for more recently viewed"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg></button>
+  </div>
+</section>
+
 <!-- ── FEATURED (hidden automatically when there are none) ── -->
 <section class="section section-alt" id="featured-section" aria-labelledby="feat-title">
   <div class="section-header">
@@ -614,15 +637,7 @@
   </div>
 </section>
 
-<!-- ── RECENTLY VIEWED ── -->
-<section class="section nk-recently-viewed" id="recently-viewed-section" aria-labelledby="rv-title">
-  <div class="section-header"><h2 class="section-title" id="rv-title">Recently viewed</h2></div>
-  <div class="scroll-wrap">
-    <div id="recently-viewed-listings"></div>
-    <button type="button" class="scroll-hint left" data-scroll="-1" aria-label="Scroll to previous recently viewed"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 6 9 12 15 18"/></svg></button>
-    <button type="button" class="scroll-hint right" data-scroll="1" aria-label="Scroll for more recently viewed"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg></button>
-  </div>
-</section>
+
 
 <!-- ── COUNTIES (sorted by listing count, tier-1 first) ── -->
 <section class="section section-alt reveal" id="areas" aria-labelledby="areas-title">
