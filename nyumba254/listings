@@ -576,6 +576,22 @@
       .card-body{padding:12px 14px 14px}
 
     }
+  
+    /* Compact cards v3 */
+    .card-img{aspect-ratio:16/10}
+    .skeleton-img{aspect-ratio:16/10}
+    .card-body{padding:10px 12px 12px}
+    .card-area{margin-bottom:2px}
+    .card-sub{margin-bottom:4px}
+    .card-price{margin-bottom:4px}
+    .card-trust{margin-bottom:6px;gap:3px 6px}
+    .card-viewing-fee{padding:1px 8px}
+    .card-specs-chips{margin-bottom:6px}
+    .card-amenities{border-top:0;padding-top:0;margin-bottom:8px}
+    .card-foot{padding-top:0}
+    @media (min-width:769px){
+      .nk-compare-check,.card-inquire-btn,.card-wa-btn,.card-msg-btn{min-height:36px}
+    }
   </style>
   <link rel="stylesheet" href="/theme.css"/>
   <script src="/theme.js"></script>
