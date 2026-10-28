@@ -11411,3 +11411,214 @@ function lcCanEdit(l){
     .forEach((n) => wrap(n, syncAll));
   syncAll();
 })();
+
+
+/* ===== Smart suggested replies for Messages ===== */
+(function () {
+  if (window.__nySuggest) return;
+  window.__nySuggest = true;
+
+  const css = document.createElement('style');
+  css.textContent = `
+    #ny-suggest{margin:0 12px 8px}
+    .nys-card{background:var(--amber-light,#faeeda);border-radius:14px;padding:12px 14px;position:relative}
+    .nys-label{font-size:12px;font-weight:700;color:var(--amber,#ba7517);margin-bottom:6px;padding-right:24px}
+    .nys-text{font-size:13.5px;line-height:1.55;color:var(--text-2);white-space:pre-wrap;word-break:break-word}
+    .nys-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .nys-x{position:absolute;top:8px;right:10px;background:none;border:none;color:var(--text-3);cursor:pointer;font-size:14px;padding:4px}
+    .nys-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .nys-chip{border:1px solid var(--border);background:var(--white);border-radius:10px;padding:8px 12px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--text)}
+    .nys-chip.active{border-color:var(--green);background:var(--green-light);color:var(--green-dark)}
+    @media(max-width:640px){.nys-chip{padding:7px 10px;font-size:12px}}
+  `;
+  document.head.appendChild(css);
+
+  const INTENTS = {
+    available: { chip: '✅ Still available', label: 'Availability' },
+    price:     { chip: '💰 Price & fees',    label: 'Price & fees' },
+    location:  { chip: '📍 Location',        label: 'Location' },
+    viewing:   { chip: '📅 Book a viewing',  label: 'Book a viewing' },
+    thanks:    { chip: '🙏 Thank you',       label: 'Thank you' },
+    followup:  { chip: '👋 Follow-up',       label: 'Follow-up' }
+  };
+  const CHIP_ORDER = ['available', 'price', 'location', 'viewing', 'thanks', 'followup'];
+
+  const AMENITY_WORDS = {
+    has_water: /\bwater\b|borehole/, has_electricity: /electric|power|kplc|token/,
+    has_security: /secur|guard|cctv|gated|safe/, has_parking: /park/, has_wifi: /wifi|wi-fi|internet/,
+    has_solar: /solar/, has_pool: /pool|swim/, has_gym: /\bgym\b/, has_pets_allowed: /\bpets?\b|\bdogs?\b|\bcats?\b/,
+    has_backup_power: /backup|generator/, has_balcony: /balcon/
+  };
+
+  const dismissed = new Set();
+  let override = null; // intent chosen via chip for the current thread
+
+  const lastMsgText = (m) => String(m.content || m.message || '');
+
+  function detectIntent(t) {
+    const msgs = t.messages || [];
+    const last = msgs[msgs.length - 1];
+    if (!last) return null;
+    if (last.sender !== 'buyer') {
+      const age = Date.now() - new Date(last.created_at).getTime();
+      return age > 24 * 3600 * 1000 ? 'followup' : null;
+    }
+    const s = lastMsgText(last).toLowerCase();
+    if (/view|visit|see the (house|place|unit|property)|tour|appointment|come (and )?see|schedule|book/.test(s)) return 'viewing';
+    if (/thank|thanks|appreciate|asante|cheers/.test(s) && s.length < 80) return 'thanks';
+    if (/price|cost|how much|rent|fee|deposit|negotiat|discount|lower|reduce|pay|bei|kiasi/.test(s)) return 'price';
+    if (/where|location|direction|pin|map|address|near|landmark|exact|wapi/.test(s)) return 'location';
+    if (/available|still (there|open|vacant|on)|vacant|taken|sold|occupied|bado/.test(s)) return 'available';
+    for (const k in AMENITY_WORDS) if (AMENITY_WORDS[k].test(s)) return 'amenity';
+    return 'greeting';
+  }
+
+  function listingOf(t) { return allListings.find((l) => String(l.id) === String(t.listing_id)); }
+
+  function priceText(l) {
+    if (!l) return '';
+    if (lcHasUnits(l)) return muPriceRangeText(l);
+    const suffix = NK_DASH_FREQ_SUFFIX[l.price_frequency || (l.price_type === 'rent' ? 'month' : 'once')] || '';
+    return fmtKES(l.price, suffix);
+  }
+
+  function buildReply(intent, t) {
+    const l = listingOf(t);
+    const name = (t.buyer_name || '').split(' ')[0];
+    const hi = name && name !== 'Buyer' && name !== 'Unknown' ? `Hi ${name}! ` : 'Hello! ';
+    const title = (l && l.title) || t.listing_title || 'this property';
+    const area = l ? [l.sub_area, l.area].filter(Boolean).join(', ') : (t.listing_area || '');
+    const last = (t.messages || []).filter((m) => m.sender === 'buyer').slice(-1)[0];
+    const msg = last ? lastMsgText(last).toLowerCase() : '';
+
+    switch (intent) {
+      case 'available': {
+        if (l && l.status === 'occupied') return `${hi}Thank you for asking. ${title} has just been taken. I will gladly let you know when a similar one becomes available.`;
+        if (l && lcHasUnits(l)) {
+          const av = muAvailabilitySummary(l);
+          return `${hi}Yes, ${title} still has units open${av ? ' (' + av + ')' : ''}. Would you like to arrange a viewing?`;
+        }
+        return `${hi}Yes, ${title} is still available. Would you like to arrange a viewing?`;
+      }
+      case 'price': {
+        const fee = l && Number(l.viewing_fee) > 0
+          ? ` Viewing fee is ${fmtKES(l.viewing_fee)}, paid directly to me.` : ' Viewing is free.';
+        if (/negotiat|discount|lower|reduce|cheaper/.test(msg))
+          return `${hi}Thank you for your interest. The listed price for ${title} is ${priceText(l)}. Let me check what flexibility there is and get back to you shortly.`;
+        return `${hi}${title} is ${priceText(l)}. That is the asking price.${fee}`;
+      }
+      case 'location':
+        return `${hi}${title} is in ${area || 'the area shown on the listing'}. For security, I will share the exact pin once we confirm a viewing time. What day works for you?`;
+      case 'viewing': {
+        const fee = l && Number(l.viewing_fee) > 0 ? ` A viewing fee of ${fmtKES(l.viewing_fee)} applies, paid directly to me.` : '';
+        return `${hi}Happy to arrange a viewing of ${title}.${fee} Which day and time suit you best?`;
+      }
+      case 'amenity': {
+        const have = (l && l.amenities) || [];
+        for (const k in AMENITY_WORDS) {
+          if (!AMENITY_WORDS[k].test(msg)) continue;
+          const label = (AMENITY_KEYS.find((a) => a.key === k) || {}).label || k;
+          return have.includes(k)
+            ? `${hi}Yes, ${title} has ${label.toLowerCase()}. Would you like to see it in person?`
+            : `${hi}${label} is not listed for ${title}. Let me confirm and get back to you.`;
+        }
+        return `${hi}Thank you for your question about ${title}. Let me confirm the details and get back to you shortly.`;
+      }
+      case 'thanks':
+        return `${hi}You are welcome! Let me know if you would like to arrange a viewing or have any other questions about ${title}.`;
+      case 'followup':
+        return `${hi}Just checking in. Are you still considering ${title}? Happy to answer any questions or arrange a viewing.`;
+      default:
+        return `${hi}Thank you for your interest in ${title}. How can I help you? I can share details or arrange a viewing.`;
+    }
+  }
+
+  function labelFor(intent) {
+    return (INTENTS[intent] && INTENTS[intent].label) || (intent === 'amenity' ? 'Amenities' : 'Quick reply');
+  }
+
+  function ensureHost() {
+    let host = document.getElementById('ny-suggest');
+    if (host) return host;
+    const anchor = document.getElementById('chat-quickreply-bar');
+    if (!anchor) return null;
+    host = document.createElement('div');
+    host.id = 'ny-suggest';
+    anchor.parentNode.insertBefore(host, anchor);
+    return host;
+  }
+
+  function render() {
+    const t = activeThread;
+    const host = ensureHost();
+    if (!host) return;
+    if (!t) { host.innerHTML = ''; return; }
+
+    const last = (t.messages || [])[t.messages.length - 1];
+    const dKey = t.key + ':' + (last ? last.id : '');
+    const auto = detectIntent(t);
+    const intent = override || (dismissed.has(dKey) ? null : auto);
+
+    host.innerHTML = '';
+    if (intent) {
+      const text = buildReply(intent, t);
+      const card = document.createElement('div');
+      card.className = 'nys-card';
+      card.innerHTML = '<div class="nys-label">💡 Suggested reply — ' + escHtml(labelFor(intent)) + '</div>' +
+        '<div class="nys-text"></div>' +
+        '<div class="nys-actions"><button type="button" class="btn btn-primary btn-sm" data-nys="send">⚡ Send this</button>' +
+        '<button type="button" class="btn btn-outline btn-sm" data-nys="edit">✎ Edit first</button></div>' +
+        '<button type="button" class="nys-x" data-nys="dismiss" aria-label="Dismiss suggestion">✕</button>';
+      card.querySelector('.nys-text').textContent = text;
+      card.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-nys]');
+        if (!b) return;
+        const input = document.getElementById('chat-reply-input');
+        if (b.dataset.nys === 'send') {
+          input.value = text; override = null; sendChatReply();
+        } else if (b.dataset.nys === 'edit') {
+          input.value = text; autoResizeTextarea(input); input.focus(); override = null; render();
+        } else {
+          dismissed.add(dKey); override = null; render();
+        }
+      });
+      host.appendChild(card);
+    }
+
+    const chips = document.createElement('div');
+    chips.className = 'nys-chips';
+    CHIP_ORDER.forEach((k) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'nys-chip' + (intent === k ? ' active' : '');
+      b.textContent = INTENTS[k].chip;
+      b.addEventListener('click', () => { override = k; render(); });
+      chips.appendChild(b);
+    });
+    host.appendChild(chips);
+  }
+
+  // Re-render whenever the chat pane or its messages are drawn
+  const _renderChatMessages = window.renderChatMessages;
+  window.renderChatMessages = function (t) {
+    const r = _renderChatMessages.apply(this, arguments);
+    try { render(); } catch (e) { console.error('[suggest]', e); }
+    return r;
+  };
+
+  // Reset the manual chip choice when switching conversations
+  const _openThread = window.openThread;
+  window.openThread = async function () {
+    override = null;
+    return _openThread.apply(this, arguments);
+  };
+
+  // After a reply is sent, clear the choice so the next suggestion is fresh
+  const _sendChatReply = window.sendChatReply;
+  window.sendChatReply = async function () {
+    const r = await _sendChatReply.apply(this, arguments);
+    override = null;
+    try { render(); } catch (e) { console.error('[suggest]', e); }
+    return r;
+  };
+})();
