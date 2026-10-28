@@ -440,6 +440,17 @@
       .quicklinks::-webkit-scrollbar { display: none; }
       .quicklink, .quicklinks-label { flex-shrink: 0; white-space: nowrap; }
     }
+  
+    /* First impression v1 */
+    .areas.hide-empty:not(.show-all) .area-card.zero-listings, .areas.hide-empty:not(.show-all) .area-card.coming-soon { display: none; }
+    .more-counties-btn { display: block; margin: 14px 0 0; font-size: 13.5px; font-weight: 600; color: var(--green-dark); background: #fff; border: 1.5px solid var(--green); border-radius: 20px; min-height: 40px; padding: 0 18px; }
+    .more-counties-btn:hover { background: var(--green-light); }
+    .card-role { color: var(--text-3); font-size: 11.5px; }
+    @media (max-width: 768px) {
+      .trust-bar { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; gap: 8px; padding: 10px 16px; scrollbar-width: none; }
+      .trust-bar::-webkit-scrollbar { display: none; }
+      .trust-item { flex: 0 0 auto; white-space: nowrap; font-size: 12.5px; background: #fff; border: 1px solid #9FE1CB; border-radius: 20px; padding: 6px 12px; }
+    }
   </style>
   <link rel="stylesheet" href="/theme.css"/>
   <script src="/theme.js"></script>
@@ -550,6 +561,12 @@
 </section>
 
 <!-- ── CATEGORIES (real links: crawlable, open in new tab) ── -->
+<div class="trust-bar">
+  <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>See who is listing and what a viewing costs</div>
+  <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.12 1.2 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>Role-verified listers</div>
+  <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>No deal commission from Nyumba254</div>
+</div>
+
 <section class="section" id="categories" aria-labelledby="cat-title">
   <div class="section-header">
     <h2 class="section-title" id="cat-title">What are you looking for?</h2>
@@ -650,16 +667,11 @@
     <button type="button" class="scroll-hint left" data-scroll="-1" aria-label="Scroll to previous counties"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 6 9 12 15 18"/></svg></button>
     <button type="button" class="scroll-hint right" data-scroll="1" aria-label="Scroll for more counties"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg></button>
   </div>
+  <button type="button" class="more-counties-btn" id="more-counties-btn" hidden>Show all counties</button>
   <div class="quicklinks" id="popular-area-links"></div>
 </section>
 
 <!-- ── TRUST BAR (seeker-only messaging; seller messaging lives in the CTA banner) ── -->
-<div class="trust-bar">
-  <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>See who is listing and what a viewing costs</div>
-  <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.12 1.2 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>Role-verified listers</div>
-  <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>No deal commission from Nyumba254</div>
-</div>
-
 <!-- ── WHY NYUMBA254 ── -->
 <section class="section reveal" aria-labelledby="why-title">
   <div class="section-header"><h2 class="section-title" id="why-title">Why Nyumba254</h2></div>
@@ -831,6 +843,21 @@ function renderCountiesGrid() {
     const inner = `<div class="area-card-name">${escHtml(nkCountyLabel(c))}</div><div class="area-card-count">${escHtml(desc)}</div>`;
     return live ? `<a class="${cls}" href="${escHtml(nkBuildListingsUrl({ county: c }))}">${inner}</a>` : `<div class="${cls}" aria-disabled="true">${inner}</div>`;
   }).join('');
+  const hasAny = Object.keys(countyCounts).some(k => countyCounts[k] > 0);
+  grid.classList.toggle('hide-empty', hasAny);
+  const mb = $('more-counties-btn');
+  if (mb) {
+    mb.hidden = !hasAny;
+    mb.textContent = grid.classList.contains('show-all') ? 'Show fewer counties' : 'Show all counties';
+    if (!mb.dataset.bound) {
+      mb.dataset.bound = '1';
+      mb.addEventListener('click', () => {
+        const on = grid.classList.toggle('show-all');
+        mb.textContent = on ? 'Show fewer counties' : 'Show all counties';
+        refreshScrollHints();
+      });
+    }
+  }
   refreshScrollHints();
 }
 function renderFooterCounties() {

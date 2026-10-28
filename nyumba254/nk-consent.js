@@ -34,9 +34,9 @@
     if (document.getElementById('nk-consent-style')) return;
     var s = el('style', { id: 'nk-consent-style' });
     s.textContent =
-      '#nk-consent{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:9990;max-width:560px;margin:0 auto;background:var(--white,#fff);color:var(--text,#1a1a1a);border:1px solid var(--border,#ddd);border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.2);padding:16px 18px;font:14px/1.5 Inter,system-ui,sans-serif}' +
+      '#nk-consent{position:fixed;left:12px;right:12px;bottom:calc(var(--nk-tabbar-h, env(safe-area-inset-bottom, 0px)) + 10px);z-index:9990;max-width:560px;margin:0 auto;background:var(--white,#fff);color:var(--text,#1a1a1a);border:1px solid var(--border,#ddd);border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.2);padding:12px 14px;font:14px/1.5 Inter,system-ui,sans-serif}' +
       '#nk-consent h2{font-size:15px;margin:0 0 6px}#nk-consent p{margin:0 0 10px;font-size:13px;color:var(--text-2,#444)}' +
-      '#nk-consent .nkc-row{display:flex;gap:8px;flex-wrap:wrap}#nk-consent button{min-height:44px;padding:0 16px;border-radius:10px;font:600 13px Inter,system-ui,sans-serif;cursor:pointer;border:1.5px solid var(--green,#0F6E56);background:transparent;color:var(--green,#0F6E56)}' +
+      '#nk-consent .nkc-row{display:flex;gap:8px;flex-wrap:wrap}#nk-consent button{min-height:40px;padding:0 16px;border-radius:10px;font:600 13px Inter,system-ui,sans-serif;cursor:pointer;border:1.5px solid var(--green,#0F6E56);background:transparent;color:var(--green,#0F6E56)}' +
       '#nk-consent button.nkc-primary{background:var(--green,#0F6E56);color:#fff}#nk-consent button:focus-visible{outline:3px solid #BA7517;outline-offset:2px}' +
       '#nk-consent label{display:flex;gap:10px;align-items:flex-start;margin:8px 0;font-size:13px;min-height:44px}#nk-consent input{width:20px;height:20px;margin-top:2px;flex:none}' +
       '#nk-consent .nkc-note{font-size:11.5px;color:var(--text-3,#666)}';
@@ -52,7 +52,7 @@
     if (!manage) {
       box.innerHTML =
         '<h2 id="nkc-title">Cookies and ads</h2>' +
-        '<p>We use essential storage to keep you signed in and remember your settings. With your permission we would also use analytics and show ads. Nothing optional loads until you choose.</p>' +
+        '<p>We use essential storage for sign-in and settings. With your permission we also use analytics and ads. Nothing optional loads until you choose.</p>' +
         '<div class="nkc-row"><button type="button" class="nkc-primary" data-c="accept">Accept</button><button type="button" data-c="reject">Reject</button><button type="button" data-c="manage">Manage</button></div>' +
         '<p class="nkc-note" style="margin-top:8px">Draft policy, needs legal review (Kenya Data Protection Act 2019). See our <a href="/privacy">privacy policy</a>.</p>';
     } else {
