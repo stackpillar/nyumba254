@@ -11285,9 +11285,10 @@ function lcCanEdit(l){
     const page = (document.querySelector('.page.active') || {}).id || '';
     if (TOOL_PAGES.includes(page.replace('page-', ''))) toolsOpen = true;
     const label = $('nav-elite-section');
-    document.body.classList.toggle('ny-tools-open', toolsOpen || !!(label && label.hidden));
     let allowed = false;
     try { allowed = !!ledgerAccessActive(); } catch (e) { allowed = false; }
+    if (allowed && !window.__nyToolsInit) { window.__nyToolsInit = true; toolsOpen = true; }
+    document.body.classList.toggle('ny-tools-open', toolsOpen);
     ['nav-rent-ledger', 'nav-demand-heatmap'].forEach((id) => {
       const el = $(id);
       if (el) el.classList.toggle('ny-locked', !allowed);
