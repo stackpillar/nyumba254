@@ -11126,3 +11126,288 @@ function lcCanEdit(l){
     } finally { listingActionBusy.delete(id); }
   };
 })();
+
+
+/* ===== Dashboard simplification patch (9 changes) ===== */
+(function () {
+  if (window.__nySimplify) return;
+  window.__nySimplify = true;
+
+  const $ = (id) => document.getElementById(id);
+  const safe = (fn) => { try { return fn(); } catch (e) { console.error('[simplify]', e); } };
+  function wrap(name, after) {
+    const orig = window[name];
+    if (typeof orig !== 'function') return;
+    window[name] = function () {
+      const r = orig.apply(this, arguments);
+      try { after.apply(this, arguments); } catch (e) { console.error('[simplify]', name, e); }
+      return r;
+    };
+  }
+
+  let loaded = false, shown = false, toolsOpen = false;
+
+  /* ---------- CSS ---------- */
+  const css = document.createElement('style');
+  css.id = 'ny-simplify-css';
+  css.textContent = `
+    .ny-hide{display:none!important}
+
+    /* 1. Overview: more-insights toggle */
+    body:not(.ny-more-open) .ny-more-item{display:none!important}
+    #ny-more-wrap{margin:0 0 16px}
+
+    /* 4. Empty state for new users */
+    body.ny-empty .stat-grid,
+    body.ny-empty #getting-started-card,
+    body.ny-empty #overview-chart-card,
+    body.ny-empty #overview-quicklistings-card,
+    body.ny-empty #ny-more-wrap{display:none!important}
+
+    /* 2. Sidebar */
+    #nav-enquiries{display:none!important}
+    .ny-locked{display:none!important}
+    body:not(.ny-tools-open) .ny-tool-item{display:none!important}
+    #nav-elite-section{cursor:pointer;user-select:none}
+    #nav-elite-section::after{content:' \\25B8'}
+    body.ny-tools-open #nav-elite-section::after{content:' \\25BE'}
+
+    /* 3. Listing cards: one alert, no sparkline, fewer buttons */
+    .lc-chip-row .lc-alert-chip:nth-child(n+2),
+    .lc-chip-row .lc-alert-more,
+    .lc-spark{display:none!important}
+    .lc-actions-row .lc-btn[data-act="preview"],
+    .lc-actions-row .lc-btn[data-act="share"],
+    .lc-actions-row .lc-btn[data-act="messages"]:not(.lc-btn-purple){display:none!important}
+
+    /* 5. Hide power tools until 5+ listings */
+    body.ny-few #lc-more-tools-group,
+    body.ny-few #lc-select-toggle-btn,
+    body.ny-few #lc-saved-views,
+    body.ny-few #lc-stat-strip,
+    body.ny-few #lc-batch-banner,
+    body.ny-few .topbar-right button[onclick^="openCmdPalette"]{display:none!important}
+
+    /* 8. Loading state */
+    body.ny-loading .stat-val{opacity:.35}
+    body.ny-loading .sidebar-nav,
+    body.ny-loading .nyb-tab,
+    body.ny-loading .page.active > *{pointer-events:none}
+
+    /* 9. Smaller help button on phones */
+    @media(max-width:640px){
+      .scw-fab{scale:.78;transform-origin:bottom right}
+      .scw-fab-text{display:none!important}
+    }
+  `;
+  document.head.appendChild(css);
+
+  /* ---------- 1. One banner at a time + "More insights" ---------- */
+  const BANNERS = ['action-center-card', 'getting-started-card', 'welcome-card', 'handle-nudge-card', 'storefront-banner-card'];
+  const MORE_ITEMS = ['week-momentum-card', 'smart-insight-card', 'listing-performance-card', 'overview-role-trust-card'];
+
+  safe(() => {
+    MORE_ITEMS.forEach((id) => { const el = $(id); if (el) el.classList.add('ny-more-item'); });
+    const anchor = $('week-momentum-card');
+    if (anchor && !$('ny-more-wrap')) {
+      const wrapDiv = document.createElement('div');
+      wrapDiv.id = 'ny-more-wrap';
+      wrapDiv.innerHTML = '<button type="button" class="btn btn-outline btn-sm" id="ny-more-btn">More insights \u25BE</button>';
+      anchor.parentNode.insertBefore(wrapDiv, anchor);
+      $('ny-more-btn').addEventListener('click', () => {
+        const open = document.body.classList.toggle('ny-more-open');
+        $('ny-more-btn').textContent = open ? 'Fewer insights \u25B4' : 'More insights \u25BE';
+      });
+    }
+    const mo = new MutationObserver(() => safe(applyBanners));
+    BANNERS.forEach((id) => { const el = $(id); if (el) mo.observe(el, { attributes: true, attributeFilter: ['style'] }); });
+  });
+
+  function applyBanners() {
+    const empty = document.body.classList.contains('ny-empty');
+    let winner = null;
+    BANNERS.forEach((id) => {
+      const el = $(id);
+      if (!el) return;
+      const wants = el.style.display !== 'none' && !(empty && id === 'getting-started-card');
+      if (wants && !winner) { winner = id; el.classList.remove('ny-hide'); }
+      else el.classList.toggle('ny-hide', !!wants);
+    });
+  }
+
+  /* ---------- 4. "Post your first listing" for new users ---------- */
+  safe(() => {
+    const page = $('page-overview');
+    if (!page || $('ny-first-card')) return;
+    const card = document.createElement('div');
+    card.id = 'ny-first-card';
+    card.className = 'card';
+    card.style.cssText = 'display:none;padding:28px 24px;text-align:center;margin-bottom:20px';
+    card.innerHTML = '<h2 style="margin:0 0 8px;font-size:18px">Post your first listing</h2>' +
+      '<p style="font-size:13px;color:var(--text-3);margin:0 0 16px;line-height:1.6">It takes about 3 minutes. Once it is live, your views, enquiries and messages will show up here.</p>' +
+      '<a class="btn btn-primary btn-lg" href="/post-listing" style="text-decoration:none">Post a listing</a>';
+    page.insertBefore(card, page.firstChild);
+  });
+
+  function syncEmpty() {
+    const profile = ownerProfile || currentProfile;
+    const buyer = profile && profile.account_type === 'buyer';
+    const empty = loaded && !buyer && allListings.length === 0;
+    document.body.classList.toggle('ny-empty', empty);
+    const card = $('ny-first-card');
+    if (card) card.style.display = empty ? 'block' : 'none';
+  }
+
+  /* ---------- 5. Show power tools only with 5+ listings ---------- */
+  function syncScale() {
+    document.body.classList.toggle('ny-few', allListings.length < 5);
+  }
+
+  /* ---------- 2. Sidebar: Tools group, no Enquiries, hide locked tools ---------- */
+  const TOOL_IDS = ['nav-rent-ledger', 'nav-demand-heatmap', 'nav-activity'];
+  const TOOL_PAGES = ['rent-ledger', 'demand-heatmap', 'activity'];
+  safe(() => {
+    const demand = $('nav-demand-heatmap'), act = $('nav-activity');
+    if (demand && act) demand.after(act);
+    TOOL_IDS.forEach((id) => { const el = $(id); if (el) el.classList.add('ny-tool-item'); });
+    const label = $('nav-elite-section');
+    if (label) {
+      label.textContent = 'Tools';
+      label.setAttribute('role', 'button');
+      label.setAttribute('tabindex', '0');
+      const toggle = () => { toolsOpen = !toolsOpen; syncTools(); };
+      label.addEventListener('click', toggle);
+      label.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+    }
+  });
+
+  function syncTools() {
+    const page = (document.querySelector('.page.active') || {}).id || '';
+    if (TOOL_PAGES.includes(page.replace('page-', ''))) toolsOpen = true;
+    const label = $('nav-elite-section');
+    document.body.classList.toggle('ny-tools-open', toolsOpen || !!(label && label.hidden));
+    let allowed = false;
+    try { allowed = !!ledgerAccessActive(); } catch (e) { allowed = false; }
+    ['nav-rent-ledger', 'nav-demand-heatmap'].forEach((id) => {
+      const el = $(id);
+      if (el) el.classList.toggle('ny-locked', !allowed);
+    });
+  }
+
+  /* ---------- 6. Settings: Advanced section ---------- */
+  safe(() => {
+    const first = $('settings-data-section');
+    if (!first || $('ny-adv')) return;
+    const adv = document.createElement('details');
+    adv.id = 'ny-adv';
+    adv.className = 'card';
+    adv.style.cssText = 'margin-top:20px;padding:4px 18px';
+    adv.innerHTML = '<summary style="cursor:pointer;font-weight:700;font-size:14px;padding:12px 0">Advanced \u00B7 team seats, data, backup, danger zone</summary><div id="ny-adv-body"></div>';
+    first.parentNode.insertBefore(adv, first);
+    const body = $('ny-adv-body');
+    [$('settings-team-section'), $('settings-data-section'), $('settings-backup-section'),
+      document.querySelector('#page-settings .danger-zone')]
+      .forEach((el) => { if (el) body.appendChild(el); });
+    const jump = window.settingsJumpTo;
+    if (typeof jump === 'function') {
+      window.settingsJumpTo = function (id) {
+        const el = $(id);
+        if (el && adv.contains(el)) adv.open = true;
+        return jump.apply(this, arguments);
+      };
+    }
+  });
+
+  /* ---------- 3. Listing insights move into the Details sheet ---------- */
+  safe(() => {
+    const realInsights = window.lcInsightsHtml;
+    if (typeof realInsights !== 'function') return;
+    window.lcInsightsHtml = function () { return ''; };
+    wrap('openListingPreview', function (id) {
+      const l = allListings.find((x) => String(x.id) === String(id));
+      const body = $('lc-sheet-body');
+      if (!l || !body) return;
+      const html = realInsights(l);
+      if (html) body.insertAdjacentHTML('beforeend', '<div class="lc-sheet-sec">Insights</div>' + html);
+    });
+  });
+
+  /* ---------- 7. Fewer interruptions ---------- */
+  safe(() => {
+    const S = window.NKNotificationSound;
+    if (!S || localStorage.getItem('ny_sound_default_off')) return;
+    localStorage.setItem('ny_sound_default_off', '1');
+    Promise.resolve(S.setEnabled(false)).then(() => {
+      if (typeof window.updateNotificationSoundToggle === 'function') window.updateNotificationSoundToggle();
+    });
+  });
+
+  // Only pop a toast + sound for listing approved/rejected. Messages already
+  // have their own alert; other events still appear in the bell silently.
+  window.subscribeNotifBellRealtime = function () {
+    if (notifBellChannel) notifBellChannel.unsubscribe();
+    notifBellChannel = db.channel('notif-bell-' + effectiveSellerId)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `seller_id=eq.${effectiveSellerId}` }, (payload) => {
+        notifItems.unshift(payload.new);
+        renderNotifBell();
+        const t = payload.new.type;
+        if (!isNotifCategoryMuted(t) && (t === 'listing_approved' || t === 'listing_rejected')) {
+          playActivitySound();
+          showToast(payload.new.title, 'success');
+        }
+        if (document.getElementById('page-notifications')?.classList.contains('active')) renderNotificationsPage();
+      })
+      .subscribe();
+  };
+
+  /* ---------- 8. Show the dashboard before data finishes loading ---------- */
+  const origLoadAll = window.loadAllData;
+  if (typeof origLoadAll === 'function') {
+    window.loadAllData = async function () {
+      const first = !shown && !loaded;
+      if (first) {
+        shown = true;
+        $('loading-screen').style.display = 'none';
+        $('app-shell').style.display = 'flex';
+        document.body.classList.add('ny-loading');
+      }
+      try {
+        const r = await origLoadAll.apply(this, arguments);
+        loaded = true;
+        safe(syncAll);
+        return r;
+      } catch (e) {
+        if (first) {
+          shown = false;
+          $('loading-screen').style.display = '';
+          $('app-shell').style.display = 'none';
+        }
+        throw e;
+      } finally {
+        if (first) document.body.classList.remove('ny-loading');
+      }
+    };
+  }
+
+  /* ---------- 9. Consistency ---------- */
+  safe(() => {
+    const h = document.querySelector('#page-payments .section-head h2');
+    if (h) h.textContent = 'Transactions';
+  });
+  wrap('renderPayments', function () {
+    document.querySelectorAll('#payments-tbody .pay-status.pending').forEach((el) => {
+      el.textContent = '\u23F3 Awaiting confirmation';
+    });
+  });
+
+  /* ---------- Wire everything up ---------- */
+  function syncAll() {
+    safe(syncScale);
+    safe(syncEmpty);
+    safe(applyBanners);
+    safe(syncTools);
+  }
+  ['renderOverview', 'renderListingsTable', 'loadSubscriptionUI', 'showPage', 'renderAccountType']
+    .forEach((n) => wrap(n, syncAll));
+  syncAll();
+})();
