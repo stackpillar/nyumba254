@@ -11264,11 +11264,11 @@ function lcCanEdit(l){
   }
 
   /* ---------- 2. Sidebar: Tools group, no Enquiries, hide locked tools ---------- */
-  const TOOL_IDS = ['nav-rent-ledger', 'nav-demand-heatmap', 'nav-activity'];
-  const TOOL_PAGES = ['rent-ledger', 'demand-heatmap', 'activity'];
+  const TOOL_IDS = ['nav-rent-ledger', 'nav-demand-heatmap'];
+  const TOOL_PAGES = ['rent-ledger', 'demand-heatmap'];
   safe(() => {
-    const demand = $('nav-demand-heatmap'), act = $('nav-activity');
-    if (demand && act) demand.after(act);
+    const notif = $('nav-notifications'), act = $('nav-activity');
+    if (notif && act) notif.after(act);
     TOOL_IDS.forEach((id) => { const el = $(id); if (el) el.classList.add('ny-tool-item'); });
     const label = $('nav-elite-section');
     if (label) {
@@ -11293,6 +11293,7 @@ function lcCanEdit(l){
       const el = $(id);
       if (el) el.classList.toggle('ny-locked', !allowed);
     });
+    if (label) label.classList.toggle('ny-locked', !allowed);
   }
 
   /* ---------- 6. Settings: Advanced section ---------- */
