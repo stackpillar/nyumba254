@@ -481,6 +481,14 @@
       .sb-main { flex-direction: row; }
       .search-btn { width: auto; min-height: 44px; padding: 0 16px; font-size: 14px; }
     }
+  
+    /* More link v1 */
+    a.latest-more-btn { align-items: center; justify-content: center; text-align: center; text-decoration: none; }
+    @media (max-width: 768px) { a.latest-more-btn { display: flex; } }
+    @media (min-width: 769px) {
+      a.latest-more-btn { display: inline-flex; margin-top: 20px; min-height: 44px; padding: 0 26px; font-size: 14px; font-weight: 600; color: var(--green-dark); background: #fff; border: 1.5px solid var(--green); border-radius: 22px; }
+      a.latest-more-btn:hover { background: var(--green-light); }
+    }
   </style>
   <link rel="stylesheet" href="/theme.css"/>
   <script src="/theme.js"></script>
@@ -679,7 +687,7 @@
         <div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line short"></div><div class="skeleton-line"></div></div></div>
       </div>
     </div>
-    <button type="button" class="latest-more-btn" id="latest-more-btn">Show more listings</button>
+    <a href="/listings" class="latest-more-btn" id="latest-more-btn">View all listings →</a>
     <button type="button" class="scroll-hint left" data-scroll="-1" aria-label="Scroll to previous listings"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 6 9 12 15 18"/></svg></button>
     <button type="button" class="scroll-hint right" data-scroll="1" aria-label="Scroll for more listings"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg></button>
   </div>
@@ -1294,9 +1302,7 @@ boot();
 <script>
 document.addEventListener('click', function (e) {
   var b = e.target.closest('#latest-more-btn'); if (!b) return;
-  var l = document.getElementById('latest-listings');
-  var on = l.classList.toggle('show-all-cards');
-  b.textContent = on ? 'Show fewer' : 'Show more listings';
+  var a = document.getElementById('latest-see-all'); if (a) b.href = a.href;
 });
 </script>
 <script src="/saved-listings.js"></script>
