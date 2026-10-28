@@ -10818,14 +10818,25 @@ init();
   const CAL = '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>';
 
   function swapTab() {
+    if (document.querySelector('.nyb-tab[data-tab="viewings"]')) return true;
     const old = document.querySelector('.nyb-tab[data-tab="money"]');
-    if (!old) return;
+    if (!old) return false;
     const btn = old.cloneNode(false);
     btn.dataset.tab = 'viewings';
     btn.setAttribute('aria-label', 'Viewings');
     btn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${CAL}</svg><span>Viewings</span><span class="nyb-badge" id="nyb-badge-viewings"></span>`;
     old.replaceWith(btn);
     btn.addEventListener('click', () => showPage('viewings'));
+    syncViewingsBadge();
+    return true;
+  }
+
+  function swapTabWhenReady() {
+    if (swapTab()) return;
+    const mo = new MutationObserver(() => { if (swapTab()) mo.disconnect(); });
+    mo.observe(document.body, { childList: true, subtree: true });
+    window.addEventListener('load', () => { swapTab(); });
+    setTimeout(() => mo.disconnect(), 20000);
   }
 
   function syncViewingsBadge() {
@@ -10876,9 +10887,113 @@ init();
   const vb = $('nav-badge-viewings');
   if (vb) new MutationObserver(() => safe(syncViewingsBadge)).observe(vb, { childList: true, characterData: true, subtree: true, attributes: true });
 
-  safe(swapTab);
+  safe(swapTabWhenReady);
   safe(hideMoneyStat);
   safe(renameTransactions);
   safe(syncTabActive);
   safe(() => window.renderWeekMomentum());
+})();
+
+
+/* ===== Pending transactions: initiate / complete ===== */
+(function () {
+  if (window.__nyPendingTx) return;
+  window.__nyPendingTx = true;
+
+  const css = document.createElement('style');
+  css.textContent = `
+    .ptx-card{padding:16px 18px;margin-bottom:16px;border:1.5px solid var(--amber);background:var(--amber-light)}
+    .ptx-row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--border);font-size:13px}
+    .ptx-row:first-of-type{border-top:none}
+    .ptx-row small{display:block;color:var(--text-3);font-size:11.5px;margin-top:2px}
+    @media(max-width:640px){
+      #page-payments .payments-table th:nth-child(2),
+      #page-payments .payments-table td:nth-child(2){display:none}
+    }`;
+  document.head.appendChild(css);
+
+  const isPending = p => p.status === 'pending' || p.status === 'pending_verification';
+
+  function renderPendingCard() {
+    const summary = document.getElementById('payment-summary');
+    if (!summary) return;
+    let card = document.getElementById('ptx-card');
+    if (!card) {
+      card = document.createElement('div');
+      card.id = 'ptx-card';
+      card.className = 'card ptx-card';
+      summary.parentNode.insertBefore(card, summary);
+    }
+    const pending = allPayments.filter(isPending);
+    const unpaid = allListings.filter(l =>
+      l.status === 'approved_unpaid' && l.payment_status !== 'pending_verification' &&
+      !l.is_disabled && !l.recycle_bin);
+
+    if (!pending.length && !unpaid.length) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+
+    const pendHtml = pending.map(p => `
+      <div class="ptx-row">
+        <div>
+          <strong>KES ${Number(p.amount || 0).toLocaleString('en-KE')}</strong> · ${escHtml(p.listings?.title || p.type || 'Payment')}
+          <small>Code: ${escHtml(p.reference || p.mpesa_ref || 'none')} · ${timeAgo(p.created_at)} · awaiting confirmation</small>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="ptxEditCode('${p.id}')">Complete / fix code</button>
+      </div>`).join('');
+
+    const unpaidHtml = unpaid.map(l => `
+      <div class="ptx-row">
+        <div>
+          <strong>${escHtml(l.title)}</strong>
+          <small>Approved — KES ${Number(l.payment_due_amount || 0).toLocaleString('en-KE')} due to go live</small>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openPayListingModal('${l.id}')">Pay now</button>
+      </div>`).join('');
+
+    card.innerHTML = `<div style="font-weight:700;font-size:13.5px;margin-bottom:6px;color:var(--amber)">⏳ Pending transactions</div>${pendHtml}${unpaidHtml}`;
+  }
+
+  window.ptxEditCode = async function (id) {
+    const p = allPayments.find(x => String(x.id) === String(id));
+    if (!p) return;
+    const entered = window.prompt('Enter the 10-character M-Pesa code for this payment:', p.reference || '');
+    if (entered === null) return;
+    const code = entered.trim().toUpperCase();
+    if (!/^[A-Z0-9]{10}$/.test(code)) { showToast('Enter a valid 10-character M-Pesa code', 'error'); return; }
+    const { data, error } = await db.from('payments')
+      .update({ reference: code, status: 'pending_verification' })
+      .eq('id', id).eq('seller_id', effectiveSellerId).in('status', ['pending', 'pending_verification'])
+      .select('id');
+    if (error || !data?.length) {
+      console.error('ptxEditCode failed:', error);
+      showToast(error ? 'Could not update: ' + error.message : 'Update blocked (check payments UPDATE policy)', 'error');
+      return;
+    }
+    p.reference = code; p.status = 'pending_verification';
+    renderPayments();
+    showToast('Code saved — sent for verification ✓', 'success');
+    notifyAdmin('listing_payment_submitted', {
+      listingId: p.listing_id, listingTitle: p.listings?.title, amount: p.amount, reference: code,
+      sellerName: currentProfile?.full_name, sellerEmail: currentUser?.email
+    });
+  };
+
+  const _renderPayments = window.renderPayments;
+  window.renderPayments = function () {
+    const r = _renderPayments.apply(this, arguments);
+    try { renderPendingCard(); } catch (e) { console.error(e); }
+    return r;
+  };
+
+  const _submit = window.submitPayListing;
+  window.submitPayListing = async function () {
+    const r = await _submit.apply(this, arguments);
+    try {
+      const { data } = await db.from('payments').select('*, listings(title)')
+        .eq('seller_id', effectiveSellerId).order('created_at', { ascending: false });
+      if (data) allPayments = data;
+      if (document.getElementById('page-payments')?.classList.contains('active')) renderPayments();
+    } catch (e) { console.error(e); }
+    return r;
+  };
 })();
