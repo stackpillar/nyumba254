@@ -21,7 +21,7 @@
     var t = null;
     try { t = localStorage.getItem('nk_theme'); } catch (e) {}
     if (t !== 'light' && t !== 'dark') {
-      t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+      t = 'light';
     }
     document.documentElement.setAttribute('data-theme', t);
     var m = document.querySelector('meta[name="theme-color"]');
@@ -2304,7 +2304,7 @@ function bindEvents() {
    ════════════════════════════════════════════════════════════ */
 async function nkSavedInit() {
   $('footer-year').textContent = new Date().getFullYear();
-  applyTheme(document.documentElement.getAttribute('data-theme') || 'dark');
+  applyTheme(document.documentElement.getAttribute('data-theme') || 'light');
   nkPopulateFooterCounties();
   nkInitDataSaver();
   bindEvents();
