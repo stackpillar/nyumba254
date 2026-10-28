@@ -368,76 +368,30 @@
       .areas { grid-auto-columns: 130px; }
     }
     @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; } }
-  /* ═══════════════════════════════════════════════════════════════
-   Nyumba254 home: COMPACT FIRST-IMPRESSION PATCH
-   HOW TO APPLY: paste this whole block at the very END of the
-   existing <style> ... </style> in index.html (just before </style>).
-   No HTML or JS changes needed. To undo, delete the block.
-   ═══════════════════════════════════════════════════════════════ */
-
-/* 1. Shorter hero: headline + search + tabs only */
-.hero { min-height: 0; padding: 28px 32px 30px; }
-.hero-content { max-width: 720px; }
-.hero-eyebrow { font-size: 11px; padding: 4px 12px; margin-bottom: 10px; }
-.hero h1 { font-size: clamp(26px, 3.2vw, 38px); line-height: 1.15; margin-bottom: 8px; }
-.hero h1 br { display: none; }                 /* one line instead of two */
-.hero-sub { font-size: 14px; margin-bottom: 14px; max-width: 520px; }
-
-/* 2. Tighter tabs + search box */
-.intent-tabs { margin-bottom: 10px; }
-.intent-tab { min-height: 34px; padding: 0 13px; font-size: 12.5px; }
-.search-box { padding: 8px; gap: 6px; margin-bottom: 12px; max-width: 680px; }
-.search-box input { padding: 10px 14px; }
-.search-box select { min-height: 38px; padding: 8px 10px; }
-.sb-filters { gap: 6px; }
-
-/* 3. Quick row stays, but small; stats move out (the trust bar already says 0% commission) */
-.hero-quick-row { margin-bottom: 0; }
-.nk-nearme-btn { min-height: 34px; }
-.nk-recent-chip { min-height: 32px; }
-.hero-stats { display: none; }
-
-/* 4. Slimmer trust bar and section spacing */
-.trust-bar { padding: 10px 32px; gap: 8px 28px; }
-.trust-item { font-size: 13px; }
-.section { padding: 40px 32px; }
-.section-header { margin-bottom: 14px; }
-.section-title { font-size: 24px; }
-
-/* 5. Listings first, browsing aids after.
-      Pure CSS reorder, so the HTML stays untouched. */
-main#main-content { display: flex; flex-direction: column; }
-main#main-content > .hero { order: 1; }
-main#main-content > .trust-bar { order: 2; }
-main#main-content > #featured-section { order: 3; }
-main#main-content > #latest-section { order: 4; }
-main#main-content > #recently-viewed-section { order: 5; }
-main#main-content > #categories { order: 6; }
-main#main-content > #areas { order: 7; }
-main#main-content > section:not([id]) { order: 8; }   /* Why / How it works / CTA keep their relative order */
-
-/* 6. Slightly shorter cards so more fit above the fold */
-.card-img { aspect-ratio: 16 / 11; }
-.card-body { padding: 12px 14px 12px; }
-.card-sub { margin-bottom: 8px; }
-
-/* Mobile */
-@media (max-width: 768px) {
-  .hero { padding: 18px 16px 20px; }
-  .hero-eyebrow, .hero-sub { display: none; }
-  .hero h1 { font-size: 24px; margin-bottom: 12px; }
-  .intent-tab { min-height: 34px; }
-  .section { padding: 28px 16px; }
-  .trust-bar { padding: 10px 16px; }
-  .trust-item:nth-child(2) { display: none; }          /* keep two trust points, not three */
-}
-@media (max-width: 560px) {
-  #search-area { display: none; }                      /* county + budget + beds is enough on a phone */
-  .sb-filters, .sb-filters.no-beds { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .sb-filters.no-beds { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .search-box select { font-size: 12.5px; padding: 8px 6px; }
-}
-
+  
+    /* ── Homepage v2: listings first ── */
+    .hero{min-height:0;padding:36px 32px 40px}
+    .hero h1{font-size:clamp(28px,3.6vw,42px);margin-bottom:12px}
+    .hero-sub{margin-bottom:18px}
+    .hero-quick-row{margin-bottom:0}
+    .hero-stats{display:none}
+    .section{padding:48px 32px}
+    #categories.section{padding:18px 32px 6px}
+    #categories .section-header{display:none}
+    .categories{gap:10px}
+    .categories .cat-card{display:flex;align-items:center;gap:10px;flex:0 0 auto;padding:9px 16px 9px 10px;border-radius:999px;background:#fff;border:1.5px solid var(--border)}
+    .categories .cat-card::before{display:none}
+    .categories .cat-card:hover{border-color:var(--green);background:var(--green-light);transform:none}
+    .categories .cat-card .cat-icon{width:30px;height:30px;margin:0;border-radius:50%;background:var(--green-light)}
+    .categories .cat-card .cat-icon svg{width:16px;height:16px;stroke:var(--green-dark)}
+    .categories .cat-card .cat-title{font-size:13.5px;margin:0;color:var(--green-dark);white-space:nowrap}
+    .categories .cat-card .cat-desc{display:none}
+    .categories .cat-card .cat-count{font-size:11.5px;color:var(--text-3);margin:0;white-space:nowrap}
+    .categories .cat-card .cat-count:empty{display:none}
+    #featured-section,#latest-section{padding-top:28px}
+    .sb-more{display:none}
+    @media (max-width:768px){.hero{padding:22px 16px 26px}.section{padding:28px 16px}#categories.section{padding:14px 16px 4px}#featured-section,#latest-section{padding-top:20px}.categories .cat-card{flex:0 0 auto;max-width:none}}
+    @media (max-width:560px){.hero-sub{display:none}.sb-more{display:block;width:100%;font-size:13px;font-weight:600;color:var(--green-dark);background:var(--green-light);border-radius:8px;min-height:40px}.search-box:not(.open) .sb-filters{display:none}}
 </style>
   <link rel="stylesheet" href="/theme.css"/>
   <script src="/theme.js"></script>
@@ -502,9 +456,9 @@ main#main-content > section:not([id]) { order: 8; }   /* Why / How it works / CT
   </div>
   <div class="hero-overlay" aria-hidden="true"></div>
   <div class="hero-content">
-    <div class="hero-eyebrow">Kisumu · Nairobi · Mombasa</div>
-    <h1 id="hero-title">Find your next home<br>anywhere in <span>Kenya</span></h1>
-    <p class="hero-sub">Apartments, houses, boarding rooms, Airbnb rentals, and shops/offices across Kenya's counties. Buyers, owners, caretakers, agents, and companies are welcome.</p>
+    
+    <h1 id="hero-title">Find your next home in Kisumu and across Kenya</h1>
+    <p class="hero-sub">Apartments, houses, boarding rooms and shops. See who is listing and what a viewing costs before you get in touch.</p>
 
     <div class="intent-tabs" id="intent-tabs" role="group" aria-label="What are you looking for">
       <button type="button" class="intent-tab active" data-cat="" data-freq="month" aria-pressed="true">Rent</button>
@@ -523,6 +477,7 @@ main#main-content > section:not([id]) { order: 8; }   /* Why / How it works / CT
         </div>
         <button type="button" class="search-btn" id="search-btn">Search</button>
       </div>
+      <button type="button" class="sb-more" id="sb-more" aria-expanded="false" aria-controls="sb-filters">More filters</button>
       <div class="sb-filters" id="sb-filters">
         <select id="search-county" aria-label="County"><option value="">All counties</option></select>
         <select id="search-area" aria-label="Area"><option value="">All areas</option></select>
@@ -549,25 +504,8 @@ main#main-content > section:not([id]) { order: 8; }   /* Why / How it works / CT
   </div>
 </section>
 
-<!-- ── TRUST BAR (seeker-only messaging; seller messaging lives in the CTA banner) ── -->
-<div class="trust-bar">
-  <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>See who is listing and what a viewing costs</div>
-  <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.12 1.2 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>Role-verified listers</div>
-  <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>No deal commission from Nyumba254</div>
-</div>
-
-<!-- ── RECENTLY VIEWED ── -->
-<section class="section reveal nk-recently-viewed" id="recently-viewed-section" aria-labelledby="rv-title">
-  <div class="section-header"><h2 class="section-title" id="rv-title">Recently viewed</h2></div>
-  <div class="scroll-wrap">
-    <div id="recently-viewed-listings"></div>
-    <button type="button" class="scroll-hint left" data-scroll="-1" aria-label="Scroll to previous recently viewed"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 6 9 12 15 18"/></svg></button>
-    <button type="button" class="scroll-hint right" data-scroll="1" aria-label="Scroll for more recently viewed"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg></button>
-  </div>
-</section>
-
 <!-- ── CATEGORIES (real links: crawlable, open in new tab) ── -->
-<section class="section reveal" id="categories" aria-labelledby="cat-title">
+<section class="section" id="categories" aria-labelledby="cat-title">
   <div class="section-header">
     <h2 class="section-title" id="cat-title">What are you looking for?</h2>
     <a href="/how-it-works" class="see-all">How it works →</a>
@@ -576,23 +514,23 @@ main#main-content > section:not([id]) { order: 8; }   /* Why / How it works / CT
     <div class="categories" tabindex="0" id="categories-row" aria-label="Property categories">
       <a class="cat-card apartment" href="/listings?category=apartment">
         <div class="cat-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
-        <div class="cat-title">Apartment</div><div class="cat-desc">Flats, units, and compounds</div><div class="cat-count" id="count-apartment">Loading…</div>
+        <div class="cat-title">Apartment</div><div class="cat-desc">Flats, units, and compounds</div><div class="cat-count" id="count-apartment"></div>
       </a>
       <a class="cat-card house" href="/listings?category=house">
         <div class="cat-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V10"/></svg></div>
-        <div class="cat-title">House</div><div class="cat-desc">Standalone homes and yards</div><div class="cat-count" id="count-house">Loading…</div>
+        <div class="cat-title">House</div><div class="cat-desc">Standalone homes and yards</div><div class="cat-count" id="count-house"></div>
       </a>
       <a class="cat-card boarding" href="/listings?category=boarding">
         <div class="cat-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
-        <div class="cat-title">Boarding House</div><div class="cat-desc">Student rooms and bed spaces</div><div class="cat-count" id="count-boarding">Loading…</div>
+        <div class="cat-title">Boarding House</div><div class="cat-desc">Student rooms and bed spaces</div><div class="cat-count" id="count-boarding"></div>
       </a>
       <a class="cat-card airbnb" href="/listings?category=airbnb">
         <div class="cat-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8 7 5 11 5 14.5a7 7 0 0014 0C19 11 16 7 12 2z"/></svg></div>
-        <div class="cat-title">Airbnb / Holiday Rental</div><div class="cat-desc">Short stays and furnished rentals</div><div class="cat-count" id="count-airbnb">Loading…</div>
+        <div class="cat-title">Airbnb / Holiday Rental</div><div class="cat-desc">Short stays and furnished rentals</div><div class="cat-count" id="count-airbnb"></div>
       </a>
       <a class="cat-card commercial" href="/listings?category=commercial">
         <div class="cat-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6M9 11h.01M15 11h.01M9 7h.01M15 7h.01"/></svg></div>
-        <div class="cat-title">Shops &amp; offices</div><div class="cat-desc">Retail shops, offices, and business spaces</div><div class="cat-count" id="count-commercial">Loading…</div>
+        <div class="cat-title">Shops &amp; offices</div><div class="cat-desc">Retail shops, offices, and business spaces</div><div class="cat-count" id="count-commercial"></div>
       </a>
     </div>
     <button type="button" class="scroll-hint left" data-scroll="-1" aria-label="Scroll to previous categories"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 6 9 12 15 18"/></svg></button>
@@ -600,8 +538,18 @@ main#main-content > section:not([id]) { order: 8; }   /* Why / How it works / CT
   </div>
 </section>
 
+<!-- ── RECENTLY VIEWED ── -->
+<section class="section nk-recently-viewed" id="recently-viewed-section" aria-labelledby="rv-title">
+  <div class="section-header"><h2 class="section-title" id="rv-title">Recently viewed</h2></div>
+  <div class="scroll-wrap">
+    <div id="recently-viewed-listings"></div>
+    <button type="button" class="scroll-hint left" data-scroll="-1" aria-label="Scroll to previous recently viewed"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 6 9 12 15 18"/></svg></button>
+    <button type="button" class="scroll-hint right" data-scroll="1" aria-label="Scroll for more recently viewed"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg></button>
+  </div>
+</section>
+
 <!-- ── FEATURED (hidden automatically when there are none) ── -->
-<section class="section section-alt reveal" id="featured-section" aria-labelledby="feat-title">
+<section class="section section-alt" id="featured-section" aria-labelledby="feat-title">
   <div class="section-header">
     <div><h2 class="section-title" id="feat-title">Featured listings</h2><p class="section-subtitle">Hand-picked and verified. Updated daily.</p></div>
     <a href="/listings?sort=featured" class="see-all">See all →</a>
@@ -620,7 +568,7 @@ main#main-content > section:not([id]) { order: 8; }   /* Why / How it works / CT
 </section>
 
 <!-- ── LATEST ── -->
-<section class="section reveal" id="latest-section" aria-labelledby="latest-title">
+<section class="section" id="latest-section" aria-labelledby="latest-title">
   <div class="section-header">
     <div><h2 class="section-title" id="latest-title">Latest listings</h2><p class="section-subtitle">Newest properties, updated in real time</p></div>
     <a href="/listings" class="see-all" id="latest-see-all">See all →</a>
@@ -656,6 +604,13 @@ main#main-content > section:not([id]) { order: 8; }   /* Why / How it works / CT
   </div>
   <div class="quicklinks" id="popular-area-links"></div>
 </section>
+
+<!-- ── TRUST BAR (seeker-only messaging; seller messaging lives in the CTA banner) ── -->
+<div class="trust-bar">
+  <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>See who is listing and what a viewing costs</div>
+  <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.12 1.2 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>Role-verified listers</div>
+  <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>No deal commission from Nyumba254</div>
+</div>
 
 <!-- ── WHY NYUMBA254 ── -->
 <section class="section reveal" aria-labelledby="why-title">
@@ -695,6 +650,7 @@ main#main-content > section:not([id]) { order: 8; }   /* Why / How it works / CT
     </div>
   </div>
 </section>
+
 
 </main>
 
@@ -788,6 +744,10 @@ const listingHref = l => '/listing?id=' + pad(l.listing_number);
 const countiesForArea = a => NK_COUNTIES.filter(c => (NK_AREAS_BY_COUNTY[c] || []).includes(a));
 const safeQ = s => nkSanitizeSearchTerm(s).replace(/["*]/g, ' ').replace(/\s+/g, ' ').trim();
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const HOME_DEFAULT_COUNTY = '';   // set to 'Kisumu' once Kisumu has about 20 live listings
+const NK_CACHE_KEYS = { 'featured-listings': 'nk_home_featured', 'latest-listings': 'nk_home_latest' };
+function cacheSave(id, el) { try { const k = NK_CACHE_KEYS[id]; if (!k) return; if (id === 'latest-listings' && (latest.county !== HOME_DEFAULT_COUNTY || latest.area)) return; const h = el.innerHTML; if (h.length < 250000) localStorage.setItem(k, h); } catch (e) {} }
+function cacheRestore() { try { Object.keys(NK_CACHE_KEYS).forEach(id => { const h = localStorage.getItem(NK_CACHE_KEYS[id]); if (h && $(id)) $(id).innerHTML = h; }); } catch (e) {} }
 const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
 let toastTimer;
 function toast(msg, kind) {
@@ -881,6 +841,7 @@ function renderListings(containerId, listings, imgWidth, emptyHtml) {
   const el = $(containerId);
   if (!listings.length) { el.innerHTML = emptyHtml || ''; refreshScrollHints(); return; }
   el.innerHTML = `<div class="listings-grid" tabindex="0" aria-label="Listings">${listings.map(l => nkBuildCard(l, { compact: true, imgWidth: imgWidth || 480 })).join('')}</div>${buildDots(listings.length)}`;
+  cacheSave(containerId, el);
   if (typeof NKSaved !== 'undefined' && NKSaved.hydrate) NKSaved.hydrate(el);
   const wrap = el.closest('.scroll-wrap'); if (wrap) { attachDots(wrap); initScrollWrap(wrap); }
 }
@@ -900,7 +861,9 @@ const latest = { county: '', area: '', token: 0 };
 function syncLatestLink() { $('latest-see-all').href = nkBuildListingsUrl({ county: latest.county, area: latest.area }); }   // carries county + area to /listings
 async function loadLatest() {
   const my = ++latest.token, { county, area } = latest;
-  $('latest-listings').innerHTML = SKELETON; syncLatestLink();
+  const keepCached = !loadLatest.done && $('latest-listings').querySelector('.listings-grid'); loadLatest.done = true;
+  if (!keepCached) $('latest-listings').innerHTML = SKELETON;
+  syncLatestLink();
   let q = db.from('listings').select('*, listing_photos(*)').eq('status', 'active');
   if (area) { q = q.eq('area', area); if (county) q = q.eq('county', county); } else q = nkCountyEq(q, county);
   const { data, error } = await q.order('created_at', { ascending: false }).order('id').limit(20);
@@ -1177,6 +1140,8 @@ function bindEvents() {
   makeSearchBox($('nav-compact-input'), $('nav-search-dropdown'), navSearch);
   $('nav-compact-btn').addEventListener('click', () => navSearch($('nav-compact-input').value));
   $('nk-nearme-btn').addEventListener('click', heroNearMe);
+  const moreBtn = $('sb-more');
+  if (moreBtn) moreBtn.addEventListener('click', () => { const box = moreBtn.closest('.search-box'); const open = box.classList.toggle('open'); moreBtn.setAttribute('aria-expanded', String(open)); moreBtn.textContent = open ? 'Fewer filters' : 'More filters'; });
   $('nk-recent-searches').addEventListener('click', e => { const b = e.target.closest('[data-repeat]'); const s = b && nkGetRecentSearches()[Number(b.dataset.repeat)]; if (s) go(s.filters); });
   // latest
   $('latest-county-select').innerHTML = '<option value="">All counties</option>' + NK_COUNTIES.map(c => `<option value="${escHtml(c)}">${escHtml(nkCountyLabel(c))}</option>`).join('');
@@ -1208,7 +1173,8 @@ function boot() {
   populateSearchCounties(); renderFooterCounties(); renderPopularLinks(); renderCountiesGrid();
   bindEvents(); renderRecentChips();
   nkInitDataSaver();
-  loadStats(); loadFeatured(); setLatestCounty(''); renderRecentlyViewed(); loadReviews();
+  cacheRestore(); refreshScrollHints();
+  loadStats(); loadFeatured(); setLatestCounty(HOME_DEFAULT_COUNTY); renderRecentlyViewed(); loadReviews();
   nkInitAccountNav(['nav-account-link', 'mobile-account-link']);
   nkSessionPromise.then(({ data }) => { if (data && data.session) $('tab-account-link').setAttribute('href', '/dashboard'); });
   nkTrackPageView();
