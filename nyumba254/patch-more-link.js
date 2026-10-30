@@ -1,412 +1,501 @@
-#!/usr/bin/env node
-// Nyumba254 first-impression patch (complete version)
-//
-// Usage (from your site root, where index.html and nk-shared.js live):
-//   node patch.js              apply everything
-//   node patch.js --dry        show what would change, write nothing
-//   node patch.js --force      write even if some edits could not be matched
-//   node patch.js /path/to/site
-//
-// Safe to re-run: every edit checks whether it is already applied.
-// Backups are saved once as index.html.bak and nk-shared.js.bak.
-'use strict';
-const fs = require('fs');
-const path = require('path');
+/* ============================================================
+   Nyumba254 — listings.html UX patch  (patch-more-link.js, completes patch.js v1)
+   Use INSTEAD of /patch.js (same position: last script on listings.html).
+   Works purely by enhancing the DOM and wrapping global helpers, so it
+   needs no edits to listings.html or nk-shared.js. Safe to remove.
 
-const args = process.argv.slice(2);
-const flags = new Set(args.filter(a => a.startsWith('--')));
-const dir = path.resolve(args.find(a => !a.startsWith('--')) || process.cwd());
-const DRY = flags.has('--dry'), FORCE = flags.has('--force');
+   What it does
+   1. Price + photo count ON the photo (desktop AND phones); category moves into the text line
+   2. Removes duplicated "identity checked" text; adds a tag icon to the viewing-fee chip
+   3. Adds "Listed 2d ago" (desktop in the area line, mobile in the key line)
+   4. Mobile: one compact key line (Category · beds · baths) under the title
+   5. Faster first paint: profile + viewing-fee requests run in parallel
+   6. Images: responsive srcset + Supabase transforms, automatic fallback to
+      the original file if transforms are not enabled, fade-in on load
+   7. Recently Viewed moves below the results; popular-search chips on top
+   8. Desktop: sticky category tabs.  Mobile: nav hides on scroll-down
+   9. Repeated "Get alerts" cards removed from infinite scroll; a11y heading
 
-/* ---------- payloads (stored in the last block comment of this file) ---------- */
-const self = fs.readFileSync(__filename, 'utf8').replace(/\r\n/g, '\n');
-const pStart = self.lastIndexOf('/*' + 'PAYLOADS');
-const pEnd = self.lastIndexOf('PAYLOADS' + '*/');
-if (pStart < 0 || pEnd < 0 || pEnd < pStart) { console.error('patch.js is damaged: payload block not found.'); process.exit(1); }
-const P = {};
-self.slice(pStart + 10, pEnd).split(/^@@@ (\w+)\n/m).slice(1).forEach((v, i, a) => { if (i % 2 === 0) P[v] = a[i + 1].replace(/\n+$/, '\n'); });
-['CSS', 'SHARED_HELPERS', 'SHARED_PRE', 'SHARED_BADGE', 'SHARED_METAROW', 'PEEK_HTML', 'PICTURE_HTML', 'HEAD_PRELOAD', 'INDEX_JS'].forEach(k => {
-  if (!P[k] || !P[k].trim()) { console.error('patch.js is damaged: payload ' + k + ' is missing.'); process.exit(1); }
-});
-
-/* ---------- helpers ---------- */
-function sub(text, find, repl) {
-  if (typeof find === 'string') {
-    const i = text.indexOf(find);
-    if (i < 0) return null;
-    return text.slice(0, i) + repl + text.slice(i + find.length);
+   Completed / fixed compared with patch.js v1
+   A. Image fallback now actually fires. v1 compared the <img src> attribute, but when
+      a srcset is in use the browser requests a srcset candidate, so the check never matched
+      and photos stayed broken when transforms were off. The fallback also only switches
+      transforms off globally once the original file has really loaded (one bad photo
+      no longer disables transforms for everyone).
+   B. A photo can no longer stay invisible: the photo is prepared first and every
+      enhancement step is isolated, so one failing step cannot leave opacity:0 behind.
+   C. Cards are enhanced synchronously in the MutationObserver microtask, not a frame
+      later: no flash of un-enhanced cards and no scroll drift when "Back to results"
+      restores the scroll position.
+   D. "Listed …" label now reads "Listed 2d ago" as promised (v1 showed only "2d ago").
+      The age comes from the rows the page already fetched, so the extra
+      listings.created_at query only runs as a fallback.
+   E. Photo counter is shown on phones too (v1 only styled it for desktop).
+   F. Stretched-link focus ring follows the new card radius.
+   G. Double-load guard: warns instead of applying the patch twice if patch.js is also loaded.
+   ============================================================ */
+(function () {
+  'use strict';
+  if (window.__nkPatchMoreLink) return;
+  if (window.__nkPatchV1) {
+    try { console.warn('[nk-patch] patch.js is also loaded. Remove it and keep only patch-more-link.js.'); } catch (x) {}
+    return;
   }
-  const m = find.exec(text);
-  if (!m) return null;
-  return text.slice(0, m.index) + (typeof repl === 'function' ? repl(m) : repl) + text.slice(m.index + m[0].length);
-}
-const has = s => t => t.includes(s);
-const lacks = s => t => !t.includes(s);
+  window.__nkPatchMoreLink = true;
+  window.__nkPatchV1 = true;   // so a late-loading patch.js stays out of the way
 
-function runEdits(label, text, edits) {
-  const results = [];
-  for (const e of edits) {
-    if (e.skip) { results.push(['skip', e.n, e.skip]); continue; }
-    if (e.done(text)) { results.push(['done', e.n]); continue; }
-    const out = e.fn(text);
-    if (out === null) { results.push(['FAIL', e.n]); continue; }
-    text = out; results.push(['ok', e.n]);
+  var $ = function (id) { return document.getElementById(id); };
+  var warn = function (e) { try { console.warn('[nk-patch]', e); } catch (x) {} };
+  var step = function (fn) { try { fn(); } catch (e) { warn(e); } };
+
+  var agoCache = {};   // listing id -> created_at (filled from the page's own rows, DB only as fallback)
+
+  var CAM = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2'%3E%3Cpath d='M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z'/%3E%3Ccircle cx='12' cy='13' r='4'/%3E%3C/svg%3E")`;
+
+  /* ───────────────────────── 1. CSS ───────────────────────── */
+  var CSS = `
+/* ===== page header ===== */
+html.nk-patched .page-header{background:linear-gradient(180deg,#fff 0%,#f3faf7 100%)}
+.page-header h1{letter-spacing:-.01em}
+.header-search{max-width:820px}
+.header-search input{padding:13px 16px;border-radius:14px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.hs-btn{border-radius:14px;box-shadow:0 4px 12px rgba(15,110,86,.25)}
+
+/* ===== category tabs ===== */
+.cat-tab.active{background:var(--green);border-color:var(--green);box-shadow:0 3px 10px rgba(15,110,86,.25)}
+@media (min-width:901px){
+  .cat-tabs{position:sticky;top:var(--nav-h);z-index:45;background:var(--surface);margin:-6px -2px 12px;padding:8px 2px}
+}
+
+/* ===== popular searches ===== */
+.nk-discover{display:flex;align-items:center;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 0 14px;padding:2px 0}
+.nk-discover::-webkit-scrollbar{display:none}
+.nk-discover-label{flex:none;font-size:12.5px;font-weight:600;color:var(--text-3);margin-right:2px}
+.nk-dchip{flex:none;min-height:36px;padding:0 14px;border-radius:20px;background:#fff;border:1.5px solid var(--border);color:var(--text-2);font-size:13px;font-weight:600;white-space:nowrap;transition:border-color .15s,color .15s,background .15s}
+.nk-dchip:hover{border-color:var(--green);color:var(--green-dark);background:var(--green-light)}
+@media (max-width:768px){.nk-discover{display:none}}
+
+/* ===== listing grid ===== */
+.listings-grid{gap:20px;grid-template-columns:repeat(auto-fill,minmax(min(285px,100%),1fr))}
+.listings-grid .card{border-radius:16px;border:1px solid #ebe9e3;box-shadow:0 1px 2px rgba(0,0,0,.04),0 6px 18px rgba(15,110,86,.06)}
+.listings-grid .card:hover,.listings-grid .card.is-hover{transform:translateY(-3px);box-shadow:0 14px 32px rgba(15,110,86,.15)}
+.listings-grid .card:has(.badge-featured){border-color:#EBC57A;box-shadow:0 0 0 1px rgba(235,197,122,.55),0 8px 22px rgba(232,151,58,.14)}
+.listings-grid .card-link:focus-visible::after{border-radius:16px}
+.skeleton{border-radius:16px}
+
+/* ===== photo ===== */
+.card-img{aspect-ratio:3/2}
+.skeleton-img{aspect-ratio:3/2}
+.card-img:not(.nk-ready){background:linear-gradient(90deg,#f0efe9 25%,#e8e7e1 50%,#f0efe9 75%);background-size:200% 100%;animation:shimmer 1.4s infinite}
+html.nk-patched .card-img>img{opacity:0;transition:opacity .35s ease,transform .5s ease}
+html.nk-patched .card-img>img.is-loaded{opacity:1}
+@media (hover:hover){.card:hover .card-img>img.is-loaded{transform:scale(1.035)}}
+.card-img::after{height:46%;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.28))}
+.card-img .badge-cat{display:none}
+
+/* price sits on the photo: the one memorable element */
+.card-price-overlay{position:absolute;left:10px;bottom:10px;z-index:3;pointer-events:none;max-width:calc(100% - 20px);
+  background:rgba(10,22,17,.76);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);color:#fff;
+  font-size:16.5px;font-weight:800;line-height:1.2;letter-spacing:-.01em;padding:6px 12px;border-radius:12px;white-space:nowrap}
+.card-price-overlay span{font-size:11.5px;font-weight:500;opacity:.85;margin-left:1px}
+.card-body .card-price{display:none}
+
+/* photo counter (multi-photo cards) */
+.card-photo-counter{display:flex;align-items:center;gap:5px;right:10px;bottom:10px;padding:4px 9px;font-size:11px;background:rgba(10,22,17,.6)}
+.card-photo-counter::before{content:"";width:12px;height:12px;background:currentColor;
+  -webkit-mask:${CAM} center/contain no-repeat;mask:${CAM} center/contain no-repeat}
+.card:has(.card-photo-counter) .card-price-overlay{max-width:calc(100% - 92px)}
+
+/* ===== card text ===== */
+.card-body{padding:13px 15px 15px}
+.card-area{text-transform:none;letter-spacing:0;font-size:12.5px;font-weight:700;gap:5px;margin-bottom:5px}
+.card-area::before{font-size:12px}
+.card-cat{font-weight:500;color:var(--text-3);font-size:12.5px}
+.card-cat::before{content:"/";margin-right:5px;color:#c9c7bf}
+.card-ago{margin-left:auto;font-size:11.5px;font-weight:500;color:var(--text-3)}
+.card-ago:empty,.kl-ago:empty{display:none}
+.card-title{font-size:15.5px;font-weight:700;line-height:1.3;min-height:2.6em;margin-bottom:3px}
+.card-keyline{display:none}
+.card-sub{margin-bottom:8px}
+
+/* trust row: who is listing and what a viewing costs */
+.card-trust{padding-top:9px;margin-top:2px;border-top:1px solid #f0eee8;gap:6px 8px}
+.card-role{font-size:12.5px;font-weight:600;color:var(--text-2)}
+.card-viewing-fee{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;padding:2px 9px}
+.card-viewing-fee svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.2;flex:none}
+.card-specs-chips{margin-top:2px}
+
+/* actions */
+.card-inquire-btn,.card-wa-btn{border-radius:12px;font-weight:700}
+.card-msg-btn,.nk-compare-check{border-radius:12px}
+
+/* ===== phones ===== */
+@media (max-width:768px){
+  .listings-grid{gap:12px 10px}
+  .listings-grid .card{border-radius:14px}
+  .listings-grid .card-link:focus-visible::after{border-radius:14px}
+  .card-img,.skeleton-img{aspect-ratio:4/3}
+  .card-price-overlay{left:6px;bottom:6px;max-width:calc(100% - 12px);font-size:13px;padding:4px 9px;border-radius:10px}
+  .card-price-overlay span{font-size:10px}
+  /* the page hides the counter on phones; swipe still works, so show the count as a small pill */
+  .card-photo-counter{display:flex;right:6px;bottom:6px;padding:3px 7px;gap:4px;font-size:10px}
+  .card-photo-counter::before{width:10px;height:10px}
+  .card:has(.card-photo-counter) .card-price-overlay{max-width:calc(100% - 66px)}
+  .card-body{padding:9px 10px 11px}
+  .card-area{font-size:11px;margin-bottom:3px}
+  .card-cat,.card-ago{display:none}
+  .card-title{font-size:13.5px;min-height:2.6em;margin-bottom:3px}
+  .card-keyline{display:flex;flex-wrap:wrap;gap:0 6px;font-size:11.5px;line-height:1.4;font-weight:500;color:var(--text-2);margin-bottom:5px}
+  .kl-ago{color:var(--text-3)}
+  .card-trust{padding-top:6px;margin-bottom:8px}
+  .card-role{font-size:11px}
+  .card-inquire-btn,.card-wa-btn{min-height:40px;font-size:12.5px}
+  .nav-count{display:none}
+  nav#main-nav{transition:transform .28s ease}
+  nav#main-nav.nk-nav-hidden{transform:translateY(-100%)}
+  .nk-quickbar{transition:top .28s ease}
+}
+
+/* ===== recently viewed now sits under the results ===== */
+#recent-mount{margin-top:28px}
+.nk-recent-card img,.nk-recent-ph{border-radius:12px}
+
+/* ===== trust bar ===== */
+.trust-bar{background:#fff;border-color:var(--border);color:var(--green-dark)}
+`;
+
+  function injectCss() {
+    if ($('nk-patch-style')) return;
+    var s = document.createElement('style');
+    s.id = 'nk-patch-style';
+    s.textContent = CSS;
+    document.head.appendChild(s);
+    document.documentElement.classList.add('nk-patched');
   }
-  console.log('\n' + label);
-  results.forEach(([s, n, why]) => console.log('  ' + ({ ok: '[applied]', done: '[already]', FAIL: '[FAILED ]', skip: '[skipped]' })[s] + ' ' + n + (why ? ' (' + why + ')' : '')));
-  return { text, failed: results.filter(r => r[0] === 'FAIL').length };
-}
 
-async function makeImages() {
-  const src = path.join(dir, 'hero-kenya-apartments.jpg');
-  const small = path.join(dir, 'hero-kenya-apartments-800.webp'), big = path.join(dir, 'hero-kenya-apartments.webp');
-  if (fs.existsSync(small) && fs.existsSync(big)) return true;
-  if (!fs.existsSync(src)) { console.log('\n  hero-kenya-apartments.jpg not found, skipping hero image optimisation.'); return false; }
-  if (DRY) return false;
-  let sharp;
-  try { sharp = require(require.resolve('sharp', { paths: [dir, process.cwd(), __dirname] })); }
-  catch (e) { console.log('\n  "sharp" is not installed, so mobile/WebP hero images were skipped.\n  Run:  npm i --no-save sharp   then   node patch.js   again.'); return false; }
-  await sharp(src).resize({ width: 800 }).webp({ quality: 72 }).toFile(small);
-  await sharp(src).webp({ quality: 78 }).toFile(big);
-  console.log('\n  Created hero-kenya-apartments-800.webp and hero-kenya-apartments.webp');
-  return true;
-}
+  /* ───────────── 2. Faster data: run profile + fee requests together ─────────────
+     runSearch awaits nkHydratePublicProfiles, THEN nkHydrateViewingFees.
+     Both only need listing ids, so start the fee request as soon as the
+     profile request starts, and hand the result back when it is asked for.
+     The rows passed in already carry created_at, so we keep it for "Listed 2d ago". */
+  function parallelHydration() {
+    var origP = window.nkHydratePublicProfiles, origF = window.nkHydrateViewingFees;
+    if (typeof origP !== 'function' || typeof origF !== 'function') return;
+    var pending = new Map();
+    var key = function (rows) { return (rows || []).map(function (r) { return r.id; }).join(','); };
 
-function readNormalised(file) {
-  const raw = fs.readFileSync(file, 'utf8');
-  return { text: raw.replace(/\r\n/g, '\n'), crlf: /\r\n/.test(raw) };
-}
-function save(file, text, crlf) {
-  const bak = file + '.bak';
-  if (!fs.existsSync(bak)) fs.copyFileSync(file, bak);
-  fs.writeFileSync(file, crlf ? text.replace(/\n/g, '\r\n') : text);
-}
+    window.nkHydratePublicProfiles = function (rows) {
+      try {
+        (rows || []).forEach(function (r) { if (r && r.id && r.created_at) agoCache[r.id] = r.created_at; });
+        var k = key(rows);
+        if (rows && rows.length && !pending.has(k)) {
+          var p = origF(rows);
+          p.catch(function () {});
+          pending.set(k, p);
+          setTimeout(function () { pending.delete(k); }, 15000);
+        }
+      } catch (e) { warn(e); }
+      return origP.apply(this, arguments);
+    };
 
-/* ---------- edits: nk-shared.js ---------- */
-const sharedEdits = [
-  { n: 'shared: nkCardMeta() helper (beds / baths / amenities)', done: has('function nkCardMeta('),
-    fn: t => sub(t, 'function nkCardCoverPhoto(listing) {', P.SHARED_HELPERS + '\nfunction nkCardCoverPhoto(listing) {') },
-  { n: 'shared: eager first images (opts.eager)', done: has('o.eager ?'),
-    fn: t => sub(t, 'alt="${safeTitle}" loading="lazy" width=', 'alt="${safeTitle}" ${o.eager ? \'loading="eager" fetchpriority="high"\' : \'loading="lazy"\'} width=') },
-  { n: 'shared: price overlay / photo count / short role vars', done: has('const nkPhotoCount'),
-    fn: t => sub(t, '  return `\n    <a class="card"', P.SHARED_PRE + '  return `\n    <a class="card"') },
-  { n: 'shared: card gets has-overlay class', done: has('has-overlay'),
-    fn: t => sub(t, '<a class="card" href="${href}"', '<a class="card${o.priceOverlay ? \' has-overlay\' : \'\'}" href="${href}"') },
-  { n: 'shared: price + photo count on image, category moves to meta row', done: has('overlayHtml :'),
-    fn: t => sub(t, '        <span class="badge-cat ${escHtml(listing.category)}">${meta.label}</span>', P.SHARED_BADGE.replace(/\n$/, '')) },
-  { n: 'shared: meta row (category, beds, baths, amenities)', done: has('class="card-meta"'),
-    fn: t => sub(t, '<div class="card-sub">${escHtml(subText)}</div>', P.SHARED_METAROW.replace(/\n$/, '')) },
-  { n: 'shared: short role text on compact cards', done: has('shortRoleText : roleText'),
-    fn: t => sub(t, '">${escHtml(roleText)}</div>', '">${escHtml(o.priceOverlay ? shortRoleText : roleText)}</div>') },
-  { n: 'shared: "free" class on free viewing pill', done: has('card-viewing-fee${viewingFee'),
-    fn: t => sub(t, '<div class="card-viewing-fee">${viewingFee===null', '<div class="card-viewing-fee${viewingFee===0 ? \' free\' : \'\'}">${viewingFee===null') },
-];
-
-/* ---------- edits: index.html ---------- */
-function indexEdits(imagesOk) {
-  const stamp = Date.now().toString(36);
-  return [
-    { n: 'css: first-impression styles (cards, peek strip, mobile hero, search icon)', done: has('nk-patch:first-impression'),
-      fn: t => sub(t, /<\/style>\s*<link rel="stylesheet" href="\/theme\.css"\/>/, () => '/* nk-patch:first-impression */\n' + P.CSS + '  </style>\n  <link rel="stylesheet" href="/theme.css"/>') },
-    { n: 'html: replace hidden hero stats with newest-listings peek strip', done: has('id="hero-peek"'),
-      fn: t => sub(t, /[ \t]*<div class="hero-stats">[\s\S]*?Deal commission \(Nyumba254\)<\/div><\/div>\s*<\/div>/, '    ' + P.PEEK_HTML.replace(/\n$/, '')) },
-    { n: 'html: "new this week" pill next to Latest listings', done: has('id="latest-fresh"'),
-      fn: t => sub(t, '<h2 class="section-title" id="latest-title">Latest listings</h2>', '<h2 class="section-title" id="latest-title">Latest listings <span class="fresh-pill" id="latest-fresh" hidden></span></h2>') },
-    { n: 'html: move Recently viewed below Latest', done: t => t.indexOf('id="recently-viewed-section"') > t.indexOf('id="latest-section"'),
-      fn: t => {
-        const m = /<!-- [^\n]*RECENTLY VIEWED[^\n]*-->[\s\S]*?<\/section>\n?/.exec(t); if (!m) return null;
-        const out = t.slice(0, m.index) + t.slice(m.index + m[0].length);
-        const m2 = /<!-- [^\n]*COUNTIES[^\n]*-->/.exec(out); if (!m2) return null;
-        return out.slice(0, m2.index) + m[0].replace(/\n?$/, '\n') + '\n' + out.slice(m2.index);
-      } },
-    { n: 'html: cache-bust nk-shared.js', done: t => /nk-shared\.js\?v=/.test(t),
-      fn: t => sub(t, '<script src="/nk-shared.js"></script>', '<script src="/nk-shared.js?v=' + stamp + '"></script>') },
-    imagesOk
-      ? { n: 'html: hero <picture> (WebP + mobile size) and preload', done: has('<picture>'),
-          fn: t => {
-            const o = sub(t, '<img class="hero-slide active" src="/hero-kenya-apartments.jpg" alt="" width="1672" height="941" decoding="async" fetchpriority="high"/>', P.PICTURE_HTML.replace(/\n$/, ''));
-            if (o === null) return null;
-            return sub(o, '<link rel="preconnect" href="https://fonts.googleapis.com"/>', P.HEAD_PRELOAD.replace(/\n$/, '') + '\n  <link rel="preconnect" href="https://fonts.googleapis.com"/>');
-          } }
-      : { n: 'html: hero <picture> (WebP + mobile size) and preload', skip: 'WebP files not available, see message above', done: () => false, fn: t => t },
-
-    { n: 'js: remove hero-stats counters', done: lacks("$('stat-listings').dataset.target"),
-      fn: t => sub(t, /[ \t]*\$\('stat-listings'\)\.dataset\.target[^\n]*\n[ \t]*\$\('stat-areas'\)\.dataset\.target[^\n]*\n/, '') },
-    { n: 'js: remove startCountUp() call', done: lacks('startCountUp();'),
-      fn: t => sub(t, 'renderCountiesGrid(); startCountUp();', 'renderCountiesGrid();') },
-    { n: 'js: remove dead hero slideshow', done: lacks('initHeroSlideshow'),
-      fn: t => { const a = sub(t, 'initHeroSlideshow(); ', ''); return a === null ? null : sub(a, /function initHeroSlideshow\(\) \{[\s\S]*?\n\}\n/, ''); } },
-    { n: 'js: statsReady flag', done: has('statsReady = true'),
-      fn: t => sub(t, 'countyCounts = stats.counties || {};', 'countyCounts = stats.counties || {}; statsReady = true;') },
-    { n: 'js: hide "Browse by county" until 2+ counties have listings', done: has('/*gate*/'),
-      fn: t => sub(t, "grid.classList.toggle('hide-empty', hasAny);", "grid.classList.toggle('hide-empty', hasAny);\n  /*gate*/ if (statsReady) { const sec = $('areas'); if (sec) sec.hidden = Object.keys(countyCounts).filter(k => countyCounts[k] > 0).length < MIN_COUNTIES_SECTION; }") },
-    { n: 'js: homepage cache expires after 10 minutes', done: has("k + '_ts'"),
-      fn: t => {
-        const a = sub(t, 'const h = el.innerHTML; if (h.length < 250000) localStorage.setItem(k, h);', "const h = el.innerHTML; if (h.length < 250000) { localStorage.setItem(k, h); localStorage.setItem(k + '_ts', String(Date.now())); }");
-        if (a === null) return null;
-        return sub(a, 'const h = localStorage.getItem(NK_CACHE_KEYS[id]); if (h && $(id)) $(id).innerHTML = h;', "const k = NK_CACHE_KEYS[id], ts = Number(localStorage.getItem(k + '_ts')) || 0, h = localStorage.getItem(k); if (h && ts && Date.now() - ts < 600000 && $(id)) $(id).innerHTML = h;");
-      } },
-    { n: 'js: cards use price overlay, meta row, eager first 2 images', done: has('priceOverlay: true'),
-      fn: t => sub(t, 'listings.map(l => nkBuildCard(l, { compact: true, imgWidth: imgWidth || 480 }))', "listings.map((l, i) => nkBuildCard(l, { compact: true, imgWidth: imgWidth || 480, priceOverlay: true, eager: i < 2 && containerId !== 'recently-viewed-listings' && !document.body.classList.contains('nk-datasaver') }))") },
-    { n: 'js: Featured shows photo listings first', done: has("renderListings('featured-listings', withPhotosFirst"),
-      fn: t => sub(t, "renderListings('featured-listings', listings);", "renderListings('featured-listings', withPhotosFirst(listings));") },
-    { n: 'js: Latest = photos first + thin-inventory fallback', done: has('homeThinFill(listings'),
-      fn: t => sub(t, "renderListings('latest-listings', listings, 480, ", "const thin = await homeThinFill(listings, county, area, where);\n  if (my !== latest.token) return;\n  listings = thin.list;\n  renderListings('latest-listings', listings, 480, ") },
-    { n: 'js: Latest post-render hook (note, fresh pill, peek strip)', done: has('homeAfterLatest(thin'),
-      fn: t => sub(t, "Be the first to list!</a></p></div>`);", "Be the first to list!</a></p></div>`); homeAfterLatest(thin, county, area);") },
-    { n: 'js: identity-checked count in boot', done: has('loadCheckedCount(); loadFeatured();'),
-      fn: t => sub(t, 'loadStats(); loadFeatured();', 'loadStats(); loadCheckedCount(); loadFeatured();') },
-    { n: 'js: nav search keeps Rent/Buy intent', done: has('const f = { category: intent.cat, freq: intent.freq }; applyText'),
-      fn: t => sub(t, 'const f = {}; applyText(f, raw); finishSearch(f);', 'const f = { category: intent.cat, freq: intent.freq }; applyText(f, raw); finishSearch(f);') },
-    { n: 'js: inject new helpers (peek, thin fill, filter badge, nav placeholder, hover photo)', done: has('nk-patch:index-js'),
-      fn: t => sub(t, /\nboot\(\);\s*\n\}\)\(\);/, () => '\n/* nk-patch:index-js */\n' + P.INDEX_JS + '\nboot();\n\n})();') },
-  ];
-}
-
-/* ---------- main ---------- */
-(async () => {
-  const idxFile = path.join(dir, 'index.html'), shFile = path.join(dir, 'nk-shared.js');
-  for (const f of [idxFile, shFile]) if (!fs.existsSync(f)) { console.error('Missing ' + f + '\nRun this from your site root or pass the folder as an argument.'); process.exit(1); }
-  console.log('Nyumba254 patch' + (DRY ? ' (dry run)' : '') + ' in ' + dir);
-
-  const imagesOk = await makeImages();
-  const sh = readNormalised(shFile), ix = readNormalised(idxFile);
-  const r1 = runEdits('nk-shared.js', sh.text, sharedEdits);
-  const r2 = runEdits('index.html', ix.text, indexEdits(imagesOk));
-  const failed = r1.failed + r2.failed;
-
-  if (DRY) { console.log('\nDry run: nothing written.'); return; }
-  if (failed && !FORCE) {
-    console.log('\n' + failed + ' edit(s) could not be matched, so NOTHING was written (your files may differ from the versions this patch was written for).\nSend me the [FAILED] names, or run with --force to write the edits that did match.');
-    process.exit(2);
+    window.nkHydrateViewingFees = async function (rows) {
+      var k = key(rows), p = pending.get(k);
+      if (!p) return origF.apply(this, arguments);
+      pending.delete(k);
+      try {
+        var fed = await p;
+        var m = new Map((fed || []).map(function (r) { return [r.id, r]; }));
+        return rows.map(function (r) {
+          var f = m.get(r.id);
+          return Object.assign({}, r, {
+            public_viewing_fee: f ? f.public_viewing_fee : null,
+            viewing_fee_status: f ? f.viewing_fee_status : 'error'
+          });
+        });
+      } catch (e) { return origF.call(this, rows); }
+    };
   }
-  save(shFile, r1.text, sh.crlf); save(idxFile, r2.text, ix.crlf);
-  console.log('\nDone. Backups: index.html.bak, nk-shared.js.bak');
-  console.log('Next: deploy, then hard-refresh (your service worker /sw.js may serve the old files until you bump its cache version).');
-})();
 
-/*PAYLOADS
-@@@ CSS
-    .hero-illustration picture{display:block}
-    .search-btn::before{content:'';font-size:0;width:16px;height:16px;flex-shrink:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") center/contain no-repeat}
+  /* ───────────── 3. Images: transforms, srcset, graceful fallback ───────────── */
+  var noTransform = false;
+  try { noTransform = sessionStorage.getItem('nk_no_tf') === '1'; } catch (e) {}
+  var RE_SB = /^(https?:\/\/[^/]+)\/storage\/v1\/(?:object|render\/image)\/public\/([^?]+)/;
 
-    .hero-peek{margin-top:18px;max-width:640px}
-    .hero-peek-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px}
-    .hero-peek-title{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#C9F0E0;text-shadow:0 1px 6px rgba(0,0,0,.35)}
-    .hero-peek-all{font-size:12.5px;font-weight:600;color:#fff;text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
-    .hero-peek-row{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
-    .hero-peek-row::-webkit-scrollbar{display:none}
-    .peek-card{position:relative;display:block;flex:1 1 0;min-width:136px;max-width:170px;aspect-ratio:4/3;border-radius:12px;overflow:hidden;background:rgba(255,255,255,.12);box-shadow:0 4px 14px rgba(0,0,0,.3);transition:transform .15s}
-    .peek-card:hover,.peek-card:focus-visible{transform:translateY(-3px)}
-    .peek-card img{width:100%;height:100%;object-fit:cover}
-    .peek-card::after{content:'';position:absolute;inset:auto 0 0 0;height:65%;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.72));pointer-events:none}
-    .peek-area{position:absolute;left:8px;right:8px;bottom:24px;z-index:1;font-size:10.5px;font-weight:600;color:rgba(255,255,255,.9);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .peek-price{position:absolute;left:8px;right:8px;bottom:7px;z-index:1;font-size:13px;font-weight:800;color:#fff;white-space:nowrap}
-    .peek-price span{font-size:10px;font-weight:600;opacity:.9;margin-left:1px}
-    .hero-peek-note{font-size:11.5px;color:rgba(255,255,255,.8);margin-top:8px}
-    body.nk-datasaver .hero-peek{display:none}
+  function baseUrl(src) {
+    var m = String(src || '').match(RE_SB);
+    return m ? m[1] + '/storage/v1/object/public/' + m[2] : String(src || '').split('?')[0];
+  }
+  function patchImgSrc() {
+    var orig = window.nkImgSrc;
+    window.nkImgSrc = function (url, w) {
+      if (!url || !w) return url;
+      var m = String(url).match(RE_SB);
+      if (m) {
+        if (noTransform) return m[1] + '/storage/v1/object/public/' + m[2];
+        return m[1] + '/storage/v1/render/image/public/' + m[2] + '?width=' + w + '&quality=72';
+      }
+      return typeof orig === 'function' ? orig(url, w) : url;
+    };
 
-    .card.has-overlay .card-price{display:none}
-    .card-price-overlay{position:absolute;left:10px;bottom:9px;z-index:2;font-size:16px;font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1.15;text-shadow:0 1px 6px rgba(0,0,0,.55)}
-    .card-price-overlay span{font-size:11.5px;font-weight:600;opacity:.92;margin-left:2px}
-    .card-photo-count{position:absolute;right:10px;bottom:9px;z-index:2;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.55);padding:3px 8px;border-radius:12px;line-height:1.2}
-    .card-photo-count svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:2}
-    .card-img-alt{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .25s ease;z-index:0}
-    .card:hover .card-img-alt.loaded{opacity:1}
-    .card-meta{flex:0 0 100%;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:3px 8px;font-size:12px;line-height:1.3;color:var(--text-2);margin-bottom:6px}
-    .card-meta span+span::before{content:'\00B7';margin-right:8px;color:var(--text-3);font-weight:700}
-    .card-meta .meta-cat+span::before{display:none}
-    .card-meta .meta-cat{font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:20px;white-space:nowrap}
-    .meta-cat.apartment{background:var(--green);color:#fff}
-    .meta-cat.house{background:var(--green-dark);color:#fff}
-    .meta-cat.boarding{background:var(--green-light);color:var(--green-dark);border:1px solid var(--green-mid)}
-    .meta-cat.airbnb{background:#fff;color:var(--green-dark);border:1px solid var(--green)}
-    .meta-cat.commercial{background:var(--text);color:#fff}
-    .card-viewing-fee.free{background:#E1F5EE;border-color:#9FE1CB;color:#085041}
+    /* If the transform endpoint is not available on this plan, fall back to the original file.
+       The failing request can be a srcset candidate, so look at currentSrc and srcset too,
+       not only the src attribute. Transforms are switched off for everyone only after the
+       original file has loaded, so one broken photo does not disable them site-wide. */
+    document.addEventListener('error', function (e) {
+      var t = e.target;
+      if (!t || t.tagName !== 'IMG') return;
+      var tried = [t.currentSrc, t.getAttribute('src'), t.getAttribute('srcset')].join(' ');
+      if (tried.indexOf('/render/image/') === -1) return;
+      var original = baseUrl(t.getAttribute('src') || t.currentSrc);
+      t.addEventListener('load', function () {
+        if (noTransform) return;
+        noTransform = true;
+        try { sessionStorage.setItem('nk_no_tf', '1'); } catch (x) {}
+      }, { once: true });
+      t.removeAttribute('srcset');
+      t.src = original;
+    }, true);
+  }
 
-    .fresh-pill{display:inline-block;vertical-align:middle;margin-left:8px;font-family:'Inter',system-ui,sans-serif;font-size:11px;font-weight:700;letter-spacing:0;color:var(--green-dark);background:var(--green-light);border:1px solid #9FE1CB;padding:3px 9px;border-radius:20px}
-    .thin-note{font-size:13px;color:var(--text-2);background:var(--green-light);border:1px solid #9FE1CB;border-radius:10px;padding:9px 12px;margin:0 0 12px}
-    .thin-note a{color:var(--green-dark);font-weight:700;text-decoration:underline}
-    .sb-more[data-count]:not([data-count="0"])::after{content:attr(data-count);display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;margin-left:6px;padding:0 5px;border-radius:9px;background:var(--green);color:#fff;font-size:11px;font-weight:800;vertical-align:middle}
-    #featured-listings,#latest-listings{min-height:210px}
-    @keyframes nkfade{from{opacity:.55}to{opacity:1}}
-    #featured-listings .listings-grid,#latest-listings .listings-grid{animation:nkfade .3s ease}
-    @media (min-width:561px){.hero-peek-note{display:none}}
-    @media (max-width:768px){
-      .hero h1{font-size:25px;line-height:1.18;margin-bottom:10px}
-      .hero-quick-row{margin-top:8px}
-      .nk-nearme-btn{min-height:34px;padding:0 12px;font-size:12.5px}
-      #nk-recent-searches{display:none!important}
-      .hero-peek{margin-top:12px;max-width:none}
-      .peek-card{flex:0 0 42%;max-width:190px;min-width:0}
-      .trust-bar{padding:8px 16px}
-      .trust-item{padding:5px 11px;font-size:12px}
-      .fresh-pill{margin-left:6px}
-      #latest-listings .card-price-overlay{left:7px;bottom:6px;font-size:13.5px}
-      #latest-listings .card-photo-count{right:7px;bottom:6px;font-size:10px;padding:2px 6px}
-      #latest-listings .card-meta{font-size:10.5px;gap:2px 6px;margin-bottom:4px}
-      #latest-listings .card-meta .meta-cat{font-size:9.5px;padding:1px 7px}
-      #latest-listings .card-meta span:nth-child(n+4){display:none}
-      #latest-listings .card-verified-badge{display:none}
+  function prepImg(img, wrap) {
+    var ready = function () { img.classList.add('is-loaded'); wrap.classList.add('nk-ready'); };
+    if (img.complete && img.naturalWidth) ready();
+    else {
+      img.addEventListener('load', ready, { once: true });
+      img.addEventListener('error', ready, { once: true });
+      setTimeout(ready, 5000);   // never leave a photo invisible
     }
-@@@ SHARED_HELPERS
-function nkCardMeta(listing) {
-  const out = [];
-  const l = listing || {};
-  const d = (l.details && typeof l.details === 'object') ? l.details : {};
-  const num = v => (v === null || v === undefined || v === '' || isNaN(Number(v))) ? null : Number(v);
-  const cat = l.category;
-  if (cat !== 'boarding' && cat !== 'commercial') {
-    const beds = num(d.bedrooms);
-    if (beds !== null) out.push(beds === 0 ? 'Studio' : beds + (beds === 1 ? ' bed' : ' beds'));
-    const baths = num(d.bathrooms);
-    if (baths !== null && baths > 0) out.push(baths + (baths === 1 ? ' bath' : ' baths'));
+    if (noTransform || img.tagName !== 'IMG' || !RE_SB.test(img.src)) return;
+    var b = baseUrl(img.src);
+    img.srcset = [360, 520, 800].map(function (w) { return window.nkImgSrc(b, w) + ' ' + w + 'w'; }).join(', ');
+    img.sizes = '(max-width:768px) 50vw, (max-width:1100px) 33vw, 300px';
   }
-  const listed = Array.isArray(d.amenities) ? d.amenities : (Array.isArray(l.amenities) ? l.amenities : []);
-  const on = k => l[k] === true || d[k] === true || listed.includes(k);
-  const short = { has_parking: 'Parking', has_wifi: 'WiFi', has_security: 'Security', has_private_bathroom: 'Private bath', has_balcony: 'Balcony', has_pool: 'Pool', has_gym: 'Gym', has_study_area: 'Study area', has_shared_bathroom: 'Shared bath', has_water: 'Water', has_backup_power: 'Backup power', has_solar: 'Solar' };
-  Object.keys(short).forEach(k => { if (out.length < 3 && on(k)) out.push(short[k]); });
-  return out;
-}
-@@@ SHARED_PRE
-  const nkPhotoCount = Array.isArray(listing.listing_photos) ? listing.listing_photos.length : 0;
-  const nkCamera = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>';
-  const overlayHtml = `<span class="card-price-overlay">${formatPrice(listing, { showFromPrefix: !compact })}</span>${nkPhotoCount > 1 ? `<span class="card-photo-count" aria-label="${nkPhotoCount} photos">${nkCamera}${nkPhotoCount}</span>` : ''}`;
-  const nkAlt = (nkPhotoCount > 1 && cover) ? [...listing.listing_photos].sort((a, b) => (a.position || 0) - (b.position || 0)).find(p => p !== cover) : null;
-  const altImgHtml = (o.priceOverlay && nkAlt) ? `<img class="card-img-alt" data-src="${escHtml(nkImgSrc(nkAlt.url, o.imgWidth))}" alt="" aria-hidden="true" width="${compact ? 400 : 360}" height="${compact ? 300 : 240}"/>` : '';
-  const nkMetaCat = `<span class="meta-cat ${escHtml(listing.category)}">${meta.label}</span>`;
-  const nkMetaBits = nkCardMeta(listing).map(b => `<span>${escHtml(b)}</span>`).join('');
-  const nkShortRoles = { buyer: 'Tenant', owner: 'Owner', landlord: 'Owner', caretaker: 'Caretaker', agent: 'Agent', company: 'Company', seller: 'Lister' };
-  const shortRoleText = listedByType ? `${nkShortRoles[listedByType] || 'Lister'}${roleChanged ? ' · unverified' : roleVerified ? ' · checked' : ''}` : 'Lister';
-@@@ SHARED_BADGE
-        ${altImgHtml}
-        ${o.priceOverlay ? overlayHtml : `<span class="badge-cat ${escHtml(listing.category)}">${meta.label}</span>`}
-@@@ SHARED_METAROW
-<div class="card-sub">${escHtml(subText)}</div>
-        ${o.priceOverlay ? `<div class="card-meta">${nkMetaCat}${nkMetaBits}</div>` : ''}
-@@@ PEEK_HTML
-<div class="hero-peek" id="hero-peek" hidden>
-      <div class="hero-peek-head"><span class="hero-peek-title" id="hero-peek-title">Newest listings</span><a class="hero-peek-all" id="hero-peek-all" href="/listings">See all</a></div>
-      <div class="hero-peek-row" id="hero-peek-row"></div>
-      <p class="hero-peek-note">Every card shows who is listing and the viewing fee.</p>
-    </div>
-@@@ PICTURE_HTML
-<picture>
-      <source media="(max-width: 768px)" srcset="/hero-kenya-apartments-800.webp" type="image/webp"/>
-      <source srcset="/hero-kenya-apartments.webp" type="image/webp"/>
-      <img class="hero-slide active" src="/hero-kenya-apartments.jpg" alt="" width="1672" height="941" decoding="async" fetchpriority="high"/>
-    </picture>
-@@@ HEAD_PRELOAD
-<link rel="preload" as="image" href="/hero-kenya-apartments-800.webp" type="image/webp" media="(max-width: 768px)" fetchpriority="high"/>
-  <link rel="preload" as="image" href="/hero-kenya-apartments.webp" type="image/webp" media="(min-width: 769px)" fetchpriority="high"/>
-@@@ INDEX_JS
-let statsReady = false;
-const MIN_COUNTIES_SECTION = 2, MIN_CHECKED_SHOWN = 10, THIN_MIN = 4, THIN_TARGET = 8;
 
-function homeHasPhoto(l) { return !!(l && l.listing_photos && l.listing_photos.length); }
-function withPhotosFirst(list) {
-  return (list || []).map((l, i) => ({ l, i })).sort((a, b) => (homeHasPhoto(b.l) - homeHasPhoto(a.l)) || (a.i - b.i)).map(x => x.l);
-}
-function homeWhere(county, area) { return area ? area + (county ? ', ' + nkCountyLabel(county) : '') : (county ? nkCountyLabel(county) : ''); }
+  /* ───────────── 4. Card enhancement ───────────── */
+  var CAT_SHORT = { apartment: 'Apartment', house: 'House', boarding: 'Boarding', airbnb: 'Airbnb', commercial: 'Shop / office' };
+  var ICON_TAG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>';
 
-async function homeThinFill(listings, county, area, where) {
-  const list = withPhotosFirst(listings || []);
-  const out = { list, primary: list.length, extra: 0, labels: [] };
-  if (list.length >= THIN_MIN || (!county && !area)) return out;
-  const seen = new Set(list.map(l => l.id));
-  const fetchMore = async (apply, label) => {
-    if (out.list.length >= THIN_TARGET) return;
+  function fmtAgo(iso) {
+    var h = (Date.now() - new Date(iso).getTime()) / 36e5;
+    if (!isFinite(h) || h < 0) return '';
+    if (h < 1) return 'Just now';
+    if (h < 24) return Math.floor(h) + 'h ago';
+    var d = Math.floor(h / 24);
+    return d < 30 ? d + 'd ago' : '';
+  }
+  function applyAgo(card) {
+    var iso = agoCache[card.dataset.listingId];
+    if (!iso) return;
+    var t = fmtAgo(iso);
+    var a = card.querySelector('.card-ago'), k = card.querySelector('.kl-ago');
+    var full = '';
+    try { full = new Date(iso).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' }); } catch (e) {}
+    if (a) {
+      a.textContent = t ? 'Listed ' + (t === 'Just now' ? 'just now' : t) : '';
+      if (full) a.title = 'Listed ' + full;
+    }
+    if (k) k.textContent = t;
+  }
+  function loadAgo(cards) {
+    var need = cards.map(function (c) { return c.dataset.listingId; }).filter(function (id) { return id && !agoCache[id]; });
+    if (!need.length) { cards.forEach(applyAgo); return; }
+    if (typeof db === 'undefined') return;
+    db.from('listings').select('id,created_at').in('id', need).then(function (r) {
+      (r.data || []).forEach(function (row) { agoCache[row.id] = row.created_at; });
+      document.querySelectorAll('#listings-grid .card').forEach(applyAgo);
+    }, warn);
+  }
+
+  function enhanceCard(card) {
+    if (card.dataset.nkp) return;
+    card.dataset.nkp = '1';
+    var wrap = card.querySelector('.card-img'), body = card.querySelector('.card-body');
+    if (!wrap || !body) return;
+
+    // photo first, so no later step can ever leave it hidden
+    var img = wrap.querySelector(':scope > img');
     try {
-      let q = db.from('listings').select('*, listing_photos(*)').eq('status', 'active');
-      q = apply(q);
-      const { data, error } = await q.order('created_at', { ascending: false }).order('id').limit(THIN_TARGET * 2);
-      if (error || !data) return;
-      let more = withPhotosFirst(data.filter(l => !seen.has(l.id))).slice(0, THIN_TARGET - out.list.length);
-      if (!more.length) return;
-      try { more = await nkHydratePublicProfiles(more); more = await nkHydrateViewingFees(more); } catch (e) { console.error(e); }
-      more.forEach(l => seen.add(l.id));
-      out.list = out.list.concat(more); out.extra += more.length; out.labels.push(label);
-    } catch (e) { console.error(e); }
-  };
-  if (area && county) await fetchMore(q => q.eq('county', county).neq('area', area), 'other areas in ' + nkCountyLabel(county));
-  const others = NK_TIER1.filter(c => c !== county);
-  await fetchMore(q => q.in('county', others), others.map(nkCountyLabel).join(' and '));
-  return out;
-}
+      if (img) prepImg(img, wrap); else wrap.classList.add('nk-ready');
+    } catch (e) {
+      warn(e);
+      wrap.classList.add('nk-ready');
+      if (img) img.classList.add('is-loaded');
+    }
 
-function homeRenderNote(thin, county, area) {
-  let note = $('latest-note');
-  if (!thin || !thin.extra) { if (note) note.hidden = true; return; }
-  if (!note) {
-    note = document.createElement('p'); note.id = 'latest-note'; note.className = 'thin-note';
-    const anchor = $('latest-listings').closest('.scroll-wrap') || $('latest-listings');
-    anchor.parentNode.insertBefore(note, anchor);
+    var catLabel = '';
+    var area = body.querySelector('.card-area');
+
+    // price on the photo
+    step(function () {
+      var priceEl = body.querySelector('.card-price');
+      if (priceEl && !wrap.querySelector('.card-price-overlay')) {
+        var ov = document.createElement('span');
+        ov.className = 'card-price-overlay';
+        ov.innerHTML = priceEl.innerHTML;
+        wrap.appendChild(ov);
+      }
+    });
+
+    // category label moves into the text line, plus the "Listed …" slot
+    step(function () {
+      var bc = wrap.querySelector('.badge-cat'), catKey = '';
+      if (bc) Object.keys(CAT_SHORT).forEach(function (k) { if (bc.classList.contains(k)) catKey = k; });
+      catLabel = CAT_SHORT[catKey] || (bc ? bc.textContent.trim() : '');
+      if (!area) return;
+      if (catLabel) {
+        var c = document.createElement('span');
+        c.className = 'card-cat';
+        c.textContent = catLabel;
+        var vb = area.querySelector('.card-verified-badge');
+        vb ? area.insertBefore(c, vb) : area.appendChild(c);
+      }
+      var ago = document.createElement('span');
+      ago.className = 'card-ago';
+      area.appendChild(ago);
+    });
+
+    // role line: the pill already says "Identity checked"
+    step(function () {
+      var role = body.querySelector('.card-role');
+      if (role && area && area.querySelector('.card-verified-badge')) {
+        role.textContent = role.textContent.replace(/\s*·\s*identity checked/i, '');
+      }
+    });
+
+    // viewing-fee chip icon
+    step(function () {
+      var fee = body.querySelector('.card-viewing-fee');
+      if (fee && !fee.querySelector('svg')) fee.insertAdjacentHTML('afterbegin', ICON_TAG);
+    });
+
+    // compact key line (shown on phones, where spec chips are hidden)
+    step(function () {
+      var parts = [];
+      if (catLabel) parts.push(catLabel);
+      var chips = [].map.call(body.querySelectorAll('.card-spec-chip'), function (n) { return n.textContent.trim(); }).filter(Boolean);
+      if (!chips.length) chips = [].map.call(body.querySelectorAll('.card-meta-item'), function (n) { return n.textContent.trim(); }).filter(Boolean).slice(0, 2);
+      parts = parts.concat(chips.slice(0, 3));
+      var kl = document.createElement('div');
+      kl.className = 'card-keyline';
+      var ks = document.createElement('span');
+      ks.className = 'kl-specs';
+      ks.textContent = parts.join(' · ');
+      var ka = document.createElement('span');
+      ka.className = 'kl-ago';
+      kl.appendChild(ks);
+      kl.appendChild(ka);
+      var sub = body.querySelector('.card-sub');
+      body.insertBefore(kl, sub || body.querySelector('.card-trust') || null);
+    });
   }
-  const where = homeWhere(county, area);
-  const first = thin.primary === 0 ? 'No listings in ' + where + ' yet.' : 'Only ' + thin.primary + ' listing' + (thin.primary === 1 ? '' : 's') + ' in ' + where + ' so far.';
-  note.innerHTML = escHtml(first) + ' Showing popular homes from ' + escHtml(thin.labels.join(', ')) + ' too. <a href="/post-listing">List yours</a>';
-  note.hidden = false;
-}
 
-function homeRenderPeek(thin, county, area) {
-  const box = $('hero-peek'); if (!box) return;
-  const withPhoto = ((thin && thin.list) || []).filter(l => nkCardCoverPhoto(l));
-  if (withPhoto.length < 2) { box.hidden = true; return; }
-  const where = homeWhere(county, area);
-  $('hero-peek-title').textContent = thin.extra > 0 ? 'Popular right now' : (where ? 'Newest in ' + where : 'Newest listings');
-  $('hero-peek-all').href = nkBuildListingsUrl({ county, area });
-  $('hero-peek-row').innerHTML = withPhoto.slice(0, 6).map((l, i) => {
-    const c = nkCardCoverPhoto(l);
-    return `<a class="peek-card" href="${escHtml(listingHref(l))}" data-listing-id="${escHtml(l.id)}" aria-label="${escHtml(l.title)}"><img src="${escHtml(nkImgSrc(c.url, 360))}" alt="" width="180" height="135" loading="${i < 3 ? 'eager' : 'lazy'}" decoding="async"/><span class="peek-area">${escHtml(l.area)}</span><span class="peek-price">${formatPrice(l)}</span></a>`;
-  }).join('');
-  box.hidden = false;
-}
-
-function homeAfterLatest(thin, county, area) {
-  const list = (thin && thin.list) || [];
-  const primary = list.slice(0, thin ? thin.primary : 0);
-  const pill = $('latest-fresh');
-  if (pill) {
-    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const n = primary.filter(l => l.created_at && new Date(l.created_at).getTime() > weekAgo).length;
-    if (n > 0) { pill.textContent = n + (primary.length >= 20 ? '+' : '') + ' new this week'; pill.hidden = false; } else pill.hidden = true;
+  function enhanceAll() {
+    var grid = $('listings-grid');
+    if (!grid) return;
+    var fresh = [].slice.call(grid.querySelectorAll('article.card:not([data-nkp])'));
+    fresh.forEach(function (c) { try { enhanceCard(c); } catch (e) { warn(e); } });
+    // keep only one inline "Get alerts" card (infinite scroll adds one per page)
+    var n = grid.querySelectorAll('.nk-inline-notify');
+    for (var i = 1; i < n.length; i++) n[i].remove();
+    if (fresh.length) loadAgo(fresh);
   }
-  homeRenderNote(thin, county, area);
-  if (!homeAfterLatest.peeked) { homeAfterLatest.peeked = true; homeRenderPeek(thin, county, area); }
-}
 
-async function loadCheckedCount() {
-  try {
-    const { count, error } = await db.from('public_account_profiles').select('id', { count: 'exact', head: true }).eq('identity_verified', true);
-    if (error || !count || count < MIN_CHECKED_SHOWN) return;
-    const el = qsa('.trust-item')[1];
-    if (el && el.lastChild && el.lastChild.nodeType === 3) el.lastChild.textContent = count.toLocaleString('en-KE') + ' identity-checked listers';
-  } catch (e) {}
-}
+  function watchGrid() {
+    var grid = $('listings-grid');
+    if (!grid) return;
+    // Synchronous on purpose: this runs as a microtask right after the page renders the cards,
+    // before the browser paints and before the page restores the scroll position.
+    new MutationObserver(function () { enhanceAll(); }).observe(grid, { childList: true });
 
-function updateFilterBadge() {
-  const b = $('sb-more'); if (!b) return;
-  const n = ['search-county', 'search-area', 'search-budget', 'search-beds'].filter(id => { const el = $(id); return el && !el.hidden && el.value !== ''; }).length;
-  b.dataset.count = String(n);
-}
-function syncNavIntent(tab) {
-  const inp = $('nav-compact-input'); if (!inp) return;
-  inp.placeholder = (tab ? tab.textContent.trim() : 'Rent') + ': area or price…';
-}
-if ($('sb-filters')) $('sb-filters').addEventListener('change', updateFilterBadge);
-if ($('intent-tabs')) $('intent-tabs').addEventListener('click', e => {
-  const tab = e.target.closest('.intent-tab');
-  if (tab) { syncNavIntent(tab); setTimeout(updateFilterBadge, 0); }
-});
-syncNavIntent(null); updateFilterBadge();
+    // the page swaps img.src for the photo carousel: drop srcset so the new photo actually shows
+    var dropSrcset = function (e) {
+      var card = e.target.closest && e.target.closest('.card');
+      var img = card && card.querySelector('.card-img>img');
+      if (img && img.hasAttribute('srcset') && (e.type === 'touchend' || e.target.closest('[data-photo-nav]'))) img.removeAttribute('srcset');
+    };
+    grid.addEventListener('click', dropSrcset, true);
+    grid.addEventListener('touchend', dropSrcset, true);
+    enhanceAll();
+  }
 
-if (window.matchMedia('(hover: hover)').matches) {
-  document.addEventListener('mouseover', e => {
-    const card = e.target.closest ? e.target.closest('.card') : null; if (!card) return;
-    const alt = card.querySelector('.card-img-alt:not([src])');
-    if (!alt || !alt.dataset.src || document.body.classList.contains('nk-datasaver')) return;
-    alt.addEventListener('load', () => alt.classList.add('loaded'), { once: true });
-    alt.src = alt.dataset.src;
-  }, { passive: true });
-}
-PAYLOADS*/
+  /* ───────────── 5. Layout tweaks ───────────── */
+  function moveRecent() {
+    var m = $('recent-mount'), area = $('results-area');
+    if (m && area && area.nextElementSibling !== m) area.insertAdjacentElement('afterend', m);
+  }
+  function addResultsHeading() {
+    var r = $('results');
+    if (!r || r.querySelector('.nk-results-h')) return;
+    var h = document.createElement('h2');
+    h.className = 'sr-only nk-results-h';
+    h.textContent = 'Search results';
+    r.insertBefore(h, r.firstChild);
+  }
+
+  var DISCOVER = [
+    ['Under 10K', 'under 10000'], ['Bedsitters', 'bedsitter'], ['1 bedroom', '1 bedroom'], ['Hostels', 'hostel'], ['Airbnb', 'airbnb'],
+    ['Kondele', 'Kondele Kisumu'], ['Milimani', 'Milimani Kisumu'], ['Maseno', 'Maseno Kisumu'],
+    ['Nyali', 'Nyali Mombasa'], ['Kilimani', 'Kilimani Nairobi'], ['Westlands', 'Westlands Nairobi']
+  ];
+  function buildDiscover() {
+    var anchor = $('active-filters');
+    if (!anchor || $('nk-discover')) return;
+    var d = document.createElement('div');
+    d.id = 'nk-discover';
+    d.className = 'nk-discover';
+    d.setAttribute('role', 'group');
+    d.setAttribute('aria-label', 'Popular searches');
+    d.innerHTML = '<span class="nk-discover-label">Popular</span>' + DISCOVER.map(function (x) {
+      return '<button type="button" class="nk-dchip" data-q="' + x[1] + '">' + x[0] + '</button>';
+    }).join('');
+    d.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-q]');
+      var q = $('search-q'), go = $('search-btn');
+      if (!b || !q || !go) return;
+      q.value = b.dataset.q;
+      go.click();
+    });
+    anchor.insertAdjacentElement('afterend', d);
+    var sync = function () { d.hidden = anchor.children.length > 0; };
+    new MutationObserver(sync).observe(anchor, { childList: true });
+    sync();
+  }
+
+  function navAutoHide() {
+    var nav = $('main-nav'), root = document.documentElement;
+    if (!nav) return;
+    var lastY = window.scrollY, hidden = false, ticking = false;
+    function setHidden(h) {
+      if (h === hidden) return;
+      hidden = h;
+      nav.classList.toggle('nk-nav-hidden', h);
+      if (h) root.style.setProperty('--nav-h', '0px'); else root.style.removeProperty('--nav-h');
+    }
+    function tick() {
+      ticking = false;
+      if (window.innerWidth > 768) { setHidden(false); lastY = window.scrollY; return; }
+      var y = window.scrollY, dy = y - lastY;
+      if (Math.abs(dy) < 8) return;
+      var mn = $('mobile-nav');
+      if (document.body.classList.contains('nk-modal-open') || (mn && mn.classList.contains('open'))) setHidden(false);
+      else if (dy > 0 && y > 160) setHidden(true);
+      else if (dy < 0) setHidden(false);
+      lastY = y;
+    }
+    window.addEventListener('scroll', function () {
+      if (!ticking) { ticking = true; requestAnimationFrame(tick); }
+    }, { passive: true });
+    window.addEventListener('resize', function () { if (window.innerWidth > 768) setHidden(false); });
+  }
+
+  /* ───────────── boot ───────────── */
+  function run(fn) { try { fn(); } catch (e) { warn(e); } }
+  run(parallelHydration);
+  run(patchImgSrc);
+  run(injectCss);
+  run(moveRecent);
+  run(addResultsHeading);
+  run(buildDiscover);
+  run(watchGrid);
+  run(navAutoHide);
+})();
