@@ -2591,7 +2591,7 @@ boot();
 <script>if (typeof NKSaved !== 'undefined') NKSaved.init();</script>
 <script src="/nav-badge.js"></script>
 <script src="/global-chat-widget.js"></script>
-<script src="/nk-listings-polish.js?v=mvvlec5b"></script>
+<script src="/nk-listings-polish.js?v=mvvljcuu"></script>
 <!-- NK-CARDS-V4:START -->
 <style id="nk-cards-v4">
 /* Tweak the shape here: bigger second number = taller photo. 16/11 keeps the whole card just taller than wide. */
