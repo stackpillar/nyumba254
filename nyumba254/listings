@@ -2583,6 +2583,5 @@ boot();
 <script src="/nav-badge.js"></script>
 <script src="/global-chat-widget.js"></script>
 <script src="/patch.js"></script>
-<script src="/patch-more-link.js"></script>
 </body>
 </html>
