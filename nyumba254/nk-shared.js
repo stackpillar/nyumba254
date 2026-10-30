@@ -372,6 +372,25 @@ function nkSaveBuyerProfile(profile) {
 }
 
 /* ---------- B3: one shared card template, with a `compact` mode for the homepage ---------- */
+function nkCardMeta(listing) {
+  const out = [];
+  const l = listing || {};
+  const d = (l.details && typeof l.details === 'object') ? l.details : {};
+  const num = v => (v === null || v === undefined || v === '' || isNaN(Number(v))) ? null : Number(v);
+  const cat = l.category;
+  if (cat !== 'boarding' && cat !== 'commercial') {
+    const beds = num(d.bedrooms);
+    if (beds !== null) out.push(beds === 0 ? 'Studio' : beds + (beds === 1 ? ' bed' : ' beds'));
+    const baths = num(d.bathrooms);
+    if (baths !== null && baths > 0) out.push(baths + (baths === 1 ? ' bath' : ' baths'));
+  }
+  const listed = Array.isArray(d.amenities) ? d.amenities : (Array.isArray(l.amenities) ? l.amenities : []);
+  const on = k => l[k] === true || d[k] === true || listed.includes(k);
+  const short = { has_parking: 'Parking', has_wifi: 'WiFi', has_security: 'Security', has_private_bathroom: 'Private bath', has_balcony: 'Balcony', has_pool: 'Pool', has_gym: 'Gym', has_study_area: 'Study area', has_shared_bathroom: 'Shared bath', has_water: 'Water', has_backup_power: 'Backup power', has_solar: 'Solar' };
+  Object.keys(short).forEach(k => { if (out.length < 3 && on(k)) out.push(short[k]); });
+  return out;
+}
+
 function nkCardCoverPhoto(listing) {
   const photos = listing.listing_photos && listing.listing_photos.length
     ? [...listing.listing_photos].sort((a, b) => (a.position || 0) - (b.position || 0))
@@ -451,7 +470,7 @@ function nkBuildCard(listing, opts) {
 
   const imgUrl = cover ? nkImgSrc(cover.url, o.imgWidth) : '';
   const imgHtml = cover
-    ? `<img src="${escHtml(imgUrl)}" alt="${safeTitle}" loading="lazy" width="${compact ? 400 : 360}" height="${compact ? 300 : 240}"/>`
+    ? `<img src="${escHtml(imgUrl)}" alt="${safeTitle}" ${o.eager ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"'} width="${compact ? 400 : 360}" height="${compact ? 300 : 240}"/>`
     : `<div class="card-img-placeholder">
          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
          <span style="font-size:12px">No photo yet</span>
@@ -475,20 +494,31 @@ function nkBuildCard(listing, opts) {
   const feeLoaded=listing.viewing_fee_status!=='error'&&listing.public_viewing_fee!==null&&listing.public_viewing_fee!==undefined;
   const viewingFee=feeLoaded?Number(listing.public_viewing_fee)||0:null;
 
+  const nkPhotoCount = Array.isArray(listing.listing_photos) ? listing.listing_photos.length : 0;
+  const nkCamera = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+  const overlayHtml = `<span class="card-price-overlay">${formatPrice(listing, { showFromPrefix: !compact })}</span>${nkPhotoCount > 1 ? `<span class="card-photo-count" aria-label="${nkPhotoCount} photos">${nkCamera}${nkPhotoCount}</span>` : ''}`;
+  const nkAlt = (nkPhotoCount > 1 && cover) ? [...listing.listing_photos].sort((a, b) => (a.position || 0) - (b.position || 0)).find(p => p !== cover) : null;
+  const altImgHtml = (o.priceOverlay && nkAlt) ? `<img class="card-img-alt" data-src="${escHtml(nkImgSrc(nkAlt.url, o.imgWidth))}" alt="" aria-hidden="true" width="${compact ? 400 : 360}" height="${compact ? 300 : 240}"/>` : '';
+  const nkMetaCat = `<span class="meta-cat ${escHtml(listing.category)}">${meta.label}</span>`;
+  const nkMetaBits = nkCardMeta(listing).map(b => `<span>${escHtml(b)}</span>`).join('');
+  const nkShortRoles = { buyer: 'Tenant', owner: 'Owner', landlord: 'Owner', caretaker: 'Caretaker', agent: 'Agent', company: 'Company', seller: 'Lister' };
+  const shortRoleText = listedByType ? `${nkShortRoles[listedByType] || 'Lister'}${roleChanged ? ' · unverified' : roleVerified ? ' · checked' : ''}` : 'Lister';
   return `
-    <a class="card" href="${href}" aria-label="${safeTitle}" data-listing-id="${escHtml(listing.id)}" style="${isOccupied ? 'opacity:.7' : ''}">
+    <a class="card${o.priceOverlay ? ' has-overlay' : ''}" href="${href}" aria-label="${safeTitle}" data-listing-id="${escHtml(listing.id)}" style="${isOccupied ? 'opacity:.7' : ''}">
       <div class="card-img">
         ${imgHtml}
         ${topBadge}
         <div class="nk-heart-overlay">${heart}</div>
-        <span class="badge-cat ${escHtml(listing.category)}">${meta.label}</span>
+        ${altImgHtml}
+        ${o.priceOverlay ? overlayHtml : `<span class="badge-cat ${escHtml(listing.category)}">${meta.label}</span>`}
       </div>
       <div class="card-body">
         <div class="card-area">${escHtml(listing.area)} ${verifiedBadge}</div>
         <div class="card-title">${safeTitle}</div>
         <div class="card-sub">${escHtml(subText)}</div>
-        <div class="card-role" title="Role claims are self-declared. Identity checks do not verify property ownership or authority to list.">${escHtml(roleText)}</div>
-        <div class="card-viewing-fee">${viewingFee===null?'Viewing fee: confirm with the lister':viewingFee>0?`Viewing KES ${viewingFee.toLocaleString('en-KE')}`:'Free viewing'}</div>
+        ${o.priceOverlay ? `<div class="card-meta">${nkMetaCat}${nkMetaBits}</div>` : ''}
+        <div class="card-role" title="Role claims are self-declared. Identity checks do not verify property ownership or authority to list.">${escHtml(o.priceOverlay ? shortRoleText : roleText)}</div>
+        <div class="card-viewing-fee${viewingFee===0 ? ' free' : ''}">${viewingFee===null?'Viewing fee: confirm with the lister':viewingFee>0?`Viewing KES ${viewingFee.toLocaleString('en-KE')}`:'Free viewing'}</div>
         <div class="card-price">${formatPrice(listing, { showFromPrefix: !compact })}</div>
       </div>
     </a>`;
