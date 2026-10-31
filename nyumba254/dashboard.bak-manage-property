@@ -1,0 +1,1806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>window.__scwEarlyErrors=[];window.addEventListener('error',function(e){window.__scwEarlyErrors.push((e&&e.message)?e.message:'Unknown error at '+(e&&e.filename||'?')+':'+(e&&e.lineno||'?'));});
+  (function(){try{var t=localStorage.getItem('ny_theme');if(!t){var prefersDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;t=prefersDark?'dark':'light';localStorage.setItem('ny_theme',t);}if(t&&t!=='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+  </script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — Nyumba254</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
+  <link rel="stylesheet" href="/dashboard.css"/>
+<link rel="manifest" href="/manifest.webmanifest"><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(error){console.error('Service worker registration failed:',error);})})}</script></head>
+<body>
+<a class="skip-link" href="#main-content">Skip to dashboard content</a>
+
+<div id="loading-screen" role="status" aria-live="polite">
+  <div class="spin"></div>
+  <p>Loading your dashboard…</p>
+</div>
+<div class="network-status" id="network-status" role="status" aria-live="polite" hidden>
+  You’re offline. Dashboard data may be unavailable until your connection returns.
+</div>
+
+<div id="suspended-screen">
+  <div class="suspended-card">
+    <div class="suspended-icon">
+      <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#c0392b" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+    </div>
+    <h2>Account Under Investigation</h2>
+    <p>Your account has been placed under a security review due to suspicious activity. All of your listings have been hidden from buyers and you will not be able to post new listings while this review is in progress.</p>
+    <p class="emphasis">Please do not email us about this — the review will be completed soon and the outcome will be sent to your account.</p>
+    <button class="btn btn-outline btn-lg" style="width:100%;justify-content:center" onclick="doSignOut()">Sign out</button>
+    <div class="suspended-footer">Nyumba254 · Account Security</div>
+  </div>
+</div>
+
+<div id="admin-blocked-screen">
+  <div class="suspended-card">
+    <div class="suspended-icon" style="background:var(--green-light)">
+      <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#0F6E56" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0116 0v1"/></svg>
+    </div>
+    <h2>This is an admin account</h2>
+    <p>Admin accounts can’t post or manage listings from this dashboard.</p>
+    <p class="emphasis">Admin accounts sign in separately and aren't accessible from this login.</p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:6px">
+      <a href="/" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;text-decoration:none">Browse listings</a>
+    </div>
+    <div class="suspended-footer">Nyumba254 · Account Roles · <span onclick="doSignOut()" style="text-decoration:underline;cursor:pointer">Sign out instead</span></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toast-msg"></span>
+</div>
+
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="shell" id="app-shell" style="display:none">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <img src="/logo-icon.png" alt="Nyumba254"/>
+      </div>
+      <span class="sidebar-logo-text">Nyumba254</span>
+    </div>
+    <nav class="sidebar-nav" aria-label="Dashboard">
+      <div class="nav-section-label">Main</div>
+      <button class="nav-item active" id="nav-overview" aria-current="page" onclick="showPage('overview')">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Overview
+      </button>
+      <button class="nav-item" id="nav-listings" onclick="showPage('listings')">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>My listings
+        <span class="badge-count" id="nav-badge-listings">0</span>
+      </button>
+      <button class="nav-item" id="nav-messages" onclick="showAllMessages()">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Messages
+        <span class="badge-count red" id="nav-badge-messages" style="display:none">0</span>
+      </button>
+      <button class="nav-item" id="nav-enquiries" onclick="showPage('enquiries')">
+        <svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Enquiries
+        <span class="badge-count" id="nav-badge-enquiries" style="display:none">0</span>
+      </button>
+      <button class="nav-item" id="nav-viewings" onclick="showPage('viewings')">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h3M8 17h6"/></svg>Viewings
+        <span class="badge-count red" id="nav-badge-viewings" style="display:none">0</span>
+      </button>
+      <button class="nav-item" id="nav-reviews" onclick="showPage('reviews')">
+        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Reviews
+        <span class="badge-count" id="nav-badge-reviews" style="display:none" title="Reviews awaiting your response">0</span>
+      </button>
+      <button class="nav-item" id="nav-payments" onclick="showPage('payments')">
+        <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Payments
+      </button>
+      <button class="nav-item" id="nav-lister-page" onclick="showPage('lister-page')">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5M16 4v5"/></svg>Lister Page
+      </button>
+      <div class="nav-section-label" id="nav-elite-section" style="margin-top:8px">Management tools</div>
+      <button class="nav-item" id="nav-rent-ledger" onclick="showPage('rent-ledger')">
+        <svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 9h1M9 13h1M9 17h1M14 9h1M14 13h1M14 17h1"/></svg><span id="nav-rent-ledger-label">Rent Ledger</span>
+        <span class="badge-count red" id="nav-badge-rentledger" style="display:none">0</span>
+      </button>
+      <button class="nav-item" id="nav-demand-heatmap" onclick="showPage('demand-heatmap')">
+        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Demand Insights
+      </button>
+      <div class="nav-section-label" id="nav-account-section" style="margin-top:8px">Account</div>
+      <button class="nav-item" id="nav-notifications" onclick="showPage('notifications')">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>Notifications
+        <span class="badge-count red" id="nav-badge-notifications" style="display:none">0</span>
+      </button>
+      <button class="nav-item" id="nav-activity" onclick="showPage('activity')">
+        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Activity
+      </button>
+      <button class="nav-item" id="nav-settings" onclick="showPage('settings')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Settings
+      </button>
+      <a href="#" class="nav-item" id="nav-premium-upgrade" onclick="goToPremiumSettings(event)">
+        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <span id="nav-premium-upgrade-text">Upgrade to Premium</span>
+      </a>
+      <a href="/" class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>View site
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user" id="sidebar-user-block" onclick="showPage('settings')" role="button" tabindex="0" aria-label="Account settings" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
+        <div class="sidebar-avatar" id="sidebar-avatar">?</div>
+        <div>
+        <div class="sidebar-user-name" id="sidebar-name">Loading…</div>
+        <div class="sidebar-user-email" id="sidebar-email">…</div>
+        <div id="sidebar-verify-badge" style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);margin-top:2px">—</div>
+        <div id="sidebar-role-chip" style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.75);margin-top:2px">Role not selected</div>
+        </div>
+      </div>
+      <button class="nav-item" onclick="doSignOut()" style="margin-top:4px;color:rgba(255,255,255,0.5)">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign out
+      </button>
+    </div>
+  </aside>
+
+  <div class="main" id="main-content" role="main" tabindex="-1">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" onclick="toggleSidebar()" aria-label="Toggle menu" aria-expanded="false" aria-controls="sidebar" id="hamburger-btn"><span></span><span></span><span></span></button>
+        <div>
+          <div class="topbar-title" id="topbar-title" aria-live="polite">Overview</div>
+          <div class="topbar-subtitle" id="topbar-date"></div>
+        </div>
+      </div>
+      <div class="topbar-right">
+              <button class="theme-switch-btn" id="notification-sound-toggle" type="button" title="Enable notification sound" aria-label="Enable notification sound" aria-pressed="false">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>
+              </button>
+              <button class="theme-switch-btn" onclick="openCmdPalette()" title="Search & jump to anything (⌘K or Ctrl+K)" aria-label="Search and jump to anything">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              </button>
+              <div class="notif-bell-wrap" id="notif-bell-wrap" style="position:relative">
+          <button class="theme-switch-btn" onclick="toggleNotifBell()" title="Notifications" aria-label="Notifications">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          </button>
+          <span id="notif-bell-badge" style="display:none;position:absolute;top:-3px;right:-3px;min-width:16px;height:16px;border-radius:9px;background:var(--red,#c0392b);color:#fff;font-size:9.5px;font-weight:700;align-items:center;justify-content:center;padding:0 3px;border:2px solid var(--white)"></span>
+          <div id="notif-bell-panel" style="display:none;position:absolute;top:44px;right:0;width:min(340px, calc(100vw - 24px));max-height:440px;overflow-y:auto;background:var(--white);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow-lg);z-index:400">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);gap:10px">
+              <strong style="font-size:13.5px">Notifications</strong>
+              <div style="display:flex;align-items:center;gap:12px;flex-shrink:0">
+                <button style="font-size:11.5px;font-weight:700;color:var(--green);background:none;border:none;cursor:pointer" onclick="markAllNotifsRead()">Mark all read</button>
+                <button style="font-size:11.5px;font-weight:700;color:var(--green-dark);background:none;border:none;cursor:pointer" onclick="document.getElementById('notif-bell-panel').style.display='none';showPage('notifications')">View all →</button>
+              </div>
+            </div>
+            <div id="notif-bell-list"><div style="padding:24px;text-align:center;color:var(--text-3);font-size:12.5px">Loading…</div></div>
+          </div>
+        </div>
+        <div class="theme-switch" id="theme-switch">
+          <button class="theme-switch-btn" onclick="toggleThemeMenu()" title="Change theme" aria-label="Change theme">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          </button>
+          <div class="theme-menu" id="theme-menu">
+            <button class="theme-option" data-theme="light" onclick="setTheme('light')"><span class="theme-swatch swatch-light"></span>Emerald</button>
+            <button class="theme-option" data-theme="sandstone" onclick="setTheme('sandstone')"><span class="theme-swatch swatch-sandstone"></span>Sandstone</button>
+            <button class="theme-option" data-theme="dark" onclick="setTheme('dark')"><span class="theme-swatch swatch-dark"></span>Midnight</button>
+          </div>
+        </div>
+        <a href="/post-listing" class="btn btn-primary" id="btn-new-listing-tour" onclick="return confirmListingCategoryBeforeLeaving()">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New listing
+        </a>
+      </div>
+    </div>
+
+    <div id="verify-warning-banner" style="display:none;background:var(--red-light);border-bottom:1.5px solid #f5c6c2;padding:12px 28px;align-items:center;gap:14px;flex-wrap:wrap">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#c0392b" stroke-width="2" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span id="verify-warning-copy" style="flex:1;font-size:13px;color:var(--red);font-weight:600;min-width:220px">Your role has not been verified yet.</span>
+      <button class="btn btn-sm" style="background:var(--red);color:white;flex-shrink:0" onclick="goToVerification()">Verify my account →</button>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div class="page active" id="page-overview">
+      <div id="overview-quickdock" style="display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom));z-index:390;background:var(--white);border:1px solid var(--border);border-radius:30px;box-shadow:var(--shadow-lg);padding:6px;gap:4px;align-items:center">
+        <a href="/post-listing" class="btn btn-primary btn-sm" id="btn-new-listing-small" style="border-radius:24px" onclick="return confirmListingCategoryBeforeLeaving()"><svg viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New</a>
+        <button class="btn btn-outline btn-sm" style="border-radius:24px" onclick="showAllMessages()"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Messages</button>
+        <button class="btn btn-outline btn-sm" style="border-radius:24px" onclick="scwToggle()"><svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Help</button>
+      </div>
+      <div class="card" id="getting-started-card" style="display:none;padding:20px 22px;margin-bottom:20px;border:1.5px solid var(--green);background:var(--green-light)">
+        <div class="section-head" style="margin-bottom:14px">
+          <h2 style="color:var(--green-dark)">🚀 Getting started</h2>
+          <button class="icon-btn" title="Hide this checklist" onclick="dismissGettingStarted()">✕</button>
+        </div>
+        <div id="getting-started-list" style="display:flex;flex-direction:column;gap:10px"></div>
+      </div>
+      <div class="card" id="storefront-banner-card" style="display:none;padding:16px 20px;margin-bottom:20px;background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;color:white">
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <div style="width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="white" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>
+          </div>
+          <div style="flex:1;min-width:200px">
+            <div style="font-size:13px;font-weight:700">Your Lister Page is live</div>
+            <div style="font-size:12px;opacity:.85;word-break:break-all" id="storefront-banner-url">nyumba254.com/…</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-shrink:0">
+            <button class="btn btn-sm" style="background:rgba(255,255,255,0.18);color:white" onclick="copyStorefrontLink()">📋 Copy link</button>
+            <a class="btn btn-sm" style="background:white;color:#5b21b6;text-decoration:none" id="storefront-banner-open" href="#" rel="noopener">Open ↗</a>
+          </div>
+        </div>
+      </div>
+      <div class="card" id="handle-nudge-card" style="display:none;padding:14px 18px;margin-bottom:20px;border:1.5px solid var(--green);background:var(--green-light,#f0faf4)">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div style="flex:1;min-width:200px;font-size:13px"><b>Claim your short link.</b> Pick a handle like nyumba254.com/@yourname so buyers can find all your listings on one easy page.</div>
+          <button class="btn btn-sm btn-primary" type="button" style="min-height:44px" onclick="showPage('lister-page')">Choose a handle</button>
+          <button class="btn btn-sm btn-outline" type="button" style="min-height:44px" onclick="dismissHandleNudge()">Not now</button>
+        </div>
+      </div>
+      <div class="card" id="action-center-card" style="display:none;padding:16px 20px;margin-bottom:20px;border:1.5px solid var(--amber);background:var(--amber-light)"></div>
+      <div class="card" id="welcome-card" style="display:none;padding:16px 20px;margin-bottom:20px;border:1px solid var(--green);background:var(--green-light)" aria-live="polite"></div>
+      <div class="stat-grid">
+        <div class="stat-card" style="cursor:pointer" onclick="showPage('listings');filterListings('active')"><div class="stat-label">Active listings</div><div class="stat-val" id="stat-active">—</div><div class="stat-delta" id="stat-active-delta">of your total listings</div><div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div></div>
+        <div class="stat-card gold" style="cursor:pointer" onclick="showAllMessages()"><div class="stat-label">Total enquiries</div><div class="stat-val" id="stat-enquiries">—</div><div class="stat-delta" id="stat-enquiries-delta">buyers reached out</div><div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div></div>
+        <div class="stat-card amber" style="cursor:pointer" onclick="showAllMessages()"><div class="stat-label">Unread messages</div><div class="stat-val" id="stat-new-enq">—</div><div class="stat-delta" id="stat-new-enq-delta">unread conversations</div><div class="stat-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div></div>
+        <div class="stat-card blue" style="cursor:pointer" onclick="showPage('payments')"><div class="stat-label">Total paid</div><div class="stat-val" id="stat-paid">—</div><div class="stat-delta" id="stat-paid-delta">listing fees</div><div class="stat-icon"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div></div>
+        <div class="stat-card purple" style="cursor:pointer" onclick="showPage('listings')"><div class="stat-label">Total views</div><div class="stat-val" id="stat-views">—</div><div class="stat-delta" id="stat-views-delta">across all listings</div><div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div></div>
+      </div>
+      <div class="card" id="week-momentum-card" style="display:none;padding:14px 20px;margin-bottom:20px;background:var(--green-light);border:1px solid var(--green)"></div>
+      <div class="card" id="smart-insight-card" style="display:none;padding:14px 20px;margin-bottom:20px;background:var(--gold-light);border:1px solid var(--gold)"></div>
+      <div class="card" id="listing-performance-card" style="display:none;padding:18px 20px;margin-bottom:20px"></div>
+      <div class="overview-grid">
+        <div class="card" id="overview-role-trust-card" style="padding:18px 20px">
+          <div class="section-head"><h2>Role and trust status</h2><button class="btn btn-outline btn-sm" onclick="showPage('settings')">Settings</button></div>
+          <div id="overview-role-trust-content" aria-live="polite">Loading role status…</div>
+        </div>
+        <div class="card" id="overview-activity-card" style="padding:20px 24px">
+          <div id="buyer-mode-card" class="card" hidden style="padding:18px 22px;margin-bottom:18px">
+            <strong>Welcome to Nyumba254</strong>
+            <p style="margin:6px 0 12px;color:var(--text-2);font-size:13px">As a Tenant / Buyer, you can browse homes, save favourites, and contact listers. To publish property, change your account type in settings.</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <a href="/listings" class="btn btn-primary btn-sm">Browse properties</a>
+              <a href="/saved" class="btn btn-outline btn-sm">Saved properties</a>
+            </div>
+          </div>
+          <div id="account-onboarding-reminder" class="card" hidden style="padding:18px 22px;margin-bottom:18px;border-color:var(--green);">
+            <strong>Finish setting up your account</strong>
+            <p style="margin:6px 0 12px;color:var(--text-2);font-size:13px">Choose whether you are a Tenant / Buyer, Property owner, Caretaker, Agent, or Company. This helps Nyumba254 show the right tools for you.</p>
+            <button type="button" class="btn btn-primary btn-sm" onclick="showPage('settings')">Choose account type</button>
+          </div>
+          <div class="section-head"><h2>Recent activity</h2><button class="btn btn-outline btn-sm" onclick="showAllMessages()">View messages</button></div>
+          <div class="activity-feed" id="activity-feed"><div style="padding:20px 0;text-align:center;color:var(--text-3);font-size:13px">Loading activity…</div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:20px">
+          <div class="card" id="overview-chart-card" style="padding:20px 22px">
+            <div class="section-head" style="margin-bottom:12px"><h2>Messages · last 7 days</h2></div>
+            <div class="chart-bars" id="chart-bars"></div>
+            <div class="chart-labels" id="chart-labels"></div>
+          </div>
+          <div class="card" id="overview-quicklistings-card" style="padding:20px 22px">
+            <div class="section-head"><h2>Your listings</h2><button class="btn btn-outline btn-sm" onclick="showPage('listings')">Manage</button></div>
+            <div id="quick-listing-top" style="margin-bottom:12px"></div>
+            <div id="quick-listings"><div style="padding:10px 0;color:var(--text-3);font-size:13px">Loading…</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LISTER PAGE -->
+    <div class="page" id="page-lister-page">
+      <div class="section-head" style="margin-bottom:18px">
+        <h2>Your Lister Page</h2>
+        <p>One link for all your properties. Organise your listings, share them anywhere, and let people view, ask and book in one place.</p>
+      </div>
+<style>
+#page-lister-page .lp-hero{padding:0;overflow:hidden;margin-bottom:18px;border:1px solid var(--border,rgba(128,128,128,.25))}
+#page-lister-page .lp-hero-top{display:grid;grid-template-columns:1fr auto;gap:20px;padding:22px;align-items:center}
+#page-lister-page .lp-eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);font-weight:700}
+#page-lister-page .lp-hero h3{margin:4px 0 10px;font-size:20px}
+#page-lister-page .lp-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:var(--surface);color:var(--text-2,var(--text-3))}
+#page-lister-page .lp-pill::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--text-3)}
+#page-lister-page .lp-pill[data-state=public]::before{background:#16a34a}
+#page-lister-page .lp-pill[data-state=unlisted]::before{background:#d97706}
+#page-lister-page .lp-pill[data-state=hidden]::before{background:#dc2626}
+#page-lister-page .lp-url{display:flex;align-items:center;gap:8px;margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--border,rgba(128,128,128,.25));min-width:0}
+#page-lister-page .lp-url code{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+#page-lister-page .lp-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+#page-lister-page .lp-actions .btn{min-height:44px}
+#page-lister-page .lp-qr{width:116px;height:116px;border-radius:12px;background:#fff;padding:8px;border:1px solid var(--border,rgba(128,128,128,.25))}
+#page-lister-page .lp-qr img{width:100%;height:100%;display:block}
+#page-lister-page .lp-note{padding:12px 22px;font-size:12.5px;color:var(--text-3);background:var(--surface);border-top:1px solid var(--border,rgba(128,128,128,.2))}
+#page-lister-page .lp-card{padding:20px;margin-bottom:18px}
+#page-lister-page .lp-card h3{margin:0 0 6px}
+#page-lister-page .lp-sub{font-size:13px;color:var(--text-3);margin:0 0 14px}
+#page-lister-page .lp-handle{display:flex;align-items:center;gap:0;border:1px solid var(--border,rgba(128,128,128,.35));border-radius:10px;overflow:hidden;background:var(--bg,transparent)}
+#page-lister-page .lp-handle span{padding:0 10px;font-size:13px;color:var(--text-3);white-space:nowrap;background:var(--surface);align-self:stretch;display:flex;align-items:center}
+#page-lister-page .lp-handle input{border:0;border-radius:0;flex:1;min-width:0;min-height:44px;box-shadow:none}
+#page-lister-page .lp-hint{font-size:12px;margin-top:6px;color:var(--text-3);display:flex;justify-content:space-between;gap:8px}
+#page-lister-page .lp-hint[data-state=bad]{color:#dc2626}
+#page-lister-page .lp-hint[data-state=ok]{color:#16a34a}
+#page-lister-page .lp-save{margin-top:10px;min-height:44px}
+#page-lister-page .lp-share{display:flex;gap:8px;flex-wrap:wrap}
+#page-lister-page .lp-share .btn{min-height:44px;display:inline-flex;align-items:center}
+#page-lister-page .lp-caption{font-size:13px;background:var(--surface);padding:12px;border-radius:10px;margin-top:12px;word-break:break-word}
+#page-lister-page .card h3{font-size:16px}
+@media (max-width:640px){#page-lister-page .lp-hero-top{grid-template-columns:1fr;padding:16px}#page-lister-page .lp-qr{display:none}#page-lister-page .lp-actions .btn{flex:1 1 45%;justify-content:center}}
+</style>
+      <div class="card lp-hero">
+        <div class="lp-hero-top">
+          <div style="min-width:0">
+            <div class="lp-eyebrow">Your shareable page</div>
+            <h3>One link for every property</h3>
+            <span class="lp-pill" id="lister-page-pill" data-state="loading">Loading…</span>
+            <div class="lp-url"><code id="lister-page-url">nyumba254.com/@…</code></div>
+            <div class="lp-actions">
+              <button class="btn btn-primary" type="button" onclick="copyListerPageLink()">Copy link</button>
+              <a class="btn btn-outline" id="lister-page-open" href="/storefront" target="_blank" rel="noopener">Preview page</a>
+              <button class="btn btn-outline" type="button" id="lister-page-share" onclick="shareListerPage()" hidden>Share</button>
+            </div>
+          </div>
+          <div class="lp-qr" aria-hidden="true"><img id="lister-qr-preview" alt="" /></div>
+        </div>
+        <div class="lp-note" id="lister-page-status" aria-live="polite">Loading your page settings…</div>
+      </div>
+      <div class="settings-grid" style="margin-bottom:18px">
+        <div class="card lp-card" style="margin-bottom:0">
+          <h3>Page handle</h3>
+          <p class="lp-sub">Your handle is the end of your link. Choose something people will recognise.</p>
+          <label class="field-label" for="lister-page-handle">Handle</label>
+          <div class="lp-handle"><span>nyumba254.com/@</span><input class="form-input" id="lister-page-handle" maxlength="30" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="your-name" aria-describedby="lister-handle-hint" oninput="validateListerHandleInput()"/></div>
+          <div class="lp-hint" id="lister-handle-hint"><span>3–30 lowercase letters, numbers, dots, underscores or hyphens. Changes limited to once every 30 days.</span><span id="lister-handle-count">0/30</span></div>
+          <button class="btn btn-primary lp-save" type="button" onclick="saveListerPageHandle()">Save handle</button>
+        </div>
+        <div class="card lp-card" style="margin-bottom:0">
+          <h3>Page visibility</h3>
+          <p class="lp-sub">Control who can find and open your page.</p>
+          <label class="field-label" for="lister-page-visibility">Visibility</label>
+          <select class="form-input" id="lister-page-visibility" style="min-height:44px" aria-describedby="lister-visibility-hint" onchange="updateListerVisibilityHint()">
+            <option value="public">Public — searchable</option>
+            <option value="unlisted">Unlisted — anyone with the link</option>
+            <option value="hidden">Hidden</option>
+          </select>
+          <div class="lp-hint" id="lister-visibility-hint"></div>
+          <button class="btn btn-primary lp-save" type="button" onclick="saveListerPageVisibility()">Save visibility</button>
+        </div>
+      </div>
+      <div class="card lp-card">
+        <h3>Share kit</h3>
+        <p class="lp-sub">Share the same page from your WhatsApp status, Instagram bio, Facebook page, TikTok profile or a printed QR code.</p>
+        <div class="lp-share">
+          <a class="btn btn-outline btn-sm" id="lister-qr-png" href="#" download="nyumba254-lister-page-qr.png">Download QR (PNG)</a>
+          <a class="btn btn-outline btn-sm" id="lister-qr-svg" href="#" download="nyumba254-lister-page-qr.svg">Download QR (SVG)</a>
+          <button class="btn btn-outline btn-sm" type="button" onclick="copyListerCaption()">Copy caption</button>
+        </div>
+        <p id="lister-share-caption" class="lp-caption"></p>
+      </div>
+      <div class="card" id="lister-social-hub" style="padding:20px;margin-bottom:18px" hidden>
+        <h3 style="margin:0 0 8px">Social links</h3>
+        <div id="lister-social-host"></div>
+      </div>
+      <div class="card" id="lister-availability-hub" style="padding:20px;margin-bottom:18px">
+        <h3 style="margin:0 0 8px">Viewing availability</h3>
+        <p style="font-size:13px;color:var(--text-3);margin-bottom:12px">Set a weekly window when people may request a viewing. You confirm arrangements through your existing Viewings inbox.</p>
+        <div class="settings-grid">
+          <div><label class="field-label" for="lister-availability-day">Day</label><select class="form-input" id="lister-availability-day"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option></select></div>
+          <div><label class="field-label" for="lister-availability-start">From</label><input class="form-input" id="lister-availability-start" type="time" value="09:00"/></div>
+          <div><label class="field-label" for="lister-availability-end">Until</label><input class="form-input" id="lister-availability-end" type="time" value="17:00"/></div>
+          <div><label class="field-label" for="lister-availability-slot">Slot length</label><select class="form-input" id="lister-availability-slot"><option value="30">30 minutes</option><option value="45">45 minutes</option><option value="60">1 hour</option><option value="90">1.5 hours</option></select></div>
+        </div>
+        <button class="btn btn-outline btn-sm" type="button" style="margin-top:12px" onclick="saveListerAvailability()">Save weekly availability</button>
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:14px">
+          <label style="display:flex;gap:8px;align-items:center;font-size:13px"><input type="checkbox" id="lister-auto-confirm"/> Confirm requests automatically</label>
+          <label style="font-size:13px">Minimum notice (hours) <input class="form-input" id="lister-min-notice" type="number" min="0" max="720" value="12" style="width:100px;display:inline-block"/></label>
+          <label style="font-size:13px">Book up to (days) <input class="form-input" id="lister-max-days" type="number" min="1" max="180" value="30" style="width:100px;display:inline-block"/></label>
+          <button class="btn btn-outline btn-sm" type="button" onclick="saveListerViewingPreferences()">Save booking preferences</button>
+        </div>
+        <div id="lister-availability-status" aria-live="polite" style="font-size:12px;color:var(--text-3);margin-top:8px"></div>
+      </div>
+      <div class="card" id="lister-quick-answers-hub" style="padding:20px;margin-bottom:18px">
+        <h3 style="margin:0 0 8px">Quick Answers</h3>
+        <p style="font-size:13px;color:var(--text-3);margin-bottom:12px">Answer common property questions clearly. Phone numbers and payment requests are not allowed.</p>
+        <label class="field-label" for="lister-answer-listing">Applies to</label>
+        <select class="form-input" id="lister-answer-listing" onchange="fillListerQuickAnswer()"><option value="">All my listings (default)</option></select>
+        <label class="field-label" for="lister-answer-question" style="margin-top:10px">Question</label>
+        <select class="form-input" id="lister-answer-question" onchange="fillListerQuickAnswer()">
+          <option value="water">Water</option><option value="electricity">Electricity</option><option value="security">Security</option><option value="parking">Parking</option><option value="deposit">Deposit</option><option value="lease_length">Lease length</option><option value="pets">Pets</option><option value="internet">Internet</option><option value="distance">Distance</option><option value="title_status">Title status</option><option value="payment_arrangements">Payment arrangements</option><option value="viewing_days">Viewing days</option>
+        </select>
+        <label class="field-label" for="lister-answer-text" style="margin-top:10px">Answer</label>
+        <textarea class="form-input" id="lister-answer-text" maxlength="500" rows="3" placeholder="Write a concise, factual answer"></textarea>
+        <button class="btn btn-outline btn-sm" type="button" style="margin-top:8px" onclick="saveListerQuickAnswer()">Save answer</button>
+        <button class="btn btn-outline btn-sm" type="button" style="margin-top:8px;color:var(--red);border-color:var(--red)" onclick="deleteListerQuickAnswer()">Delete answer</button>
+        <p style="font-size:12px;color:var(--text-3);margin-top:8px">An answer for one listing replaces your default answer on that listing page.</p>
+        <div id="lister-answer-status" aria-live="polite" style="font-size:12px;color:var(--text-3);margin-top:8px"></div>
+      </div>
+      <div class="card" id="lister-source-stats" style="padding:20px">
+        <h3 style="margin:0 0 8px">Page sources</h3>
+        <p style="font-size:12px;color:var(--text-3);margin-bottom:12px">Source counts are aggregate page events; they do not include names, email addresses or phone numbers.</p>
+        <div id="lister-source-stats-content">No source activity available yet.</div>
+      </div>
+    </div>
+
+    <!-- MY LISTINGS -->
+    <div class="page" id="page-listings">
+      <div class="section-head">
+        <h2>My listings</h2>
+        <a href="/post-listing" class="btn btn-primary" id="btn-add-listing-empty" onclick="return confirmListingCategoryBeforeLeaving()"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add listing</a>
+      </div>
+
+      <div class="lc-stat-strip" id="lc-stat-strip"></div>
+      <div id="lc-batch-banner"></div>
+
+      <div class="lc-toolbar" id="listings-filter-bar">
+        <div class="lc-toolbar-top">
+          <div class="lc-pill-group" id="lc-pill-group" role="tablist" aria-label="Filter listings by status"></div>
+        </div>
+        <div class="lc-saved-views" id="lc-saved-views" aria-label="Smart views"></div>
+        <div class="lc-toolbar-row2">
+          <div class="lc-results-count" id="lc-results-count"></div>
+          <div class="lc-toolbar-controls">
+            <div class="filter-search" id="lc-search-wrap">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="search" id="listing-search" enterkeyhint="search" autocomplete="off"
+                     placeholder="Search title, area, address, #ID…"
+                     aria-label="Search your listings" oninput="lcOnSearchInput()"/>
+              <button type="button" class="lc-search-clear" onclick="lcClearSearch()" aria-label="Clear search">✕</button>
+            </div>
+            <button type="button" class="lc-select-toggle" id="lc-select-toggle-btn" onclick="toggleBulkSelectMode()" aria-pressed="false" title="Select several listings at once">☑ Select</button>
+            <span id="lc-more-tools-group" style="display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <button type="button" class="lc-select-toggle" id="lc-filters-btn" onclick="openAttrFilters(this)" aria-haspopup="dialog" title="Filter by price, bedrooms and features">⛃ Filters</button>
+              <button type="button" class="lc-select-toggle" id="lc-view-btn" onclick="openViewMenu(this)" aria-haspopup="menu" title="Sort, layout, density and export options">⚙ View</button>
+              <button type="button" class="lc-kbd-hint" onclick="lcShowShortcuts()" title="Keyboard shortcuts"><kbd>⌘K</kbd> shortcuts</button>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div id="listings-bulk-bar" role="region" aria-label="Bulk actions">
+        <label class="lc-bulk-all">
+          <input type="checkbox" id="listings-select-all" onchange="toggleSelectAllListings(this.checked)" aria-label="Select all visible listings"/>
+          <span id="listings-bulk-count">0 selected</span>
+        </label>
+        <div class="lc-bulk-actions">
+          <button class="btn btn-outline btn-sm" onclick="bulkPauseSelectedListings()">⏸ Pause</button>
+          <button class="btn btn-outline btn-sm" onclick="bulkResumeSelectedListings()">▶ Resume</button>
+          <button class="btn btn-outline btn-sm" onclick="bulkRenewExpiredListings()">↻ Renew expired</button>
+          <button class="btn btn-outline btn-sm" onclick="bulkCancelScheduledListings()">✕ Cancel scheduled</button>
+          <button class="btn btn-outline btn-sm" onclick="bulkOccupySelectedListings()">✓ Occupied/sold</button>
+          <label class="btn btn-outline btn-sm" style="display:inline-flex;align-items:center;gap:6px">📅 Schedule
+            <input type="datetime-local" id="bulk-listing-publish-at" aria-label="Schedule selected live listings" style="max-width:180px;border:0;background:transparent;color:inherit;font:inherit"/>
+          </label>
+          <button class="btn btn-outline btn-sm" onclick="bulkScheduleSelectedListings()">Schedule selected</button>
+          <button class="btn btn-outline btn-sm" onclick="bulkDuplicateSelectedListings()">⧉ Duplicate</button>
+          <button class="btn btn-outline btn-sm" style="color:#7c3aed;border-color:#7c3aed" onclick="bulkAiRewriteSelectedListings()">✨ AI rewrite</button>
+          <button class="btn btn-outline btn-sm" style="color:var(--gold);border-color:var(--gold)" onclick="bulkFeatureSelectedListings()">⭐ Feature</button>
+          <button class="btn btn-outline btn-sm" onclick="bulkShareSelectedListings()">🔗 Share</button>
+          <button class="btn btn-outline btn-sm" id="bulk-set-viewing-fee-btn" onclick="bulkSetViewingFeeSelectedListings()" hidden>Set viewing fee</button>
+          <button class="btn btn-outline btn-sm" id="bulk-clear-viewing-fee-btn" onclick="bulkClearViewingFeeSelectedListings()" hidden>Clear viewing fee (make free)</button>
+          <button class="btn btn-outline btn-sm" onclick="exportListingsCSV(true)">⬇️ CSV</button>
+          <button class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="bulkDeleteSelectedListings()">🗑 Delete</button>
+        </div>
+        <button class="btn btn-outline btn-sm lc-bulk-clear" onclick="exitBulkSelectMode()">Done</button>
+      </div>
+
+      <div class="lc-ptr" id="lc-ptr">↓ Pull to refresh</div>
+      <div id="listings-table-card">
+        <div class="lc-list" id="listings-tbody" role="list">
+          <div class="lc-skel-card"><div class="lc-skel-thumb"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="lc-skel-lines"><div class="lc-skel-line" style="width:60%"></div><div class="lc-skel-line" style="width:40%"></div><div class="lc-skel-line" style="width:80%"></div></div></div>
+          <div class="lc-skel-card"><div class="lc-skel-thumb"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="lc-skel-lines"><div class="lc-skel-line" style="width:50%"></div><div class="lc-skel-line" style="width:35%"></div><div class="lc-skel-line" style="width:70%"></div></div></div>
+          <div class="lc-skel-card"><div class="lc-skel-thumb"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="lc-skel-lines"><div class="lc-skel-line" style="width:55%"></div><div class="lc-skel-line" style="width:30%"></div><div class="lc-skel-line" style="width:75%"></div></div></div>
+        </div>
+      </div>
+
+      <div id="lc-loadmore"></div>
+      <div id="lc-live" class="sr-only" aria-live="polite" role="status"></div>
+    </div>
+
+    <!-- MESSAGES -->
+    <div class="page" id="page-messages">
+      <div class="messages-layout" id="messages-layout">
+        <div class="thread-list" id="thread-list">
+          <div class="thread-list-head" style="flex-wrap:wrap">
+            <div><h3>Messages</h3><div style="font-size:11px;color:var(--text-3);font-weight:500">All buyer conversations — see the <a href="#" onclick="event.preventDefault();showPage('enquiries')" style="color:var(--green);font-weight:600">Enquiries feed</a> for a quick scan</div></div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span id="msg-thread-count" style="font-size:12px;color:var(--text-3);font-weight:600"></span>
+              <button class="btn btn-outline btn-sm" id="btn-mark-all-read" onclick="markAllThreadsRead()">Mark all read</button>
+            </div>
+          </div>
+          <div id="thread-filter-chip" style="display:none;padding:8px 14px 0"></div>
+          <div class="thread-search"><input type="text" aria-label="Search conversations" placeholder="Search conversations…" id="thread-search-input" oninput="renderThreadList()"/></div>
+          <div id="thread-items" style="flex:1;overflow-y:auto"><div style="padding:30px 20px;text-align:center;color:var(--text-3);font-size:13px">Loading…</div></div>
+        </div>
+        <div class="chat-pane" id="chat-pane">
+          <div class="chat-pane-empty" id="chat-empty"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><p>Select a conversation to view messages</p></div>
+          <div id="chat-active" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+            <div class="chat-header" id="chat-header"></div>
+            <div class="chat-messages" id="chat-messages" onscroll="handleChatScroll()"></div>
+<button id="chat-scroll-btn" onclick="scrollChatToBottom(true)" aria-label="Scroll to latest message" style="display:none;position:absolute;bottom:90px;right:26px;width:38px;height:38px;border-radius:50%;background:var(--white);border:1px solid var(--border);box-shadow:var(--shadow);z-index:5;align-items:center;justify-content:center;cursor:pointer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--text-2)" stroke-width="2"><polyline points="19 12 12 19 5 12"/><line x1="12" y1="19" x2="12" y2="5"/></svg></button>
+            <div class="chat-wa-hint" id="chat-wa-hint"></div>
+            <div class="chat-quickreply-bar" id="chat-quickreply-bar" style="display:none"></div>
+            <div class="chat-input-bar">
+              <div class="chat-quick-btn" id="chat-quickreply-toggle" onclick="toggleQuickReplyBar()" title="Quick replies" role="button" tabindex="0" aria-label="Quick replies"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="13" y2="13"/></svg></div>
+              <textarea id="chat-reply-input" aria-label="Type your reply" placeholder="Type your reply…" rows="1" onkeydown="handleChatKeydown(event)" oninput="autoResizeTextarea(this);dashBroadcastTyping()"></textarea>
+              <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatReply()" aria-label="Send reply"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ENQUIRIES -->
+    <div class="page" id="page-enquiries">
+      <div class="section-head" style="flex-direction:column;align-items:flex-start;gap:6px">
+        <h2>Enquiries</h2>
+        <p style="font-size:12.5px;color:var(--text-3);margin:0">A quick read-only feed of every buyer enquiry. To reply, open the full conversation in <a href="#" onclick="event.preventDefault();showAllMessages()" style="color:var(--green);font-weight:600">Messages</a>.</p>
+      </div>
+      <div class="section-head">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button class="filter-pill active" id="enq-filter-all" onclick="filterEnquiries('all',this)">All</button>
+          <button class="filter-pill" id="enq-filter-unread" onclick="filterEnquiries('unread',this)">Unread</button>
+          <div class="filter-search" style="margin-left:8px">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Search buyer or listing…" id="enquiry-search" oninput="renderEnquiries()"/>
+          </div>
+        </div>
+      </div>
+      <div class="enquiries-stat-strip" id="enquiries-stat-strip"></div>
+      <div class="enquiry-list" id="enquiry-list"><div style="text-align:center;padding:40px;color:var(--text-3);font-size:13px">Loading enquiries…</div></div>
+    </div>
+
+    <!-- VIEWING REQUESTS -->
+    <div class="page" id="page-viewings">
+      <div class="section-head">
+        <div><h2>Viewing requests</h2><p style="font-size:12.5px;color:var(--text-3);margin:5px 0 0">Confirm a time, cancel a request, or mark a completed viewing. The fee shown is the amount recorded when the buyer requested it.</p></div>
+        <button class="btn btn-outline btn-sm" type="button" onclick="loadViewingRequestsPage()">Refresh</button>
+      </div>
+      <div id="viewings-page-status" role="status" aria-live="polite" style="font-size:12px;color:var(--text-3);margin-bottom:12px"></div>
+      <div class="enquiry-list" id="viewings-list"><div style="text-align:center;padding:40px;color:var(--text-3);font-size:13px">Loading viewing requests…</div></div>
+    </div>
+
+    <!-- REVIEWS -->
+    <div class="page" id="page-reviews">
+      <div class="section-head">
+        <h2>Reviews from buyers</h2>
+        <div style="font-size:13px;color:var(--text-3)" id="reviews-summary"></div>
+      </div>
+      <div class="enquiry-list" id="reviews-list"><div style="text-align:center;padding:40px;color:var(--text-3);font-size:13px">Loading reviews…</div></div>
+    </div>
+
+    <!-- PAYMENTS -->
+    <div class="page" id="page-payments">
+      <div class="section-head">
+        <h2>Payment history</h2>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <label style="font-size:12px;color:var(--text-3)">From <input type="date" id="pay-date-from" onchange="renderPayments()" style="margin-left:4px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:12px"/></label>
+          <label style="font-size:12px;color:var(--text-3)">To <input type="date" id="pay-date-to" onchange="renderPayments()" style="margin-left:4px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:12px"/></label>
+          <button class="btn btn-outline btn-sm" onclick="document.getElementById('pay-date-from').value='';document.getElementById('pay-date-to').value='';renderPayments()">Clear</button>
+          <button class="btn btn-outline btn-sm" onclick="exportSellerPaymentsCSV()">⬇️ CSV</button>
+        </div>
+      </div>
+      <div id="payment-summary"></div>
+      <div class="card" style="overflow:hidden">
+        <table class="payments-table">
+          <thead><tr><th>Date</th><th>Listing</th><th>Reference</th><th>Amount</th><th>Status</th><th>Receipt</th></tr></thead>
+          <tbody id="payments-tbody"><tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-3)">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RENT LEDGER -->
+    <div class="page" id="page-rent-ledger">
+      <div class="section-head">
+        <h2 id="rl-page-heading">Rent &amp; Tenant Ledger</h2>
+        <div id="rl-capacity-switcher" style="display:none;gap:6px;margin-right:8px">
+          <button class="filter-pill" id="rl-switch-rental" onclick="setLedgerView('rental')">Rentals</button>
+          <button class="filter-pill" id="rl-switch-bnb" onclick="setLedgerView('bnb')">BNB</button>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <div class="rl-toolbar-icon-btn" id="rl-tour-replay-btn" title="Replay Rent Ledger tour" onclick="RLTour.restart()" role="button" tabindex="0" aria-label="Replay Rent Ledger tour" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#7c3aed" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          </div>
+          <button class="btn btn-outline" id="btn-reminder-settings" style="display:none" onclick="openReminderSettingsModal()">🔔 Reminder settings</button>
+          <button class="btn btn-outline" id="btn-remind-overdue" style="display:none;color:var(--red);border-color:var(--red)" onclick="sendAllOverdueReminders()">✉️ Remind all overdue</button>
+          <button class="btn btn-outline" id="btn-export-rl-csv" style="display:none" onclick="exportRentLedgerCSV()">⬇️ CSV</button>
+          <button class="btn btn-outline" id="btn-export-rl-pdf" style="display:none" onclick="exportRentLedgerPDF()">⬇️ Rent roll PDF</button>
+          <button class="btn btn-outline" id="btn-export-rl-annual" style="display:none" onclick="exportAnnualReport()">📊 Annual report</button>
+          <button class="btn btn-primary" id="btn-add-rental-unit" style="display:none;background:#7c3aed" onclick="openAddRentalUnitModal()">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add rental unit
+          </button>
+          <button class="btn btn-outline" id="btn-export-bnb-csv" style="display:none" onclick="exportBnbBookingsCSV()">⬇️ CSV</button>
+          <button class="btn btn-outline" id="btn-export-bnb-pdf" style="display:none" onclick="exportBnbRevenuePDF()">📊 Revenue report PDF</button>
+          <button class="btn btn-primary" id="btn-add-bnb-property" style="display:none;background:#7c3aed" onclick="openAddBnbPropertyModal()">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add property
+          </button>
+          <button class="btn btn-primary" id="btn-add-bnb-booking" style="display:none;background:#7c3aed" onclick="openAddBnbBookingModal()">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Log booking
+          </button>
+        </div>
+      </div>
+      <div class="card" id="rent-ledger-locked" style="display:none;padding:40px 30px;text-align:center">
+        <div style="width:52px;height:52px;border-radius:50%;background:#EDE9FE;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#7c3aed" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        </div>
+        <h3 style="font-size:16px;margin-bottom:8px">Rent Ledger is an Elite feature</h3>
+        <p style="font-size:13px;color:var(--text-3);max-width:380px;margin:0 auto 18px;line-height:1.6">A full rent roll for units you manage long-term: automatic overdue detection, lease expiry alerts, tenant history, and downloadable reports.</p>
+        <button class="btn btn-primary" style="background:#7c3aed" onclick="joinEliteWaitlist()">Notify me when Elite opens</button>
+      </div>
+      <div id="rent-ledger-content" style="display:none">
+        <div id="rl-lease-alerts" class="rl-lease-alert" style="display:none"></div>
+        <div id="rl-portfolio-health-card" class="card" style="padding:18px 20px;margin-bottom:16px;display:flex;gap:18px;align-items:center;flex-wrap:wrap"></div>
+        <div class="rl-summary-grid" id="rl-summary-grid"></div>
+        <div id="rl-goal-card" class="card" style="padding:16px 20px;margin-bottom:16px"></div>
+        <div class="rl-tabs">
+          <button class="rl-tab active" data-tab="units" onclick="rlSetTab('units')">Units</button>
+          <button class="rl-tab" data-tab="ledger" onclick="rlSetTab('ledger')">Full 12-month ledger</button>
+          <button class="rl-tab" data-tab="analytics" onclick="rlSetTab('analytics')">📈 Analytics</button>
+          <button class="rl-tab" data-tab="pipeline" onclick="rlSetTab('pipeline')">🗂️ Lease pipeline</button>
+          <button class="rl-tab" data-tab="finances" onclick="rlSetTab('finances')">💰 Finances</button>
+          <button class="rl-tab" data-tab="maintenance" onclick="rlSetTab('maintenance')">🔧 Maintenance</button>
+        </div>
+        <div class="rl-toolbar" id="rl-units-toolbar">
+          <input type="text" placeholder="Search unit or tenant…" oninput="rlFilterInput(this.value)"/>
+        </div>
+        <div id="rental-units-list"><div style="padding:30px;text-align:center;color:var(--text-3);font-size:13px">Loading…</div></div>
+        <div id="rl-ledger-wrap" class="card" style="padding:18px 20px;display:none"></div>
+        <div id="rl-analytics-wrap" style="display:none"></div>
+        <div id="rl-pipeline-wrap" style="display:none"></div>
+        <div id="rl-finances-wrap" style="display:none"></div>
+        <div id="rl-maintenance-wrap" style="display:none"></div>
+      </div>
+
+      <div id="bnb-ledger-content" style="display:none">
+        <div class="rl-summary-grid" id="bnb-summary-grid"></div>
+        <div id="bnb-goal-card" class="card" style="padding:16px 20px;margin-bottom:16px"></div>
+        <div class="rl-tabs">
+          <button class="rl-tab active" data-bnbtab="properties" onclick="bnbSetTab('properties')">Properties</button>
+          <button class="rl-tab" data-bnbtab="calendar" onclick="bnbSetTab('calendar')">📅 Calendar</button>
+          <button class="rl-tab" data-bnbtab="analytics" onclick="bnbSetTab('analytics')">📈 Analytics</button>
+          <button class="rl-tab" data-bnbtab="guests" onclick="bnbSetTab('guests')">👥 Guests</button>
+          <button class="rl-tab" data-bnbtab="finances" onclick="bnbSetTab('finances')">💰 Finances</button>
+          <button class="rl-tab" data-bnbtab="maintenance" onclick="bnbSetTab('maintenance')">🔧 Maintenance</button>
+        </div>
+        <div id="bnb-tab-properties">
+          <div id="bnb-expiry-alerts" class="rl-lease-alert" style="display:none"></div>
+        <div id="bnb-upcoming-card" class="card" style="padding:18px 20px;margin-bottom:16px"></div>
+          <div class="section-head" style="margin-top:4px"><h3 style="font-size:15px">Your properties</h3></div>
+          <div id="bnb-properties-list"><div style="padding:30px;text-align:center;color:var(--text-3);font-size:13px">Loading…</div></div>
+          <div class="card" style="padding:14px 18px;margin-top:14px;font-size:12px;color:var(--text-3);line-height:1.7">
+            💡 <strong>Tip:</strong> use 🧾 <strong>Receipt</strong> once a guest has paid, ✉️ <strong>Check-in</strong> to send arrival instructions ahead of time, and ⭐ <strong>Review</strong> after checkout to ask for feedback.
+          </div>
+        </div>
+        <div id="bnb-tab-calendar" style="display:none"></div>
+        <div id="bnb-tab-analytics" style="display:none"></div>
+        <div id="bnb-tab-guests" style="display:none"></div>
+        <div id="bnb-tab-finances" style="display:none"></div>
+        <div id="bnb-tab-maintenance" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- DEMAND INSIGHTS -->
+    <div class="page" id="page-demand-heatmap">
+      <div class="section-head">
+        <h2>Demand Insights</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-outline" id="btn-export-di-csv" style="display:none" onclick="exportDemandCSV()">⬇️ CSV</button>
+          <button class="btn btn-outline" id="btn-export-di-pdf" style="display:none" onclick="exportDemandPDF()">⬇️ PDF report</button>
+        </div>
+      </div>
+      <div class="card" id="demand-locked" style="display:none;padding:40px 30px;text-align:center">
+        <div style="width:52px;height:52px;border-radius:50%;background:#EDE9FE;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <h3 style="font-size:16px;margin-bottom:8px">Demand Insights is an Elite feature</h3>
+        <p style="font-size:13px;color:var(--text-3);max-width:380px;margin:0 auto 18px;line-height:1.6">Platform-wide buyer demand by area, category, and price type — with supply comparisons and downloadable reports — so you know exactly where to list next.</p>
+        <button class="btn btn-primary" style="background:#7c3aed" onclick="joinEliteWaitlist()">Notify me when Elite opens</button>
+      </div>
+      <div id="demand-content" style="display:none">
+        <div class="di-tabs">
+          <button class="filter-pill" onclick="diSetRange(30,this)">Last 30 days</button>
+          <button class="filter-pill active" onclick="diSetRange(90,this)">Last 90 days</button>
+          <button class="filter-pill" onclick="diSetRange(180,this)">Last 180 days</button>
+        </div>
+        <p style="font-size:13px;color:var(--text-3);margin-bottom:18px;line-height:1.6">Where buyers are enquiring right now on Nyumba254 — platform-wide. 🔥 flags areas with strong demand relative to how many listings currently exist there.</p>
+        <div class="card" style="padding:20px 22px;margin-bottom:16px">
+          <h3 style="font-size:14px;font-weight:600;margin-bottom:14px">Top areas by buyer enquiries</h3>
+          <div id="demand-area-bars"></div>
+        </div>
+        <div class="di-breakdown-grid">
+          <div class="card" style="padding:20px 22px">
+            <h3 style="font-size:14px;font-weight:600;margin-bottom:14px">Demand by category</h3>
+            <div id="demand-category-bars"></div>
+          </div>
+          <div class="card" style="padding:20px 22px">
+            <h3 style="font-size:14px;font-weight:600;margin-bottom:14px">Rent vs. sale demand</h3>
+            <div id="demand-type-bars"></div>
+          </div>
+        </div>
+        <div class="card" style="padding:20px 22px;margin-top:16px">
+          <h3 style="font-size:14px;font-weight:600;margin-bottom:14px">Your listings vs. area average</h3>
+          <div id="demand-mine-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div class="page" id="page-notifications">
+      <div class="section-head">
+        <h2>Notification Center</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-2);cursor:pointer"><input type="checkbox" id="notif-unread-only" onchange="renderNotificationsPage()"/> Unread only</label>
+          <button class="btn btn-outline btn-sm" onclick="markAllNotifsRead()">Mark all read</button>
+        </div>
+      </div>
+      <div class="notif-page-stats" id="notif-page-stats"></div>
+      <div class="notif-cat-tabs" id="notif-cat-tabs"></div>
+      <div id="notif-groups-list"><div style="text-align:center;padding:40px;color:var(--text-3);font-size:13px">Loading…</div></div>
+    </div>
+
+    <!-- ACTIVITY -->
+    <div class="page" id="page-activity">
+      <div class="section-head"><h2>Activity</h2></div>
+      <p style="font-size:13px;color:var(--text-2);margin-bottom:12px">A categorised history of what happened on your account. Download it as a report you can keep or print.</p>
+      <div id="activity-host"><div style="text-align:center;padding:40px;color:var(--text-3);font-size:13px">Loading…</div></div>
+      <div id="company-activity-section" hidden style="margin-top:28px">
+        <div class="section-head"><h2>Company activity</h2></div>
+        <p style="font-size:13px;color:var(--text-2);margin-bottom:12px">Shared by the account owner: listings, viewings, enquiries and team changes. Payments, sign-in details and message text are not included.</p>
+        <div id="company-activity-host"></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="section-head" style="margin-bottom:12px"><h2>Account settings</h2></div>
+      <div id="settings-quicknav" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;position:sticky;top:var(--topbar-h);background:var(--surface);padding:8px 0;z-index:10">
+        <button type="button" class="filter-pill" onclick="settingsJumpTo('settings-profile-anchor')">👤 Profile</button>
+        <button type="button" class="filter-pill" onclick="settingsJumpTo('account-role-card')">Role</button>
+        <button type="button" class="filter-pill" onclick="settingsJumpTo('viewing-fee-settings')">Viewing fee</button>
+        <button type="button" class="filter-pill" onclick="settingsJumpTo('verification-settings-section')">🛡️ Verification</button>
+        <button type="button" class="filter-pill" onclick="settingsJumpTo('settings-contact-privacy-section')">🔒 Privacy</button>
+        <button type="button" class="filter-pill" onclick="settingsJumpTo('settings-notifications-section')">🔔 Notifications</button>
+        <button type="button" class="filter-pill" onclick="settingsJumpTo('settings-premium-section')">⭐ Premium</button>
+        <button type="button" class="filter-pill" onclick="settingsJumpTo('settings-elite-section')">👑 Elite</button>
+        <button type="button" class="filter-pill" onclick="settingsJumpTo('settings-team-section')">👥 Team</button>
+      </div>
+      <div class="settings-grid">
+        <div class="settings-section" id="settings-profile-anchor">
+          <h3><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</h3>
+          <div class="profile-avatar-row"><div class="profile-avatar-lg" id="settings-avatar">?</div><div class="profile-avatar-info"><strong id="settings-fullname">—</strong><span id="settings-email-display">—</span></div></div>
+          <p style="font-size:13px;color:var(--text-3);margin-bottom:18px;line-height:1.6">Edit your name, phone number, email address, and password from your dedicated profile page.</p>
+          <a href="/profile" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;text-decoration:none"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="15" height="15"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit profile &amp; password</a>
+          <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
+            <div class="card" id="account-role-card" style="padding:14px;margin:0 0 12px">
+              <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
+                <div><h4 style="font-size:14px;margin-bottom:4px">Your role</h4><strong id="account-role-label">Choose a role</strong><div id="account-role-description" style="font-size:12px;color:var(--text-3);margin-top:4px"></div><div id="account-role-verification" style="margin-top:8px;font-size:12px"></div><div id="account-role-set-date" style="margin-top:5px;font-size:12px;color:var(--text-3)"></div></div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <button type="button" class="btn btn-outline btn-sm" id="change-account-role-btn" onclick="openChangeRoleModal()" hidden>Change role</button>
+                </div>
+              </div>
+            </div>
+            <p style="font-size:12px;color:var(--text-3);line-height:1.5;margin-bottom:10px" id="account-role-picker-hint">Choose the role that best describes how you use Nyumba254. Role claims are self-declared; identity checks do not prove ownership or authority to list.</p>
+            <div class="role-choice-list" id="account-role-options">
+              <label class="role-choice"><input type="radio" name="account-type" value="buyer"/><div><strong>Tenant / Buyer</strong><span>Browse, save, and contact property listers</span></div></label>
+              <label class="role-choice"><input type="radio" name="account-type" value="owner"/><div><strong>Property owner</strong><span>List rental or sale property</span></div></label>
+              <label class="role-choice"><input type="radio" name="account-type" value="caretaker"/><div><strong>Caretaker</strong><span>Manage property on an owner's behalf</span></div></label>
+              <label class="role-choice"><input type="radio" name="account-type" value="agent"/><div><strong>Agent</strong><span>Connect people with properties</span></div></label>
+              <label class="role-choice"><input type="radio" name="account-type" value="company"/><div><strong>Company</strong><span>Represent an agency, developer, or property manager</span></div></label>
+            </div>
+            <div id="account-role-status" aria-live="polite" style="font-size:12px;color:var(--text-3);margin-top:8px"></div>
+            <button type="button" class="btn btn-outline btn-sm" id="save-account-roles-btn" onclick="saveAccountType()" style="width:100%;justify-content:center;margin-top:10px">Save account type</button>
+            <details id="account-role-history-details" style="margin-top:12px;font-size:12px;color:var(--text-3)"><summary>Recent role changes</summary><div id="account-role-history" style="margin-top:8px"></div></details>
+          </div>
+          <div class="settings-section" id="viewing-fee-settings" hidden style="margin-top:14px">
+            <h3>Viewing fee defaults</h3>
+            <p style="font-size:12px;color:var(--text-3);line-height:1.5;margin-bottom:10px">Agents and companies set optional per-listing fees up to the platform limit. Fees are paid directly to the lister; Nyumba254 does not collect them.</p>
+            <label class="field-label" for="viewing-fee-default">Default fee (KES)</label>
+            <input class="form-input" id="viewing-fee-default" type="number" min="0" max="5000" step="1" inputmode="numeric" placeholder="0 for free viewing"/>
+            <label style="display:flex;gap:9px;align-items:flex-start;margin-top:10px;font-size:12px;line-height:1.5;color:var(--text-2)"><input type="checkbox" id="viewing-fee-policy-accepted" style="margin-top:2px"/><span>I have read and agree to the <a href="/viewing-fee-policy" data-policy-viewer>Viewing Fee Policy</a>.</span></label>
+            <div id="viewing-fee-status" aria-live="polite" style="font-size:12px;color:var(--text-3);margin-top:6px"></div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="saveViewingFeeDefault()" style="width:100%;justify-content:center;margin-top:8px">Save default</button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="applyViewingFeeToActiveListings()" style="width:100%;justify-content:center;margin-top:8px">Apply to active listings…</button>
+          </div>
+          <div class="settings-section" id="company-profile-settings" hidden>
+            <h3>Company profile</h3>
+            <p style="font-size:12px;color:var(--text-3);line-height:1.5;margin-bottom:12px">Company name and details are public while Company is your account type. The role remains self-declared; identity verification is shown separately.</p>
+            <label class="field-label" for="company-name">Company name</label>
+            <input class="form-input" id="company-name" maxlength="160" autocomplete="organization"/>
+            <label class="field-label" for="company-type" style="margin-top:10px">Company type</label>
+            <select class="form-input" id="company-type">
+              <option value="agency">Agency</option><option value="developer">Developer</option><option value="property_manager">Property manager</option>
+            </select>
+            <label class="field-label" for="company-registration" style="margin-top:10px">Registration number (optional)</label>
+            <input class="form-input" id="company-registration" maxlength="120"/>
+            <label class="field-label" for="company-logo" style="margin-top:10px">Logo URL (optional)</label>
+            <input class="form-input" id="company-logo" type="url" maxlength="2048" placeholder="https://…"/>
+            <label class="field-label" for="company-description" style="margin-top:10px">Description</label>
+            <textarea class="form-input" id="company-description" maxlength="2000" rows="3"></textarea>
+            <label class="field-label" for="company-website" style="margin-top:10px">Website (optional)</label>
+            <input class="form-input" id="company-website" type="url" maxlength="2048" placeholder="https://…"/>
+            <div id="company-profile-status" aria-live="polite" style="font-size:12px;color:var(--text-3);margin-top:8px"></div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="saveCompanyProfile()" style="width:100%;justify-content:center;margin-top:10px">Save company profile</button>
+          </div>
+          <button class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:10px" onclick="window.__tourShort=false;Tour.restart()">🔄 Replay dashboard tour</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:20px">
+          <div class="settings-section" id="settings-notifications-section">
+            <h3><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>Notifications</h3>
+            <div class="notif-list">
+              <div class="toggle-row"><div class="toggle-label"><strong>New message</strong><span>Get notified when a buyer messages you</span></div><label class="switch"><input type="checkbox" id="notif-enquiry" checked/><span class="switch-track"></span></label></div>
+              <div class="toggle-row"><div class="toggle-label"><strong>Listing approved</strong><span>When your listing goes live</span></div><label class="switch"><input type="checkbox" id="notif-approved" checked/><span class="switch-track"></span></label></div>
+              <div class="toggle-row"><div class="toggle-label"><strong>Listing expiring</strong><span>7 days before your listing expires</span></div><label class="switch"><input type="checkbox" id="notif-expiring" checked/><span class="switch-track"></span></label></div>
+              <div class="toggle-row"><div class="toggle-label"><strong>Payment confirmed</strong><span>Payment receipt notifications</span></div><label class="switch"><input type="checkbox" id="notif-payment" checked/><span class="switch-track"></span></label></div>
+              <div class="toggle-row"><div class="toggle-label"><strong>Weekly portfolio digest</strong><span>A Monday email summarising health changes, new stale listings and wins</span></div><label class="switch"><input type="checkbox" id="notif-weekly-digest"/><span class="switch-track"></span></label></div>
+            </div>
+            <button class="btn btn-outline btn-sm" style="margin-top:14px;width:100%;justify-content:center" onclick="saveNotificationPrefs()">Save preferences</button>
+          </div>
+          <div class="settings-section" id="verification-settings-section">
+            <h3><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>KYC · Identity Verification</h3>
+            <div id="kyc-settings-summary" class="kyc-summary-row">
+              <div class="kyc-summary-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1.8"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg></div>
+              <div class="kyc-summary-body">
+                <div class="kyc-summary-title">Nyumba254 KYC Center <span class="kyc-pill unverified" id="kyc-settings-pill">Not started</span></div>
+                <div class="kyc-summary-sub" id="kyc-settings-sub">Verify your identity to show buyers that your identity was checked; your role remains self-declared.</div>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:14px" onclick="openKycModal()">Open KYC Center →</button>
+            <button class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:8px" onclick="openKycFullPage()">Open in new tab ↗</button>
+          </div>
+          <div class="settings-section" id="settings-concierge-section">
+            <h3><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Managed chat</h3>
+            <div class="toggle-row" style="border-bottom:none">
+              <div class="toggle-label"><strong>Let our team handle enquiries</strong><span>A real person from our team replies to buyer messages on your behalf — not an AI. You never need to log in for it.</span></div>
+              <label class="switch"><input type="checkbox" id="concierge-toggle" onchange="toggleConcierge(this.checked)"/><span class="switch-track"></span></label>
+            </div>
+            <p style="font-size:12px;color:var(--text-3);line-height:1.6;margin-top:8px" id="concierge-note"></p>
+            <p style="font-size:12px;color:var(--gold);background:var(--gold-light);border-radius:6px;padding:8px 10px;line-height:1.6;margin-top:8px;display:none" id="concierge-lock-note">🔒 Managed chat requires Premium, Elite, or any active BNB plan. <a href="/plans" style="color:var(--gold);font-weight:700;text-decoration:underline">Upgrade to unlock</a>.</p>
+          </div>
+          <div class="settings-section" id="settings-sms-section">
+            <h3><svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>SMS enquiry alerts</h3>
+            <div class="toggle-row" style="border-bottom:none">
+              <div class="toggle-label"><strong>Text me for new enquiries</strong><span>We'll text you the moment a buyer enquires — in addition to email/in-app</span></div>
+              <label class="switch"><input type="checkbox" id="sms-alerts-toggle" onchange="toggleSmsAlerts(this.checked)"/><span class="switch-track"></span></label>
+            </div>
+            <p style="font-size:12px;color:var(--text-3);line-height:1.6;margin-top:8px" id="sms-alerts-note">Yearly plans also get texts for payment confirmations and listing status changes.</p>
+            <p style="font-size:12px;color:var(--gold);background:var(--gold-light);border-radius:6px;padding:8px 10px;line-height:1.6;margin-top:8px;display:none" id="sms-alerts-lock-note">🔒 SMS alerts are a Premium feature. <a href="/plans" style="color:var(--gold);font-weight:700;text-decoration:underline">Upgrade to unlock</a>.</p>
+          </div>
+          <div class="settings-section" id="settings-premium-section">
+            <h3><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Premium</h3>
+            <p style="font-size:12.5px;color:var(--text-3);margin-bottom:14px;line-height:1.6">Unlock managed chat, a Pro badge, scheduled publishing, printable brochures, and more. Video walkthroughs are free on every plan.</p>
+            <button type="button" class="btn btn-outline btn-sm" style="margin-bottom:12px" onclick="var w=document.getElementById('plan-compare-wrap');w.style.display=w.style.display==='none'?'block':'none'">Compare Premium vs Elite</button>
+            <div id="plan-compare-wrap" style="display:none;overflow-x:auto;margin-bottom:16px;border:1px solid var(--border);border-radius:10px">
+              <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:340px">
+                <thead>
+                  <tr style="background:var(--surface)">
+                    <th style="text-align:left;padding:8px 10px;font-weight:700;color:var(--text-2)">Feature</th>
+                    <th style="text-align:center;padding:8px 10px;font-weight:700;color:var(--gold)">Premium</th>
+                    <th style="text-align:center;padding:8px 10px;font-weight:700;color:#7c3aed">Elite</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Managed chat</td><td style="text-align:center;padding:7px 10px;color:var(--gold);font-weight:700">✓</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
+                  <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Pro lister badge</td><td style="text-align:center;padding:7px 10px;color:var(--gold);font-weight:700">✓</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
+                  <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Scheduled publishing</td><td style="text-align:center;padding:7px 10px;color:var(--gold);font-weight:700">✓</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
+                  <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Video walkthroughs</td><td colspan="2" style="text-align:center;padding:7px 10px;color:var(--green-dark);font-weight:700">✓ Free on every plan</td></tr>
+                  <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Printable brochure</td><td style="text-align:center;padding:7px 10px;color:var(--gold);font-weight:700">✓</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
+                  <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">SMS enquiry alerts</td><td style="text-align:center;padding:7px 10px;color:var(--gold);font-weight:700">✓</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
+                  <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Unlimited listings</td><td style="text-align:center;padding:7px 10px;color:var(--text-3);font-weight:700">—</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
+                  <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">AI Listing Assistant</td><td style="text-align:center;padding:7px 10px;color:var(--text-3);font-weight:700">—</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
+                  <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Instant Valuation Tool</td><td style="text-align:center;padding:7px 10px;color:var(--text-3);font-weight:700">—</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
+                  <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Storefront / Company page</td><td style="text-align:center;padding:7px 10px;color:var(--text-3);font-weight:700">—</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
+                  <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Rent & Tenant Ledger</td><td style="text-align:center;padding:7px 10px;color:var(--text-3);font-weight:700">—</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
+                  <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Demand Insights</td><td style="text-align:center;padding:7px 10px;color:var(--text-3);font-weight:700">—</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div id="plan-category-row" style="display:none;margin-bottom:14px;font-size:12.5px;background:var(--surface);border-radius:8px;padding:10px 12px">
+              <div style="font-weight:700;color:var(--text)">Plan scope: <span id="plan-category-label">—</span></div>
+              <div id="plan-balance-note" style="color:var(--green-dark);margin-top:4px"></div>
+              <button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="requestPlanCategorySwitch()">Switch plan category</button>
+            </div>
+            <div id="premium-status-banner" style="display:none;font-size:12.5px;font-weight:700;color:var(--green-dark);background:var(--green-light);border-radius:8px;padding:8px 12px;margin-bottom:14px"></div>
+            <div class="toggle-row">
+              <div class="toggle-label"><strong>Managed chat</strong><span>We reply to buyer messages for you</span></div>
+              <span style="font-size:11px;font-weight:700;color:var(--gold);background:var(--gold-light);padding:3px 9px;border-radius:20px">Premium</span>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-label"><strong>Pro lister badge</strong><span>Show buyers you're a trusted, active lister</span></div>
+              <span style="font-size:11px;font-weight:700;color:var(--gold);background:var(--gold-light);padding:3px 9px;border-radius:20px">Premium</span>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-label"><strong>Scheduled publishing</strong><span>Set a listing to go live on a future date</span></div>
+              <span style="font-size:11px;font-weight:700;color:var(--gold);background:var(--gold-light);padding:3px 9px;border-radius:20px">Premium</span>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-label"><strong>Video walkthroughs</strong><span>Add a video or 360° tour to any listing — 1 per listing on the free plan, or up to 5 on yearly plans</span></div>
+              <span style="font-size:11px;font-weight:700;color:var(--green-dark);background:var(--green-light);padding:3px 9px;border-radius:20px">Free</span>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-label"><strong>Printable brochure</strong><span>Download a branded PDF flyer for a listing</span></div>
+              <span style="font-size:11px;font-weight:700;color:var(--gold);background:var(--gold-light);padding:3px 9px;border-radius:20px">Premium</span>
+            </div>
+            <div class="toggle-row" style="border-bottom:none">
+              <div class="toggle-label"><strong>SMS enquiry alerts</strong><span>Get a text the moment a buyer enquires</span></div>
+              <span style="font-size:11px;font-weight:700;color:var(--gold);background:var(--gold-light);padding:3px 9px;border-radius:20px">Premium</span>
+            </div>
+            <a href="/plans" id="premium-upgrade-btn" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:14px;text-decoration:none">Upgrade — from KES 1,200/mo</a>
+          </div>
+          <div class="settings-section" id="settings-bnb-section">
+            <h3><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Airbnb / BNB plan</h3>
+            <p style="font-size:12.5px;color:var(--text-3);margin-bottom:14px;line-height:1.6">A separate monthly plan for a couple of Airbnb/holiday-rental listings — independent of Premium/Elite. Need more than a few, or want the AI tools too? <strong>Elite includes unlimited BNB listings</strong> at no extra cost.</p>
+            <div id="bnb-status-banner" style="display:none;font-size:12.5px;font-weight:700;color:var(--green-dark);background:var(--green-light);border-radius:8px;padding:8px 12px;margin-bottom:14px"></div>
+            <div class="toggle-row"><div class="toggle-label"><strong>BNB Basic</strong><span>1 active Airbnb listing</span></div><span style="font-size:12px;font-weight:700;color:var(--text-2)" id="bnb-basic-price-label">—</span></div>
+            <div class="toggle-row" style="border-bottom:none"><div class="toggle-label"><strong>BNB Bundle</strong><span>Up to 5 active Airbnb listings</span></div><span style="font-size:12px;font-weight:700;color:var(--text-2)" id="bnb-bundle-price-label">—</span></div>
+            <a href="/plans#bnb-plans-grid" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:14px;text-decoration:none">Get a BNB plan →</a>
+          </div>
+          <div class="settings-section" id="settings-rm-section" style="display:none">
+            <h3><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Your relationship manager</h3>
+            <p id="rm-content" style="font-size:13px;color:var(--text-2);line-height:1.7"></p>
+          </div>
+          <div class="settings-section" id="settings-elite-section">
+            <h3><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Elite</h3>
+            <p style="font-size:12.5px;color:var(--text-3);margin-bottom:14px;line-height:1.6">Everything in Premium, plus unlimited listings — rental and BNB both — and AI-powered tools to save time on listings and pricing.</p>
+            <div id="elite-status-banner" style="display:none;font-size:12.5px;font-weight:700;color:white;background:#7c3aed;border-radius:8px;padding:8px 12px;margin-bottom:14px"></div>
+            <div class="toggle-row">
+              <div class="toggle-label"><strong>Unlimited listings — rental &amp; BNB</strong><span>No per-listing fee and no separate BNB plan needed while subscribed</span></div>
+              <span style="font-size:11px;font-weight:700;color:white;background:#7c3aed;padding:3px 9px;border-radius:20px">Elite</span>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-label"><strong>AI Listing Assistant</strong><span>Auto-generate a polished title, description, and suggested price</span></div>
+              <span style="font-size:11px;font-weight:700;color:white;background:#7c3aed;padding:3px 9px;border-radius:20px">Elite</span>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-label"><strong>Instant Valuation Tool</strong><span>Get an estimated fair rent/price based on similar listings</span></div>
+              <span style="font-size:11px;font-weight:700;color:white;background:#7c3aed;padding:3px 9px;border-radius:20px">Elite</span>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-label"><strong>Storefront / Company page</strong><span>A full branded page listing all your active properties</span></div>
+              <span style="font-size:11px;font-weight:700;color:white;background:#7c3aed;padding:3px 9px;border-radius:20px">Elite</span>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-label"><strong>Rent &amp; Tenant Ledger</strong><span>Track rent due dates, payments, and tenant history</span></div>
+              <span style="font-size:11px;font-weight:700;color:white;background:#7c3aed;padding:3px 9px;border-radius:20px">Elite</span>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-label"><strong>Demand Insights</strong><span>See which areas buyers are enquiring about most</span></div>
+              <span style="font-size:11px;font-weight:700;color:white;background:#7c3aed;padding:3px 9px;border-radius:20px">Elite</span>
+            </div>
+            <div class="toggle-row" id="demand-digest-row" style="display:none">
+              <div class="toggle-label"><strong>Weekly demand digest</strong><span>Email me the top opportunity areas every Monday</span></div>
+              <label class="switch"><input type="checkbox" id="demand-digest-toggle" onchange="toggleDemandDigest(this.checked)"/><span class="switch-track"></span></label>
+            </div>
+            <div class="toggle-row" id="ai-concierge-row" style="display:none;border-bottom:none">
+              <div class="toggle-label"><strong>24/7 AI Chat Concierge</strong><span>An AI trained on this listing's own details answers routine buyer questions instantly — availability, price, amenities — and hands off anything it can't answer to you</span></div>
+              <label class="switch"><input type="checkbox" id="ai-concierge-toggle" onchange="toggleAiConcierge(this.checked)"/><span class="switch-track"></span></label>
+            </div>
+            <a href="/plans" id="elite-upgrade-btn" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:14px;background:#7c3aed;text-decoration:none">Upgrade to Elite — from KES 3,000/mo</a>
+            <div id="storefront-link-row" style="display:none;margin-top:10px">
+              <div style="font-size:11.5px;color:var(--text-3);word-break:break-all;background:var(--surface);border-radius:8px;padding:8px 10px;margin-bottom:8px" id="storefront-settings-url"></div>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-outline" style="flex:1;justify-content:center" onclick="copyStorefrontLink()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy link</button>
+                <a class="btn btn-primary" style="flex:1;justify-content:center;text-decoration:none;background:#7c3aed" id="storefront-settings-open" href="#" rel="noopener">Open storefront ↗</a>
+              </div>
+            </div>
+            <button id="elite-valuation-btn" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:10px;display:none" onclick="openValuationModal()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Instant Valuation Tool</button>
+            <button id="elite-ai-listing-btn" class="btn btn-outline btn-lg" style="width:100%;justify-content:center;margin-top:10px;display:none" onclick="openAiListingModal()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>AI Listing Assistant</button>
+          </div>
+          <div class="settings-section" id="settings-team-section" style="display:none">
+            <h3><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Team seats</h3>
+            <p style="font-size:12.5px;color:var(--text-3);margin-bottom:12px;line-height:1.6">Invite someone to help manage your account. <span id="team-seats-note"></span></p>
+            <div style="display:flex;gap:8px;margin-bottom:14px">
+              <input type="email" id="team-invite-email" placeholder="teammate@email.com" style="flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none"/>
+              <button class="btn btn-primary btn-sm" id="team-invite-btn" onclick="inviteTeamMember()">Invite</button>
+            </div>
+            <div id="team-members-list"></div>
+            <p style="font-size:12px;color:var(--text-3);line-height:1.6;margin-top:10px">Teammates choose for themselves whether their name appears on your Lister Page. You cannot turn this on for them.</p>
+          </div>
+          <div class="settings-section" id="settings-roster-consent-section" style="display:none">
+            <h3><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Team listing on Lister Page</h3>
+            <div class="toggle-row" style="border-bottom:none">
+              <div class="toggle-label"><strong>Show my name on the team's Lister Page</strong><span>Only your name is shown publicly. You can turn this off at any time.</span></div>
+              <label class="switch"><input type="checkbox" id="roster-consent-toggle" onchange="setRosterConsent(this.checked)"/><span class="switch-track"></span></label>
+            </div>
+          </div>
+          <div class="settings-section" id="settings-contact-privacy-section">
+            <h3><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.12 1.2 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>Buyer contact privacy</h3>
+            <div class="toggle-row" style="border-bottom:none">
+              <div class="toggle-label"><strong>Hide Call &amp; WhatsApp on all my listings</strong><span>When on, buyers can only message you on Nyumba254 — your phone number is never revealed. When off, buyers can reveal your number to call or WhatsApp you directly.</span></div>
+              <label class="switch"><input type="checkbox" id="hide-contact-toggle" onchange="toggleContactPrivacy(this.checked)"/><span class="switch-track"></span></label>
+            </div>
+            <p style="font-size:12px;color:var(--text-3);line-height:1.6;margin-top:8px" id="hide-contact-note"></p>
+          </div>
+        </div>
+      </div>
+      <div class="settings-section" id="settings-data-section" style="margin-top:20px">
+        <h3><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Your data</h3>
+        <p style="font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:12px">See a readable history of your account and download it as a report. Backup = a copy you can restore. Activity report = a readable history you can keep or print.</p>
+        <button class="btn btn-outline" type="button" onclick="showPage('activity')">Open Activity</button>
+      </div>
+      <div class="settings-section" id="settings-backup-section" style="margin-top:20px">
+        <h3><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 17v3a1 1 0 001 1h12a1 1 0 001-1v-3"/></svg>Account backup &amp; restore</h3>
+        <p style="font-size:12.5px;color:var(--text-3);line-height:1.6;margin-bottom:12px">Download a private JSON copy of your account records, including listings, messages, support conversations, payment history, rental records, and BNB bookings. Keep the file somewhere secure — it contains personal and financial information.</p>
+        <p style="font-size:12px;color:var(--gold);background:var(--gold-light);border-radius:8px;padding:10px 12px;line-height:1.6;margin-bottom:14px">Restore only accepts a backup from this same account and adds missing records without replacing existing records. Restored listings are sent for review. Payment records are included in downloads but are never recreated during restore. Uploaded files themselves are not included.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <button class="btn btn-primary" id="dashboard-backup-download" type="button" onclick="downloadDashboardBackup()">Download account backup</button>
+          <label class="btn btn-outline" for="dashboard-backup-file" style="cursor:pointer">Choose backup to restore</label>
+          <input id="dashboard-backup-file" type="file" accept=".json,application/json" style="display:none" onchange="previewDashboardBackup(this.files[0])"/>
+          <button class="btn btn-outline" id="dashboard-backup-restore" type="button" onclick="restoreDashboardBackup()" disabled>Restore missing records</button>
+        </div>
+        <div id="dashboard-backup-status" role="status" aria-live="polite" style="font-size:12px;color:var(--text-3);margin-top:12px"></div>
+        <div id="dashboard-backup-history" aria-label="Recent backup history" style="font-size:12px;color:var(--text-3);margin-top:8px"></div>
+      </div>
+      <div class="danger-zone">
+        <h3>Danger zone</h3>
+        <p>Deleting your account permanently removes all your listings, messages, and payment records. This cannot be undone.</p>
+        <a href="/profile#danger-zone" class="btn btn-danger" style="text-decoration:none"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>Manage in profile</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-change-role">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="change-role-title">
+    <div class="modal-head"><h3 id="change-role-title">Change your role</h3><button type="button" class="modal-close" onclick="closeModal('modal-change-role')" aria-label="Close">✕</button></div>
+    <div class="modal-body">
+      <div class="box" style="margin-bottom:14px">You can change your role only once every 7 days. Role changes are recorded in your history; the role remains self-declared. If you leave Agent or Company, your viewing fees stop showing publicly.</div>
+      <div id="change-role-locked" class="box" hidden></div>
+      <div id="change-role-options" class="role-choice-list"></div>
+      <div id="change-role-confirm-step" class="box" hidden>
+        <p id="change-role-confirm-copy">This uses your change for the next 7 days. Continue?</p>
+        <label id="change-role-reason-wrap" for="change-role-reason" hidden style="display:block;margin-top:10px">Why should this role be corrected?
+          <textarea id="change-role-reason" maxlength="1000" rows="3" placeholder="Tell our team which role is accurate and why." style="display:block;width:100%;margin-top:6px"></textarea>
+        </label>
+        <div style="display:flex;gap:8px;margin-top:10px"><button type="button" class="btn btn-outline" id="change-role-cancel">Cancel</button><button type="button" class="btn btn-primary" id="change-role-confirm">Confirm</button></div>
+      </div>
+      <div id="change-role-status" aria-live="polite" role="status" style="font-size:12px;margin-top:10px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="modal-edit">
+  <div class="modal">
+    <div class="modal-head"><h3>Edit listing</h3><div class="modal-close" onclick="closeModal('modal-edit')" role="button" tabindex="0" aria-label="Close" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeModal('modal-edit')}">✕</div></div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-id"/>
+      <div class="form-grid">
+        <div class="form-group" style="grid-column:1/-1"><label>Title</label><input type="text" id="edit-title"/></div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Photos</label>
+          <div id="edit-photos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-bottom:10px"></div>
+          <input type="file" id="edit-photo-upload" accept="image/*" multiple style="display:none" onchange="handleEditPhotoUpload(this.files)"/>
+          <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('edit-photo-upload').click()">+ Add photos</button>
+          <div id="edit-photo-upload-status" style="font-size:11px;color:var(--text-3);margin-top:6px"></div>
+        </div>
+        <div class="form-group" style="grid-column:1/-1;background:var(--gold-light);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--gold);margin-bottom:2px">🔒 Price, location, and category can only be changed by our team — contact us (via the chat bubble) to update these.</div>
+        <div class="form-group"><label>Price (KES)</label><input type="number" id="edit-price" disabled title="Contact admin to change this"/></div>
+        <div class="form-group" id="edit-viewing-fee-wrap" style="grid-column:1/-1" hidden><label for="edit-viewing-fee">Viewing fee (KES)</label><input type="number" id="edit-viewing-fee" min="0" max="5000" step="1" inputmode="numeric"/><div id="edit-viewing-fee-default" style="font-size:12px;color:var(--text-3);margin-top:5px"></div><div id="edit-viewing-fee-lock-notice" role="status" style="font-size:12px;color:var(--text-3);margin-top:5px" hidden><span id="edit-viewing-fee-lock-text">Viewing fee editing is locked.</span> <a href="/dashboard#verification-settings-section">Review verification</a></div><button type="button" class="link" id="edit-viewing-fee-reset">Reset to default</button><div id="edit-viewing-fee-warning" role="status" style="font-size:12px;color:var(--amber);margin-top:5px" hidden>Existing confirmed viewing requests keep the fee they were shown.</div></div>
+        <div class="form-group"><label>Price type</label><select id="edit-price-type" disabled title="Contact admin to change this"><option value="sale">For sale</option><option value="rent">To let (monthly)</option></select></div>
+         <div class="form-group"><label>Bedrooms</label><input type="number" id="edit-bedrooms" min="0" max="20"/></div>
+        <div class="form-group"><label>Bathrooms</label><input type="number" id="edit-bathrooms" min="0" max="20"/></div>
+        <div class="form-group"><label>Size (m²)</label><input type="number" id="edit-size"/></div>
+        <div class="form-group"><label>County</label>
+          <select id="edit-county" onchange="handleEditCountyChange()" disabled title="Contact admin to change this"></select>
+        </div>
+        <div class="form-group"><label>Area</label>
+          <select id="edit-area" disabled title="Contact admin to change this"></select>
+        </div>
+        <div class="form-group"><label>Category</label><select id="edit-category" disabled title="Contact admin to change this"><option value="apartment">Apartment</option><option value="house">House</option><option value="boarding">Boarding House</option><option value="airbnb">Airbnb / Holiday Rental</option><option value="commercial">Shops & Offices</option></select></div>
+        <div class="form-group" style="grid-column:1/-1"><label>Address / sub-area</label><input type="text" id="edit-address" disabled title="Contact admin to change this"/></div>
+        <div class="form-group" style="grid-column:1/-1"><label>Description</label><textarea id="edit-description" style="min-height:120px"></textarea></div>
+        <div class="form-group" style="grid-column:1/-1"><label>Furnished</label><label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:10px;background:var(--surface);border-radius:6px;text-transform:none;letter-spacing:0"><input type="checkbox" id="edit-furnished"/> This apartment is furnished</label></div>
+        <div class="form-group" style="grid-column:1/-1"><label>Contact privacy</label><label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:10px;background:var(--surface);border-radius:6px;text-transform:none;letter-spacing:0"><input type="checkbox" id="edit-contact_hidden"/> Keep buyer contact on chat only (hide Call/WhatsApp)</label></div>
+      </div>
+      <div style="margin-top:16px"><div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text-3);margin-bottom:10px">Amenities</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px" id="edit-amenities-grid"></div></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-edit')">Cancel</button><button class="btn btn-primary" id="btn-save-edit" onclick="saveEdit()">Save changes</button></div>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal-overlay" id="modal-delete">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-head"><h3>Delete listing?</h3><div class="modal-close" onclick="closeModal('modal-delete')" role="button" tabindex="0" aria-label="Close" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeModal('modal-delete')}">✕</div></div>
+    <div class="modal-body"><p style="font-size:14px;color:var(--text-2);line-height:1.7">This will permanently delete <strong id="delete-listing-name"></strong>. Any messages and enquiries linked to it will also be removed. This cannot be undone.</p></div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-delete')">Keep it</button><button class="btn btn-danger btn-lg" id="btn-confirm-delete" onclick="confirmDelete()">Delete listing</button></div>
+  </div>
+</div>
+<!-- LISTINGS: GENERIC CONFIRM MODAL -->
+<div class="modal-overlay" id="modal-lc-confirm">
+  <div class="modal" style="max-width:430px">
+    <div class="modal-head"><h3 id="lc-confirm-title">Are you sure?</h3><div class="modal-close" role="button" tabindex="0" aria-label="Cancel" onclick="lcConfirmResolve(false)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();lcConfirmResolve(false)}">✕</div></div>
+    <div class="modal-body">
+      <p id="lc-confirm-msg" style="font-size:14px;color:var(--text-2);line-height:1.75"></p>
+      <div id="lc-confirm-typewrap" style="display:none;margin-top:16px">
+        <label style="display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:6px">Type <strong id="lc-confirm-word"></strong> to confirm</label>
+        <input type="text" id="lc-confirm-input" autocomplete="off" oninput="lcConfirmCheck()" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;outline:none;background:var(--white);color:var(--text)"/>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="lcConfirmResolve(false)">Cancel</button>
+      <button class="btn btn-primary" id="lc-confirm-ok" onclick="lcConfirmResolve(true)">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- LISTINGS: PREVIEW SHEET -->
+<div class="lc-sheet-overlay" id="lc-sheet-overlay" onclick="closeListingPreview()"></div>
+<aside class="lc-sheet" id="lc-sheet" role="dialog" aria-modal="true" aria-labelledby="lc-sheet-title">
+  <div class="lc-sheet-grab"></div>
+  <div class="lc-sheet-head">
+    <h3 id="lc-sheet-title">Listing</h3>
+    <div class="modal-close" role="button" tabindex="0" aria-label="Close" onclick="closeListingPreview()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeListingPreview()}">✕</div>
+  </div>
+  <div class="lc-sheet-body" id="lc-sheet-body"></div>
+  <div class="lc-sheet-foot" id="lc-sheet-foot"></div>
+</aside>
+
+<!-- LISTINGS: FLOATING MENU -->
+<div class="lc-menu-backdrop" id="lc-menu-backdrop" onclick="closeActionMenu()"></div>
+<div class="lc-menu" id="lc-menu" role="menu" aria-label="Actions"></div>
+
+<!-- LISTINGS: ATTRIBUTE FILTERS (v5) -->
+<div class="lc-filters-pop" id="lc-filters-pop" role="dialog" aria-label="Filter listings by attributes">
+  <h5>Price range (KES)</h5>
+  <div class="lc-filters-row">
+    <input type="number" id="lcf-price-min" placeholder="Min" min="0"/>
+    <input type="number" id="lcf-price-max" placeholder="Max" min="0"/>
+  </div>
+  <h5>Bedrooms</h5>
+  <select id="lcf-beds">
+    <option value="">Any</option>
+    <option value="0">Studio</option>
+    <option value="1">1 bedroom</option>
+    <option value="2">2 bedrooms</option>
+    <option value="3">3 bedrooms</option>
+    <option value="4">4+ bedrooms</option>
+  </select>
+  <h5>Features</h5>
+  <div class="lc-filters-checks">
+    <label><input type="checkbox" id="lcf-video"/> Has video</label>
+    <label><input type="checkbox" id="lcf-featured"/> Featured</label>
+    <label><input type="checkbox" id="lcf-multi"/> Multi-unit</label>
+  </div>
+  <div class="lc-filters-foot">
+    <button type="button" class="btn btn-outline btn-sm" onclick="clearAttrFilters()">Clear</button>
+    <button type="button" class="btn btn-primary btn-sm" onclick="applyAttrFilters()">Apply</button>
+  </div>
+</div>
+
+<!-- LISTINGS: STICKY MINI TOOLBAR (v5, mobile) -->
+<div class="lc-minibar" id="lc-minibar">
+  <span class="lc-mini-count"></span>
+  <button type="button" onclick="toggleBulkSelectMode()">☑ Select</button>
+  <button type="button" onclick="openViewMenu(this)">⚙ Sort</button>
+  <button type="button" onclick="lcMiniTop()">↑ Top</button>
+</div>
+
+<!-- OFFLINE BANNER (v5) -->
+<div class="lc-offline" id="lc-offline"><span>⚠️</span><span>You're offline — changes will retry once you're back online.</span></div>
+
+<!-- COMMAND PALETTE (v5) -->
+<div class="lc-cmd-overlay" id="lc-cmd-overlay" onclick="if(event.target===this)closeCmdPalette()">
+  <div class="lc-cmd" role="dialog" aria-label="Command palette">
+    <input type="text" id="lc-cmd-input" placeholder="Jump to a listing, filter, sort or page…" oninput="lcCmdRender(this.value)" onkeydown="lcCmdKeydown(event)" autocomplete="off"/>
+    <div class="lc-cmd-results" id="lc-cmd-results"></div>
+    <div class="lc-cmd-foot"><span><kbd>↑</kbd><kbd>↓</kbd> navigate</span><span><kbd>↵</kbd> open</span><span><kbd>esc</kbd> close</span></div>
+  </div>
+</div>
+
+<!-- OCCUPIED MODAL -->
+<div class="modal-overlay" id="modal-occupied">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head"><h3 id="occupied-modal-title">Mark as sold?</h3><div class="modal-close" onclick="closeModal('modal-occupied')" role="button" tabindex="0" aria-label="Close" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeModal('modal-occupied')}">✕</div></div>
+    <div class="modal-body"><p style="font-size:14px;color:var(--text-2);line-height:1.7" id="occupied-modal-copy">This will hide <strong id="occupied-listing-name"></strong> from public search immediately. It stays in your dashboard so you keep messages and history. You can reactivate it later.</p></div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-occupied')">Cancel</button><button class="btn btn-primary" id="btn-confirm-occupied" onclick="confirmOccupied()" style="background:#5b21b6">Yes, mark it</button></div>
+  </div>
+</div>
+<!-- PAY LISTING MODAL (seller-side, for approved_unpaid) -->
+<div class="modal-overlay" id="modal-pay-listing">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-head"><h3>Pay to go live</h3><div class="modal-close" onclick="closeModal('modal-pay-listing')">✕</div></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-2);margin-bottom:16px;line-height:1.6" id="pay-listing-intro"></p>
+      <div class="field" style="margin-bottom:14px">
+        <label style="display:flex;align-items:center;gap:10px;padding:12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer" id="pay-plan-standard-row">
+          <input type="radio" name="pay-plan" value="basic" checked onchange="updatePayListingAmount()"/>
+          <span style="flex:1"><strong>Standard</strong><br><span style="font-size:12px;color:var(--text-3)" id="pay-standard-amount">—</span></span>
+        </label>
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label style="display:flex;align-items:center;gap:10px;padding:12px;border:1.5px solid var(--gold);border-radius:10px;cursor:pointer;background:var(--gold-light)" id="pay-plan-featured-row">
+          <input type="radio" name="pay-plan" value="featured" onchange="updatePayListingAmount()"/>
+          <span style="flex:1"><strong>Featured ⭐</strong><br><span style="font-size:12px;color:var(--text-3)" id="pay-featured-amount">—</span></span>
+        </label>
+      </div>
+      <div style="background:var(--surface);border-radius:10px;padding:14px;font-size:13px;color:var(--text-2);margin-bottom:14px">
+        <strong id="pay-listing-amount-display">KES —</strong> via M-Pesa Paybill<br>
+        <span style="font-size:12px;color:var(--text-3)">Paybill 522522 · Account 1298476615</span>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button type="button" class="btn btn-outline btn-sm" onclick="copyPayDetail('522522','Paybill number')">Copy Paybill</button><button type="button" class="btn btn-outline btn-sm" onclick="copyPayDetail('1298476615','Account number')">Copy account no.</button></div>
+      </div>
+      <div class="field">
+        <label>M-Pesa transaction code</label>
+        <input type="text" id="pay-listing-ref" placeholder="e.g. QFT7H8K2LM" maxlength="10" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"/>
+        <div style="margin-top:12px"><label style="display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:6px">Or paste the whole M-Pesa SMS and we'll find the code</label>
+        <textarea id="pay-sms-paste" rows="3" placeholder="QFT7H8K2LM Confirmed. Ksh1,200.00 sent to…" oninput="parsePaySms(this.value)" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:12.5px;font-family:inherit;resize:vertical;background:var(--white);color:var(--text)"></textarea>
+        <div id="pay-sms-note" style="font-size:12px;margin-top:6px;min-height:16px"></div></div>
+      </div>
+      <p style="font-size:12px;color:var(--text-3);margin-top:14px;text-align:center">Manage many listings? <a href="/plans" style="color:var(--green);font-weight:700">A subscription may work out cheaper →</a></p>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-pay-listing')">Cancel</button><button class="btn btn-primary" id="btn-submit-pay-listing" onclick="submitPayListing()">Submit for verification</button></div>
+  </div>
+</div>
+<!-- MANAGE UNITS MODAL (multi-unit properties) -->
+<div class="modal-overlay" id="modal-manage-units">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-head"><h3>Manage units — <span id="mu-listing-title"></span></h3><div class="modal-close" onclick="closeModal('modal-manage-units')" role="button" tabindex="0" aria-label="Close" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeModal('modal-manage-units')}">✕</div></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-3);margin-bottom:16px;line-height:1.6">Add unit types, mark them occupied once taken, and edit price or availability any time — this updates the live listing immediately.</p>
+      <div class="mu-summary-strip" id="mu-summary-strip"></div>
+      <div id="mu-unit-list"><div style="text-align:center;padding:20px;color:var(--text-3);font-size:13px">Loading units…</div></div>
+      <button type="button" class="btn btn-outline" style="width:100%;justify-content:center;margin-top:10px" id="mu-add-toggle-btn" onclick="muToggleAddForm()">+ Add unit type</button>
+      <div class="mu-occupy-form" id="mu-add-form">
+        <div class="mu-occupy-grid" style="grid-template-columns:1fr 1fr 1fr">
+          <div><label>Unit label</label><input type="text" id="mu-new-label" placeholder="e.g. 2-bedroom, Door 4B"/></div>
+          <div><label>Price (KES)</label><input type="number" id="mu-new-price" min="0"/></div>
+          <div><label>How many total</label><input type="number" id="mu-new-total" min="1" value="1"/></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary btn-sm" onclick="muSaveNewUnit()">Add unit type</button>
+          <button class="btn btn-outline btn-sm" onclick="muToggleAddForm()">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-manage-units')">Close</button></div>
+  </div>
+</div>
+
+<!-- MANAGE VIDEOS MODAL -->
+<div class="modal-overlay" id="modal-manage-videos">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-head">
+      <h3>Video walkthrough — <span id="mv-listing-title"></span></h3>
+      <div class="modal-close" role="button" tabindex="0" aria-label="Close" onclick="closeModal('modal-manage-videos')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeModal('modal-manage-videos')}">✕</div>
+    </div>
+    <div class="modal-body">
+      <p id="mv-limit-note" style="font-size:12px;color:var(--text-3);margin-bottom:14px"></p>
+      <div id="mv-video-list" style="margin-bottom:16px"></div>
+      <label style="display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:6px">Paste a YouTube, Vimeo, or direct video link</label>
+      <div style="display:flex;gap:8px;margin-bottom:18px">
+        <input type="url" id="mv-url-input" placeholder="https://youtube.com/watch?v=…" style="flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;outline:none;background:var(--white);color:var(--text)"/>
+        <button type="button" class="btn btn-primary btn-sm" id="mv-add-btn" onclick="addListingVideo()">+ Add</button>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:14px">
+        <label style="display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:6px">Or upload a short clip (max 60s, 100MB)</label>
+        <input type="file" id="mv-file-input" accept="video/*" onchange="handleMvFileSelect(this.files[0])" style="font-size:12.5px"/>
+        <div id="mv-file-status" style="font-size:12px;color:var(--text-3);margin-top:8px"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('modal-manage-videos')">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- REPLY MODAL -->
+<div class="modal-overlay" id="modal-reply">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-head"><h3>Reply to enquiry</h3><div class="modal-close" onclick="closeModal('modal-reply')" role="button" tabindex="0" aria-label="Close" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeModal('modal-reply')}">✕</div></div>
+    <div class="modal-body">
+      <div style="background:var(--surface);border-radius:var(--radius);padding:14px;margin-bottom:16px;font-size:13px;color:var(--text-2);line-height:1.6" id="reply-original-msg"></div>
+      <div class="form-group"><label>Your reply</label><textarea id="reply-text" placeholder="Type your reply…" style="min-height:120px"></textarea></div>
+      <div id="reply-whatsapp-row" style="margin-top:10px"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-reply')">Cancel</button><button class="btn btn-primary" onclick="sendReply()">Send via WhatsApp</button></div>
+  </div>
+</div>
+
+<!-- RECEIPT MODAL -->
+<div class="modal-overlay" id="modal-receipt">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-head no-print"><h3>Payment receipt</h3><div class="modal-close" onclick="closeModal('modal-receipt')" role="button" tabindex="0" aria-label="Close" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeModal('modal-receipt')}">✕</div></div>
+    <div class="modal-body">
+      <div id="receipt-content" class="receipt-box">
+        <div class="receipt-header"><div class="receipt-logo">🏠 Nyumba254</div><div class="receipt-sub">Payment Receipt</div></div>
+        <div class="receipt-row"><span>Receipt No.</span><span id="rcpt-number">—</span></div>
+        <div class="receipt-row"><span>Date</span><span id="rcpt-date">—</span></div>
+        <div class="receipt-divider"></div>
+        <div class="receipt-row"><span>Billed to</span><span id="rcpt-seller">—</span></div>
+        <div class="receipt-row"><span>Listing</span><span id="rcpt-listing">—</span></div>
+        <div class="receipt-row"><span>Payment method</span><span id="rcpt-method">—</span></div>
+        <div class="receipt-row"><span>Reference</span><span id="rcpt-ref">—</span></div>
+        <div class="receipt-row"><span>Status</span><span id="rcpt-status">—</span></div>
+        <div class="receipt-divider"></div>
+        <div class="receipt-row receipt-total"><span>Amount paid</span><span id="rcpt-amount">—</span></div>
+        <div class="receipt-footer">Thank you for using Nyumba254. This receipt confirms payment of your apartment listing fee.</div>
+      </div>
+    </div>
+    <div class="modal-foot no-print">
+      <button class="btn btn-outline" onclick="closeModal('modal-receipt')">Close</button>
+      <button class="btn btn-outline" onclick="printReceipt()">🖨️ Print</button>
+      <button class="btn btn-primary" onclick="downloadReceiptPDF()">⬇️ Download PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- KYC VERIFICATION CENTER MODAL -->
+<div class="modal-overlay" id="modal-kyc">
+  <div class="modal kyc-modal">
+    <div class="kyc-header">
+      <div class="kyc-header-top">
+        <div class="kyc-brandmark">
+          <div class="kyc-brandmark-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+          <div><div class="kyc-eyebrow">Nyumba254 · Trust &amp; Safety</div><div class="kyc-h1">KYC Verification Center</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+          <button class="kyc-header-close" onclick="openKycFullPage()" aria-label="Open in new tab" title="Open in new tab">↗</button>
+          <button class="kyc-header-close" onclick="closeModal('modal-kyc')" aria-label="Close">✕</button>
+        </div>
+      </div>
+      <div class="kyc-header-status">
+        <svg class="kyc-seal" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>
+        <div class="kyc-status-text" id="kyc-header-status-text">Submit your identity documents for review. Your selected account role remains self-declared.</div>
+      </div>
+    </div>
+
+    <div class="kyc-stepper" id="kyc-stepper"></div>
+
+    <div class="kyc-body">
+      <div id="kyc-body-content"></div>
+    </div>
+
+    <div class="kyc-footer">
+      <div class="kyc-footer-note">🔒 Documents are encrypted in transit and only visible to Nyumba254's verification team.</div>
+      <div style="display:flex;gap:10px" id="kyc-footer-actions"></div>
+    </div>
+  </div>
+</div>
+
+<!-- VALUATION TOOL MODAL -->
+<div class="modal-overlay" id="modal-valuation">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-head"><h3>Instant Valuation</h3><div class="modal-close" onclick="closeModal('modal-valuation')" role="button" tabindex="0" aria-label="Close" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeModal('modal-valuation')}">✕</div></div>
+    <div class="modal-body">
+      <p style="font-size:12.5px;color:var(--text-3);margin-bottom:16px;line-height:1.6">See what similar properties are priced at on Nyumba254 right now, so you can list competitively.</p>
+      <div class="form-grid">
+        <div class="form-group"><label>County</label><select id="val-county" onchange="valPopulateAreas()"></select></div>
+        <div class="form-group"><label>Area</label><select id="val-area"><option value="">Any area in county</option></select></div>
+        <div class="form-group"><label>Category</label><select id="val-category"><option value="apartment">Apartment</option><option value="house">House</option><option value="boarding">Boarding House</option><option value="airbnb">Airbnb / Holiday Rental</option><option value="commercial">Shops & Offices</option></select></div>
+        <div class="form-group"><label>Sale or rent</label><select id="val-price-type"><option value="rent">To let (monthly)</option><option value="sale">For sale</option></select></div>
+        <div class="form-group"><label>Bedrooms</label><input type="number" id="val-bedrooms" min="0" max="20" placeholder="e.g. 2"/></div>
+      </div>
+      <div id="val-usage-note" style="font-size:11.5px;color:var(--text-3);margin-top:4px"></div>
+      <div id="val-results" style="margin-top:18px"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-valuation')">Close</button><button class="btn btn-primary" id="btn-run-valuation" onclick="runValuation()">Get valuation</button></div>
+  </div>
+</div>
+
+<!-- AI LISTING ASSISTANT MODAL -->
+<div class="modal-overlay" id="modal-ai-listing">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-head"><h3>AI Listing Assistant</h3><div class="modal-close" onclick="closeModal('modal-ai-listing')" role="button" tabindex="0" aria-label="Close" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeModal('modal-ai-listing')}">✕</div></div>
+    <div class="modal-body">
+      <p style="font-size:12.5px;color:var(--text-3);margin-bottom:16px;line-height:1.6">Choose a listing to prefill its saved details, or enter the facts yourself. AI drafts a title and description from the information you provide and suggests a price range using comparable listings. Review everything before applying it.</p>
+      <div class="form-group"><label for="ai-listing-select">Apply to an existing listing (optional)</label><select id="ai-listing-select" onchange="aiListingSelectionChanged(this.value)"><option value="">Just generate text — I'll copy it myself</option></select></div>
+      <div class="form-grid">
+        <div class="form-group"><label for="ai-listing-category">Category</label><select id="ai-listing-category" onchange="aiListingUpdateFrequency();aiInvalidateListingResult()"><option value="apartment">Apartment</option><option value="house">House</option><option value="boarding">Boarding House</option><option value="airbnb">Airbnb / Holiday Rental</option><option value="commercial">Shops & Offices</option></select></div>
+        <div class="form-group"><label for="ai-listing-price-type">Sale or rent</label><select id="ai-listing-price-type" onchange="aiListingUpdateFrequency();aiInvalidateListingResult()"><option value="rent">To let</option><option value="sale">For sale</option></select></div>
+        <div class="form-group"><label for="ai-listing-bedrooms">Bedrooms</label><input type="number" id="ai-listing-bedrooms" min="0" max="20" placeholder="e.g. 2" oninput="aiInvalidateListingResult()"/></div>
+        <div class="form-group"><label for="ai-listing-area">Area</label><input type="text" id="ai-listing-area" placeholder="e.g. Milimani, Kisumu" oninput="aiInvalidateListingResult()"/></div>
+        <div class="form-group"><label for="ai-listing-frequency">Price frequency</label><select id="ai-listing-frequency" onchange="aiInvalidateListingResult()"></select></div>
+      </div>
+      <div class="form-group"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><label for="ai-listing-notes">Key features and listing facts (one per line)</label><button type="button" class="btn btn-outline btn-sm" id="ai-listing-load-details" onclick="aiLoadSelectedListingDetails(true)" disabled>Load listing details</button></div><textarea id="ai-listing-notes" placeholder="Choose a listing to fill this from its saved details, or add facts such as a backup water tank, gated access, or nearby services." style="min-height:120px" oninput="aiInvalidateListingResult()"></textarea><div id="ai-listing-notes-hint" style="display:block;font-size:11px;color:var(--text-3);margin-top:6px;line-height:1.5" aria-live="polite">Only use accurate details. The generated copy is a draft for you to review.</div></div>
+      <div class="form-group"><label for="ai-listing-price">Current asking price (KES) — optional, helps the price suggestion</label><input type="number" id="ai-listing-price" min="0" placeholder="e.g. 15000" oninput="aiInvalidateListingResult()"/></div>
+      <div id="ai-listing-usage-note" style="font-size:11.5px;color:var(--text-3);margin-top:4px"></div>
+      <div id="ai-listing-results" style="margin-top:18px;display:none">
+        <div style="height:1px;background:var(--border);margin-bottom:16px"></div>
+        <div class="form-group"><label>Generated title <button type="button" onclick="copyAiField('ai-listing-out-title')" style="float:right;background:none;border:none;color:var(--green);font-weight:700;font-size:11px;cursor:pointer;text-transform:none;letter-spacing:0">Copy</button></label><input type="text" id="ai-listing-out-title"/></div>
+        <div class="form-group"><label>Generated description <button type="button" onclick="copyAiField('ai-listing-out-desc')" style="float:right;background:none;border:none;color:var(--green);font-weight:700;font-size:11px;cursor:pointer;text-transform:none;letter-spacing:0">Copy</button></label><textarea id="ai-listing-out-desc" style="min-height:130px"></textarea></div>
+        <div style="background:var(--green-light);border-radius:var(--radius);padding:12px 14px;font-size:13px;color:var(--green-dark)">
+          <strong>Suggested price:</strong> <span id="ai-listing-out-price">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('modal-ai-listing')">Close</button>
+      <button class="btn btn-outline" id="btn-apply-ai-listing" style="display:none" onclick="applyAiListingToSelected()">Apply to selected listing</button>
+      <button class="btn btn-primary" id="btn-generate-ai-listing" style="background:#7c3aed" onclick="generateAiListing()">✨ Generate</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD RENTAL UNIT MODAL -->
+<div class="modal-overlay" id="modal-add-rental-unit">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-head"><h3>Add rental unit</h3><div class="modal-close" onclick="closeModal('modal-add-rental-unit')" role="button" tabindex="0" aria-label="Close" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeModal('modal-add-rental-unit')}">✕</div></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Unit label</label><input type="text" id="ru-label" placeholder="e.g. Milimani Court, Unit 4B"/></div>
+      <div class="form-group"><label>Link to an existing listing (optional)</label><select id="ru-listing"></select></div>
+      <div class="form-group"><label>Monthly rent (KES)</label><input type="number" id="ru-rent" min="0"/></div>
+      <div class="form-group"><label>Late fee (% per overdue month, optional)</label><input type="number" id="ru-late-fee" min="0" step="0.5" placeholder="e.g. 5"/></div>
+      <div class="form-group"><label>Notes</label><textarea id="ru-notes" placeholder="Optional — anything worth remembering about this unit"></textarea></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-add-rental-unit')">Cancel</button><button class="btn btn-primary" id="btn-save-rental-unit" onclick="saveRentalUnit()">Add unit</button></div>
+  </div>
+</div>
+
+<!-- ADD/EDIT BNB PROPERTY MODAL -->
+<div class="modal-overlay" id="modal-add-bnb-property">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-head"><h3 id="bp-modal-title">Add BNB property</h3><div class="modal-close" onclick="closeModal('modal-add-bnb-property')">✕</div></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Property label</label><input type="text" id="bp-label" placeholder="e.g. Milimani 2BR Apartment"/></div>
+      <div class="form-group" id="bp-listing-group"><label>Link to an existing listing (optional)</label><select id="bp-listing" onchange="bpToggleUnlinkedFields()"></select><p style="font-size:11px;color:var(--text-3);margin-top:4px">Linked properties automatically use that listing's title, photos, description and amenities — nothing else to fill in below, and it can't be edited here (edit the listing instead).</p></div>
+      <div id="bp-unlinked-fields">
+        <div class="form-group" id="bp-photos-group">
+          <label>Photos <span style="font-weight:400;text-transform:none">— required before this property can be made publicly bookable</span></label>
+          <div id="bp-photos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-bottom:10px"></div>
+          <input type="file" id="bp-photo-upload" accept="image/*" multiple style="display:none" onchange="handleBpPhotoUpload(this.files)"/>
+          <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('bp-photo-upload').click()">+ Add photos</button>
+          <div id="bp-photo-upload-status" style="font-size:11px;color:var(--text-3);margin-top:6px"></div>
+        </div>
+        <div class="form-group"><label>Description</label><textarea id="bp-description" placeholder="What guests should know — the space, the neighbourhood, house rules…" style="min-height:90px"></textarea></div>
+        <div class="form-group"><label>Amenities</label><div id="bp-amenities-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px"></div></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label>Nightly rate (KES)</label><input type="number" id="bp-nightly" min="0"/></div>
+        <div class="form-group"><label>Weekend rate (optional)</label><input type="number" id="bp-weekend" min="0"/></div>
+      </div>
+      <div class="form-group"><label>Cleaning fee (optional)</label><input type="number" id="bp-cleaning" min="0"/></div>
+      <div class="form-group"><label>Notes <span style="font-weight:400;text-transform:none">— private, for you only</span></label><textarea id="bp-notes"></textarea></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-add-bnb-property')">Cancel</button><button class="btn btn-primary" id="btn-save-bnb-property" onclick="saveBnbProperty()">Add property</button></div>
+  </div>
+</div>
+
+<!-- BNB PUBLIC BOOKING SETTINGS MODAL -->
+<div class="modal-overlay" id="modal-bnb-public-booking">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-head"><h3>Public booking settings</h3><div class="modal-close" onclick="closeModal('modal-bnb-public-booking')">✕</div></div>
+    <div class="modal-body">
+      <div class="toggle-row" style="border-bottom:none">
+        <div class="toggle-label"><strong>Allow public booking</strong><span>Turns this property on/off at book.nyumba254.com</span></div>
+        <label class="switch"><input type="checkbox" id="pb-is-bookable"/><span class="switch-track"></span></label>
+      </div>
+      <div class="form-grid" style="margin-top:14px">
+        <div class="form-group"><label>Max guests</label><input type="number" id="pb-max-guests" min="1"/></div>
+        <div class="form-group"><label>Min stay (nights)</label><input type="number" id="pb-min-stay" min="1" value="1"/></div>
+      </div>
+      <div class="form-group"><label>Cancellation policy</label>
+        <select id="pb-cancellation-policy">
+          <option value="flexible">Flexible</option>
+          <option value="moderate">Moderate</option>
+          <option value="strict">Strict</option>
+        </select>
+      </div>
+      <p style="font-size:11.5px;color:var(--text-3);line-height:1.6">Guests will see this property at <strong>book.nyumba254.com</strong> once turned on — make sure nightly rate and cleaning fee above are correct first.</p>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-bnb-public-booking')">Cancel</button><button class="btn btn-primary" id="btn-save-bnb-public-booking" onclick="saveBnbPublicBooking()">Save</button></div>
+  </div>
+</div>
+
+<!-- ADD BNB BOOKING MODAL -->
+<div class="modal-overlay" id="modal-add-bnb-booking">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-head"><h3>Log a booking</h3><div class="modal-close" onclick="closeModal('modal-add-bnb-booking')">✕</div></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Property</label><select id="bb-property"></select></div>
+      <div class="form-group"><label>Guest name</label><input type="text" id="bb-guest-name"/></div>
+      <div class="form-grid">
+        <div class="form-group"><label>Guest phone</label><input type="text" id="bb-guest-phone"/></div>
+        <div class="form-group"><label>Guest email</label><input type="text" id="bb-guest-email"/></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label>Check-in</label><input type="date" id="bb-checkin"/></div>
+        <div class="form-group"><label>Check-out</label><input type="date" id="bb-checkout"/></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label>Source</label><select id="bb-source"><option value="direct">Direct</option><option value="airbnb">Airbnb</option><option value="booking_com">Booking.com</option><option value="other">Other</option></select></div>
+        <div class="form-group"><label>Total amount (KES)</label><input type="number" id="bb-total" min="0"/></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label>Amount paid so far</label><input type="number" id="bb-paid" min="0" value="0"/></div>
+        <div class="form-group"><label>Payment status</label><select id="bb-payment-status"><option value="pending_verification">Awaiting confirmation</option><option value="due">Due</option><option value="partial">Partial</option><option value="paid">Paid</option><option value="refunded">Refunded</option></select></div>
+      </div>
+      <div class="form-group"><label>Notes</label><textarea id="bb-notes"></textarea></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-add-bnb-booking')">Cancel</button><button class="btn btn-primary" id="btn-save-bnb-booking" onclick="saveBnbBooking()">Save booking</button></div>
+  </div>
+</div>
+
+<!-- ADD TENANT MODAL -->
+<div class="modal-overlay" id="modal-add-tenant">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-head"><h3>Add tenant</h3><div class="modal-close" onclick="closeModal('modal-add-tenant')" role="button" tabindex="0" aria-label="Close" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeModal('modal-add-tenant')}">✕</div></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Full name</label><input type="text" id="tn-name"/></div>
+      <div class="form-group"><label>Phone</label><input type="text" id="tn-phone"/></div>
+      <div class="form-group"><label>Email</label><input type="text" id="tn-email" placeholder="Optional — needed to send rent reminders"/></div>
+      <div class="form-grid">
+        <div class="form-group"><label>Move-in date</label><input type="date" id="tn-movein"/></div>
+        <div class="form-group"><label>Deposit (KES)</label><input type="number" id="tn-deposit" min="0"/></div>
+      </div>
+      <div class="form-group"><label>Lease end date</label><input type="date" id="tn-lease-end"/><p style="font-size:11px;color:var(--text-3);margin-top:4px">Optional — you'll get an alert here when it's within 30 days of expiring.</p></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-add-tenant')">Cancel</button><button class="btn btn-primary" id="btn-save-tenant" onclick="saveTenant()">Add tenant</button></div>
+  </div>
+</div>
+
+<!-- TENANT DETAIL MODAL -->
+<div class="modal-overlay" id="modal-tenant-detail">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-head"><h3 id="td-title">Tenant details</h3><div class="modal-close" onclick="closeModal('modal-tenant-detail')" role="button" tabindex="0" aria-label="Close" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeModal('modal-tenant-detail')}">✕</div></div>
+    <div class="modal-body" id="td-body"></div>
+    <div class="modal-foot"><button class="btn btn-outline" style="color:var(--red);border-color:var(--red)" onclick="moveOutTenant()">Mark moved out</button><button class="btn btn-outline" onclick="closeModal('modal-tenant-detail')">Close</button></div>
+  </div>
+</div>
+
+<!-- LOG RENT PAYMENT MODAL -->
+<div class="modal-overlay" id="modal-log-rent-payment">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-head"><h3>Log rent payment</h3><div class="modal-close" onclick="closeModal('modal-log-rent-payment')" role="button" tabindex="0" aria-label="Close" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeModal('modal-log-rent-payment')}">✕</div></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>Month</label><input type="month" id="rp-month"/></div>
+        <div class="form-group"><label>Amount (KES)</label><input type="number" id="rp-amount" min="0"/></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label>Date paid</label><input type="date" id="rp-paiddate"/></div>
+        <div class="form-group"><label>Method</label><select id="rp-method"><option value="mpesa">M-Pesa</option><option value="bank">Bank transfer</option><option value="cash">Cash</option><option value="other">Other</option></select></div>
+      </div>
+      <div class="form-group"><label>Status</label><select id="rp-status"><option value="paid">Paid</option><option value="partial">Partial</option><option value="due">Due</option><option value="overdue">Overdue</option></select></div>
+      <div class="form-group"><label>Notes</label><textarea id="rp-notes"></textarea></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-log-rent-payment')">Cancel</button><button class="btn btn-primary" id="btn-save-rent-payment" onclick="saveRentPayment()">Save payment</button></div>
+  </div>
+</div>
+
+<!-- REMINDER SETTINGS MODAL -->
+<div class="modal-overlay" id="modal-reminder-settings">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-head"><h3>Automatic reminders</h3><div class="modal-close" onclick="closeModal('modal-reminder-settings')">✕</div></div>
+    <div class="modal-body">
+      <div class="toggle-row"><div class="toggle-label"><strong>Auto-remind tenants</strong><span>Sends escalating reminders as rent becomes due/overdue</span></div><label class="switch"><input type="checkbox" id="rs-auto-enabled"/><span class="switch-track"></span></label></div>
+      <div class="form-group" style="margin-top:14px"><label>Remind this many days before due date</label><input type="number" id="rs-days-before" min="0" max="15"/></div>
+      <p style="font-size:11.5px;color:var(--text-3);line-height:1.6">Tenants move through three stages automatically: <strong>Reminder</strong> (before/on due date) → <strong>Notice</strong> (1–14 days overdue) → <strong>Final Notice</strong> (15+ days overdue). Each stage has its own tone. Use "Remind all overdue" any time to send immediately regardless of schedule.</p>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-reminder-settings')">Cancel</button><button class="btn btn-primary" onclick="saveReminderSettings()">Save</button></div>
+  </div>
+</div>
+
+<!-- DEPOSIT MODAL -->
+<div class="modal-overlay" id="modal-deposit">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-head"><h3>Manage deposit</h3><div class="modal-close" onclick="closeModal('modal-deposit')">✕</div></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Status</label><select id="dep-status"><option value="held">Held</option><option value="partially_refunded">Partially refunded</option><option value="refunded">Fully refunded</option><option value="forfeited">Forfeited</option></select></div>
+      <div class="form-group"><label>Amount refunded (KES)</label><input type="number" id="dep-refund-amount" min="0"/></div>
+      <div class="form-group"><label>Refund date</label><input type="date" id="dep-refund-date"/></div>
+      <div class="form-group"><label>Deduction notes</label><textarea id="dep-notes" placeholder="e.g. KES 3,000 deducted for wall repainting"></textarea></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-deposit')">Cancel</button><button class="btn btn-primary" onclick="saveDeposit()">Save</button></div>
+  </div>
+</div>
+
+<!-- EXPENSE MODAL -->
+<div class="modal-overlay" id="modal-add-expense">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head"><h3>Log expense</h3><div class="modal-close" onclick="closeModal('modal-add-expense')">✕</div></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Unit</label><select id="exp-unit"></select></div>
+      <div class="form-grid">
+        <div class="form-group"><label>Category</label><select id="exp-category"><option value="repair">Repair</option><option value="rates">Land rates/rent</option><option value="insurance">Insurance</option><option value="utilities">Utilities</option><option value="management_fee">Management fee</option><option value="other">Other</option></select></div>
+        <div class="form-group"><label>Amount (KES)</label><input type="number" id="exp-amount" min="0"/></div>
+      </div>
+      <div class="form-group"><label>Date</label><input type="date" id="exp-date"/></div>
+      <div class="form-group"><label>Description</label><textarea id="exp-desc"></textarea></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-add-expense')">Cancel</button><button class="btn btn-primary" onclick="saveExpense()">Save expense</button></div>
+  </div>
+</div>
+
+<!-- MAINTENANCE MODAL -->
+<div class="modal-overlay" id="modal-add-maintenance">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head"><h3>Log maintenance request</h3><div class="modal-close" onclick="closeModal('modal-add-maintenance')">✕</div></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Unit</label><select id="mt-unit"></select></div>
+      <div class="form-group"><label>Title</label><input type="text" id="mt-title" placeholder="e.g. Leaking kitchen tap"/></div>
+      <div class="form-group"><label>Notes</label><textarea id="mt-notes"></textarea></div>
+      <div class="form-grid">
+        <div class="form-group"><label>Status</label><select id="mt-status"><option value="open">Open</option><option value="in_progress">In progress</option><option value="done">Done</option></select></div>
+        <div class="form-group"><label>Cost so far (KES)</label><input type="number" id="mt-cost" min="0"/></div>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-add-maintenance')">Cancel</button><button class="btn btn-primary" onclick="saveMaintenance()">Save</button></div>
+  </div>
+</div>
+
+<!-- ESCALATION MODAL -->
+<div class="modal-overlay" id="modal-escalation">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-head"><h3>Rent escalation schedule</h3><div class="modal-close" onclick="closeModal('modal-escalation')">✕</div></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Annual increase (%)</label><input type="number" id="esc-percent" min="0" step="0.5" placeholder="e.g. 5"/></div>
+      <div class="form-group"><label>Every how many months</label><input type="number" id="esc-freq" min="1" value="12"/></div>
+      <p style="font-size:11.5px;color:var(--text-3);line-height:1.6">We'll calculate and flag exactly when the next increase is due and what the new rent will be — you apply it with one click when you're ready.</p>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-escalation')">Cancel</button><button class="btn btn-primary" onclick="saveEscalation()">Save schedule</button></div>
+  </div>
+</div>
+
+<!-- GOAL MODAL -->
+<div class="modal-overlay" id="modal-rent-goal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-head"><h3>Set a rent-roll goal</h3><div class="modal-close" onclick="closeModal('modal-rent-goal')">✕</div></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Monthly rent roll target (KES)</label><input type="number" id="goal-amount" min="0"/></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-outline" onclick="closeModal('modal-rent-goal')">Cancel</button><button class="btn btn-primary" onclick="saveRentGoal()">Save goal</button></div>
+  </div>
+</div>
+<button class="scw-fab" id="scw-fab" onclick="scwToggle()">
+  <span class="scw-fab-avatar"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span>
+  <span class="scw-fab-text">Help &amp; Support</span>
+  <span class="scw-fab-badge" id="scw-fab-badge"></span>
+</button>
+
+<div class="scw-overlay" id="scw-overlay" onclick="scwToggle()"></div>
+
+<div class="scw-panel" id="scw-panel">
+  <div class="scw-header">
+    <button class="scw-close" onclick="scwToggle()" aria-label="Close support">✕</button>
+    <div class="scw-header-avatars"><span class="scw-av">NK</span></div>
+    <div class="scw-header-title">Nyumba254 support</div>
+    <div class="scw-header-sub">Hello <span id="scw-greet-name">there</span> — how can we help?</div>
+  </div>
+
+  <div class="scw-body">
+    <div class="scw-status" id="scw-status" role="alert" aria-live="assertive" hidden>
+      <span id="scw-status-text"></span>
+      <button type="button" onclick="scwRetry()">Retry</button>
+    </div>
+    <div class="scw-view active" id="scw-view-home">
+      <div class="scw-home-scroll">
+        <div class="scw-section-label">Recent ticket</div>
+        <div id="scw-recent-ticket"><div class="scw-empty-mini">No conversations yet — start one below.</div></div>
+
+        <div id="scw-home-cta-wrap">
+          <button class="scw-cta" onclick="scwShowTopicPicker('home')">
+            <div class="scw-cta-icon">💬</div>
+            <div class="scw-cta-text"><strong>Contact support</strong><span>We’ll reply in this conversation as soon as we can</span></div>
+            <div class="scw-cta-arrow">→</div>
+          </button>
+        </div>
+        <div id="scw-topic-picker" style="display:none" class="scw-topic-grid"></div>
+
+        <div class="scw-section-label" style="margin-top:18px">Quick answers</div>
+        <div id="scw-home-faq"></div>
+      </div>
+    </div>
+
+    <div class="scw-view" id="scw-view-tickets">
+      <div class="scw-view-head"><h4>Your tickets</h4><button class="scw-new-btn" onclick="scwShowTopicPicker('tickets')">+ New</button></div>
+      <div id="scw-tickets-topic-picker" style="display:none;margin:0 18px 14px" class="scw-topic-grid"></div>
+      <div class="scw-ticket-list" id="scw-ticket-list"></div>
+    </div>
+
+    <div class="scw-view" id="scw-view-messages">
+      <div id="scw-msg-empty" class="scw-empty-state" style="display:none">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <p>No conversations yet</p>
+        <button class="scw-chip-btn" onclick="scwStartNewTicket()">Start one</button>
+      </div>
+      <div id="scw-msg-inbox" style="display:none;flex-direction:column;height:100%">
+        <div class="scw-view-head"><h4>Inbox</h4><button class="scw-new-btn" onclick="scwStartNewTicket()">+ New</button></div>
+        <div class="scw-ticket-list" id="scw-inbox-list"></div>
+      </div>
+      <div id="scw-msg-active" style="display:none;flex-direction:column;height:100%">
+        <div class="scw-thread-head" id="scw-thread-head"></div>
+        <div class="scw-msgs" id="scw-msgs"></div>
+        <div class="scw-closed-banner" id="scw-closed-banner" style="display:none">This ticket is closed. Start a new topic if you need further help.</div>
+        <div class="scw-input-bar" id="scw-input-bar">
+          <textarea id="scw-input" rows="1" placeholder="Type a message…" oninput="scwResize(this)" onkeydown="scwKeydown(event)"></textarea>
+          <button class="scw-send" onclick="scwSend()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="scw-view" id="scw-view-help">
+      <div class="scw-view-head"><h4>Help center</h4></div>
+      <div class="scw-search-wrap">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="scw-search-input" id="scw-help-search" placeholder="Search help articles…" oninput="scwRenderHelp(this.value)"/>
+      </div>
+      <div class="scw-faq-list" id="scw-faq-list"></div>
+      <p style="font-size:12.5px;margin:10px 14px"><a href="/trust-and-safety" target="_blank" rel="noopener">Trust &amp; Safety: roles, scams to avoid, how to report</a></p>
+    </div>
+  </div>
+
+  <div class="scw-tabbar">
+    <button class="scw-tab active" data-tab="home" onclick="scwSetTab('home')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Home</span></button>
+    <button class="scw-tab" data-tab="messages" onclick="scwSetTab('messages')"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span>Messages</span><span class="scw-tab-badge" id="scw-tab-badge-messages"></span></button>
+    <button class="scw-tab" data-tab="tickets" onclick="scwSetTab('tickets')"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h14a2 2 0 012 2v3a2 2 0 000 4v3a2 2 0 01-2 2H5a2 2 0 01-2-2v-3a2 2 0 000-4z"/></svg><span>Tickets</span></button>
+    <button class="scw-tab" data-tab="help" onclick="scwSetTab('help')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Help</span></button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     ONBOARDING TOUR — shown once to first-time listers on their
+     first dashboard visit. See the Tour module in the script below.
+══════════════════════════════════════════════════════════════ -->
+<div class="tour-overlay" id="tour-overlay">
+  <div class="tour-spotlight" id="tour-spotlight"></div>
+  <div class="tour-tooltip" id="tour-tooltip">
+    <div class="tour-tooltip-scroll">
+      <div class="tour-tooltip-step">
+        <span id="tour-step-label">Step 1 of 8</span>
+        <span class="tour-tooltip-progress"><span class="tour-tooltip-progress-fill" id="tour-progress-fill" style="width:0%"></span></span>
+      </div>
+      <h3 class="tour-tooltip-title" id="tour-title"></h3>
+      <p class="tour-tooltip-desc" id="tour-desc"></p>
+      <div class="tour-tooltip-click-hint" id="tour-click-hint" style="display:none">👆 Tap the highlighted item to continue</div>
+    </div>
+    <div class="tour-tooltip-actions">
+      <div class="tour-tooltip-actions-left">
+        <button class="tour-btn-back" id="tour-btn-back" onclick="Tour.back()" title="Go back">← Back</button>
+        <button class="tour-btn-skip" onclick="Tour.skip()" title="Close the tour and go straight to your dashboard">Skip tour</button>
+      </div>
+      <button class="tour-btn-continue" id="tour-btn-continue" onclick="Tour.next()" title="See the next tip">Continue</button>
+    </div>
+  </div>
+</div>
+<div class="tour-overlay" id="rl-tour-overlay">
+  <div class="tour-spotlight" id="rl-tour-spotlight"></div>
+  <div class="tour-tooltip" id="rl-tour-tooltip">
+    <div class="tour-tooltip-scroll">
+      <div class="tour-tooltip-step">
+        <span id="rl-tour-step-label">Step 1 of 8</span>
+        <span class="tour-tooltip-progress"><span class="tour-tooltip-progress-fill" id="rl-tour-progress-fill" style="width:0%"></span></span>
+      </div>
+      <h3 class="tour-tooltip-title" id="rl-tour-title"></h3>
+      <p class="tour-tooltip-desc" id="rl-tour-desc"></p>
+    </div>
+    <div class="tour-tooltip-actions">
+      <div class="tour-tooltip-actions-left">
+        <button class="tour-btn-back" id="rl-tour-btn-back" onclick="RLTour.back()">← Back</button>
+        <button class="tour-btn-skip" onclick="RLTour.skip()">Skip tour</button>
+      </div>
+      <button class="tour-btn-continue" id="rl-tour-btn-continue" onclick="RLTour.next()">Continue</button>
+    </div>
+  </div>
+</div>
+<script src="/nk-notification-sound.js"></script>
+<script src="/qrcode.js"></script>
+<script src="/nk-activity.js"></script>
+<script src="/nk-social.js"></script>
+<script src="/dashboard.js"></script>
+<script src="/nk-policy-viewer.js"></script>
+<script>
+(function(){
+  setTimeout(function(){
+    try{
+      if(typeof window.SCW_FAQ==='undefined'&&typeof SCW_FAQ==='undefined'){
+        var early=(window.__scwEarlyErrors&&window.__scwEarlyErrors.length)?window.__scwEarlyErrors.join(' | '):null;
+        console.error('SCW failed to initialize:',early||'main script did not finish running');
+      }
+    }catch(e){
+      console.error('SCW failed to initialize:',e.message);
+    }
+  },1200);
+})();
+</script>
+<audio id="scw-notify-sound" preload="auto" src="/assets/notify.mp3"></audio>
+<script id="coming-soon-patch">
+(function(){
+  var SELS = ['a[href^="/plans"]','#nav-premium-upgrade','#premium-upgrade-btn','#elite-upgrade-btn','[data-act="upgrade"]'];
+  var SEL = SELS.join(',');
+  var st = document.createElement('style');
+  st.textContent = SELS.join(',') + '{opacity:.5!important;cursor:not-allowed!important;filter:grayscale(.4)}';
+  document.head.appendChild(st);
+  document.addEventListener('click', function(e){
+    var el = e.target.closest(SEL);
+    if(!el) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    showToast("Paid plans open soon — we'll notify you here and by email.",'');
+  }, true);
+})();
+</script><script src="/patch.js"></script>
+</body>
+</html>
