@@ -339,6 +339,110 @@ a.lncard:hover{border-color:var(--green);background:var(--green-light)}
 @media print{nav,.topbar,.side,.ctabar,.nk-tabbar,footer,.sim,.nk-scrolltop-btn,.anchors,.inline-cta{display:none!important}.layout{display:block}}
 </style>
 <link rel="stylesheet" href="/theme.css"/><script src="/theme.js"></script>
+<style id="nk-compact-v1">
+/* NK-COMPACT-PATCH v1 */
+/* page rhythm */
+.wrap{padding-top:8px;padding-bottom:40px}
+.topbar{margin-bottom:8px;min-height:40px}
+.chip{min-height:38px;padding:0 13px}
+.backlink{min-height:38px}
+.layout{gap:24px}
+.reach{margin-bottom:10px;padding:8px 12px}
+.notice{margin-bottom:10px;padding:8px 12px}
+
+/* gallery: shorter, with the price on the photo */
+.gallery{margin-bottom:12px}
+.gmosaic{height:clamp(240px,29vw,370px);gap:4px}
+.gtrack{aspect-ratio:16/11;max-height:min(46vh,340px)}
+.gm-main .gcount{top:12px;bottom:auto;left:12px;right:auto}
+.gcount{z-index:4}
+.gall{min-height:38px;padding:0 13px;font-size:13px;right:12px;bottom:12px}
+.gnav{width:34px;height:34px}
+.ghero{position:absolute;left:0;right:0;bottom:0;z-index:3;display:flex;flex-direction:column;gap:2px;padding:48px 16px 12px;color:#fff;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.66))}
+.ghero-price{font-family:'Playfair Display',serif;font-size:clamp(22px,5.4vw,30px);font-weight:700;line-height:1.1;letter-spacing:-.01em;text-shadow:0 1px 6px rgba(0,0,0,.5);overflow-wrap:anywhere}
+.ghero-price small{font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:rgba(255,255,255,.9)}
+.ghero-price .price-req{font-size:.62em}
+.ghero-sub{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:rgba(255,255,255,.96);text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.ghero-dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:#4ade80}
+.ghero-dot.bad{background:#f87171}.ghero-dot.soon{background:#fbbf24}
+.gcar{border-radius:14px}
+/* the price now lives on the photo, so the big duplicate under the title is kept for screen readers only */
+.main-col:has(.ghero)>.price{position:absolute;width:1px;height:1px;margin:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+
+/* header block */
+.pills{margin-bottom:8px;gap:6px}
+.pill{font-size:12px;padding:3px 10px}
+h1.title{font-size:clamp(20px,4.6vw,27px);line-height:1.22;margin-bottom:4px}
+.loc{font-size:13.5px;margin-bottom:8px}
+.loc svg{margin-top:3px}
+.pdrop{margin-top:0;margin-bottom:6px;padding:4px 10px;font-size:12.5px}
+.cost{font-size:13px;margin-bottom:10px}
+.price+.strip{margin-top:0}
+.strip{margin-bottom:10px;border-radius:12px}
+.strip .f{padding:8px 6px}
+.strip .f svg{width:18px;height:18px;margin-bottom:2px}
+.strip b{font-size:clamp(13px,3.4vw,15px)}
+.strip span{font-size:11.5px}
+.meta{gap:6px 14px;padding-bottom:10px;margin-bottom:10px;font-size:12.5px}
+/* highlights: availability and viewing fee are already on the photo, keep Reference + Posted */
+.insight-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:8px 0 4px}
+.insight:nth-child(2),.insight:nth-child(3){display:none}
+.insight{padding:6px 10px;border-radius:8px}
+.insight b{font-size:13px}
+.insight span{font-size:11.5px;margin-top:0}
+
+/* quick tools: one swipeable row, video walkthrough first */
+.quick-tools{flex-wrap:nowrap;gap:6px;margin:8px 0 4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.quick-tools::-webkit-scrollbar{display:none}
+.quick-tools .qtool{flex:0 0 auto;min-height:34px;padding:0 12px;font-size:12.5px;white-space:nowrap}
+.quick-tools .qtool-video{order:-1;background:var(--green);border-color:var(--green);color:#fff}
+.quick-tools .qtool-video:hover{background:var(--green-dark);border-color:var(--green-dark);color:#fff}
+.afford{margin-top:8px;padding:6px 12px}
+
+/* phone action row */
+.inline-cta{gap:6px;margin-bottom:10px}
+.inline-cta .btn,.inline-cta .vbtn{min-height:42px}
+.ctabar .btn{min-height:44px}
+
+/* section nav and cards */
+.anchors{margin-bottom:10px}
+.anchors a{min-height:34px;padding:0 12px;font-size:13px}
+.sec{padding:16px 18px;margin-bottom:10px;border-radius:14px}
+.sec h2{font-size:16px;gap:8px;margin-bottom:10px}
+.hic{width:28px;height:28px;border-radius:8px}
+@media(max-width:480px){.sec{padding:14px}}
+.dgrid{grid-template-columns:repeat(auto-fill,minmax(min(150px,100%),1fr));gap:8px}
+.dgrid>div{padding:8px 11px}
+.dgrid dd{font-size:14px}
+.chips{gap:6px}
+.achip{padding:5px 10px 5px 8px;font-size:13px}
+.desc{font-size:14.5px;line-height:1.65}
+.urow{padding:10px 0}
+.occ{margin-top:12px;padding-top:12px}
+.mapbox{height:220px}
+.bnbcard{padding:10px 14px;margin-bottom:10px}
+
+/* contact card (right column on desktop) */
+.scard{padding:16px;border-radius:14px}
+.s-top{padding-bottom:10px;margin-bottom:10px}
+.s-price{font-size:22px}
+.seller{gap:10px;margin-bottom:10px}
+.av{width:40px;height:40px;font-size:14px}
+.cbtns,.or{margin-bottom:10px}
+.scard .nf-field{margin-bottom:10px}
+.scard .nf-field label{margin-bottom:4px}
+.scard .nf-field input,.scard .nf-field select{min-height:42px;padding-top:8px;padding-bottom:8px}
+.scard .nf-field textarea{min-height:64px;padding-top:8px;padding-bottom:8px}
+.qchip{min-height:34px;padding:0 11px;font-size:12.5px}
+.tip{margin-top:10px;padding:8px 10px}
+.side{max-height:calc(100dvh - var(--nav-h) - 24px)}
+
+/* previous / next and similar */
+.listnav{margin:0 0 6px}
+.lncard{min-height:60px;padding:10px 14px}
+.sim{margin-top:24px}
+.sim-head{margin-bottom:12px}
+</style>
 </head>
 <body>
 <a href="#main-content" class="skip-link">Skip to listing</a>
@@ -724,16 +828,17 @@ function tileBtn(i,main){
   const p=photos[i],n=photos.length,saver=document.body.classList.contains('nk-datasaver'),w=main?(saver?640:1200):(saver?400:640);
   return `<button type="button" class="gt${main?' gt-main':''}" data-act="photo" data-i="${i}" aria-label="Open photo ${i+1} of ${n}"><img src="${escHtml(srcFor(p,w))}" data-orig="${escHtml(p.url)}" alt="${main?escHtml(P.title)+', photo '+(i+1)+' of '+n:''}" ${main?'fetchpriority="high"':'loading="lazy"'} decoding="async"/></button>`;
 }
+function heroOverlay(){const st=availState(),fee=viewingFeeText(P.viewing_fee);return '<div class="ghero"><div class="ghero-price">'+priceHtml()+'</div><div class="ghero-sub"><span class="ghero-dot '+st.k+'"></span>'+escHtml(st.t)+' · '+escHtml(fee)+'</div></div>'}
 function galleryHtml(){
   if(!photos.length)return `<div class="gallery" id="gallery"><div class="gnone">${IC.photo}<span>No photos for this listing yet</span></div></div>`;
   const heart=(typeof NKSaved!=='undefined'&&NKSaved.buildHeartBtn)?NKSaved.buildHeartBtn(P.id):'',n=photos.length,saver=document.body.classList.contains('nk-datasaver');
   const arrows=n>1?`<button type="button" class="gnav prev" data-act="gprev" aria-label="Previous photo">${IC.chev(1)}</button><button type="button" class="gnav next" data-act="gnext" aria-label="Next photo">${IC.chev(0)}</button>`:'';
   const count=n>1?`<div class="gcount" id="gcount" aria-hidden="true">${IC.photo}<span>${idx+1} / ${n}</span></div>`:'';
   if(phoneGallery()){
-    return `<div class="gallery" id="gallery"><div class="gcar"><div class="gtrack" id="gtrack" role="group" aria-label="Photos, swipe to browse">${photos.map((p,i)=>`<button type="button" class="gslide" data-act="photo" data-i="${i}" aria-label="Open photo ${i+1} of ${n}"><img src="${escHtml(srcFor(p,saver?640:900))}" data-orig="${escHtml(p.url)}" alt="${i===0?escHtml(P.title)+', photo 1 of '+n:''}" ${i===0?'fetchpriority="high"':'loading="lazy"'} decoding="async"/></button>`).join('')}</div>${arrows}${count}<span class="gheart">${heart}</span></div></div>`;
+    return `<div class="gallery" id="gallery"><div class="gcar"><div class="gtrack" id="gtrack" role="group" aria-label="Photos, swipe to browse">${photos.map((p,i)=>`<button type="button" class="gslide" data-act="photo" data-i="${i}" aria-label="Open photo ${i+1} of ${n}"><img src="${escHtml(srcFor(p,saver?640:900))}" data-orig="${escHtml(p.url)}" alt="${i===0?escHtml(P.title)+', photo 1 of '+n:''}" ${i===0?'fetchpriority="high"':'loading="lazy"'} decoding="async"/></button>`).join('')}</div>${arrows}${count}${heroOverlay()}<span class="gheart">${heart}</span></div></div>`;
   }
   const order=tileOrder();
-  return `<div class="gallery" id="gallery"><div class="gmosaic n${order.length}" id="gmosaic"><div class="gm-main" id="gm-main">${tileBtn(order[0],true)}${arrows}${count}</div>${order.slice(1).map(i=>tileBtn(i,false)).join('')}</div>
+  return `<div class="gallery" id="gallery"><div class="gmosaic n${order.length}" id="gmosaic"><div class="gm-main" id="gm-main">${tileBtn(order[0],true)}${arrows}${count}${heroOverlay()}</div>${order.slice(1).map(i=>tileBtn(i,false)).join('')}</div>
     <span class="gheart">${heart}</span><button type="button" class="gall" data-act="photo" data-i="${idx}">${IC.expand}${n>1?`Show all ${n} photos`:'View photo'}</button></div>`;
 }
 function renderGallery(){const g=$('gallery');if(!g||!P)return;g.outerHTML=galleryHtml();syncTrack();if(typeof NKSaved!=='undefined'&&NKSaved.hydrate)NKSaved.hydrate($('gallery'))}
@@ -836,9 +941,9 @@ function render(){
   const postedFull=P.created_at?new Date(P.created_at).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'}):'Recently posted';
   const quickInfo=[[shortRef(),'Reference'],[st.t,'Availability'],[viewingFeeText(P.viewing_fee),'Viewing'],[postedFull,'Posted']];
   const quickInfoHtml=`<div class="insight-grid" aria-label="Listing highlights">${quickInfo.map(([v,l])=>`<div class="insight"><b title="${escHtml(v)}">${escHtml(v)}</b><span>${escHtml(l)}</span></div>`).join('')}</div>`;
-  const quickToolsHtml=`<div class="quick-tools" aria-label="Listing tools"><button type="button" class="qtool" data-act="share">Share listing</button><button type="button" class="qtool" data-act="copy" data-url="${escHtml(listingUrl)}">Copy link</button><button type="button" class="qtool" data-act="copy-ref">Copy reference</button><button type="button" class="qtool" data-act="map-jump">Jump to location</button>${P.seller_id?`<a class="qtool" href="${escHtml(nkListerPageUrl({handle:P.profiles?.page_handle,user_id:P.seller_id}))}">View lister page</a>`:''}</div>`+(isSale()&&basePrice()>0?affordHtml():'');
+  const quickToolsHtml=`<div class="quick-tools" aria-label="Listing tools"><button type="button" class="qtool" data-act="share">Share listing</button>${((P.listing_videos||[])[0]||{}).url?'<button type="button" class="qtool qtool-video" data-act="video-jump">▶ Video walkthrough</button>':''}<button type="button" class="qtool" data-act="copy-ref">Copy reference</button><button type="button" class="qtool" data-act="map-jump">Jump to location</button>${P.seller_id?`<a class="qtool" href="${escHtml(nkListerPageUrl({handle:P.profiles?.page_handle,user_id:P.seller_id}))}">View lister page</a>`:''}</div>`+(isSale()&&basePrice()>0?affordHtml():'');
   const inline=(!isOwner&&!occ)?`<div class="inline-cta md-only${P.contact_hidden?' two':''}" id="inline-cta">${P.contact_hidden?'':`<button type="button" class="btn btn-wa" data-act="wa" data-src="inline">${IC.wa}WhatsApp</button>`}<button type="button" class="btn ${P.contact_hidden?'btn-primary':'btn-outline'}" data-act="scroll">${IC.msg}Message</button>${P.contact_hidden?'':`<button type="button" class="btn btn-outline" data-act="call" data-src="inline">${IC.call}Call</button>`}<button type="button" class="btn btn-outline vbtn" data-act="viewing" data-src="inline">${IC.cal}${escHtml(viewingRequestButtonLabel())}</button></div>`:'';
-  const anchors=[];if(desc)anchors.push(['sec-about','About']);if(units.length)anchors.push(['sec-units','Units']);if(rest.length)anchors.push(['sec-details','Details']);if(am.length)anchors.push(['sec-amen','Amenities']);anchors.push(['sec-loc','Location'],['sim','Similar']);
+  const anchors=[];if(desc)anchors.push(['sec-about','About']);if(units.length)anchors.push(['sec-units','Units']);if(rest.length)anchors.push(['sec-details','Details']);if(am.length)anchors.push(['sec-amen','Amenities']);if(((P.listing_videos||[])[0]||{}).url)anchors.push(['sec-video','Video']);anchors.push(['sec-loc','Location'],['sim','Similar']);
   const rules=(P.details||{}).house_rules?String(P.details.house_rules).split(/\n/).map(r=>r.trim()).filter(Boolean):[];
   $('view').innerHTML=`${pv}<div class="layout"><div class="main-col">
     ${galleryHtml()}
@@ -1367,6 +1472,7 @@ document.addEventListener('click',e=>{
     case 'share':track('share');openShare();break;
     case 'copy':navigator.clipboard.writeText(t.dataset.url).then(()=>{t.innerHTML='<span>✓</span>Copied';toast('Link copied')},()=>toast('Could not copy the link','error'));break;
     case 'copy-ref':navigator.clipboard.writeText(shortRef()).then(()=>toast('Listing reference copied'),()=>toast('Could not copy the reference','error'));break;
+    case 'video-jump':{const sec=$('sec-video');if(sec){sec.scrollIntoView({behavior:'smooth',block:'start'});const pb=sec.querySelector('[data-act="vid"]');if(pb)setTimeout(()=>pb.click(),450)}else toast('No video walkthrough for this listing yet.');break}
     case 'map-jump':{const sec=$('sec-loc');if(sec){sec.scrollIntoView({behavior:'smooth',block:'start'});track('location_jump')}break;}
     case 'report':$('rp-reason').value='';$('rp-amt-wrap').hidden=true;$('rp-banner').textContent='';nkOpenModal($('ov-report'));break;
     case 'report-fee':$('rp-reason').value=P?.viewing_fee===0?'viewing_fee_free_listing':'viewing_fee_dispute';$('rp-amt-wrap').hidden=false;$('rp-banner').textContent='';nkOpenModal($('ov-report'));break;
