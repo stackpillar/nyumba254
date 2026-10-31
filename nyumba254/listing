@@ -499,6 +499,40 @@ h1.title{font-size:clamp(20px,4.6vw,27px);line-height:1.22;margin-bottom:4px}
   body.nk-cta-show .toast{bottom:calc(var(--nk-cta-h,0px) + 20px)}
 }
 </style>
+<style id="nk-extras-v3">
+/* NK-EXTRAS-V3 */
+/* reply-speed badge */
+.rbadge{display:inline-flex;align-items:center;gap:4px;margin:3px 0;padding:2px 9px;border-radius:20px;background:var(--green-light);color:var(--green-dark);font-size:12px;font-weight:700}
+.rbadge[hidden]{display:none}
+
+/* stale-listing button */
+.notice .nbtn{display:inline-flex;min-height:36px;padding:0 12px;margin-top:6px;font-size:13px}
+
+/* photo viewer thumbnails */
+.lb-thumbs{flex:0 0 auto;display:flex;gap:6px;overflow-x:auto;padding:8px 12px 2px;scrollbar-width:none;-webkit-overflow-scrolling:touch;position:relative;z-index:3}
+.lb-thumbs::-webkit-scrollbar{display:none}
+.lb-thumbs::before,.lb-thumbs::after{content:'';margin:auto}
+.lb-thumbs[hidden]{display:none}
+.lbt{flex:0 0 auto;width:58px;height:44px;padding:0;border-radius:6px;overflow:hidden;border:2px solid transparent;opacity:.55;background:#222}
+.lbt.on{opacity:1;border-color:#fff}
+.lbt img{width:100%;height:100%;object-fit:cover}
+.lbt:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+/* similar listings: swipeable row on phones */
+@media(max-width:768px){
+  .sim .card-grid{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin:0 calc(-1 * clamp(16px,4vw,32px));padding:0 clamp(16px,4vw,32px) 8px;scroll-padding-left:clamp(16px,4vw,32px)}
+  .sim .card-grid::-webkit-scrollbar{display:none}
+  .sim .card-grid>*{flex:0 0 78%;max-width:320px;scroll-snap-align:start}
+}
+
+/* boarding: near institution */
+.nearby{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
+.nearby .nb-ic{font-size:18px}
+.nearby .nb-t{flex:1 1 160px;min-width:0}
+.nearby .nb-t b{display:block;font-size:14px;overflow-wrap:anywhere}
+.nearby .nb-t span{display:block;font-size:12.5px;color:var(--text-3)}
+.nearby .link{margin:0;min-height:36px;font-size:13px;white-space:nowrap}
+</style>
 </head>
 <body>
 <a href="#main-content" class="skip-link">Skip to listing</a>
@@ -550,6 +584,7 @@ h1.title{font-size:clamp(20px,4.6vw,27px);line-height:1.22;margin-bottom:4px}
   <div class="lb-box" id="lb-box"><img id="lb-img" src="" alt="" data-act="lbzoom"/></div>
   <button type="button" class="garrow prev" data-act="lprev" aria-label="Previous photo"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
   <button type="button" class="garrow next" data-act="lnext" aria-label="Next photo"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+  <div class="lb-thumbs" id="lb-thumbs" aria-label="Photo thumbnails" hidden></div>
   <div class="lb-count" id="lb-count" aria-live="polite"></div>
 </div>
 
@@ -951,7 +986,7 @@ function ownerHtml(){
 function sellerHead(){
   const p=P.profiles||{},snapshotRole=P.listed_by_type||p.account_type,currentRole=p.account_type,company=snapshotRole==='company',name=company?(p.company_name||P.contact_name||p.full_name||'Company'):(P.contact_name||p.full_name||'Lister'),ini=name.split(' ').filter(Boolean).map(x=>x[0]).join('').toUpperCase().slice(0,2)||'L',identityVerified=p.identity_verified===true,roleChanged=!!snapshotRole&&!!currentRole&&snapshotRole!==currentRole,roleVerified=!!snapshotRole&&!roleChanged&&p.verified_role===snapshotRole,roleLabels={buyer:'Tenant / Buyer',owner:'Direct from owner',landlord:'Direct from owner',caretaker:'Caretaker',agent:'Agent',company:'Company'},listedBy=roleLabels[snapshotRole]||'Lister',roleText=`${listedBy}${roleChanged?' (role changed, not verified)':roleVerified?' · identity checked':' (not verified)'}`;
   const logo=company&&roleVerified&&p.company_logo_url?`<img src="${escHtml(p.company_logo_url)}" alt="" width="36" height="36" loading="lazy" style="object-fit:contain;border-radius:6px">`:'';
-  return `<div class="seller"><div class="av" aria-hidden="true">${escHtml(ini)}</div><div>${logo}<b>${escHtml(name)}</b><small title="Role claims are self-declared; identity checks do not verify ownership or authority to list.">${escHtml(roleText)}</small>${P.seller_id?`<a href="${escHtml(nkListerPageUrl({handle:p.page_handle,user_id:P.seller_id}))}" style="display:inline-block;margin:5px 0;font-size:12px;font-weight:600;color:var(--green-dark);text-decoration:underline">View lister profile and all listings ↗</a>`:''}<button type="button" class="vbadge${identityVerified?'':' no'}" data-act="verinfo" data-v="${identityVerified?1:0}" aria-haspopup="dialog" aria-label="${identityVerified?'Identity verified. What does this mean?':'Identity not yet verified. What does this mean?'}">${identityVerified?IC.check+'Identity checked':'Identity not yet checked'}${IC.info}</button><small class="js-rate"></small>${p.created_at?`<small>Member since ${escHtml(new Date(p.created_at).toLocaleDateString('en-KE',{month:'long',year:'numeric'}))}</small>`:''}${!isOwner&&canReview()?'<button type="button" class="link" data-act="rate">Rate this lister</button>':''}</div></div>`;
+  return `<div class="seller"><div class="av" aria-hidden="true">${escHtml(ini)}</div><div>${logo}<b>${escHtml(name)}</b><small title="Role claims are self-declared; identity checks do not verify ownership or authority to list.">${escHtml(roleText)}</small>${P.seller_id?`<a href="${escHtml(nkListerPageUrl({handle:p.page_handle,user_id:P.seller_id}))}" style="display:inline-block;margin:5px 0;font-size:12px;font-weight:600;color:var(--green-dark);text-decoration:underline">View lister profile and all listings ↗</a>`:''}<button type="button" class="vbadge${identityVerified?'':' no'}" data-act="verinfo" data-v="${identityVerified?1:0}" aria-haspopup="dialog" aria-label="${identityVerified?'Identity verified. What does this mean?':'Identity not yet verified. What does this mean?'}">${identityVerified?IC.check+'Identity checked':'Identity not yet checked'}${IC.info}</button><small class="js-rate"></small><span class="rbadge js-reply" hidden></span>${p.created_at?`<small>Member since ${escHtml(new Date(p.created_at).toLocaleDateString('en-KE',{month:'long',year:'numeric'}))}</small>`:''}${!isOwner&&canReview()?'<button type="button" class="link" data-act="rate">Rate this lister</button>':''}</div></div>`;
 }
 const SAFETY='Pay any listed viewing fee only at the property, to the person you meet, and ask for a receipt. Never pay rent, a deposit or any other fee before you have viewed the property. Nyumba254 does not collect viewing fees.';
 const viewingFeeText=fee=>fee==null?'Viewing fee: confirm with the lister':fee>0?`Viewing fee: ${money(fee)}`:'Free viewing';
@@ -988,6 +1023,15 @@ function sidebarHtml(){
 }
 function anchorsHtml(list){return `<nav class="anchors" id="anchors" aria-label="Page sections">${list.map(([id,l])=>`<a href="#${id}" data-anchor="${id}">${escHtml(l)}</a>`).join('')}<span class="anc-price" aria-hidden="true">${priceHtml()}</span></nav>`}
 function viewingRequestButtonLabel(){return `Request a viewing · ${P.viewing_fee===null?'fee to confirm':P.viewing_fee>0?money(P.viewing_fee):'Free'}`}
+function nearbyHtml(){
+  if(meta().group!=='boarding')return '';
+  const inst=String((P.details||{}).institution||'').trim();if(!inst)return '';
+  const la=parseFloat(P.latitude),ln=parseFloat(P.longitude);
+  const origin=isFinite(la)&&isFinite(ln)?la+','+ln:encodeURIComponent([P.area,P.county,'Kenya'].filter(Boolean).join(', '));
+  const href='https://www.google.com/maps/dir/?api=1&origin='+origin+'&destination='+encodeURIComponent(inst+', Kenya')+'&travelmode=walking';
+  const d=(P._answers||[]).find(a=>a.k==='distance');
+  return '<div class="nearby"><span class="nb-ic" aria-hidden="true">🎓</span><div class="nb-t"><b>Near '+escHtml(inst)+'</b>'+(d&&d.a?'<span>Lister says: '+escHtml(d.a)+'</span>':'')+'</div><a class="link" href="'+escHtml(href)+'" rel="noopener" target="_blank">Walking directions ↗</a></div>';
+}
 function render(){
   const m=meta(),f=facts(),strip=f.slice(0,3),rest=[...f.slice(3),...extraRows(),['Viewing fee',viewingFeeText(P.viewing_fee)]],am=amenityLabels(),desc=(P.description||'').trim(),st=availState(),cost=costLine();
   const ver=(P.profiles||{}).identity_verified===true,occ=P.status==='occupied';
@@ -995,7 +1039,7 @@ function render(){
   pills.push(`<span class="pill plain">${escHtml(viewingFeeText(P.viewing_fee))}</span>`);
   if(m.group==='boarding'&&(P.details||{}).institution)pills.push('<span class="pill plain">Student friendly</span>');
   const pv=preview?`<div class="notice warn" role="status"><b>Preview.</b> ${P.is_disabled?'Hidden by admin'+(P.disabled_reason?': '+escHtml(P.disabled_reason):'.'):P.recycle_bin?'This listing is in the recycle bin.':'Status: '+escHtml(nkTitleCase(P.status))+'. It is not public yet.'} Only you${isOwner?'':' and the admin team'} can see this page.</div>`:'';
-  const stale=!preview&&!occ&&daysOld()>CFG.staleDays?`<div class="notice warn">This listing was posted ${Math.floor(daysOld())} days ago. Confirm it is still available before you visit.</div>`:'';
+  const stale=!preview&&!occ&&daysOld()>CFG.staleDays?`<div class="notice warn">This listing was posted ${Math.floor(daysOld())} days ago. Confirm it is still available before you visit. <button type="button" class="btn btn-outline nbtn" data-act="ask-avail">Ask if it is still available</button></div>`:'';
   const listingUrl=location.origin+'/listing?id='+pad(P.listing_number);
   const postedFull=P.created_at?new Date(P.created_at).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'}):'Recently posted';
   const quickInfo=[[shortRef(),'Reference'],[st.t,'Availability'],[viewingFeeText(P.viewing_fee),'Viewing'],[postedFull,'Posted']];
@@ -1020,7 +1064,7 @@ function render(){
     ${am.length?`<section class="sec" id="sec-amen">${secHead('amenities','Amenities')}<div class="chips">${am.map(a=>`<span class="achip">${IC.tick}${escHtml(a)}</span>`).join('')}</div></section>`:''}
     ${videoHtml()}
     <section class="sec" id="sec-loc">${secHead('loc','Location')}<div class="mapbox" id="mapbox"></div>
-      <div class="maprow"><span class="addr">${escHtml(P.address||where())}</span><a class="link" id="maplink" href="#" rel="noopener">Open in Maps</a></div><p class="maphint" id="maphint" hidden>Pinch to zoom the map. Use Open in Maps for directions.</p></section>
+      <div class="maprow"><span class="addr">${escHtml(P.address||where())}</span><a class="link" id="maplink" href="#" rel="noopener">Open in Maps</a></div><p class="maphint" id="maphint" hidden>Pinch to zoom the map. Use Open in Maps for directions.</p>${nearbyHtml()}</section>
     ${rules.length?`<section class="sec" id="sec-rules">${secHead('rules','House rules')}<ul class="rules">${rules.map(r=>`<li>${escHtml(r)}</li>`).join('')}</ul></section>`:''}
     ${isOwner?'':`<section class="sec md-only">${secHead('seller','About the lister')}${sellerHead()}</section><section class="sec md-only safety">${secHead('safety','Viewing fee and safety')}<p>${escHtml(viewingFeeSafetyText(P.viewing_fee))}</p><a class="link" href="/viewing-fee-policy">Read the Viewing Fee Policy</a><button type="button" class="link" data-act="report-fee">Report a fee problem</button><ul><li>Verify the property and confirm it is available.</li><li>Check the listing for any viewing fee and pay only that fee directly to the lister, with a receipt.</li><li>Never pay rent or a deposit before viewing. Nyumba254 does not collect viewing fees.</li></ul></section>`}
     <div class="listnav" id="listnav" hidden></div>
@@ -1099,6 +1143,17 @@ function ctaBar(){
 }
 
 /* ═══ SEO ═══ */
+function ldExtra(){
+  try{
+    const p=P.profiles||{},role=P.listed_by_type||p.account_type,fee=P.viewing_fee;
+    const labels={owner:'Direct from owner',landlord:'Direct from owner',caretaker:'Caretaker',agent:'Agent',company:'Company',buyer:'Tenant / Buyer'};
+    const props=[{'@type':'PropertyValue',name:'Viewing fee',...(fee===null||fee===undefined?{value:'Confirm with the lister'}:{value:Number(fee),unitText:'KES'})}];
+    if(role&&labels[role])props.push({'@type':'PropertyValue',name:'Listed by',value:labels[role]+(p.verified_role===role&&p.account_type===role?' (identity checked)':' (not verified)')});
+    const out={additionalProperty:props};
+    if(role==='company'&&(p.company_name||P.contact_name))out.seller={'@type':'Organization',name:p.company_name||P.contact_name};
+    return out;
+  }catch(e){return {}}
+}
 function seo(){
   const t=P.title+' — Nyumba254',d=`${P.title} in ${where()}. ${basePrice()>0?money(basePrice())+(FREQ[freq()]||'')+'. ':''}${viewingFeeText(P.viewing_fee)}. Message the lister on Nyumba254.`,url=location.origin+'/listing?id='+pad(P.listing_number);
   document.title=t;document.querySelector('meta[name="description"]').setAttribute('content',d);
@@ -1107,7 +1162,7 @@ function seo(){
   [['og-title',t],['tw-title',t],['og-desc',d],['tw-desc',d],['og-img',img],['tw-img',img],['og-url',url]].forEach(([i,v])=>setMeta(i,v));
   $('m-canon').setAttribute('href',url);
   $('ld-listing').textContent=JSON.stringify({'@context':'https://schema.org','@type':'RealEstateListing',name:P.title,description:P.description||d,url,datePosted:P.created_at,image:photos.slice(0,8).map(p=>p.url),
-    offers:{'@type':'Offer',price:basePrice(),priceCurrency:'KES',availability:P.status==='occupied'?'https://schema.org/SoldOut':'https://schema.org/InStock',url},
+    offers:{'@type':'Offer',price:basePrice(),priceCurrency:'KES',availability:P.status==='occupied'?'https://schema.org/SoldOut':'https://schema.org/InStock',url,...ldExtra()},
     contentLocation:{'@type':'Place',name:where(),address:{'@type':'PostalAddress',addressLocality:P.area,addressRegion:P.county,addressCountry:'KE'},...(CFG.exactPin&&isFinite(parseFloat(P.latitude))?{geo:{'@type':'GeoCoordinates',latitude:parseFloat(P.latitude),longitude:parseFloat(P.longitude)}}:{})}}).replace(/</g,'\\u003c');
   const cr=[['Home','/'],['Listings','/listings'],[meta().label,nkBuildListingsUrl({category:P.category})],[P.title,'/listing?id='+pad(P.listing_number)]];
   $('ld-crumbs').textContent=JSON.stringify({'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:cr.map(([n,h],i)=>({'@type':'ListItem',position:i+1,name:n,item:location.origin+h}))}).replace(/</g,'\\u003c');
@@ -1122,7 +1177,14 @@ function showPhoto(i){
 }
 function lbShow(){
   zoomed=false;const im=$('lb-img');im.classList.remove('zoomed');im.dataset.orig=photos[idx].url;im.src=nkImgSrc(photos[idx].url,1800);im.alt=P.title;
-  $('lb-count').textContent=`${idx+1} / ${photos.length}`;qsa('#lb .garrow').forEach(b=>b.hidden=photos.length<2);$('lb-box').scrollTo(0,0);
+  $('lb-count').textContent=`${idx+1} / ${photos.length}`;qsa('#lb .garrow').forEach(b=>b.hidden=photos.length<2);$('lb-box').scrollTo(0,0);lbThumbs();
+}
+function lbThumbs(){
+  const t=$('lb-thumbs');if(!t||!P)return;
+  if(photos.length<2||document.body.classList.contains('nk-datasaver')){t.hidden=true;t.innerHTML='';t.dataset.n='';return}
+  t.hidden=false;
+  if(t.dataset.n!==String(photos.length)+':'+P.id){t.dataset.n=String(photos.length)+':'+P.id;t.innerHTML=photos.map((p,i)=>'<button type="button" class="lbt" data-act="lthumb" data-i="'+i+'" aria-label="Photo '+(i+1)+' of '+photos.length+'"><img src="'+escHtml(nkImgSrc(p.url,160))+'" data-orig="'+escHtml(p.url)+'" alt="" loading="lazy" decoding="async"/></button>').join('')}
+  qsa('.lbt',t).forEach((b,i)=>{b.classList.toggle('on',i===idx);if(i===idx&&b.scrollIntoView)b.scrollIntoView({block:'nearest',inline:'center'})});
 }
 function lbZoom(){
   zoomed=!zoomed;const im=$('lb-img'),box=$('lb-box');im.classList.toggle('zoomed',zoomed);
@@ -1198,7 +1260,7 @@ async function loadSimilar(){
 
 /* ═══ seller rating, enquiry count, thread state ═══ */
 let ratingText='';
-function updateRating(){qsa('.js-rate').forEach(e=>{e.textContent=[ratingText,replyText].filter(Boolean).join(' · ')})}
+function updateRating(){qsa('.js-rate').forEach(e=>{e.textContent=ratingText});qsa('.js-reply').forEach(e=>{e.hidden=!replyText;e.textContent=replyText?'⚡ '+replyText:''})}
 let replyText='';
 async function loadReplySpeed(){
   if(!P.seller_id)return;
@@ -1303,6 +1365,19 @@ function prefill(){
   $('q-msg').value=baseMsg()+' Is it still available?';
   const st=$('q-sum-t');if(st)st.textContent=[p.name,p.phone&&prettyPhone(p.phone)].filter(Boolean).join(' · ');
   ['q-name','q-phone','q-email'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',()=>setErr(id,''))});
+}
+async function askAvail(){
+  if(!P||isOwner)return;
+  const token=lsg('nk_buyer_'+P.id);
+  if(token){if(typeof NKGlobalChat!=='undefined')NKGlobalChat.registerAndOpen(P.id,token);return}
+  const pr=nkGetBuyerProfile(),hidden=!!P.contact_hidden,phone=nkNormalizePhone(pr.phone||''),m=baseMsg()+' Is it still available?';
+  if(!pr.name||pr.name.length<2||(!hidden&&!okPhone(phone))){const q=$('q-msg');if(q)q.value=m;openContactSheet();return}
+  if(cooling()){toast(COOLDOWN,'error');return}
+  if(needNet())return;
+  toast('Sending your question…');
+  let r;try{r=await postEnquiry({name:pr.name,phone:hidden?'':phone,email:pr.email||'',message:m,notify:true},'form')}catch(e){r={error:e}}
+  if(r.error){toast(enquiryFailure(r.error),'error');return}
+  showSent(false);toast('Sent. The lister will reply in your chat.');
 }
 function inTouchUI(){qsa('[data-act="scroll"]').forEach(b=>{b.dataset.act='chat';b.classList.add('intouch');b.innerHTML=IC.msg+'View messages'})}
 function showSent(existing){
@@ -1518,7 +1593,7 @@ document.addEventListener('click',e=>{
   const a=t.dataset.act;
   switch(a){
     case 'photo':if(!EV.photo){EV.photo=true;track('photo_open')}idx=Number(t.dataset.i)||0;lbShow();nkOpenModal($('lb'));break;case 'gprev':showPhoto(idx-1);break;case 'gnext':showPhoto(idx+1);break;
-    case 'lb':lbShow();nkOpenModal($('lb'));break;case 'lprev':showPhoto(idx-1);break;case 'lnext':showPhoto(idx+1);break;case 'lbzoom':lbZoom();break;
+    case 'lb':lbShow();nkOpenModal($('lb'));break;case 'lprev':showPhoto(idx-1);break;case 'lnext':showPhoto(idx+1);break;case 'lbzoom':lbZoom();break;case 'lthumb':showPhoto(Number(t.dataset.i)||0);break;
     case 'close':nkCloseModal(t.closest('.notify-modal-overlay, .nk-sheet-overlay'));break;case 'reload':location.reload();break;
     case 'call':case 'wa':track(a==='call'?'call_tap':'whatsapp_tap',{src:t.dataset.src||'unknown'});reveal(a==='call'?'call':'whatsapp');break;
     case 'copynum':{const n=($('phone-panel')||{dataset:{}}).dataset.n||nkNormalizePhone(phoneRaw);navigator.clipboard.writeText(n).then(()=>toast('Number copied'),()=>toast('Could not copy the number','error'));break}
@@ -1532,6 +1607,7 @@ document.addEventListener('click',e=>{
     case 'pick':openContactSheet(t.dataset.label);break;
     case 'occ':unitAction(t.dataset.id,true);break;case 'avail':unitAction(t.dataset.id,false);break;
     case 'status':ownerStatus();break;case 'map':window.__drawMap&&window.__drawMap();break;
+    case 'ask-avail':askAvail();break;
     case 'more':{const d=$('desc'),x=d.classList.toggle('clamp');t.textContent=x?'Read more ↓':'Show less ↑';t.setAttribute('aria-expanded',String(!x));break}
     case 'vid':{const wrap=t;const f=document.createElement('div');f.className='vid';f.innerHTML=`<iframe src="${escHtml(t.dataset.src)}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="Video walkthrough"></iframe>`;wrap.replaceWith(f);break}
     case 'share':track('share');openShare();break;
@@ -1564,6 +1640,10 @@ document.addEventListener('scroll',e=>{const t=e.target;if(!t||t.id!=='gtrack'||
 new MutationObserver(m=>{if(m.some(x=>x.attributeName==='class')&&!$('lb').classList.contains('open'))syncTrack()}).observe($('lb'),{attributes:true});
 matchMedia('(max-width:768px)').addEventListener('change',renderGallery);
 swipe($('lb-box'),d=>{if(!zoomed)showPhoto(idx+d)});
+(function(){const b=$('lb-box');let y0=0,x0=0,on=false;
+  b.addEventListener('touchstart',e=>{on=e.touches.length===1&&!zoomed;y0=e.touches[0].clientY;x0=e.touches[0].clientX},{passive:true});
+  b.addEventListener('touchend',e=>{if(!on)return;on=false;const t=e.changedTouches[0],dy=t.clientY-y0,dx=t.clientX-x0;if(dy>110&&Math.abs(dx)<60&&!zoomed)nkCloseModal($('lb'))},{passive:true});
+})();
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)maybeReach()});
 window.addEventListener('pageshow',e=>{if(e.persisted&&P){checkThread();maybeReach();if(typeof NKSaved!=='undefined'&&NKSaved.hydrate)NKSaved.hydrate($('view'))}});
 

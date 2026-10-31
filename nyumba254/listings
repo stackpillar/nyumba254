@@ -1352,7 +1352,7 @@ const sortedPhotos = l => {
 const hasThread = id => !!lsGet('nk_buyer_' + id);
 function waLink(l) {
   const n = nkNormalizePhone(NK_WHATSAPP.number(l)).replace('+', '');
-  const text = `Hi, I'm interested in "${l.title}" (ref #${pad(l.listing_number)}) on Nyumba254. Is it still available?`;
+  /* NK-CARD-WA-LINK */ const text = `Hi, I'm interested in "${l.title}" (ref #${pad(l.listing_number)}) on Nyumba254. Is it still available?\n${SITE}${listingHref(l)}`;
   return `https://wa.me/${n}?text=${encodeURIComponent(text)}`;
 }
 function availBadge(l, meta) {
