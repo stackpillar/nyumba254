@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Listing — Nyumba254</title>
+<meta name="description" content="View property details on Nyumba254: photos, price, location, lister role and viewing fee. Message the lister directly."/>
+<meta name="robots" id="m-robots" content="index,follow"/>
+<meta name="theme-color" content="#0F6E56"/>
+<link rel="canonical" id="m-canon" href="https://nyumba254.com/listings"/>
+<meta property="og:type" content="website"/><meta property="og:site_name" content="Nyumba254"/>
+<meta property="og:title" id="og-title" content="Nyumba254 listing"/><meta property="og:description" id="og-desc" content=""/>
+<meta property="og:image" id="og-img" content="https://nyumba254.com/hero-photo.jpg"/><meta property="og:url" id="og-url" content=""/>
+<meta name="twitter:card" content="summary_large_image"/><meta name="twitter:site" content="@Nyumba254"/>
+<meta name="twitter:title" id="tw-title" content="Nyumba254 listing"/><meta name="twitter:description" id="tw-desc" content=""/><meta name="twitter:image" id="tw-img" content="https://nyumba254.com/hero-photo.jpg"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link rel="preconnect" href="https://vliuuloyfhyxcsuchpss.supabase.co"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+<link rel="icon" href="/favicon.ico" sizes="any"/><link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96"/><link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
+<script type="application/ld+json" id="ld-listing"></script>
+<script type="application/ld+json" id="ld-crumbs"></script>
+<link rel="stylesheet" href="/nk-shared.css"/>
+<style>
+/* ═══ listing.html: page-specific layout only. Tokens, nav, cards, forms, modals live in /nk-shared.css ═══ */
+.wrap{max-width:1200px;margin:0 auto;padding:16px clamp(16px,4vw,32px) 56px;padding-left:max(clamp(16px,4vw,32px),env(safe-area-inset-left));padding-right:max(clamp(16px,4vw,32px),env(safe-area-inset-right))}
+.md-only{display:none}
+@media(max-width:900px){.md-only{display:revert}.inline-cta.md-only{display:grid}}
+
+/* top bar */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;min-height:44px}
+.crumbs{display:flex;flex:1;min-width:0;flex-wrap:wrap;align-items:center;gap:2px 6px;font-size:13px;color:var(--text-3)}
+.crumbs a:hover{color:var(--green);text-decoration:underline}
+.crumbs .cur{color:var(--text-2);font-weight:600;max-width:40ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.backlink{display:none;align-items:center;gap:6px;min-height:44px;font-size:14px;font-weight:600;color:var(--green-dark);margin-left:-6px;padding:0 8px;border-radius:var(--radius)}
+.backlink:hover{background:var(--green-light)}
+.backlink svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.4}
+.tb-actions{display:flex;gap:8px;flex-shrink:0}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border-radius:22px;border:1.5px solid var(--border);background:var(--white);font-size:13.5px;font-weight:600;color:var(--text-2);white-space:nowrap}
+.chip:hover{border-color:var(--green);color:var(--green-dark)}
+.chip svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+@media(max-width:768px){.crumbs{display:none}.backlink{display:inline-flex;flex:1;min-width:0}.backlink span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+.tbnav{display:inline-flex;gap:8px}
+.chip.off{opacity:.42;pointer-events:none}
+@media(max-width:600px){.chip.navchip{padding:0;width:44px;justify-content:center}.chip.navchip .lbl{display:none}.chip.iconchip span{display:none}}
+
+/* banners */
+.reach{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;background:var(--green-light);border:1px solid var(--green-mid);border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;font-size:14px;color:var(--green-dark)}
+.reach span{flex:1 1 200px;font-weight:600}
+.reach .btn{min-height:40px;padding:0 16px}
+.notice{border:1px solid var(--border);background:var(--white);border-radius:var(--radius);padding:11px 14px;font-size:13.5px;color:var(--text-2);margin-bottom:16px;line-height:1.55}
+.notice.warn{background:var(--amber-bg);border-color:var(--amber-border);color:var(--amber)}
+
+/* layout */
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:32px;align-items:start}
+.main-col{min-width:0}
+.side{position:sticky;top:calc(var(--nav-h) + 16px);max-height:calc(100dvh - var(--nav-h) - 32px);overflow-y:auto;overscroll-behavior:contain;border-radius:var(--radius-lg)}
+@media(max-width:1000px){.layout{grid-template-columns:minmax(0,1fr) 340px;gap:24px}}
+@media(max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}.side{position:static;max-height:none;overflow:visible}}
+
+/* gallery: every photo FILLS its tile (cover), it is only a preview. Tapping any photo opens the full, uncropped viewer.
+   Desktop: one large photo + up to four tiles. Phones: a swipeable carousel (native scroll-snap). */
+.gallery{position:relative;margin-bottom:22px}
+.gmosaic{display:grid;gap:6px;height:clamp(300px,40vw,480px);border-radius:var(--radius-lg);overflow:hidden;background:var(--border);border:1px solid var(--border);box-shadow:var(--shadow-card)}
+.gmosaic.n1{grid-template-columns:minmax(0,1fr)}
+.gmosaic.n2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.gmosaic.n3{grid-template-columns:minmax(0,2fr) minmax(0,1fr);grid-template-rows:repeat(2,minmax(0,1fr))}
+.gmosaic.n4{grid-template-columns:minmax(0,2fr) minmax(0,1fr);grid-template-rows:repeat(3,minmax(0,1fr))}
+.gmosaic.n5{grid-template-columns:minmax(0,2fr) repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
+.gmosaic.n3>:first-child{grid-row:1/3}.gmosaic.n4>:first-child{grid-row:1/4}.gmosaic.n5>:first-child{grid-row:1/3}
+.gm-main{position:relative;min-width:0;min-height:0;overflow:hidden;background:var(--surface)}
+.gm-main .gt{position:absolute;inset:0;width:100%;height:100%}
+.gm-main .gcount{left:12px;right:auto}
+.gt{position:relative;display:block;padding:0;min-width:0;min-height:0;overflow:hidden;background:var(--surface);cursor:zoom-in}
+.gt img{width:100%;height:100%;object-fit:cover;object-position:center;transition:transform .35s ease;animation:gfade .28s ease}
+@keyframes gfade{from{opacity:.35}to{opacity:1}}
+.gt:hover img{transform:scale(1.03)}
+/* quiet arrows: light, round, sit on the photo edges; fully solid on hover or keyboard focus */
+.gnav{position:absolute;top:50%;transform:translateY(-50%);z-index:4;width:40px;height:40px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.9);color:var(--text);box-shadow:0 2px 10px rgba(0,0,0,.22);opacity:.72;transition:opacity .18s,background .15s,transform .15s}
+.gnav.prev{left:12px}.gnav.next{right:12px}
+.gnav svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.6}
+.gallery:hover .gnav,.gnav:hover,.gnav:focus-visible{opacity:1}
+.gnav:hover{background:#fff;transform:translateY(-50%) scale(1.06)}
+.gnav:active{transform:translateY(-50%) scale(.96)}
+@media(hover:none),(max-width:768px){.gnav{opacity:.9;width:38px;height:38px}.gnav.prev{left:8px}.gnav.next{right:8px}}
+.gall{position:absolute;right:14px;bottom:14px;z-index:3;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:22px;background:var(--white);border:1px solid var(--border);box-shadow:0 2px 10px rgba(0,0,0,.2);font-size:13.5px;font-weight:700;color:var(--text)}
+.gall:hover{background:var(--green-light);border-color:var(--green);color:var(--green-dark)}
+.gall svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+.gheart{position:absolute;top:12px;right:12px;z-index:3}
+.gcar{display:none;position:relative;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow-card);background:var(--surface)}
+.gtrack{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;overscroll-behavior-x:contain;aspect-ratio:4/3;max-height:min(64vh,500px)}
+.gtrack::-webkit-scrollbar{display:none}
+.gslide{flex:0 0 100%;min-width:0;height:100%;padding:0;display:block;scroll-snap-align:center;scroll-snap-stop:always}
+.gslide img{width:100%;height:100%;object-fit:cover}
+.gcount{position:absolute;right:12px;bottom:12px;z-index:3;display:inline-flex;align-items:center;gap:6px;background:rgba(0,0,0,.62);color:#fff;font-size:12.5px;font-weight:700;padding:5px 11px;border-radius:20px;font-variant-numeric:tabular-nums;pointer-events:none}
+.gcount svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+.gnone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;height:clamp(240px,32vw,340px);border-radius:var(--radius-lg);border:1px solid var(--border);background:var(--surface);color:var(--text-3);font-size:13.5px}
+.gnone svg{width:44px;height:44px;stroke:currentColor;opacity:.5;fill:none;stroke-width:1.5}
+@media(max-width:768px){.gmosaic,.gall{display:none}.gcar{display:block}}
+
+/* header block */
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.pill{display:inline-flex;align-items:center;font-size:12.5px;font-weight:700;padding:5px 12px;border-radius:20px;background:var(--green-light);color:var(--green-dark)}
+.pill.st::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor;margin-right:7px}
+.pill.plain{background:var(--white);border:1px solid var(--border);color:var(--text-2);font-weight:600}
+.pill.bad{background:var(--danger-bg);color:var(--danger)}
+.pill.soon{background:var(--amber-bg);color:var(--amber)}
+h1.title{font-family:'Playfair Display',serif;font-size:clamp(25px,5.4vw,34px);line-height:1.2;margin-bottom:8px;overflow-wrap:anywhere;text-wrap:balance;letter-spacing:-.005em}
+.loc{display:flex;align-items:flex-start;gap:6px;font-size:14.5px;color:var(--text-2);margin-bottom:14px;overflow-wrap:anywhere}
+.loc svg{width:16px;height:16px;flex-shrink:0;margin-top:4px;stroke:var(--green);fill:none;stroke-width:2}
+.price{font-family:'Playfair Display',serif;font-size:clamp(28px,6.8vw,38px);font-weight:700;color:var(--green-dark);line-height:1.15;letter-spacing:-.01em;overflow-wrap:anywhere;margin-bottom:6px;font-variant-numeric:lining-nums}
+.price small{font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--text-3)}
+.price-req{font-size:.7em}
+.cost{font-size:13.5px;color:var(--text-2);margin-bottom:16px}
+.price+.strip{margin-top:14px}
+.strip{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:16px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.strip .f{display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px 8px;text-align:center;min-width:0;border-left:1px solid var(--border)}
+.strip .f:first-child{border-left:0}
+.strip .f svg{width:22px;height:22px;stroke:var(--green);fill:none;stroke-width:1.7;margin-bottom:5px}
+.strip b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:clamp(13.5px,3.6vw,16px);line-height:1.3;overflow-wrap:anywhere;font-variant-numeric:lining-nums}
+.strip span{display:block;font-size:12px;color:var(--text-3)}
+.meta{display:flex;align-items:center;gap:8px 18px;flex-wrap:wrap;font-size:13px;color:var(--text-3);padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid var(--border)}
+.mchip{display:inline-flex;align-items:center;gap:6px}
+.mchip svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+.tchip{display:inline-flex;align-items:center;gap:5px;font-weight:700;color:var(--green-dark);background:var(--green-light);padding:3px 10px;border-radius:20px}
+.tchip svg,.vbadge svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.6}
+
+/* inline action row (phones: the fixed bar takes over once this scrolls out of view) */
+.inline-cta{grid-template-columns:1.4fr 1fr 1fr;gap:8px;margin-bottom:18px}
+.inline-cta .vbtn{grid-column:1/-1;min-height:48px;font-size:14px;font-weight:700;border-color:var(--green-dark);color:var(--green-dark);background:rgba(22,163,74,.08)}.inline-cta .vbtn:hover{background:rgba(22,163,74,.16)}.inline-cta .btn:focus-visible,.ctabar .btn:focus-visible{outline:3px solid var(--green-dark);outline-offset:2px}
+.inline-cta.two{grid-template-columns:1fr}
+.inline-cta .btn{padding:0 8px;min-height:48px}
+@media(max-width:400px){.inline-cta .btn{font-size:13.5px}.inline-cta .btn svg{display:none}}
+
+/* section navigation (desktop) */
+.anchors{position:sticky;top:var(--nav-h);z-index:20;display:flex;gap:4px;overflow-x:auto;background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:4px;margin-bottom:16px;scrollbar-width:none}
+.anchors::-webkit-scrollbar{display:none}
+.anchors a{flex:0 0 auto;font-size:13.5px;font-weight:600;color:var(--text-2);padding:0 14px;min-height:40px;display:inline-flex;align-items:center;border-radius:8px}
+.anchors a:hover{background:var(--surface)}
+.anchors a.on{background:var(--green-light);color:var(--green-dark)}
+@media(max-width:900px){.anchors{display:none}}
+
+/* sections */
+.sec{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;margin-bottom:16px;min-width:0;box-shadow:0 1px 2px rgba(0,0,0,.03);scroll-margin-top:calc(var(--nav-h) + 68px)}
+.sec h2{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:700;margin-bottom:16px}
+.hic{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9px;background:var(--green-light);flex-shrink:0}
+.hic svg{width:17px;height:17px;stroke:var(--green-dark);fill:none;stroke-width:2}
+@media(max-width:480px){.sec{padding:18px 16px}}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(170px,100%),1fr));gap:10px}
+.dgrid>div{min-width:0;background:var(--surface);border-radius:10px;padding:11px 14px}
+.dgrid dt{font-size:12.5px;color:var(--text-3)}
+.dgrid dd{font-size:14.5px;font-weight:600;overflow-wrap:anywhere}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.achip{display:inline-flex;align-items:center;gap:7px;padding:8px 13px 8px 10px;border-radius:var(--radius);background:var(--surface);border:1px solid var(--border);font-size:13.5px;font-weight:600;color:var(--text-2);max-width:100%;overflow-wrap:anywhere}
+.achip svg{width:15px;height:15px;stroke:var(--green);fill:none;stroke-width:2.6;flex-shrink:0}
+.desc{font-size:15px;color:var(--text-2);line-height:1.75;white-space:pre-line;overflow-wrap:anywhere;max-width:72ch}
+.desc.clamp{display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+.rules{margin:0 0 0 18px;font-size:14px;color:var(--text-2);line-height:1.7}
+.rules li{overflow-wrap:anywhere}
+.safety ul{margin:0 0 6px 18px;font-size:14px;color:var(--text-2);line-height:1.7}
+
+/* unit rows */
+.urow{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.urow:first-of-type{padding-top:0}.urow:last-of-type{border:0;padding-bottom:0}
+.urow .m{flex:1;min-width:150px}
+.urow .m b{font-size:14.5px;display:block;overflow-wrap:anywhere}
+.urow .m span{font-size:12.5px;color:var(--text-3)}
+.urow .a{font-size:12.5px;text-align:right;color:var(--text-3)}
+.urow .a b{display:block;color:var(--green-dark);font-size:13px}
+.urow .a.none b{color:var(--danger)}
+.urow .p{font-weight:700;color:var(--green-dark);text-align:right;min-width:110px}
+.urow .p small{display:block;font-weight:500;color:var(--text-3);font-size:12.5px}
+.urow .btn{min-height:44px;padding:0 14px}
+.occ{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+.donut{width:88px;height:88px;border-radius:50%;position:relative;flex-shrink:0}
+.donut::after{content:attr(data-pct);position:absolute;inset:11px;background:var(--white);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:var(--text)}
+@media(max-width:480px){.urow{flex-direction:column;align-items:stretch;gap:8px}.urow .m{min-width:0}.urow .a,.urow .p{text-align:left}.urow .btn{width:100%}}
+
+/* map + video */
+.mapbox{position:relative;height:280px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;text-align:center;font-size:13.5px;color:var(--text-3);padding:12px}
+.mapbox #map{position:absolute;inset:0}
+.maprow{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px 12px;margin-top:8px;font-size:14px}
+.maprow .addr{color:var(--text-2);font-weight:600;overflow-wrap:anywhere}
+.maprow .link{margin:0}
+.maphint{font-size:12.5px;color:var(--text-3);margin-top:6px}
+.vid{position:relative;display:block;width:100%;padding-top:56.25%;border-radius:12px;overflow:hidden;background:#111 center/cover;cursor:pointer}
+.vid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.vid .play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.25)}
+.vid .play span{width:64px;height:64px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--green-dark);font-size:22px}
+video.vidfile{width:100%;border-radius:12px;background:#000;max-height:70vh}
+
+/* owner + airbnb */
+.owner{border:2px solid var(--green);background:var(--green-light)}
+.owner p{font-size:13.5px;color:var(--green-dark)}
+.owner .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.bnbcard{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--green-light);border:1.5px solid var(--green);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:16px}
+.bnbcard b{display:block;color:var(--green-dark)}
+.bnbcard span{font-size:13px;color:var(--text-2)}
+.scard .bnbcard{margin:0 0 14px}
+
+/* contact card */
+.scard{background:var(--white);border:1px solid var(--border);border-top:3px solid var(--green);border-radius:var(--radius-lg);padding:20px;min-width:0;box-shadow:0 1px 2px rgba(0,0,0,.03),0 8px 24px rgba(15,110,86,.06)}
+.s-top{padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--border)}
+.s-price{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--green-dark);line-height:1.2;overflow-wrap:anywhere}
+.s-price small{font-family:'Inter',sans-serif;font-size:13.5px;font-weight:500;color:var(--text-3)}
+.s-cost{font-size:13px;color:var(--text-2);margin-top:4px}
+.s-h{font-size:16px;margin-bottom:6px}
+.s-note{font-size:13.5px;color:var(--text-3);margin-bottom:14px}
+.seller{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.seller>div:last-child{min-width:0}
+.av{width:46px;height:46px;border-radius:50%;background:var(--green-light);color:var(--green-dark);font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.seller b{display:block;font-size:15px;overflow-wrap:anywhere}
+.seller small{display:block;font-size:12.5px;color:var(--text-3);overflow-wrap:anywhere}
+.seller small:empty{display:none}
+.seller .link{min-height:40px;padding:0;font-size:13px}
+.vbadge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:2px 9px;border-radius:20px;background:var(--green-light);color:var(--green-dark);margin:3px 0}
+.vbadge.no{background:var(--surface);color:var(--text-2);border:1px solid var(--border);font-weight:600}
+.cbtns{display:grid;grid-template-columns:1.5fr 1fr;gap:10px;margin-bottom:14px}
+.or{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--text-3);margin-bottom:14px}
+.or::before,.or::after{content:'';flex:1;height:1px;background:var(--border)}
+@media(max-width:900px){.cbtns,.or{display:none}}
+.phone-panel{background:var(--green-light);border:1px solid var(--green-mid);border-radius:var(--radius);padding:12px 14px;margin-bottom:14px}
+.phone-panel .num{font-size:20px;font-weight:700;color:var(--green-dark);letter-spacing:.02em}
+.phone-panel .row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.phone-panel .btn{min-height:40px;padding:0 14px;font-size:13px}
+.csum{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:4px 6px 4px 12px;font-size:13.5px;margin-bottom:14px}
+.csum b{overflow-wrap:anywhere}
+.qchips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.qchip{min-height:40px;padding:0 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);font-size:13px;font-weight:600;color:var(--text-2)}
+.qchip:hover{border-color:var(--green);color:var(--green-dark);background:var(--green-light)}
+details.more{margin-bottom:14px}
+details.more summary{cursor:pointer;font-size:13.5px;font-weight:600;color:var(--green);min-height:44px;display:flex;align-items:center;list-style:none}
+details.more summary::-webkit-details-marker{display:none}
+details.more[open] summary{margin-bottom:6px}
+.hp{position:absolute;left:-9999px}
+.sendrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sendrow .btn{padding:0 10px;font-size:13.5px}
+.nf-row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:420px){.nf-row2{grid-template-columns:1fr;gap:0}}
+.vlist{margin:10px 0 0 18px;font-size:14px;color:var(--text-2);line-height:1.7}
+.notify-modal-body p+p{margin-top:10px}
+.notify-modal-body.sent{padding:26px 20px}
+.notify-modal-body.sent p{font-size:13.5px;color:var(--text-3);margin-bottom:14px}
+.notify-modal-body.sent .btn{width:100%;margin-bottom:8px}
+button.tchip,button.vbadge{position:relative;cursor:pointer}
+button.tchip{border:0}button.vbadge:not(.no){border:0}
+button.tchip::after,button.vbadge::after{content:'';position:absolute;inset:-8px}
+button.tchip svg:last-child,button.vbadge svg:last-child{opacity:.7;margin-left:1px}
+.netbar{position:sticky;top:var(--nav-h);z-index:90;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;background:var(--amber-bg);border-bottom:1px solid var(--amber-border);color:var(--amber);font-size:13.5px;font-weight:500;padding:8px 16px;text-align:center}
+.netbar.ok{background:var(--green-light);border-color:var(--green-mid);color:var(--green-dark)}
+.netbar button{border:1px solid currentColor;border-radius:20px;min-height:36px;padding:0 14px;font-weight:600;font-size:13px}
+.netbar.ok button{display:none}
+.tip{font-size:12.5px;color:var(--text-2);margin-top:14px;line-height:1.55;background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:var(--radius);padding:10px 12px}
+.fee-safety{font-weight:600}.fee-safety>div{display:flex;gap:12px;flex-wrap:wrap;margin-top:7px}.fee-safety .link{min-height:44px;text-align:left}
+.scard .report{display:block;margin:6px auto 0}
+.sent{text-align:center}
+.sent-ic{width:48px;height:48px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;margin:0 auto 10px}
+.sent-ic svg{width:22px;height:22px;stroke:var(--green);fill:none;stroke-width:2.5}
+.sent h3{font-size:16px;margin-bottom:4px}
+.sent p{font-size:13.5px;color:var(--text-3);margin-bottom:14px}
+.sent .btn{width:100%;margin-bottom:8px}
+
+/* previous / next listing */
+.listnav{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0 8px}
+.lncard{display:flex;align-items:center;gap:12px;min-width:0;background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;min-height:76px;transition:border-color .15s,background .15s}
+a.lncard:hover{border-color:var(--green);background:var(--green-light)}
+.lncard svg{width:20px;height:20px;stroke:var(--green);fill:none;stroke-width:2.4;flex-shrink:0}
+.lncard.n{justify-content:flex-end;text-align:right}
+.ln-t{display:flex;flex-direction:column;min-width:0}
+.lncard.n .ln-t{align-items:flex-end}
+.ln-t small{font-size:12.5px;color:var(--text-3);font-weight:600}
+.ln-t b{font-size:14.5px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ln-t em{font-style:normal;font-size:12.5px;color:var(--text-3)}
+.lncard.off{opacity:.55;background:var(--surface)}
+@media(max-width:600px){.listnav{grid-template-columns:1fr}}
+
+/* similar */
+.sim{margin-top:40px}
+.sim-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.sim h2{font-family:'Playfair Display',serif;font-size:24px}
+.sim-head .link{min-height:40px}
+.state{text-align:center;padding:72px 20px}
+.state h1{font-size:24px;margin-bottom:8px;font-family:'Playfair Display',serif}
+.state p{color:var(--text-3);margin:0 auto 20px;max-width:52ch}
+.state .btn{margin:4px}
+
+/* listing quick tools and at-a-glance cards */
+.pdrop{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:999px;background:rgba(22,163,74,.12);color:var(--green-dark);font-size:13px;font-weight:700}.pdrop s{font-weight:500;opacity:.8}.qa-list{display:grid;gap:10px;margin:0}.qa-list>div{padding:10px 12px;border:1px solid var(--border);border-radius:10px}.qa-list dt{font-weight:700;font-size:13px}.qa-list dd{margin:2px 0 0;color:var(--text-2);font-size:14px;white-space:pre-line}
+.insight-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0 6px}
+.insight{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;min-width:0}
+.insight b{display:block;font-size:14px;color:var(--green-dark);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.insight span{display:block;font-size:12.5px;color:var(--text-3);margin-top:2px}
+.quick-tools{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 2px}
+.afford{margin-top:12px;border:1px solid var(--border);border-radius:12px;padding:10px 14px;background:var(--white)}.afford summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--green-dark);min-height:32px;display:flex;align-items:center}.afford-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.afford-grid label{display:grid;gap:4px;font-size:12px;color:var(--text-3)}.afford-grid input{min-height:44px;border:1.5px solid var(--border);border-radius:8px;padding:0 8px;font-size:16px}.afford-out{margin:10px 0 0;font-weight:700}.afford-note{margin:4px 0 0;font-size:12px;color:var(--text-3)}
+.quick-tools .qtool{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);font-size:13px;font-weight:600;color:var(--text-2)}
+.quick-tools .qtool:hover{border-color:var(--green);color:var(--green-dark);background:var(--green-light)}
+@media(max-width:900px){.insight-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:479px){.quick-tools .qtool{flex:1 1 calc(50% - 8px);padding:0 10px}}
+
+/* sticky action bar (phones and tablets). Appears only when the inline action row is off-screen. */
+.ctabar{display:none;position:fixed;left:0;right:0;bottom:var(--nk-tabbar-h);z-index:65;background:var(--white);border-top:1px solid var(--border);padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));gap:8px;align-items:center;box-shadow:0 -4px 16px rgba(0,0,0,.08);transform:translateY(110%);visibility:hidden;transition:transform .2s ease,visibility 0s linear .2s}
+.ctabar.show{transform:none;visibility:visible;transition:transform .2s ease}
+@media(max-width:900px){.ctabar:not([hidden]){display:flex}body.nk-cta .nk-tabbar{display:none}}
+.ctabar-price{flex:1;min-width:0;line-height:1.25}
+.ctabar-price strong{display:block;color:var(--green-dark);font-size:15px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ctabar-price strong small{font-size:11.5px;font-weight:500;color:var(--text-3)}
+.ctabar-price span{display:block;font-size:12px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ctabar .btn{min-height:48px;padding:0 14px}
+.ctabar .ctabar-icon{flex:0 0 48px;padding:0}
+.ctabar .btn:not(.ctabar-icon){flex:1;padding:0 12px}
+.ctabar .ctabar-wa{flex:1.4}
+.ctabar-price{flex:1.2}
+@media(max-width:479px){.ctabar-price{display:block;flex:1;min-width:0}.ctabar .btn{padding:0 9px}.ctabar .ctabar-icon{flex-basis:42px}}
+
+/* lightbox */
+.lb{background:rgba(0,0,0,.96);flex-direction:column;padding:0}
+.lb-box{flex:1;min-height:0;width:100%;overflow:auto;display:flex;-webkit-overflow-scrolling:touch}
+.lb-box img{margin:auto;max-width:100%;max-height:100%;object-fit:contain;cursor:zoom-in}
+.lb-box img.zoomed{max-width:none;max-height:none;width:min(200vw,3200px);height:auto;cursor:zoom-out}
+.lb-x{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:14px;z-index:3;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;font-size:20px}
+.lb .garrow{background:rgba(255,255,255,.16);z-index:3}
+.lb .garrow svg{stroke:#fff}
+.lb-count{color:#fff;font-size:13px;text-align:center;padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px))}
+.lb-hint{position:absolute;left:14px;top:calc(22px + env(safe-area-inset-top,0px));color:rgba(255,255,255,.7);font-size:12.5px}
+
+/* modals used on this page */
+.stars{display:flex;gap:2px;justify-content:center;margin-bottom:14px}
+.stars button{font-size:32px;color:var(--border);line-height:1;min-width:48px;min-height:48px}
+.stars button.on{color:var(--green)}
+.share{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(96px,100%),1fr));gap:8px}
+.share a,.share button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 6px;border-radius:10px;border:1px solid var(--border);font-size:13px;font-weight:600;min-height:64px;justify-content:center}
+.share span{font-size:22px}
+#ov-contact-sheet .nk-sheet{max-height:92dvh;padding-top:10px}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.sheet-head h2{font-family:'Playfair Display',serif;font-size:19px}
+.sheet-close{width:44px;height:44px;border-radius:50%;font-size:18px;color:var(--text-3);margin-right:-8px}
+.sheet-close:hover{background:var(--surface);color:var(--text)}
+.sheet-body .scard{border:0;padding:0;border-radius:0;box-shadow:none}
+
+@media print{nav,.topbar,.side,.ctabar,.nk-tabbar,footer,.sim,.nk-scrolltop-btn,.anchors,.inline-cta{display:none!important}.layout{display:block}}
+</style>
+<link rel="stylesheet" href="/theme.css"/><script src="/theme.js"></script>
+<style id="nk-compact-v1">
+/* NK-COMPACT-PATCH v1 */
+/* page rhythm */
+.wrap{padding-top:8px;padding-bottom:40px}
+.topbar{margin-bottom:8px;min-height:40px}
+.chip{min-height:38px;padding:0 13px}
+.backlink{min-height:38px}
+.layout{gap:24px}
+.reach{margin-bottom:10px;padding:8px 12px}
+.notice{margin-bottom:10px;padding:8px 12px}
+
+/* gallery: shorter, with the price on the photo */
+.gallery{margin-bottom:12px}
+.gmosaic{height:clamp(240px,29vw,370px);gap:4px}
+.gtrack{aspect-ratio:16/11;max-height:min(46vh,340px)}
+.gm-main .gcount{top:12px;bottom:auto;left:12px;right:auto}
+.gcount{z-index:4}
+.gall{min-height:38px;padding:0 13px;font-size:13px;right:12px;bottom:12px}
+.gnav{width:34px;height:34px}
+.ghero{position:absolute;left:0;right:0;bottom:0;z-index:3;display:flex;flex-direction:column;gap:2px;padding:48px 16px 12px;color:#fff;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.66))}
+.ghero-price{font-family:'Playfair Display',serif;font-size:clamp(22px,5.4vw,30px);font-weight:700;line-height:1.1;letter-spacing:-.01em;text-shadow:0 1px 6px rgba(0,0,0,.5);overflow-wrap:anywhere}
+.ghero-price small{font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:rgba(255,255,255,.9)}
+.ghero-price .price-req{font-size:.62em}
+.ghero-sub{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:rgba(255,255,255,.96);text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.ghero-dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:#4ade80}
+.ghero-dot.bad{background:#f87171}.ghero-dot.soon{background:#fbbf24}
+.gcar{border-radius:14px}
+/* the price now lives on the photo, so the big duplicate under the title is kept for screen readers only */
+.main-col:has(.ghero)>.price{position:absolute;width:1px;height:1px;margin:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+
+/* header block */
+.pills{margin-bottom:8px;gap:6px}
+.pill{font-size:12px;padding:3px 10px}
+h1.title{font-size:clamp(20px,4.6vw,27px);line-height:1.22;margin-bottom:4px}
+.loc{font-size:13.5px;margin-bottom:8px}
+.loc svg{margin-top:3px}
+.pdrop{margin-top:0;margin-bottom:6px;padding:4px 10px;font-size:12.5px}
+.cost{font-size:13px;margin-bottom:10px}
+.price+.strip{margin-top:0}
+.strip{margin-bottom:10px;border-radius:12px}
+.strip .f{padding:8px 6px}
+.strip .f svg{width:18px;height:18px;margin-bottom:2px}
+.strip b{font-size:clamp(13px,3.4vw,15px)}
+.strip span{font-size:11.5px}
+.meta{gap:6px 14px;padding-bottom:10px;margin-bottom:10px;font-size:12.5px}
+/* highlights: availability and viewing fee are already on the photo, keep Reference + Posted */
+.insight-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:8px 0 4px}
+.insight:nth-child(2),.insight:nth-child(3){display:none}
+.insight{padding:6px 10px;border-radius:8px}
+.insight b{font-size:13px}
+.insight span{font-size:11.5px;margin-top:0}
+
+/* quick tools: one swipeable row, video walkthrough first */
+.quick-tools{flex-wrap:nowrap;gap:6px;margin:8px 0 4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.quick-tools::-webkit-scrollbar{display:none}
+.quick-tools .qtool{flex:0 0 auto;min-height:34px;padding:0 12px;font-size:12.5px;white-space:nowrap}
+.quick-tools .qtool-video{order:-1;background:var(--green);border-color:var(--green);color:#fff}
+.quick-tools .qtool-video:hover{background:var(--green-dark);border-color:var(--green-dark);color:#fff}
+.afford{margin-top:8px;padding:6px 12px}
+
+/* phone action row */
+.inline-cta{gap:6px;margin-bottom:10px}
+.inline-cta .btn,.inline-cta .vbtn{min-height:42px}
+.ctabar .btn{min-height:44px}
+
+/* section nav and cards */
+.anchors{margin-bottom:10px}
+.anchors a{min-height:34px;padding:0 12px;font-size:13px}
+.sec{padding:16px 18px;margin-bottom:10px;border-radius:14px}
+.sec h2{font-size:16px;gap:8px;margin-bottom:10px}
+.hic{width:28px;height:28px;border-radius:8px}
+@media(max-width:480px){.sec{padding:14px}}
+.dgrid{grid-template-columns:repeat(auto-fill,minmax(min(150px,100%),1fr));gap:8px}
+.dgrid>div{padding:8px 11px}
+.dgrid dd{font-size:14px}
+.chips{gap:6px}
+.achip{padding:5px 10px 5px 8px;font-size:13px}
+.desc{font-size:14.5px;line-height:1.65}
+.urow{padding:10px 0}
+.occ{margin-top:12px;padding-top:12px}
+.mapbox{height:220px}
+.bnbcard{padding:10px 14px;margin-bottom:10px}
+
+/* contact card (right column on desktop) */
+.scard{padding:16px;border-radius:14px}
+.s-top{padding-bottom:10px;margin-bottom:10px}
+.s-price{font-size:22px}
+.seller{gap:10px;margin-bottom:10px}
+.av{width:40px;height:40px;font-size:14px}
+.cbtns,.or{margin-bottom:10px}
+.scard .nf-field{margin-bottom:10px}
+.scard .nf-field label{margin-bottom:4px}
+.scard .nf-field input,.scard .nf-field select{min-height:42px;padding-top:8px;padding-bottom:8px}
+.scard .nf-field textarea{min-height:64px;padding-top:8px;padding-bottom:8px}
+.qchip{min-height:34px;padding:0 11px;font-size:12.5px}
+.tip{margin-top:10px;padding:8px 10px}
+.side{max-height:calc(100dvh - var(--nav-h) - 24px)}
+
+/* previous / next and similar */
+.listnav{margin:0 0 6px}
+.lncard{min-height:60px;padding:10px 14px}
+.sim{margin-top:24px}
+.sim-head{margin-bottom:12px}
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to listing</a>
+<div class="nk-datasaver-banner" id="nk-datasaver-banner" role="status"><span>You're on a slower connection. Data Saver is on so pages load faster.</span><button type="button" id="nk-datasaver-off">Turn off</button></div>
+
+<nav id="main-nav" aria-label="Main">
+  <a href="/" class="logo"><div class="logo-icon"><img src="/logo-icon.png" alt="" width="48" height="48"/></div><span>Nyumba254</span></a>
+  <div class="nav-links">
+    <a href="/listings" class="nav-link">Browse</a>
+    <a href="/how-it-works" class="nav-link nav-secondary">How it works</a>
+    <a href="/about" class="nav-link nav-secondary">About us</a>
+    <a href="/faq" class="nav-link">FAQ</a>
+    <a href="/login" class="nav-link" id="nav-account-link">Sign in</a>
+    <a href="/saved" class="nav-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>Saved <span class="nav-count" id="nav-count-badge" style="display:none">0</span></a>
+    <a href="/post-listing" class="btn btn-primary">List your property</a>
+  </div>
+  <button type="button" class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-nav"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+</nav>
+<div class="mobile-nav" id="mobile-nav">
+  <a href="/listings">Browse listings</a><a href="/how-it-works">How it works</a><a href="/about">About us</a><a href="/faq">FAQ</a>
+  <a href="/login" id="mobile-account-link">Sign in</a><a href="/saved">Saved <span class="nav-count" id="nav-count-badge-mobile" style="display:none">0</span></a>
+  <a href="/post-listing" class="btn btn-primary">List your property</a>
+</div>
+
+<div class="netbar" id="netbar" role="status" aria-live="polite" hidden><span id="netbar-t"></span><button type="button" data-act="retry-net">Retry</button></div>
+<main id="main-content" class="wrap">
+  <div class="topbar">
+    <a class="backlink" id="backlink" data-back href="/listings"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg><span>Back to results</span></a>
+    <nav class="crumbs" id="crumbs" aria-label="Breadcrumb"></nav>
+    <div class="tb-actions" id="tb-actions"></div>
+  </div>
+  <div class="reach" id="reach" hidden role="status"><span>Did you manage to reach the lister?</span><button type="button" class="btn btn-primary" data-act="reach-yes">Yes</button><button type="button" class="btn btn-outline" data-act="reach-no">No</button></div>
+  <div id="view">
+    <div class="layout"><div class="main-col"><div class="sk" style="aspect-ratio:16/10;margin-bottom:20px"></div><div class="sk" style="height:22px;width:40%;margin-bottom:12px"></div><div class="sk" style="height:38px;margin-bottom:12px"></div><div class="sk" style="height:34px;width:50%;margin-bottom:18px"></div><div class="sk" style="height:76px;margin-bottom:16px"></div><div class="sk" style="height:140px"></div></div><div class="sk" style="height:440px"></div></div>
+  </div>
+  <section id="buyer-viewing-feedback" hidden aria-labelledby="buyer-viewing-feedback-title" style="margin:24px 0;padding:18px;border:1px solid var(--border);border-radius:14px;background:var(--surface)">
+    <h2 id="buyer-viewing-feedback-title" style="font-size:18px;margin:0 0 8px">How did the viewing go?</h2>
+    <div id="buyer-viewing-feedback-list" aria-live="polite"></div>
+  </section>
+</main>
+
+<div class="ctabar" id="ctabar" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<button type="button" class="nk-scrolltop-btn" id="scrolltop-btn" aria-label="Scroll to top"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></button>
+
+<!-- Lightbox: scrollable box, so a zoomed photo can be panned natively with a finger or trackpad -->
+<div class="notify-modal-overlay lb" id="lb" role="dialog" aria-modal="true" aria-label="Photo viewer">
+  <button type="button" class="lb-x" data-act="close" aria-label="Close photo viewer">✕</button>
+  <div class="lb-box" id="lb-box"><img id="lb-img" src="" alt="" data-act="lbzoom"/></div>
+  <button type="button" class="garrow prev" data-act="lprev" aria-label="Previous photo"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+  <button type="button" class="garrow next" data-act="lnext" aria-label="Next photo"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+  <div class="lb-count" id="lb-count" aria-live="polite"></div>
+</div>
+
+<!-- Phone/tablet contact sheet: the real #side card is moved in here (same nodes, same ids) instead of scrolling the page -->
+<div class="nk-sheet-overlay" id="ov-contact-sheet">
+  <div class="nk-sheet" role="dialog" aria-modal="true" aria-labelledby="cs-t">
+    <div class="nk-sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-head"><h2 id="cs-t">Contact the lister</h2><button type="button" class="sheet-close" data-act="close" aria-label="Close">✕</button></div>
+    <div class="sheet-body" id="contact-sheet-slot"></div>
+  </div>
+</div>
+
+<div class="notify-modal-overlay" id="ov-share"><div class="notify-modal" role="dialog" aria-modal="true" aria-labelledby="sh-t">
+  <div class="notify-modal-head"><h2 id="sh-t">Share this listing</h2><button type="button" class="notify-modal-close" data-act="close" aria-label="Close">✕</button></div>
+  <div class="notify-modal-body"><div class="share" id="share-grid"></div></div></div></div>
+
+<div class="notify-modal-overlay" id="ov-report"><div class="notify-modal" role="dialog" aria-modal="true" aria-labelledby="rp-t">
+  <div class="notify-modal-head"><h2 id="rp-t">Report this listing</h2><button type="button" class="notify-modal-close" data-act="close" aria-label="Close">✕</button></div>
+  <div class="notify-modal-body">
+    <p class="notify-modal-sub">Fake listing, scam attempt or wrong details? We review every report.</p>
+    <div class="nf-banner" id="rp-banner" role="alert"></div>
+    <div class="nf-field"><label for="rp-reason">Reason</label><select id="rp-reason"><option value="">Select a reason…</option><option value="fake_listing">This listing looks fake</option><option value="scam_attempt">Scam or other upfront payment</option><option value="viewing_fee_advance_payment">Asked for viewing-fee payment before viewing</option><option value="viewing_fee_dispute">Asked for more than the listed fee</option><option value="viewing_fee_free_listing">Charged after a free-viewing listing</option><option value="viewing_fee_not_refunded">Fee not refunded</option><option value="wrong_info">Details don't match reality</option><option value="offensive">Offensive content</option><option value="other">Something else</option></select></div>
+    <div class="nf-field" id="rp-amt-wrap" hidden><label for="rp-amt">Amount asked (KES)</label><input type="number" id="rp-amt" min="0" inputmode="numeric"/></div>
+    <div class="nf-field"><label for="rp-det">Details <span class="nf-optional">optional</span></label><textarea id="rp-det" maxlength="1000"></textarea></div>
+  </div>
+  <div class="notify-modal-foot"><button type="button" class="btn btn-outline" data-act="close">Cancel</button><button type="button" class="btn btn-primary" data-act="send-report">Send report</button></div></div></div>
+
+<div class="notify-modal-overlay" id="ov-rate"><div class="notify-modal" role="dialog" aria-modal="true" aria-labelledby="rt-t">
+  <div class="notify-modal-head"><h2 id="rt-t">Rate this lister</h2><button type="button" class="notify-modal-close" data-act="close" aria-label="Close">✕</button></div>
+  <div class="notify-modal-body">
+    <p class="notify-modal-sub">Your review helps other buyers know what to expect.</p>
+    <div class="stars" id="rt-stars" role="group" aria-label="Rating"></div>
+    <div class="nf-banner" id="rt-banner" role="alert"></div>
+    <div class="nf-field"><label for="rt-name">Your name <span class="nf-optional">shown publicly</span></label><input type="text" id="rt-name" maxlength="60"/></div>
+    <label class="nf-check"><input type="checkbox" id="rt-anon"/> Post anonymously</label>
+    <div class="nf-field"><label for="rt-txt">Comment <span class="nf-optional">optional</span></label><textarea id="rt-txt" maxlength="1000"></textarea></div>
+  </div>
+  <div class="notify-modal-foot"><button type="button" class="btn btn-outline" data-act="close">Skip</button><button type="button" class="btn btn-primary" data-act="send-rate">Submit review</button></div></div></div>
+
+<div class="notify-modal-overlay" id="ov-view"><div class="notify-modal" role="dialog" aria-modal="true" aria-labelledby="vw-t">
+  <div class="notify-modal-head"><h2 id="vw-t">Request a viewing</h2><button type="button" class="notify-modal-close" data-act="close" aria-label="Close">✕</button></div>
+  <div id="vw-form">
+    <div class="notify-modal-body">
+      <p class="notify-modal-sub" id="vw-sub"></p>
+      <div class="nf-banner" id="vw-banner" role="alert"></div>
+      <div class="nf-row2">
+        <div class="nf-field"><label for="vw-date">Preferred date</label><input type="date" id="vw-date"/><div class="nf-err" id="vw-date-e" role="alert"></div></div>
+        <div class="nf-field"><label for="vw-slot">Time</label><select id="vw-slot"><option value="Morning (8am–11am)">Morning, 8am to 11am</option><option value="Midday (11am–2pm)">Midday, 11am to 2pm</option><option value="Afternoon (2pm–5pm)">Afternoon, 2pm to 5pm</option><option value="Evening (5pm–7pm)">Evening, 5pm to 7pm</option></select></div>
+      </div>
+      <div class="nf-field"><label for="vw-name">Full name</label><input type="text" id="vw-name" autocomplete="name"/><div class="nf-err" id="vw-name-e" role="alert"></div></div>
+      <div class="nf-field"><label for="vw-email">Email for viewing updates <span class="nf-optional">optional</span></label><input type="email" id="vw-email" autocomplete="email"/><div class="nf-err" id="vw-email-e" role="alert"></div></div>
+      <div class="nf-field" id="vw-phone-f"><label for="vw-phone">Phone</label><input type="tel" id="vw-phone" inputmode="tel" autocomplete="tel" placeholder="07XX XXX XXX"/><div class="nf-err" id="vw-phone-e" role="alert"></div></div>
+      <div class="nf-field"><label for="vw-note">Note <span class="nf-optional">optional</span></label><textarea id="vw-note" maxlength="300" placeholder="e.g. I will come with my family"></textarea></div>
+      <label class="nf-check" id="vw-fee-ack-wrap" hidden><input type="checkbox" id="vw-fee-ack"/> I have read and understand the viewing fee shown above.</label>
+      <div class="hp" aria-hidden="true"><label for="vw-web">Leave empty</label><input id="vw-web" tabindex="-1" autocomplete="off"/></div>
+      <p class="tip" id="vw-safety"></p>
+    </div>
+    <div class="notify-modal-foot"><button type="button" class="btn btn-outline" data-act="close">Cancel</button><button type="button" class="btn btn-primary" id="vw-send" data-act="send-viewing">Send request</button></div>
+  </div>
+  <div class="notify-modal-body sent" id="vw-done" hidden><div class="sent-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></div><h3>Request sent</h3><p>The lister will confirm the time in your chat. You may also get a call.</p><button type="button" class="btn btn-primary" data-act="chat">Open conversation</button><button type="button" class="btn btn-outline" data-act="close">Close</button></div>
+</div></div>
+
+<div class="notify-modal-overlay" id="ov-verify"><div class="notify-modal" role="dialog" aria-modal="true" aria-labelledby="vf-t">
+  <div class="notify-modal-head"><h2 id="vf-t">What does Verified mean?</h2><button type="button" class="notify-modal-close" data-act="close" aria-label="Close">✕</button></div>
+  <div class="notify-modal-body" id="vf-body"></div>
+  <div class="notify-modal-foot"><a class="link" href="/how-it-works" style="margin-right:auto">How identity checks and role badges work</a><button type="button" class="btn btn-primary" data-act="close">Got it</button></div>
+</div></div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo"><div class="footer-logo-icon"><img src="/logo-icon.png" alt="" width="40" height="40"/></div>Nyumba254</div>
+        <p class="footer-tagline">Find and list property across Kenya, with open account roles and no deal commission charged by Nyumba254.</p>
+        <div class="footer-social">
+          <a href="https://wa.me/254739348560" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg></a>
+          <a href="https://www.instagram.com/nyumba.254?igsh=Z2VhNzJkMm1td2Jz" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+          <a href="https://www.facebook.com/share/1EdzJKujSK/" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
+          <a href="https://www.tiktok.com/@nyumba.254?_r=1&amp;_t=ZS-98w137YXueA" rel="noopener" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="M9 12a4 4 0 104 4V4a5 5 0 005 5"/></svg></a>
+          <a href="https://x.com/Nyumba254" rel="noopener" aria-label="X (Twitter)"><svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20"/></svg></a>
+          <a href="mailto:hello@nyumba254.co.ke" aria-label="Email"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></a>
+        </div>
+      </div>
+      <div class="footer-col"><h2>Browse</h2><a href="/listings">All listings</a><a href="/listings?category=apartment">Apartment</a><a href="/listings?category=house">House</a><a href="/listings?category=boarding">Boarding House</a><a href="/listings?category=airbnb">Airbnb / Holiday Rental</a><a href="/listings?category=commercial">Shops &amp; offices</a></div>
+      <div class="footer-col"><h2>Counties</h2><div class="footer-counties" id="footer-counties"></div></div>
+      <div class="footer-col"><h2>Platform</h2><a href="/post-listing">List a property</a><a href="/how-it-works">How it works</a><a href="/viewing-fee-policy">Viewing Fee Policy</a><a href="/login">Sign in</a></div>
+      <div class="footer-col"><h2>Company</h2><a href="/contact">Contact us</a><a href="/terms">Terms of service</a><a href="/privacy">Privacy policy</a><a href="/faq">FAQ</a></div>
+    </div>
+    <div class="footer-divider"></div>
+    <div class="footer-bottom"><p>© <span id="yr">2026</span> Nyumba254. All rights reserved. Built for Kenya.</p><div class="footer-bottom-links"><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/contact">Contact</a><a href="/sitemap">Sitemap</a></div></div>
+  </div>
+</footer>
+
+<nav class="nk-tabbar" aria-label="Primary">
+  <a href="/" class="nk-tab"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</a>
+  <a href="/listings" class="nk-tab active" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Browse</a>
+  <a href="/post-listing" class="nk-tab nk-tab-postbtn"><span class="nk-tab-postcircle"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>Post</a>
+  <a href="/saved" class="nk-tab"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg><span class="nk-tab-badge" id="nk-tab-saved-badge">0</span>Saved</a>
+  <a href="/login" class="nk-tab" id="tab-account-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Account</a>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
+<script src="/nk-shared.js"></script>
+<script>
+(function(){'use strict';
+/* ═══ helpers ═══ */
+const $=id=>document.getElementById(id),qsa=(s,r)=>[...(r||document).querySelectorAll(s)];
+const CFG={
+  exactPin:true,                 // true: exact map pin (as you requested). false: ~100 m rounded pin inside a circle.
+  staleDays:60,                  // show "confirm it is still available" after this many days
+  viewTtlMs:864e5,               // a visitor counts as a new view once per 24 h
+  reachWindowMs:45*60*1000,      // "did you reach the lister?" prompt window
+  reviewAfterMs:864e5,           // "Rate this lister" unlocks 24 h after first contact
+  /* Explicit columns keep phone/whatsapp/contact_email out of the public payload.
+     If any name below does not exist in your table, the query silently retries with '*'. */
+  listCols:'id,listing_number,seller_id,title,description,category,status,is_disabled,disabled_reason,recycle_bin,is_featured,price,price_frequency,county,area,address,latitude,longitude,details,amenities,contact_name,contact_hidden,views,created_at,payment_status,trial_expires_at,listed_by_type',
+  cardCols:'id,listing_number,title,area,county,address,category,price,price_frequency,status,is_featured,created_at'
+};
+const REL='listing_photos(*), listing_units(*), listing_videos(*)';
+const FREQ=Object.assign({},NK_FREQ_LABEL,{semester:'/semester'});
+const money=n=>'KES '+Number(n||0).toLocaleString('en-KE');
+const pad=n=>String(n).padStart(6,'0');
+const lsg=k=>{try{return localStorage.getItem(k)}catch(e){return null}},lss=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+const uuid=()=>crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2);
+const coarse=()=>matchMedia('(pointer:coarse)').matches;
+const isMobileWidth=()=>matchMedia('(max-width:900px)').matches;
+const prettyPhone=raw=>{const p=nkNormalizePhone(raw);if(/^\+254\d{9}$/.test(p))return ('0'+p.slice(4)).replace(/(\d{4})(\d{3})(\d{3})/,'$1 $2 $3');return p||String(raw||'')};
+const okPhone=p=>/^\+254\d{9}$/.test(p)||/^\+\d{9,15}$/.test(p),okMail=e=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+const SEC={gated_guard_cctv:'Gated, guarded & CCTV',gated_guard:'Gated with guard',gated_cctv:'Gated with CCTV',gated:'Gated compound',cctv:'CCTV only',none:'None'};
+const PARK={private:'Private',shared:'Shared compound',street:'Street only',none:'None'};
+const FURN={yes:'Furnished',partial:'Partly furnished',no:'Unfurnished'};
+const QMSG_BY=(m,fr)=>{
+  if(m.group==='airbnb')return['Is it available for my dates?','Can I get a discount for a longer stay?','What time is check-in?','Is there parking on site?'];
+  if(m.group==='boarding')return['Is a bed still open?','Can I view it today?','What is the deposit?','Is the room shared or private?'];
+  if(m.group==='commercial')return['Is it still available?','Can I view it today?','What are the lease terms?','Is the price negotiable?'];
+  if(fr==='once')return['Is it still available?','Can I view it today?','Is the price negotiable?','Do you have the title deed?'];
+  return['Is it still available?','Can I view it today?','What is the deposit?','Is the price negotiable?'];
+};
+const IC={chev:d=>`<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="${d?'15 18 9 12 15 6':'9 18 15 12 9 6'}"/></svg>`,
+ call:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.12 1.2 2 2 0 012.11 0h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0122 14.92z"/></svg>',
+ msg:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
+ wa:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>',
+ share:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>',
+ photo:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+ check:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>',
+ sent:'<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>'};
+const svg=p=>`<svg viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
+Object.assign(IC,{
+ expand:svg('<path d="M8 3H5a2 2 0 00-2 2v3M21 8V5a2 2 0 00-2-2h-3M3 16v3a2 2 0 002 2h3M16 21h3a2 2 0 002-2v-3"/>'),
+ pin:svg('<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>'),
+ clock:svg('<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>'),
+ eye:svg('<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'),
+ tick:svg('<polyline points="20 6 9 17 4 12"/>')});
+Object.assign(IC,{
+ cal:svg('<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>'),
+ info:svg('<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>')});
+const FI={Bedrooms:'<path d="M2 4v16M2 8h18a2 2 0 012 2v10M2 17h20M6 8v9"/>',Bathrooms:'<path d="M9 6l1-1a2 2 0 012.83 0L14 6M4 12h16v3a4 4 0 01-4 4H8a4 4 0 01-4-4v-3zM6 19l-1 2M18 19l1 2"/>',
+ 'Floor area':'<rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h6V3"/>',Furnishing:'<path d="M4 11V8a3 3 0 013-3h10a3 3 0 013 3v3M2 13a2 2 0 014 0v2h12v-2a2 2 0 014 0v5H2zM5 18v2M19 18v2"/>',
+ Parking:'<path d="M5 16l1.5-5.5A2 2 0 018.4 9h7.2a2 2 0 011.9 1.5L19 16M3 16h18v3H3zM7 19v1M17 19v1"/>',Security:'<path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/>',
+ Spaces:'<path d="M4 21V4a1 1 0 011-1h10a1 1 0 011 1v17M2 21h20M12 12h.01"/>',Residents:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>',
+ 'Nearest institution':'<path d="M22 10L12 5 2 10l10 5 10-5zM6 12v5c3 3 9 3 12 0v-5"/>',Guests:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>',
+ 'Minimum stay':'<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>','Check-in / out':'<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>',
+ Type:'<path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/>',Terms:'<path d="M20 12l-8 8-9-9V3h8l9 9z"/><circle cx="7.5" cy="7.5" r="1"/>',Condition:'<path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.5 2.5-2.4-2.4z"/>',
+ Frontage:'<path d="M3 21h18M6 21V10l6-5 6 5v11M10 21v-6h4v6"/>'};
+const FI_DEF='<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>';
+const factIcon=k=>svg(FI[k]||FI_DEF);
+const SI={answers:'<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2zM9 9a3 3 0 115 2c-1 .8-2 1.2-2 2.5M12 16.5h.01"/>',about:'<path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9zM14 3v6h6M8 13h8M8 17h5"/>',units:FI_DEF,details:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+ amenities:'<path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',video:'<circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>',
+ loc:'<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',rules:'<path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2M9 2h6v4H9z"/>',
+ seller:'<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>',safety:'<path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/>'};
+const secHead=(k,t)=>`<h2><span class="hic">${svg(SI[k])}</span>${t}</h2>`;
+
+/* ═══ state (P = the property; window.L is Leaflet, so the listing is never called L) ═══ */
+const nav={prev:null,next:null,src:''};
+let loadFailed=false;
+let P=null,photos=[],idx=0,units=[],uid=null,isOwner=false,preview=false,phoneRaw=null,revealBusy=false,stars=0,zoomed=false;
+const ctx=(()=>{try{const c=JSON.parse(sessionStorage.getItem('nk_results_ctx')||'null');return c&&Date.now()-(c.ts||0)<36e5?c:null}catch(e){return null}})();
+let toastT;function toast(m,k){const t=$('toast');t.textContent=m;t.className='toast show'+(k==='error'?' error':'');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),4200)}
+const meta=()=>NK_CATEGORIES[P.category]||{label:nkTitleCase(P.category),group:'standard'};
+const freq=()=>P.price_frequency||({boarding:'month',airbnb:'night'}[P.category])||((P.details||{}).lease_type==='sale'?'once':'month');
+const isSale=()=>freq()==='once';
+const where=()=>[P.area,P.county?nkCountyLabel(P.county):''].filter(Boolean).join(', ')||'Kenya';
+const daysOld=()=>P.created_at?(Date.now()-new Date(P.created_at))/864e5:0;
+const ago=iso=>{const d=(Date.now()-new Date(iso))/864e5;return d<1?'today':d<30?Math.floor(d)+'d ago':d<365?Math.floor(d/30)+' mo ago':Math.floor(d/365)+' yr ago'};
+const setMeta=(id,v)=>{const e=$(id);if(e)e.setAttribute(id==='m-canon'?'href':'content',v)};
+const mainW=()=>document.body.classList.contains('nk-datasaver')?640:1200;
+const srcFor=(p,w)=>nkImgSrc(p.url,w);
+const shortRef=()=>'#'+pad(P.listing_number);
+const baseMsg=()=>`Hi, I'm interested in "${P.title}" (ref ${shortRef()}).`;
+
+/* ═══ 1. usage tracking: one small insert per action. Stops by itself if the table does not exist yet. Never runs for owners or previews. ═══ */
+const EV={ok:true,photo:false};
+function track(type,meta){
+  if(!P||!EV.ok||preview||isOwner)return;
+  try{db.from('listing_events').insert({listing_id:P.id,event:type,session_id:lsg('nk_sid')||null,device:isMobileWidth()?'mobile':'desktop',meta:meta||null}).then(r=>{if(r&&r.error)EV.ok=false},()=>{EV.ok=false})}catch(e){EV.ok=false}
+}
+/* ═══ 5. offline handling ═══ */
+function offline(){return navigator.onLine===false}
+function isNetErr(err){return offline()||/failed to fetch|network|load failed/i.test((err&&err.message)||'')}
+function showNet(msg,kind){const b=$('netbar');$('netbar-t').textContent=msg;b.classList.toggle('ok',kind==='ok');b.hidden=false}
+function hideNet(){$('netbar').hidden=true}
+function needNet(msg){if(offline()){showNet(msg||"You're offline. Your message is kept, so try again when you're back online.");return true}return false}
+function retryNet(){
+  fetch('/favicon.ico',{method:'HEAD',cache:'no-store'}).then(()=>{hideNet();if(loadFailed)load()}).catch(()=>toast('Still offline. We will keep trying.','error'));
+}
+
+/* ═══ load ═══ */
+async function fetchListing(n){
+  const q=cols=>db.from('listings').select(cols+', '+REL).eq('listing_number',n).single();
+  let r=await q(CFG.listCols);
+  if(r.error&&r.error.code!=='PGRST116')r=await q('*');   // a column name above does not exist: retry once with everything
+  return r;
+}
+async function load(){
+  loadFailed=false;preview=false;
+  const n=new URLSearchParams(location.search).get('id');
+  if(!n||!/^\d+$/.test(n))return unavailable('missing');
+  try{
+    const [lr,sr]=await Promise.all([fetchListing(parseInt(n,10)),nkSessionPromise]);
+    const {data,error}=lr;
+    if(error)return error.code==='PGRST116'?unavailable('missing'):unavailable('error');
+    P=data;
+    const[listingWithProfile]=await nkHydratePublicProfiles([P]);
+    P.profiles=listingWithProfile?.profiles||P.profiles||{};
+      const{data:feeRows,error:feeError}=await db.rpc('get_public_viewing_fees',{p_listing_ids:[P.id]});
+      if(feeError){console.error('[viewing-fee] Could not load listing fee:',feeError);P.viewing_fee=null}
+      else P.viewing_fee=Number.isFinite(Number(feeRows?.[0]?.viewing_fee))?Number(feeRows[0].viewing_fee):null;
+    try{const{data:dr}=await db.rpc('get_listing_price_drops',{p_listing_ids:[P.id]});P._drop=dr&&dr[0]||null}catch(e){P._drop=null}
+    try{
+      const{data:qa}=await db.from('lister_quick_answers').select('question_key,answer,listing_id').eq('lister_id',P.seller_id).or('listing_id.is.null,listing_id.eq.'+P.id);
+      const m=new Map();(qa||[]).filter(r=>!r.listing_id).forEach(r=>m.set(r.question_key,r.answer));(qa||[]).filter(r=>r.listing_id).forEach(r=>m.set(r.question_key,r.answer));
+      P._answers=[...m].map(([k,a])=>({k,a}));
+    }catch(e){P._answers=[]}
+    const s=sr&&sr.data;uid=(s&&s.session&&s.session.user&&s.session.user.id)||null;
+    isOwner=!!uid&&P.seller_id===uid;
+    const live=(P.status==='active'||P.status==='occupied')&&!P.is_disabled&&!P.recycle_bin;
+    if(!live){
+      let admin=false;
+      if(uid&&!isOwner){try{const {data:p}=await db.from('profiles').select('role').eq('id',uid).maybeSingle();admin=!!p&&p.role==='admin'}catch(e){}}
+      if(!(isOwner||admin))return unavailable('missing');
+      preview=true;                                   // owners and admins now see the real page with a banner
+    }
+    photos=(P.listing_photos||[]).slice().sort((a,b)=>(a.position||0)-(b.position||0));
+    const c=photos.find(p=>p.is_cover);idx=c?Math.max(0,photos.indexOf(c)):0;
+    units=(P.listing_units||[]).slice().sort((a,b)=>String(a.id||'').localeCompare(String(b.id||''),undefined,{numeric:true}));
+    render();seo();
+    if(!preview){nkTrackRecentViewed(P.id);countView();loadViewingFeedback()}
+    loadSimilar();loadRating();loadReplySpeed();checkThread();maybeReach();loadNeighbours();
+  }catch(e){console.error(e);unavailable('error')}
+}
+async function countView(){
+  if(isOwner)return;const k='nk_viewed_'+P.id,t=Number(lsg(k)||0);if(t&&Date.now()-t<CFG.viewTtlMs)return;lss(k,String(Date.now()));
+  try{const {data,error}=await db.rpc('increment_listing_views',{listing_id:P.id});const el=$('m-views');if(!error&&data!=null&&el)el.textContent=Number(data).toLocaleString('en-KE')+' views'}catch(e){}
+}
+function unavailable(kind){
+  P=null;document.title='Listing unavailable — Nyumba254';$('m-robots').setAttribute('content','noindex,follow');
+  const msg={error:offline()?["You're offline",'Connect to the internet and this listing will load automatically.']:["We couldn't load this listing",'Check your connection and try again.'],missing:['This listing is no longer available','It may have been rented, sold or removed, or the link is incorrect.']}[kind];loadFailed=kind==='error';
+  $('view').innerHTML=`<div class="state"><h1>${escHtml(msg[0])}</h1><p>${escHtml(msg[1])}</p>${kind==='error'?'<button type="button" class="btn btn-primary" data-act="reload">Try again</button>':'<a class="btn btn-primary" href="/listings">Browse listings</a><a class="btn btn-outline" href="/">Home</a>'}</div>`;
+  tabActions();ctaBar();
+}
+
+/* ═══ derived content ═══ */
+function unitTotals(){return {total:units.reduce((s,u)=>s+(u.quantity_total??u.quantity_available??0),0),avail:units.reduce((s,u)=>s+(u.quantity_available??0),0)}}
+function availState(){
+  if(P.status==='occupied')return {k:'bad',t:isSale()?'Sold':'Occupied'};
+  const t=unitTotals();if(units.length&&t.total>0&&t.avail<=0)return {k:'bad',t:'Full'};
+  const af=(P.details||{}).available_from;
+  if(af){const d=new Date(af);if(!isNaN(d)&&d>new Date(Date.now()+864e5))return {k:'soon',t:'Available '+d.toLocaleDateString('en-KE',{day:'numeric',month:'short'})}}
+  return {k:'ok',t:'Available now'};
+}
+function affordHtml(){return `<details class="afford"><summary>Estimate monthly mortgage payment</summary><div class="afford-grid"><label>Deposit %<input type="number" id="af-dep" min="0" max="90" value="10" inputmode="decimal"></label><label>Interest % a year<input type="number" id="af-rate" min="1" max="40" value="13" step="0.1" inputmode="decimal"></label><label>Years<input type="number" id="af-yrs" min="1" max="35" value="20" inputmode="numeric"></label></div><p class="afford-out" id="af-out" aria-live="polite"></p><p class="afford-note">An illustration only. Actual rates and terms come from your lender. This is not financial advice.</p></details>`}
+function affordCalc(){const o=$('af-out');if(!o)return;const dep=Math.min(90,Math.max(0,+$('af-dep').value||0)),r=Math.max(0,+$('af-rate').value||0)/1200,n=Math.max(1,Math.round(+$('af-yrs').value||1))*12,loan=basePrice()*(1-dep/100),pay=r?loan*r/(1-Math.pow(1+r,-n)):loan/n;o.textContent=`About ${money(Math.round(pay))} a month on a loan of ${money(Math.round(loan))} (deposit ${money(Math.round(basePrice()-loan))}).`}
+document.addEventListener('input',e=>{if(e.target.closest&&e.target.closest('.afford'))affordCalc()});
+document.addEventListener('toggle',e=>{if(e.target.classList&&e.target.classList.contains('afford'))affordCalc()},true);
+function basePrice(){
+  if(meta().group==='boarding'&&units.length){
+    const prices=list=>list.map(u=>Number(u.price)).filter(x=>x>0),open=prices(units.filter(u=>(u.quantity_available??0)>0)),all=prices(units);
+    const p=open.length?open:all;if(p.length)return Math.min(...p)}
+  return Number(P.price)||0;
+}
+const QA_LABELS={water:'Water',electricity:'Electricity',security:'Security',parking:'Parking',deposit:'Deposit',lease_length:'Lease length',pets:'Pets',internet:'Internet',distance:'Distance',title_status:'Title status',payment_arrangements:'Payment arrangements',viewing_days:'Viewing days'};
+function dropBadgeHtml(){const d=P._drop;if(!d||!(Number(d.new_price)<Number(d.old_price)))return '';const pct=Math.round((1-Number(d.new_price)/Number(d.old_price))*100);return `<div class="pdrop" role="status">Price dropped${pct>0?' '+pct+'%':''} <s>${escHtml(money(Number(d.old_price)))}</s> · ${escHtml(ago(d.changed_at))}</div>`}
+function answersHtml(){const a=P._answers||[];if(!a.length)return '';return `<section class="sec" id="sec-answers">${secHead('answers','Quick answers from the lister')}<dl class="qa-list">${a.map(r=>`<div><dt>${escHtml(QA_LABELS[r.k]||r.k)}</dt><dd>${escHtml(r.a)}</dd></div>`).join('')}</dl></section>`}
+function priceHtml(){
+  const v=basePrice(),from=meta().group==='boarding'&&units.length&&v>0;
+  if(!(v>0))return '<span class="price-req">Price on request</span>';
+  return `${from?'<small>From </small>':''}${escHtml(money(v))}${FREQ[freq()]?`<small>${escHtml(FREQ[freq()])}</small>`:''}`;
+}
+function costLine(){
+  const dm=(P.details||{}).deposit_months;if(dm===undefined||dm===null||dm===''||isNaN(Number(dm)))return '';
+  const n=Number(dm),b=basePrice();if(isSale())return '';
+  if(n===0)return 'No deposit required';
+  if(freq()==='month'&&b>0)return `Move-in about ${money(b*(1+n))} (first month + ${n} month${n===1?'':'s'} deposit)`;
+  return `Deposit: ${n} month${n===1?'':'s'}`;
+}
+function facts(){
+  const d=P.details||{},g=meta().group,f=[],add=(k,v)=>{if(v!==undefined&&v!==null&&v!=='')f.push([k,String(v)])};
+  const bed=v=>v==null||v===''?null:(Number(v)===0?'Studio':v);
+  if(g==='standard'){
+    let b=bed(d.bedrooms);
+    if(units.length){const bs=[...new Set(units.map(u=>u.bedrooms).filter(x=>x!=null))].sort((a,c)=>a-c),fm=x=>x==0?'Studio':x+'BR';
+      if(bs.length>1)b=fm(bs[0])+'–'+fm(bs[bs.length-1]);else if(bs.length===1)b=bed(bs[0])}
+    add('Bedrooms',b);add('Bathrooms',d.bathrooms);add('Floor area',d.size_sqm&&d.size_sqm+' m²');add('Furnishing',FURN[d.furnished]);add('Parking',PARK[d.parking]);add('Security',SEC[d.security]);
+  }else if(g==='boarding'){
+    add('Spaces',unitTotals().total||d.total_beds);add('Residents',nkTitleCase(d.gender||'mixed'));add('Nearest institution',d.institution);
+  }else if(g==='airbnb'){
+    add('Guests',d.guests);add('Bedrooms',d.bedrooms);add('Bathrooms',d.bathrooms);add('Minimum stay',d.min_stay&&d.min_stay+' night'+(d.min_stay==1?'':'s'));add('Check-in / out',d.checkin);
+  }else{
+    add('Type',nkTitleCase(d.property_type));add('Floor area',d.size_sqm&&d.size_sqm+' m²');add('Terms',d.lease_type==='sale'?'For sale':'Lease');
+    add('Parking',PARK[d.parking]);add('Condition',d.condition==='fitted'?'Fitted, ready to use':d.condition==='shell'?'Shell / bare':'');add('Frontage',d.frontage);add('Units',d.units);
+  }
+  return f;
+}
+function extraRows(){
+  const d=P.details||{},r=[],dm=d.deposit_months;
+  if(!isSale()&&dm!==undefined&&dm!==null&&dm!==''&&!isNaN(Number(dm)))r.push(['Deposit',Number(dm)===0?'No deposit':dm+' month'+(Number(dm)===1?'':'s')]);
+  if(d.available_from){const a=new Date(d.available_from);if(!isNaN(a))r.push(['Available from',a<=new Date()?'Now':a.toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'})])}
+  if(d.listed_by)r.push(['Listed by',nkTitleCase(d.listed_by)]);
+  r.push(['Listing reference',shortRef()]);
+  return r;
+}
+function amenityLabels(){
+  const a=Array.isArray(P.amenities)?P.amenities:[],custom=Array.isArray((P.details||{}).custom_amenities)?P.details.custom_amenities:[];
+  const out=a.map(k=>(NK_AMENITIES.find(x=>x.key===k)||{}).label||(/^has_/.test(k)?nkTitleCase(k.replace(/^has_/,'')):k));
+  return [...new Set([...out,...custom])].filter(Boolean);
+}
+
+/* ═══ render ═══ */
+const phoneGallery=()=>matchMedia('(max-width:768px)').matches;
+const tileOrder=()=>{const n=photos.length;return Array.from({length:Math.min(n,5)},(_,j)=>(idx+j)%n)};   // current photo first, then the next ones, so tiles never repeat the main photo
+function tileBtn(i,main){
+  const p=photos[i],n=photos.length,saver=document.body.classList.contains('nk-datasaver'),w=main?(saver?640:1200):(saver?400:640);
+  return `<button type="button" class="gt${main?' gt-main':''}" data-act="photo" data-i="${i}" aria-label="Open photo ${i+1} of ${n}"><img src="${escHtml(srcFor(p,w))}" data-orig="${escHtml(p.url)}" alt="${main?escHtml(P.title)+', photo '+(i+1)+' of '+n:''}" ${main?'fetchpriority="high"':'loading="lazy"'} decoding="async"/></button>`;
+}
+function heroOverlay(){const st=availState(),fee=viewingFeeText(P.viewing_fee);return '<div class="ghero"><div class="ghero-price">'+priceHtml()+'</div><div class="ghero-sub"><span class="ghero-dot '+st.k+'"></span>'+escHtml(st.t)+' · '+escHtml(fee)+'</div></div>'}
+function galleryHtml(){
+  if(!photos.length)return `<div class="gallery" id="gallery"><div class="gnone">${IC.photo}<span>No photos for this listing yet</span></div></div>`;
+  const heart=(typeof NKSaved!=='undefined'&&NKSaved.buildHeartBtn)?NKSaved.buildHeartBtn(P.id):'',n=photos.length,saver=document.body.classList.contains('nk-datasaver');
+  const arrows=n>1?`<button type="button" class="gnav prev" data-act="gprev" aria-label="Previous photo">${IC.chev(1)}</button><button type="button" class="gnav next" data-act="gnext" aria-label="Next photo">${IC.chev(0)}</button>`:'';
+  const count=n>1?`<div class="gcount" id="gcount" aria-hidden="true">${IC.photo}<span>${idx+1} / ${n}</span></div>`:'';
+  if(phoneGallery()){
+    return `<div class="gallery" id="gallery"><div class="gcar"><div class="gtrack" id="gtrack" role="group" aria-label="Photos, swipe to browse">${photos.map((p,i)=>`<button type="button" class="gslide" data-act="photo" data-i="${i}" aria-label="Open photo ${i+1} of ${n}"><img src="${escHtml(srcFor(p,saver?640:900))}" data-orig="${escHtml(p.url)}" alt="${i===0?escHtml(P.title)+', photo 1 of '+n:''}" ${i===0?'fetchpriority="high"':'loading="lazy"'} decoding="async"/></button>`).join('')}</div>${arrows}${count}${heroOverlay()}<span class="gheart">${heart}</span></div></div>`;
+  }
+  const order=tileOrder();
+  return `<div class="gallery" id="gallery"><div class="gmosaic n${order.length}" id="gmosaic"><div class="gm-main" id="gm-main">${tileBtn(order[0],true)}${arrows}${count}${heroOverlay()}</div>${order.slice(1).map(i=>tileBtn(i,false)).join('')}</div>
+    <span class="gheart">${heart}</span><button type="button" class="gall" data-act="photo" data-i="${idx}">${IC.expand}${n>1?`Show all ${n} photos`:'View photo'}</button></div>`;
+}
+function renderGallery(){const g=$('gallery');if(!g||!P)return;g.outerHTML=galleryHtml();syncTrack();if(typeof NKSaved!=='undefined'&&NKSaved.hydrate)NKSaved.hydrate($('gallery'))}
+/* desktop: swap only the photo tiles, so the arrow buttons keep keyboard focus */
+function renderMosaic(){
+  const gm=$('gm-main');if(!gm)return;const order=tileOrder();
+  gm.querySelector('.gt').outerHTML=tileBtn(order[0],true);
+  qsa('#gmosaic > .gt').forEach(b=>b.remove());
+  gm.insertAdjacentHTML('afterend',order.slice(1).map(i=>tileBtn(i,false)).join(''));
+  const c=$('gcount');if(c)c.lastElementChild.textContent=`${idx+1} / ${photos.length}`;
+}
+function syncTrack(smooth){
+  const t=$('gtrack');if(!t||!photos.length)return;
+  const w=t.clientWidth;if(w&&Math.abs(t.scrollLeft-idx*w)>2)t.scrollTo({left:idx*w,behavior:smooth?'smooth':'auto'});
+  const c=$('gcount');if(c)c.lastElementChild.textContent=`${idx+1} / ${photos.length}`;
+}
+function unitsHtml(){
+  if(!units.length)return '';
+  const g=meta().group,rt=g==='boarding'&&(P.details||{}).room_types?Object.fromEntries(P.details.room_types.map(r=>[r.label,r.capacity])):{};
+  const {total,avail}=unitTotals(),taken=Math.max(0,total-avail),pct=total?Math.round(taken/total*100):0;
+  const rows=units.map(u=>{
+    const a=u.quantity_available??0,t=u.quantity_total??null,full=a<=0;
+    const sub=g==='standard'&&u.bedrooms!=null?(u.bedrooms==0?'Studio':u.bedrooms+' bedroom'+(u.bedrooms==1?'':'s')):(rt[u.unit_label]?rt[u.unit_label]+' person'+(rt[u.unit_label]==1?'':'s'):'');
+    const btn=isOwner?`<button type="button" class="btn btn-primary" data-act="occ" data-id="${escHtml(u.id)}" ${full?'disabled':''}>Mark one occupied</button><button type="button" class="btn btn-outline" data-act="avail" data-id="${escHtml(u.id)}" ${t!=null&&a>=t?'disabled':''}>Mark one free</button>`
+      :`<button type="button" class="btn btn-primary" data-act="pick" data-label="${escHtml(u.unit_label)}" ${full||P.status==='occupied'?'disabled':''}>${full?'Full':'Enquire'}</button>`;
+    const pr=Number(u.price)>0?`${escHtml(money(u.price))}${FREQ[freq()]?`<small>${escHtml(FREQ[freq()])}</small>`:''}`:'On request';
+    return `<div class="urow"><div class="m"><b>${escHtml(u.unit_label)}</b>${sub?`<span>${escHtml(sub)}</span>`:''}</div><div class="a${full?' none':''}">${t?a+' of '+t:a}<b>${full?'Full':'open'}</b></div><div class="p">${pr}</div>${btn}</div>`;
+  }).join('');
+  return `<section class="sec" id="sec-units">${secHead('units','Unit options and availability')}${rows}${total?`<div class="occ"><div class="donut" data-pct="${pct}%" style="background:conic-gradient(var(--green-dark) 0 ${pct*3.6}deg,var(--green-light) ${pct*3.6}deg 360deg)" role="img" aria-label="${pct}% occupied"></div><div style="font-size:14px"><b>${taken} of ${total} spaces taken</b><br><span style="color:var(--text-3)">${avail} still available</span></div></div>`:''}</section>`;
+}
+function videoHtml(){
+  const v=(P.listing_videos||[])[0];if(!v||!v.url)return '';
+  const url=String(v.url),yt=url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([\w-]{6,})/i),vm=url.match(/vimeo\.com\/(\d+)/i),saver=document.body.classList.contains('nk-datasaver');
+  const ext=(label)=>`<a class="btn btn-outline" href="${escHtml(url)}" rel="noopener">${escHtml(label)}</a>`;
+  let inner;
+  if(yt)inner=`<button type="button" class="vid" data-act="vid" data-src="https://www.youtube.com/embed/${escHtml(yt[1])}?autoplay=1" aria-label="Play video walkthrough" ${saver?'':`style="background-image:url('https://img.youtube.com/vi/${escHtml(yt[1])}/hqdefault.jpg')"`}><span class="play"><span>▶</span></span></button>`;
+  else if(vm)inner=`<button type="button" class="vid" data-act="vid" data-src="https://player.vimeo.com/video/${escHtml(vm[1])}?autoplay=1" aria-label="Play video walkthrough"><span class="play"><span>▶</span></span></button>`;
+  else if(/facebook\.com\/.*\/videos\/|fb\.watch\//i.test(url))inner=`<div class="vid"><iframe src="https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false" allowfullscreen loading="lazy" title="Video walkthrough"></iframe></div>`;
+  else if(/tiktok\.com/i.test(url))inner=ext('Watch on TikTok');
+  else if(/instagram\.com/i.test(url))inner=ext('Watch on Instagram');
+  else if(/\.(mp4|webm)(\?.*)?$/i.test(url))inner=`<video class="vidfile" controls playsinline preload="metadata"><source src="${escHtml(url)}"/>Your browser cannot play this video.</video>`;
+  else if(/^https?:\/\//i.test(url))inner=ext('Watch the video');
+  else return '';
+  return `<section class="sec" id="sec-video">${secHead('video','Video walkthrough')}${inner}</section>`;
+}
+function ownerHtml(){
+  const occ=P.status==='occupied',sold=isSale();
+  return `<section class="sec owner"><h2>Your listing</h2><p>Status: <b>${escHtml(nkTitleCase(P.status))}</b>${P.payment_status==='trial'&&P.trial_expires_at?` · trial ends ${escHtml(new Date(P.trial_expires_at).toLocaleDateString('en-KE',{day:'numeric',month:'short'}))}`:''}. Buyers see this page without this panel.</p>
+    <div class="row"><a class="btn btn-primary" href="/dashboard?edit=${encodeURIComponent(P.id)}">Edit and manage</a><a class="btn btn-outline" href="/dashboard">View enquiries</a>${preview?'':`<button type="button" class="btn btn-outline" data-act="status">${occ?'Mark as available':sold?'Mark as sold':'Mark as occupied'}</button>`}</div></section>`;
+}
+function sellerHead(){
+  const p=P.profiles||{},snapshotRole=P.listed_by_type||p.account_type,currentRole=p.account_type,company=snapshotRole==='company',name=company?(p.company_name||P.contact_name||p.full_name||'Company'):(P.contact_name||p.full_name||'Lister'),ini=name.split(' ').filter(Boolean).map(x=>x[0]).join('').toUpperCase().slice(0,2)||'L',identityVerified=p.identity_verified===true,roleChanged=!!snapshotRole&&!!currentRole&&snapshotRole!==currentRole,roleVerified=!!snapshotRole&&!roleChanged&&p.verified_role===snapshotRole,roleLabels={buyer:'Tenant / Buyer',owner:'Direct from owner',landlord:'Direct from owner',caretaker:'Caretaker',agent:'Agent',company:'Company'},listedBy=roleLabels[snapshotRole]||'Lister',roleText=`${listedBy}${roleChanged?' (role changed, not verified)':roleVerified?' · identity checked':' (not verified)'}`;
+  const logo=company&&roleVerified&&p.company_logo_url?`<img src="${escHtml(p.company_logo_url)}" alt="" width="36" height="36" loading="lazy" style="object-fit:contain;border-radius:6px">`:'';
+  return `<div class="seller"><div class="av" aria-hidden="true">${escHtml(ini)}</div><div>${logo}<b>${escHtml(name)}</b><small title="Role claims are self-declared; identity checks do not verify ownership or authority to list.">${escHtml(roleText)}</small>${P.seller_id?`<a href="${escHtml(nkListerPageUrl({handle:p.page_handle,user_id:P.seller_id}))}" style="display:inline-block;margin:5px 0;font-size:12px;font-weight:600;color:var(--green-dark);text-decoration:underline">View lister profile and all listings ↗</a>`:''}<button type="button" class="vbadge${identityVerified?'':' no'}" data-act="verinfo" data-v="${identityVerified?1:0}" aria-haspopup="dialog" aria-label="${identityVerified?'Identity verified. What does this mean?':'Identity not yet verified. What does this mean?'}">${identityVerified?IC.check+'Identity checked':'Identity not yet checked'}${IC.info}</button><small class="js-rate"></small>${p.created_at?`<small>Member since ${escHtml(new Date(p.created_at).toLocaleDateString('en-KE',{month:'long',year:'numeric'}))}</small>`:''}${!isOwner&&canReview()?'<button type="button" class="link" data-act="rate">Rate this lister</button>':''}</div></div>`;
+}
+const SAFETY='Pay any listed viewing fee only at the property, to the person you meet, and ask for a receipt. Never pay rent, a deposit or any other fee before you have viewed the property. Nyumba254 does not collect viewing fees.';
+const viewingFeeText=fee=>fee==null?'Viewing fee: confirm with the lister':fee>0?`Viewing fee: ${money(fee)}`:'Free viewing';
+function viewingFeeSafetyText(fee){
+  if(fee==null)return `Viewing fee: confirm with the lister. ${SAFETY}`;
+  if(fee===0)return 'Viewing is free for this listing. Nobody should charge you to view it. Report it if you are asked to pay.';
+  return `This lister charges a viewing fee of ${money(fee)}. ${SAFETY} You should not be charged more than the listed fee.`;
+}
+function sidebarHtml(){
+  const hidden=!!P.contact_hidden,cost=costLine(),viewingFee=Number(P.viewing_fee)||0;
+  const feeUnknown=P.viewing_fee===null||P.viewing_fee===undefined;
+  const top=`<div class="s-top"><div class="s-price">${priceHtml()}</div>${cost?`<div class="s-cost">${escHtml(cost)}</div>`:''}<div class="s-cost">${escHtml(viewingFeeText(feeUnknown?null:viewingFee))}</div></div>${sellerHead()}`;
+  if(isOwner)return `<div class="scard">${top}<p class="s-note">This is how buyers see you. Enquiries reach you in your chat inbox and dashboard.</p></div>`;
+  if(P.status==='occupied')return `<div class="scard">${top}<h3 class="s-h">${isSale()?'This property has been sold':'This property is no longer available'}</h3><p class="s-note">See similar listings below, or browse more in ${escHtml(P.county?nkCountyLabel(P.county):'Kenya')}.</p><a class="btn btn-primary btn-block" href="${escHtml(nkBuildListingsUrl({county:P.county,category:P.category}))}">Browse similar listings</a></div>`;
+  const opts=units.filter(u=>(u.quantity_available??0)>0),pr=nkGetBuyerProfile();
+  const known=!!pr.name&&pr.name.length>=2&&(hidden||okPhone(nkNormalizePhone(pr.phone||'')));
+  return `<div class="scard">${top}
+    <div class="bnb-slot"></div>
+    <div class="phone-panel" id="phone-panel" hidden></div>
+    ${hidden?'':`<div class="cbtns"><button type="button" class="btn btn-wa" data-act="wa" data-src="sidebar">${IC.wa}WhatsApp</button><button type="button" class="btn btn-outline" data-act="call" data-src="sidebar">${IC.call}Call</button></div><div class="or">or send a message here</div>`}
+    <div id="sent" class="sent" hidden><div class="sent-ic">${IC.sent}</div><h3>Message sent</h3><p>The lister will reply in your chat. You may also get a call.</p><button type="button" class="btn btn-primary" data-act="chat">Open conversation</button><button type="button" class="btn btn-outline" data-act="viewing" data-src="sent">${IC.cal}${escHtml(viewingRequestButtonLabel())}</button><button type="button" class="link" data-act="again">Send another message</button></div>
+    <div id="enq"><div class="nf-banner" id="q-banner" role="alert"></div>
+      ${opts.length?`<div class="nf-field"><label for="q-unit">Unit type <span class="nf-optional">optional</span></label><select id="q-unit"><option value="">Any available unit</option>${opts.map(u=>`<option value="${escHtml(u.unit_label)}">${escHtml(u.unit_label)}${Number(u.price)>0?' · '+escHtml(money(u.price)):''}</option>`).join('')}</select></div>`:''}
+      ${known?`<div class="csum" id="q-sum"><span>Sending as <b id="q-sum-t"></b></span><button type="button" class="link" data-act="edit-contact">Change</button></div>`:''}
+      <div id="q-fields"${known?' hidden':''}>
+        <div class="nf-field"><label for="q-name">Full name</label><input id="q-name" type="text" autocomplete="name"/><div class="nf-err" id="q-name-e" role="alert"></div></div>
+        ${hidden?'':`<div class="nf-field"><label for="q-phone">Phone</label><input id="q-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="07XX XXX XXX"/><div class="nf-err" id="q-phone-e" role="alert"></div></div>`}
+        <details class="more"><summary>Add email (optional)</summary><div class="nf-field"><label for="q-email">Email</label><input id="q-email" type="email" autocomplete="email"/><div class="nf-err" id="q-email-e" role="alert"></div></div><label class="nf-check" for="q-notify"><input type="checkbox" id="q-notify" checked/>Email me when the lister replies</label></details>
+      </div>
+      <div class="nf-field"><label for="q-msg">Message</label><div class="qchips" role="group" aria-label="Quick messages">${QMSG_BY(meta(),freq()).map((m,i)=>`<button type="button" class="qchip" data-act="qmsg" data-i="${i}">${escHtml(m)}</button>`).join('')}</div><textarea id="q-msg" maxlength="1000"></textarea></div>
+      <div class="hp" aria-hidden="true"><label for="q-web">Leave empty</label><input id="q-web" tabindex="-1" autocomplete="off"/></div>
+      <div class="sendrow"><button type="button" class="btn btn-primary" id="q-send" data-act="send">Send message</button><button type="button" class="btn btn-outline" data-act="viewing" data-src="form">${IC.cal}${escHtml(viewingRequestButtonLabel())}</button></div></div>
+    <div class="tip fee-safety">${escHtml(viewingFeeSafetyText(P.viewing_fee))}<div><a class="link" href="/viewing-fee-policy">Read the Viewing Fee Policy</a><button type="button" class="link" data-act="report-fee">Report a fee problem</button></div></div><button type="button" class="link report" data-act="report">Report this listing</button></div>`;
+}
+function anchorsHtml(list){return `<nav class="anchors" id="anchors" aria-label="Page sections">${list.map(([id,l])=>`<a href="#${id}" data-anchor="${id}">${escHtml(l)}</a>`).join('')}</nav>`}
+function viewingRequestButtonLabel(){return `Request a viewing · ${P.viewing_fee===null?'fee to confirm':P.viewing_fee>0?money(P.viewing_fee):'Free'}`}
+function render(){
+  const m=meta(),f=facts(),strip=f.slice(0,3),rest=[...f.slice(3),...extraRows(),['Viewing fee',viewingFeeText(P.viewing_fee)]],am=amenityLabels(),desc=(P.description||'').trim(),st=availState(),cost=costLine();
+  const ver=(P.profiles||{}).identity_verified===true,occ=P.status==='occupied';
+  const pills=[`<span class="pill st${st.k==='bad'?' bad':st.k==='soon'?' soon':''}">${escHtml(st.t)}</span>`,`<span class="pill plain">${escHtml(m.label)}</span>`];
+  pills.push(`<span class="pill plain">${escHtml(viewingFeeText(P.viewing_fee))}</span>`);
+  if(m.group==='boarding'&&(P.details||{}).institution)pills.push('<span class="pill plain">Student friendly</span>');
+  const pv=preview?`<div class="notice warn" role="status"><b>Preview.</b> ${P.is_disabled?'Hidden by admin'+(P.disabled_reason?': '+escHtml(P.disabled_reason):'.'):P.recycle_bin?'This listing is in the recycle bin.':'Status: '+escHtml(nkTitleCase(P.status))+'. It is not public yet.'} Only you${isOwner?'':' and the admin team'} can see this page.</div>`:'';
+  const stale=!preview&&!occ&&daysOld()>CFG.staleDays?`<div class="notice warn">This listing was posted ${Math.floor(daysOld())} days ago. Confirm it is still available before you visit.</div>`:'';
+  const listingUrl=location.origin+'/listing?id='+pad(P.listing_number);
+  const postedFull=P.created_at?new Date(P.created_at).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'}):'Recently posted';
+  const quickInfo=[[shortRef(),'Reference'],[st.t,'Availability'],[viewingFeeText(P.viewing_fee),'Viewing'],[postedFull,'Posted']];
+  const quickInfoHtml=`<div class="insight-grid" aria-label="Listing highlights">${quickInfo.map(([v,l])=>`<div class="insight"><b title="${escHtml(v)}">${escHtml(v)}</b><span>${escHtml(l)}</span></div>`).join('')}</div>`;
+  const quickToolsHtml=`<div class="quick-tools" aria-label="Listing tools"><button type="button" class="qtool" data-act="share">Share listing</button>${((P.listing_videos||[])[0]||{}).url?'<button type="button" class="qtool qtool-video" data-act="video-jump">▶ Video walkthrough</button>':''}<button type="button" class="qtool" data-act="copy-ref">Copy reference</button><button type="button" class="qtool" data-act="map-jump">Jump to location</button>${P.seller_id?`<a class="qtool" href="${escHtml(nkListerPageUrl({handle:P.profiles?.page_handle,user_id:P.seller_id}))}">View lister page</a>`:''}</div>`+(isSale()&&basePrice()>0?affordHtml():'');
+  const inline=(!isOwner&&!occ)?`<div class="inline-cta md-only${P.contact_hidden?' two':''}" id="inline-cta">${P.contact_hidden?'':`<button type="button" class="btn btn-wa" data-act="wa" data-src="inline">${IC.wa}WhatsApp</button>`}<button type="button" class="btn ${P.contact_hidden?'btn-primary':'btn-outline'}" data-act="scroll">${IC.msg}Message</button>${P.contact_hidden?'':`<button type="button" class="btn btn-outline" data-act="call" data-src="inline">${IC.call}Call</button>`}<button type="button" class="btn btn-outline vbtn" data-act="viewing" data-src="inline">${IC.cal}${escHtml(viewingRequestButtonLabel())}</button></div>`:'';
+  const anchors=[];if(desc)anchors.push(['sec-about','About']);if(units.length)anchors.push(['sec-units','Units']);if(rest.length)anchors.push(['sec-details','Details']);if(am.length)anchors.push(['sec-amen','Amenities']);if(((P.listing_videos||[])[0]||{}).url)anchors.push(['sec-video','Video']);anchors.push(['sec-loc','Location'],['sim','Similar']);
+  const rules=(P.details||{}).house_rules?String(P.details.house_rules).split(/\n/).map(r=>r.trim()).filter(Boolean):[];
+  $('view').innerHTML=`${pv}<div class="layout"><div class="main-col">
+    ${galleryHtml()}
+    <div class="pills">${pills.join('')}</div>
+    <h1 class="title">${escHtml(P.title)}</h1><div class="loc">${IC.pin}<span>${escHtml(where())}</span></div><div class="price">${priceHtml()}</div>${dropBadgeHtml()}${cost?`<div class="cost">${escHtml(cost)}</div>`:''}
+    ${strip.length?`<div class="strip" style="--n:${strip.length}">${strip.map(([k,v])=>`<div class="f">${factIcon(k)}<b title="${escHtml(v)}">${escHtml(v)}</b><span>${escHtml(k)}</span></div>`).join('')}</div>`:''}
+    <div class="meta">${ver?`<button type="button" class="tchip" data-act="verinfo" data-v="1" aria-haspopup="dialog" aria-label="Identity verified. What does this mean?">${IC.check}Identity verified${IC.info}</button>`:''}<span class="mchip">${IC.clock}Posted ${P.created_at?escHtml(ago(P.created_at)):''}</span><span class="mchip">${IC.eye}<span id="m-views">${Number(P.views||0).toLocaleString('en-KE')} views</span></span><span class="mchip" id="m-enq-w" hidden>${IC.msg}<span id="m-enq"></span></span></div>
+    ${quickInfoHtml}${quickToolsHtml}${stale}${inline}${isOwner?ownerHtml():''}
+    <div class="bnb-slot md-only"></div>
+    ${anchorsHtml(anchors)}
+    ${answersHtml()}
+    ${desc?`<section class="sec" id="sec-about">${secHead('about','About this property')}<div class="desc${desc.length>300?' clamp':''}" id="desc">${escHtml(desc)}</div>${desc.length>300?'<button type="button" class="link" data-act="more" id="more" aria-expanded="false">Read more ↓</button>':''}</section>`:''}
+    ${unitsHtml()}
+    ${rest.length?`<section class="sec" id="sec-details">${secHead('details','Property details')}<dl class="dgrid">${rest.map(([k,v])=>`<div><dt>${escHtml(k)}</dt><dd>${escHtml(v)}</dd></div>`).join('')}</dl></section>`:''}
+    ${am.length?`<section class="sec" id="sec-amen">${secHead('amenities','Amenities')}<div class="chips">${am.map(a=>`<span class="achip">${IC.tick}${escHtml(a)}</span>`).join('')}</div></section>`:''}
+    ${videoHtml()}
+    <section class="sec" id="sec-loc">${secHead('loc','Location')}<div class="mapbox" id="mapbox"></div>
+      <div class="maprow"><span class="addr">${escHtml(P.address||where())}</span><a class="link" id="maplink" href="#" rel="noopener">Open in Maps</a></div><p class="maphint" id="maphint" hidden>Pinch to zoom the map. Use Open in Maps for directions.</p></section>
+    ${rules.length?`<section class="sec" id="sec-rules">${secHead('rules','House rules')}<ul class="rules">${rules.map(r=>`<li>${escHtml(r)}</li>`).join('')}</ul></section>`:''}
+    ${isOwner?'':`<section class="sec md-only">${secHead('seller','About the lister')}${sellerHead()}</section><section class="sec md-only safety">${secHead('safety','Viewing fee and safety')}<p>${escHtml(viewingFeeSafetyText(P.viewing_fee))}</p><a class="link" href="/viewing-fee-policy">Read the Viewing Fee Policy</a><button type="button" class="link" data-act="report-fee">Report a fee problem</button><ul><li>Verify the property and confirm it is available.</li><li>Check the listing for any viewing fee and pay only that fee directly to the lister, with a receipt.</li><li>Never pay rent or a deposit before viewing. Nyumba254 does not collect viewing fees.</li></ul></section>`}
+    <div class="listnav" id="listnav" hidden></div>
+  </div><aside class="side" id="side" aria-label="Contact the lister">${sidebarHtml()}</aside></div>
+  <section class="sim" id="sim" hidden><div class="sim-head"><h2>${occ?'Similar listings available now':'Similar listings nearby'}</h2><a class="link" href="${escHtml(nkBuildListingsUrl({category:P.category,county:P.county}))}">View all in ${escHtml(P.county?nkCountyLabel(P.county):'Kenya')}</a></div><div class="card-grid" id="sim-grid"><div class="sk" style="aspect-ratio:4/3"></div><div class="sk" style="aspect-ratio:4/3"></div><div class="sk" style="aspect-ratio:4/3"></div></div></section>`;
+  tabActions();prefill();initMap();bnbCheck();ctaBar();initAnchors();initClamp();updateRating();
+  if(typeof NKSaved!=='undefined'&&NKSaved.hydrate)NKSaved.hydrate($('view'));
+  loadEnqCount();
+}
+function navChip(dir,n){
+  const lbl=dir<0?'Previous':'Next',ic=dir<0?IC.chev(1):IC.chev(0),aria=`${lbl} listing`+(n&&n.title?`: ${n.title}`:''),inner=dir<0?`${ic}<span class="lbl">${lbl}</span>`:`<span class="lbl">${lbl}</span>${ic}`;
+  return n?`<a class="chip navchip" href="${escHtml(n.href)}" rel="${dir<0?'prev':'next'}" aria-label="${escHtml(aria)}" title="${escHtml(aria)}">${inner}</a>`:`<span class="chip navchip off" aria-disabled="true" aria-label="No ${lbl.toLowerCase()} listing">${inner}</span>`;
+}
+function navCard(dir,n){
+  const ic=dir<0?IC.chev(1):IC.chev(0),lbl=dir<0?'Previous listing':'Next listing',end=dir<0?'This is the first listing':'This is the last listing';
+  const body=`<span class="ln-t"><small>${lbl}</small><b>${n?escHtml(n.title||'View listing'):end}</b>${n&&n.sub?`<em>${escHtml(n.sub)}</em>`:''}</span>`,inner=dir<0?ic+body:body+ic;
+  return n?`<a class="lncard ${dir<0?'p':'n'}" href="${escHtml(n.href)}" rel="${dir<0?'prev':'next'}">${inner}</a>`:`<span class="lncard off ${dir<0?'p':'n'}" aria-disabled="true">${inner}</span>`;
+}
+function renderNav(){
+  const has=!!(P&&(nav.prev||nav.next)),tb=$('tb-nav'),ln=$('listnav');
+  if(tb)tb.innerHTML=has?navChip(-1,nav.prev)+navChip(1,nav.next):'';
+  if(ln){ln.hidden=!has;if(has)ln.innerHTML=navCard(-1,nav.prev)+navCard(1,nav.next)}
+}
+/* Previous / Next: from the search results the visitor came from when known, otherwise the neighbouring listings in the same category and county */
+async function loadNeighbours(){
+  if(!P||nav.src==='ctx')return;
+  try{
+    const n=P.listing_number,base=()=>{const q=db.from('listings').select('listing_number,title,area').eq('status','active').eq('is_disabled',false).eq('recycle_bin',false).eq('category',P.category);return P.county?q.eq('county',P.county):q};
+    const [nw,od]=await Promise.all([base().gt('listing_number',n).order('listing_number',{ascending:true}).limit(1),base().lt('listing_number',n).order('listing_number',{ascending:false}).limit(1)]);
+    const mk=r=>{const l=r&&r.data&&r.data[0];return l?{href:'/listing?id='+pad(l.listing_number),title:l.title,sub:l.area}:null};
+    nav.prev=mk(nw);nav.next=mk(od);nav.src='db';renderNav();
+  }catch(e){}
+}
+function tabActions(){
+  const pn=P?pad(P.listing_number):'',ids=ctx&&Array.isArray(ctx.ids)?ctx.ids:[],i=P?ids.indexOf(pn):-1,useCtx=i>=0;
+  const back=useCtx&&ctx.url?ctx.url:'/listings';$('backlink').href=back;
+  if(!P){nav.prev=nav.next=null;nav.src=''}
+  else if(useCtx){
+    nav.src='ctx';nav.prev=i>0?{href:'/listing?id='+ids[i-1]}:null;nav.next=i<ids.length-1?{href:'/listing?id='+ids[i+1]}:null;
+    try{sessionStorage.setItem('nk_results_ctx',JSON.stringify(Object.assign({},ctx,{ts:Date.now()})))}catch(e){}   // keeps the chain alive while browsing
+  }
+  $('tb-actions').innerHTML=P?`<span class="tbnav" id="tb-nav"></span><button type="button" class="chip iconchip" data-act="share" aria-label="Share this listing">${IC.share}<span>Share</span></button>`:'';
+  const c=[['Home','/'],['Listings',back]];
+  if(P){c.push([meta().label+'s',nkBuildListingsUrl({category:P.category})]);if(P.county)c.push([nkCountyLabel(P.county),nkBuildListingsUrl({category:P.category,county:P.county})])}
+  const parts=c.map(([t,h])=>`<a href="${escHtml(h)}">${escHtml(t)}</a>`);if(P)parts.push(`<span class="cur" aria-current="page" title="${escHtml(P.title)}">${escHtml(P.title)}</span>`);
+  $('crumbs').innerHTML=parts.join('<span aria-hidden="true">/</span>');
+  renderNav();
+}
+function canHistoryBack(){try{if(!document.referrer||history.length<2)return false;const u=new URL(document.referrer);return u.origin===location.origin&&/^\/(?:(?:index|listings|saved)(?:\.html)?)?\/?$/.test(u.pathname)}catch(e){return false}}
+function initClamp(){const d=$('desc'),b=$('more');if(!d||!b)return;if(d.scrollHeight<=d.clientHeight+2){d.classList.remove('clamp');b.hidden=true}}
+let spy=null;
+function initAnchors(){
+  if(spy){spy.disconnect();spy=null}
+  const links=qsa('#anchors a');if(!links.length||!('IntersectionObserver' in window))return;
+  spy=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting)links.forEach(a=>a.classList.toggle('on',a.dataset.anchor===en.target.id))}),{rootMargin:'-30% 0px -60% 0px'});
+  links.forEach(a=>{const t=$(a.dataset.anchor);if(t)spy.observe(t)});
+}
+
+/* ═══ sticky action bar: the fixed bar appears only when the inline action row is off-screen ═══ */
+let ctaObs=null,ctaRO=null;
+function measureCta(){const bar=$('ctabar'),on=bar&&!bar.hidden&&getComputedStyle(bar).display!=='none';document.documentElement.style.setProperty('--nk-cta-h',(on?Math.ceil(bar.getBoundingClientRect().height):0)+'px')}
+function ctaBar(){
+  const bar=$('ctabar');if(ctaObs){ctaObs.disconnect();ctaObs=null}
+  if(!P||isOwner||P.status==='occupied'){bar.hidden=true;document.body.classList.remove('nk-cta','nk-cta-show');measureCta();tabbarSync();return}
+  const hid=!!P.contact_hidden;
+  bar.innerHTML=`<div class="ctabar-price"><strong>${priceHtml()}</strong><span>${escHtml(P.title)}</span><span>${escHtml(viewingFeeText(P.viewing_fee))}</span></div><button type="button" class="btn btn-outline ctabar-icon" data-act="viewing" data-src="bar" aria-label="${escHtml(viewingRequestButtonLabel())}">${IC.cal}</button>${hid?'':`<button type="button" class="btn btn-outline ctabar-icon" data-act="call" data-src="bar" aria-label="Call lister">${IC.call}</button>`}<button type="button" class="btn ${hid?'btn-primary':'btn-outline'}" data-act="scroll">${IC.msg}Message</button>${hid?'':`<button type="button" class="btn btn-wa ctabar-wa" data-act="wa" data-src="bar">${IC.wa}WhatsApp</button>`}`;
+  bar.hidden=false;document.body.classList.add('nk-cta');
+  const show=on=>{bar.classList.toggle('show',on);document.body.classList.toggle('nk-cta-show',on)},inl=$('inline-cta');
+  if(inl&&'IntersectionObserver' in window){ctaObs=new IntersectionObserver(([e])=>show(!e.isIntersecting),{rootMargin:'0px 0px -8px 0px'});ctaObs.observe(inl)}else show(true);
+  if('ResizeObserver' in window&&!ctaRO){ctaRO=new ResizeObserver(measureCta);ctaRO.observe(bar)}
+  measureCta();tabbarSync();
+}
+
+/* ═══ SEO ═══ */
+function seo(){
+  const t=P.title+' — Nyumba254',d=`${P.title} in ${where()}. ${basePrice()>0?money(basePrice())+(FREQ[freq()]||'')+'. ':''}${viewingFeeText(P.viewing_fee)}. Message the lister on Nyumba254.`,url=location.origin+'/listing?id='+pad(P.listing_number);
+  document.title=t;document.querySelector('meta[name="description"]').setAttribute('content',d);
+  if(preview)$('m-robots').setAttribute('content','noindex,nofollow');
+  const img=photos.length?(photos.find(p=>p.is_cover)||photos[0]).url:'https://nyumba254.com/hero-photo.jpg';
+  [['og-title',t],['tw-title',t],['og-desc',d],['tw-desc',d],['og-img',img],['tw-img',img],['og-url',url]].forEach(([i,v])=>setMeta(i,v));
+  $('m-canon').setAttribute('href',url);
+  $('ld-listing').textContent=JSON.stringify({'@context':'https://schema.org','@type':'RealEstateListing',name:P.title,description:P.description||d,url,datePosted:P.created_at,image:photos.slice(0,8).map(p=>p.url),
+    offers:{'@type':'Offer',price:basePrice(),priceCurrency:'KES',availability:P.status==='occupied'?'https://schema.org/SoldOut':'https://schema.org/InStock',url},
+    contentLocation:{'@type':'Place',name:where(),address:{'@type':'PostalAddress',addressLocality:P.area,addressRegion:P.county,addressCountry:'KE'},...(CFG.exactPin&&isFinite(parseFloat(P.latitude))?{geo:{'@type':'GeoCoordinates',latitude:parseFloat(P.latitude),longitude:parseFloat(P.longitude)}}:{})}}).replace(/</g,'\\u003c');
+  const cr=[['Home','/'],['Listings','/listings'],[meta().label,nkBuildListingsUrl({category:P.category})],[P.title,'/listing?id='+pad(P.listing_number)]];
+  $('ld-crumbs').textContent=JSON.stringify({'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:cr.map(([n,h],i)=>({'@type':'ListItem',position:i+1,name:n,item:location.origin+h}))}).replace(/</g,'\\u003c');
+}
+
+/* ═══ gallery + lightbox ═══ */
+function showPhoto(i){
+  if(!photos.length)return;idx=(i+photos.length)%photos.length;
+  if(phoneGallery())syncTrack(!$('lb').classList.contains('open'));else renderMosaic();
+  if(!document.body.classList.contains('nk-datasaver'))[1,-1].forEach(d=>{const p=photos[(idx+d+photos.length)%photos.length];if(p)new Image().src=srcFor(p,phoneGallery()?900:1200)});
+  if($('lb').classList.contains('open'))lbShow();
+}
+function lbShow(){
+  zoomed=false;const im=$('lb-img');im.classList.remove('zoomed');im.dataset.orig=photos[idx].url;im.src=nkImgSrc(photos[idx].url,1800);im.alt=P.title;
+  $('lb-count').textContent=`${idx+1} / ${photos.length}`;qsa('#lb .garrow').forEach(b=>b.hidden=photos.length<2);$('lb-box').scrollTo(0,0);
+}
+function lbZoom(){
+  zoomed=!zoomed;const im=$('lb-img'),box=$('lb-box');im.classList.toggle('zoomed',zoomed);
+  requestAnimationFrame(()=>{if(zoomed){box.scrollLeft=(box.scrollWidth-box.clientWidth)/2;box.scrollTop=(box.scrollHeight-box.clientHeight)/2}else box.scrollTo(0,0)});
+}
+function swipe(el,fn){let x=0,y=0;el.addEventListener('touchstart',e=>{x=e.touches[0].clientX;y=e.touches[0].clientY},{passive:true});
+  el.addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.clientX-x,dy=t.clientY-y;if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)*1.4)fn(dx<0?1:-1)},{passive:true})}
+
+/* ═══ map: lazy, waits for Leaflet CSS, never traps one-finger page scrolling on touch screens ═══ */
+let leaf=null;
+function loadLeaflet(){
+  if(window.L&&window.L.map)return Promise.resolve();if(leaf)return leaf;
+  leaf=new Promise((ok,no)=>{let css=false,js=false;const fin=()=>{if(css&&js)ok()};
+    const l=document.createElement('link');l.rel='stylesheet';l.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';l.onload=l.onerror=()=>{css=true;fin()};document.head.appendChild(l);
+    const s=document.createElement('script');s.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';s.onload=()=>{js=true;fin()};s.onerror=()=>{leaf=null;no(new Error('leaflet'))};document.head.appendChild(s)});
+  return leaf;
+}
+async function position(){
+  const la=parseFloat(P.latitude),ln=parseFloat(P.longitude);
+  if(isFinite(la)&&isFinite(ln))return CFG.exactPin?{ll:[la,ln],z:15,exact:true}:{ll:[+la.toFixed(3),+ln.toFixed(3)],z:15,exact:false};
+  try{const {data}=await db.from('area_centroids').select('lat,lng').eq('county',P.county).eq('area',P.area).maybeSingle();if(data)return {ll:[Number(data.lat),Number(data.lng)],z:14,exact:false}}catch(e){}
+  const c=NK_COUNTY_COORDS[P.county];return c?{ll:c,z:11,exact:false}:null;
+}
+function initMap(){
+  const box=$('mapbox');if(!box)return;
+  const q=[P.area,P.county,'Kenya'].filter(Boolean).join(', '),la=parseFloat(P.latitude),ln=parseFloat(P.longitude);
+  $('maplink').href='https://www.google.com/maps/search/?api=1&query='+(isFinite(la)&&isFinite(ln)?la+','+ln:encodeURIComponent(q));
+  const draw=async()=>{
+    box.textContent='Loading map…';
+    try{await loadLeaflet();const p=await position();if(!p){box.textContent='Map not available for this listing.';return}
+      const LF=window.L;box.innerHTML='<div id="map"></div>';
+      const m=LF.map('map',{scrollWheelZoom:false,dragging:!coarse(),tap:false}).setView(p.ll,p.z);
+      LF.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap contributors',maxZoom:19}).addTo(m);
+      p.exact?LF.marker(p.ll).addTo(m):LF.circle(p.ll,{radius:CFG.exactPin?600:250,color:'#0F6E56'}).addTo(m);
+      setTimeout(()=>m.invalidateSize(),200);const h=$('maphint');if(h&&coarse())h.hidden=false;
+    }catch(e){box.innerHTML='<button type="button" class="btn btn-outline" data-act="map">Map could not load. Try again</button>'}
+  };
+  window.__drawMap=draw;
+  if(document.body.classList.contains('nk-datasaver')){box.innerHTML='<button type="button" class="btn btn-outline" data-act="map">Load map (uses extra data)</button>';return}
+  if('IntersectionObserver' in window){const io=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting)){io.disconnect();draw()}},{rootMargin:'300px'});io.observe(box)}else draw();
+}
+async function bnbCheck(){
+  if(P.category!=='airbnb'||P.status==='occupied'||preview)return;
+  try{const {data,error}=await db.from('bnb_properties').select('id,is_publicly_bookable').eq('listing_id',P.id).maybeSingle();
+    if(error||!data||!data.is_publicly_bookable)return;
+    const html=`<div class="bnbcard"><div><b>Check availability and book instantly</b><span>See live dates and pay securely, with no waiting for a reply.</span></div><a class="btn btn-primary" href="https://book.nyumba254.com/property.html?id=${encodeURIComponent(data.id)}" rel="noopener">Book this stay</a></div>`;
+    qsa('.bnb-slot').forEach(e=>{e.innerHTML=html});
+  }catch(e){}
+}
+
+/* ═══ similar listings ═══ */
+async function withCols(build){let r=await build(CFG.cardCols);if(r.error)r=await build('*');return r}
+async function loadSimilar(){
+  const sec=$('sim');if(!sec)return;sec.hidden=false;
+  const noSim=()=>{sec.hidden=true;qsa('#anchors [data-anchor="sim"]').forEach(a=>a.remove())};
+  try{
+    const base=cols=>db.from('listings').select(cols+', listing_photos(*)').eq('status','active').eq('is_disabled',false).eq('recycle_bin',false).neq('id',P.id);
+    const {data}=await withCols(cols=>{let q=base(cols).eq('category',P.category);q=P.county?q.eq('county',P.county):q.eq('area',P.area);return q.order('created_at',{ascending:false}).limit(24)});
+    const score=l=>(l.area===P.area?0:1e9)+Math.abs(Number(l.price||0)-Number(P.price||0));
+    let list=(data||[]).sort((a,b)=>score(a)-score(b)).slice(0,4);
+    if(list.length<4&&P.county){
+      const have=new Set(list.map(x=>x.id));
+      const {data:more}=await withCols(cols=>base(cols).eq('county',P.county).order('created_at',{ascending:false}).limit(12));
+      (more||[]).forEach(l=>{if(list.length<4&&!have.has(l.id)){list.push(l);have.add(l.id)}});
+    }
+    if(!list.length)return noSim();
+    try{list=await nkHydratePublicProfiles(list)}catch(error){console.error('[listing] Could not hydrate similar-listing lister profiles:',error)}
+    list=await nkHydrateViewingFees(list);
+    $('sim-grid').innerHTML=list.map(l=>nkBuildCard(l,{compact:true,imgWidth:480})).join('');
+    if(typeof NKSaved!=='undefined'&&NKSaved.hydrate)NKSaved.hydrate($('sim-grid'));nkBindRecentViewedTracking($('sim-grid'));
+  }catch(e){noSim()}
+}
+
+/* ═══ seller rating, enquiry count, thread state ═══ */
+let ratingText='';
+function updateRating(){qsa('.js-rate').forEach(e=>{e.textContent=[ratingText,replyText].filter(Boolean).join(' · ')})}
+let replyText='';
+async function loadReplySpeed(){
+  if(!P.seller_id)return;
+  try{
+    const {data,error}=await db.rpc('get_lister_reply_speed',{p_seller:P.seller_id});
+    if(error||!Array.isArray(data)||data.length<3)return;
+    const mins=data.map(Number).filter(n=>n>0&&n<10080);
+    if(mins.length<3)return;
+    const med=mins.sort((a,b)=>a-b)[Math.floor(mins.length/2)];
+    replyText=med<60?`Typically replies within ${Math.round(med)} min`:med<1440?`Typically replies within ${Math.round(med/60)} hr`:`Typically replies within a day`;
+    updateRating();
+  }catch(e){}
+}
+async function loadRating(){
+  if(!P.seller_id)return;
+  try{const {data,error}=await db.from('reviews').select('rating').eq('review_type','seller').eq('target_seller_id',P.seller_id).eq('status','published');
+    if(error||!data||!data.length)return;
+    const avg=data.reduce((s,r)=>s+r.rating,0)/data.length;ratingText=`★ ${Math.round(avg*10)/10} (${data.length} review${data.length===1?'':'s'})`;updateRating();
+  }catch(e){}
+}
+async function loadEnqCount(){
+  let n=typeof P.enquiry_count==='number'?P.enquiry_count:null;
+  if(n===null){try{const {count}=await db.from('enquiries').select('id',{count:'exact',head:true}).eq('listing_id',P.id);n=count}catch(e){}}
+  const e=$('m-enq'),w=$('m-enq-w');if(e&&w&&n>=3){e.textContent=n+' enquiries';w.hidden=false}
+}
+async function checkThread(){
+  if(isOwner||P.status==='occupied')return;let has=!!lsg('nk_buyer_'+P.id);
+  if(!has&&uid){try{const {count}=await db.from('messages').select('id',{count:'exact',head:true}).eq('listing_id',P.id).eq('buyer_id',uid);has=count>0}catch(e){}}
+  if(has)showSent(true);
+}
+function firstContactAt(){const a=Number(lsg('nk_enq_ts_'+P.id)||0),b=Number(lsg('nk_last_contact_'+P.id)||0),t=[a,b].filter(Boolean);return t.length?Math.min(...t):0}
+function canReview(){const t=P?firstContactAt():0;return t>0&&Date.now()-t>CFG.reviewAfterMs}
+
+/* ═══ contact: call / WhatsApp reveal ═══ */
+function setBusy(on){qsa('[data-act="call"],[data-act="wa"]').forEach(b=>{b.setAttribute('aria-busy',String(on));b.classList.toggle('busy',on)})}
+function showPhonePanel(){
+  const el=$('phone-panel');if(!el)return;const n=nkNormalizePhone(phoneRaw);
+  el.hidden=false;el.innerHTML=`<div class="num">${escHtml(prettyPhone(phoneRaw))}</div><div class="row"><button type="button" class="btn btn-outline" data-act="copynum">Copy number</button><button type="button" class="btn btn-wa" data-act="wa" data-src="panel">${IC.wa}WhatsApp</button></div>`;
+  el.dataset.n=n;
+}
+async function reveal(channel){
+  if(P.contact_hidden){toast('This lister keeps contact on Nyumba254 chat. Send a message instead.');return openContactSheet()}
+  if(revealBusy)return;
+  if(!phoneRaw&&needNet("You're offline. Connect to the internet to see the lister's contact."))return;
+  const wa=channel==='whatsapp';
+  if(!phoneRaw){
+    revealBusy=true;setBusy(true);
+    try{
+      const {data,error}=await db.rpc('reveal_seller_contact',{p_listing_id:P.id,p_device_id:lsg('nk_sid')||'',p_channel:channel});
+      if(error||!data){toast(error?'Contact is temporarily unavailable. Send a message instead.':"You've reached the contact limit for now. Send a message instead.",'error');return}
+      phoneRaw=data;
+    }catch(e){toast('Contact is temporarily unavailable. Send a message instead.','error');return}
+    finally{revealBusy=false;setBusy(false)}
+  }
+  const n=nkNormalizePhone(phoneRaw);
+  if(wa){
+    /* NK-WA-LINK */const listingLink=location.origin+'/listing?id='+pad(P.listing_number);
+    const url=`https://wa.me/${n.replace('+','')}?text=${encodeURIComponent(`Hello, I saw your listing "${P.title}" (ref ${shortRef()}) on Nyumba254. Is it still available?\n${listingLink}`)}`;
+    location.assign(url);
+  }else if(coarse()){location.href='tel:'+n}
+  else{showPhonePanel();if(isMobileWidth())openContactSheet()}
+  nkTrackContactIntent();
+}
+function nkTrackContactIntent(){lss('nk_last_contact_'+P.id,String(Date.now()))}
+function maybeReach(){
+  if(!P||isOwner||preview||lsg('nk_reach_'+P.id))return;
+  const t=Number(lsg('nk_last_contact_'+P.id)||0),age=Date.now()-t;
+  if(!t||age>CFG.reachWindowMs||age<15000)return;$('reach').hidden=false;
+}
+
+/* ═══ contact sheet (phones/tablets): moves the real #side node, so nothing is duplicated ═══ */
+let sheetHome={parent:null,next:null};
+function openContactSheet(unitLabel){
+  if(unitLabel){const s=$('q-unit');if(s)s.value=unitLabel}
+  const side=$('side');if(!side)return;
+  if(!isMobileWidth()){
+    side.scrollIntoView({block:'nearest',behavior:'smooth'});
+    if(!coarse())setTimeout(()=>{const f=$('q-name');const t=(f&&!f.closest('[hidden]'))?f:$('q-msg');if(t)t.focus({preventScroll:true})},300);
+    return;
+  }
+  const slot=$('contact-sheet-slot');if(!slot)return;
+  if(!sheetHome.parent){sheetHome.parent=side.parentNode;sheetHome.next=side.nextSibling}
+  slot.appendChild(side);
+  nkOpenModal($('ov-contact-sheet'));
+  if(!coarse())setTimeout(()=>{const t=document.querySelector('#contact-sheet-slot #q-name:not([hidden]), #contact-sheet-slot #q-msg');if(t&&!t.closest('[hidden]'))t.focus({preventScroll:true})},80);
+}
+function restoreSide(){
+  const side=$('side');if(!side||!sheetHome.parent||!side.closest('#ov-contact-sheet'))return;
+  if(sheetHome.next&&sheetHome.next.parentNode===sheetHome.parent)sheetHome.parent.insertBefore(side,sheetHome.next);else sheetHome.parent.appendChild(side);
+}
+new MutationObserver(m=>{if(!m.some(x=>x.attributeName==='class'))return;const ov=$('ov-contact-sheet');if(ov&&!ov.classList.contains('open'))restoreSide()}).observe($('ov-contact-sheet'),{attributes:true});
+matchMedia('(max-width:900px)').addEventListener('change',e=>{if(!e.matches){const ov=$('ov-contact-sheet');if(ov&&ov.classList.contains('open'))nkCloseModal(ov)}});
+if(window.visualViewport){const sync=()=>{const ov=$('ov-contact-sheet');if(!ov||!ov.classList.contains('open'))return;const d=ov.querySelector('.nk-sheet');if(d)d.style.maxHeight=Math.round(window.visualViewport.height*.94)+'px'};
+  window.visualViewport.addEventListener('resize',sync);window.visualViewport.addEventListener('scroll',sync)}
+document.addEventListener('focusin',e=>{const ov=$('ov-contact-sheet');if(ov&&ov.classList.contains('open')&&ov.contains(e.target)&&/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))setTimeout(()=>e.target.scrollIntoView({block:'center',behavior:'smooth'}),300)});
+
+/* ═══ enquiry form ═══ */
+function prefill(){
+  const n=$('q-name');if(!n)return;const p=nkGetBuyerProfile();
+  n.value=p.name||'';if($('q-phone'))$('q-phone').value=p.phone||'';if($('q-email'))$('q-email').value=p.email||'';
+  if(p.email&&$('q-email')){const d=$('q-email').closest('details');if(d)d.open=true}
+  $('q-msg').value=baseMsg()+' Is it still available?';
+  const st=$('q-sum-t');if(st)st.textContent=[p.name,p.phone&&prettyPhone(p.phone)].filter(Boolean).join(' · ');
+  ['q-name','q-phone','q-email'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',()=>setErr(id,''))});
+}
+function showSent(existing){
+  const s=$('sent'),e=$('enq');if(!s||!e)return;e.hidden=true;s.hidden=false;
+  s.querySelector('h3').textContent=existing?'You are already in touch':'Message sent';
+  s.querySelector('p').textContent=existing?'Continue the conversation with the lister in your chat, or ask about another unit.':'The lister will reply in your chat. You may also get a call.';
+  if(typeof NKGlobalChat!=='undefined'&&NKGlobalChat.refresh)NKGlobalChat.refresh();
+}
+function setErr(id,m){const e=$(id+'-e');if(e)e.textContent=m;const i=$(id);if(i)i.setAttribute('aria-invalid',m?'true':'false')}
+async function legacyEnquiry(x){
+  const eid=uuid(),a=await db.from('enquiries').insert({id:eid,listing_id:x.listing_id,buyer_name:x.name,buyer_phone:x.phone,buyer_email:x.email||null,buyer_token:x.token,buyer_id:x.uid,message:x.message});
+  if(a.error)return {error:a.error};
+  const b=await db.from('messages').insert({id:uuid(),listing_id:x.listing_id,buyer_token:x.token,buyer_name:x.name,buyer_phone:x.phone,buyer_id:x.uid,sender:'buyer',content:x.message});
+  if(b.error){await db.from('enquiries').delete().eq('id',eid);return {error:b.error}}return {error:null};
+}
+const COOLDOWN='You just sent an enquiry for this listing. Please wait a minute before sending another.';
+const cooling=()=>Date.now()-Number(lsg('nk_enq_ts_'+P.id)||0)<60000;
+function enquiryFailure(err){const m=(err&&err.message)||'';return /rate_limited/.test(m)?'Too many enquiries from this device. Try again in an hour.':/listing_unavailable/.test(m)?'This listing is no longer available.':isNetErr(err)?"No connection. Your message is kept, so try again when you're back online.":'Your message was not sent. Please try again.'}
+/* one place that writes an enquiry, so the form and the viewing request behave identically */
+async function postEnquiry(x,kind){
+  const token=lsg('nk_buyer_'+P.id)||uuid(),q={listing_id:P.id,name:x.name,phone:x.phone,email:x.email,message:x.message,token,uid};
+  let r=await db.rpc('submit_enquiry',{p_listing_id:P.id,p_name:x.name,p_phone:x.phone,p_email:x.email||null,p_message:x.message,p_buyer_token:token});
+  if(r.error&&(r.error.code==='PGRST202'||r.error.code==='42883'||/could not find the function|does not exist/i.test(r.error.message||'')))r=await legacyEnquiry(q);
+  if(r.error)return r;
+  lss('nk_buyer_'+P.id,token);lss('nk_enq_ts_'+P.id,String(Date.now()));nkSaveBuyerProfile({name:x.name,phone:x.phone,email:x.email});
+  if(kind!=='viewing'){
+    const h={'Content-Type':'application/json',apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY};
+    fetch(`${EDGE_URL}/send-notification-email`,{method:'POST',headers:h,body:JSON.stringify({type:'new_buyer_enquiry',buyerName:x.name,buyerPhone:x.phone,buyerEmail:x.email||null,message:x.message,listingId:P.id,listingTitle:P.title})}).catch(error=>console.error('[notification] Could not send enquiry email:',error));
+    fetch(`${EDGE_URL}/send-sms-alert`,{method:'POST',headers:h,body:JSON.stringify({type:'new_enquiry',listingId:P.id,buyerName:x.name,messagePreview:x.message,listingTitle:P.title})}).catch(error=>console.error('[notification] Could not send enquiry SMS:',error));
+  }
+  lss('nk_last_listing_title_'+P.id,P.title);   // lets the chat widget name this conversation instantly
+  if(x.email&&x.notify!==false){
+    const{error:contactError}=await db.from('buyer_contacts').upsert({buyer_token:token,full_name:x.name,email:x.email,phone:x.phone||null,notify_email:true,updated_at:new Date().toISOString()},{onConflict:'buyer_token'});
+    if(contactError)console.error('[notification] Could not save buyer contact email for viewing updates:',contactError);
+  }
+  track(kind==='viewing'?'viewing_request':'message_sent');
+  return {error:null};
+}
+async function sendEnquiry(){
+  const hidden=!!P.contact_hidden;['q-name','q-phone','q-email'].forEach(i=>setErr(i,''));$('q-banner').textContent='';
+  const name=$('q-name').value.trim(),phone=hidden?'':nkNormalizePhone($('q-phone').value.trim()),email=$('q-email').value.trim();let message=$('q-msg').value.trim(),ok=true;
+  if(name.length<2){setErr('q-name','Enter your name');ok=false}
+  if(!hidden&&!okPhone(phone)){setErr('q-phone','Enter a valid phone number, e.g. 0712 345 678');ok=false}
+  if(email&&!okMail(email)){setErr('q-email','That email does not look right');ok=false;const d=$('q-email').closest('details');if(d)d.open=true}
+  if(!ok){const f=$('q-fields');if(f)f.hidden=false;const s=$('q-sum');if(s)s.hidden=true;const bad=document.querySelector('#enq [aria-invalid="true"]');if(bad)bad.focus();return}
+  if(!message)message=baseMsg()+' Is it still available?';
+  if($('q-web').value){showSent(false);return}
+  if(cooling()){$('q-banner').textContent=COOLDOWN;return}
+  if(needNet())return;
+  const unit=$('q-unit')&&$('q-unit').value;if(unit)message=`Interested in: ${unit}. ${message}`;
+  const btn=$('q-send');btn.disabled=true;btn.innerHTML='<span class="spin"></span>Sending…';
+  let r;try{r=await postEnquiry({name,phone,email,message,notify:!$('q-notify')||$('q-notify').checked},'form')}catch(e){r={error:e}}
+  btn.disabled=false;btn.textContent='Send message';
+  if(r.error){if(isNetErr(r.error))showNet("You're offline. Your message is kept, so try again when you're back online.");$('q-banner').textContent=enquiryFailure(r.error);return}
+  showSent(false);   // the chat opens only when the buyer taps "Open conversation", so two layers never compete
+}
+
+/* ═══ 3. request a viewing: a date and time slot, sent to the lister through the same enquiry path ═══ */
+const localISO=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+function openViewing(){
+  if(!P||isOwner||P.status==='occupied')return;
+  const sheet=$('ov-contact-sheet');if(sheet&&sheet.classList.contains('open'))nkCloseModal(sheet);
+  ['vw-date','vw-name','vw-email','vw-phone'].forEach(i=>setErr(i,''));$('vw-banner').textContent='';
+  const pr=nkGetBuyerProfile(),first=(P.contact_name||(P.profiles||{}).full_name||'the lister').split(' ')[0],t=new Date();
+  $('vw-t').textContent=viewingRequestButtonLabel();
+  $('vw-sub').textContent=`Tell ${first} when you would like to see "${P.title}".`;
+  $('vw-safety').textContent=viewingFeeSafetyText(P.viewing_fee);
+  const fee=P.viewing_fee,feeAckWrap=$('vw-fee-ack-wrap');
+  feeAckWrap.hidden=fee===0;
+  feeAckWrap.querySelector('input').nextSibling.textContent=fee===null?'I understand the viewing fee needs to be confirmed directly with the lister before the visit.':'I understand the listed viewing fee is paid directly to the lister at the property; Nyumba254 does not collect it.';
+  $('vw-fee-ack').checked=false;
+  $('vw-date').min=localISO(t);t.setDate(t.getDate()+1);$('vw-date').value=localISO(t);
+  $('vw-name').value=pr.name||'';$('vw-email').value=pr.email||'';$('vw-phone').value=pr.phone||'';$('vw-note').value='';
+  $('vw-phone-f').hidden=!!P.contact_hidden;$('vw-form').hidden=false;$('vw-done').hidden=true;
+  nkOpenModal($('ov-view'));
+}
+async function sendViewing(){
+  ['vw-date','vw-name','vw-email','vw-phone'].forEach(i=>setErr(i,''));$('vw-banner').textContent='';
+  const hidden=!!P.contact_hidden,date=$('vw-date').value,slot=$('vw-slot').value,name=$('vw-name').value.trim(),email=$('vw-email').value.trim(),phone=hidden?'':nkNormalizePhone($('vw-phone').value.trim()),note=$('vw-note').value.trim();let ok=true;
+  if(!date){setErr('vw-date','Pick a date');ok=false}else if(date<localISO(new Date())){setErr('vw-date','Pick today or a later date');ok=false}
+  if(name.length<2){setErr('vw-name','Enter your name');ok=false}
+  if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){setErr('vw-email','Enter a valid email address or leave this blank');ok=false}
+  if(!hidden&&!okPhone(phone)){setErr('vw-phone','Enter a valid phone number, e.g. 0712 345 678');ok=false}
+  const viewingFee=P.viewing_fee;
+  if(viewingFee!==0&&!$('vw-fee-ack').checked){$('vw-banner').textContent='Please acknowledge the viewing fee details before sending your request.';ok=false}
+  if(!ok){const bad=document.querySelector('#vw-form [aria-invalid="true"]');if(bad)bad.focus();return}
+  const done=()=>{$('vw-form').hidden=true;$('vw-done').hidden=false;showSent(false)};
+  if($('vw-web').value){done();return}
+  if(cooling()){$('vw-banner').textContent=COOLDOWN;return}
+  if(needNet())return;
+  const when=new Date(date+'T00:00:00').toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const feeLine=viewingFee===null?'\nViewing fee: confirm with the lister':viewingFee>0?`\nViewing fee: ${money(viewingFee)} (paid directly to the lister at the property; not collected by Nyumba254)`:'\nViewing fee: Free';
+  const message=`📅 Viewing requested\nDate: ${when}\nTime: ${slot}${feeLine}\n${SAFETY}${note?`\nNotes: ${note}`:''}`;
+  const btn=$('vw-send');btn.disabled=true;btn.innerHTML='<span class="spin"></span>Sending…';
+  let r;try{r=await postEnquiry({name,phone,email,message},'viewing')}catch(e){r={error:e}}
+  btn.disabled=false;btn.textContent='Send request';
+  if(r.error){if(isNetErr(r.error))showNet("You're offline. Your request is kept, so try again when you're back online.");$('vw-banner').textContent=enquiryFailure(r.error);return}
+  const{error:viewingError}=await db.from('viewing_requests').insert({id:uuid(),listing_id:P.id,buyer_token:lsg('nk_buyer_'+P.id),buyer_name:name,buyer_phone:phone,requested_date:date,requested_time:slot,notes:note||null,viewing_fee_acknowledged:viewingFee!==0&&$('vw-fee-ack').checked,fee_at_request:viewingFee});
+  if(viewingError){done();console.error('[viewing-fee] Viewing request message sent but request record failed:',viewingError);toast('Your message was sent, but we could not save the viewing request. Please contact the lister directly.','error');return}
+  done();
+  const{error:emailError}=await db.functions.invoke('send-notification-email',{body:{type:'viewing_request',buyerName:name,buyerPhone:phone,buyerEmail:email||null,date,time:slot,notes:note||null,listingId:P.id,listingTitle:P.title,feeAtRequest:viewingFee}});
+  if(emailError){console.error('[viewing-fee] Request saved but viewing notification email failed:',emailError);toast('Viewing request sent, but the email update could not be sent.','error')}
+}
+
+async function loadViewingFeedback(){
+  const section=$('buyer-viewing-feedback'),list=$('buyer-viewing-feedback-list'),token=lsg('nk_buyer_'+P.id);
+  if(!section||!list||!token)return;
+  try{
+    const{data,error}=await db.rpc('get_completed_viewing_fee_feedback',{p_listing_id:P.id,p_buyer_token:token});
+    if(error)throw error;
+    if(!data?.length){section.hidden=true;return}
+    section.hidden=false;
+    list.innerHTML=data.map(request=>{
+      const fee=request.fee_at_request==null?'confirm with the lister':Number(request.fee_at_request)===0?'Free viewing':`KES ${Number(request.fee_at_request).toLocaleString('en-KE')}`;
+      const id=escHtml(request.viewing_request_id);
+      return `<div class="viewing-feedback-row" data-feedback-row="${id}" style="padding:12px 0;border-top:1px solid var(--border)"><p style="margin:0 0 10px;font-size:13px">Was the viewing fee shown on the listing (${escHtml(fee)}) the amount you were asked to pay?</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn btn-primary btn-sm" data-feedback-yes="${id}" style="min-height:44px">Yes, it matched</button><button type="button" class="btn btn-outline btn-sm" data-feedback-no="${id}" style="min-height:44px">No, it did not</button></div><div data-feedback-details="${id}" hidden style="margin-top:10px"><label style="display:block;font-size:12px;margin-bottom:5px" for="feedback-note-${id}">What happened? (optional)</label><textarea id="feedback-note-${id}" maxlength="1000" style="width:100%;min-height:72px;padding:9px;border:1px solid var(--border);border-radius:8px"></textarea><button type="button" class="btn btn-primary btn-sm" data-feedback-submit="${id}" style="margin-top:8px;min-height:44px">Send feedback</button></div><div data-feedback-status="${id}" role="status" aria-live="polite" style="font-size:12px;margin-top:8px"></div></div>`;
+    }).join('');
+    if(list.dataset.feedbackBound)return;
+    list.dataset.feedbackBound='true';
+    list.addEventListener('click',async event=>{
+      const yes=event.target.closest('[data-feedback-yes]'),no=event.target.closest('[data-feedback-no]'),submit=event.target.closest('[data-feedback-submit]');
+      const rowId=yes?.dataset.feedbackYes||no?.dataset.feedbackNo||submit?.dataset.feedbackSubmit;
+      if(!rowId)return;
+      if(no){list.querySelector(`[data-feedback-details="${CSS.escape(rowId)}"]`).hidden=false;no.disabled=true;return}
+      const wasAsListed=!!yes;
+      const details=wasAsListed?'':list.querySelector(`#feedback-note-${CSS.escape(rowId)}`)?.value.trim()||'';
+      const status=list.querySelector(`[data-feedback-status="${CSS.escape(rowId)}"]`);
+      const buttons=list.querySelectorAll(`[data-feedback-yes="${CSS.escape(rowId)}"],[data-feedback-submit="${CSS.escape(rowId)}"]`);
+      buttons.forEach(button=>button.disabled=true);
+      try{
+        const{error:feedbackError}=await db.rpc('submit_viewing_fee_feedback',{p_viewing_request_id:rowId,p_buyer_token:token,p_was_as_listed:wasAsListed,p_details:details||null});
+        if(feedbackError)throw feedbackError;
+        const feedbackRow=list.querySelector(`[data-feedback-row="${CSS.escape(rowId)}"]`);
+        if(feedbackRow)feedbackRow.innerHTML='<p role="status" style="margin:0;font-size:13px">Thanks for sharing your feedback.</p>';
+      }catch(feedbackError){
+        console.error('[viewing-fee] Could not submit viewing feedback:',feedbackError);
+        if(status)status.textContent=feedbackError.message||'Could not send your feedback. Please try again.';
+        buttons.forEach(button=>button.disabled=false);
+      }
+    });
+  }catch(error){
+    console.error('[viewing-fee] Could not load completed viewing feedback:',error);
+    section.hidden=true;
+  }
+}
+
+/* ═══ 4. verified explainer ═══ */
+function openVerify(verified){
+  $('vf-body').innerHTML=(verified?'<p><b>Identity verified</b> means Nyumba254 has checked this person’s identity.</p><p>That is a good sign, but it is not a guarantee about the property itself.</p>':'<p>This person has not completed identity verification yet.</p><p>That does not mean anything is wrong, but take extra care.</p>')+
+    '<ul class="vlist"><li>View the property in person first.</li><li>Pay any listed viewing fee at the property to the person you meet, and ask for a receipt.</li><li>Never pay rent, a deposit, or another fee before viewing. Nyumba254 does not collect viewing fees.</li></ul>';
+  nkOpenModal($('ov-verify'));
+}
+
+/* ═══ owner actions ═══ */
+async function ownerStatus(){
+  const next=P.status==='occupied'?'active':'occupied';
+  const {error}=await db.from('listings').update({status:next}).eq('id',P.id).eq('seller_id',uid);
+  if(error)return toast('Could not update the status. Try again.','error');
+  toast(next==='occupied'?'Marked as '+(isSale()?'sold':'occupied'):'Marked as available');setTimeout(()=>location.reload(),700);
+}
+async function unitAction(id,occupy){
+  const u=units.find(x=>String(x.id)===String(id));if(!u)return;
+  const {data,error}=occupy?await db.rpc('mark_unit_occupied',{p_unit_id:u.id,p_floor:null,p_door:null,p_position:null}):await db.rpc('mark_unit_available',{p_unit_id:u.id});
+  if(error||data===null)return toast('Could not update availability. Try again.','error');
+  u.quantity_available=data;const y=window.scrollY,old=$('sec-units');
+  if(old){const t=document.createElement('div');t.innerHTML=unitsHtml();old.replaceWith(t.firstElementChild)}
+  window.scrollTo(0,y);toast(occupy?'Marked as occupied':'Marked as available');
+}
+
+/* ═══ share / report / rate ═══ */
+async function openShare(){
+  const url=location.origin+'/listing?id='+pad(P.listing_number),role=P.listed_by_type||P.profiles?.account_type,roleLabels={buyer:'Tenant / Buyer',owner:'Direct from owner',landlord:'Direct from owner',caretaker:'Caretaker',agent:'Agent',company:'Company'},roleChanged=!!role&&!!P.profiles?.account_type&&role!==P.profiles.account_type,roleVerified=!!role&&!roleChanged&&P.profiles?.verified_role===role,roleText=role?`${roleLabels[role]||'Lister'}${roleChanged?' (role changed, not verified)':roleVerified?' (identity checked)':' (not verified)'}`:'Lister (not verified)',txt=`${P.title} · ${where()} · ${basePrice()>0?money(basePrice())+(FREQ[freq()]||''):'Price on request'} · ${roleText} · ${viewingFeeText(P.viewing_fee)}`;
+  if(navigator.share){try{await navigator.share({title:P.title,text:txt,url});return}catch(e){if(e&&e.name==='AbortError')return}}
+  const e=encodeURIComponent,items=[['💬','WhatsApp',`https://wa.me/?text=${e(txt+'\n'+url)}`],['📘','Facebook',`https://www.facebook.com/sharer/sharer.php?u=${e(url)}`],['𝕏','X',`https://x.com/intent/tweet?text=${e(txt)}&url=${e(url)}`],['✈️','Telegram',`https://t.me/share/url?url=${e(url)}&text=${e(txt)}`],['✉️','Email',`mailto:?subject=${e(P.title)}&body=${e(txt+'\n'+url)}`]];
+  $('share-grid').innerHTML=items.map(([i,n,h])=>`<a href="${escHtml(h)}" rel="noopener noreferrer"><span>${i}</span>${n}</a>`).join('')+`<button type="button" data-act="copy" data-url="${escHtml(url)}"><span>🔗</span>Copy link</button>`;
+  nkOpenModal($('ov-share'));
+}
+async function sendReport(){
+  const reason=$('rp-reason').value,amt=$('rp-amt').value.trim();let det=$('rp-det').value.trim();
+  if(!reason){$('rp-banner').textContent='Select a reason first.';return}
+  if(amt)det=`Amount asked: ${money(amt)}\n\n${det}`;
+  const b=qsa('#ov-report .btn-primary')[0];b.disabled=true;b.innerHTML='<span class="spin"></span>Sending…';
+  const {error}=await db.from('reports').insert({target_type:'listing',target_id:P.id,reason,details:det||null});
+  b.disabled=false;b.textContent='Send report';
+  if(error){$('rp-banner').textContent='Your report was not sent. Please try again.';return}
+  nkCloseModal($('ov-report'));$('rp-banner').textContent='';toast("Thanks. We've received your report and will review it.");
+}
+function rateStars(){$('rt-stars').innerHTML=[1,2,3,4,5].map(n=>`<button type="button" class="${n<=stars?'on':''}" data-act="star" data-n="${n}" aria-label="${n} star${n>1?'s':''}" aria-pressed="${n===stars}">★</button>`).join('')}
+async function sendRate(){
+  if(!stars){$('rt-banner').textContent='Pick a star rating first.';return}
+  const anon=$('rt-anon').checked,name=anon?null:($('rt-name').value.trim()||null);
+  const b=qsa('#ov-rate .btn-primary')[0];b.disabled=true;b.innerHTML='<span class="spin"></span>Sending…';
+  const {error}=await db.from('reviews').insert({review_type:'seller',target_seller_id:P.seller_id,listing_id:P.id,reviewer_role:'buyer',reviewer_name:name,is_anonymous:anon,rating:stars,comment:$('rt-txt').value.trim()||null});
+  b.disabled=false;b.textContent='Submit review';
+  if(error){$('rt-banner').textContent='Your review was not sent. Please try again.';return}
+  nkCloseModal($('ov-rate'));toast('Thanks for your review.');loadRating();
+}
+
+/* ═══ events ═══ */
+function closeMenu(){const n=$('mobile-nav');n.classList.remove('open');document.body.style.overflow='';$('mobile-menu-btn').setAttribute('aria-expanded','false')}
+document.addEventListener('click',e=>{
+  const bk=e.target.closest('[data-back]');
+  if(bk&&canHistoryBack()){e.preventDefault();history.back();return}
+  const nl=e.target.closest('a.navchip, a.lncard');if(nl)track('listing_nav',{dir:nl.getAttribute('rel')||''});
+  if(e.target.closest('#sim-grid a.card'))track('similar_click');
+  const anc=e.target.closest('[data-anchor]');
+  if(anc){e.preventDefault();const t=$(anc.dataset.anchor);if(t)t.scrollIntoView({behavior:'smooth',block:'start'});return}
+  const t=e.target.closest('[data-act]');
+  if(!t){
+    const n=$('mobile-nav');if(n.classList.contains('open')&&!n.contains(e.target)&&!$('mobile-menu-btn').contains(e.target))closeMenu();
+    if(e.target.classList&&(e.target.classList.contains('notify-modal-overlay')||e.target.classList.contains('nk-sheet-overlay')))nkCloseModal(e.target);
+    return}
+  const a=t.dataset.act;
+  switch(a){
+    case 'photo':if(!EV.photo){EV.photo=true;track('photo_open')}idx=Number(t.dataset.i)||0;lbShow();nkOpenModal($('lb'));break;case 'gprev':showPhoto(idx-1);break;case 'gnext':showPhoto(idx+1);break;
+    case 'lb':lbShow();nkOpenModal($('lb'));break;case 'lprev':showPhoto(idx-1);break;case 'lnext':showPhoto(idx+1);break;case 'lbzoom':lbZoom();break;
+    case 'close':nkCloseModal(t.closest('.notify-modal-overlay, .nk-sheet-overlay'));break;case 'reload':location.reload();break;
+    case 'call':case 'wa':track(a==='call'?'call_tap':'whatsapp_tap',{src:t.dataset.src||'unknown'});reveal(a==='call'?'call':'whatsapp');break;
+    case 'copynum':{const n=($('phone-panel')||{dataset:{}}).dataset.n||nkNormalizePhone(phoneRaw);navigator.clipboard.writeText(n).then(()=>toast('Number copied'),()=>toast('Could not copy the number','error'));break}
+    case 'scroll':openContactSheet();break;case 'send':sendEnquiry();break;
+    case 'qmsg':{$('q-msg').value=baseMsg()+' '+QMSG_BY(meta(),freq())[Number(t.dataset.i)];$('q-msg').focus({preventScroll:true});break}
+    case 'again':{$('sent').hidden=true;$('enq').hidden=false;$('q-msg').value=baseMsg()+' ';if(!coarse())$('q-msg').focus({preventScroll:true});break}
+    case 'edit-contact':{$('q-fields').hidden=false;$('q-sum').hidden=true;$('q-name').focus({preventScroll:true});break}
+    case 'chat':if(typeof NKGlobalChat!=='undefined')NKGlobalChat.registerAndOpen(P.id,lsg('nk_buyer_'+P.id));break;
+    case 'viewing':track('viewing_open',{src:t.dataset.src||'unknown'});openViewing();break;case 'send-viewing':sendViewing();break;
+    case 'verinfo':track('verify_info');openVerify(t.dataset.v==='1');break;case 'retry-net':retryNet();break;
+    case 'pick':openContactSheet(t.dataset.label);break;
+    case 'occ':unitAction(t.dataset.id,true);break;case 'avail':unitAction(t.dataset.id,false);break;
+    case 'status':ownerStatus();break;case 'map':window.__drawMap&&window.__drawMap();break;
+    case 'more':{const d=$('desc'),x=d.classList.toggle('clamp');t.textContent=x?'Read more ↓':'Show less ↑';t.setAttribute('aria-expanded',String(!x));break}
+    case 'vid':{const wrap=t;const f=document.createElement('div');f.className='vid';f.innerHTML=`<iframe src="${escHtml(t.dataset.src)}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="Video walkthrough"></iframe>`;wrap.replaceWith(f);break}
+    case 'share':track('share');openShare();break;
+    case 'copy':navigator.clipboard.writeText(t.dataset.url).then(()=>{t.innerHTML='<span>✓</span>Copied';toast('Link copied')},()=>toast('Could not copy the link','error'));break;
+    case 'copy-ref':navigator.clipboard.writeText(shortRef()).then(()=>toast('Listing reference copied'),()=>toast('Could not copy the reference','error'));break;
+    case 'video-jump':{const sec=$('sec-video');if(sec){sec.scrollIntoView({behavior:'smooth',block:'start'});const pb=sec.querySelector('[data-act="vid"]');if(pb)setTimeout(()=>pb.click(),450)}else toast('No video walkthrough for this listing yet.');break}
+    case 'map-jump':{const sec=$('sec-loc');if(sec){sec.scrollIntoView({behavior:'smooth',block:'start'});track('location_jump')}break;}
+    case 'report':$('rp-reason').value='';$('rp-amt-wrap').hidden=true;$('rp-banner').textContent='';nkOpenModal($('ov-report'));break;
+    case 'report-fee':$('rp-reason').value=P?.viewing_fee===0?'viewing_fee_free_listing':'viewing_fee_dispute';$('rp-amt-wrap').hidden=false;$('rp-banner').textContent='';nkOpenModal($('ov-report'));break;
+    case 'send-report':sendReport();break;
+    case 'rate':stars=0;rateStars();$('rt-name').value=(nkGetBuyerProfile().name)||'';$('rt-banner').textContent='';nkOpenModal($('ov-rate'));break;
+    case 'star':stars=Number(t.dataset.n);rateStars();break;case 'send-rate':sendRate();break;
+    case 'reach-yes':lss('nk_reach_'+P.id,'1');$('reach').hidden=true;toast('Great. Good luck with the viewing.');break;
+    case 'reach-no':lss('nk_reach_'+P.id,'1');$('reach').hidden=true;toast('Send the lister a message here and they will reply in your chat.');openContactSheet();break;
+  }
+});
+document.addEventListener('keydown',e=>{
+  if($('lb').classList.contains('open')){if(e.key==='ArrowLeft')showPhoto(idx-1);if(e.key==='ArrowRight')showPhoto(idx+1);return}
+  if(e.key==='Escape'&&$('mobile-nav').classList.contains('open')){closeMenu();$('mobile-menu-btn').focus();return}
+  const g=$('gallery');if(P&&photos.length>1&&g&&g.contains(document.activeElement)){if(e.key==='ArrowLeft'){e.preventDefault();showPhoto(idx-1)}if(e.key==='ArrowRight'){e.preventDefault();showPhoto(idx+1)}}
+});
+document.addEventListener('change',e=>{if(e.target.id==='rp-reason')$('rp-amt-wrap').hidden=!/viewing_fee|scam_attempt/.test(e.target.value)});
+/* photo fallback: if a resized URL fails (transforms unavailable), fall back to the original file once */
+document.addEventListener('error',e=>{const im=e.target;if(im&&im.tagName==='IMG'&&im.dataset&&im.dataset.orig&&im.getAttribute('src')!==im.dataset.orig)im.src=im.dataset.orig},true);
+/* carousel: keep the counter and index in step with the native swipe */
+let gTick=false;
+document.addEventListener('scroll',e=>{const t=e.target;if(!t||t.id!=='gtrack'||gTick)return;gTick=true;requestAnimationFrame(()=>{gTick=false;const w=t.clientWidth;if(!w)return;const i=Math.round(t.scrollLeft/w);if(i!==idx&&i>=0&&i<photos.length){idx=i;const c=$('gcount');if(c)c.lastElementChild.textContent=`${idx+1} / ${photos.length}`}})},true);
+/* the carousel jumps to whichever photo the viewer was left on; the layout switches between mosaic and carousel at 768px */
+new MutationObserver(m=>{if(m.some(x=>x.attributeName==='class')&&!$('lb').classList.contains('open'))syncTrack()}).observe($('lb'),{attributes:true});
+matchMedia('(max-width:768px)').addEventListener('change',renderGallery);
+swipe($('lb-box'),d=>{if(!zoomed)showPhoto(idx+d)});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)maybeReach()});
+window.addEventListener('pageshow',e=>{if(e.persisted&&P){checkThread();maybeReach();if(typeof NKSaved!=='undefined'&&NKSaved.hydrate)NKSaved.hydrate($('view'))}});
+
+/* ═══ page chrome ═══ */
+$('scrolltop-btn').addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+let tick=false;window.addEventListener('scroll',()=>{if(tick)return;tick=true;requestAnimationFrame(()=>{$('scrolltop-btn').classList.toggle('visible',window.scrollY>800);tick=false})},{passive:true});
+$('mobile-menu-btn').addEventListener('click',()=>{const o=$('mobile-nav').classList.toggle('open');$('mobile-menu-btn').setAttribute('aria-expanded',String(o));document.body.style.overflow=o?'hidden':''});
+$('nk-datasaver-off').addEventListener('click',nkToggleDataSaver);
+let tabbarSync=()=>{};
+function tabbar(){const tb=document.querySelector('.nk-tabbar');if(!tb)return;
+  tabbarSync=()=>document.documentElement.style.setProperty('--nk-tabbar-h',(getComputedStyle(tb).display==='none'?0:Math.ceil(tb.getBoundingClientRect().height))+'px');
+  tabbarSync();if('ResizeObserver' in window)new ResizeObserver(tabbarSync).observe(tb);
+  addEventListener('resize',()=>{tabbarSync();measureCta()});addEventListener('load',()=>{tabbarSync();measureCta()});matchMedia('(max-width:900px)').addEventListener('change',()=>{tabbarSync();measureCta()})}
+function liftChat(){const skip=new Set(['toast','main-nav','mobile-nav','ctabar','lb','scrolltop-btn']);const scan=()=>[...document.body.children].forEach(el=>{
+  if(/^gcw-/.test(el.id)&&el.id!=='gcw-btn')return;   // the chat panel and its dialogs position themselves
+  if(el.classList.contains('nk-chat-fab')||skip.has(el.id)||/^(SCRIPT|MAIN|FOOTER|NAV)$/.test(el.tagName)||/notify-modal-overlay|nk-sheet-overlay|nk-tabbar|ctabar/.test(el.className))return;
+  const cs=getComputedStyle(el);if(cs.position!=='fixed'||cs.bottom==='auto'||cs.right==='auto')return;
+  if(/chat|help|support/i.test((el.textContent+' '+(el.getAttribute('aria-label')||'')+' '+el.id+' '+el.className).slice(0,400)))el.classList.add('nk-chat-fab')});
+  scan();new MutationObserver(nkDebounce(scan,150)).observe(document.body,{childList:true});setTimeout(scan,1500);setTimeout(scan,4000)}
+function footerCounties(){$('footer-counties').innerHTML=NK_COUNTIES.map(c=>nkAreaCountFor(c)>0?`<a href="${escHtml(nkBuildListingsUrl({county:c}))}">${escHtml(nkCountyLabel(c))}</a>`:`<span class="soon">${escHtml(nkCountyLabel(c))}</span>`).join('')}
+const src=$('nav-count-badge'),tgt=$('nk-tab-saved-badge');
+if(src&&tgt){const s=()=>{const n=src.textContent.trim();tgt.textContent=n;tgt.classList.toggle('visible',src.style.display!=='none'&&n!=='0'&&n!=='')};new MutationObserver(s).observe(src,{childList:true,attributes:true,attributeFilter:['style']});s()}
+$('yr').textContent=new Date().getFullYear();footerCounties();
+window.addEventListener('offline',()=>showNet("You're offline. What's already on screen still works, but sending messages needs a connection."));
+window.addEventListener('online',()=>{showNet('Back online.','ok');setTimeout(hideNet,2500);if(loadFailed)load()});
+if(offline())showNet("You're offline. What's already on screen still works, but sending messages needs a connection.");
+nkInitDataSaver();nkInitAccountNav(['nav-account-link','mobile-account-link']);
+nkSessionPromise.then(({data})=>{if(data&&data.session)$('tab-account-link').setAttribute('href','/dashboard')});
+nkTrackPageView();tabbar();liftChat();tabActions();load();
+})();
+</script>
+<script src="/saved-listings.js"></script>
+<script>if(typeof NKSaved!=='undefined')NKSaved.init();</script>
+<script src="/nav-badge.js"></script>
+<script src="/global-chat-widget.js"></script>
+<script src="/patch.js"></script>
+</body>
+</html>
