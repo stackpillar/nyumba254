@@ -1192,7 +1192,8 @@ async function reveal(channel){
   }
   const n=nkNormalizePhone(phoneRaw);
   if(wa){
-    const url=`https://wa.me/${n.replace('+','')}?text=${encodeURIComponent(`Hello, I saw your listing "${P.title}" (ref ${shortRef()}) on Nyumba254. Is it still available?`)}`;
+    /* NK-WA-LINK */const listingLink=location.origin+'/listing?id='+pad(P.listing_number);
+    const url=`https://wa.me/${n.replace('+','')}?text=${encodeURIComponent(`Hello, I saw your listing "${P.title}" (ref ${shortRef()}) on Nyumba254. Is it still available?\n${listingLink}`)}`;
     location.assign(url);
   }else if(coarse()){location.href='tel:'+n}
   else{showPhonePanel();if(isMobileWidth())openContactSheet()}
