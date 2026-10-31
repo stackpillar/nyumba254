@@ -159,7 +159,7 @@
 
     /* Card */
     .card { position: relative; background: var(--card); border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; transition: transform .2s, box-shadow .2s; display: flex; flex-direction: column; }
-    .card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px var(--shadow); }
+    @media (hover: hover) { .card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px var(--shadow); } }
     .card.unavailable { opacity: .82; }
     .card.selected { outline: 2px solid var(--green-mid); outline-offset: -1px; }
     .card.dragging { opacity: .45; }
@@ -177,7 +177,8 @@
     .photo-count { position: absolute; right: 10px; bottom: 10px; background: rgba(0,0,0,.6); color: #fff; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 12px; z-index: 3; pointer-events: none; }
     .photo-nav { position: absolute; top: 50%; transform: translateY(-50%); z-index: 3; width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,.5); color: #fff; font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .15s; }
     .photo-nav.prev { left: 8px; } .photo-nav.next { right: 8px; }
-    .card:hover .photo-nav, .photo-nav:focus-visible { opacity: 1; }
+    .photo-nav:focus-visible { opacity: 1; }
+    @media (hover: hover) { .card:hover .photo-nav { opacity: 1; } }
     @media (hover: none) { .photo-nav { opacity: .85; } }
     .sel-box { position: absolute; left: 10px; bottom: 10px; z-index: 4; background: var(--card); border: 1.5px solid var(--border); border-radius: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
     .sel-box input { width: 18px; height: 18px; padding: 0; accent-color: var(--green); cursor: pointer; }
@@ -461,6 +462,34 @@
       .card-reorder { gap: 4px; margin-bottom: 6px; }
       .skeleton-body { padding: 12px; }
       .side-section { margin-top: 36px; padding-top: 24px; }
+    }
+
+    .card-img::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 46%; background: linear-gradient(to top, rgba(0,0,0,.58), rgba(0,0,0,0)); pointer-events: none; z-index: 1; }
+    .card.unavailable .card-img::after { display: none; }
+    .lp-price { position: absolute; left: 10px; bottom: 9px; z-index: 2; color: #fff; font-weight: 800; font-size: 17px; line-height: 1.15; letter-spacing: -.01em; text-shadow: 0 1px 3px rgba(0,0,0,.6); max-width: calc(100% - 64px); pointer-events: none; }
+    .lp-price span { font-size: 11.5px; font-weight: 600; color: rgba(255,255,255,.9); }
+    .card-media:has(.sel-box) .lp-price { left: 50px; }
+    .card:not(.unavailable) .card-price { display: none; }
+    .card-top-row { min-width: 0; }
+    .card-area { flex-wrap: nowrap; min-width: 0; overflow: hidden; }
+    .lp-area-name { min-width: 0; flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lp-cat { flex: 0 0 auto; white-space: nowrap; text-transform: none; letter-spacing: 0; font-weight: 600; font-size: 11px; color: var(--text-3); }
+    .lp-cat::before { content: "\00b7"; margin-right: 6px; color: var(--text-3); }
+    .card-area .card-verified-badge { flex: none; }
+    @media (hover: none) {
+      .remove-heart-btn:hover { background: rgba(255,255,255,.95); border-color: var(--border); }
+      .remove-heart-btn:hover svg { transform: none; }
+    }
+    @media screen and (max-width: 768px) {
+      .lp-price { left: 8px; bottom: 7px; font-size: 14.5px; max-width: calc(100% - 16px); }
+      .lp-price span { font-size: 10.5px; }
+      .card-media:has(.sel-box) .lp-price { left: 40px; }
+      .card-img::after { height: 55%; }
+      .lp-cat { display: none; }
+      .remove-heart-btn::before, .add-heart-btn::before { content: ""; position: absolute; inset: -7px; }
+      .card-meta { display: flex; gap: 4px 10px; font-size: 11px; padding-top: 0; border-top: 0; margin-bottom: 6px; }
+      #listings-grid .card-meta-item:only-child:not(:has(svg)), #unavail-grid .card-meta-item:only-child:not(:has(svg)) { display: none; }
+      .card-actions .act-btn { min-height: 40px; }
     }
   </style>
 <link rel="manifest" href="/manifest.webmanifest"><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script></head>
@@ -1496,7 +1525,8 @@ function buildCard(row, opts) {
     ? '<div class="badge-unavailable">No longer available</div>'
     : (occ ? `<div class="badge-unavailable">${escHtml(occLabelOf(l))} — not available</div>` : '');
   const verifiedTag = l.is_admin_verified && !off ? '<span class="badge-featured">Reviewed by Nyumba254</span>' : '';
-  const mediaInner = `<div class="card-img">${imgHtml}${verifiedTag}${overlay}</div>`;
+  const priceTag = off ? '' : `<span class="lp-price">${nkFormatPriceLike(l.price, l.price_frequency)}</span>`;
+  const mediaInner = `<div class="card-img">${imgHtml}${verifiedTag}${overlay}${priceTag}</div>`;
   const media = un
     ? `<div class="card-img-link">${mediaInner}</div>`
     : `<a class="card-img-link" href="${listingHref(l)}" data-view-id="${escHtml(id)}" draggable="false" aria-label="Open ${safeTitle}">${mediaInner}</a>`;
@@ -1577,8 +1607,7 @@ function buildCard(row, opts) {
       <div class="card-body">
         ${reorder}
         <div class="card-top-row">
-          <div class="card-area">${escHtml(l.area)} ${nkBuildVerifiedBadge(l)}</div>
-          <span class="card-cat-pill ${escHtml(l.category)}">${escHtml(catLabel)}</span>
+          <div class="card-area"><span class="lp-area-name">${escHtml(l.area)}</span><span class="lp-cat">${escHtml(catLabel)}</span>${nkBuildVerifiedBadge(l)}</div>
         </div>
         <div class="card-title">${safeTitle}</div>
         <div class="card-sub">${escHtml(l.address || l.area || nkListingCounty(l))}</div>
@@ -1606,7 +1635,7 @@ function buildRecommendedCard(l) {
     <div class="card" data-listing-id="${escHtml(l.id)}">
       <div class="card-media">
         <a class="card-img-link" href="${listingHref(l)}" data-view-id="${escHtml(l.id)}" aria-label="Open ${safeTitle}">
-          <div class="card-img">${imgHtml}${l.is_admin_verified ? '<span class="badge-featured">Reviewed by Nyumba254</span>' : ''}</div>
+          <div class="card-img">${imgHtml}${l.is_admin_verified ? '<span class="badge-featured">Reviewed by Nyumba254</span>' : ''}<span class="lp-price">${nkFormatPriceLike(l.price, l.price_frequency)}</span></div>
         </a>
         <button type="button" class="add-heart-btn" data-add="${escHtml(l.id)}" aria-label="Save ${safeTitle} to shortlist">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
@@ -1614,8 +1643,7 @@ function buildRecommendedCard(l) {
       </div>
       <div class="card-body">
         <div class="card-top-row">
-          <div class="card-area">${escHtml(l.area)} ${nkBuildVerifiedBadge(l)}</div>
-          <span class="card-cat-pill ${escHtml(l.category)}">${escHtml(catLabel)}</span>
+          <div class="card-area"><span class="lp-area-name">${escHtml(l.area)}</span><span class="lp-cat">${escHtml(catLabel)}</span>${nkBuildVerifiedBadge(l)}</div>
         </div>
         <div class="card-title">${safeTitle}</div>
         <div class="card-sub">${escHtml(l.address || l.area || nkListingCounty(l))}</div>
