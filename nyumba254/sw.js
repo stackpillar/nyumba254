@@ -1,7 +1,7 @@
 /* Nyumba254 service worker
  * - Pages: network-first. HTML is never cached, so dashboards, chats and
  *   account pages are never stored on the device. Offline shows offline.html.
- * - Images and fonts: stale-while-revalidate (fast, and refreshed in background).
+ * - Images and fonts: cache-first (no repeat downloads; the cache is replaced when VERSION is bumped).
  * - CSS and JS: network-first with cache fallback, so new deploys are never
  *   masked by stale code.
  * - Cross-origin requests (Supabase, Cloudinary, Google Maps, M-Pesa, Brevo,
@@ -9,7 +9,7 @@
  *
  * Bump VERSION whenever you change this file or the precache list.
  */
-const VERSION = 'v2';
+const VERSION = 'v3';
 const SHELL_CACHE = `nyumba254-shell-${VERSION}`;
 const ASSET_CACHE = `nyumba254-assets-${VERSION}`;
 
@@ -76,9 +76,9 @@ self.addEventListener('fetch', (event) => {
 
   const dest = req.destination;
 
-  // 2. Images and fonts: stale-while-revalidate.
+  // 2. Images and fonts: cache-first.
   if (dest === 'image' || dest === 'font') {
-    event.respondWith(staleWhileRevalidate(req));
+    event.respondWith(cacheFirst(req));
     return;
   }
 
@@ -88,16 +88,13 @@ self.addEventListener('fetch', (event) => {
   }
 });
 
-async function staleWhileRevalidate(req) {
+async function cacheFirst(req) {
   const cache = await caches.open(ASSET_CACHE);
   const cached = await cache.match(req);
-  const refresh = fetch(req)
-    .then((res) => {
-      if (res && res.status === 200) cache.put(req, res.clone());
-      return res;
-    })
-    .catch(() => cached);
-  return cached || refresh;
+  if (cached) return cached;
+  const res = await fetch(req);
+  if (res && res.status === 200) cache.put(req, res.clone());
+  return res;
 }
 
 async function networkFirst(req) {

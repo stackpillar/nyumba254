@@ -5577,7 +5577,7 @@ function renderPerformanceSummary(){
 function renderQuickListings(){
   const el=document.getElementById('quick-listings');
   if(!allListings.length){el.innerHTML=`<div style="text-align:center;padding:20px 0;color:var(--text-3);font-size:13px">No listings yet. <a href="/post-listing" style="color:var(--green);font-weight:500">Post one →</a></div>`;return;}
-  el.innerHTML=allListings.slice(0,5).map(l=>{const cover=(l.listing_photos||[]).find(p=>p.is_cover)||(l.listing_photos||[])[0];const img=cover?`<img src="${escAttr(cover.url)}" alt=""/>`:`<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;const d=getListingStatusDisplay(l);const trialDays=getTrialDaysLeft(l);const trialTxt=trialDays!==null?` · Trial: ${trialDays}d left`:'';const hasUnitTypes=(l.listing_units&&l.listing_units.length>0);const priceTxt=hasUnitTypes?muPriceRangeText(l):`KES ${Number(l.price).toLocaleString('en-KE')}${NK_DASH_FREQ_SUFFIX[l.price_frequency||(l.price_type==='rent'?'month':'once')]||''}`;return `<div class="quick-listing"><div class="quick-img">${img}</div><div style="flex:1;min-width:0"><div class="quick-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(l.title)}</div><div class="quick-meta" style="${l.is_disabled?'color:var(--red)':''}">${escHtml(l.area)} · ${d.label}${trialTxt}</div></div><div class="quick-price">${priceTxt}</div></div>`;}).join('');
+  el.innerHTML=allListings.slice(0,5).map(l=>{const cover=(l.listing_photos||[]).find(p=>p.is_cover)||(l.listing_photos||[])[0];const img=cover?`<img src="${escAttr(lcThumbUrl(cover.url,160))}" alt="" loading="lazy" decoding="async"/>`:`<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;const d=getListingStatusDisplay(l);const trialDays=getTrialDaysLeft(l);const trialTxt=trialDays!==null?` · Trial: ${trialDays}d left`:'';const hasUnitTypes=(l.listing_units&&l.listing_units.length>0);const priceTxt=hasUnitTypes?muPriceRangeText(l):`KES ${Number(l.price).toLocaleString('en-KE')}${NK_DASH_FREQ_SUFFIX[l.price_frequency||(l.price_type==='rent'?'month':'once')]||''}`;return `<div class="quick-listing"><div class="quick-img">${img}</div><div style="flex:1;min-width:0"><div class="quick-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(l.title)}</div><div class="quick-meta" style="${l.is_disabled?'color:var(--red)':''}">${escHtml(l.area)} · ${d.label}${trialTxt}</div></div><div class="quick-price">${priceTxt}</div></div>`;}).join('');
 }
 
 function debounce(fn,ms){let t;return function(...args){clearTimeout(t);t=setTimeout(()=>fn.apply(this,args),ms);};}
@@ -5679,7 +5679,7 @@ function renderEditPhotosGrid(l) {
   if (!photos.length) return `<div style="font-size:12px;color:var(--text-3)">No photos yet</div>`;
   return photos.map(p => `
     <div style="position:relative;border-radius:8px;overflow:hidden;border:2px solid ${p.is_cover?'var(--green)':'var(--border)'};aspect-ratio:1">
-      <img src="${escAttr(p.url)}" style="width:100%;height:100%;object-fit:cover;display:block"/>
+      <img src="${escAttr(lcThumbUrl(p.url,400))}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block"/>
       ${p.is_cover?`<span style="position:absolute;top:3px;left:3px;background:var(--green);color:white;font-size:9px;font-weight:700;padding:1px 5px;border-radius:6px">COVER</span>`:''}
       <div style="position:absolute;bottom:0;left:0;right:0;display:flex;gap:2px;padding:3px;background:rgba(0,0,0,0.55)">
         ${!p.is_cover?`<button type="button" title="Set as cover" onclick="setEditCoverPhoto('${p.id}')" style="flex:1;background:none;border:none;color:white;font-size:13px;cursor:pointer;padding:2px">★</button>`:''}
@@ -5889,7 +5889,7 @@ let lcConfirmResolver=null;
 let lcUndoTimer=null,lcUndoEl=null;
 /* Set to true ONLY if Supabase Image Transformations are enabled on your
    project — otherwise thumbnails would 400. Safe default: off. */
-const LC_IMG_TRANSFORM=false;
+const LC_IMG_TRANSFORM=true;
 
 const LC_FILTERS=[
   {id:'attention',label:'Needs attention',cls:'pill-attention'},
@@ -6028,11 +6028,11 @@ function openViewMenu(anchor){
 }
 
 /* ══════════ Data helpers ══════════ */
-function lcThumbUrl(url){
+function lcThumbUrl(url,w){
   if(!url)return url;
   if(!LC_IMG_TRANSFORM)return url;
   if(url.indexOf('/storage/v1/object/public/')===-1)return url;
-  return url.replace('/storage/v1/object/public/','/storage/v1/render/image/public/')+'?width=200&quality=70';
+  return url.replace('/storage/v1/object/public/','/storage/v1/render/image/public/')+'?width='+(w||200)+'&quality=70';
 }
 function lcNum(l){const n=l&&l.listing_number;return (n===null||n===undefined||n==='')?'':String(n).padStart(6,'0');}
 function lcListingUrl(l){const n=lcNum(l);return n?`${location.origin}/listing?id=${n}`:`${location.origin}/listing?id=${l.id}`;}

@@ -1385,10 +1385,13 @@ body.nk-modal-open #nk-qh-launcher{display:none;}
     nkQhEnsureFonts();
     nkQhInjectMarkup();
     nkQhInit();
-    // Warm the Supabase SDK in the background so live chat / reports
-    // open instantly on first click, without blocking widget render.
-    // (Skipped when the page already has its own client: nothing to load.)
-    nkQhEnsureSupabaseSdk().catch(err => console.warn('Nia: Supabase SDK failed to preload', err));
+    // Load the Supabase SDK only when the visitor shows intent (hover, touch or focus on the launcher),
+    // so pages that don't otherwise need it don't pay for it on every visit.
+    const launcher = document.getElementById('nk-qh-launcher');
+    if (launcher) {
+      const warm = () => nkQhEnsureSupabaseSdk().catch(err => console.warn('Nia: Supabase SDK failed to preload', err));
+      ['pointerenter', 'touchstart', 'focus'].forEach(ev => launcher.addEventListener(ev, warm, { once: true, passive: true }));
+    }
   }
 
   if (document.readyState === 'loading') {

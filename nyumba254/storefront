@@ -208,7 +208,7 @@
     const listedBy=`${roleLabels[snapshotRole]||'Lister'}${roleChanged?' (role changed)':roleVerified?' ✓':' (not verified)'}`;
     const viewingFee=listing.public_viewing_fee===null||listing.public_viewing_fee===undefined?null:Number(listing.public_viewing_fee);
     const imgHtml = cover
-      ? `<img src="${esc(cover.url)}" alt="${esc(listing.title)}" loading="lazy"/>`
+      ? `<img src="${esc(String(cover.url).replace(/^(https:\/\/[^/]+\.supabase\.co\/storage\/v1)\/object\/public\/([^?#]+)$/,"$1/render/image/public/$2?width=520&quality=75"))}" alt="${esc(listing.title)}" loading="lazy" decoding="async"/>`
       : `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
     return `
       <div class="card" onclick="trackListerEvent('listing_view','${esc(listing.id)}');window.location='/listing?id=${String(listing.listing_number).padStart(6,'0')}'" role="button" tabindex="0" aria-label="${esc(listing.title)}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();trackListerEvent('listing_view','${esc(listing.id)}');window.location='/listing?id=${String(listing.listing_number).padStart(6,'0')}'}">

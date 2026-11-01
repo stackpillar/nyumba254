@@ -445,7 +445,14 @@ async function nkHydrateViewingFees(listings) {
 function nkImgSrc(url, width) {
   if (!url) return '';
   if (!width) return url;
-  // Supabase Storage image transforms (only applies to Supabase-hosted URLs; harmless no-op otherwise).
+  // Supabase only resizes through /render/image/public/; "?width=" on /object/public/ is ignored
+  // and serves the full-size original.
+  const m = String(url).match(/^(https:\/\/[^/]+\.supabase\.co\/storage\/v1)\/object\/public\/([^?#]+)(\?[^#]*)?$/);
+  if (m && !m[3]) {
+    const dpr = Math.min(2, Math.max(1, Math.round(window.devicePixelRatio || 1)));
+    const w = Math.min(2400, Math.round(width * (width <= 400 ? dpr : 1)));
+    return `${m[1]}/render/image/public/${m[2]}?width=${w}&quality=75`;
+  }
   return url.includes('?') ? `${url}&width=${width}` : `${url}?width=${width}`;
 }
 
