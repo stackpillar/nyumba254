@@ -225,7 +225,7 @@ function subscribeBnbBookingsRealtime(){
 const MSG_HISTORY_DAYS=90;
 // Realtime already delivers new messages instantly; these two intervals are
 // just a fallback in case a realtime channel silently drops.
-const MSG_POLL_MS=300000, LISTING_STATUS_POLL_MS=30000; // 5min fallback poll — realtime (subscribeMessagesRealtime) is the primary delivery path
+const MSG_POLL_MS=300000, LISTING_STATUS_POLL_MS=90000; // 5min fallback poll — realtime (subscribeMessagesRealtime) is the primary delivery path
 
 // ── Multi-unit management state (Manage units modal) ──
 let muActiveListingId=null,muUnits=[],muActionBusy=false;
@@ -795,7 +795,7 @@ async function refreshVerificationPolicy(){
 }
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&currentUser)refreshVerificationPolicy();});
 window.addEventListener('focus',()=>{if(currentUser)refreshVerificationPolicy();});
-setInterval(()=>{if(document.visibilityState==='visible'&&currentUser)refreshVerificationPolicy();},60000);
+setInterval(()=>{if(document.visibilityState==='visible'&&currentUser)refreshVerificationPolicy();},180000);
 function verificationEnforcedForMe(){
   return VERIFY_POLICY.required===true;
 }
