@@ -14,13 +14,12 @@
  *
  * Bump VERSION whenever you change this file or the precache list.
  */
-const VERSION = 'v5';
+const VERSION = 'v6';
 const SHELL_CACHE = `nyumba254-shell-${VERSION}`;
 const ASSET_CACHE = `nyumba254-assets-${VERSION}`;
 
 const PRECACHE = [
   '/manifest.webmanifest',
-  '/offline-app.html',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
 ];
@@ -44,13 +43,13 @@ function isAppNavigation(req, url, event) {
   return !!(event.clientId && APP_CLIENTS.get(event.clientId));
 }
 
-async function cacheOfflinePage(cache) {
+async function cacheOfflinePage(cache, path) {
   // Cloudflare may redirect /offline.html to /offline, and a redirected
   // response can't be used for a page navigation, so store a clean copy.
-  const res = await fetch('/offline.html');
+  const res = await fetch(path);
   if (!res.ok) throw new Error('offline page not available');
   const html = await res.text();
-  await cache.put('/offline.html', new Response(html, {
+  await cache.put(path, new Response(html, {
     headers: { 'Content-Type': 'text/html; charset=utf-8' }
   }));
 }
@@ -58,7 +57,7 @@ async function cacheOfflinePage(cache) {
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(SHELL_CACHE)
-      .then((cache) => Promise.all([cache.addAll(PRECACHE), cacheOfflinePage(cache)]))
+      .then((cache) => Promise.all([cache.addAll(PRECACHE), cacheOfflinePage(cache, '/offline.html'), cacheOfflinePage(cache, '/offline-app.html')]))
       .then(() => self.skipWaiting())
   );
 });
