@@ -799,6 +799,8 @@
   <main class="main" id="main-content">
     <div id="results-start" tabindex="-1"></div>
 
+    <div id="recent-mount"></div>
+
     <div class="cat-tabs" id="cat-tabs" role="group" aria-label="Property type"></div>
 
     <div class="toolbar">
@@ -823,7 +825,6 @@
     </div>
 
     <div class="active-filters" id="active-filters" aria-label="Active filters"></div>
-    <div id="recent-mount"></div>
 
     <div class="results-area" id="results-area">
       <section class="nk-map-view" id="nk-map-view" aria-label="Map of results">

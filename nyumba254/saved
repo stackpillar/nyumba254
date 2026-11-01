@@ -585,6 +585,12 @@
     </div>
   </div>
 
+  <!-- ── RECENTLY VIEWED ── -->
+  <section class="side-section no-print" id="recent-section" aria-labelledby="recent-title" hidden>
+    <div class="side-header"><h2 id="recent-title">Recently viewed</h2><p>Listings you opened lately that aren't on your shortlist</p></div>
+    <div class="listings-grid" id="recent-grid"></div>
+  </section>
+
   <div class="notice warn no-print" id="stale-note" hidden>
     <span>Showing your last saved copy. We couldn't refresh it just now.</span>
     <button type="button" class="btn-outline" data-act="retry">Retry</button>
@@ -653,12 +659,6 @@
       <div class="listings-grid" id="unavail-grid"></div>
     </details>
   </div>
-
-  <!-- ── RECENTLY VIEWED ── -->
-  <section class="side-section no-print" id="recent-section" aria-labelledby="recent-title" hidden>
-    <div class="side-header"><h2 id="recent-title">Recently viewed</h2><p>Listings you opened lately that aren't on your shortlist</p></div>
-    <div class="listings-grid" id="recent-grid"></div>
-  </section>
 
   <!-- ── RECOMMENDED ── -->
   <section class="side-section no-print" id="recommended-section" aria-labelledby="rec-title" hidden>
