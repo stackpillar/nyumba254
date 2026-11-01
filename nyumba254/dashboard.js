@@ -1839,18 +1839,7 @@ function updatePremiumSectionUI(sub){
   if(!btn || !banner) return;
   const planP = ownerProfile || currentProfile;
   const catRow = document.getElementById('plan-category-row');
-  if (catRow) {
-    const caps = [];
-    if (planP?.has_rental_capacity) caps.push('Sale & rental');
-    if (planP?.has_bnb_capacity) caps.push('Airbnb / BNB');
-    if (caps.length) {
-      catRow.style.display = 'block';
-      document.getElementById('plan-category-label').textContent = caps.join(' + ') + ' listings';
-      document.getElementById('plan-balance-note').textContent = '';
-    } else {
-      catRow.style.display = 'none';
-    }
-  }
+  if (catRow) catRow.style.display = 'none';
   if(sub.active){
     const exp = sub.expiresAt ? ` — renews/expires ${fmtSubDate(sub.expiresAt)}` : '';
     banner.style.display = 'block';
@@ -4698,32 +4687,22 @@ async function loadPlatformPrices(){
     const open = !!(myPricing && myPricing.paid_plans_open);
     const money = NKPricing.money;
     const needs = !myPricing || !myPricing.role;
-    const bn = (myPricing && myPricing.bnb) || {};
-    platformPrices.bnb_basic_price = bn.basic ?? Number(platformCfg.bnb_basic_price);
-    platformPrices.bnb_bundle_price = bn.bundle ?? Number(platformCfg.bnb_bundle_price);
     platformPrices.premium_monthly_price = NKPricing.planPrice(myPricing,'premium','monthly');
     platformPrices.elite_monthly_price = NKPricing.planPrice(myPricing,'elite','monthly');
     const pBtn=document.getElementById('premium-upgrade-btn');
     const eBtn=document.getElementById('elite-upgrade-btn');
     if(pBtn) pBtn.textContent = needs ? 'Set up your profile to see prices' : (open ? `Upgrade — from ${money(platformPrices.premium_monthly_price)}/mo` : 'Paid plans open soon');
     if(eBtn) eBtn.textContent = needs ? 'Set up your profile to see prices' : (open ? `Upgrade to Elite — from ${money(platformPrices.elite_monthly_price)}/mo` : 'Paid plans open soon');
-    const bBasic=document.getElementById('bnb-basic-price-label'); if(bBasic) bBasic.textContent=`${money(platformPrices.bnb_basic_price)}/mo`;
-    const bBundle=document.getElementById('bnb-bundle-price-label'); if(bBundle) bBundle.textContent=`${money(platformPrices.bnb_bundle_price)}/mo`;
-    updateBnbStatusBanner();
   }catch(e){console.error('loadPlatformPrices failed:',e);}
 }
 // Featured is an upgrade: Fee(featured) minus the Standard fee already covered or paid, never below the minimum.
 function featureQuote(l){
-  const units=Number(l.total_units)||(l.listing_units||[]).length||0;
-  const trial=l.payment_status==='trial';
-  const covered=!!l.covered_by_plan;
-  const role=l.listed_by_type||(myPricing&&myPricing.role)||'owner';
-  const paidStd=!trial&&!covered&&l.payment_status==='paid'?NKPricing.listingFee(platformCfg,{price:l.price,type:l.price_type==='rent'?'rent':'sale',plan:'standard',units,role,multiplier:myPricing&&myPricing.listing_fee_multiplier}):0;
-  return NKPricing.featuredCharge(platformCfg,{price:l.price,type:l.price_type==='rent'?'rent':'sale',units,role,multiplier:myPricing&&myPricing.listing_fee_multiplier,covered,trial,paidStandardFee:paidStd});
+  const plan=subscriptionInfo().plan||'free';
+  return NKPricing.flatFeaturedCharge(platformCfg,l.category,plan);
 }
 function featureQuoteLine(q){
   const m=NKPricing.money;
-  return q.credit>0?`Featured fee ${m(q.full)} minus ${m(q.credit)} Standard credit = <strong>${m(q.charge)}</strong>`:`Featured fee <strong>${m(q.charge)}</strong>`;
+  return q.credit>0?`Featured price ${m(q.full)} less your plan discount ${m(q.credit)} = <strong>${m(q.charge)}</strong>`:`Featured price <strong>${m(q.charge)}</strong>`;
 }
 function updateBnbStatusBanner(){
   const banner=document.getElementById('bnb-status-banner');
@@ -5771,14 +5750,11 @@ async function setEditCoverPhoto(photoId) {
 function openPayListingModal(id){const _s=document.getElementById('pay-sms-paste');if(_s){_s.value='';parsePaySms('');}
   const l=allListings.find(x=>x.id===id);if(!l)return;
   payListingTargetId=id;
-  const isBnbListing = l.category==='airbnb';
-  const dueAmount = isBnbListing ? (Number(l.payment_due_amount)||Number(platformPrices.bnb_basic_price)||0) : Number(l.payment_due_amount||0);
-  document.getElementById('pay-listing-intro').textContent = isBnbListing
-    ? `Your listing "${l.title}" is approved. Pay a one-time fee to make it live now — no BNB subscription needed.`
-    : `Your listing "${l.title}" is approved. Choose a plan and pay to make it live.`;
+  const dueAmount = NKPricing.flatListingFee(platformCfg,l.category,false) || Number(l.payment_due_amount||0);
+  document.getElementById('pay-listing-intro').textContent = `Your listing "${l.title}" is approved. Pay a one-time fee to make it live, or subscribe to Premium or Elite to cover every category.`;
   document.getElementById('pay-standard-amount').textContent='KES '+dueAmount.toLocaleString('en-KE');
-  document.getElementById('pay-plan-featured-row').style.display = isBnbListing ? 'none' : 'flex';
-  const featuredEstimate=Math.round(dueAmount*1.6);
+  document.getElementById('pay-plan-featured-row').style.display = 'flex';
+  const featuredEstimate=NKPricing.flatFeaturedCharge(platformCfg,l.category,subscriptionInfo().plan||'free').charge;
   document.getElementById('pay-featured-amount').textContent='KES '+featuredEstimate.toLocaleString('en-KE')+' · top placement, more photos';
   document.querySelector('input[name="pay-plan"][value="basic"]').checked=true;
   document.getElementById('pay-listing-ref').value='';

@@ -218,7 +218,7 @@ IC.mute='<path d="M11 5 6 9H3v6h3l5 4z"/><line x1="16" y1="9" x2="22" y2="15"/><
 const icon=(n,s=16)=>`<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]||''}</svg>`;
 
 /* ───── app state + settings ───── */
-const S={user:null,me:null,cfg:{sale_standard_pct:.1,sale_featured_pct:.15,rent_standard_pct:3,rent_featured_pct:6,standard_min_fee:500,standard_max_fee:18000,featured_min_fee:1200,featured_max_fee:28000,standard_fee_per_unit:50,featured_fee_per_unit:150,trial_days:14,standard_duration_days:60,featured_duration_days:90,recycle_bin_days:30,premium_monthly_price:1200,premium_yearly_price:12000,elite_monthly_price:3000,elite_yearly_price:30000,elite_ai_listing_uses_monthly:20,elite_valuation_uses_monthly:20,bnb_basic_price:700,bnb_bundle_price:2000,require_payment_to_publish:1,enforce_verification_general:0,unverified_listing_limit:2,viewing_fee_max:5000,viewing_fee_requires_identity:0,allowance_over_10_requires_identity:0,boost_requires_identity:0,owner_listing_risk_threshold:5,viewing_fee_policy_version:'v1'},social:{facebook:false,instagram:false,tiktok:false}};
+const S={user:null,me:null,cfg:{sale_standard_pct:.1,sale_featured_pct:.15,rent_standard_pct:3,rent_featured_pct:6,standard_min_fee:500,standard_max_fee:18000,featured_min_fee:1200,featured_max_fee:28000,standard_fee_per_unit:50,featured_fee_per_unit:150,trial_days:14,standard_duration_days:60,featured_duration_days:90,recycle_bin_days:30,premium_monthly_price:1200,premium_yearly_price:12000,elite_monthly_price:3000,elite_yearly_price:30000,elite_ai_listing_uses_monthly:20,elite_valuation_uses_monthly:20,listing_fee_mode:'single',listing_fee_single:1000,listing_fee_apartment:1000,listing_fee_house:1000,listing_fee_boarding:1000,listing_fee_airbnb:1000,listing_fee_commercial:1000,featured_fee_single:500,featured_fee_apartment:500,featured_fee_house:500,featured_fee_boarding:500,featured_fee_airbnb:500,featured_fee_commercial:500,require_payment_to_publish:1,enforce_verification_general:0,unverified_listing_limit:2,viewing_fee_max:5000,viewing_fee_requires_identity:0,allowance_over_10_requires_identity:0,boost_requires_identity:0,owner_listing_risk_threshold:5,viewing_fee_policy_version:'v1'},social:{facebook:false,instagram:false,tiktok:false}};
 async function loadSettings(){
   const{data}=await db.from('platform_settings').select('key,value');
   (data||[]).forEach(r=>{
@@ -226,16 +226,12 @@ async function loadSettings(){
     const m=/^auto_post_(facebook|instagram|tiktok)$/.exec(r.key);if(m)S.social[m[1]]=r.value==='1'||r.value===1;
   });
 }
-function calcFee(price,type,plan){
-  price=Math.max(0,Number(price)||0);const f=plan==='featured'?'featured':'standard';
-  const pct=Number(S.cfg[`${type==='rent'?'rent':'sale'}_${f}_pct`])||0;
-  return Math.round(Math.max(Number(S.cfg[f+'_min_fee'])||0,Math.min(Number(S.cfg[f+'_max_fee'])||Infinity,price*pct/100)));
+function flatFee(category,plan){
+  const pre=plan==='featured'?'featured_fee_':'listing_fee_',single=Number(S.cfg[pre+'single'])||0;
+  if(S.cfg.listing_fee_mode!=='per_category')return single;
+  const c=S.cfg[pre+category];return c===''||c==null||!Number.isFinite(Number(c))?single:Number(c);
 }
-function upgradeAmount(l,plan){
-  const type=l.price_type==='rent'?'rent':'sale',f=plan==='featured'?'featured':'standard',u=l.listing_units||[];
-  if(u.length){const pv=u.reduce((s,x)=>s+Number(x.price||0)*Number(x.quantity_total??x.quantity_available??1),0);return calcFee(pv,type,f)+S.cfg[f+'_fee_per_unit']*u.length;}
-  return calcFee(l.price,type,f);
-}
+function upgradeAmount(l,plan){return flatFee(l.category,plan==='featured'?'featured':'standard');}
 function listingRoleText(l){
   const profile=l.profiles||{},role=l.listed_by_type||profile.account_type;
   const labels={owner:'Direct from owner',caretaker:'Caretaker',agent:'Agent',company:'Company',buyer:'Buyer'};
@@ -710,26 +706,20 @@ function listingTab(q,tab){
 }
 async function planCovers(l){
   if(!l?.seller_id)return false;
-  const{data:p}=await db.from('profiles').select('has_bnb_capacity,bnb_expires_at,has_rental_capacity,subscription_tier,subscription_plan,subscription_expires_at').eq('id',l.seller_id).single();
+  const{data:p}=await db.from('profiles').select('subscription_tier,subscription_expires_at').eq('id',l.seller_id).single();
   const live=!p?.subscription_expires_at||new Date(p.subscription_expires_at)>new Date();
-  const elite=!!p?.subscription_tier&&p.subscription_tier!=='none'&&p.subscription_plan==='elite'&&live;
-  const bnb=!!p?.has_bnb_capacity&&p?.bnb_expires_at&&new Date(p.bnb_expires_at)>new Date();
-  const rental=!!p?.has_rental_capacity&&p?.subscription_tier&&p.subscription_tier!=='none'&&live;
-  return l.category==='airbnb'?(bnb||elite):rental;
+  return !!p?.subscription_tier&&p.subscription_tier!=='none'&&live;
 }
-async function reactivate(sellerId,airbnb){
-  const base=()=>{let q=db.from('listings');return q;};
-  let a=base().update({is_disabled:false,disabled_reason:null,disabled_at:null,disabled_by_subscription:false}).eq('seller_id',sellerId).eq('disabled_by_subscription',true);
-  a=airbnb?a.eq('category','airbnb'):a.neq('category','airbnb');await a;
-  let b=base().update({status:'active',payment_status:'paid'}).eq('seller_id',sellerId).eq('status',airbnb?'approved_unpaid_bnb':'approved_unpaid');
-  b=airbnb?b.eq('category','airbnb'):b.neq('category','airbnb');await b;
+async function reactivate(sellerId){
+  await db.from('listings').update({is_disabled:false,disabled_reason:null,disabled_at:null,disabled_by_subscription:false}).eq('seller_id',sellerId).eq('disabled_by_subscription',true);
+  await db.from('listings').update({status:'active',payment_status:'paid'}).eq('seller_id',sellerId).in('status',['approved_unpaid','approved_unpaid_bnb']);
 }
 const REJ=['Blurry or too few photos','Missing or unclear price','Duplicate listing','Wrong category or location','Contact details in description','Misleading information'];
 const LA={
   async approve(l){
-    const future=l.publish_at&&new Date(l.publish_at)>new Date(),trial=l.payment_status==='trial',paid=l.payment_status==='paid',bnb=l.category==='airbnb';
+    const future=l.publish_at&&new Date(l.publish_at)>new Date(),trial=l.payment_status==='trial',paid=l.payment_status==='paid';
     const covers=!trial&&!paid?await planCovers(l):false,bypass=Number(S.cfg.require_payment_to_publish)===0;
-    const ns=future?'scheduled':(trial||paid||covers||bypass)?'active':bnb?'approved_unpaid_bnb':'approved_unpaid';
+    const ns=future?'scheduled':(trial||paid||covers||bypass)?'active':'approved_unpaid';
     const{data,error}=await db.from('listings').update({status:ns,payment_status:(covers||bypass)?'paid':l.payment_status}).eq('id',l.id).select();
     if(error)throw error;if(!data?.length)throw new Error('Blocked by database policy (RLS) — check Supabase policies');
     logAction(future?'approve_listing_scheduled':'approve_listing','listing',l.id,l.title);
@@ -737,7 +727,6 @@ const LA={
     if(pr?.email){
       if(future)notifySeller('listing_scheduled',{...base,publishAt:l.publish_at});
       else if(ns==='active')notifySeller('listing_approved',base);
-      else if(bnb)notifySeller('listing_approved_subscribe_bnb',base);
       else{const sa=upgradeAmount(l,'basic'),fa=upgradeAmount(l,'featured');await db.from('listings').update({payment_due_amount:sa}).eq('id',l.id);notifySeller('listing_approved_payment_required',{...base,standardAmount:sa,featuredAmount:fa});}
     }
     notifyInApp(l.seller_id,'listing_approved',future?'Listing scheduled':ns==='active'?'Listing approved':'Listing approved — action needed',ns==='active'?`"${l.title}" is now live.`:future?`"${l.title}" will go live ${new Date(l.publish_at).toLocaleString('en-KE')}.`:`"${l.title}" was approved but needs payment or a plan to go live.`,'/dashboard.html');
@@ -1031,7 +1020,7 @@ async function confirmPayment(p){
   }else if(p.type==='bnb_subscription'&&p.seller_id){
     const exp=new Date(Date.now()+30*864e5).toISOString();
     const{data:s}=await db.from('profiles').update({bnb_plan:p.plan_key,bnb_unit_limit:p.plan_key==='bnb_unlimited'?null:p.plan_key==='bnb_bundle'?5:1,bnb_expires_at:exp}).eq('id',p.seller_id).select().single();
-    await reactivate(p.seller_id,true);
+    await reactivate(p.seller_id);
     if(s?.email)notifySeller('premium_granted',{sellerName:s.full_name,sellerEmail:s.email,plan:p.plan_key,expiresAt:exp});
     notifyInApp(p.seller_id,'payment','BNB plan activated',`Your ${String(p.plan_key).replace('_',' ')} plan is active.`,'/dashboard.html');logAction('activate_bnb_subscription','profile',p.seller_id,p.plan_key);
   }else if((p.type==='premium_subscription'||p.type==='elite_subscription')&&p.seller_id){
@@ -1039,7 +1028,7 @@ async function confirmPayment(p){
     const tier=Math.abs(a-yr)<Math.abs(a-mo)?'yearly':'monthly',exp=new Date(Date.now()+(tier==='yearly'?365:30)*864e5).toISOString();
     const up={subscription_tier:tier,subscription_plan:elite?'elite':'premium',subscription_expires_at:exp,is_pro:true,has_rental_capacity:true};if(elite)up.has_bnb_capacity=true;
     const{data:s}=await db.from('profiles').update(up).eq('id',p.seller_id).select().single();
-    await reactivate(p.seller_id,false);if(elite)await reactivate(p.seller_id,true);
+    await reactivate(p.seller_id);if(elite)await reactivate(p.seller_id);
     if(s?.email)notifySeller('premium_granted',{sellerName:s.full_name,sellerEmail:s.email,plan:tier,expiresAt:exp});
     notifyInApp(p.seller_id,'payment','Plan activated',`Your ${elite?'Elite':'Premium'} (${tier}) plan is active.`,'/dashboard.html');logAction('activate_subscription_from_payment','profile',p.seller_id,`${elite?'elite':'premium'} ${tier}`);
   }else if(p.type==='bnb_property_renewal'&&p.bnb_property_id){
@@ -1292,18 +1281,16 @@ async function grantPlan(u){
     const k=safe(r.k);const{data}=await db.from('profiles').select('*').or(`email.eq.${k},phone.eq.${k}`).limit(1);u=data?.[0];if(!u)throw new Error('No seller found with that email or phone');
   }
   const r=await ui.form({title:`Plan for ${u.full_name||'seller'}`,wide:true,submit:'Grant plan',intro:'This only marks the plan active. <b>Confirm payment was received first.</b>',fields:[
-    {id:'tier',label:'Feature tier',type:'select',value:u.subscription_plan==='elite'?'elite':'premium',options:[{v:'none',l:'None (BNB capacity only)'},{v:'premium',l:'Premium'},{v:'elite',l:'Elite (includes unlimited BNB)'}]},
+    {id:'tier',label:'Feature tier',type:'select',value:u.subscription_plan==='elite'?'elite':'premium',options:[{v:'premium',l:'Premium'},{v:'elite',l:'Elite'}]},
     {id:'billing',label:'Billing period',type:'select',value:'monthly',options:[{v:'monthly',l:`Monthly — ${KES(S.cfg.premium_monthly_price)} / ${KES(S.cfg.elite_monthly_price)}`},{v:'yearly',l:`Yearly — ${KES(S.cfg.premium_yearly_price)} / ${KES(S.cfg.elite_yearly_price)}`}]},
-    {id:'bnb',label:'Add-on: BNB capacity',type:'select',value:'none',options:[{v:'none',l:'None'},{v:'bnb_basic',l:'BNB Basic — 1 listing'},{v:'bnb_bundle',l:'BNB Bundle — up to 5'}]},
-    {id:'pro',label:'Show the Pro seller badge',type:'checkbox',value:true},{id:'paid',label:'Amount actually paid (KES) — optional',type:'number',help:'Leave blank to record the list price.'}]});
-  if(!r)return false;if(r.tier==='none'&&r.bnb==='none')throw new Error('Pick a feature tier, a BNB add-on, or both');
+    {id:'pro',label:'Show the Pro lister badge',type:'checkbox',value:true},{id:'paid',label:'Amount actually paid (KES) — optional',type:'number',help:'Leave blank to record the list price.'}]});
+  if(!r)return false;
   const up={};let total=0;const days=r.billing==='yearly'?365:30,tExp=new Date(Date.now()+days*864e5).toISOString();
-  if(r.tier!=='none'){Object.assign(up,{subscription_tier:r.billing,subscription_plan:r.tier,subscription_expires_at:tExp,is_pro:r.pro,has_rental_capacity:true,subscription_started_at:new Date().toISOString()});if(r.tier==='elite')up.has_bnb_capacity=true;total+=S.cfg[`${r.tier}_${r.billing}_price`];}
-  if(r.bnb!=='none'){Object.assign(up,{bnb_plan:r.bnb,bnb_unit_limit:r.bnb==='bnb_bundle'?5:1,bnb_expires_at:new Date(Date.now()+30*864e5).toISOString(),has_bnb_capacity:true});total+=S.cfg[r.bnb+'_price']||0;}
+  Object.assign(up,{subscription_tier:r.billing,subscription_plan:r.tier,subscription_expires_at:tExp,is_pro:r.pro,has_rental_capacity:true,has_bnb_capacity:true,subscription_started_at:new Date().toISOString()});total+=S.cfg[`${r.tier}_${r.billing}_price`];
   const{data,error}=await db.from('profiles').update(up).eq('id',u.id).select();if(error)throw error;if(!data?.length)throw new Error('Blocked by database policy (RLS)');
-  const label=[r.tier!=='none'?r.tier:null,r.bnb!=='none'?r.bnb:null].filter(Boolean).join('+');
-  await db.from('payments').insert({seller_id:u.id,amount:r.paid??total,method:'manual',reference:'Admin-granted '+label,type:r.tier==='elite'?'elite_subscription':r.tier==='premium'?'premium_subscription':'bnb_subscription',plan_key:r.bnb!=='none'?r.bnb:null,status:'confirmed'});
-  if(r.tier!=='none')await reactivate(u.id,false);if(r.bnb!=='none'||r.tier==='elite')await reactivate(u.id,true);
+  const label=r.tier;
+  await db.from('payments').insert({seller_id:u.id,amount:r.paid??total,method:'manual',reference:'Admin-granted '+label,type:r.tier==='elite'?'elite_subscription':'premium_subscription',plan_key:r.tier,status:'confirmed'});
+  await reactivate(u.id);
   logAction('grant_premium','profile',u.id,label);
   if(data[0]?.email)notifySeller('premium_granted',{sellerName:data[0].full_name,sellerEmail:data[0].email,plan:r.billing,expiresAt:tExp});
   notifyInApp(u.id,'plan_feature','Plan activated','Your plan is now active.','/dashboard.html');ui.toast('Plan granted','ok');
@@ -1743,9 +1730,10 @@ VIEWS.overview={title:'Dashboard',async mount(el){
 
 /* ═════════ SETTINGS ═════════ */
 const SET_GROUPS=[
-  {t:'Listing fees',d:'Percentage of price, clamped between a minimum and maximum.',f:[['sale_standard_pct','Sale — Standard (%)',.01],['sale_featured_pct','Sale — Featured (%)',.01],['rent_standard_pct','Rent — Standard (%)',.01],['rent_featured_pct','Rent — Featured (%)',.01],['standard_min_fee','Standard — min fee (KES)'],['standard_max_fee','Standard — max fee (KES)'],['featured_min_fee','Featured — min fee (KES)'],['featured_max_fee','Featured — max fee (KES)'],['standard_fee_per_unit','Standard — per extra unit (KES)'],['featured_fee_per_unit','Featured — per extra unit (KES)']]},
+  {t:'Listing prices',d:'Choose how listings are priced. The mode you pick here is what the dashboard, post-listing and the Plans page show. An active Premium or Elite plan covers every category regardless of mode.',f:[['listing_fee_mode','Pricing mode','mode'],['listing_fee_single','One price for all categories: Standard (KES)'],['featured_fee_single','One price for all categories: Featured upgrade (KES)']]},
+  {t:'Per-category prices',d:'Used only when the mode is “Each category has its own price”.',f:[['listing_fee_apartment','Apartment: Standard (KES)'],['featured_fee_apartment','Apartment: Featured (KES)'],['listing_fee_house','House / land: Standard (KES)'],['featured_fee_house','House / land: Featured (KES)'],['listing_fee_boarding','Boarding house: Standard (KES)'],['featured_fee_boarding','Boarding house: Featured (KES)'],['listing_fee_airbnb','Airbnb / holiday: Standard (KES)'],['featured_fee_airbnb','Airbnb / holiday: Featured (KES)'],['listing_fee_commercial','Shop / office: Standard (KES)'],['featured_fee_commercial','Shop / office: Featured (KES)']]},
   {t:'Durations',d:'How long plans and the recycle bin last.',f:[['trial_days','Free trial (days)'],['standard_duration_days','Standard plan (days)'],['featured_duration_days','Featured plan (days)'],['recycle_bin_days','Recycle bin retention (days)']]},
-  {t:'Subscriptions',d:'Prices shown to sellers and used when payments are auto-matched to a billing period.',f:[['premium_monthly_price','Premium — monthly (KES)'],['premium_yearly_price','Premium — yearly (KES)'],['elite_monthly_price','Elite — monthly (KES)'],['elite_yearly_price','Elite — yearly (KES)'],['elite_ai_listing_uses_monthly','Elite — AI listing uses / month'],['elite_valuation_uses_monthly','Elite — valuation uses / month'],['bnb_basic_price','BNB Basic — monthly (KES)'],['bnb_bundle_price','BNB Bundle — monthly (KES, up to 5)']]},
+  {t:'Subscriptions',d:'Prices shown to sellers and used when payments are auto-matched to a billing period.',f:[['premium_monthly_price','Premium — monthly (KES)'],['premium_yearly_price','Premium — yearly (KES)'],['elite_monthly_price','Elite — monthly (KES)'],['elite_yearly_price','Elite — yearly (KES)'],['elite_ai_listing_uses_monthly','Elite — AI listing uses / month'],['elite_valuation_uses_monthly','Elite — valuation uses / month']]},
   {t:'Viewing-fee policy',d:'Agents and companies may disclose a fee shown on each listing. Buyers pay the lister directly; Nyumba254 does not collect viewing fees.',f:[['viewing_fee_max','Maximum viewing fee (KES)'],['viewing_fee_policy_version','Policy version','text']]},
   {t:'Relationship manager',d:'Shown to yearly subscribers.',f:[['rm_name','Name','text'],['rm_phone','Phone','text']]},
 ];
@@ -1757,7 +1745,7 @@ VIEWS.settings={title:'Settings',async mount(el){
   el.innerHTML=`<div style="max-width:880px">
   <div class="card" style="padding:18px;margin-bottom:16px"><h3 style="margin-bottom:12px">Platform controls</h3>
     ${chk('require_payment_to_publish','Require payment before listings go live','On: pay or trial before going active. Off: every approved listing goes live free.')}
-    ${chk('enforce_verification_general','Show the verification-limit check before listing setup','When enabled, check the remaining unverified listing allowance before opening the form. The server-enforced limit below applies either way.')}
+    ${chk('enforce_verification_general','Require identity verification (master switch)','Off: nobody is blocked and every verification requirement below is ignored, except accounts you force-verify individually. On: the limits and the switches below apply.')}
     ${chk('viewing_fee_requires_identity','Require identity verification before charging a viewing fee','When enabled, agents and companies must have verified identity before setting a fee.')}
     ${chk('allowance_over_10_requires_identity','Require identity verification for allowances over 10 listings','When enabled, an account must verify identity before exceeding 10 active listings.')}
     ${chk('boost_requires_identity','Require identity verification before requesting a listing boost','When enabled, listers must verify identity before asking support to feature a listing.')}
@@ -1768,21 +1756,21 @@ VIEWS.settings={title:'Settings',async mount(el){
     ${chk('lister_source_tracking_enabled','Enable Lister Page source analytics','Records aggregate page activity by whitelisted source; no contact details are stored. Disabled by default.')}
     <div class="fld" style="max-width:260px"><label>Unverified listing limit</label><input class="in" type="number" min="0" id="s_unverified_listing_limit" value="${esc(val('unverified_listing_limit'))}"></div>
     <div class="fld" style="max-width:260px"><label for="s_owner_listing_risk_threshold">Owner listing-count signal threshold</label><input class="in" type="number" min="1" id="s_owner_listing_risk_threshold" value="${esc(val('owner_listing_risk_threshold'))}"><small>Creates a low-severity review signal at this many active listings.</small></div></div>
-  ${SET_GROUPS.map(g=>`<div class="card" style="padding:18px;margin-bottom:16px"><h3>${g.t}</h3><p class="intro" style="margin:2px 0 12px"><small>${g.d}</small></p><div class="g2">${g.f.map(([k,l,s])=>`<div class="fld"><label for="s_${k}">${l}</label><input class="in" id="s_${k}" ${s==='text'?'type="text"':`type="number" step="${s||1}"`} value="${esc(val(k))}"></div>`).join('')}</div></div>`).join('')}
+  ${SET_GROUPS.map(g=>`<div class="card" style="padding:18px;margin-bottom:16px"><h3>${g.t}</h3><p class="intro" style="margin:2px 0 12px"><small>${g.d}</small></p><div class="g2">${g.f.map(([k,l,s])=>`<div class="fld"><label for="s_${k}">${l}</label>${s==='mode'?`<select class="in" id="s_${k}"><option value="single" ${val(k)!=='per_category'?'selected':''}>One price for all categories</option><option value="per_category" ${val(k)==='per_category'?'selected':''}>Each category has its own price</option></select>`:`<input class="in" id="s_${k}" ${s==='text'?'type="text"':`type="number" step="${s||1}"`} value="${esc(val(k))}">`}</div>`).join('')}</div></div>`).join('')}
   <div class="card" style="padding:18px"><h3 style="margin-bottom:4px">Social auto-posting</h3><p class="intro"><small>New listings are posted to Nyumba254's own Facebook, Instagram and TikTok when approved. You can always post manually from a listing.</small></p>
     ${['facebook','instagram','tiktok'].map(k=>`<label class="chk"><input type="checkbox" id="a_${k}" ${auto(k)?'checked':''}> Auto-post to ${k[0].toUpperCase()+k.slice(1)}${k==='tiktok'?' <small>(private until TikTok’s audit clears)</small>':''}</label>`).join('')}</div>
   <div class="savebar" id="sv" hidden><span id="svn"></span><span><button class="btn ghost" style="color:inherit" id="rs">Discard</button> <button class="btn pri" id="sa">Save changes</button></span></div></div>`;
   const listerFlags=['lister_pages_enabled','lister_availability_enabled','lister_quick_answers_enabled','lister_source_tracking_enabled'];
   const keys=[...SET_GROUPS.flatMap(g=>g.f.map(f=>f[0])),'unverified_listing_limit','owner_listing_risk_threshold','storefront_free_enabled',...listerFlags],flags=['require_payment_to_publish','enforce_verification_general','viewing_fee_requires_identity','allowance_over_10_requires_identity','boost_requires_identity','storefront_free_enabled',...listerFlags];
-  const read=()=>{const o={};keys.forEach(k=>{const e=$('#s_'+k,el);o[k]=SET_GROUPS.find(g=>g.f.find(f=>f[0]===k&&f[2]==='text'))?e.value.trim():(e.value===''?val(k):Number(e.value));});flags.forEach(k=>o[k]=$('#s_'+k,el).checked?1:0);['facebook','instagram','tiktok'].forEach(k=>o['auto_post_'+k]=$('#a_'+k,el).checked?'1':'0');return o;};
+  const read=()=>{const o={};keys.forEach(k=>{const e=$('#s_'+k,el);o[k]=SET_GROUPS.find(g=>g.f.find(f=>f[0]===k&&(f[2]==='text'||f[2]==='mode')))?e.value.trim():(e.value===''?val(k):Number(e.value));});flags.forEach(k=>o[k]=$('#s_'+k,el).checked?1:0);['facebook','instagram','tiktok'].forEach(k=>o['auto_post_'+k]=$('#a_'+k,el).checked?'1':'0');return o;};
   const changed=()=>{const o=read();return Object.entries(o).filter(([k,v])=>String(v)!==String(k.startsWith('auto_post_')?(auto(k.slice(10))?'1':'0'):(flags.includes(k)?(Number(val(k))?1:0):val(k))));};
   const upd=()=>{const c=changed();window.onbeforeunload=c.length?()=>'':null;$('#sv',el).hidden=!c.length;$('#svn',el).textContent=`${c.length} unsaved change${c.length!==1?'s':''}`;};
   el.addEventListener('input',upd);el.addEventListener('change',upd);
   $('#rs',el).onclick=()=>{window.onbeforeunload=null;VIEWS.settings.mount(el);};
   $('#sa',el).onclick=async()=>{
     const c=changed(),now=new Date().toISOString();const o=read();
-if([['standard_min_fee','standard_max_fee'],['featured_min_fee','featured_max_fee']].some(([a,b])=>o[a]>o[b]))return ui.toast('Minimum fee can’t be higher than the maximum fee','err');
-if(['sale_standard_pct','sale_featured_pct','rent_standard_pct','rent_featured_pct'].some(k=>o[k]<0||o[k]>100))return ui.toast('Percentages must be between 0 and 100','err');
+if(!['single','per_category'].includes(o.listing_fee_mode))return ui.toast('Pick a listing pricing mode','err');
+if(Object.keys(o).filter(k=>/^(listing|featured)_fee_/.test(k)&&k!=='listing_fee_mode').some(k=>!Number.isInteger(o[k])||o[k]<0||o[k]>500000))return ui.toast('Listing prices must be whole amounts from KES 0 to KES 500,000','err');
 if(!Number.isInteger(o.viewing_fee_max)||o.viewing_fee_max<0||o.viewing_fee_max>5000)return ui.toast('The viewing-fee cap must be a whole amount from KES 0 to KES 5,000','err');
 if(!Number.isInteger(o.unverified_listing_limit)||o.unverified_listing_limit<0)return ui.toast('The unverified listing limit must be a whole number of zero or more','err');
 if(!Number.isInteger(o.owner_listing_risk_threshold)||o.owner_listing_risk_threshold<1)return ui.toast('The owner listing-count signal threshold must be a whole number of at least 1','err');

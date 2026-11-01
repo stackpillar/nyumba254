@@ -103,6 +103,26 @@
     return { credit, full, charge: Math.max(floor, full - credit) };
   }
 
+  /* Flat listing price. Mode 'single' charges one price for every category; 'per_category' uses the
+     category price and falls back to the single price when that category is empty. */
+  function flatListingFee(cfg, category, featured) {
+    cfg = cfg || {};
+    const pre = featured ? 'featured_fee_' : 'listing_fee_';
+    const get = (k) => { const v = cfg[k]; return v === null || v === undefined || v === '' ? null : num(v); };
+    const single = get(pre + 'single') || 0;
+    if (String(cfg.listing_fee_mode || 'single') !== 'per_category') return Math.max(0, Math.round(single));
+    const c = get(pre + category);
+    return Math.max(0, Math.round(c === null ? single : c));
+  }
+
+  /* Featured price after the plan discount (Premium / Elite). One-time, no Standard credit. */
+  function flatFeaturedCharge(cfg, category, plan) {
+    const full = flatListingFee(cfg, category, true);
+    const pct = plan === 'elite' ? num((cfg || {}).featured_discount_elite) : plan === 'premium' ? num((cfg || {}).featured_discount_premium) : 0;
+    const charge = Math.round(full * (1 - Math.min(100, Math.max(0, pct || 0)) / 100));
+    return { credit: full - charge, full, charge };
+  }
+
   function seats(pricing, tier) {
     return pricing && pricing.seats ? (num(pricing.seats[tier || 'elite']) || 0) : 0;
   }
@@ -147,6 +167,6 @@
   return {
     ROLE_ORDER, ROLE_LABEL, NK_PLAN_FEATURES, state,
     loadSettings, loadPricing, loadPublicPricing, resolvePricingRole, planPrice, yearlySavingPct,
-    listingFee, featuredCredit, featuredCharge, featureSet, seats, money, rolesLabel, publicRoleLabel, canPostAirbnb,
+    flatListingFee, flatFeaturedCharge, listingFee, featuredCredit, featuredCharge, featureSet, seats, money, rolesLabel, publicRoleLabel, canPostAirbnb,
   };
 });
