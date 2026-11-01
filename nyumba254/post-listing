@@ -335,11 +335,11 @@ const PRICE_HINT={standard:'Digits only. Choose the payment frequency alongside 
 const LABEL={furnished:{yes:'Fully furnished',partial:'Partly furnished',no:'Unfurnished'},parking:{private:'Private',shared:'Shared compound',street:'Street only',none:'None'},security:{gated_guard_cctv:'Gated, guarded and CCTV',gated_guard:'Gated with guard',gated_cctv:'Gated with CCTV',gated:'Gated, no guard',cctv:'CCTV only',none:'None'}};
 const FREQ_SUFFIX={month:'/month',once:'',night:'/night',term:'/term',semester:'/semester',week:'/week'};
 const FIELD_IDS=['title','description','county','area','area_custom','address','price','price_frequency','comm_lease_type','deposit','available_from','viewing_fee','std_bathrooms','std_bedrooms','std_size','std_furnished','std_parking','std_security','board_gender','board_institution','air_guests','air_bedrooms','air_bathrooms','air_min_stay','air_checkin','air_rules','std_rules','comm_type','comm_size','comm_parking','comm_condition','comm_units','comm_frontage','video_url','contact_name','phone','whatsapp','contact_email'];
-const PS={sale_standard_pct:.1,rent_standard_pct:3,standard_min_fee:500,standard_max_fee:18000,standard_fee_per_unit:50,trial_days:14,bnb_basic_price:700,enforce_verification_general:0,unverified_listing_limit:2,allowance_over_10_requires_identity:0,viewing_fee_max:5000,viewing_fee_requires_identity:0,viewing_fee_policy_version:'v1'};
+const PS={listing_fee_mode:'single',listing_fee_single:null,listing_fee_apartment:null,listing_fee_house:null,listing_fee_boarding:null,listing_fee_airbnb:null,listing_fee_commercial:null,trial_days:14,enforce_verification_general:0,unverified_listing_limit:2,allowance_over_10_requires_identity:0,viewing_fee_max:5000,viewing_fee_requires_identity:0,viewing_fee_policy_version:'v1'};
 const DRAFT_KEY='nk_post_listing_draft_v3';
 
 /* ═══ STATE ═══ */
-const S={step:1,max:1,cat:'apartment',amen:new Set(),custom:[],tiers:[],seq:0,pin:null,photos:[],cover:0,video:null,user:null,effectiveSellerId:null,userName:'',first:true,cov:{rental:false,bnb:false},accountType:null,roleVerified:false,identityVerified:false,viewingFeeBlocked:false,policyAccepted:false,defaultViewingFee:null,ready:false,busy:false,guestBlocked:false,
+const S={step:1,max:1,cat:'apartment',amen:new Set(),custom:[],tiers:[],seq:0,pin:null,photos:[],cover:0,video:null,user:null,effectiveSellerId:null,userName:'',first:true,cov:{rental:false},plan:'free',accountType:null,roleVerified:false,identityVerified:false,viewingFeeBlocked:false,policyAccepted:false,defaultViewingFee:null,ready:false,busy:false,guestBlocked:false,
   sub:{listingId:null,urls:{},unitsDone:false,photosDone:false,videoLinked:false}};
 const group=()=>(NK_CATEGORIES[S.cat]||{}).group;
 let toastT;function toast(m,k){const t=$('toast');t.textContent=m;t.className='toast show '+(k||'');clearTimeout(toastT);toastT=setTimeout(()=>t.className='toast',4200)}
@@ -652,9 +652,9 @@ async function uploadVideo(listingId){
 }
 
 /* ═══ PRICING (estimate only; nothing is charged here) ═══ */
-async function loadSettings(){const {data,error}=await db.from('platform_settings').select('key,value').in('key',Object.keys(PS));if(error)throw new Error(`Could not load platform settings: ${error.message}`);(data||[]).forEach(r=>{PS[r.key]=r.key==='viewing_fee_policy_version'?String(r.value??'v1'):Number(r.value)})}
-function fee(price,type){price=Math.max(0,Number(price)||0);const pct=Number(PS[type==='rent'?'rent_standard_pct':'sale_standard_pct'])||0;return Math.round(Math.max(Number(PS.standard_min_fee)||0,Math.min(Number(PS.standard_max_fee)||Infinity,price*pct/100)))}
-function updateKicker(){const k=$('page-kicker');k.textContent=S.first?`Your first listing is free for ${PS.trial_days} days`:S.cat==='airbnb'?'Holiday rentals run on a monthly BNB plan':'Getting started takes just a few minutes'}
+async function loadSettings(){const {data,error}=await db.from('platform_settings').select('key,value').in('key',Object.keys(PS));if(error)throw new Error(`Could not load platform settings: ${error.message}`);(data||[]).forEach(r=>{PS[r.key]=(r.key==='viewing_fee_policy_version'||r.key==='listing_fee_mode')?String(r.value??''):(r.value===''||r.value===null?null:Number(r.value))})}
+function flatFee(){return nkListingFee(PS,S.cat,false)}
+function updateKicker(){const k=$('page-kicker');k.textContent=S.first?`Your first listing is free for ${PS.trial_days} days`:'Getting started takes just a few minutes'}
 function feeBox(){
   const g=group();let h;
   if(S.first)h=`<div class="box ok"><strong>This listing is free.</strong> It's your first on Nyumba254, so it stays live for ${PS.trial_days} days at no cost. No payment is needed now.</div>`;
@@ -684,10 +684,12 @@ async function checkGate(){
   if(capabilityError)throw new Error(`Could not check listing permissions: ${capabilityError.message}`);
   if((!p.onboarding_completed||!S.accountType)&&canList!==true)return {blocked:false,accountBlocked:'Complete account setup before posting a listing.'};
   if(S.accountType==='buyer')return {blocked:false,accountBlocked:'Tenant / Buyer accounts cannot create listings. Change your account type in dashboard settings.'};
-  const enforced=Number(PS.enforce_verification_general)===1||!!p.verification_enforced;
-  const allowanceOver10=Number(PS.allowance_over_10_requires_identity)===1;
+  const{data:pol}=await db.rpc('get_effective_verification_policy');
+  const enforced=!!(pol&&pol.required);
+  const allowanceOver10=!!(pol&&pol.allowance_over_10_requires_identity);
+  S.viewingFeeNeedsIdentity=!!(pol&&pol.viewing_fee_requires_identity);syncViewingFeeField();
   if(p.verification_status==='verified'||(!enforced&&!allowanceOver10))return {blocked:false};
-  const configuredLimit=Number(PS.unverified_listing_limit??2);
+  const configuredLimit=Number((pol&&pol.listing_limit)??PS.unverified_listing_limit??2);
   const limit=allowanceOver10?Math.min(configuredLimit,10):configuredLimit;
   const {count,error:countError}=await db.from('listings').select('id',{count:'exact',head:true}).eq('seller_id',sellerId).eq('recycle_bin',false).eq('status','active');
   if(countError)throw new Error(`Could not check your active listings: ${countError.message}`);
@@ -700,7 +702,8 @@ async function loadAccount(){
   const {data:p,error}=await db.from('profiles').select('has_bnb_capacity,has_rental_capacity,bnb_expires_at,subscription_expires_at,subscription_plan,subscription_tier,account_type,verified_role,verification_status,onboarding_completed,default_viewing_fee,viewing_fee_blocked,viewing_fee_policy_version,viewing_fee_policy_accepted_at').eq('id',sellerId).maybeSingle();if(error)throw new Error(`Could not load your listing account: ${error.message}`);if(!p)return;
   S.accountType=p.account_type||null;S.roleVerified=p.verified_role===p.account_type;S.identityVerified=p.verification_status==='verified';S.viewingFeeBlocked=p.viewing_fee_blocked===true;S.policyAccepted=p.viewing_fee_policy_version===PS.viewing_fee_policy_version&&!!p.viewing_fee_policy_accepted_at;S.defaultViewingFee=p.default_viewing_fee??null;syncViewingFeeField();
   const live=!p.subscription_expires_at||new Date(p.subscription_expires_at)>new Date(),paid=!!p.subscription_tier&&p.subscription_tier!=='none',elite=paid&&p.subscription_plan==='elite'&&live;
-  S.cov={rental:(!!p.has_rental_capacity&&paid&&live)||elite,bnb:(!!p.has_bnb_capacity&&p.bnb_expires_at&&new Date(p.bnb_expires_at)>new Date())||elite};
+  S.plan=elite?'elite':(paid&&live?'premium':'free');
+  S.cov={rental:(!!p.has_rental_capacity&&paid&&live)||elite};
 }
 function syncViewingFeeField(){
   const wrap=$('viewing-fee-field'),input=$('viewing_fee'),free=$('viewing-fee-free'),lock=$('viewing-fee-locked'),note=$('viewing-free-note');
@@ -710,7 +713,7 @@ function syncViewingFeeField(){
   const roleLine=$('posting-role-line'),role=$('posting-as');
   if(roleLine)roleLine.hidden=!S.user;
   if(role)role.textContent=`Posting as: ${S.accountType?({buyer:'Tenant / Buyer',owner:'Owner',caretaker:'Caretaker',agent:'Agent',company:'Company'}[S.accountType]||S.accountType):'Role not selected'}${S.roleVerified?' ✓':' (not verified)'}`;
-  const locked=eligible&&((PS.viewing_fee_requires_identity===1&&!S.identityVerified)||S.viewingFeeBlocked);
+  const locked=eligible&&((S.viewingFeeNeedsIdentity&&!S.identityVerified)||S.viewingFeeBlocked);
   if(lock)lock.hidden=!locked;
   const policyBox=$('viewing-fee-policy-accept');
   if(policyBox)policyBox.checked=S.policyAccepted;
@@ -724,10 +727,8 @@ function syncViewingFeeField(){
 function selectedViewingFee(){return !['agent','company'].includes(S.accountType)||$('viewing-fee-free')?.checked?0:(val('viewing_fee')===''?0:Number(val('viewing_fee')))}
 function updateViewingFeePreview(){const preview=$('viewing-fee-preview');if(!preview)return;const fee=selectedViewingFee();preview.textContent=`Buyers will see: ${fee>0?`Viewing fee KES ${fee.toLocaleString('en-KE')}`:'Free viewing'}`}
 function checkPlan(){
-  const el=$('plan-banner'),need=S.cat==='airbnb'?'bnb':'rental';
-  if(S.cov[need]||(!S.cov.rental&&!S.cov.bnb)){el.hidden=true;return}
-  el.hidden=false;el.className='box';el.style.marginBottom='16px';
-  el.textContent=`Your active plan covers ${S.cov.bnb&&S.cov.rental?'sale, rental and Airbnb':S.cov.bnb?'Airbnb':'sale and rental'} listings, so this ${need==='bnb'?'holiday rental':'sale or rental'} won't be free under it. You can still post it and pay for this one separately.`;
+  const el=$('plan-banner');
+  el.hidden=true;
 }
 async function checkGuestEmail(){
   if(S.user)return;const email=val('contact_email'),w=$('email-exists');
@@ -825,7 +826,7 @@ async function submit(){
   ok=fail('viewing_fee',!feeEligible||Number.isInteger(viewingFee)&&viewingFee>=0&&viewingFee<=Math.min(5000,Number(PS.viewing_fee_max)||5000)?'':`Enter a whole-number viewing fee from KES 0 to KES ${Math.min(5000,Number(PS.viewing_fee_max)||5000).toLocaleString('en-KE')}`)&&ok;
   if(feeEligible&&viewingFee>0){
     if(S.viewingFeeBlocked)ok=fail('viewing_fee','Your viewing fee privilege is paused. Contact support for help.')&&ok;
-    else if(PS.viewing_fee_requires_identity===1&&!S.identityVerified)ok=fail('viewing_fee','Verify your identity before charging a viewing fee.')&&ok;
+    else if(S.viewingFeeNeedsIdentity&&!S.identityVerified)ok=fail('viewing_fee','Verify your identity before charging a viewing fee.')&&ok;
     else if(!S.policyAccepted&&!chk('viewing-fee-policy-accept'))ok=fail('viewing_fee','Read and accept the Viewing Fee Policy before setting a fee.')&&ok;
   }
   ok=fail('contact_name',val('contact_name').length>1?'':'Enter your full name')&&ok;

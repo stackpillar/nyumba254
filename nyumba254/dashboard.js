@@ -298,6 +298,7 @@ async function init(){
     await resolveEffectiveSeller();
     logSignInOnce();
     await Promise.all([loadPlatformVerifySettings(), loadProfile()]);
+    await loadVerificationPolicy();
     updateVerifyWarningBanner();
     if(currentProfile?.role==='admin'){
       document.getElementById('loading-screen').style.display='none';
@@ -324,7 +325,7 @@ async function init(){
     document.getElementById('loading-screen').style.display='none';
     document.getElementById('app-shell').style.display='flex';
     const urlParams=new URLSearchParams(location.search);
-    if(urlParams.get('verify')==='1'){
+    if(urlParams.get('verify')==='1'&&verificationEnforcedForMe()){
       const lim=urlParams.get('limit')??String(PLATFORM_VERIFY_SETTINGS.unverified_listing_limit??2);
       showToast(`Please verify your identity — unverified listers are limited to ${lim} listing(s).`,'error');
       showPage('settings');
@@ -769,14 +770,37 @@ async function loadPlatformVerifySettings(){
     else if(r.key==='viewing_fee_policy_version')VIEWING_FEE_POLICY_VERSION=String(r.value??'v1');
     else if(r.key==='viewing_fee_max')VIEWING_FEE_MAX=Math.min(5000,Number(r.value)||5000);
     else if(r.key==='viewing_fee_requires_identity')VIEWING_FEE_REQUIRES_IDENTITY=Number(r.value)!==0;
+    else if(r.key==='enforce_verification_general'||r.key==='unverified_listing_limit')PLATFORM_VERIFY_SETTINGS[r.key]=Number(r.value);
     else PLATFORM_VERIFY_SETTINGS[r.key]=Number(r.value);
   });
 }
+let VERIFY_POLICY={master:false,forced:false,required:false,verified:false,listing_limit:null,viewing_fee_requires_identity:false,allowance_over_10_requires_identity:false,boost_requires_identity:false};
+/* Single source of truth: the server-computed policy for the signed-in user. */
+async function loadVerificationPolicy(){
+  const{data,error}=await db.rpc('get_effective_verification_policy');
+  if(error||!data)return false;
+  const before=JSON.stringify(VERIFY_POLICY);
+  VERIFY_POLICY={...VERIFY_POLICY,...data};
+  VIEWING_FEE_REQUIRES_IDENTITY=VERIFY_POLICY.viewing_fee_requires_identity===true;
+  if(data.listing_limit!=null)PLATFORM_VERIFY_SETTINGS.unverified_listing_limit=Number(data.listing_limit);
+  return before!==JSON.stringify(VERIFY_POLICY);
+}
+async function refreshVerificationPolicy(){
+  try{
+    if(!(await loadVerificationPolicy()))return;
+    updateVerifyWarningBanner();
+    if(typeof renderRoleTrustOverview==='function')renderRoleTrustOverview();
+    if(typeof renderGettingStarted==='function')renderGettingStarted();
+  }catch(e){console.warn('Verification policy refresh failed:',e);}
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&currentUser)refreshVerificationPolicy();});
+window.addEventListener('focus',()=>{if(currentUser)refreshVerificationPolicy();});
+setInterval(()=>{if(document.visibilityState==='visible'&&currentUser)refreshVerificationPolicy();},60000);
 function verificationEnforcedForMe(){
-  return Number(PLATFORM_VERIFY_SETTINGS.enforce_verification_general)===1 || !!currentProfile?.verification_enforced;
+  return VERIFY_POLICY.required===true;
 }
 function identityRequiredFor(feature){
-  return Number(PLATFORM_VERIFY_SETTINGS[`${feature}_requires_identity`])===1;
+  return VERIFY_POLICY[`${feature}_requires_identity`]===true;
 }
 function requireVerifiedIdentity(feature,description){
   const profile=ownerProfile||currentProfile;
@@ -936,10 +960,11 @@ function renderRoleTrustOverview(){
   const limit=Number(PLATFORM_VERIFY_SETTINGS.unverified_listing_limit??2);
   const next=!profile?.account_type?'Choose your role in Settings.':
     profile.account_type==='buyer'?'Browse listings, save favourites and contact listers.':
-    !identityVerified?'Identity checks are optional unless an admin rule applies.':
+    !identityVerified?(verificationEnforcedForMe()?'Identity verification is required to keep listing without the unverified cap.':'Identity verification is optional. Get a verified badge any time in Settings.'):
     !roleVerified?'Your identity is checked; role claims remain self-declared.':
     'Identity checked; your selected role remains self-declared.';
-  const cap=`${count} active${identityVerified?' (no unverified cap)':` of ${limit} unverified listing cap`}`;
+  const capOn=verificationEnforcedForMe()&&!identityVerified;
+  const cap=capOn?`${count} active of ${limit} unverified listing cap`:`${count} active`;
   const checklistKey=`ny_role_checklist_dismissed_${currentUser?.id||''}`;
   let checklistDismissed=false;
   try{checklistDismissed=localStorage.getItem(checklistKey)==='1'}catch(error){console.error('Could not read onboarding checklist preference:',error)}
@@ -947,14 +972,14 @@ function renderRoleTrustOverview(){
   const feeStepDone=(profile?.default_viewing_fee!==null&&profile?.default_viewing_fee!==undefined)
     ||(profile?.viewing_fee_policy_version===VIEWING_FEE_POLICY_VERSION&&allListings.some(listing=>Number(listing.viewing_fee)>0));
   const steps=[
-    {label:'Verify your identity',done:identityVerified,action:"settingsJumpTo('verification-settings-section')"},
+    ...(verificationEnforcedForMe()?[{label:'Verify your identity',done:identityVerified,action:"settingsJumpTo('verification-settings-section')"}]:[]),
     {label:'Add your first listing',done:allListings.length>0,action:"location.href='/post-listing'"},
     ...(feeStepNeeded?[{label:'Set a viewing-fee default or keep viewings free',done:feeStepDone,action:"settingsJumpTo('viewing-fee-settings')"}]:[])
   ];
   const checklist=profile?.account_type&&profile.account_type!=='buyer'&&!checklistDismissed
     ?`<div class="card" style="padding:14px;margin-top:14px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong style="font-size:13px">Getting started</strong><button type="button" class="btn btn-outline btn-sm" onclick="dismissRoleSetupChecklist()" aria-label="Dismiss getting started checklist">Dismiss</button></div><ol style="margin:8px 0 0;padding-left:20px">${steps.map(step=>`<li style="margin:7px 0;font-size:12px;color:var(--text-2)"><span>${step.done?'✓':'○'} ${escHtml(step.label)}</span>${step.done?'':` <button type="button" class="link" onclick="${step.action}" style="min-height:44px">${step.action.includes('post-listing')?'Add a listing':'Continue'}</button>`}</li>`).join('')}</ol></div>`
     :'';
-  target.innerHTML=`<div style="display:flex;gap:10px;flex-wrap:wrap"><span><strong>Role claim:</strong> ${escHtml(role)}</span><span><strong>Role badge:</strong> ${escHtml(roleVerified?'Active':'Not active')}</span><span><strong>Identity:</strong> ${escHtml(identityVerified?'Checked':'Not checked')}</span><span><strong>Listing cap used:</strong> ${escHtml(cap)}</span></div><p style="margin:8px 0 0;color:var(--text-2);font-size:12px">${escHtml(next)}</p>${checklist}`;
+  target.innerHTML=`<div style="display:flex;gap:10px;flex-wrap:wrap"><span><strong>Role claim:</strong> ${escHtml(role)}</span><span><strong>Role badge:</strong> ${escHtml(roleVerified?'Active':'Not active')}</span><span><strong>Identity:</strong> ${escHtml(identityVerified?'Checked':'Not checked')}</span><span><strong>${capOn?'Listing cap used':'Active listings'}:</strong> ${escHtml(cap)}</span></div><p style="margin:8px 0 0;color:var(--text-2);font-size:12px">${escHtml(next)}</p>${checklist}`;
 }
 
 function dismissRoleSetupChecklist(){
@@ -1237,7 +1262,7 @@ function updateVerifyWarningBanner(){
   const roleProfile=ownerProfile||currentProfile;
   const accountType=roleProfile?.account_type;
   const status=roleProfile?.verification_status||'unverified';
-  const applies=!!accountType&&accountType!=='buyer'&&status!=='verified';
+  const applies=!!accountType&&accountType!=='buyer'&&status!=='verified'&&verificationEnforcedForMe();
   banner.style.display = applies ? 'flex' : 'none';
   if(applies){
     const limit = Number(PLATFORM_VERIFY_SETTINGS.unverified_listing_limit??2);
@@ -5546,7 +5571,7 @@ function renderGettingStarted(){
   let dismissed=false;
   try{dismissed=localStorage.getItem('ny_gs_dismissed_'+(currentUser?.id||''))==='1';}catch(e){}
   const steps=[
-    {done:currentProfile?.verification_status==='verified',label:'Verify your identity',sub:'Shows buyers your identity was checked; your role remains self-declared',action:()=>{showPage('settings');setTimeout(()=>settingsJumpTo('verification-settings-section'),150);}},
+    ...(verificationEnforcedForMe()?[{done:currentProfile?.verification_status==='verified',label:'Verify your identity',sub:'Shows buyers your identity was checked; your role remains self-declared',action:()=>{showPage('settings');setTimeout(()=>settingsJumpTo('verification-settings-section'),150);}}]:[]),
     {done:allListings.length>0,label:'Post your first listing',sub:'Takes about 3 minutes',action:()=>{window.location.href='/post-listing';}},
     {done:allListings.length>0 && allListings.every(l=>(l.listing_photos||[]).length>0),label:'Add photos to every listing',sub:'Listings with 6+ photos get far more enquiries',action:()=>showPage('listings')},
     {done:threads.some(t=>t.messages.some(m=>m.sender==='seller')),label:'Reply to a buyer message',sub:'Fast replies win more viewings',action:()=>showAllMessages()},

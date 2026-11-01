@@ -442,6 +442,21 @@ async function nkHydrateViewingFees(listings) {
   }
 }
 
+/* Flat listing price. Mirror of the SQL function calc_listing_fee(); the database is the authority.
+   settings: { listing_fee_mode, listing_fee_single, listing_fee_<category>, featured_fee_single, featured_fee_<category> } */
+function nkListingFee(settings, category, featured) {
+  const s = settings || {};
+  const pre = featured ? 'featured_fee_' : 'listing_fee_';
+  const num = k => { const v = s[k]; if (v === null || v === undefined || v === '') return null; const n = Number(v); return Number.isFinite(n) ? n : null; };
+  const single = num(pre + 'single') || 0;
+  let out = single;
+  if (String(s.listing_fee_mode || 'single') === 'per_category' && ['apartment', 'house', 'boarding', 'airbnb', 'commercial'].includes(category)) {
+    const c = num(pre + category);
+    out = c === null ? single : c;
+  }
+  return Math.max(0, Math.round(out));
+}
+
 function nkImgSrc(url, width) {
   if (!url) return '';
   if (!width) return url;
