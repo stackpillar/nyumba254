@@ -539,7 +539,7 @@ const NAV=[
   {g:'People',i:[['sellers','Accounts','users'],['verification','Verification','shield','verification'],['role-requests','Role change requests','users','roleRequests'],['premium','Premium accounts','star'],['enquiries','Enquiries','msg','enquiries'],['concierge','Concierge inbox','msg','concierge'],['support','Support chat','life','support']]},
   {g:'Trust & safety',i:[['reports','Reports','flag','reports'],['risk-signals','Risk signals','flag'],['reviews','Reviews','star','reviews'],['reveals','Contact reveals','phone']]},
   {g:'Insights',i:[['analytics','Site visits','chart'],['activity','Activity log','clock']]},
-  {g:'Platform',i:[['updates','Platform updates','bell'],['settings','Settings','gear']]},
+  {g:'Platform',i:[['updates','Platform updates','bell'],['plans','Plans & unlocks','star'],['settings','Settings','gear']]},
 ];
 function buildShell(){
   $('#sb').innerHTML=`<div class="brand"><img src="/logo-icon.png" alt="" onerror="this.remove()">Nyumba254<b>ADMIN</b></div><nav>${NAV.map(g=>`<div class="ng"><small>${g.g}</small>${g.i.map(([id,l,ic,bk])=>`<a class="ni" href="#/${id}" data-v="${id}">${icon(ic)}${l}${bk?`<span class="n z" data-b="${bk}">0</span>`:''}</a>`).join('')}</div>`).join('')}<div class="ng"><small>Site</small><a class="ni" href="/" rel="noopener">${icon('home')}View live site</a></div></nav>
@@ -817,6 +817,7 @@ const LA={
     for(const t of ['listing_photos','enquiries','messages','unit_occupancy_log','listing_units','reviews'])await db.from(t).delete().eq('listing_id',l.id);
     const{data,error}=await db.from('listings').delete().eq('id',l.id).select();
     if(error)throw error;if(!data?.length)throw new Error('Blocked by database policy (RLS)');
+    if(window.NKVideo)await NKVideo.purgeListingFiles(db,l.id);
   },
   async del(l){
     if(!await ui.typed('DELETE','Delete permanently?',`<b>${esc(l.title)}</b>, its photos, messages, enquiries and unit types will be removed. This can't be undone.`))return false;
@@ -1802,6 +1803,29 @@ if(!String(o.viewing_fee_policy_version||'').trim())return ui.toast('Enter a vie
     const{error}=await db.from('platform_settings').upsert(c.map(([key,value])=>({key,value,updated_at:now,updated_by:S.user.id})),{onConflict:'key'});
     if(error)return ui.toast('Could not save: '+error.message,'err');
     logAction('update_settings','settings','pricing',c.map(x=>x[0]).join(', '));await loadSettings();window.onbeforeunload=null;ui.toast('Settings saved','ok');VIEWS.settings.mount(el);
+  };
+}};
+
+/* ═════════ PLANS & UNLOCKS ═════════ */
+VIEWS.plans={title:'Plans & unlocks',async mount(el){
+  const{data,error}=await db.from('plan_unlocks').select('*').order('sort',{ascending:true});
+  if(error){el.innerHTML=`<div class="card" style="padding:18px"><small>Could not load plan unlocks: ${esc(error.message)}</small></div>`;return;}
+  const rows=data||[],T=['free','premium','elite'];
+  const inp=(r,t)=>{const v=r[t+'_value'];return r.kind==='number'?`<input class="in" type="number" min="0" step="1" style="width:90px" data-k="${esc(r.feature_key)}" data-t="${t}" value="${esc(v)}">`:`<input type="checkbox" data-k="${esc(r.feature_key)}" data-t="${t}" ${v===true?'checked':''}>`;};
+  el.innerHTML=`<div style="max-width:980px"><div class="card" style="padding:18px;margin-bottom:16px"><h3>Plans &amp; unlocks</h3><p class="intro" style="margin:2px 0 12px"><small>Controls what Free, Premium and Elite get. The public Plans page, the dashboard and server-side limits all read this table. Every plan covers all categories. Number features: 0 means not included.</small></p>
+  <div style="overflow:auto"><table class="tbl" style="width:100%"><thead><tr><th style="text-align:left">Feature</th><th>Free</th><th>Premium</th><th>Elite</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.label)}<br><small>${esc(r.feature_key)}</small></td>${T.map(t=>`<td style="text-align:center">${inp(r,t)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>
+  <div class="savebar" id="pv" hidden><span id="pvn"></span><span><button class="btn ghost" style="color:inherit" id="prs">Discard</button> <button class="btn pri" id="psa">Save changes</button></span></div></div>`;
+  const read=()=>{const out=[];rows.forEach(r=>{const o={key:r.feature_key};let ch=false;T.forEach(t=>{const e=el.querySelector(`[data-k="${r.feature_key}"][data-t="${t}"]`);const v=r.kind==='number'?Number(e.value):e.checked;if(r.kind==='number'&&(!Number.isInteger(v)||v<0))o.bad=true;if(JSON.stringify(v)!==JSON.stringify(r[t+'_value'])){o[t]=v;ch=true;}});if(ch)out.push(o);});return out;};
+  const upd=()=>{const c=read();window.onbeforeunload=c.length?()=>'':null;$('#pv',el).hidden=!c.length;$('#pvn',el).textContent=`${c.length} feature${c.length!==1?'s':''} changed`;};
+  el.addEventListener('input',upd);el.addEventListener('change',upd);
+  $('#prs',el).onclick=()=>{window.onbeforeunload=null;VIEWS.plans.mount(el);};
+  $('#psa',el).onclick=async()=>{
+    const c=read();if(c.some(o=>o.bad))return ui.toast('Number values must be whole numbers of zero or more','err');
+    if(!c.length)return;
+    if(!await ui.confirm({title:'Change what plans include?',message:`This changes access for every Free, Premium and Elite account straight away: <b>${c.map(o=>esc(o.key)).join(', ')}</b>.`,confirm:'Save changes'}))return;
+    const{error:e}=await db.rpc('admin_save_plan_unlocks',{p_rows:c.map(({bad,...o})=>o)});
+    if(e)return ui.toast('Could not save: '+e.message,'err');
+    window.onbeforeunload=null;ui.toast('Plans updated','ok');VIEWS.plans.mount(el);
   };
 }};
 

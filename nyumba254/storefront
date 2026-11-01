@@ -366,7 +366,7 @@
     }
 
     const [{ data: listings, error: listErr }, { data: reviews, error: reviewError }] = await Promise.all([
-      db.from('listings').select('*, listing_photos(*)').eq('seller_id', sellerId).eq('status', 'active').eq('is_disabled', false).order('is_featured', { ascending: false }).order('created_at', { ascending: false }),
+      db.from('listings').select('*, listing_photos(*), listing_videos(id)').eq('seller_id', sellerId).eq('status', 'active').eq('is_disabled', false).order('is_featured', { ascending: false }).order('created_at', { ascending: false }),
       db.from('reviews').select('*').eq('review_type','seller').eq('target_seller_id', sellerId).order('created_at',{ascending:false}),
     ]);
 

@@ -154,6 +154,11 @@
   @media(max-width:640px){
     .fee-table th:nth-child(3), .fee-table td:nth-child(3){display:none}
   }
+  .cmp-table th,.cmp-table td{text-align:center}
+  .cmp-table th:first-child,.cmp-table td:first-child{text-align:left}
+  .cmp-table .yes{color:var(--green-dark);font-weight:700}
+  .cmp-table .no{color:var(--text-3)}
+  @media(max-width:640px){.cmp-table th:nth-child(3),.cmp-table td:nth-child(3){display:table-cell}.cmp-table th,.cmp-table td{padding:12px 8px;font-size:12.5px}}
 </style>
   <link rel="stylesheet" href="/theme.css"/>
   <script src="/theme.js"></script>
@@ -212,6 +217,20 @@
     <div class="plans-trust-item"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Roles and viewing fees shown clearly</div>
     <div class="plans-trust-item"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Pay via M-Pesa</div>
     <div class="plans-trust-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Cancel any time</div>
+  </div>
+
+  <!-- ═══ PLAN COMPARISON ═══ -->
+  <div class="section-block" id="compare-block" hidden>
+    <div class="section-head">
+      <div class="kicker">Compare plans</div>
+      <h2>What each plan includes</h2>
+    </div>
+    <div class="fee-table-card">
+      <table class="fee-table cmp-table">
+        <thead><tr><th>Feature</th><th>Free</th><th>Premium</th><th>Elite</th></tr></thead>
+        <tbody id="cmp-body"></tbody>
+      </table>
+    </div>
   </div>
 
   <!-- ═══ ONE-TIME LISTING FEES ═══ -->
@@ -445,7 +464,17 @@
     if (!PRICING) PRICING = await NKP.loadPublicPricing(db, 'owner');
     renderAll();
   }
+  async function loadMatrix(){
+    try{
+      const { data } = await db.rpc('get_public_plan_matrix');
+      if (!Array.isArray(data) || !data.length) return;
+      const cell = (kind, v) => kind === 'number' ? (Number(v) > 0 ? `<span class="yes">${Number(v).toLocaleString('en-KE')}</span>` : '<span class="no">&mdash;</span>') : (v === true ? '<span class="yes" aria-label="Included">&#10003;</span>' : '<span class="no" aria-label="Not included">&mdash;</span>');
+      document.getElementById('cmp-body').innerHTML = data.map(r => `<tr><td>${esc(r.label)}</td><td>${cell(r.kind, r.free)}</td><td>${cell(r.kind, r.premium)}</td><td>${cell(r.kind, r.elite)}</td></tr>`).join('');
+      document.getElementById('compare-block').hidden = false;
+    }catch(e){}
+  }
   loadLivePrices();
+  loadMatrix();
   if (typeof NKSaved !== 'undefined') NKSaved.init();
 
   function toggleMobileMenu() {

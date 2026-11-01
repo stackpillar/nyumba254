@@ -1025,7 +1025,7 @@ function renderListings(containerId, listings, imgWidth, emptyHtml) {
 const SKELETON = '<div class="loading-grid">' + Array(3).fill('<div class="skeleton"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line short"></div><div class="skeleton-line"></div></div></div>').join('') + '</div>';
 
 async function loadFeatured() {
-  const { data, error } = await db.from('listings').select('*, listing_photos(*)')
+  const { data, error } = await db.from('listings').select('*, listing_photos(*), listing_videos(id)')
     .eq('status', 'active').eq('is_featured', true).order('created_at', { ascending: false }).order('id').limit(12);
   if (error) { console.error(error); $('featured-section').hidden = true; return; }
   if (!data || !data.length) { $('featured-section').hidden = true; return; }     // no empty "be the first" block for Featured
@@ -1041,7 +1041,7 @@ async function loadLatest() {
   const keepCached = !loadLatest.done && $('latest-listings').querySelector('.listings-grid'); loadLatest.done = true;
   if (!keepCached) $('latest-listings').innerHTML = SKELETON;
   syncLatestLink();
-  let q = db.from('listings').select('*, listing_photos(*)').eq('status', 'active');
+  let q = db.from('listings').select('*, listing_photos(*), listing_videos(id)').eq('status', 'active');
   if (area) { q = q.eq('area', area); if (county) q = q.eq('county', county); } else q = nkCountyEq(q, county);
   const { data, error } = await q.order('created_at', { ascending: false }).order('id').limit(20);
   if (my !== latest.token) return;
@@ -1370,7 +1370,7 @@ async function homeThinFill(listings, county, area, where) {
   const fetchMore = async (apply, label) => {
     if (out.list.length >= THIN_TARGET) return;
     try {
-      let q = db.from('listings').select('*, listing_photos(*)').eq('status', 'active');
+      let q = db.from('listings').select('*, listing_photos(*), listing_videos(id)').eq('status', 'active');
       q = apply(q);
       const { data, error } = await q.order('created_at', { ascending: false }).order('id').limit(THIN_TARGET * 2);
       if (error || !data) return;

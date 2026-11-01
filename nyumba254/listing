@@ -831,7 +831,7 @@ async function load(){
     photos=(P.listing_photos||[]).slice().sort((a,b)=>(a.position||0)-(b.position||0));
     const c=photos.find(p=>p.is_cover);idx=c?Math.max(0,photos.indexOf(c)):0;
     units=(P.listing_units||[]).slice().sort((a,b)=>String(a.id||'').localeCompare(String(b.id||''),undefined,{numeric:true}));
-    render();seo();
+    render();seo();watchVideos();
     if(!preview){nkTrackRecentViewed(P.id);countView();loadViewingFeedback()}
     loadSimilar();loadRating();loadReplySpeed();checkThread();maybeReach();loadNeighbours();
   }catch(e){console.error(e);unavailable('error')}
@@ -967,6 +967,19 @@ function unitsHtml(){
 function videoHtml(){
   const v=(P.listing_videos||[]).filter(x=>x&&x.url);if(!v.length)return '';
   return `<section class="sec" id="sec-video">${secHead('video',v.length>1?'Video walkthroughs':'Video walkthrough')}<div id="vid-mount"></div></section>`;
+}
+let vidChan=null;
+function watchVideos(){
+  if(!(isOwner||preview)||vidChan||!P)return;
+  let t=null;
+  vidChan=db.channel('lv-'+P.id).on('postgres_changes',{event:'*',schema:'public',table:'listing_videos',filter:'listing_id=eq.'+P.id},()=>{
+    clearTimeout(t);t=setTimeout(async()=>{
+      const{data}=await db.from('listing_videos').select('*').eq('listing_id',P.id);
+      P.listing_videos=data||[];
+      const sec=$('sec-video');
+      if(!sec||!P.listing_videos.length)render();else mountVideos();
+    },400);
+  }).subscribe();
 }
 function mountVideos(){
   const el=$('vid-mount');if(!el||typeof NKVideo==='undefined')return;

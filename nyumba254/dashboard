@@ -848,7 +848,7 @@
               <label class="switch"><input type="checkbox" id="concierge-toggle" onchange="toggleConcierge(this.checked)"/><span class="switch-track"></span></label>
             </div>
             <p style="font-size:12px;color:var(--text-3);line-height:1.6;margin-top:8px" id="concierge-note"></p>
-            <p style="font-size:12px;color:var(--gold);background:var(--gold-light);border-radius:6px;padding:8px 10px;line-height:1.6;margin-top:8px;display:none" id="concierge-lock-note">🔒 Managed chat requires Premium, Elite, or any active BNB plan. <a href="/plans" style="color:var(--gold);font-weight:700;text-decoration:underline">Upgrade to unlock</a>.</p>
+            <p style="font-size:12px;color:var(--gold);background:var(--gold-light);border-radius:6px;padding:8px 10px;line-height:1.6;margin-top:8px;display:none" id="concierge-lock-note">🔒 Managed chat requires an active Premium or Elite plan. <a href="/plans" style="color:var(--gold);font-weight:700;text-decoration:underline">Upgrade to unlock</a>.</p>
           </div>
           <div class="settings-section" id="settings-sms-section">
             <h3><svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>SMS enquiry alerts</h3>
@@ -887,11 +887,6 @@
                   <tr style="border-top:1px solid var(--border)"><td style="padding:7px 10px;color:var(--text-2)">Demand Insights</td><td style="text-align:center;padding:7px 10px;color:var(--text-3);font-weight:700">—</td><td style="text-align:center;padding:7px 10px;color:#7c3aed;font-weight:700">✓</td></tr>
                 </tbody>
               </table>
-            </div>
-            <div id="plan-category-row" style="display:none;margin-bottom:14px;font-size:12.5px;background:var(--surface);border-radius:8px;padding:10px 12px">
-              <div style="font-weight:700;color:var(--text)">Plan scope: <span id="plan-category-label">—</span></div>
-              <div id="plan-balance-note" style="color:var(--green-dark);margin-top:4px"></div>
-              <button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="requestPlanCategorySwitch()">Switch plan category</button>
             </div>
             <div id="premium-status-banner" style="display:none;font-size:12.5px;font-weight:700;color:var(--green-dark);background:var(--green-light);border-radius:8px;padding:8px 12px;margin-bottom:14px"></div>
             <div class="toggle-row">

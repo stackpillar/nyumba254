@@ -270,6 +270,17 @@
     return data;
   }
 
+  /* Removes every stored file under <listingId>/ . Call after the listing rows are deleted. */
+  async function purgeListingFiles(db, listingIds) {
+    for (const id of [].concat(listingIds)) {
+      try {
+        const { data } = await db.storage.from(BUCKET).list(String(id), { limit: 100 });
+        const paths = (data || []).filter((f) => f.name).map((f) => `${id}/${f.name}`);
+        if (paths.length) await db.storage.from(BUCKET).remove(paths);
+      } catch (e) { /* orphan listing keeps files; admin_list_orphan_videos reports them */ }
+    }
+  }
+
   const ERRORS = {
     VIDEO_LIMIT_REACHED: 'You have reached the video limit for this listing on your plan.',
     VIDEO_WALKTHROUGH_BLOCKED: 'Video walkthroughs are turned off for this account. Contact support.',
@@ -287,5 +298,5 @@
     return k ? ERRORS[k] : (m || 'Something went wrong.');
   }
 
-  return { BUCKET, clampRatio, orientationOf, parse, describe, mountInto, loadLimits, prepareFile, uploadFile, saveUpload, saveLink, remove, friendlyError, frameHtml, injectCss, esc };
+  return { BUCKET, clampRatio, orientationOf, parse, describe, mountInto, loadLimits, prepareFile, uploadFile, saveUpload, saveLink, remove, purgeListingFiles, friendlyError, frameHtml, injectCss, esc };
 });

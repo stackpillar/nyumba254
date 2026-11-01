@@ -831,7 +831,7 @@ const CACHE_KEY = 'nk_saved_cache_v1';              // last shortlist, for insta
 const SHORTLIST_TOKEN_KEY = 'nk_shortlist_token';   // anonymous shortlist token
 const THEME_KEY = 'nk_theme';
 const PAGE_SIZE = 12;
-const LISTING_SELECT = '*, listing_photos(*), profiles(verification_status,account_type,verified_role)';
+const LISTING_SELECT = '*, listing_photos(*), listing_videos(id), profiles(verification_status,account_type,verified_role)';
 /* Columns that may hold the seller's phone. Add or reorder to match your `listings` table. */
 const CONTACT_FIELDS = ['whatsapp_number', 'whatsapp', 'contact_phone', 'phone', 'phone_number', 'seller_phone', 'contact_number'];
 const STATUS_LABEL = { interested: 'Interested', contacted: 'Contacted', viewing: 'Viewing booked', viewed: 'Viewed', rejected: 'Rejected' };

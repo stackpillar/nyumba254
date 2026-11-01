@@ -1819,20 +1819,6 @@ function updateEliteGatedPages(sub){
   });
 }
 
-async function requestPlanCategorySwitch(){
-  const p = ownerProfile || currentProfile;
-  const current = p?.has_bnb_capacity ? 'bnb' : 'rental';
-  const target = p?.has_bnb_capacity ? 'rental' : 'bnb';
-  if(!await lcConfirm({title:'Request a plan change?',message:`Request ${target==='bnb'?'Airbnb/BNB':'rental'} listing capacity on top of what you have. This opens a support ticket so our team can confirm pricing first. Nothing is charged yet.`,confirmLabel:'Send request'})) return;
-  const sessionKey = `seller_${currentUser.id}_plan_switch_${Date.now()}`;
-  const { data, error } = await db.from('chat_sessions').insert({
-    session_key: sessionKey, session_type:'seller', seller_id: currentUser.id, visitor_name: scwSellerName,
-    page:'dashboard.html', topic:'Plan category switch request', status:'open', is_resolved:false, last_msg_at:new Date().toISOString(),
-  }).select().single();
-  if(error){ showToast('Could not start request: '+error.message,'error'); return; }
-  await db.from('chat_messages').insert({ session_id:data.id, sender:'visitor', body:`I'd like to switch my plan from ${current} to ${target}. Please let me know if I owe anything or have credit.` });
-  showToast('Request sent — check Messages for our reply ✓','success');
-}
 function updatePremiumSectionUI(sub){
   const btn = document.getElementById('premium-upgrade-btn');
   const banner = document.getElementById('premium-status-banner');
@@ -1872,9 +1858,8 @@ function goToPremiumSettings(e){
 }
 function bnbSubscriptionInfo(){
   const p = ownerProfile || currentProfile;
-  const bnbPlanActive = !!(p?.bnb_plan && p?.bnb_expires_at && new Date(p.bnb_expires_at) > new Date());
-  const active = bnbPlanActive || eliteActive();
-  return { active, plan: bnbPlanActive ? p.bnb_plan : (eliteActive() ? 'elite_included' : null) };
+  const active = eliteActive();
+  return { active, plan: active ? 'elite_included' : null };
 }
 function isNearChatBottom(){
   const mc=document.getElementById('chat-messages');if(!mc)return true;
@@ -1897,27 +1882,19 @@ function updatePremiumNavBadge(sub){
   link.onclick = goToPremiumSettings;
   link.style.cursor = 'pointer';
 
-  const bnb = bnbSubscriptionInfo();
-  const bnbLabelMap = { bnb_basic:'BNB Basic', bnb_bundle:'BNB Bundle', bnb_unlimited:'BNB Unlimited' };
-  const hasAnyActivePlan = (sub.active && (sub.plan==='elite' || sub.plan==='premium')) || bnb.active;
+  const hasAnyActivePlan = sub.active && (sub.plan==='elite' || sub.plan==='premium');
   // Matches the same highlighted look .nav-item.active gets when it's the
   // current page, so an active plan visually reads as "selected" in the
   // sidebar instead of just being plain dimmed text.
   link.style.background = hasAnyActivePlan ? 'rgba(255,255,255,0.12)' : 'none';
   link.style.color = hasAnyActivePlan ? 'white' : '';
 
-  const navP = ownerProfile || currentProfile;
-  const capSuffix = (navP?.has_rental_capacity && navP?.has_bnb_capacity) ? ' · Rental+BNB' : navP?.has_bnb_capacity ? ' · BNB' : navP?.has_rental_capacity ? ' · Rental' : '';
+  const capSuffix = '';
   if(sub.active && sub.plan==='elite'){
     textEl.innerHTML = `👑 Elite member${capSuffix}`;
     link.style.opacity = '1';
   } else if(sub.active && sub.plan==='premium'){
     textEl.innerHTML = `⭐ Pro${capSuffix} · Upgrade to Elite`;
-    link.style.opacity = '1';
-  } else if(bnb.active){
-    // BNB-only seller (no Premium/Elite) — reflect the active BNB plan
-    // instead of falling through to the generic "Upgrade to Premium" link.
-    textEl.innerHTML = `🏠 ${bnbLabelMap[bnb.plan]||'BNB'} active`;
     link.style.opacity = '1';
   } else {
     textEl.textContent = 'Upgrade to Premium';
@@ -4706,19 +4683,7 @@ function featureQuoteLine(q){
 }
 function updateBnbStatusBanner(){
   const banner=document.getElementById('bnb-status-banner');
-  if(!banner)return;
-  const p=currentProfile;
-  const bnbPlanActive=p?.bnb_plan && p?.bnb_expires_at && new Date(p.bnb_expires_at)>new Date();
-  if(bnbPlanActive){
-    const labelMap={bnb_basic:'BNB Basic',bnb_bundle:'BNB Bundle',bnb_unlimited:'BNB Unlimited'};
-    banner.style.display='block';
-    banner.textContent=`✓ ${labelMap[p.bnb_plan]||'BNB plan'} active — renews/expires ${fmtSubDate(p.bnb_expires_at)}`;
-  } else if (eliteActive()) {
-    banner.style.display='block';
-    banner.textContent=`✓ Unlimited BNB listings included with your Elite plan — no separate BNB plan needed`;
-  } else {
-    banner.style.display='none';
-  }
+  if(banner)banner.style.display='none';
 }
 
 function kycStatusMeta(status){
@@ -5253,7 +5218,7 @@ async function restoreDashboardBackup(){
 }
 
 async function loadAllData(){
-  const{data:listingsData,error:listingsError}=await db.from('listings').select('*, listing_photos(*), listing_units(*)').eq('seller_id',effectiveSellerId).order('created_at',{ascending:false});
+  const{data:listingsData,error:listingsError}=await db.from('listings').select('*, listing_photos(*), listing_units(*), listing_videos(id)').eq('seller_id',effectiveSellerId).order('created_at',{ascending:false});
   if(listingsError) throw new Error(`Could not load your listings: ${listingsError.message}`);
   allListings=listingsData||[];
   const ids=allListings.map(l=>l.id);
@@ -5368,7 +5333,7 @@ function getListingStatusDisplay(l){
   if(l.status==='scheduled')return{label:'Scheduled',cls:'status-pending',banner:l.publish_at?`Approved — goes live automatically on ${new Date(l.publish_at).toLocaleString('en-KE')}.`:null};
   if(l.status==='approved_unpaid'&&l.payment_status==='pending_verification')return{label:'Verifying payment',cls:'status-pending',banner:'Your M-Pesa payment is being verified — this usually takes a few minutes.'};
   if(l.status==='approved_unpaid')return{label:'Awaiting payment',cls:'status-pending',banner:'Approved — pay the listing fee to make it live.'};
-  if(l.status==='approved_unpaid_bnb')return{label:'Awaiting BNB plan',cls:'status-pending',banner:'Approved — subscribe to a BNB plan to make it live.'};
+  if(l.status==='approved_unpaid_bnb')return{label:'Awaiting payment',cls:'status-pending',banner:'Approved — pay for this listing or subscribe to Premium or Elite to make it live.'};
   return{label:statusLabel(l.status),cls:'status-'+l.status,banner:null};
 }
 // BNB (airbnb) listings expire with the seller's BNB plan, not with a fixed
@@ -6239,12 +6204,9 @@ function lcBuildAlerts(l){
   if(l.status==='occupied'&&d.banner)a.push({sev:2,html:d.banner});
   if(l.status==='approved_unpaid'&&l.payment_status==='pending_verification')a.push({sev:1,html:'⏳ Payment submitted — verification in progress.'});
   else if(l.status==='approved_unpaid')a.push({sev:0,html:`💳 Approved — pay <strong>KES ${Number(l.payment_due_amount||0).toLocaleString('en-KE')}</strong> to go live. <button type="button" class="lc-alert-link" data-act="pay" data-id="${l.id}">Pay now →</button>`});
-  else if(l.status==='approved_unpaid_bnb')a.push({sev:0,html:`📅 Approved — <button type="button" class="lc-alert-link" data-act="pay" data-id="${l.id}">pay for this listing</button> or <a href="/plans">subscribe to a BNB plan</a>`});
+  else if(l.status==='approved_unpaid_bnb')a.push({sev:0,html:`📅 Approved — <button type="button" class="lc-alert-link" data-act="pay" data-id="${l.id}">pay for this listing</button> or <a href="/plans">subscribe to Premium or Elite</a>`});
   const t=getTrialDaysLeft(l);
   if(t!==null)a.push({sev:t<=2?0:1,html:`🕐 Free trial — ${t} day${t!==1?'s':''} left <button type="button" class="lc-alert-link" data-act="upgrade" data-id="${l.id}">Upgrade</button>`});
-  const b=getBnbDaysLeft(l);
-  if(b!==null)a.push({sev:b<=3?0:1,html:`📅 BNB plan — ${b} day${b!==1?'s':''} left <a href="/plans">Renew</a>`});
-  else if(l.category==='airbnb'&&l.status!=='approved_unpaid_bnb'&&lcIsLive(l))a.push({sev:0,html:`⚠️ No active BNB plan <a href="/plans">Subscribe</a>`});
   if(lcHasUnits(l)){
     const av=muAvailabilitySummary(l);
     a.push({sev:2,html:`🏢 Units${av?' · '+av:''} <button type="button" class="lc-alert-link" data-act="units" data-id="${l.id}">Manage →</button>`});
@@ -6625,7 +6587,7 @@ function lcCardHtml(l,showHint){
   </div>`;
 }
 
-function statusLabel(s){return{active:'Active',pending:'Pending review',paused:'Paused',rejected:'Rejected',expired:'Expired',occupied:'Occupied',scheduled:'Scheduled',approved_unpaid:'Awaiting payment',approved_unpaid_bnb:'Awaiting BNB plan'}[s]||s;}
+function statusLabel(s){return{active:'Active',pending:'Pending review',paused:'Paused',rejected:'Rejected',expired:'Expired',occupied:'Occupied',scheduled:'Scheduled',approved_unpaid:'Awaiting payment',approved_unpaid_bnb:'Awaiting payment'}[s]||s;}
 
 /* ══════════ v5: TRUST BADGES ══════════ */
 function lcTrustBadges(){
@@ -6645,7 +6607,7 @@ function lcStepperHtml(l){
   else if(l.status==='approved_unpaid'||l.status==='approved_unpaid_bnb'||l.status==='scheduled')at=2;
   if(at<0)return '';
   const note=l.status==='approved_unpaid'?'Pay the listing fee to move to Live.'
-    :l.status==='approved_unpaid_bnb'?'Pay for this listing or subscribe to a BNB plan to move to Live.'
+    :l.status==='approved_unpaid_bnb'?'Pay for this listing or subscribe to Premium or Elite to move to Live.'
     :l.status==='scheduled'?(l.publish_at?`Goes live automatically on ${new Date(l.publish_at).toLocaleDateString('en-KE',{day:'numeric',month:'short'})}.`:'Queued to publish.')
     :'Usually reviewed within 24 hours.';
   const steps=flow.map((label,i)=>{
@@ -6858,7 +6820,7 @@ function lcMatchesAttrFilters(l){
     if(f.beds==='4'){if(!(b>=4))return false;}
     else if(String(b)!==String(f.beds))return false;
   }
-  if(f.video&&!((l.videos||[]).length))return false;
+  if(f.video&&!((l.videos||l.listing_videos||[]).length))return false;
   if(f.featured&&!l.is_featured)return false;
   if(f.multi&&!units)return false;
   return true;
@@ -7754,11 +7716,7 @@ function dashboardPlanCoversListing(listing){
   const profile=ownerProfile||currentProfile;
   const subscriptionActive=!!profile?.subscription_tier&&profile.subscription_tier!=='none'&&
     (!profile.subscription_expires_at||new Date(profile.subscription_expires_at)>new Date());
-  if(listing.category==='airbnb'){
-    const bnbActive=!!profile?.has_bnb_capacity&&!!profile.bnb_expires_at&&new Date(profile.bnb_expires_at)>new Date();
-    return bnbActive||(profile?.subscription_plan==='elite'&&subscriptionActive);
-  }
-  return !!profile?.has_rental_capacity&&subscriptionActive;
+  return subscriptionActive;
 }
 
 async function bulkScheduleSelectedListings(){
@@ -8214,6 +8172,7 @@ async function openManageVideosModal(listingId){
     mvVideos=data||[];
     mvRenderVideoList();
     openModal('modal-manage-videos');
+    mvWatch(listingId);
   }catch(error){
     console.error('Could not load listing videos:',error);
     showToast('Could not load listing videos: '+(error.message||String(error)),'error');
@@ -8280,6 +8239,16 @@ async function removeListingVideo(index){
   }
 }
 
+let mvChan=null;
+function mvWatch(listingId){
+  if(mvChan){try{db.removeChannel(mvChan)}catch(e){}mvChan=null;}
+  mvChan=db.channel('mv-'+listingId).on('postgres_changes',{event:'*',schema:'public',table:'listing_videos',filter:'listing_id=eq.'+listingId},async()=>{
+    const m=document.getElementById('modal-manage-videos');
+    if(!m||m.offsetParent===null||String(mvActiveListingId)!==String(listingId)){try{db.removeChannel(mvChan)}catch(e){}mvChan=null;return;}
+    const{data}=await db.from('listing_videos').select('*').eq('listing_id',listingId).order('position',{ascending:true});
+    if(data){mvVideos=data;mvSync();}
+  }).subscribe();
+}
 let mvUploading=false;
 async function handleMvFileSelect(file){
   const input=document.getElementById('mv-file-input'),statusEl=document.getElementById('mv-file-status');
@@ -8463,6 +8432,7 @@ async function lcCommitDelete(){
     return;
   }
   const del=new Set(ids.map(String));
+  if(window.NKVideo)NKVideo.purgeListingFiles(db,ids);
   allEnquiries=allEnquiries.filter(e=>!del.has(String(e.listing_id)));
   allMessages=allMessages.filter(m=>!del.has(String(m.listing_id)));
   buildThreads();updateNavBadges();renderOverview();
@@ -9049,6 +9019,7 @@ async function generateBrochure(id){
       doc.text('Scan to view listing',pageW-margin-32,y+27);
     }catch(e){console.error('QR generation failed:',e);}
 
+    if((l.listing_videos||l.videos||[]).length){doc.setFontSize(9);doc.setTextColor(8,80,65);doc.text('Video walkthrough available: scan the QR code to watch.',margin,278);}
     doc.setFontSize(9);doc.setTextColor(136,135,128);
     doc.text(currentProfile?.full_name?`Contact: ${currentProfile.full_name}`:'Nyumba254',margin,285);
 

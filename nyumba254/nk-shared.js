@@ -260,7 +260,7 @@ function nkTrackRecentViewed(id) {
 async function nkFetchRecentlyViewed() {
   const ids = nkGetRecentViewedIds();
   if (!ids.length) return [];
-  const { data, error } = await db.from('listings').select('*, listing_photos(*)').in('id', ids).in('status', ['active', 'occupied']);
+  const { data, error } = await db.from('listings').select('*, listing_photos(*), listing_videos(id)').in('id', ids).in('status', ['active', 'occupied']);
   if (error || !data) return [];
   const byId = Object.fromEntries(data.map(l => [l.id, l]));
   return ids.map(id => byId[id]).filter(Boolean);
@@ -535,7 +535,7 @@ function nkBuildCard(listing, opts) {
         ${o.priceOverlay ? overlayHtml : `<span class="badge-cat ${escHtml(listing.category)}">${meta.label}</span>`}
       </div>
       <div class="card-body">
-        <div class="card-area">${escHtml(listing.area)} ${verifiedBadge}</div>
+        <div class="card-area">${escHtml(listing.area)} ${verifiedBadge}${Array.isArray(listing.listing_videos) && listing.listing_videos.length ? '<span class="card-video-chip" title="Has a video walkthrough" style="display:inline-block;margin-left:6px;padding:1px 7px;border-radius:20px;background:#e8f3ee;color:#0f6e56;font-size:10.5px;font-weight:700;vertical-align:middle">&#9654; Video</span>' : ''}</div>
         <div class="card-title">${safeTitle}</div>
         <div class="card-sub">${escHtml(subText)}</div>
         ${o.priceOverlay ? `<div class="card-meta">${nkMetaCat}${nkMetaBits}</div>` : ''}
