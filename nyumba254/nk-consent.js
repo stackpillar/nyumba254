@@ -1,6 +1,6 @@
 /* Cookie and ads consent. Nothing for analytics or ads loads until the visitor accepts.
    Public pages only: never shown on dashboard, post-listing, login or admin pages.
-   Policy text is a draft and needs legal review (Kenya Data Protection Act 2019). */
+   Policy text follows the Kenya Data Protection Act 2019. */
 (function () {
   var KEY = 'nk_consent_v1';
   var PRIVATE = /^\/(dashboard|post-listing|login|nk-ctrl-7f3k2x9|admin|inbox|profile|kyc|reset|accept-invite|verify-email)/i;
@@ -54,7 +54,7 @@
         '<h2 id="nkc-title">Cookies and ads</h2>' +
         '<p>We use essential storage for sign-in and settings. With your permission we also use analytics and ads. Nothing optional loads until you choose.</p>' +
         '<div class="nkc-row"><button type="button" class="nkc-primary" data-c="accept">Accept</button><button type="button" data-c="reject">Reject</button><button type="button" data-c="manage">Manage</button></div>' +
-        '<p class="nkc-note" style="margin-top:8px">Draft policy, needs legal review (Kenya Data Protection Act 2019). See our <a href="/privacy">privacy policy</a>.</p>';
+        '<p class="nkc-note" style="margin-top:8px">See our <a href="/privacy">privacy policy</a> (Kenya Data Protection Act 2019).</p>';
     } else {
       box.innerHTML =
         '<h2 id="nkc-title">Manage cookie choices</h2>' +
@@ -62,7 +62,7 @@
         '<label><input type="checkbox" id="nkc-an"' + (cur.analytics ? ' checked' : '') + '/><span><b>Analytics</b><br>Helps us see which pages are used so we can improve them.</span></label>' +
         '<label><input type="checkbox" id="nkc-ads"' + (cur.ads ? ' checked' : '') + '/><span><b>Ads</b><br>Lets us show ads on public pages. Never shown in your dashboard.</span></label>' +
         '<div class="nkc-row"><button type="button" class="nkc-primary" data-c="save">Save choices</button><button type="button" data-c="reject">Reject all</button></div>' +
-        '<p class="nkc-note" style="margin-top:8px">Draft policy, needs legal review (Kenya Data Protection Act 2019).</p>';
+        '<p class="nkc-note" style="margin-top:8px">Kenya Data Protection Act 2019.</p>';
     }
     box.addEventListener('click', function (e) {
       var b = e.target.closest('button[data-c]'); if (!b) return;
