@@ -12,6 +12,7 @@
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
+  <script src="/nk-pricing.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
   <link rel="stylesheet" href="/dashboard.css"/>
 <link rel="manifest" href="/manifest.webmanifest"><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(error){console.error('Service worker registration failed:',error);})})}</script></head>
@@ -917,7 +918,7 @@
               <div class="toggle-label"><strong>SMS enquiry alerts</strong><span>Get a text the moment a buyer enquires</span></div>
               <span style="font-size:11px;font-weight:700;color:var(--gold);background:var(--gold-light);padding:3px 9px;border-radius:20px">Premium</span>
             </div>
-            <a href="/plans" id="premium-upgrade-btn" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:14px;text-decoration:none">Upgrade — from KES 1,200/mo</a>
+            <a href="/plans" id="premium-upgrade-btn" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:14px;text-decoration:none">Upgrade</a>
           </div>
           <div class="settings-section" id="settings-bnb-section">
             <h3><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Airbnb / BNB plan</h3>
@@ -967,7 +968,7 @@
               <div class="toggle-label"><strong>24/7 AI Chat Concierge</strong><span>An AI trained on this listing's own details answers routine buyer questions instantly — availability, price, amenities — and hands off anything it can't answer to you</span></div>
               <label class="switch"><input type="checkbox" id="ai-concierge-toggle" onchange="toggleAiConcierge(this.checked)"/><span class="switch-track"></span></label>
             </div>
-            <a href="/plans" id="elite-upgrade-btn" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:14px;background:#7c3aed;text-decoration:none">Upgrade to Elite — from KES 3,000/mo</a>
+            <a href="/plans" id="elite-upgrade-btn" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:14px;background:#7c3aed;text-decoration:none">Upgrade to Elite</a>
             <div id="storefront-link-row" style="display:none;margin-top:10px">
               <div style="font-size:11.5px;color:var(--text-3);word-break:break-all;background:var(--surface);border-radius:8px;padding:8px 10px;margin-bottom:8px" id="storefront-settings-url"></div>
               <div style="display:flex;gap:8px">
@@ -1791,11 +1792,15 @@
   var SELS = ['a[href^="/plans"]','#nav-premium-upgrade','#premium-upgrade-btn','#elite-upgrade-btn','[data-act="upgrade"]'];
   var SEL = SELS.join(',');
   var st = document.createElement('style');
+  st.id = 'coming-soon-style';
   st.textContent = SELS.join(',') + '{opacity:.5!important;cursor:not-allowed!important;filter:grayscale(.4)}';
   document.head.appendChild(st);
+  try { db.from('platform_settings').select('value').eq('key','paid_plans_open').maybeSingle().then(function(r){ var v = r && r.data && r.data.value; if (v === 1 || v === '1' || v === true) st.remove(); }, function(){}); } catch(e) {}
+  var paidOpen = false;
+  try { db.from('platform_settings').select('value').eq('key','paid_plans_open').maybeSingle().then(function(r){ var v = r && r.data && r.data.value; paidOpen = v === 1 || v === '1' || v === true; }, function(){}); } catch(e) {}
   document.addEventListener('click', function(e){
     var el = e.target.closest(SEL);
-    if(!el) return;
+    if(!el || paidOpen) return;
     e.preventDefault();
     e.stopImmediatePropagation();
     showToast("Paid plans open soon — we'll notify you here and by email.",'');

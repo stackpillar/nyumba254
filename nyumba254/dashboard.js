@@ -2787,7 +2787,7 @@ function openRenewBnbPropertyModal(propertyId){const _s=document.getElementById(
   document.getElementById('pay-listing-intro').textContent=`Renew "${p.property_label}" (${wasBundle?'Bundle':'Basic'} tier) to bring it back live on the book page.`;
   document.getElementById('pay-plan-standard-row').style.display='flex';
   document.getElementById('pay-plan-featured-row').style.display='none';
-  const amt=Number(wasBundle?(platformPrices.bnb_bundle_price||2000):(platformPrices.bnb_basic_price||700));
+  const amt=Number(wasBundle?platformPrices.bnb_bundle_price:platformPrices.bnb_basic_price)||0;
   document.getElementById('pay-standard-amount').textContent='KES '+amt.toLocaleString('en-KE')+' / 30 days';
   document.getElementById('pay-listing-amount-display').textContent='KES '+amt.toLocaleString('en-KE');
   document.getElementById('pay-listing-ref').value='';
@@ -2799,7 +2799,8 @@ async function submitRenewBnbProperty(){
   if(!code||code.length!==10){showToast('Enter a valid 10-character M-Pesa code','error');return;}
   const p=bnbPropertiesCache.find(x=>String(x.id)===String(rbpActivePropertyId));
   if(!p)return;
-  const amount=Number(p.plan_tier==='bundle'?(platformPrices.bnb_bundle_price||2000):(platformPrices.bnb_basic_price||700))||700;
+  const amount=Number(p.plan_tier==='bundle'?platformPrices.bnb_bundle_price:platformPrices.bnb_basic_price)||0;
+  if(!amount){showToast('Price unavailable. Please try again shortly.','error');return;}
   const btn=document.getElementById('btn-submit-pay-listing');btn.disabled=true;btn.textContent='Submitting…';
   const{error}=await db.from('payments').insert({seller_id:effectiveSellerId,amount,method:'paybill',reference:code,type:'bnb_property_renewal',status:'pending_verification',bnb_property_id:p.id});
   btn.disabled=false;btn.textContent='Submit for verification';
@@ -4663,20 +4664,41 @@ const VERIFY_BUCKET = 'verification-docs';
 // ── Live Premium/Elite prices — reads the same platform_settings rows the
 // admin's Pricing settings page writes, so this dashboard never shows a
 // stale hardcoded number after an admin changes a price. ──
-  let platformPrices = { premium_monthly_price: 1200, elite_monthly_price: 3000, bnb_basic_price: 700, bnb_bundle_price: 2000 };
+  let platformPrices = {};
+let myPricing = null, platformCfg = {};
 async function loadPlatformPrices(){
   try{
-    const{data,error}=await db.from('platform_settings').select('key,value').in('key',['premium_monthly_price','elite_monthly_price','bnb_basic_price','bnb_bundle_price']);
-    if(error||!data)return;
-    data.forEach(row=>{ if(row.key in platformPrices) platformPrices[row.key]=Number(row.value)||platformPrices[row.key]; });
+    platformCfg = await NKPricing.loadSettings(db);
+    myPricing = await NKPricing.loadPricing(db);
+    const open = !!(myPricing && myPricing.paid_plans_open);
+    const money = NKPricing.money;
+    const needs = !myPricing || !myPricing.role;
+    const bn = (myPricing && myPricing.bnb) || {};
+    platformPrices.bnb_basic_price = bn.basic ?? Number(platformCfg.bnb_basic_price);
+    platformPrices.bnb_bundle_price = bn.bundle ?? Number(platformCfg.bnb_bundle_price);
+    platformPrices.premium_monthly_price = NKPricing.planPrice(myPricing,'premium','monthly');
+    platformPrices.elite_monthly_price = NKPricing.planPrice(myPricing,'elite','monthly');
     const pBtn=document.getElementById('premium-upgrade-btn');
-    if(pBtn) pBtn.textContent=`Upgrade — from KES ${platformPrices.premium_monthly_price.toLocaleString('en-KE')}/mo`;
     const eBtn=document.getElementById('elite-upgrade-btn');
-    if(eBtn) eBtn.textContent=`Upgrade to Elite — from KES ${platformPrices.elite_monthly_price.toLocaleString('en-KE')}/mo`;
-    const bBasic=document.getElementById('bnb-basic-price-label'); if(bBasic) bBasic.textContent=`KES ${platformPrices.bnb_basic_price.toLocaleString('en-KE')}/mo`;
-    const bBundle=document.getElementById('bnb-bundle-price-label'); if(bBundle) bBundle.textContent=`KES ${platformPrices.bnb_bundle_price.toLocaleString('en-KE')}/mo`;
+    if(pBtn) pBtn.textContent = needs ? 'Set up your profile to see prices' : (open ? `Upgrade — from ${money(platformPrices.premium_monthly_price)}/mo` : 'Paid plans open soon');
+    if(eBtn) eBtn.textContent = needs ? 'Set up your profile to see prices' : (open ? `Upgrade to Elite — from ${money(platformPrices.elite_monthly_price)}/mo` : 'Paid plans open soon');
+    const bBasic=document.getElementById('bnb-basic-price-label'); if(bBasic) bBasic.textContent=`${money(platformPrices.bnb_basic_price)}/mo`;
+    const bBundle=document.getElementById('bnb-bundle-price-label'); if(bBundle) bBundle.textContent=`${money(platformPrices.bnb_bundle_price)}/mo`;
     updateBnbStatusBanner();
   }catch(e){console.error('loadPlatformPrices failed:',e);}
+}
+// Featured is an upgrade: Fee(featured) minus the Standard fee already covered or paid, never below the minimum.
+function featureQuote(l){
+  const units=Number(l.total_units)||(l.listing_units||[]).length||0;
+  const trial=l.payment_status==='trial';
+  const covered=!!l.covered_by_plan;
+  const role=l.listed_by_type||(myPricing&&myPricing.role)||'owner';
+  const paidStd=!trial&&!covered&&l.payment_status==='paid'?NKPricing.listingFee(platformCfg,{price:l.price,type:l.price_type==='rent'?'rent':'sale',plan:'standard',units,role,multiplier:myPricing&&myPricing.listing_fee_multiplier}):0;
+  return NKPricing.featuredCharge(platformCfg,{price:l.price,type:l.price_type==='rent'?'rent':'sale',units,role,multiplier:myPricing&&myPricing.listing_fee_multiplier,covered,trial,paidStandardFee:paidStd});
+}
+function featureQuoteLine(q){
+  const m=NKPricing.money;
+  return q.credit>0?`Featured fee ${m(q.full)} minus ${m(q.credit)} Standard credit = <strong>${m(q.charge)}</strong>`:`Featured fee <strong>${m(q.charge)}</strong>`;
 }
 function updateBnbStatusBanner(){
   const banner=document.getElementById('bnb-status-banner');
@@ -6693,8 +6715,8 @@ async function boostSingleListing(id){
   const l=allListings.find(x=>String(x.id)===String(id));
   if(!l)return;
   if(!requireVerifiedIdentity('boost','requesting a listing boost'))return;
-  const unit=Math.round((Number(platformPrices.premium_monthly_price)||1200)*0.6);
-  if(!await lcConfirm({title:'Feature this listing?',message:`Featuring "<strong>${escHtml(l.title)}</strong>" costs roughly <strong>KES ${unit.toLocaleString('en-KE')}</strong>.<br><br>This opens a support ticket so our team can confirm the exact price and send payment details. <strong>Nothing is charged yet.</strong>`,confirmLabel:'Request featuring'}))return;
+  const fq=featureQuote(l);
+  if(!await lcConfirm({title:'Feature this listing?',message:`Featuring "<strong>${escHtml(l.title)}</strong>": ${featureQuoteLine(fq)}.<br><br>This opens a support ticket so our team can confirm the exact price and send payment details. <strong>Nothing is charged yet.</strong>`,confirmLabel:'Request featuring'}))return;
   if(!scwOpen)scwToggle();
   await scwCreateTicket('pricing');
   setTimeout(()=>{
@@ -7824,9 +7846,10 @@ async function bulkFeatureSelectedListings(){
   const ok=lcSelected().filter(l=>lcIsLive(l)&&!l.is_featured);
   if(!ok.length){showToast('Select live, not-yet-featured listings to boost','error');return;}
   if(!requireVerifiedIdentity('boost','requesting a listing boost'))return;
-  const unit=Math.round((Number(platformPrices.premium_monthly_price)||1200)*0.6);
-  const total=unit*ok.length;
-  if(!await lcConfirm({title:'Feature these listings?',message:`Featuring <strong>${ok.length} listing${ok.length!==1?'s':''}</strong> costs roughly <strong>KES ${total.toLocaleString('en-KE')}</strong> (about KES ${unit.toLocaleString('en-KE')} each).<br><br>This opens a support ticket so our team can confirm the exact price and send payment details. <strong>Nothing is charged yet.</strong>`,confirmLabel:'Request featuring'}))return;
+  const quotes=ok.map(featureQuote);
+  const total=quotes.reduce((s,q)=>s+q.charge,0);
+  const unit=Math.round(total/ok.length);
+  if(!await lcConfirm({title:'Feature these listings?',message:`Featuring <strong>${ok.length} listing${ok.length!==1?'s':''}</strong> costs about <strong>${NKPricing.money(total)}</strong> in total (about ${NKPricing.money(unit)} each, after any Standard-fee credit).<br><br>This opens a support ticket so our team can confirm the exact price and send payment details. <strong>Nothing is charged yet.</strong>`,confirmLabel:'Request featuring'}))return;
   if(!scwOpen)scwToggle();
   await scwCreateTicket('pricing');
   setTimeout(()=>{
