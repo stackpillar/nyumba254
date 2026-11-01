@@ -7,14 +7,20 @@
  * - Cross-origin requests (Supabase, Cloudinary, Google Maps, M-Pesa, Brevo,
  *   Gemini) and all non-GET requests are left completely alone.
  *
+ * App context: pages opened by the Android app shell (?source=app, an android-app://
+ * referrer, or a page that announced itself with nk-context.js) get their own offline
+ * page (/offline-app.html). Website visitors never see it and the app never sees
+ * /offline.html. The native Expo app does not use this worker at all.
+ *
  * Bump VERSION whenever you change this file or the precache list.
  */
-const VERSION = 'v4';
+const VERSION = 'v5';
 const SHELL_CACHE = `nyumba254-shell-${VERSION}`;
 const ASSET_CACHE = `nyumba254-assets-${VERSION}`;
 
 const PRECACHE = [
   '/manifest.webmanifest',
+  '/offline-app.html',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
 ];
@@ -26,6 +32,17 @@ const NEVER_CACHE = [
   '/admin',
   '/api/'
 ];
+
+const APP_CLIENTS = new Map();
+self.addEventListener('message', (event) => {
+  const d = event.data;
+  if (d && d.type === 'nk-ctx' && event.source && event.source.id) APP_CLIENTS.set(event.source.id, d.ctx === 'app');
+});
+function isAppNavigation(req, url, event) {
+  if (url.searchParams.get('source') === 'app') return true;
+  if ((req.referrer || '').startsWith('android-app://')) return true;
+  return !!(event.clientId && APP_CLIENTS.get(event.clientId));
+}
 
 async function cacheOfflinePage(cache) {
   // Cloudflare may redirect /offline.html to /offline, and a redirected
@@ -70,7 +87,7 @@ self.addEventListener('fetch', (event) => {
   // 1. Page navigations: network only, offline page as fallback.
   if (req.mode === 'navigate') {
     event.respondWith(
-      fetch(req).catch(() => caches.match('/offline.html'))
+      fetch(req).catch(() => caches.match(isAppNavigation(req, url, event) ? '/offline-app.html' : '/offline.html'))
     );
     return;
   }

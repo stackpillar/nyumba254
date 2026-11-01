@@ -188,7 +188,7 @@ main{display:block}
 <link rel="stylesheet" href="/theme.css"/>
 <script src="/theme.js"></script>
 <link rel="manifest" href="/manifest.webmanifest"/>
-<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script>
+<script src="/nk-context.js"></script><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script>
 </head>
 <body>
 

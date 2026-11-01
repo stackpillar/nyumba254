@@ -55,7 +55,8 @@
       )) ||
       window.navigator.standalone === true ||
       (document.referrer || '').indexOf('android-app://') === 0 ||
-      /[?&]source=(pwa|shortcut)(&|$)/.test(location.search);
+      /[?&]source=(pwa|shortcut|app)(&|$)/.test(location.search) ||
+      window.NK_CTX === 'app';
     } catch (e) { inApp = false; }
     if (inApp) safeSet(window.sessionStorage, SESSION_KEY, '1');
     return inApp;

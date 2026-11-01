@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0F6E56">
+<meta name="robots" content="noindex">
+<title>No connection | Nyumba254 app</title>
+<style>
+  :root { --bg:#f7f6f2; --surface:#fff; --text:#1a1a18; --muted:#55625d; --accent:#0F6E56; --border:#dcd9cf; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#06231c; --surface:#0b3429; --text:#e8f4ef; --muted:#9cc4b6; --accent:#1D9E75; --border:#14503f; } }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; display: grid; place-items: center; padding: 24px; }
+  main { width: 100%; max-width: 420px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px 28px; }
+  .brand { font-family: "Playfair Display", Georgia, serif; font-size: 1.5rem; margin: 0 0 20px; }
+  h1 { font-size: 1.25rem; margin: 0 0 8px; }
+  p { margin: 0 0 22px; line-height: 1.5; color: var(--muted); }
+  button { width: 100%; min-height: 48px; border: 0; border-radius: 12px; background: var(--accent); color: #fff; font: 600 1rem Inter, system-ui, sans-serif; cursor: pointer; }
+  button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+</style>
+</head>
+<body>
+<main>
+  <p class="brand">Nyumba254</p>
+  <h1>No internet connection</h1>
+  <p>Check your mobile data or Wi-Fi, then try again. Your saved listings will load as soon as you are back online.</p>
+  <button type="button" id="retry">Try again</button>
+</main>
+<script>
+document.getElementById('retry').addEventListener('click', function () { location.href = '/?source=app'; });
+window.addEventListener('online', function () { location.href = '/?source=app'; });
+</script>
+</body>
+</html>

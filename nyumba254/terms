@@ -185,7 +185,7 @@
   </style>
   <link rel="stylesheet" href="/theme.css"/>
   <script src="/theme.js"></script>
-<link rel="manifest" href="/manifest.webmanifest"><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script>  <meta property="og:type" content="website"/>
+<link rel="manifest" href="/manifest.webmanifest"><script src="/nk-context.js"></script><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script>  <meta property="og:type" content="website"/>
   <meta property="og:site_name" content="Nyumba254"/>
   <meta property="og:title" content="Terms of Service — Nyumba254"/>
   <meta property="og:description" content="Terms of Service for Nyumba254 — Kenya's apartment and property listing platform."/>

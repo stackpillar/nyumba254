@@ -260,7 +260,7 @@
   </style>
   <link rel="stylesheet" href="/theme.css"/>
   <script src="/theme.js"></script>
-<link rel="manifest" href="/manifest.webmanifest"><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script>  <meta property="og:type" content="website"/>
+<link rel="manifest" href="/manifest.webmanifest"><script src="/nk-context.js"></script><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script>  <meta property="og:type" content="website"/>
   <meta property="og:site_name" content="Nyumba254"/>
   <meta property="og:title" content="Contact Us — Nyumba254"/>
   <meta property="og:description" content="Get in touch with Nyumba254. We're here to help with listings, payments, and anything else across Kenya — starting with Kisumu, Nairobi, and Mombasa."/>
