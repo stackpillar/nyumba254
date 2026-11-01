@@ -12,7 +12,12 @@ def nkProps = new Properties()
 def nkPropsPath = System.getenv('NK_KEYSTORE_PROPS')
 if (nkPropsPath && new File(nkPropsPath).exists()) { new File(nkPropsPath).withInputStream { nkProps.load(it) } }
 `;
-    g = g.replace(/android\s*\{/, `${loader}\nandroid {`);
+    // NK_CXX_DIR shortens CMake output paths on Windows (MAX_PATH breaks ninja otherwise).
+    const cxx = `
+    if (System.getenv('NK_CXX_DIR')) {
+        externalNativeBuild { cmake { buildStagingDirectory = file(System.getenv('NK_CXX_DIR')) } }
+    }`;
+    g = g.replace(/android\s*\{/, `${loader}\nandroid {${cxx}`);
     g = g.replace(/signingConfigs\s*\{/, `signingConfigs {
         release {
             if (nkProps.getProperty('storeFile')) {
