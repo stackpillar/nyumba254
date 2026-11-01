@@ -688,6 +688,7 @@ h1.title{font-size:clamp(20px,4.6vw,27px);line-height:1.22;margin-bottom:4px}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 <script src="/nk-shared.js"></script>
+<script src="/nk-video.js"></script>
 <script>
 (function(){'use strict';
 /* ═══ helpers ═══ */
@@ -964,19 +965,12 @@ function unitsHtml(){
   return `<section class="sec" id="sec-units">${secHead('units','Unit options and availability')}${rows}${total?`<div class="occ"><div class="donut" data-pct="${pct}%" style="background:conic-gradient(var(--green-dark) 0 ${pct*3.6}deg,var(--green-light) ${pct*3.6}deg 360deg)" role="img" aria-label="${pct}% occupied"></div><div style="font-size:14px"><b>${taken} of ${total} spaces taken</b><br><span style="color:var(--text-3)">${avail} still available</span></div></div>`:''}</section>`;
 }
 function videoHtml(){
-  const v=(P.listing_videos||[])[0];if(!v||!v.url)return '';
-  const url=String(v.url),yt=url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([\w-]{6,})/i),vm=url.match(/vimeo\.com\/(\d+)/i),saver=document.body.classList.contains('nk-datasaver');
-  const ext=(label)=>`<a class="btn btn-outline" href="${escHtml(url)}" rel="noopener">${escHtml(label)}</a>`;
-  let inner;
-  if(yt)inner=`<button type="button" class="vid" data-act="vid" data-src="https://www.youtube.com/embed/${escHtml(yt[1])}?autoplay=1" aria-label="Play video walkthrough" ${saver?'':`style="background-image:url('https://img.youtube.com/vi/${escHtml(yt[1])}/hqdefault.jpg')"`}><span class="play"><span>▶</span></span></button>`;
-  else if(vm)inner=`<button type="button" class="vid" data-act="vid" data-src="https://player.vimeo.com/video/${escHtml(vm[1])}?autoplay=1" aria-label="Play video walkthrough"><span class="play"><span>▶</span></span></button>`;
-  else if(/facebook\.com\/.*\/videos\/|fb\.watch\//i.test(url))inner=`<div class="vid"><iframe src="https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false" allowfullscreen loading="lazy" title="Video walkthrough"></iframe></div>`;
-  else if(/tiktok\.com/i.test(url))inner=ext('Watch on TikTok');
-  else if(/instagram\.com/i.test(url))inner=ext('Watch on Instagram');
-  else if(/\.(mp4|webm)(\?.*)?$/i.test(url))inner=`<video class="vidfile" controls playsinline preload="metadata"><source src="${escHtml(url)}"/>Your browser cannot play this video.</video>`;
-  else if(/^https?:\/\//i.test(url))inner=ext('Watch the video');
-  else return '';
-  return `<section class="sec" id="sec-video">${secHead('video','Video walkthrough')}${inner}</section>`;
+  const v=(P.listing_videos||[]).filter(x=>x&&x.url);if(!v.length)return '';
+  return `<section class="sec" id="sec-video">${secHead('video',v.length>1?'Video walkthroughs':'Video walkthrough')}<div id="vid-mount"></div></section>`;
+}
+function mountVideos(){
+  const el=$('vid-mount');if(!el||typeof NKVideo==='undefined')return;
+  NKVideo.mountInto(el,(P.listing_videos||[]).filter(x=>x&&x.url).sort((x,y)=>(x.position||0)-(y.position||0)),{db,canEdit:!!isOwner});
 }
 function ownerHtml(){
   const occ=P.status==='occupied',sold=isSale();
@@ -1070,7 +1064,7 @@ function render(){
     <div class="listnav" id="listnav" hidden></div>
   </div><aside class="side" id="side" aria-label="Contact the lister">${sidebarHtml()}</aside></div>
   <section class="sim" id="sim" hidden><div class="sim-head"><h2>${occ?'Similar listings available now':'Similar listings nearby'}</h2><a class="link" href="${escHtml(nkBuildListingsUrl({category:P.category,county:P.county}))}">View all in ${escHtml(P.county?nkCountyLabel(P.county):'Kenya')}</a></div><div class="card-grid" id="sim-grid"><div class="sk" style="aspect-ratio:4/3"></div><div class="sk" style="aspect-ratio:4/3"></div><div class="sk" style="aspect-ratio:4/3"></div></div></section>`;
-  tabActions();prefill();initMap();bnbCheck();ctaBar();initAnchors();initClamp();updateRating();
+  mountVideos();tabActions();prefill();initMap();bnbCheck();ctaBar();initAnchors();initClamp();updateRating();
   if(typeof NKSaved!=='undefined'&&NKSaved.hydrate)NKSaved.hydrate($('view'));
   loadEnqCount();
 }
@@ -1613,7 +1607,7 @@ document.addEventListener('click',e=>{
     case 'share':track('share');openShare();break;
     case 'copy':navigator.clipboard.writeText(t.dataset.url).then(()=>{t.innerHTML='<span>✓</span>Copied';toast('Link copied')},()=>toast('Could not copy the link','error'));break;
     case 'copy-ref':navigator.clipboard.writeText(shortRef()).then(()=>toast('Listing reference copied'),()=>toast('Could not copy the reference','error'));break;
-    case 'video-jump':{const sec=$('sec-video');if(sec){sec.scrollIntoView({behavior:'smooth',block:'start'});const pb=sec.querySelector('[data-act="vid"]');if(pb)setTimeout(()=>pb.click(),450)}else toast('No video walkthrough for this listing yet.');break}
+    case 'video-jump':{const sec=$('sec-video');if(sec){sec.scrollIntoView({behavior:'smooth',block:'start'});const pb=sec.querySelector('[data-nkv-file]');if(pb)setTimeout(()=>{pb.play&&pb.play().catch(()=>{})},450)}else toast('No video walkthrough for this listing yet.');break}
     case 'map-jump':{const sec=$('sec-loc');if(sec){sec.scrollIntoView({behavior:'smooth',block:'start'});track('location_jump')}break;}
     case 'report':$('rp-reason').value='';$('rp-amt-wrap').hidden=true;$('rp-banner').textContent='';nkOpenModal($('ov-report'));break;
     case 'report-fee':$('rp-reason').value=P?.viewing_fee===0?'viewing_fee_free_listing':'viewing_fee_dispute';$('rp-amt-wrap').hidden=false;$('rp-banner').textContent='';nkOpenModal($('ov-report'));break;

@@ -9,7 +9,7 @@
  *
  * Bump VERSION whenever you change this file or the precache list.
  */
-const VERSION = 'v3';
+const VERSION = 'v4';
 const SHELL_CACHE = `nyumba254-shell-${VERSION}`;
 const ASSET_CACHE = `nyumba254-assets-${VERSION}`;
 
@@ -61,6 +61,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
+  if (req.headers.has('range') || req.destination === 'video' || req.destination === 'audio') return;
 
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
