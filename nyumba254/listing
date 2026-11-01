@@ -442,24 +442,6 @@ h1.title{font-size:clamp(20px,4.6vw,27px);line-height:1.22;margin-bottom:4px}
 .lncard{min-height:60px;padding:10px 14px}
 .sim{margin-top:24px}
 .sim-head{margin-bottom:12px}
-/* mobile section order: contact first, estimator/tools/nav last */
-@media(max-width:900px){
-.layout{display:flex;flex-direction:column;gap:0}
-.main-col{display:contents}
-.main-col>*{order:6}
-.main-col>.gallery,.main-col>.ghero,.main-col>#gallery,.main-col>.pills,.main-col>h1.title,.main-col>.loc,.main-col>.price,.main-col>.strip{order:0}
-.main-col>.notice,.main-col>.owner{order:1}
-.main-col>#inline-cta{order:1}
-.main-col>.meta{order:2}
-.main-col>#sec-about,.main-col>#sec-units,.main-col>#sec-details,.main-col>#sec-amen,.main-col>#sec-video{order:3}
-.main-col>#sec-answers{order:4}
-.main-col>#sec-loc{order:5}
-.layout>.side{order:7}
-.main-col>.safety{order:8}
-.main-col>.insight-grid,.main-col>.quick-tools,.main-col>details.afford{order:9}
-.main-col>.listnav{order:10}
-.main-col>.insight-grid{margin-top:10px}
-}
 </style>
 <style id="nk-polish-v2">
 /* NK-POLISH-V2 */
