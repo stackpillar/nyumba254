@@ -8208,10 +8208,8 @@ async function openManageVideosModal(listingId){
   document.getElementById('mv-url-input').value='';
   document.getElementById('mv-file-input').value='';
   document.getElementById('mv-file-status').textContent='';
-  const limit=mvGetLimit();
-  document.getElementById('mv-limit-note').textContent=`Free on every plan — 1 video per listing${limit>1?' (up to 5 with an active yearly plan)':''}.`;
   try{
-    const{data,error}=await db.from('listing_videos').select('id,url,position').eq('listing_id',listingId).order('position',{ascending:true});
+    const{data,error}=await db.from('listing_videos').select('*').eq('listing_id',listingId).order('position',{ascending:true});
     if(error)throw error;
     mvVideos=data||[];
     mvRenderVideoList();
@@ -8225,12 +8223,24 @@ async function openManageVideosModal(listingId){
 function mvRenderVideoList(){
   const el=document.getElementById('mv-video-list');
   if(!el)return;
+  const limit=mvGetLimit();
+  document.getElementById('mv-limit-note').textContent=`${mvVideos.length} of ${limit} video${limit===1?'':'s'} used on this listing.${limit<5?' Upgrade your plan for up to 5.':''}`;
   if(!mvVideos.length){el.innerHTML='<div style="font-size:12px;color:var(--text-3)">No videos added yet.</div>';return;}
-  el.innerHTML=mvVideos.map((v,i)=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px">
-      <span style="flex:1;font-size:12.5px;word-break:break-all">${escHtml(v.url||v)}</span>
+  el.innerHTML=mvVideos.map((v,i)=>{
+    const d=NKVideo.describe(v),up=v.source==='upload';
+    const meta=[up?'Uploaded':'Link',v.duration_seconds?Math.round(v.duration_seconds)+'s':'',v.file_size_bytes?(v.file_size_bytes/1048576).toFixed(1)+' MB':'',v.status&&v.status!=='ready'?'Awaiting review':''].filter(Boolean).join(' · ');
+    const thumb=v.poster_url?`<img src="${escHtml(v.poster_url)}" alt="" loading="lazy" style="width:72px;height:54px;object-fit:cover;border-radius:6px;background:#111;flex:none"/>`:`<div style="width:72px;height:54px;border-radius:6px;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;flex:none">▶</div>`;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px">
+      <a href="${escHtml(d.original||v.url)}" target="_blank" rel="noopener" aria-label="Preview video">${thumb}</a>
+      <div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(up?'Uploaded video':(d.provider||'Video link'))}</div><div style="font-size:11.5px;color:var(--text-3)">${escHtml(meta)}</div></div>
       <button type="button" class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red)" onclick="removeListingVideo(${i})">Remove</button>
-    </div>`).join('');
+    </div>`}).join('');
+}
+
+function mvSync(){
+  const l=allListings.find(x=>String(x.id)===String(mvActiveListingId));
+  if(l)l.videos=mvVideos;
+  mvRenderVideoList();
 }
 
 async function addListingVideo(){
@@ -8238,106 +8248,61 @@ async function addListingVideo(){
   const input=document.getElementById('mv-url-input');
   const url=input.value.trim();
   if(!url){showToast('Paste a video link first','error');return;}
-  if(!safeHttpLink(url)){showToast('Enter a valid video link starting with http:// or https://.','error');return;}
-  if(mvVideos.length>=mvGetLimit()){showToast(`You can add up to ${mvGetLimit()} video(s) on your plan`,'error');return;}
+  if(!/^https:\/\//i.test(url)){showToast('Video links must start with https://','error');return;}
   const btn=document.getElementById('mv-add-btn');
   btn.disabled=true;btn.textContent='Saving…';
   try{
-    const{data,error}=await db.from('listing_videos').insert({listing_id:mvActiveListingId,url,position:mvVideos.length}).select('id,url,position').single();
-    if(error)throw error;
-    mvVideos.push(data);
-    const l=allListings.find(x=>String(x.id)===String(mvActiveListingId));
-    if(l)l.videos=mvVideos;
+    const row=await NKVideo.saveLink(db,mvActiveListingId,url);
+    mvVideos.push(row);
     input.value='';
-    mvRenderVideoList();
+    mvSync();
     showToast('Video added ✓','success');
   }catch(error){
     console.error('Could not save listing video:',error);
-    showToast('Could not save: '+(error.message||String(error)),'error');
+    showToast(NKVideo.friendlyError(error),'error');
   }finally{
     btn.disabled=false;btn.textContent='+ Add';
-  }
-}
-
-function mvOwnStoragePath(urlValue){
-  try{
-    const url=new URL(urlValue),base=new URL(SUPABASE_URL);
-    const marker=`/storage/v1/object/public/${LISTING_VIDEOS_BUCKET}/`;
-    const index=url.pathname.indexOf(marker);
-    if(url.origin!==base.origin||index<0)return null;
-    const path=decodeURIComponent(url.pathname.slice(index+marker.length));
-    const segments=path.split('/');
-    if(!path.startsWith(`${mvActiveListingId}/`)||segments.some(part=>!part||part==='.'||part==='..'))return null;
-    return path;
-  }catch(error){
-    console.warn('Could not verify listing video storage ownership; leaving the file untouched:',error);
-    return null;
   }
 }
 
 async function removeListingVideo(index){
   const video=mvVideos[index];
   if(!video)return;
-  let deleteError;
+  if(!confirm('Remove this video from the listing?'))return;
   try{
-    const{error}=await db.from('listing_videos').delete().eq('id',video.id).eq('listing_id',mvActiveListingId);
-    deleteError=error;
-  }catch(error){deleteError=error;}
-  if(deleteError){console.error('Could not remove listing video:',deleteError);showToast('Could not remove: '+(deleteError.message||String(deleteError)),'error');return;}
-  mvVideos.splice(index,1);
-  const l=allListings.find(x=>String(x.id)===String(mvActiveListingId));
-  if(l)l.videos=mvVideos;
-  const path=mvOwnStoragePath(video.url);
-  if(path){
-    let storageError;
-    try{
-      ({error:storageError}=await db.storage.from(LISTING_VIDEOS_BUCKET).remove([path]));
-    }catch(error){storageError=error;}
-    if(storageError){
-      console.error('Video record was removed, but its uploaded file could not be deleted:',storageError);
-      showToast('Video removed, but its stored file could not be cleaned up: '+(storageError.message||String(storageError)),'error');
-      mvRenderVideoList();
-      return;
-    }
+    await NKVideo.remove(db,video.id);
+    mvVideos.splice(index,1);
+    mvSync();
+    showToast('Video removed','success');
+  }catch(error){
+    console.error('Could not remove listing video:',error);
+    showToast('Could not remove: '+NKVideo.friendlyError(error),'error');
   }
-  mvRenderVideoList();
-  showToast('Video removed','success');
 }
 
-const LISTING_VIDEOS_BUCKET='listing-videos'; // create this Supabase storage bucket if it doesn't exist
+let mvUploading=false;
 async function handleMvFileSelect(file){
+  const input=document.getElementById('mv-file-input'),statusEl=document.getElementById('mv-file-status');
   if(!file)return;
-  if(mvIsBlocked()){showToast('Adding video walkthroughs is disabled for this account. Contact support for help.','error');document.getElementById('mv-file-input').value='';return;}
-  if(!file.type.startsWith('video/')){showToast('Choose a video file.','error');document.getElementById('mv-file-input').value='';return;}
-  if(mvVideos.length>=mvGetLimit()){showToast(`You can add up to ${mvGetLimit()} video(s) on your plan`,'error');document.getElementById('mv-file-input').value='';return;}
-  if(file.size>100*1024*1024){showToast('Video must be under 100MB','error');document.getElementById('mv-file-input').value='';return;}
-  const statusEl=document.getElementById('mv-file-status');
-  statusEl.textContent='Uploading…';
-  const ext=(file.name.split('.').pop()||'mp4').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,8)||'mp4';
-  const path=`${mvActiveListingId}/${Date.now()}.${ext}`;
-  let uploaded=false;
+  if(mvIsBlocked()){showToast('Adding video walkthroughs is disabled for this account. Contact support for help.','error');input.value='';return;}
+  if(mvUploading)return;
+  mvUploading=true;
   try{
-    const{error:upErr}=await db.storage.from(LISTING_VIDEOS_BUCKET).upload(path,file);
-    if(upErr)throw new Error(`Upload failed: ${upErr.message}`);
-    uploaded=true;
-    const{data:pub}=db.storage.from(LISTING_VIDEOS_BUCKET).getPublicUrl(path);
-    const{data,error}=await db.from('listing_videos').insert({listing_id:mvActiveListingId,url:pub.publicUrl,position:mvVideos.length}).select('id,url,position').single();
-    if(error)throw new Error(`Save failed: ${error.message}`);
-    mvVideos.push(data);
-    const l=allListings.find(x=>String(x.id)===String(mvActiveListingId));
-    if(l)l.videos=mvVideos;
+    statusEl.textContent='Checking video…';
+    const limits=await NKVideo.loadLimits(db);
+    const prep=await NKVideo.prepareFile(file,limits);
+    if(prep.error){statusEl.textContent=prep.error;return;}
+    const up=await NKVideo.uploadFile(db,mvActiveListingId,prep,p=>{statusEl.textContent='Uploading… '+Math.round(p*100)+'%'});
+    statusEl.textContent='Saving…';
+    const row=await NKVideo.saveUpload(db,mvActiveListingId,prep,up);
+    mvVideos.push(row);
     statusEl.textContent='Uploaded ✓';
-    document.getElementById('mv-file-input').value='';
-    mvRenderVideoList();
+    mvSync();
   }catch(error){
     console.error('Video walkthrough upload failed:',error);
-    statusEl.textContent=error.message||'Video upload failed.';
-    if(uploaded){
-      try{
-        const{error:cleanupError}=await db.storage.from(LISTING_VIDEOS_BUCKET).remove([path]);
-        if(cleanupError)console.error('Could not remove uploaded video after its record failed to save:',cleanupError);
-      }catch(cleanupError){console.error('Could not clean up uploaded video after a failed save:',cleanupError);}
-    }
+    statusEl.textContent=NKVideo.friendlyError(error);
+  }finally{
+    mvUploading=false;input.value='';
   }
 }
 function openEditModal(id){

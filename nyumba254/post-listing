@@ -258,11 +258,11 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
     </div>
     <div class="form-card">
       <h2>Video walkthrough <span class="opt">optional</span></h2><p class="hint">A short video builds trust faster than photos alone.</p>
-      <div class="field"><label for="video_url">Video link</label><input type="url" id="video_url" placeholder="TikTok, Instagram, YouTube, Vimeo or a direct video link"/><div class="field-error" id="e-video_url" role="alert"></div></div>
+      <div class="field"><label for="video_url">Video link</label><input type="url" id="video_url" placeholder="https:// link: YouTube, Vimeo, TikTok, Instagram or a direct video"/><div class="field-error" id="e-video_url" role="alert"></div></div>
       <div class="field" id="video-file-f" style="padding-top:14px;border-top:1px dashed var(--border)"><label>Or upload a short video <span class="opt">up to 60 seconds</span></label>
         <div class="map-tools"><button type="button" class="btn-alt" data-act="vid-up">Upload video</button><button type="button" class="btn-alt" data-act="vid-rec">Record video</button></div>
         <input type="file" id="vid-up" accept="video/*" class="sr-only"/><input type="file" id="vid-rec" accept="video/*" capture="environment" class="sr-only"/>
-        <div class="field-hint" id="video-hint">Longer video? Email it to <a href="mailto:hellonyumba254@gmail.com" style="color:var(--green-dark);font-weight:600">hellonyumba254@gmail.com</a> and we'll add it for you.</div>
+        <div class="field-hint" id="video-hint">MP4, WebM or MOV. Shorter than the limit shown after you choose a file. Longer video? Email it to <a href="mailto:hellonyumba254@gmail.com" style="color:var(--green-dark);font-weight:600">hellonyumba254@gmail.com</a> and we'll add it for you.</div>
         <div class="field-hint" id="video-status" aria-live="polite"></div></div>
     </div>
   </section>
@@ -318,6 +318,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
 <script src="/nk-shared.js"></script>
+<script src="/nk-video.js"></script>
 <script src="/nk-policy-viewer.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -634,21 +635,21 @@ async function uploadPhotos(listingId){
 }
 
 /* ═══ VIDEO ═══ */
-function videoLength(f){return new Promise((ok,no)=>{const v=document.createElement('video');v.preload='metadata';v.muted=true;v.src=URL.createObjectURL(f);const t=setTimeout(()=>{URL.revokeObjectURL(v.src);no()},8000);v.onloadedmetadata=()=>{clearTimeout(t);URL.revokeObjectURL(v.src);ok(v.duration)};v.onerror=()=>{clearTimeout(t);no()}})}
 async function pickVideo(f){
-  const st=$('video-status');if(!f){S.video=null;st.textContent='';return}
+  const st=$('video-status');S.video=null;S.videoPrep=null;if(!f){st.textContent='';return}
   st.textContent='Checking video…';
-  try{const d=await videoLength(f);
-    if(d>60||f.size>100*1024*1024){S.video=null;st.textContent=d>60?`That video is ${Math.round(d)} seconds; the limit is 60. Email longer videos to hellonyumba254@gmail.com.`:'That file is too large (100 MB max).';return}
-    S.video=f;st.textContent=`Ready: ${f.name} (${Math.round(d)}s)`;
-  }catch(e){S.video=null;st.textContent='We could not read that video. Try a different file.'}
+  const lim=S.vlimits||(S.vlimits=await NKVideo.loadLimits(db));
+  const r=await NKVideo.prepareFile(f,lim);
+  if(r.error){st.textContent=r.error;return}
+  S.video=f;S.videoPrep=r;S.videoDone=false;
+  st.textContent=`Ready: ${f.name} (${Math.round(r.meta.duration_seconds)}s, ${(f.size/1048576).toFixed(1)} MB, ${r.meta.orientation})`;
 }
 async function uploadVideo(listingId){
-  if(!S.video||!S.user)return;const st=$('video-status');st.textContent='Uploading video…';
-  try{const {data:{session}}=await db.auth.getSession();const fd=new FormData();fd.append('video',S.video);fd.append('listingId',listingId);fd.append('sellerId',await resolveEffectiveSellerId());fd.append('title',val('title')||'Nyumba254 listing video');
-    const r=await fetch(`${EDGE_URL}/upload-listing-video`,{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+session.access_token},body:fd}),j=await r.json();
-    if(!r.ok||j.error)throw new Error('x');st.textContent='Video received, pending review.';
-  }catch(e){st.textContent='Video upload failed. Your listing was still submitted; add the video from your dashboard.'}
+  if(!S.videoPrep||!S.user||S.videoDone)return true;const st=$('video-status');
+  try{
+    const up=await NKVideo.uploadFile(db,listingId,S.videoPrep,p=>{st.textContent='Uploading video… '+Math.round(p*100)+'%'});
+    await NKVideo.saveUpload(db,listingId,S.videoPrep,up);S.videoDone=true;st.textContent='Video uploaded.';return true;
+  }catch(e){st.textContent='Video not added: '+NKVideo.friendlyError(e)+' Your listing was still submitted; add the video from your dashboard.';return false}
 }
 
 /* ═══ PRICING (estimate only; nothing is charged here) ═══ */
@@ -855,7 +856,7 @@ async function submit(){
       if(!S.sub.photosDone){const bad=await uploadPhotos(id);
         if(bad){$('submit-error').textContent=`${bad} photo(s) failed to upload (see the red thumbnails on the Photos step). Check your connection and tap "Retry upload"; the photos that worked won't be sent again.`;btn.textContent='Retry upload';btn.disabled=false;S.busy=false;$('submit-error').scrollIntoView({block:'center',behavior:'smooth'});return}
         const {error}=await db.from('listing_photos').insert(S.photos.map((p,i)=>({listing_id:id,url:p.uploadedUrl,is_cover:i===S.cover,position:i})));if(error)throw error;S.sub.photosDone=true;saveDraftNow()}
-      if(link&&!S.sub.videoLinked){const {error}=await db.from('listing_videos').insert({listing_id:id,url:link,position:0});if(error)toast('Your video link could not be saved, but the listing was submitted.','error');S.sub.videoLinked=true}
+      if(link&&!S.sub.videoLinked){try{await NKVideo.saveLink(db,id,link)}catch(e){toast('Video link not saved: '+NKVideo.friendlyError(e),'error')}S.sub.videoLinked=true}
       fetch(`${EDGE_URL}/send-listing-email`,{method:'POST',headers:{'Content-Type':'application/json',apikey:SUPABASE_KEY},body:JSON.stringify({sellerEmail:S.user.email,sellerName:S.userName,listingTitle:data.title,listingId:id})}).catch(()=>{});
       if(S.video)btn.textContent='Uploading video…';await uploadVideo(id);
     }else{
