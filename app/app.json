@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "Nyumba254",
+    "slug": "nyumba254",
+    "scheme": "nyumba254",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#F7F6F2",
+    "ios": { "supportsTablet": false },
+    "android": {
+      "package": "com.nyumba254.app",
+      "versionCode": 2,
+      "adaptiveIcon": {
+        "backgroundColor": "#052D26",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": true,
+      "permissions": ["android.permission.INTERNET", "android.permission.ACCESS_NETWORK_STATE", "android.permission.POST_NOTIFICATIONS"],
+      "blockedPermissions": ["android.permission.RECORD_AUDIO", "android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE", "android.permission.SYSTEM_ALERT_WINDOW"],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            { "scheme": "https", "host": "nyumba254.com", "pathPrefix": "/listing" },
+            { "scheme": "https", "host": "nyumba254.com", "pathPrefix": "/@" },
+            { "scheme": "https", "host": "nyumba254.com", "pathPrefix": "/saved" },
+            { "scheme": "https", "host": "nyumba254.com", "pathPrefix": "/dashboard" },
+            { "scheme": "https", "host": "www.nyumba254.com", "pathPrefix": "/listing" },
+            { "scheme": "https", "host": "www.nyumba254.com", "pathPrefix": "/@" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "plugins": [
+      "./plugins/withReleaseSigning",
+      "expo-secure-store",
+      "expo-font",
+      "expo-image",
+      "expo-video",
+      ["expo-image-picker", { "photosPermission": "Nyumba254 uses your photos so you can add pictures to your listing." }],
+      ["expo-notifications", { "color": "#0F6E56" }],
+      ["expo-build-properties", { "android": { "minSdkVersion": 24, "enableMinifyInReleaseBuilds": true, "enableShrinkResourcesInReleaseBuilds": true } }],
+      ["expo-splash-screen", { "image": "./assets/splash-icon.png", "imageWidth": 220, "backgroundColor": "#052D26" }]
+    ],
+    "extra": {
+      "supabaseUrl": "https://vliuuloyfhyxcsuchpss.supabase.co",
+      "supabaseKey": "sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx"
+    }
+  }
+}

@@ -3,6 +3,9 @@
       "target": {
         "namespace": "android_app",
         "package_name": "com.nyumba254.app",
-        "sha256_cert_fingerprints": ["55:99:6F:5A:46:5A:7F:74:5D:33:76:1E:44:CA:23:D6:BD:95:72:1F:9E:5D:6A:08:1F:D0:F8:DF:61:EC:07:A4"]
+        "sha256_cert_fingerprints": [
+          "55:99:6F:5A:46:5A:7F:74:5D:33:76:1E:44:CA:23:D6:BD:95:72:1F:9E:5D:6A:08:1F:D0:F8:DF:61:EC:07:A4",
+          "54:89:B1:C8:EF:19:4D:3A:C7:52:56:7A:AF:76:D0:94:0A:B2:AB:97:BA:8F:EB:05:B4:EB:D0:17:B0:15:F8:E5"
+        ]
       }
     }]
