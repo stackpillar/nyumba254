@@ -3,7 +3,7 @@
     "name": "Nyumba254",
     "slug": "nyumba254",
     "scheme": "nyumba254",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -11,7 +11,7 @@
     "ios": { "supportsTablet": false },
     "android": {
       "package": "com.nyumba254.app",
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
         "backgroundColor": "#052D26",
         "foregroundImage": "./assets/android-icon-foreground.png",

@@ -43,7 +43,7 @@ function Tabs() {
 // App Links: https://nyumba254.com/listing?id=N and https://nyumba254.com/@handle open these screens.
 const linking: LinkingOptions<any> = {
   prefixes: ['https://nyumba254.com', 'https://www.nyumba254.com', 'nyumba254://'],
-  config: { screens: { Listing: 'listing', Lister: '@:handle', Dashboard: 'dashboard', PostListing: 'post-listing', Main: { screens: { Home: '', Search: 'listings', Saved: 'saved', Account: 'profile' } } } },
+  config: { screens: { Listing: 'listing', Lister: 'lister/:handle', Dashboard: 'dashboard', PostListing: 'post-listing', Main: { screens: { Home: '', Search: 'listings', Saved: 'saved', Account: 'profile' } } } },
   getStateFromPath: (path, options) => {
     const m = path.match(/^\/?@([^/?#]+)/);
     if (m) return { routes: [{ name: 'Lister', params: { handle: m[1] } }] };
