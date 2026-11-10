@@ -44,6 +44,12 @@
 @media(max-width:600px){.chip.navchip{padding:0;width:44px;justify-content:center}.chip.navchip .lbl{display:none}.chip.iconchip span{display:none}}
 @media(max-width:900px){html body #listnav,html body .main-col>.insight-grid{display:none!important}
 html body .safety-tips summary{cursor:pointer;font-weight:600;font-size:14px;padding:8px 0;color:var(--green-dark)}
+html body .strip .f b{overflow-wrap:normal;word-break:normal;hyphens:none;font-size:14px}
+html body .meta{gap:6px 8px}
+html body .meta>*{font-size:12.5px}
+html body #sec-details .dgrid{grid-template-columns:1fr 1fr;gap:8px}
+html body #sec-details .dgrid>div{padding:10px 12px}
+html body .ctabar-price span:nth-of-type(1){display:none}
 html body .layout>.side .s-top,html body .layout>.side .seller,html body .layout>.side .tip.fee-safety,html body .layout>.side .rmenu-b [data-act="report-fee"],html body .layout>.side .sendrow [data-act="viewing"]{display:none!important}}
 
 /* banners */
