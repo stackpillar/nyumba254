@@ -1344,8 +1344,9 @@ function openContactSheet(unitLabel){
   if(unitLabel){const s=$('q-unit');if(s)s.value=unitLabel}
   const side=$('side');if(!side)return;
   if(!isMobileWidth()){
-    side.scrollIntoView({block:'nearest',behavior:'smooth'});
-    if(!coarse())setTimeout(()=>{const f=$('q-name');const t=(f&&!f.closest('[hidden]'))?f:$('q-msg');if(t)t.focus({preventScroll:true})},300);
+    side.scrollIntoView({block:'center',behavior:'smooth'});
+    const enq=$('enq');if(enq&&!enq.hidden){enq.style.transition='box-shadow .3s';enq.style.boxShadow='0 0 0 3px var(--green)';setTimeout(()=>{enq.style.boxShadow=''},1400)}
+    setTimeout(()=>{const f=$('q-name');const t=(f&&!f.closest('[hidden]'))?f:$('q-msg');if(t)t.focus({preventScroll:true})},300);
     return;
   }
   const slot=$('contact-sheet-slot');if(!slot)return;
