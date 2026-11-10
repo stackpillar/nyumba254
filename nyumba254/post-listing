@@ -175,7 +175,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
         <div class="field-hint" id="viewing-fee-locked" hidden>Verify your identity to charge a viewing fee. <a href="/dashboard#verification-settings-section">Verify identity</a></div>
         <div class="field-error" id="e-viewing_fee" role="alert"></div>
         <div id="viewing-fee-preview" class="box" aria-live="polite" style="margin-top:8px">Buyers will see: Free viewing</div>
-        <label style="display:flex;gap:9px;align-items:flex-start;font-weight:400;font-size:12px;color:var(--text-2);margin-top:10px"><input type="checkbox" id="viewing-fee-policy-accept" style="width:18px;height:18px;accent-color:var(--green)"/>I have read and agree to the <a href="/viewing-fee-policy" data-policy-viewer>Viewing Fee Policy</a>.</label>
+        <label id="viewing-fee-policy-row" hidden style="gap:9px;align-items:flex-start;font-weight:500;font-size:13px;color:var(--text-2);margin-top:10px"><input type="checkbox" id="viewing-fee-policy-accept" required style="width:18px;height:18px;accent-color:var(--green);flex:0 0 auto;margin-top:2px"/><span>I have read and agree to the <a href="/viewing-fee-policy" data-policy-viewer target="_blank" rel="noopener" style="font-weight:700;text-decoration:underline">Viewing Fee Policy</a>. <span class="req">*</span></span></label>
         <div class="field-hint" style="margin-top:8px">Safety preview: Pay any listed viewing fee only at the property, to the person you meet, and ask for a receipt. Never pay rent, a deposit or any other fee before you have viewed the property.</div>
       </div>
       <div class="field-hint" id="viewing-free-note" hidden>Viewing is free for this listing. Only agents and companies can charge a viewing fee.</div>
@@ -717,7 +717,6 @@ function syncViewingFeeField(){
   const locked=eligible&&((S.viewingFeeNeedsIdentity&&!S.identityVerified)||S.viewingFeeBlocked);
   if(lock)lock.hidden=!locked;
   const policyBox=$('viewing-fee-policy-accept');
-  if(policyBox)policyBox.checked=S.policyAccepted;
   if(input&&eligible){
     if(document.activeElement!==input&&input.value==='')input.value=S.defaultViewingFee??'';
     input.max=String(Math.min(5000,Number(PS.viewing_fee_max)||5000));
@@ -726,7 +725,7 @@ function syncViewingFeeField(){
   updateViewingFeePreview();
 }
 function selectedViewingFee(){return !['agent','company'].includes(S.accountType)||$('viewing-fee-free')?.checked?0:(val('viewing_fee')===''?0:Number(val('viewing_fee')))}
-function updateViewingFeePreview(){const preview=$('viewing-fee-preview');if(!preview)return;const fee=selectedViewingFee();preview.textContent=`Buyers will see: ${fee>0?`Viewing fee KES ${fee.toLocaleString('en-KE')}`:'Free viewing'}`}
+function updateViewingFeePreview(){const row=$('viewing-fee-policy-row');if(row){const on=['agent','company'].includes(S.accountType)&&selectedViewingFee()>0;row.hidden=!on;row.style.display=on?'flex':'none'}const preview=$('viewing-fee-preview');if(!preview)return;const fee=selectedViewingFee();preview.textContent=`Buyers will see: ${fee>0?`Viewing fee KES ${fee.toLocaleString('en-KE')}`:'Free viewing'}`}
 function checkPlan(){
   const el=$('plan-banner');
   el.hidden=true;
@@ -828,7 +827,7 @@ async function submit(){
   if(feeEligible&&viewingFee>0){
     if(S.viewingFeeBlocked)ok=fail('viewing_fee','Your viewing fee privilege is paused. Contact support for help.')&&ok;
     else if(S.viewingFeeNeedsIdentity&&!S.identityVerified)ok=fail('viewing_fee','Verify your identity before charging a viewing fee.')&&ok;
-    else if(!S.policyAccepted&&!chk('viewing-fee-policy-accept'))ok=fail('viewing_fee','Read and accept the Viewing Fee Policy before setting a fee.')&&ok;
+    else if(!chk('viewing-fee-policy-accept'))ok=fail('viewing_fee','Tick the box to confirm you have read the Viewing Fee Policy before charging a fee.')&&ok;
   }
   ok=fail('contact_name',val('contact_name').length>1?'':'Enter your full name')&&ok;
   ok=fail('phone',okPhone(val('phone'))?'':'Enter a valid phone number, e.g. 0712 345 678')&&ok;
