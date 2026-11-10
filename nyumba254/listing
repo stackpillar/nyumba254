@@ -42,7 +42,8 @@
 .tbnav{display:inline-flex;gap:8px}
 .chip.off{opacity:.42;pointer-events:none}
 @media(max-width:600px){.chip.navchip{padding:0;width:44px;justify-content:center}.chip.navchip .lbl{display:none}.chip.iconchip span{display:none}}
-@media(max-width:900px){html body #listnav{display:none!important}
+@media(max-width:900px){html body #listnav,html body .main-col>.insight-grid{display:none!important}
+html body .safety-tips summary{cursor:pointer;font-weight:600;font-size:14px;padding:8px 0;color:var(--green-dark)}
 html body .layout>.side .s-top,html body .layout>.side .seller,html body .layout>.side .tip.fee-safety,html body .layout>.side .rmenu-b [data-act="report-fee"],html body .layout>.side .sendrow [data-act="viewing"]{display:none!important}}
 
 /* banners */
@@ -1075,7 +1076,7 @@ function render(){
     <section class="sec" id="sec-loc">${secHead('loc','Location')}<div class="mapbox" id="mapbox"></div>
       <div class="maprow"><span class="addr">${escHtml(P.address||where())}</span><a class="link" id="maplink" href="#" rel="noopener">Open in Maps</a></div><p class="maphint" id="maphint" hidden>Pinch to zoom the map. Use Open in Maps for directions.</p>${nearbyHtml()}</section>
     ${rules.length?`<section class="sec" id="sec-rules">${secHead('rules','House rules')}<ul class="rules">${rules.map(r=>`<li>${escHtml(r)}</li>`).join('')}</ul></section>`:''}
-    ${isOwner?'':`<section class="sec md-only">${secHead('seller','About the lister')}${sellerHead()}</section><section class="sec md-only safety">${secHead('safety','Viewing fee and safety')}<p>${escHtml(viewingFeeSafetyText(P.viewing_fee))}</p><a class="link" href="/viewing-fee-policy">Read the Viewing Fee Policy</a><button type="button" class="link" data-act="report-fee">Report a fee problem</button><ul><li>Verify the property and confirm it is available.</li><li>Check the listing for any viewing fee and pay only that fee directly to the lister, with a receipt.</li><li>Never pay rent or a deposit before viewing. Nyumba254 does not collect viewing fees.</li></ul></section>`}
+    ${isOwner?'':`<section class="sec md-only">${secHead('seller','About the lister')}${sellerHead()}</section><section class="sec md-only safety">${secHead('safety','Viewing fee and safety')}<p>${escHtml(viewingFeeSafetyText(P.viewing_fee))}</p><a class="link" href="/viewing-fee-policy">Read the Viewing Fee Policy</a><button type="button" class="link" data-act="report-fee">Report a fee problem</button><details class="safety-tips"><summary>Safety tips</summary><ul><li>Verify the property and confirm it is available.</li><li>Check the listing for any viewing fee and pay only that fee directly to the lister, with a receipt.</li><li>Never pay rent or a deposit before viewing. Nyumba254 does not collect viewing fees.</li></ul></details></section>`}
     <div class="listnav" id="listnav" hidden></div>
   </div><aside class="side" id="side" aria-label="Contact the lister">${sidebarHtml()}</aside></div>
   <section class="sim" id="sim" hidden><div class="sim-head"><h2>${occ?'Similar listings available now':'Similar listings nearby'}</h2><a class="link" href="${escHtml(nkBuildListingsUrl({category:P.category,county:P.county}))}">View all in ${escHtml(P.county?nkCountyLabel(P.county):'Kenya')}</a></div><div class="card-grid" id="sim-grid"><div class="sk" style="aspect-ratio:4/3"></div><div class="sk" style="aspect-ratio:4/3"></div><div class="sk" style="aspect-ratio:4/3"></div></div></section>`;
