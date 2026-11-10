@@ -586,7 +586,7 @@
   </div>
 
   <!-- ── RECENTLY VIEWED ── -->
-  <section class="side-section no-print" id="recent-section" aria-labelledby="recent-title" hidden>
+  <section class="side-section no-print" id="recent-section" aria-labelledby="recent-title" hidden style="display:none!important">
     <div class="side-header"><h2 id="recent-title">Recently viewed</h2><p>Listings you opened lately that aren't on your shortlist</p></div>
     <div class="listings-grid" id="recent-grid"></div>
   </section>
@@ -1251,7 +1251,7 @@ async function silentRefresh(force) {
   ensureSnapshots(); pruneMeta(); writeCache();
   if (!currentUser && shortlistMode) syncShortlistToServer();
   render();
-  if (before !== savedRows.map(r => r.listing_id).sort().join()) { loadRecommended(); loadRecent(); scheduleRealtime(); }
+  if (before !== savedRows.map(r => r.listing_id).sort().join()) { loadRecommended(); scheduleRealtime(); }
 }
 async function retryLoad() {
   if (shareMode) return;
@@ -1261,7 +1261,7 @@ async function retryLoad() {
   if (ok) {
     $('stale-note').hidden = true; ensureSnapshots(); pruneMeta(); writeCache();
     if (!currentUser && shortlistMode) syncShortlistToServer();
-    loadRecommended(); loadRecent(); scheduleRealtime();
+    loadRecommended(); scheduleRealtime();
   }
   render();
 }
@@ -2386,7 +2386,7 @@ async function nkSavedInit() {
   loadError = !ok;
   if (ok) { ensureSnapshots(); pruneMeta(); writeCache(); }
   render();
-  loadRecommended(); loadRecent(); scheduleRealtime();
+  loadRecommended(); scheduleRealtime();
   nkTrackPageView();
   track(shareMode ? 'shared_view' : 'saved_view', { count: savedRows.length });
 }

@@ -83,7 +83,7 @@ html.nk-lp .card-viewing-fee{display:inline-flex;align-items:center;gap:4px}
 html.nk-lp .card-viewing-fee svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.2;flex:none}
 html.nk-lp .card-inquire-btn,html.nk-lp .card-wa-btn{font-weight:700}
 
-html.nk-lp #recent-mount{margin-top:28px}
+html.nk-lp #recent-mount{margin:0 0 14px}
 
 html.nk-lp nav#main-nav .logo,html.nk-lp nav#main-nav .logo-icon,html.nk-lp .mobile-menu-btn{flex:none}
 html.nk-lp nav#main-nav .nav-compact-search{flex:1 1 0;min-width:0}
@@ -549,7 +549,7 @@ html.nk-lp .trust-bar{background:#fff;border-color:var(--border);color:var(--gre
   /* ───────────── 5. Layout tweaks ───────────── */
   function moveRecent() {
     var m = $('recent-mount'), area = $('results-area');
-    if (m && area && area.nextElementSibling !== m) area.insertAdjacentElement('afterend', m);
+    /* Recently viewed stays at the top, above the results. */
   }
   function addResultsHeading() {
     var r = $('results');
