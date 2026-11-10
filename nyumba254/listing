@@ -42,7 +42,8 @@
 .tbnav{display:inline-flex;gap:8px}
 .chip.off{opacity:.42;pointer-events:none}
 @media(max-width:600px){.chip.navchip{padding:0;width:44px;justify-content:center}.chip.navchip .lbl{display:none}.chip.iconchip span{display:none}}
-@media(max-width:900px){html body #listnav{display:none!important}}
+@media(max-width:900px){html body #listnav{display:none!important}
+html body .layout>.side .s-top,html body .layout>.side .seller,html body .layout>.side .tip.fee-safety,html body .layout>.side .rmenu-b [data-act="report-fee"],html body .layout>.side .sendrow [data-act="viewing"]{display:none!important}}
 
 /* banners */
 .reach{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;background:var(--green-light);border:1px solid var(--green-mid);border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;font-size:14px;color:var(--green-dark)}
