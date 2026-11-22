@@ -544,19 +544,7 @@
             <div class="field-error" id="err-reg-email" aria-live="polite">Please enter a valid email</div>
           </div>
 
-          <div class="form-group">
-            <label class="field-label" for="reg-phone">
-              Phone number
-              <span class="opt">for payments</span>
-            </label>
-            <div class="input-wrap">
-              <svg class="icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.12 1.2 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
-              <input type="tel" id="reg-phone" placeholder="07XX XXX XXX" autocomplete="tel" maxlength="13" oninput="formatPhone(this)"/>
-            </div>
-            <div class="field-error" id="err-phone" aria-live="polite">Please enter a valid Kenyan phone number</div>
-            <p class="phone-note">Used only for M-Pesa listing payments. We never share it publicly or with third parties.</p>
-          </div>
-
+          
           <p class="role-choice-note">After you verify your email, choose one account type to personalize Nyumba254. You can change it later in account settings.</p>
 
           <div class="form-group">
@@ -956,7 +944,6 @@
     const first   = document.getElementById('reg-firstname').value.trim();
     const last    = document.getElementById('reg-lastname').value.trim();
     const email   = document.getElementById('reg-email').value.trim();
-    const phone   = document.getElementById('reg-phone').value.trim();
     const pw      = document.getElementById('reg-password').value;
     const confirm = document.getElementById('reg-confirm').value;
     const consent = document.getElementById('reg-consent').checked;
@@ -965,7 +952,6 @@
     if (!first)        { fieldError('reg-firstname','err-firstname',true); ok=false; }
     if (!last)         { fieldError('reg-lastname','err-lastname',true); ok=false; }
     if (!isEmail(email)){ fieldError('reg-email','err-reg-email',true); ok=false; }
-    if (!okPhone(phone)){ fieldError('reg-phone','err-phone',true); ok=false; }
     if (pw.length < 8) { fieldError('reg-password','err-reg-pw',true); ok=false; }
     if (confirm !== pw) { fieldError('reg-confirm','err-reg-confirm',true); ok=false; }
     if (!consent) {
@@ -976,9 +962,6 @@
     if (!ok) return;
     if (needNet("You're offline. Connect to the internet to create your account.")) return;
 
-    // Normalize once here, then reuse everywhere below — the stored value
-    // is always E.164 (+254...), matching every other page in the codebase.
-    const phoneNorm = nkNormalizePhone(phone);
 
     setLoading('btn-register', true);
     let data, error;
@@ -986,7 +969,7 @@
       ({ data, error } = await withTimeout(db.auth.signUp({
         email, password: pw,
         options: {
-          data: { full_name: `${first} ${last}`, phone: phoneNorm },
+          data: { full_name: `${first} ${last}` },
           emailRedirectTo: SITE_BASE + '/verify-email'
         }
       }), 20000));
@@ -1025,7 +1008,7 @@
         const{error:profileError}=await db.from('profiles').upsert({
           id: data.user.id,
           full_name: `${first} ${last}`,
-          phone: phoneNorm, email
+          email
         });
         if(profileError)console.error('Could not save signup roles to profile; they remain in account metadata for sync after sign-in:',profileError);
       } catch (e) { console.error('Could not save signup profile; it can be completed after sign-in:',e); }
@@ -1040,7 +1023,7 @@
         audience: 'admin',
         sellerName: `${first} ${last}`,
         sellerEmail: email,
-        sellerPhone: phoneNorm,
+        sellerPhone: '',
       }),
     }).catch(()=>{});
 
