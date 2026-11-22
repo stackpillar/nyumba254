@@ -321,9 +321,11 @@ async function init(){
     dashJoinAllPresence();
     loadPlatformPrices();
     loadNotifBell();
-    renderOverview();
-    document.getElementById('loading-screen').style.display='none';
+    const initialPage=location.hash.slice(1)||window.__initialDashboardPage||'overview';
+    window.__navFromHash=true;
+    try{showPage(initialPage);}finally{window.__navFromHash=false;}
     document.getElementById('app-shell').style.display='flex';
+    document.getElementById('loading-screen').style.display='none';
     const urlParams=new URLSearchParams(location.search);
     if(urlParams.get('verify')==='1'&&verificationEnforcedForMe()){
       const lim=urlParams.get('limit')??String(PLATFORM_VERIFY_SETTINGS.unverified_listing_limit??2);
@@ -332,8 +334,6 @@ async function init(){
       setTimeout(()=>openKycModal(),400);
       history.replaceState(null,'',location.pathname);
     }
-    const lastPage=location.hash.slice(1)||sessionStorage.getItem('ny_last_page');
-    if(lastPage&&lastPage!=='overview'&&document.getElementById('page-'+lastPage)){showPage(lastPage);}
     if(!currentProfile?.onboarding_completed){
       showToast('Choose an account type to finish setting up your account.','success');
       showPage('settings');
@@ -1398,7 +1398,7 @@ function validateListerHandleInput(){
   if(count)count.textContent=v.length+'/30';
   const msg=hint.firstElementChild;
   if(!v){hint.dataset.state='';return;}
-  const ok=/^[a-z0-9][a-z0-9._-]{1,28}[a-z0-9]\$/.test(v);
+  const ok=/^[a-z0-9][a-z0-9._-]{1,28}[a-z0-9]$/.test(v);
   hint.dataset.state=ok?'ok':'bad';
   if(msg)msg.textContent=ok?'Looks good. Availability is checked when you save.':'Use 3–30 lowercase letters, numbers, dots, underscores or hyphens; start and end with a letter or number.';
 }
@@ -1458,13 +1458,29 @@ async function loadListerPageHub(){
   const caption=document.getElementById('lister-share-caption');
   if(caption)caption.textContent=`One link for all my properties. Browse, ask questions and arrange a viewing: ${link}`;
   const socialHub=document.getElementById('lister-social-hub');
-  if(socialHub&&window.NKSocial&&LISTER_PAGE_FLAGS.pages&&profile.account_type!=='buyer'&&!socialHub.dataset.mounted){
-    socialHub.dataset.mounted='1';
+  if(socialHub&&profile.account_type!=='buyer'&&!socialHub.dataset.mounted){
+    socialHub.hidden=false;
     const socialHost=document.getElementById('lister-social-host');
-    let canEditSocial=true;
-    if(isTeamMember){try{const{data:ok}=await db.rpc('my_social_edit_access');canEditSocial=ok!==false;}catch(e){}}
-    if(!canEditSocial){socialHub.hidden=true;}
-    else NKSocial.mountEditor(socialHost,{db,toast:showToast}).then(ok=>{socialHub.hidden=!ok;}).catch(()=>{socialHub.hidden=true;});
+    if(!LISTER_PAGE_FLAGS.pages){socialHost.textContent='Social links are not enabled until Lister Pages are enabled.';}
+    else if(!window.NKSocial){socialHost.textContent='Social links could not be loaded. Please refresh and try again.';}
+    else {
+      try{
+        let canEditSocial=true;
+        if(isTeamMember){
+          const{data:ok,error}=await db.rpc('my_social_edit_access');
+          if(error)throw error;
+          canEditSocial=ok===true;
+        }
+        if(!canEditSocial)socialHost.textContent='You do not have permission to edit social links.';
+        else{
+          socialHub.dataset.mounted='1';
+          await NKSocial.mountEditor(socialHost,{db,toast:showToast});
+        }
+      }catch(error){
+        console.error('Could not load social links:',error);
+        socialHost.textContent='Social links could not be loaded. Please refresh the dashboard to try again.';
+      }
+    }
   }
   if(LISTER_PAGE_FLAGS.quickAnswers)await loadListerQuickAnswers();
   if(LISTER_PAGE_FLAGS.availability)await loadListerAvailability();

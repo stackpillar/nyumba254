@@ -3,6 +3,7 @@
 <head>
   <script>window.__scwEarlyErrors=[];window.addEventListener('error',function(e){window.__scwEarlyErrors.push((e&&e.message)?e.message:'Unknown error at '+(e&&e.filename||'?')+':'+(e&&e.lineno||'?'));});
   (function(){try{var t=localStorage.getItem('ny_theme');if(!t){var prefersDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;t=prefersDark?'dark':'light';localStorage.setItem('ny_theme',t);}if(t&&t!=='light')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+  (function(){var p=location.hash.slice(1);if(!p){try{p=sessionStorage.getItem('ny_last_page')||'';}catch(e){console.info('Dashboard page preference unavailable.',e);}}window.__initialDashboardPage=p||'overview';})();
   </script>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -72,7 +73,7 @@
     </div>
     <nav class="sidebar-nav" aria-label="Dashboard">
       <div class="nav-section-label">Main</div>
-      <button class="nav-item active" id="nav-overview" aria-current="page" onclick="showPage('overview')">
+      <button class="nav-item" id="nav-overview" onclick="showPage('overview')">
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Overview
       </button>
       <button class="nav-item" id="nav-listings" onclick="showPage('listings')">
@@ -199,7 +200,7 @@
     </div>
 
     <!-- OVERVIEW -->
-    <div class="page active" id="page-overview">
+    <div class="page" id="page-overview">
       <div id="overview-quickdock" style="display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom));z-index:390;background:var(--white);border:1px solid var(--border);border-radius:30px;box-shadow:var(--shadow-lg);padding:6px;gap:4px;align-items:center">
         <a href="/post-listing" class="btn btn-primary btn-sm" id="btn-new-listing-small" style="border-radius:24px" onclick="return confirmListingCategoryBeforeLeaving()"><svg viewBox="0 0 24 24" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New</a>
         <button class="btn btn-outline btn-sm" style="border-radius:24px" onclick="showAllMessages()"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Messages</button>

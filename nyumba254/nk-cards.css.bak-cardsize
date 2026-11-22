@@ -1,0 +1,52 @@
+/* Nyumba254 listing cards: one compact, consistent finish for Home, Listings and Saved.
+   Loaded last on each page. Selectors start with "html body" so they win over page and polish CSS. */
+
+/* ── shared ─────────────────────────────────────────── */
+html body .card { border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 3px 12px rgba(15,110,86,.07); min-width: 0; }
+html body .card-img img { width: 100%; height: 100%; object-fit: cover; }
+html body .card-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; line-height: 1.3; }
+html body .card-sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+html body .card-role, html body .card-trust { min-width: 0; }
+@media (hover: none) {
+  html body .card:hover, html body .card:focus-visible { transform: none; }
+}
+
+/* ── desktop and tablet ─────────────────────────────── */
+@media (min-width: 769px) {
+  html body .listings-grid { gap: 16px; }
+  html body .listings-grid .card-img { aspect-ratio: 3 / 2; }
+  html body .listings-grid .card-body { padding: 12px 14px 14px; }
+  html body .listings-grid .card-title { font-size: 15px; }
+  html body .listings-grid .card-amenities { flex-wrap: nowrap; overflow: hidden; }
+  html body .listings-grid .card-amenity-chip { flex: 0 0 auto; white-space: nowrap; }
+  html body .listings-grid .card:hover { transform: translateY(-3px); }
+}
+
+/* ── phones: compact two-column cards ───────────────── */
+@media (max-width: 768px) {
+  html body .card { border-radius: 14px; }
+  html body .listings-grid .card-img, html body #listings-grid .card-img, html body #unavail-grid .card-img { aspect-ratio: 4 / 3; }
+  html body .listings-grid .card-body { padding: 9px 10px 10px; }
+  html body .listings-grid .card-title, html body #listings-grid .card-title, html body #unavail-grid .card-title { font-size: 13.5px; line-height: 1.28; margin-bottom: 4px; }
+  html body .listings-grid .card-amenities { display: none; }
+  html body .listings-grid .card-trust { gap: 4px 6px; margin-bottom: 0; }
+  html body .listings-grid .card-foot { margin-top: 8px; padding-top: 0; border-top: 0; }
+  html body .listings-grid .card-inquire-btn { min-height: 36px; height: 36px; padding: 0 10px; font-size: 12.5px; border-radius: 10px; }
+
+  /* Saved */
+  html body #listings-grid .card-body, html body #unavail-grid .card-body { padding: 9px 10px 10px; }
+  html body #listings-grid .chip-row, html body #unavail-grid .chip-row { display: none; }
+  html body #listings-grid .card-saved-date, html body #unavail-grid .card-saved-date { font-size: 10.5px; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  html body #listings-grid .card-body, html body #unavail-grid .card-body { flex: 1; }
+  html body #listings-grid .card-area, html body #unavail-grid .card-area { flex-wrap: wrap; row-gap: 3px; overflow: visible; }
+  html body #listings-grid .lp-area-name, html body #unavail-grid .lp-area-name { max-width: 100%; }
+  html body #listings-grid .card-actions, html body #unavail-grid .card-actions { display: flex; flex-wrap: nowrap; gap: 5px; margin: auto -10px 0; padding: 4px 10px 2px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  html body #listings-grid .card-actions::-webkit-scrollbar, html body #unavail-grid .card-actions::-webkit-scrollbar { display: none; }
+  html body #listings-grid .card-actions .act-btn, html body #unavail-grid .card-actions .act-btn { flex: 0 0 auto; min-height: 34px; padding: 0 11px; font-size: 11.5px; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; }
+  html body #listings-grid .card-view-btn, html body #unavail-grid .card-view-btn { padding: 8px; font-size: 12.5px; border-radius: 10px; }
+}
+
+/* very small phones */
+@media (max-width: 360px) {
+  html body .listings-grid .card-title, html body #listings-grid .card-title { font-size: 13px; }
+}

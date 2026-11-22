@@ -19,7 +19,10 @@
   var BY = {}; P.forEach(function (p) { BY[p.k] = p; });
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
-  function safeHttps(u) { return typeof u === 'string' && /^https:\/\//i.test(u); }
+  function safeHttps(u) {
+    try { var parsed = new URL(u); return parsed.protocol === 'https:' && !!parsed.hostname && !parsed.username && !parsed.password; }
+    catch (e) { return false; }
+  }
 
   var CSS = '.nks-row{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}' +
     '.nks-link{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border:1px solid var(--border,#d7dbe0);border-radius:999px;color:var(--text,inherit);background:var(--surface,transparent);text-decoration:none;font-size:13px;font-weight:600}' +
@@ -47,7 +50,7 @@
     (links || []).forEach(function (l) {
       var p = BY[l && l.platform]; if (!p || !safeHttps(l.url)) return;
       var shown = l.handle || p.label;
-      out.push('<a class="nks-link" href="' + esc(l.url) + '" target="_blank" rel="noopener noreferrer nofollow ugc" data-nks-platform="' + esc(l.platform) + '" aria-label="' + esc(p.label + ': ' + shown + ' (opens in a new tab)') + '" title="' + esc(p.label + ': ' + shown) + '">' + p.icon + '<span>' + esc(p.label) + '</span></a>');
+      out.push('<a class="nks-link" href="' + esc(l.url) + '" rel="noopener noreferrer nofollow ugc" data-nks-platform="' + esc(l.platform) + '" aria-label="' + esc(p.label + ': ' + shown) + '" title="' + esc(p.label + ': ' + shown) + '">' + p.icon + '<span>' + esc(p.label) + '</span></a>');
     });
     if (!out.length) return '';
     return '<div class="nks-row" role="list" aria-label="Social links">' + out.map(function (x) { return x.replace('<a ', '<a role="listitem" '); }).join('') + '</div>';
@@ -59,7 +62,7 @@
     if (!p || !v) return null;
     if (platform === 'website') {
       if (!/^https?:\/\//i.test(v) && !/^[a-z][a-z0-9+.-]*:/i.test(v)) v = 'https://' + v;
-      try { var w = new URL(v); if (w.protocol !== 'https:') return null; return { handle: w.hostname, url: w.href }; } catch (e) { return null; }
+      try { var w = new URL(v); if (!safeHttps(w.href)) return null; return { handle: w.hostname, url: w.href }; } catch (e) { return null; }
     }
     if (!/^[a-z][a-z0-9+.-]*:/i.test(v) && /^(www\.)?[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}\//i.test(v)) v = 'https://' + v;
     if (/^https?:\/\//i.test(v)) {
@@ -109,7 +112,7 @@
       }).join('');
       var pv = renderRow(previewLinks());
       host.innerHTML = '<p class="nks-note" style="margin:0 0 8px">These links appear only on your Lister Page. They are self-declared. Nyumba254 does not verify social accounts.</p>' + rows +
-        '<div style="margin-top:14px"><div style="font-size:13px;font-weight:600">How it looks on your page</div>' + (pv || '<p class="nks-note">Add a link to see the preview.</p>') + '</div>' +
+        '<div style="margin-top:14px"><div style="font-size:13px;font-weight:600">How it looks on your page</div><div data-preview>' + (pv || '<p class="nks-note">Add a link to see the preview.</p>') + '</div></div>' +
         '<button type="button" class="btn btn-outline btn-sm" data-save style="margin-top:8px"' + (saving ? ' disabled' : '') + '>' + (saving ? 'Saving…' : 'Save social links') + '</button>' +
         '<div class="nks-note" data-status aria-live="polite"></div>';
     }
@@ -117,11 +120,13 @@
     host.addEventListener('input', function (e) {
       var row = e.target.closest('.nks-ed-row'); if (!row || e.target.type !== 'text') return;
       var it = byKey(row.dataset.p); it.value = e.target.value; it.error = '';
+      var preview = host.querySelector('[data-preview]');
+      if (preview) preview.innerHTML = renderRow(previewLinks()) || '<p class="nks-note">Add a link to see the preview.</p>';
     });
     host.addEventListener('change', function (e) {
       var row = e.target.closest('.nks-ed-row'); if (!row) return;
       var it = byKey(row.dataset.p);
-      if (e.target.type === 'text') { var ex = extract(it.platform, e.target.value); if (ex && /[\/:]/.test(e.target.value)) it.value = ex.handle; }
+      if (e.target.type === 'text') { var ex = extract(it.platform, e.target.value); if (ex && /[\/:]/.test(e.target.value)) it.value = it.platform === 'website' ? ex.url : ex.handle; }
       if (e.target.matches('[data-vis]')) it.is_visible = e.target.checked;
       draw();
     });
@@ -133,7 +138,7 @@
       i = items.indexOf(byKey(row.dataset.p));
       if (b.matches('[data-up]') && i > 0) { var t = items[i]; items[i] = items[i - 1]; items[i - 1] = t; draw(); host.querySelector('[data-p="' + t.platform + '"] [data-up]') && host.querySelector('[data-p="' + t.platform + '"] [data-up]').focus(); }
       if (b.matches('[data-down]') && i < items.length - 1) { var t2 = items[i]; items[i] = items[i + 1]; items[i + 1] = t2; draw(); var nb = host.querySelector('[data-p="' + t2.platform + '"] [data-down]'); if (nb) nb.focus(); }
-      if (b.matches('[data-test]')) { var ex = extract(items[i].platform, items[i].value); if (ex) window.open(ex.url, '_blank', 'noopener,noreferrer'); }
+      if (b.matches('[data-test]')) { var ex = extract(items[i].platform, items[i].value); if (ex) window.location.assign(ex.url); }
     });
     function save() {
       if (saving) return;
@@ -158,14 +163,14 @@
       var order = [], map = {};
       (saved || []).forEach(function (l) { order.push(l.platform); map[l.platform] = l; });
       P.forEach(function (p) { if (order.indexOf(p.k) < 0) order.push(p.k); });
-      items = order.map(function (k) { var l = map[k]; return { platform: k, value: l ? l.handle : '', is_visible: l ? l.is_visible !== false : true, hidden: l ? !!l.hidden_by_admin : false, hidden_reason: l ? l.hidden_reason : '', error: '' }; });
+      items = order.filter(function (k) { return !!BY[k]; }).map(function (k) { var l = map[k]; return { platform: k, value: l ? (k === 'website' ? l.url : l.handle) : '', is_visible: l ? l.is_visible !== false : true, hidden: l ? !!l.hidden_by_admin : false, hidden_reason: l ? l.hidden_reason : '', error: '' }; });
     }
     return db.rpc('get_my_social_links').then(function (r) {
-      if (r.error) { host.hidden = true; return false; }
+      if (r.error) throw new Error('Could not load social links: ' + r.error.message);
       load(r.data); draw();
       db.rpc('get_my_social_click_totals').then(function (c) { if (!c.error) { (c.data || []).forEach(function (x) { totals[x.platform] = x.clicks; }); draw(); } }, function () {});
       return true;
-    }, function () { host.hidden = true; return false; });
+    });
   }
 
   window.NKSocial = { platforms: P, renderRow: renderRow, extract: extract, mountEditor: mountEditor, css: css };

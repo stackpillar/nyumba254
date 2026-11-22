@@ -430,13 +430,13 @@
     }
 
     let socialLinks=[];
-    if(handleParam&&window.NKSocial){
-      try{const{data:sl,error:se}=await db.rpc('get_lister_social_links',{p_handle:handleParam});if(!se&&Array.isArray(sl))socialLinks=sl.filter(l=>l&&typeof l.url==='string');}catch(e){console.error('Could not load social links:',e)}
+    if((handleParam||profile.handle)&&window.NKSocial){
+      try{const{data:sl,error:se}=await db.rpc('get_lister_social_links',{p_handle:handleParam||profile.handle});if(se)throw se;if(Array.isArray(sl))socialLinks=sl.filter(l=>l&&typeof l.url==='string'&&NKSocial.extract(l.platform,l.url));}catch(e){console.error('Could not load social links:',e)}
     }
     const socialBlock=socialLinks.length?`<div class="seller-social">${NKSocial.renderRow(socialLinks)}<p class="nks-note">Social accounts are self-declared and not verified by Nyumba254. Pay viewing fees only at the property, never through direct messages. <a href="#" onclick="reportListerPage(event)">Report this page</a></p></div>`:'';
     if(socialLinks.length){
       const ld=document.createElement('script');ld.type='application/ld+json';
-      ld.textContent=JSON.stringify({'@context':'https://schema.org','@type':isCompany?'Organization':'Person',name,url:`${location.origin}/@${encodeURIComponent(profile.handle||handleParam)}`,sameAs:socialLinks.map(l=>l.url)}).replace(/</g,'\u003c');
+      ld.textContent=JSON.stringify({'@context':'https://schema.org','@type':isCompany?'Organization':'Person',name,url:`${location.origin}/@${encodeURIComponent(profile.handle||handleParam)}`,sameAs:socialLinks.map(l=>l.url)}).replace(/</g,'\\u003c');
       document.head.appendChild(ld);
     }
 

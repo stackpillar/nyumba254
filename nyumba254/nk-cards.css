@@ -50,3 +50,74 @@ html body .card-role, html body .card-trust { min-width: 0; }
 @media (max-width: 360px) {
   html body .listings-grid .card-title, html body #listings-grid .card-title { font-size: 13px; }
 }
+
+/* nk-card-size:v1 start */
+/* One standard card. Source of truth: Home "Latest listings" card. */
+:root { --nk-card-gap: 10px; }
+@media (min-width: 769px) { :root { --nk-card-gap: 16px; } }
+
+/* Same photo ratio everywhere (Home, Browse, Saved, skeletons) */
+html body .card-img,
+html body .listings-grid .card-img,
+html body #listings-grid .card-img,
+html body #unavail-grid .card-img,
+html body .skeleton-img { aspect-ratio: 4 / 3; }
+
+/* Height follows content; cards in the same row stay equal */
+html body .card { display: flex; flex-direction: column; }
+html body .card-img { flex: 0 0 auto; }
+html body .card-body { flex: 1 1 auto; min-width: 0; }
+html body .card-title { min-height: 2.6em; }
+
+/* Spec row stays on one line */
+html body .card-meta { flex-wrap: nowrap; overflow: hidden; white-space: nowrap; }
+html body .card-meta > span { flex: 0 0 auto; }
+
+/* One gap value for every grid and scroller */
+html body .listings-grid,
+html body .loading-grid { gap: var(--nk-card-gap); }
+
+@media (max-width: 768px) {
+  /* Featured + Recently viewed: exactly the width of a Latest card (2 per screen) */
+  html body #featured-listings .listings-grid .card,
+  html body #recently-viewed-listings .listings-grid .card {
+    flex: 0 0 calc((100% - var(--nk-card-gap)) / 2);
+    max-width: none;
+    min-width: 0;
+  }
+  html body #featured-listings .listings-grid .badge-featured,
+  html body #recently-viewed-listings .listings-grid .badge-featured { top:7px;left:7px;font-size:9.5px;padding:3px 8px; }
+  html body #featured-listings .listings-grid .badge-new,
+  html body #recently-viewed-listings .listings-grid .badge-new { top:7px;left:7px;font-size:9.5px;padding:3px 8px; }
+  html body #featured-listings .listings-grid .badge-cat,
+  html body #recently-viewed-listings .listings-grid .badge-cat { left:7px;bottom:7px;font-size:9.5px;padding:3px 8px; }
+  html body #featured-listings .listings-grid .card-body,
+  html body #recently-viewed-listings .listings-grid .card-body { padding:9px 10px 10px; }
+  html body #featured-listings .listings-grid .card-area,
+  html body #recently-viewed-listings .listings-grid .card-area { font-size:10px;margin-bottom:2px; }
+  html body #featured-listings .listings-grid .card-area::before,
+  html body #recently-viewed-listings .listings-grid .card-area::before { display:none; }
+  html body #featured-listings .listings-grid .card-title,
+  html body #recently-viewed-listings .listings-grid .card-title { font-size:13px; }
+  html body #featured-listings .listings-grid .card-sub,
+  html body #recently-viewed-listings .listings-grid .card-sub { display:none; }
+  html body #featured-listings .listings-grid .card-role,
+  html body #recently-viewed-listings .listings-grid .card-role { flex:0 0 100%;font-size:10.5px;margin-bottom:4px; }
+  html body #featured-listings .listings-grid .card-viewing-fee,
+  html body #recently-viewed-listings .listings-grid .card-viewing-fee { font-size:10.5px;padding:1px 8px;margin-bottom:5px; }
+  html body #featured-listings .listings-grid .card-price,
+  html body #recently-viewed-listings .listings-grid .card-price { font-size:14.5px; }
+  html body #featured-listings .listings-grid .card-price-overlay,
+  html body #recently-viewed-listings .listings-grid .card-price-overlay { left:7px;bottom:6px;font-size:13.5px; }
+  html body #featured-listings .listings-grid .card-photo-count,
+  html body #recently-viewed-listings .listings-grid .card-photo-count { right:7px;bottom:6px;font-size:10px;padding:2px 6px; }
+  html body #featured-listings .listings-grid .card-meta,
+  html body #recently-viewed-listings .listings-grid .card-meta { font-size:10.5px;gap:2px 6px;margin-bottom:4px; }
+  html body #featured-listings .listings-grid .card-meta .meta-cat,
+  html body #recently-viewed-listings .listings-grid .card-meta .meta-cat { font-size:9.5px;padding:1px 7px; }
+  html body #featured-listings .listings-grid .card-meta span:nth-child(n+4),
+  html body #recently-viewed-listings .listings-grid .card-meta span:nth-child(n+4) { display:none; }
+  html body #featured-listings .listings-grid .card-verified-badge,
+  html body #recently-viewed-listings .listings-grid .card-verified-badge { display:none; }
+}
+/* nk-card-size:v1 end */
