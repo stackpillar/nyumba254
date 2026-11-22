@@ -617,6 +617,17 @@ h1.title{font-size:clamp(20px,4.6vw,27px);line-height:1.22;margin-bottom:4px}
 .vg2 .vt-play svg{width:16px!important;height:16px!important;margin:0!important}
 @media(max-width:768px){.vg2 .vt{width:70px;height:52px}}
 </style>
+<style id="nk-videofix-v3">
+/* NK-VIDEOFIX v3 */
+.vg2 .vstage{display:block}
+.vg2 .vbox{display:block;width:100%;max-width:100%;aspect-ratio:4/3;max-height:min(75vh,540px);margin:0;transition:none}
+.vg2 .hv{object-fit:cover}
+.vg2 .vbox:fullscreen{max-height:none}
+.vg2 .vbox:-webkit-full-screen{max-height:none}
+.vg2 .vbox:fullscreen .hv{object-fit:contain}
+.vg2 .vbox:-webkit-full-screen .hv{object-fit:contain}
+.vg2 .vs-v{overflow:hidden}
+</style>
 </head>
 <body>
 <a href="#main-content" class="skip-link">Skip to listing</a>
@@ -1345,6 +1356,265 @@ function initHeroVideo(){
   }
   _hvCleanup=function(){vgPlay=null;vgPause=null;offs.forEach(function(f){f()})};
 }
+/* NK-VIDEOFIX v3: computers get the earlier layout back; phones get a same-size video + photo slider. */
+var vgEmMuted=true;
+function vdLayout(){
+  var g=$('vgrid'),b=$('vbox'),p=g&&g.querySelector('.vphotos');
+  if(!g||!b||!p)return;
+  p.classList.toggle('below',p.offsetTop>=b.offsetTop+b.offsetHeight-2);
+}
+/* ---- computers: the earlier layout, unchanged ---- */
+function vdHtml(){
+  var h=heroVid();if(!h)return '';
+  var saver=document.body.classList.contains('nk-datasaver'),canAuto=hvCanAuto(),
+      heart=(typeof NKSaved!=='undefined'&&NKSaved.buildHeartBtn)?NKSaved.buildHeartBtn(P.id):'',
+      inner='',ctl='',cls='vbox';
+  if(h.kind==='file'){
+    cls+=canAuto?' loading':' paused';
+    inner='<video id="hv" class="hv" data-act="hv-toggle" src="'+escHtml(h.url)+'#t=0.1" muted playsinline loop preload="'+(saver?'none':'metadata')+'"'+(canAuto?' autoplay':'')+' aria-label="Video walkthrough of '+escHtml(P.title)+'"></video>'+
+      '<button type="button" class="hv-play" data-act="hv-toggle" aria-label="Play video"><span>'+HV_PLAY+'</span></button>';
+    ctl='<div class="vctrl br"><button type="button" class="hvb" data-act="hv-sound" aria-pressed="false" aria-label="Turn sound on">'+HV_SND_OFF+'</button><button type="button" class="hvb" data-act="hv-full" aria-label="Full screen">'+HV_FS+'</button></div>';
+  }else if(saver){
+    cls+=' paused';
+    var poster=h.kind==='yt'?'https://i.ytimg.com/vi/'+h.id+'/hqdefault.jpg':'';
+    inner='<button type="button" class="hv-play hv-embedbtn" data-act="hv-embed" aria-label="Play video"'+(poster?' style="background-image:url('+poster+')"':'')+'><span>'+HV_PLAY+'</span></button>';
+  }else{
+    inner='<iframe id="hv-embed" class="hv-embed" src="'+escHtml(hvEmbedSrc(h,true))+'" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="Video walkthrough"></iframe>';
+  }
+  return '<div class="gallery vgal" id="gallery"><div class="vgrid'+(photos.length?'':' solo')+'" id="vgrid"><div class="'+cls+'" id="vbox" style="--ar:'+hvAr(h)+'">'+inner+'<span class="gheart">'+heart+'</span>'+ctl+'</div>'+hvPhotoTiles()+'</div></div>';
+}
+function vdInit(){
+  var box=$('vbox'),h=heroVid();
+  if(!box||!h)return;
+  var offs=[],on=function(t,ev,fn,o){t.addEventListener(ev,fn,o);offs.push(function(){t.removeEventListener(ev,fn,o)})};
+  hvState={userPaused:false,inView:true,canAuto:hvCanAuto(),autoPaused:false};
+  var tick=false;
+  on(window,'resize',function(){if(tick)return;tick=true;requestAnimationFrame(function(){tick=false;vdLayout()})});
+  vdLayout();
+  var lb=$('lb'),lbOpen=function(){return !!(lb&&lb.classList.contains('open'))},v=$('hv');
+  var play=function(){
+    if(h.kind==='file'){
+      if(!v||!hvState.canAuto||hvState.userPaused||hvState.inView===false||document.hidden||lbOpen())return;
+      var p=v.play();if(p&&p.catch)p.catch(function(){box.classList.add('paused')});
+    }else if(hvState.autoPaused&&hvState.inView&&!document.hidden&&!lbOpen()){
+      hvState.autoPaused=false;hvEmbedCmd(h,true);
+    }
+  };
+  var pause=function(){
+    if(h.kind==='file'){if(v&&!v.paused)v.pause()}
+    else if(!hvState.autoPaused){hvState.autoPaused=true;hvEmbedCmd(h,false)}
+  };
+  if(v){
+    v.muted=true;
+    var setAr=function(){
+      if(v.videoWidth&&v.videoHeight){box.style.setProperty('--ar',(v.videoWidth/v.videoHeight).toFixed(4));box.classList.remove('loading');vdLayout()}
+    };
+    on(v,'loadedmetadata',setAr);on(v,'loadeddata',setAr);
+    on(v,'canplay',function(){box.classList.remove('loading')});
+    on(v,'playing',function(){box.classList.remove('loading');box.classList.remove('paused')});
+    on(v,'play',function(){box.classList.remove('paused')});
+    on(v,'pause',function(){box.classList.add('paused')});
+    on(v,'volumechange',syncSoundBtn);
+    on(v,'error',function(){
+      if(heroBad)return;
+      heroBad=true;
+      console.error('[video] The walkthrough could not play on this device; showing the photo gallery instead:',v.error);
+      render();
+    });
+    if(v.readyState>=1)setAr();
+    syncSoundBtn();
+  }
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){
+      var e=es[es.length-1];
+      hvState.inView=e.intersectionRatio>=0.35;
+      if(hvState.inView)play();else pause();
+    },{threshold:[0,0.35,0.6]});
+    io.observe(box);offs.push(function(){io.disconnect()});
+  }else play();
+  on(document,'visibilitychange',function(){if(document.hidden)pause();else play()});
+  if(lb&&window.MutationObserver){
+    var mo=new MutationObserver(function(){if(lbOpen())pause();else play()});
+    mo.observe(lb,{attributes:true,attributeFilter:['class']});
+    offs.push(function(){mo.disconnect()});
+  }
+  _hvCleanup=function(){offs.forEach(function(f){f()})};
+}
+/* ---- phones: same-size frame for video and photos ---- */
+function vgEmbedSrc(h,mute){
+  if(h.kind==='yt')return 'https://www.youtube.com/embed/'+h.id+'?autoplay=1&mute='+(mute?1:0)+'&loop=1&playlist='+h.id+'&playsinline=1&rel=0&modestbranding=1&enablejsapi=1&controls=0&iv_load_policy=3&disablekb=1&fs=0&origin='+encodeURIComponent(location.origin);
+  return 'https://player.vimeo.com/video/'+h.id+'?'+(h.hash?'h='+h.hash+'&':'')+'autoplay=1&muted='+(mute?1:0)+'&loop=1&playsinline=1&title=0&byline=0&portrait=0&controls=0';
+}
+function vgEmbedCtl(){
+  return '<div class="vctrl br"><button type="button" class="hvb" data-act="hv-esound" aria-pressed="'+(!vgEmMuted)+'" aria-label="'+(vgEmMuted?'Turn sound on':'Turn sound off')+'">'+(vgEmMuted?HV_SND_OFF:HV_SND_ON)+'</button><button type="button" class="hvb" data-act="hv-full" aria-label="Full screen">'+HV_FS+'</button></div>';
+}
+function vgFitEmbed(){
+  var box=$('vbox'),f=$('hv-embed'),h=heroVid();
+  if(!box||!f||!h||h.kind==='file'||!phoneGallery())return;
+  var W=box.clientWidth,H=box.clientHeight;if(!W||!H)return;
+  var fs=document.fullscreenElement||document.webkitFullscreenElement,a=hvAr(h),w,hh;
+  if(fs===box){if(a>W/H){w=W;hh=W/a}else{hh=H;w=H*a}}
+  else{if(a>W/H){hh=H;w=H*a}else{w=W;hh=W/a}}
+  var s=f.style;
+  s.position='absolute';s.left='50%';s.top='50%';s.right='auto';s.bottom='auto';s.maxWidth='none';
+  s.width=Math.ceil(w)+'px';s.height=Math.ceil(hh)+'px';s.transform='translate(-50%,-50%)';
+}
+function vgEmbedSound(){
+  var h=heroVid(),f=$('hv-embed');if(!h||!f||!f.contentWindow)return;
+  vgEmMuted=!vgEmMuted;
+  try{
+    if(h.kind==='yt'){
+      f.contentWindow.postMessage(JSON.stringify({event:'command',func:vgEmMuted?'mute':'unMute',args:[]}),'*');
+      if(!vgEmMuted)f.contentWindow.postMessage(JSON.stringify({event:'command',func:'setVolume',args:[100]}),'*');
+    }else f.contentWindow.postMessage(JSON.stringify({method:'setVolume',value:vgEmMuted?0:1}),'*');
+  }catch(e){}
+  var b=document.querySelector('[data-act="hv-esound"]');
+  if(b){b.setAttribute('aria-pressed',String(!vgEmMuted));b.setAttribute('aria-label',vgEmMuted?'Turn sound on':'Turn sound off');b.innerHTML=vgEmMuted?HV_SND_OFF:HV_SND_ON}
+}
+function hvLoadEmbed(btn){
+  var h=heroVid(),box=$('vbox');if(!h||!box)return;
+  box.classList.remove('paused');
+  var m=phoneGallery();
+  btn.outerHTML='<iframe id="hv-embed" class="hv-embed" src="'+escHtml(m?vgEmbedSrc(h,false):hvEmbedSrc(h,false))+'" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="Video walkthrough"></iframe>';
+  if(m){
+    vgEmMuted=false;
+    var s=box.querySelector('.vs-v');
+    if(s&&!s.querySelector('.vctrl'))s.insertAdjacentHTML('beforeend',vgEmbedCtl());
+    vgFitEmbed();
+  }
+}
+function vgMobHtml(){
+  var h=heroVid();if(!h)return '';
+  var n=photos.length,saver=document.body.classList.contains('nk-datasaver'),canAuto=hvCanAuto(),
+      heart=(typeof NKSaved!=='undefined'&&NKSaved.buildHeartBtn)?NKSaved.buildHeartBtn(P.id):'',
+      inner='',ctl='',cls='vbox';
+  if(vgS>n)vgS=0;
+  vgEmMuted=true;
+  if(h.kind==='file'){
+    cls+=(canAuto&&vgS===0)?' loading':(canAuto?'':' paused');
+    inner='<video id="hv" class="hv" data-act="hv-toggle" src="'+escHtml(h.url)+'#t=0.1" muted playsinline loop preload="'+(saver?'none':'metadata')+'"'+(canAuto?' autoplay':'')+' aria-label="Video walkthrough of '+escHtml(P.title)+'"></video>'+
+      '<button type="button" class="hv-play" data-act="hv-toggle" aria-label="Play video"><span>'+HV_PLAY+'</span></button>';
+    ctl='<div class="vctrl br"><button type="button" class="hvb" data-act="hv-sound" aria-pressed="false" aria-label="Turn sound on">'+HV_SND_OFF+'</button><button type="button" class="hvb" data-act="hv-full" aria-label="Full screen">'+HV_FS+'</button></div>';
+  }else if(saver){
+    cls+=' paused';
+    var poster=h.kind==='yt'?'https://i.ytimg.com/vi/'+h.id+'/hqdefault.jpg':'';
+    inner='<button type="button" class="hv-play hv-embedbtn" data-act="hv-embed" aria-label="Play video"'+(poster?' style="background-image:url('+poster+')"':'')+'><span>'+HV_PLAY+'</span></button>';
+  }else{
+    inner='<iframe id="hv-embed" class="hv-embed" src="'+escHtml(vgEmbedSrc(h,true))+'" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="Video walkthrough"></iframe>';
+    ctl=vgEmbedCtl();
+  }
+  if(vgS>0)cls+=' onph';
+  var slides='<div class="vs vs-v'+(vgS===0?' on':'')+'" data-s="0">'+inner+ctl+'</div>'+photos.map(function(p,i){
+    return '<button type="button" class="vs vs-p'+(vgS===i+1?' on':'')+'" data-s="'+(i+1)+'" data-act="photo" data-i="'+i+'" aria-label="Open photo '+(i+1)+' of '+n+'"><img src="'+escHtml(srcFor(p,saver?640:1000))+'" data-orig="'+escHtml(p.url)+'" alt="'+escHtml(P.title)+', photo '+(i+1)+' of '+n+'" loading="lazy" decoding="async"/></button>';
+  }).join('');
+  var nav=n?'<button type="button" class="gnav prev" data-act="vg-prev" aria-label="Previous: video or photo">'+IC.chev(1)+'</button><button type="button" class="gnav next" data-act="vg-next" aria-label="Next: video or photo">'+IC.chev(0)+'</button><div class="gcount" id="vgcount" aria-live="polite"><span id="vgc">'+vgLabel()+'</span></div>':'';
+  return '<div class="gallery vgal vg2" id="gallery"><div class="vstage" id="vstage"><div class="'+cls+'" id="vbox" style="--sar:'+vgSar(h).toFixed(4)+'">'+slides+'<span class="gheart">'+heart+'</span>'+nav+'</div></div>'+vgThumbs(h)+'</div>';
+}
+function vgMobInit(){
+  var box=$('vbox'),h=heroVid();
+  if(!box||!h)return;
+  var offs=[],on=function(t,ev,fn,o){t.addEventListener(ev,fn,o);offs.push(function(){t.removeEventListener(ev,fn,o)})};
+  hvState={userPaused:false,inView:true,canAuto:hvCanAuto(),autoPaused:false};
+  var lb=$('lb'),lbOpen=function(){return !!(lb&&lb.classList.contains('open'))},v=$('hv'),gal=$('gallery');
+  var play=function(){
+    if(vgS!==0)return;
+    if(h.kind==='file'){
+      if(!v||!hvState.canAuto||hvState.userPaused||hvState.inView===false||document.hidden||lbOpen())return;
+      var p=v.play();if(p&&p.catch)p.catch(function(){box.classList.add('paused')});
+    }else if(hvState.autoPaused&&hvState.inView&&!document.hidden&&!lbOpen()){
+      hvState.autoPaused=false;hvEmbedCmd(h,true);
+    }
+  };
+  var pause=function(){
+    if(h.kind==='file'){if(v&&!v.paused)v.pause()}
+    else if(!hvState.autoPaused){hvState.autoPaused=true;hvEmbedCmd(h,false)}
+  };
+  vgPlay=play;vgPause=pause;
+  if(v){
+    v.muted=true;
+    var setAr=function(){
+      if(v.videoWidth&&v.videoHeight){
+        var a=+(v.videoWidth/v.videoHeight).toFixed(4);
+        vgVAr=a;lss(vgCacheKey(h),String(a));
+        box.classList.remove('loading');vgApply();
+      }
+    };
+    on(v,'loadedmetadata',setAr);on(v,'loadeddata',setAr);
+    on(v,'canplay',function(){box.classList.remove('loading')});
+    on(v,'playing',function(){box.classList.remove('loading');box.classList.remove('paused')});
+    on(v,'play',function(){box.classList.remove('paused')});
+    on(v,'pause',function(){box.classList.add('paused')});
+    on(v,'volumechange',syncSoundBtn);
+    on(v,'error',function(){
+      if(heroBad)return;
+      heroBad=true;vgS=0;
+      console.error('[video] The walkthrough could not play on this device; showing the photo gallery instead:',v.error);
+      render();
+    });
+    if(v.readyState>=1)setAr();
+    syncSoundBtn();
+  }
+  /* YouTube / Vimeo: scale to fill the same frame, and follow size changes and full screen */
+  if(h.kind!=='file'){
+    vgFitEmbed();
+    if(window.ResizeObserver){var ro=new ResizeObserver(vgFitEmbed);ro.observe(box);offs.push(function(){ro.disconnect()})}
+    on(document,'fullscreenchange',vgFitEmbed);on(document,'webkitfullscreenchange',vgFitEmbed);on(window,'resize',vgFitEmbed);
+  }
+  /* swipe on phones, arrow keys */
+  var sx=0,sy=0;
+  on(box,'touchstart',function(e){if(e.touches.length===1){sx=e.touches[0].clientX;sy=e.touches[0].clientY}},{passive:true});
+  on(box,'touchend',function(e){
+    var t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
+    if(vgCount()>1&&Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)*1.4)vgGo(dx<0?1:-1);
+  },{passive:true});
+  if(gal)on(gal,'keydown',function(e){
+    if(vgCount()<2)return;
+    if(e.key==='ArrowLeft'){e.preventDefault();vgGo(-1)}
+    else if(e.key==='ArrowRight'){e.preventDefault();vgGo(1)}
+  });
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){
+      var e=es[es.length-1];
+      hvState.inView=e.intersectionRatio>=0.35;
+      if(hvState.inView)play();else pause();
+    },{threshold:[0,0.35,0.6]});
+    io.observe(box);offs.push(function(){io.disconnect()});
+  }else play();
+  on(document,'visibilitychange',function(){if(document.hidden)pause();else play()});
+  if(lb&&window.MutationObserver){
+    var mo=new MutationObserver(function(){
+      if(lbOpen())pause();
+      else{
+        if(vgS>0&&idx>=0&&idx<photos.length&&idx+1!==vgS){vgS=idx+1;vgApply(true)}
+        play();
+      }
+    });
+    mo.observe(lb,{attributes:true,attributeFilter:['class']});
+    offs.push(function(){mo.disconnect()});
+  }
+  _hvCleanup=function(){vgPlay=null;vgPause=null;offs.forEach(function(f){f()})};
+}
+/* ---- pick the layout by screen width ---- */
+function videoGalleryHtml(){return phoneGallery()?vgMobHtml():vdHtml()}
+function layoutVGal(){vdLayout()}
+function initHeroVideo(){
+  if(_hvCleanup){_hvCleanup();_hvCleanup=null}
+  vgPlay=null;vgPause=null;
+  if(!heroVid())return;
+  if(phoneGallery())vgMobInit();else vdInit();
+}
+function heroJump(){
+  if(!heroVid())return false;
+  if(phoneGallery())vgTo(0);
+  var g=$('gallery'),v=$('hv');
+  if(g)g.scrollIntoView({behavior:'smooth',block:'center'});
+  if(v){
+    hvState.userPaused=false;v.muted=false;syncSoundBtn();
+    var p=v.play();
+    if(p&&p.catch)p.catch(function(){v.muted=true;syncSoundBtn();var q=v.play();if(q&&q.catch)q.catch(function(){})});
+  }
+  return true;
+}
 function galleryHtml(){
   var _vg=videoGalleryHtml();if(_vg)return _vg;
   if(!photos.length)return `<div class="gallery" id="gallery"><div class="gnone">${IC.photo}<span>No photos for this listing yet</span></div></div>`;
@@ -1358,7 +1628,7 @@ function galleryHtml(){
   return `<div class="gallery" id="gallery"><div class="gmosaic n${order.length}" id="gmosaic"><div class="gm-main" id="gm-main">${tileBtn(order[0],true)}${arrows}${count}${heroOverlay()}</div>${order.slice(1).map(i=>tileBtn(i,false)).join('')}</div>
     <span class="gheart">${heart}</span><button type="button" class="gall" data-act="photo" data-i="${idx}">${IC.expand}${n>1?`Show all ${n} photos`:'View photo'}</button></div>`;
 }
-function renderGallery(){const g=$('gallery');if(!g||!P)return;if($('vbox')&&heroVid())return;g.outerHTML=galleryHtml();syncTrack();syncDots();initHeroVideo();if(typeof NKSaved!=='undefined'&&NKSaved.hydrate)NKSaved.hydrate($('gallery'))}
+function renderGallery(){const g=$('gallery');if(!g||!P)return;g.outerHTML=galleryHtml();syncTrack();syncDots();initHeroVideo();if(typeof NKSaved!=='undefined'&&NKSaved.hydrate)NKSaved.hydrate($('gallery'))}
 /* desktop: swap only the photo tiles, so the arrow buttons keep keyboard focus */
 function renderMosaic(){
   const gm=$('gm-main');if(!gm)return;const order=tileOrder();
@@ -2043,7 +2313,7 @@ document.addEventListener('click',e=>{
     case 'share':track('share');openShare();break;
     case 'copy':navigator.clipboard.writeText(t.dataset.url).then(()=>{t.innerHTML='<span>✓</span>Copied';toast('Link copied')},()=>toast('Could not copy the link','error'));break;
     case 'copy-ref':navigator.clipboard.writeText(shortRef()).then(()=>toast('Listing reference copied'),()=>toast('Could not copy the reference','error'));break;
-    case 'vg-prev':vgGo(-1);break;case 'vg-next':vgGo(1);break;case 'vg-to':vgTo(Number(t.dataset.i)||0);break;case 'hv-sound':hvSound();break;case 'hv-full':hvFull();break;case 'hv-toggle':hvToggle();break;case 'hv-embed':hvLoadEmbed(t);break;
+    case 'hv-esound':vgEmbedSound();break;case 'vg-prev':vgGo(-1);break;case 'vg-next':vgGo(1);break;case 'vg-to':vgTo(Number(t.dataset.i)||0);break;case 'hv-sound':hvSound();break;case 'hv-full':hvFull();break;case 'hv-toggle':hvToggle();break;case 'hv-embed':hvLoadEmbed(t);break;
     case 'video-jump':{if(heroJump())break;const sec=$('sec-video');if(sec){sec.scrollIntoView({behavior:'smooth',block:'start'});const pb=sec.querySelector('[data-nkv-file]');if(pb)setTimeout(()=>{pb.play&&pb.play().catch(()=>{})},450)}else toast('No video walkthrough for this listing yet.');break}
     case 'map-jump':{const sec=$('sec-loc');if(sec){sec.scrollIntoView({behavior:'smooth',block:'start'});track('location_jump')}break;}
     case 'report':$('rp-reason').value='';$('rp-amt-wrap').hidden=true;$('rp-banner').textContent='';nkOpenModal($('ov-report'));break;
