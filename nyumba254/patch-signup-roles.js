@@ -11,14 +11,13 @@
  *     Step 1  name, email, password, consent  (button: Continue)
  *     Step 2  "How will you use Nyumba254?"  - tap-to-select cards with icons
  *             Tenant/Buyer, Property owner, Caretaker, Agent, Company
- *     Step 3  (Company, Agent, Caretaker only) a few details for that role
- *             Company: company name (required), type, registration no. (optional)
- *             Agent: agency name (optional)
- *             Caretaker: property looked after (optional)
- *   Tenant/Buyer and Property owner have nothing more to ask, so the account is
- *   created straight after the role step.
+ *     Step 3  (everyone except Tenant/Buyer) a few details for that role
+ *             Company: company name, type, registration no. (optional), phone
+ *             Agent: agency name (optional), phone
+ *             Owner: phone      Caretaker: property looked after (optional), phone
+ *   Tenant/Buyer skips step 3 and the account is created straight away.
  *   The choice is sent with sign-up as account metadata:
- *     account_type, company_name, company_type, company_registration,
+ *     account_type, phone, company_name, company_type, company_registration,
  *     agency_name, managed_property
  *   Google sign-in is untouched: those users choose later in the dashboard.
  *
@@ -42,8 +41,15 @@ if (REVERT) {
   console.log('Restored ' + FILE + ' from backup.'); process.exit(0);
 }
 
-const raw = fs.readFileSync(FILE, 'utf8');
-if (raw.includes(MARK)) die(FILE + ' is already patched. Use --revert first if you want to re-apply.');
+let raw = fs.readFileSync(FILE, 'utf8');
+if (raw.includes(MARK)) {
+  /* an earlier run of this patch is in the file: start again from its backup so the new version replaces it */
+  if (!isFile(FILE + BAK)) die(FILE + ' already has this patch but ' + FILE + BAK + ' is missing, so it cannot be replaced safely. Send me the file.');
+  const orig = fs.readFileSync(FILE + BAK, 'utf8');
+  if (orig.includes(MARK)) die(FILE + BAK + ' is itself patched. Restore your original login file first.');
+  raw = orig;
+  console.log('Earlier version found: replacing it with this one (from ' + FILE + BAK + ').');
+}
 if (!raw.includes('id="panel-register"') || !raw.includes('async function doRegister()')) die(FILE + ' does not look like the login page (no register panel / doRegister).');
 const crlf = /\r\n/.test(raw);
 let out = raw.replace(/\r\n/g, '\n');
@@ -106,11 +112,12 @@ const ICON = {
 const card = (v, t, d) => '            <label class="rc"><input type="radio" name="reg-role" value="' + v + '"/><span class="rc-ic"><svg viewBox="0 0 24 24">' + ICON[v] + '</svg></span><span class="rc-tx"><strong>' + t + '</strong><span>' + d + '</span></span><span class="rc-tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span></label>\n';
 const USER_SVG = '<svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
 const BLDG_SVG = '<svg class="icon" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/></svg>';
+const PHONE_SVG = '<svg class="icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0122 16.92z"/></svg>';
 const field = (forRoles, label, opt, id, type, ph, extra, err) =>
   '          <div class="form-group" data-for="' + forRoles + '">\n' +
   '            <label class="field-label" for="' + id + '">' + label + (opt ? ' <span class="opt">optional</span>' : '') + '</label>\n' +
   '            <div class="input-wrap">' + (type === 'tel' ? PHONE_SVG : type === 'co' ? BLDG_SVG : USER_SVG) +
-  '<input type="text" id="' + id + '" placeholder="' + ph + '" maxlength="160" ' + extra + '/></div>\n' +
+  '<input type="' + (type === 'tel' ? 'tel' : 'text') + '" id="' + id + '" placeholder="' + ph + '" maxlength="' + (type === 'tel' ? '16' : '160') + '" ' + extra + '/></div>\n' +
   (err ? '            <div class="field-error" id="err-' + id + '" aria-live="polite">' + err + '</div>\n' : '') +
   '          </div>\n';
 
@@ -140,6 +147,8 @@ const PANES =
   field('company', 'Registration number', true, 'reg-company-reg', 'co', 'Business registration no.', '') +
   field('agent', 'Agency or business name', true, 'reg-agency', 'co', 'e.g. Lakeview Realty', 'autocomplete="organization"') +
   field('caretaker', 'Property you look after', true, 'reg-managed', 'co', 'Building name or area', '') +
+  field('owner,caretaker,agent,company', 'Phone number', false, 'reg-phone', 'tel', '07XX XXX XXX', 'autocomplete="tel" inputmode="tel" oninput="formatPhone(this)"', 'Enter a valid Kenyan phone number') +
+  '          <p class="reg-hint" style="margin-top:-6px">Used so buyers and tenants can reach you. You can hide it from buyers in Settings.</p>\n' +
   '          <div class="reg-actions">\n' +
   '            <button type="button" class="btn-back" onclick="regGo(2)">Back</button>\n' +
   '            <button type="submit" class="btn-submit" id="btn-reg-final"><div class="spinner"></div><span class="btn-text">Create account</span></button>\n' +
@@ -149,14 +158,15 @@ const PANES =
 /* ------------------------------------------------------------------- JS */
 const JS = String.raw`/*NK-SIGNUPROLE*/
   // ── Multi-step sign-up: step 1 details -> step 2 role -> step 3 role details ──
-  const regState = { step: 1, role: '' };
-  const REG_DETAIL_ROLES = ['company', 'agent', 'caretaker'];  /* roles that get a step 3 */
+  const regState = { step: 1, role: '', phone: '' };
+  const REG_DETAIL_ROLES = ['company', 'agent', 'caretaker', 'owner'];  /* roles that get a step 3 */
   const REG_COPY = {
     1: { t: 'Create your account', s: 'Free to join. Start listing in under 10 minutes.' },
     2: { t: 'How will you use Nyumba254?', s: 'Pick the option that fits you best. You can change it later in account settings.' },
     company:   { t: 'Tell us about your company', s: 'These details appear on your public profile while Company is your account type.' },
-    agent:     { t: 'A few details about you', s: 'Optional. Help people recognise your agency.' },
-    caretaker: { t: 'A few details about you', s: 'Optional. Tell us which property you look after.' }
+    agent:     { t: 'A few details about you', s: 'Help people recognise and reach you.' },
+    owner:     { t: 'A few details about you', s: 'So interested tenants and buyers can reach you.' },
+    caretaker: { t: 'A few details about you', s: 'So interested tenants and buyers can reach you.' }
   };
   function regTotal() { return regState.role && REG_DETAIL_ROLES.indexOf(regState.role) < 0 ? 2 : 3; }
   function regRenderSteps() {
@@ -230,14 +240,19 @@ const JS = String.raw`/*NK-SIGNUPROLE*/
   }
   function regDetailsNext() {
     clearAllErrors();
-    if (regState.role === 'company' && document.getElementById('reg-company-name').value.trim().length < 2) {
-      fieldError('reg-company-name', 'err-reg-company-name', true); return;
-    }
+    let ok = true;
+    if (regState.role === 'company' && document.getElementById('reg-company-name').value.trim().length < 2) { fieldError('reg-company-name', 'err-reg-company-name', true); ok = false; }
+    if (!okPhone(document.getElementById('reg-phone').value)) { fieldError('reg-phone', 'err-reg-phone', true); ok = false; }
+    if (!ok) return;
     doRegister();
   }
   function regMetaExtra() {
     const r = regState.role, m = { account_type: r };
     const g = id => { const e = document.getElementById(id); return e ? e.value.trim() : ''; };
+    if (REG_DETAIL_ROLES.indexOf(r) > -1) {
+      const ph = nkNormalizePhone(g('reg-phone'));
+      if (/^\+254\d{9}$/.test(ph)) { m.phone = ph; regState.phone = ph; }
+    }
     if (r === 'company') {
       m.company_name = g('reg-company-name'); m.company_type = g('reg-company-type') || 'agency';
       if (g('reg-company-reg')) m.company_registration = g('reg-company-reg');
@@ -274,6 +289,8 @@ once('send the role with sign-up', 'data: { full_name: `${first} ${last}` },', '
 many('spinner on the active button (start)', "setLoading('btn-register', true);", 'regBusy(true);', 1);
 many('spinner on the active button (end)', "setLoading('btn-register', false);", 'regBusy(false);', 2);
 once('hide the steps on success', "document.getElementById('register-form').style.display = 'none';", "document.getElementById('register-form').style.display = 'none'; regHideAll();");
+once('save phone in profile', 'id: data.user.id,', 'id: data.user.id,\n          ...(regState.phone ? { phone: regState.phone } : {}),');
+once('admin notification phone', "sellerPhone: '',", "sellerPhone: regState.phone || '',");
 
 let bad = false;
 console.log('File: ' + FILE);
