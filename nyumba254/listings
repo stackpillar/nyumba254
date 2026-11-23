@@ -2750,5 +2750,6 @@ boot();
 })();
 </script>
 <!-- NK-CARDS-V4:END -->
+<script src="/nk-video-cover.js?v=1"></script>
 </body>
 </html>

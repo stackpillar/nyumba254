@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Nyumba254 Lister Page</title>
+<meta name="robots" id="m-robots" content="index,follow"/>
+<meta name="description" id="meta-description" content="Browse active property listings on Nyumba254."/>
+<meta property="og:title" id="og-title" content="Nyumba254 Lister Page"/>
+<meta property="og:description" id="og-description" content="Browse active property listings on Nyumba254."/>
+<meta property="og:type" content="profile"/>
+<link rel="canonical" href="https://nyumba254.com/storefront"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" id="tw-title" content="Nyumba254 Lister Page"/>
+<meta name="twitter:description" id="tw-description" content="Browse active property listings on Nyumba254."/>
+<meta name="twitter:image" content="https://nyumba254.com/hero-photo.jpg"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --green:#0F6E56;--green-light:#E1F5EE;--green-mid:#1D9E75;--green-dark:#085041;
+    --gold:#BA7517;--gold-light:#FAEEDA;--purple:#7c3aed;--purple-light:#EDE9FE;
+    --text:#1a1a18;--text-2:#4a4a46;--text-3:#888780;
+    --border:#e0ded8;--surface:#f7f6f2;--white:#ffffff;
+    --radius:10px;--radius-lg:16px;
+    --shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 12px rgba(0,0,0,0.06);
+  }
+  body{font-family:'Inter',sans-serif;color:var(--text);background:var(--surface);line-height:1.6;min-height:100vh}
+  a{text-decoration:none;color:inherit}
+  img{display:block;max-width:100%}
+
+  /* ── minimal top bar, links back to the platform ── */
+  .topbar{background:var(--white);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+  .topbar-logo{display:flex;align-items:center;gap:8px;font-family:'Playfair Display',serif;font-size:16px;color:var(--green-dark);font-weight:700}
+  .topbar-logo-icon{width:auto;height:36px;background:transparent;border-radius:0;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .topbar-logo-icon img{ width:auto; height:100%; aspect-ratio:1/1; object-fit:cover; display:block; border-radius:22%; box-shadow:0 0 0 1px rgba(0,0,0,.08); }
+  .topbar-cta{font-size:13px;font-weight:600;color:var(--green);border:1.5px solid var(--green);padding:7px 14px;border-radius:20px}
+  .topbar-cta:hover{background:var(--green-light)}
+
+  /* ── seller header / branding ── */
+  .seller-header{background:linear-gradient(135deg,var(--green-dark),var(--green-mid));padding:44px 24px 90px;text-align:center;position:relative}
+.seller-social{margin:4px 0 10px}
+.seller-social .nks-row{justify-content:center}
+.seller-social .nks-link{color:#fff;border-color:rgba(255,255,255,.6);background:rgba(255,255,255,.12)}
+.seller-social .nks-link:hover{background:rgba(255,255,255,.22)}
+.seller-social .nks-link:focus-visible{outline-color:#fff}
+.seller-social .nks-note{color:rgba(255,255,255,.9)}
+.seller-social .nks-note a{color:#fff;text-decoration:underline}
+  .seller-avatar{width:84px;height:84px;border-radius:50%;background:rgba(255,255,255,0.15);border:3px solid rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:white;margin:0 auto 16px}
+  .seller-name{font-family:'Playfair Display',serif;font-size:clamp(24px,4vw,32px);color:white;margin-bottom:8px}
+  .seller-badges{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .s-badge{font-size:11.5px;font-weight:700;padding:4px 12px;border-radius:20px;display:inline-flex;align-items:center;gap:5px}
+  .s-badge.pro{background:var(--gold-light);color:var(--gold)}
+  .s-badge.verified{background:rgba(255,255,255,0.18);color:white}
+  .s-badge svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5}
+  .seller-sub{font-size:14px;color:rgba(255,255,255,0.75);max-width:440px;margin:0 auto}
+  .seller-profile-details{max-width:700px;margin:16px auto 0;color:rgba(255,255,255,.9);font-size:13px}
+  .seller-profile-details p{margin:5px 0}
+  .seller-profile-details a{color:#fff;text-decoration:underline;text-underline-offset:3px}
+  .seller-contact-row{display:flex;justify-content:center;gap:10px;margin-top:20px;flex-wrap:wrap}
+  .contact-btn{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;padding:10px 18px;border-radius:var(--radius);transition:all .15s}
+  .contact-btn.wa{background:#25D366;color:white}
+  .contact-btn.wa:hover{background:#1ea952}
+  .contact-btn.chat{background:white;color:var(--green-dark)}
+  .contact-btn.chat:hover{background:var(--green-light)}
+  .contact-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+
+  /* ── content ── */
+  .content{max-width:1120px;margin:-56px auto 0;padding:0 24px 64px;position:relative;z-index:2}
+  .stats-strip{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:18px 26px;display:flex;justify-content:center;gap:40px;flex-wrap:wrap;margin-bottom:36px}
+  .stat{text-align:center}
+  .stat-val{font-size:22px;font-weight:700;color:var(--green-dark)}
+  .stat-lbl{font-size:11.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+
+  .section-title{font-family:'Playfair Display',serif;font-size:21px;color:var(--text);margin-bottom:18px}
+
+  .listings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px}
+  .card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;transition:transform .15s,box-shadow .15s;cursor:pointer}
+  .card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+  .card-img{height:170px;background:var(--surface);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .card-img img{width:100%;height:100%;object-fit:cover}
+  .card-img svg{width:32px;height:32px;stroke:var(--text-3);fill:none;stroke-width:1.4;opacity:.5}
+  .badge-featured{position:absolute;top:10px;left:10px;background:var(--gold);color:white;font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:20px}
+  .card-body{padding:14px 16px}
+  .card-area{font-size:10.5px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+  .card-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px;line-height:1.35}
+  .card-price{font-size:16px;font-weight:700;color:var(--green-dark)}
+  .card-price span{font-size:12px;font-weight:400;color:var(--text-3)}
+
+  /* ── filters & sort ── */
+  .filters-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px}
+  .filters-bar select,.filters-bar input[type="text"]{padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--white);outline:none;font-family:inherit}
+  .filters-bar select:focus,.filters-bar input:focus{border-color:var(--green)}
+  .filters-bar input[type="text"]{flex:1;min-width:160px}
+  .filters-count{font-size:12.5px;color:var(--text-3);margin-left:auto;white-space:nowrap}
+
+  /* ── share button ── */
+  .share-btn{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;padding:8px 14px;border-radius:20px;background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.35);cursor:pointer}
+  .share-btn:hover{background:rgba(255,255,255,0.25)}
+  .share-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
+
+  /* ── reviews ── */
+  .reviews-summary-row{display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+  .reviews-avg{font-size:30px;font-weight:700;color:var(--text)}
+  .reviews-stars{color:var(--gold);font-size:15px;letter-spacing:1px}
+  .reviews-count{font-size:12.5px;color:var(--text-3)}
+  .review-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:12px}
+  .review-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .review-avatar{width:32px;height:32px;border-radius:50%;background:var(--green-light);color:var(--green-dark);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+  .review-name{font-size:13px;font-weight:600;color:var(--text)}
+  .review-date{font-size:11.5px;color:var(--text-3);margin-left:auto}
+  .review-stars{color:var(--gold);font-size:12px;letter-spacing:1px;margin-bottom:6px}
+  .review-comment{font-size:13.5px;color:var(--text-2);line-height:1.6}
+  .review-response{background:var(--green-light);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12.5px;color:var(--green-dark)}
+  .review-response strong{color:var(--green-dark)}
+
+  /* ── mobile sticky contact bar ── */
+  .sticky-contact-bar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--white);border-top:1px solid var(--border);padding:10px 16px;box-shadow:0 -4px 16px rgba(0,0,0,0.08);gap:10px}
+  .sticky-contact-bar a{flex:1;text-align:center}
+
+  .empty-state{text-align:center;padding:60px 20px;color:var(--text-3)}
+  .empty-state svg{width:44px;height:44px;margin:0 auto 14px;stroke:var(--border);fill:none;stroke-width:1.4}
+
+  .loading-wrap{text-align:center;padding:80px 20px;color:var(--text-3);font-size:13px}
+  .spin{width:26px;height:26px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:sp .7s linear infinite;margin:0 auto 12px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  .not-available{max-width:460px;margin:80px auto;text-align:center;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:40px 32px}
+  .not-available svg{width:44px;height:44px;stroke:var(--text-3);fill:none;stroke-width:1.4;margin:0 auto 16px}
+  .not-available h2{font-family:'Playfair Display',serif;font-size:19px;margin-bottom:8px}
+  .not-available p{font-size:13.5px;color:var(--text-3);line-height:1.6;margin-bottom:18px}
+
+  footer{text-align:center;padding:28px 20px;font-size:12px;color:var(--text-3)}
+  footer a{color:var(--green);font-weight:600}
+
+  @media(max-width:600px){
+    .content{margin-top:-40px}
+    .seller-header{padding:36px 16px 70px}
+    body{padding-bottom:64px}
+    .sticky-contact-bar{display:flex}
+  }
+</style>
+  <link rel="stylesheet" href="/theme.css"/>
+  <script src="/theme.js"></script>
+<link rel="manifest" href="/manifest.webmanifest"><script src="/nk-context.js"></script><script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}</script></head>
+<body>
+
+<div class="topbar">
+  <a href="/" class="topbar-logo">
+    <span class="topbar-logo-icon"><img src="/logo-icon.png" alt="Nyumba254"/></span>
+    Nyumba254
+  </a>
+  <a href="/listings" class="topbar-cta">Browse all listings</a>
+</div>
+
+<div id="app-root">
+  <div class="loading-wrap"><div class="spin"></div>Loading Lister Page…</div>
+</div>
+
+<script src="/nk-social.js"></script>
+<script>
+  const SUPABASE_URL = 'https://vliuuloyfhyxcsuchpss.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx';
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function safeExternalUrl(value){
+    try{
+      const url=new URL(String(value||''));
+      return url.protocol==='https:'||url.protocol==='http:'?url.href:'';
+    }catch{return '';}
+  }
+  function fmtPrice(price, type){
+    const p = Number(price||0).toLocaleString('en-KE');
+    return type === 'rent' ? `KES ${p}<span>/mo</span>` : `KES ${p}`;
+  }
+  function formatWaPhone(p){
+    const clean = String(p||'').replace(/\D/g,'');
+    return /^0\d{9}$/.test(clean) ? '254'+clean.slice(1) : clean;
+  }
+  function initialsOf(name){
+    return (name||'?').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase() || '?';
+  }
+
+  function renderNotAvailable(msg){
+    document.getElementById('m-robots')?.setAttribute('content','noindex,follow');
+    document.getElementById('app-root').innerHTML = `
+      <div class="not-available">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        <h2>Lister Page not available</h2>
+        <p>${esc(msg)}</p>
+        <a href="/listings" class="topbar-cta" style="display:inline-block">Browse all listings</a>
+      </div>`;
+  }
+
+  function buildCard(listing){
+    const photos = listing.listing_photos || [];
+    const cover = photos.find(p=>p.is_cover) || photos[0];
+    const roleLabels={buyer:'Tenant / Buyer',owner:'Direct from owner',landlord:'Direct from owner',caretaker:'Caretaker',agent:'Agent',company:'Company'};
+    const snapshotRole=listing.listed_by_type||SELLER_PROFILE?.account_type;
+    const currentRole=SELLER_PROFILE?.account_type;
+    const roleChanged=!!snapshotRole&&!!currentRole&&snapshotRole!==currentRole;
+    const roleVerified=!!snapshotRole&&!roleChanged&&SELLER_PROFILE?.verified_role===snapshotRole;
+    const listedBy=`${roleLabels[snapshotRole]||'Lister'}${roleChanged?' (role changed)':roleVerified?' ✓':' (not verified)'}`;
+    const viewingFee=listing.public_viewing_fee===null||listing.public_viewing_fee===undefined?null:Number(listing.public_viewing_fee);
+    const imgHtml = cover
+      ? `<img src="${esc(String(cover.url).replace(/^(https:\/\/[^/]+\.supabase\.co\/storage\/v1)\/object\/public\/([^?#]+)$/,"$1/render/image/public/$2?width=520&quality=75"))}" alt="${esc(listing.title)}" loading="lazy" decoding="async"/>`
+      : `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
+    return `
+      <div class="card" onclick="trackListerEvent('listing_view','${esc(listing.id)}');window.location='/listing?id=${String(listing.listing_number).padStart(6,'0')}'" role="button" tabindex="0" aria-label="${esc(listing.title)}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();trackListerEvent('listing_view','${esc(listing.id)}');window.location='/listing?id=${String(listing.listing_number).padStart(6,'0')}'}">
+        <div class="card-img">${imgHtml}${listing.is_featured?'<span class="badge-featured">Featured</span>':''}</div>
+        <div class="card-body">
+          <div class="card-area">${esc(listing.area||'')}${listing.sub_area?' · '+esc(listing.sub_area):''}</div>
+          <div class="card-title">${esc(listing.title)}</div>
+          <div class="card-sub">Listed by ${esc(listedBy)}</div>
+          <div class="card-viewing-fee">${viewingFee===null?'Viewing fee: confirm with the lister':viewingFee>0?`Viewing fee: KES ${viewingFee.toLocaleString('en-KE')}`:'Free viewing'}</div>
+          <div class="card-price">${fmtPrice(listing.price, listing.price_type)}</div>
+        </div>
+      </div>`;
+  }
+
+  let ALL_ITEMS = [];
+  let ALL_REVIEWS = [];
+  let SELLER_PROFILE = null;
+
+  function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+  function starGlyphs(avg){ const full=Math.round(avg); return '★★★★★'.slice(0,full)+'☆☆☆☆☆'.slice(0,5-full); }
+
+  function buildReviewCard(r){
+    const date=new Date(r.created_at).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'});
+    return `<div class="review-card">
+      <div class="review-head">
+        <div class="review-avatar">${esc(initialsOf(r.reviewer_name||'Buyer'))}</div>
+        <div class="review-name">${esc(r.reviewer_name||'Anonymous buyer')}</div>
+        <div class="review-date">${date}</div>
+      </div>
+      <div class="review-stars">${starGlyphs(r.rating)}</div>
+      <div class="review-comment">${esc(r.comment||'(No comment left — rating only)')}</div>
+      ${r.response_text?`<div class="review-response"><strong>Lister response:</strong> ${esc(r.response_text)}</div>`:''}
+    </div>`;
+  }
+
+  function applyFilters(){
+    const q=(document.getElementById('sf-search')?.value||'').toLowerCase().trim();
+    const cat=document.getElementById('sf-category')?.value||'';
+    const type=document.getElementById('sf-type')?.value||'';
+    const area=document.getElementById('sf-area')?.value||'';
+    const maxPrice=Number(document.getElementById('sf-max-price')?.value)||0;
+    const bedrooms=Number(document.getElementById('sf-bedrooms')?.value)||0;
+    const sort=document.getElementById('sf-sort')?.value||'newest';
+
+    let filtered=ALL_ITEMS.filter(l=>{
+      if(q && !(l.title||'').toLowerCase().includes(q) && !(l.area||'').toLowerCase().includes(q)) return false;
+      if(cat && l.category!==cat) return false;
+      if(type && l.price_type!==type) return false;
+      if(area && l.area!==area) return false;
+      if(maxPrice&&Number(l.price)>maxPrice)return false;
+      if(bedrooms&&Number(l.bedrooms||l.bedroom_count||0)<bedrooms)return false;
+      return true;
+    });
+    if(sort==='price_low') filtered=[...filtered].sort((a,b)=>Number(a.price)-Number(b.price));
+    else if(sort==='price_high') filtered=[...filtered].sort((a,b)=>Number(b.price)-Number(a.price));
+    else filtered=[...filtered].sort((a,b)=>(b.is_featured?1:0)-(a.is_featured?1:0)||new Date(b.created_at)-new Date(a.created_at));
+
+    const grid=document.getElementById('listings-grid');
+    const countEl=document.getElementById('sf-count');
+    if(countEl) countEl.textContent=`${filtered.length} of ${ALL_ITEMS.length} listing${ALL_ITEMS.length!==1?'s':''}`;
+    if(grid){
+      grid.innerHTML = filtered.length
+        ? filtered.map(buildCard).join('')
+        : `<div style="grid-column:1/-1" class="empty-state"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><p>No listings match your filters. Try clearing them.</p></div>`;
+    }
+  }
+
+  function wireFilters(){
+    const searchEl=document.getElementById('sf-search');
+    if(!searchEl)return;
+    searchEl.addEventListener('input', debounce(applyFilters,250));
+    ['sf-category','sf-type','sf-area','sf-sort','sf-max-price','sf-bedrooms'].forEach(id=>document.getElementById(id)?.addEventListener('input',applyFilters));
+    applyFilters();
+  }
+
+  function socialVisitorToken(){
+    try{let t=localStorage.getItem('nk_sv');if(!t){t=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)+Date.now());localStorage.setItem('nk_sv',t);}return t;}catch(e){return null;}
+  }
+  document.addEventListener('click',function(ev){
+    const a=ev.target.closest&&ev.target.closest('a[data-nks-platform]');
+    if(!a||!SELLER_PROFILE?.handle)return;
+    const tok=socialVisitorToken();
+    if(!tok)return;
+    db.rpc('record_social_click',{p_handle:SELLER_PROFILE.handle,p_platform:a.dataset.nksPlatform,p_visitor:tok}).then(()=>{},()=>{});
+  });
+  async function reportListerPage(ev){
+    if(ev)ev.preventDefault();
+    if(!SELLER_PROFILE?.id)return;
+    if(!window.confirm('Report this page as a fake or impersonating account? Nyumba254 will review it.'))return;
+    const{error}=await db.from('reports').insert({target_type:'seller',target_id:SELLER_PROFILE.id,reason:'fake_or_impersonating_account',details:'Reported from Lister Page @'+(SELLER_PROFILE.handle||'')});
+    window.alert(error?'We could not send your report. Please use the Contact page.':'Thank you. Your report has been sent.');
+  }
+
+  function shareStorefront(){
+    const url=location.href;
+    const name=SELLER_PROFILE?.full_name||'this seller';
+    if(navigator.share){
+      navigator.share({title:`${name} — Nyumba254`, text:`Check out ${name}'s listings on Nyumba254`, url}).catch(()=>{});
+    } else {
+      const copy=navigator.clipboard?.writeText?navigator.clipboard.writeText(url):Promise.reject(new Error('Clipboard unavailable'));
+      copy.then(()=>{
+        document.querySelectorAll('.share-btn').forEach(b=>{const orig=b.innerHTML;b.innerHTML='✓ Link copied';setTimeout(()=>b.innerHTML=orig,1800);});
+      }).catch(()=>window.prompt('Copy this Lister Page link',url));
+    }
+    trackListerEvent('share_click');
+  }
+
+  const LISTER_SOURCES=new Set(['instagram','facebook','whatsapp','tiktok','x','telegram','qr']);
+  let LISTER_SOURCE='direct';
+  let LISTER_SESSION=null;
+  function initListerTracking(){
+    const source=new URLSearchParams(location.search).get('src')||'';
+    if(LISTER_SOURCES.has(source))LISTER_SOURCE=source;
+    try{
+      LISTER_SESSION=sessionStorage.getItem('nk_lister_sid')||crypto.randomUUID();
+      LISTER_SOURCE=LISTER_SOURCES.has(source)?source:(sessionStorage.getItem('nk_lister_src')||'direct');
+      sessionStorage.setItem('nk_lister_sid',LISTER_SESSION);
+      sessionStorage.setItem('nk_lister_src',LISTER_SOURCE);
+    }catch(error){
+      LISTER_SESSION=typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():null;
+      console.info('Session storage unavailable; source tracking will use a temporary session.',error);
+    }
+  }
+  function trackListerEvent(event,listingId){
+    if(!SELLER_PROFILE?.handle||!LISTER_SESSION)return;
+    db.rpc('record_lister_page_event',{
+      p_handle:SELLER_PROFILE.handle,p_event:event,p_source:LISTER_SOURCE,
+      p_listing_id:listingId||null,p_session_id:LISTER_SESSION
+    }).then(({error})=>{if(error)console.error('Could not record Lister Page event:',error);});
+  }
+
+  async function init(){
+    const params = new URLSearchParams(location.search);
+    initListerTracking();
+    const handleParam=params.get('handle')||(/^\/@([^/]+)/.exec(location.pathname)||[])[1]||'';
+    const sellerParam = params.get('seller');
+    if (!sellerParam&&!handleParam) { renderNotAvailable("No lister was specified in this link."); return; }
+
+    const { data: profileData, error: profileError } = handleParam
+      ? await db.rpc('get_public_lister_page',{p_handle:handleParam})
+      : await db.rpc('get_public_storefront_profile', { p_lookup: sellerParam });
+    if (profileError) {
+      console.error('Could not load public Lister Page profile:', profileError);
+      renderNotAvailable('Public profile details are temporarily unavailable. Please try again later.');
+      return;
+    }
+    const profile = Array.isArray(profileData) ? profileData[0] : profileData;
+    if(profile?.redirect_to){location.replace(`/@${encodeURIComponent(profile.redirect_to)}`);return;}
+    if (!profile) { renderNotAvailable("We couldn't find this lister — the link may be incorrect."); return; }
+    const sellerId = profile.id;
+    SELLER_PROFILE = profile;
+    if (handleParam ? profile.visibility==='hidden' : !profile.storefront_available) {
+      renderNotAvailable("This lister's public page isn't currently available.");
+      return;
+    }
+
+    const [{ data: listings, error: listErr }, { data: reviews, error: reviewError }] = await Promise.all([
+      db.from('listings').select('*, listing_photos(*), listing_videos(id)').eq('seller_id', sellerId).eq('status', 'active').eq('is_disabled', false).order('is_featured', { ascending: false }).order('created_at', { ascending: false }),
+      db.from('reviews').select('*').eq('review_type','seller').eq('target_seller_id', sellerId).order('created_at',{ascending:false}),
+    ]);
+
+    if(listErr){
+      console.error('Could not load public Lister Page listings:',listErr);
+      renderNotAvailable('This lister’s active listings are temporarily unavailable. Please try again later.');
+      return;
+    }
+    if(reviewError)console.error('Could not load public Lister Page reviews:',reviewError);
+    let items = listings || [];
+    if(items.length){
+      try{items=await nkHydrateViewingFees(items);}catch(feeError){console.error('Could not load Lister Page viewing fees:',feeError);}
+    }
+    ALL_ITEMS = items;
+    ALL_REVIEWS = reviews || [];
+
+    const isCompany=profile.account_type==='company';
+    const name = isCompany?(profile.company_name||profile.full_name||'Company'):(profile.full_name||'Lister');
+    const roleLabels={buyer:'Tenant / Buyer',owner:'Direct from owner',caretaker:'Caretaker',agent:'Agent',company:'Company'};
+    const roleVerified=!!profile.account_type&&profile.verified_role===profile.account_type;
+    const isVerified = profile.identity_verified===true;
+    const publicPhone = profile.public_phone || '';
+    const hideContact = !publicPhone;
+    const firstListingHref=items[0]?`/listing?id=${String(items[0].listing_number).padStart(6,'0')}`:'/listings';
+    const companyWebsite=safeExternalUrl(profile.company_website);
+    const totalViews = items.reduce((s,l)=>s+(Number(l.views)||0),0);
+    const avgRating = ALL_REVIEWS.length ? (ALL_REVIEWS.reduce((s,r)=>s+r.rating,0)/ALL_REVIEWS.length) : 0;
+
+    document.title = `${name} — Nyumba254 Lister Page`;
+    const descText = `Browse ${items.length} active propert${items.length===1?'y':'ies'} from ${name} on Nyumba254.`;
+    document.getElementById('meta-description')?.setAttribute('content', descText);
+    document.getElementById('og-title')?.setAttribute('content', `${name} — Nyumba254 Lister Page`);
+    document.getElementById('og-description')?.setAttribute('content', descText);
+    document.getElementById('tw-title')?.setAttribute('content',`${name} — Nyumba254 Lister Page`);
+    document.getElementById('tw-description')?.setAttribute('content',descText);
+    document.getElementById('m-robots')?.setAttribute('content',
+      profile.visibility==='public'&&items.length?'index,follow':'noindex,follow');
+    if(profile.handle)document.querySelector('link[rel="canonical"]')?.setAttribute('href',`${location.origin}/@${encodeURIComponent(profile.handle)}`);
+    if(!handleParam)document.getElementById('m-robots')?.setAttribute('content','noindex,follow');
+    trackListerEvent('page_view');
+    const {data:quickAnswers,error:answersError}=handleParam
+      ? await db.from('lister_quick_answers').select('question_key,answer').eq('lister_id',sellerId).is('listing_id',null).order('question_key')
+      : {data:[],error:null};
+    if(answersError)console.error('Could not load public Quick Answers:',answersError);
+    let roster=[];
+    if(handleParam){try{const{data:rosterData}=await db.rpc('get_lister_roster',{p_owner_id:sellerId});roster=Array.isArray(rosterData)?rosterData:[]}catch(e){console.error('Could not load team roster:',e)}}
+    const quickAnswerLabels={water:'Water',electricity:'Electricity',security:'Security',parking:'Parking',deposit:'Deposit',lease_length:'Lease length',pets:'Pets',internet:'Internet',distance:'Distance',title_status:'Title status',payment_arrangements:'Payment arrangements',viewing_days:'Viewing days'};
+    let availabilitySlots=[];
+    if(handleParam){
+      const{data:availabilityFlag,error:availabilityFlagError}=await db.from('platform_settings').select('value').eq('key','lister_availability_enabled').maybeSingle();
+      if(availabilityFlagError)console.error('Could not read viewing availability setting:',availabilityFlagError);
+      const availabilityEnabled=availabilityFlag?.value===true||Number(availabilityFlag?.value)===1;
+      if(availabilityEnabled){
+        const from=new Date(),to=new Date(from.getTime()+30*24*60*60*1000);
+        const{data:slots,error:slotsError}=await db.rpc('get_lister_open_slots',{
+          p_handle:profile.handle,p_from:from.toISOString(),p_to:to.toISOString()
+        });
+        if(slotsError)console.error('Could not load available viewing slots:',slotsError);
+        availabilitySlots=slots||[];
+      }
+    }
+
+    let socialLinks=[];
+    if((handleParam||profile.handle)&&window.NKSocial){
+      try{const{data:sl,error:se}=await db.rpc('get_lister_social_links',{p_handle:handleParam||profile.handle});if(se)throw se;if(Array.isArray(sl))socialLinks=sl.filter(l=>l&&typeof l.url==='string'&&NKSocial.extract(l.platform,l.url));}catch(e){console.error('Could not load social links:',e)}
+    }
+    const socialBlock=socialLinks.length?`<div class="seller-social">${NKSocial.renderRow(socialLinks)}<p class="nks-note">Social accounts are self-declared and not verified by Nyumba254. Pay viewing fees only at the property, never through direct messages. <a href="#" onclick="reportListerPage(event)">Report this page</a></p></div>`:'';
+    if(socialLinks.length){
+      const ld=document.createElement('script');ld.type='application/ld+json';
+      ld.textContent=JSON.stringify({'@context':'https://schema.org','@type':isCompany?'Organization':'Person',name,url:`${location.origin}/@${encodeURIComponent(profile.handle||handleParam)}`,sameAs:socialLinks.map(l=>l.url)}).replace(/</g,'\\u003c');
+      document.head.appendChild(ld);
+    }
+
+    const contactRow = !publicPhone
+      ? `<div class="seller-contact-row"><a class="contact-btn chat" href="${firstListingHref}">Message via listing chat</a><button class="share-btn" onclick="shareStorefront()"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share</button></div>`
+      : `<div class="seller-contact-row">
+          ${publicPhone?`<a class="contact-btn wa" href="https://wa.me/${formatWaPhone(publicPhone)}" rel="noopener"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>WhatsApp</a>`:''}
+          ${publicPhone?`<a class="contact-btn chat" href="tel:${esc(publicPhone)}">Call</a>`:''}
+          <a class="contact-btn chat" href="${firstListingHref}">Message via listing chat</a>
+          <button class="share-btn" onclick="shareStorefront()"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share</button>
+        </div>`;
+
+    const areas = [...new Set(items.map(l=>l.area).filter(Boolean))].sort();
+    const categories = [...new Set(items.map(l=>l.category).filter(Boolean))];
+    const catLabels = {student:'Student',standard:'Standard',luxury:'Luxury',commercial:'Shops & offices'};
+
+    document.getElementById('app-root').innerHTML = `
+      <div class="seller-header">
+        <div class="seller-avatar">${isCompany&&roleVerified&&profile.company_logo_url?`<img src="${esc(profile.company_logo_url)}" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:50%">`:esc(initialsOf(name))}</div>
+        <div class="seller-name">${esc(name)}${profile.account_type&&!roleVerified?' (not verified)':''}</div>
+        <div class="seller-badges">
+          ${roleVerified?`<span class="s-badge verified">${esc(roleLabels[profile.account_type]||profile.account_type)} verified</span>`:''}
+          ${isVerified?'<span class="s-badge verified"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><polyline points="9 12 11 14 15 10"/></svg>Identity verified</span>':''}
+          ${ALL_REVIEWS.length?`<span class="s-badge verified">⭐ ${avgRating.toFixed(1)} (${ALL_REVIEWS.length} review${ALL_REVIEWS.length!==1?'s':''})</span>`:''}
+        </div>
+        <p class="seller-sub">One organized place for ${esc(name)}'s property details and active listings.</p>
+        <div class="seller-profile-details">
+          ${profile.account_type?`<p>${esc(roleLabels[profile.account_type]||profile.account_type)} · ${roleVerified?'role verified':'(not verified)'}</p>`:''}
+          ${profile.profile_location?`<p>${esc(profile.profile_location)}</p>`:''}
+          ${profile.bio?`<p>${esc(profile.bio)}</p>`:''}
+          ${profile.company_description?`<p>${esc(profile.company_description)}</p>`:''}
+          ${companyWebsite?`<p><a href="${esc(companyWebsite)}" rel="noopener noreferrer">Visit company website</a></p>`:''}
+          <p>Member since ${esc(new Date(profile.created_at).toLocaleDateString('en-KE',{month:'long',year:'numeric'}))}</p>
+        </div>
+        ${socialBlock}
+        ${contactRow}
+      </div>
+      <div class="content">
+        <div class="stats-strip">
+          <div class="stat"><div class="stat-val">${items.length}</div><div class="stat-lbl">Active listings</div></div>
+          <div class="stat"><div class="stat-val">${totalViews.toLocaleString('en-KE')}</div><div class="stat-lbl">Total views</div></div>
+          ${ALL_REVIEWS.length?`<div class="stat"><div class="stat-val">${avgRating.toFixed(1)} ★</div><div class="stat-lbl">Seller rating</div></div>`:''}
+        </div>
+
+        ${items.length>1?`<div class="filters-bar">
+          <input type="text" id="sf-search" placeholder="Search by title or area…"/>
+          <select id="sf-category"><option value="">All categories</option>${categories.map(c=>`<option value="${esc(c)}">${esc(catLabels[c]||c)}</option>`).join('')}</select>
+          <select id="sf-type"><option value="">Sale &amp; rent</option><option value="sale">For sale</option><option value="rent">To let</option></select>
+          <select id="sf-area"><option value="">All areas</option>${areas.map(a=>`<option value="${esc(a)}">${esc(a)}</option>`).join('')}</select>
+          <input type="number" id="sf-max-price" min="0" inputmode="numeric" placeholder="Max price (KES)" aria-label="Maximum price"/>
+          <input type="number" id="sf-bedrooms" min="0" inputmode="numeric" placeholder="Bedrooms" aria-label="Minimum bedrooms"/>
+          <select id="sf-sort"><option value="newest">Newest first</option><option value="price_low">Price: low to high</option><option value="price_high">Price: high to low</option></select>
+          <span class="filters-count" id="sf-count"></span>
+        </div>`:''}
+
+        <div class="section-title">${esc(name)}'s listings</div>
+        <div id="listings-wrap">
+          ${items.length
+            ? `<div class="listings-grid" id="listings-grid">${items.map(buildCard).join('')}</div>`
+            : `<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><p>No active listings right now — check back soon.</p></div>`}
+        </div>
+        ${handleParam&&availabilitySlots.length?`<section class="card" style="padding:20px;margin:24px 0"><h2>Request a viewing</h2><p>Choose a property and available time. Your request will be sent to the lister for confirmation.</p><form id="lister-viewing-form"><label for="lv-listing">Property</label><select id="lv-listing" required>${items.map(l=>`<option value="${esc(l.id)}">${esc(l.title)}</option>`).join('')}</select><label for="lv-slot">Available time (East Africa Time)</label><select id="lv-slot" required>${availabilitySlots.map(s=>`<option value="${esc(s.slot_start)}">${esc(new Date(s.slot_start).toLocaleString('en-KE',{timeZone:s.timezone||'Africa/Nairobi',weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}))}</option>`).join('')}</select><label for="lv-name">Your name</label><input id="lv-name" required maxlength="120" autocomplete="name"/><label for="lv-phone">Phone number</label><input id="lv-phone" required maxlength="20" autocomplete="tel" inputmode="tel"/><label for="lv-note">Note (optional)</label><textarea id="lv-note" maxlength="1000" rows="2"></textarea><label id="lv-fee-ack-wrap" hidden><input type="checkbox" id="lv-fee-ack"/> I have checked and acknowledge the viewing fee on the selected listing. Any fee is paid directly to the lister.</label><button type="submit" class="btn btn-primary">Request viewing</button><p id="lv-status" role="status" aria-live="polite"></p></form></section>`:''}
+        ${roster.length?`<section class="card" style="padding:20px;margin:24px 0" aria-labelledby="roster-title"><div class="section-title" id="roster-title">Our team</div><p style="font-size:13px;color:var(--text-3);margin-bottom:10px">Team members who chose to be listed here.</p><ul style="list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:8px">${roster.map(m=>`<li style="padding:6px 12px;border:1px solid var(--border);border-radius:999px;font-size:13px;font-weight:600">${esc(m.name)}</li>`).join('')}</ul></section>`:''}
+        ${quickAnswers?.length?`<section class="lister-quick-answers" aria-labelledby="quick-answers-title"><div class="section-title" id="quick-answers-title">Quick answers</div><dl>${quickAnswers.map(row=>`<div><dt>${esc(quickAnswerLabels[row.question_key]||row.question_key)}</dt><dd>${esc(row.answer)}</dd></div>`).join('')}</dl></section>`:''}
+        <section class="lister-safety" aria-label="Viewing safety"><div class="section-title">Arrange a viewing safely</div><p>Check the viewing fee shown on each listing. If a fee applies, pay only that fee to the lister you meet and ask for a receipt. Never pay rent or a deposit before viewing.</p><p><a href="/viewing-fee-policy">Read the Viewing Fee Policy</a> · <a href="/contact?type=lister&handle=${encodeURIComponent(profile.handle||sellerParam||'')}">Report this lister</a></p></section>
+
+        ${ALL_REVIEWS.length ? `
+        <div class="section-title" style="margin-top:44px">Reviews for ${esc(name)}</div>
+        <div class="reviews-summary-row">
+          <div class="reviews-avg">${avgRating.toFixed(1)}</div>
+          <div>
+            <div class="reviews-stars">${starGlyphs(avgRating)}</div>
+            <div class="reviews-count">${ALL_REVIEWS.length} review${ALL_REVIEWS.length!==1?'s':''}</div>
+          </div>
+        </div>
+        <div id="reviews-list">${ALL_REVIEWS.slice(0,8).map(buildReviewCard).join('')}</div>` : ''}
+      </div>
+      <footer>Powered by <a href="/">Nyumba254</a> — Kenya's open property platform</footer>
+      ${(!hideContact && publicPhone) ? `<div class="sticky-contact-bar">
+        <a class="contact-btn wa" style="flex:1" href="https://wa.me/${formatWaPhone(publicPhone)}" rel="noopener"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>Chat on WhatsApp</a>
+      </div>`:''}`;
+
+    wireFilters();
+    let legacySessionId=null;
+    try{legacySessionId=localStorage.getItem('nk_sid')||null;}catch(error){console.info('Local storage unavailable for legacy page-view tracking.',error);}
+    db.from('page_views').insert({ path: handleParam?`/@${profile.handle}`:'/storefront?seller='+sellerId, referrer: document.referrer || null, user_agent: navigator.userAgent, session_id: legacySessionId }).then(({error})=>{if(error)console.error('Could not record legacy page view:',error);});
+    const syncViewingFeeAcknowledgement=()=>{
+      const selected=items.find(row=>row.id===document.getElementById('lv-listing').value);
+      const acknowledgement=document.getElementById('lv-fee-ack-wrap');
+      const checkbox=document.getElementById('lv-fee-ack');
+      if(acknowledgement)acknowledgement.hidden=!(Number(selected?.public_viewing_fee)>0);
+      if(checkbox)checkbox.checked=false;
+    };
+    document.getElementById('lv-listing')?.addEventListener('change',syncViewingFeeAcknowledgement);
+    syncViewingFeeAcknowledgement();
+    document.querySelectorAll('.seller-contact-row a.contact-btn,.sticky-contact-bar a.contact-btn').forEach(link=>
+      link.addEventListener('click',()=>trackListerEvent('contact_click',items[0]?.id))
+    );
+    document.getElementById('lister-viewing-form')?.addEventListener('submit',async event=>{
+      event.preventDefault();
+      const form=event.currentTarget;
+      const status=document.getElementById('lv-status');
+      const selected=items.find(row=>row.id===document.getElementById('lv-listing').value);
+      const feeAcknowledged=!!document.getElementById('lv-fee-ack')?.checked;
+      if(Number(selected?.public_viewing_fee)>0&&!feeAcknowledged){if(status)status.textContent='Please acknowledge the viewing fee shown on the listing.';return;}
+      if(status)status.textContent='Sending your request…';
+      const{error}=await db.rpc('request_lister_viewing_slot',{
+        p_listing_id:selected?.id,p_slot_start:document.getElementById('lv-slot').value,
+        p_buyer_name:document.getElementById('lv-name').value.trim(),
+        p_buyer_phone:document.getElementById('lv-phone').value.trim(),
+        p_buyer_timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||'Africa/Nairobi',
+        p_note:document.getElementById('lv-note').value.trim()||null,
+        p_fee_acknowledged:feeAcknowledged,p_source:LISTER_SOURCE
+      });
+      if(error){console.error('Could not request viewing slot:',error);if(status)status.textContent=error.message||'Could not request that viewing. Please choose another slot.';return;}
+      const slotIso=document.getElementById('lv-slot').value;
+      const slotMeta=availabilitySlots.find(s=>s.slot_start===slotIso);
+      if(status){
+        status.textContent='Your request was sent. The lister will confirm the viewing. ';
+        try{
+          const start=new Date(slotIso),end=new Date(start.getTime()+(Number(slotMeta?.slot_minutes)||30)*60000);
+          const stamp=d=>d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+          const clean=v=>String(v||'').replace(/[\\\\;,]/g,' ').replace(/\s+/g,' ').trim();
+          const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Nyumba254//Viewing//EN','BEGIN:VEVENT','UID:'+stamp(start)+'-'+(selected?.id||'x')+'@nyumba254.com','DTSTAMP:'+stamp(new Date()),'DTSTART:'+stamp(start),'DTEND:'+stamp(end),'SUMMARY:'+clean('Viewing request: '+(selected?.title||'Property')),'DESCRIPTION:'+clean('Requested on Nyumba254. Awaiting confirmation from the lister.'),'STATUS:TENTATIVE','END:VEVENT','END:VCALENDAR'].join('\r\n');
+          const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar'}));a.download='viewing-request.ics';a.textContent='Add to calendar';a.style.fontWeight='700';
+          status.appendChild(a);
+        }catch(e){console.error('Could not build calendar file:',e)}
+      }
+      trackListerEvent('viewing_request',selected?.id);
+      form.reset();
+    });
+  }
+
+  init();
+</script>
+</body>
+</html>

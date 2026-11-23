@@ -263,7 +263,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
         <div class="map-tools"><button type="button" class="btn-alt" data-act="vid-up">Upload video</button><button type="button" class="btn-alt" data-act="vid-rec">Record video</button></div>
         <input type="file" id="vid-up" accept="video/*" class="sr-only"/><input type="file" id="vid-rec" accept="video/*" capture="environment" class="sr-only"/>
         <div class="field-hint" id="video-hint">MP4, WebM or MOV. Shorter than the limit shown after you choose a file. Longer video? Email it to <a href="mailto:hellonyumba254@gmail.com" style="color:var(--green-dark);font-weight:600">hellonyumba254@gmail.com</a> and we'll add it for you.</div>
-        <div class="field-hint" id="video-status" aria-live="polite"></div></div>
+        <div class="field-hint" id="video-status" aria-live="polite"></div><label id="video-cover-row" hidden style="display:flex;gap:10px;align-items:flex-start;margin-top:12px;padding:12px 14px;border:1.5px solid var(--green-mid);background:var(--green-light);border-radius:var(--radius);font-size:13px;font-weight:500;color:var(--green-dark);cursor:pointer"><input type="checkbox" id="video_cover" checked style="width:18px;height:18px;margin-top:2px;accent-color:var(--green);flex:0 0 auto"/><span><b>Use my video as the cover</b><br><span style="font-weight:400">It plays on your listing card in search, home and saved lists. Untick to keep your photo as the cover.</span></span></label></div>
     </div>
   </section>
 
@@ -805,7 +805,7 @@ function payload(){
   if(g==='commercial')Object.assign(d,{property_type:num('comm_type'),size_sqm:num('comm_size'),lease_type:val('comm_lease_type'),parking:num('comm_parking'),frontage:num('comm_frontage'),condition:num('comm_condition'),units:num('comm_units')});
   if(S.custom.length)d.custom_amenities=S.custom;
   if(val('deposit')!==''&&freq()!=='once')d.deposit_months=Number(val('deposit'));if(val('available_from'))d.available_from=val('available_from');
-  if(val('area')==='__other__')d.custom_area=true;
+  if(val('area')==='__other__')d.custom_area=true;/*NK-VIDEOCOVER*/if($('video_cover')&&!$('video_cover').checked)d.video_cover=false;
   const f=freq();
   return {title:val('title'),description:val('description'),price:g==='boarding'?boardingPrice():priceVal(),price_frequency:f,price_type:f==='once'?'sale':'rent',category:S.cat,county:val('county'),area:areaName(),address:val('address'),
     latitude:S.pin?S.pin.lat:null,longitude:S.pin?S.pin.lng:null,amenities:[...S.amen],details:d,contact_name:val('contact_name'),phone:nkNormalizePhone(val('phone')),whatsapp:nkNormalizePhone(val('whatsapp')||val('phone')),contact_email:val('contact_email'),contact_hidden:chk('contact_hidden'),
@@ -1002,5 +1002,6 @@ init();
 </script>
 <script src="/patch.js"></script>
 <script>if (typeof db !== 'undefined') nkTrackPageView();</script>
+<script>/*NK-VIDEOCOVER*/(function(){var u=document.getElementById("video_url"),row=document.getElementById("video-cover-row"),st=document.getElementById("video-status");if(!row)return;function sync(){var has=/^https?:\/\//i.test(((u&&u.value)||"").trim())||/^Ready:/.test((st&&st.textContent)||"");row.hidden=!has}if(u)u.addEventListener("input",sync);if(st&&window.MutationObserver)new MutationObserver(sync).observe(st,{childList:true,characterData:true,subtree:true});document.addEventListener("change",function(e){if(e.target&&(e.target.id==="vid-up"||e.target.id==="vid-rec"))setTimeout(sync,600)});sync()})();</script>
 </body>
 </html>

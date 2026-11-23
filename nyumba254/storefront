@@ -572,5 +572,6 @@
 
   init();
 </script>
+<script src="/nk-video-cover.js?v=1"></script>
 </body>
 </html>
