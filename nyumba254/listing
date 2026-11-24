@@ -628,6 +628,23 @@ h1.title{font-size:clamp(20px,4.6vw,27px);line-height:1.22;margin-bottom:4px}
 .vg2 .vbox:-webkit-full-screen .hv{object-fit:contain}
 .vg2 .vs-v{overflow:hidden}
 </style>
+<style id="nk-videodesk-v4">
+/* NK-VIDEODESK v4 */
+.vg2 .gm-main.vbox{display:block;position:relative;width:auto;max-width:none;aspect-ratio:auto;max-height:none;align-self:stretch;margin:0;border:0;border-radius:0;box-shadow:none;background:var(--surface);transition:none}
+.vg2 .gm-main.vbox:fullscreen{width:100vw;height:100vh;background:#000}
+.vg2 .gm-main.vbox:-webkit-full-screen{width:100vw;height:100vh;background:#000}
+.vg2 .gm-main .vs{cursor:zoom-in}
+.vg2 .gm-main .vs-v{cursor:default}
+.vg2 .gm-main .ghero{z-index:3}
+.vg2 .gm-main .vs-v .vctrl{z-index:4}
+.vg2 .gmosaic>.gt{cursor:pointer}
+.vg2 .gmosaic>.gt .vmore{z-index:2}
+.dt-vt{background-size:cover;background-position:center}
+.dt-vv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.dt-vp{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:46px;height:46px;border-radius:50%;background:rgba(0,0,0,.52);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.dt-vp svg{width:22px!important;height:22px!important;margin:0 0 0 2px!important}
+.dt-vl{position:absolute;left:8px;bottom:8px;font-style:normal;font-size:11.5px;font-weight:700;color:#fff;background:rgba(0,0,0,.55);padding:2px 8px;border-radius:10px}
+</style>
 </head>
 <body>
 <a href="#main-content" class="skip-link">Skip to listing</a>
@@ -1240,7 +1257,7 @@ function videoGalleryHtml(){
   return '<div class="gallery vgal vg2" id="gallery"><div class="vstage" id="vstage"><div class="'+cls+'" id="vbox" style="--sar:'+vgSar(h).toFixed(4)+'">'+slides+'<span class="gheart">'+heart+'</span>'+nav+'</div></div>'+vgThumbs(h)+'</div>';
 }
 function layoutVGal(){}
-function vgApply(scrollThumb){
+function vgApplyMob(scrollThumb){
   var box=$('vbox'),h=heroVid();if(!box||!h)return;
   box.style.setProperty('--sar',vgSar(h).toFixed(4));
   box.classList.toggle('onph',vgS>0);
@@ -1450,7 +1467,7 @@ function vgEmbedCtl(){
 }
 function vgFitEmbed(){
   var box=$('vbox'),f=$('hv-embed'),h=heroVid();
-  if(!box||!f||!h||h.kind==='file'||!phoneGallery())return;
+  if(!box||!f||!h||h.kind==='file')return;
   var W=box.clientWidth,H=box.clientHeight;if(!W||!H)return;
   var fs=document.fullscreenElement||document.webkitFullscreenElement,a=hvAr(h),w,hh;
   if(fs===box){if(a>W/H){w=W;hh=W/a}else{hh=H;w=H*a}}
@@ -1474,7 +1491,7 @@ function vgEmbedSound(){
 function hvLoadEmbed(btn){
   var h=heroVid(),box=$('vbox');if(!h||!box)return;
   box.classList.remove('paused');
-  var m=phoneGallery();
+  var m=true;
   btn.outerHTML='<iframe id="hv-embed" class="hv-embed" src="'+escHtml(m?vgEmbedSrc(h,false):hvEmbedSrc(h,false))+'" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="Video walkthrough"></iframe>';
   if(m){
     vgEmMuted=false;
@@ -1594,18 +1611,79 @@ function vgMobInit(){
   }
   _hvCleanup=function(){vgPlay=null;vgPause=null;offs.forEach(function(f){f()})};
 }
+/* NK-VIDEODESK v4: computers get the same big box + tiles as photos, with the video as the first item */
+function dtTilesHtml(){
+  var h=heroVid(),N=vgCount(),k=Math.min(N-1,4),rem=N-1-k,saver=document.body.classList.contains('nk-datasaver'),out='',j,s,more;
+  for(j=1;j<=k;j++){
+    s=(vgS+j)%N;
+    more=(j===k&&rem>0)?'<span class="vmore" aria-hidden="true">+'+rem+'</span>':'';
+    if(s===0){
+      var st='background-color:#0F6E56;background-image:linear-gradient(135deg,#0F6E56,#064E3B)',vel='';
+      if(h&&h.kind==='yt'){st='background-color:#111;background-image:url(https://i.ytimg.com/vi/'+h.id+'/mqdefault.jpg);background-size:cover;background-position:center'}
+      else if(h&&h.kind==='file'&&!saver){vel='<video class="dt-vv" src="'+escHtml(h.url)+'#t=0.5" muted playsinline preload="metadata" tabindex="-1" aria-hidden="true"></video>'}
+      out+='<button type="button" class="gt dt-vt" data-act="vg-to" data-i="0" aria-label="Show the video walkthrough" style="'+st+'">'+vel+'<span class="dt-vp">'+HV_PLAY+'</span><em class="dt-vl">Video</em>'+more+'</button>';
+    }else{
+      out+='<button type="button" class="gt" data-act="vg-to" data-i="'+s+'" aria-label="Show photo '+s+' of '+photos.length+'"><img src="'+escHtml(srcFor(photos[s-1],saver?400:560))+'" data-orig="'+escHtml(photos[s-1].url)+'" alt="" loading="lazy" decoding="async"/>'+more+'</button>';
+    }
+  }
+  return out;
+}
+function dtHtml(){
+  var h=heroVid();if(!h)return '';
+  var n=photos.length,saver=document.body.classList.contains('nk-datasaver'),canAuto=hvCanAuto(),
+      heart=(typeof NKSaved!=='undefined'&&NKSaved.buildHeartBtn)?NKSaved.buildHeartBtn(P.id):'',
+      inner='',ctl='',cls='gm-main vbox';
+  if(vgS>n)vgS=0;
+  vgEmMuted=true;
+  if(h.kind==='file'){
+    cls+=(canAuto&&vgS===0)?' loading':(canAuto?'':' paused');
+    inner='<video id="hv" class="hv" data-act="hv-toggle" src="'+escHtml(h.url)+'#t=0.1" muted playsinline loop preload="'+(saver?'none':'metadata')+'"'+(canAuto?' autoplay':'')+' aria-label="Video walkthrough of '+escHtml(P.title)+'"></video>'+
+      '<button type="button" class="hv-play" data-act="hv-toggle" aria-label="Play video"><span>'+HV_PLAY+'</span></button>';
+    ctl='<div class="vctrl br"><button type="button" class="hvb" data-act="hv-sound" aria-pressed="false" aria-label="Turn sound on">'+HV_SND_OFF+'</button><button type="button" class="hvb" data-act="hv-full" aria-label="Full screen">'+HV_FS+'</button></div>';
+  }else if(saver){
+    cls+=' paused';
+    var poster=h.kind==='yt'?'https://i.ytimg.com/vi/'+h.id+'/hqdefault.jpg':'';
+    inner='<button type="button" class="hv-play hv-embedbtn" data-act="hv-embed" aria-label="Play video"'+(poster?' style="background-image:url('+poster+')"':'')+'><span>'+HV_PLAY+'</span></button>';
+  }else{
+    inner='<iframe id="hv-embed" class="hv-embed" src="'+escHtml(vgEmbedSrc(h,true))+'" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="Video walkthrough"></iframe>';
+    ctl=vgEmbedCtl();
+  }
+  if(vgS>0)cls+=' onph';
+  var slides='<div class="vs vs-v'+(vgS===0?' on':'')+'" data-s="0">'+inner+ctl+'</div>'+photos.map(function(p,i){
+    return '<button type="button" class="vs vs-p'+(vgS===i+1?' on':'')+'" data-s="'+(i+1)+'" data-act="photo" data-i="'+i+'" aria-label="Open photo '+(i+1)+' of '+n+'"><img src="'+escHtml(srcFor(p,saver?640:1000))+'" data-orig="'+escHtml(p.url)+'" alt="'+escHtml(P.title)+', photo '+(i+1)+' of '+n+'" loading="lazy" decoding="async"/></button>';
+  }).join('');
+  var nav=n?'<button type="button" class="gnav prev" data-act="vg-prev" aria-label="Previous: video or photo">'+IC.chev(1)+'</button><button type="button" class="gnav next" data-act="vg-next" aria-label="Next: video or photo">'+IC.chev(0)+'</button><div class="gcount" id="vgcount" aria-live="polite"><span id="vgc">'+vgLabel()+'</span></div>':'';
+  return '<div class="gallery vg2" id="gallery"><div class="gmosaic n'+(Math.min(n,4)+1)+'" id="dtgrid" data-s="'+vgS+'"><div class="'+cls+'" id="vbox">'+slides+heroOverlay()+nav+'</div>'+dtTilesHtml()+'</div><span class="gheart">'+heart+'</span>'+(n?'<button type="button" class="gall" data-act="photo" data-i="'+Math.max(0,vgS-1)+'">'+IC.expand+'Show all '+n+' photos</button>':'')+'</div>';
+}
+function vgApply(scrollThumb){
+  var g=$('dtgrid');
+  if(!g)return vgApplyMob(scrollThumb);
+  var box=$('vbox'),h=heroVid();if(!box||!h)return;
+  Array.prototype.forEach.call(box.querySelectorAll('.vs'),function(el){el.classList.toggle('on',Number(el.getAttribute('data-s'))===vgS)});
+  box.classList.toggle('onph',vgS>0);
+  var c=$('vgc');if(c)c.textContent=vgLabel();
+  if(g.getAttribute('data-s')!==String(vgS)){
+    g.setAttribute('data-s',String(vgS));
+    Array.prototype.forEach.call(g.querySelectorAll(':scope > .gt'),function(b){b.remove()});
+    box.insertAdjacentHTML('afterend',dtTilesHtml());
+    var ga=g.parentNode.querySelector('.gall');if(ga)ga.setAttribute('data-i',String(Math.max(0,vgS-1)));
+  }
+  if(vgS>0&&!document.body.classList.contains('nk-datasaver')){
+    var N=vgCount();[1,-1].forEach(function(d){var s=(vgS+d+N)%N;if(s>0&&photos[s-1])new Image().src=srcFor(photos[s-1],1000)});
+  }
+}
 /* ---- pick the layout by screen width ---- */
-function videoGalleryHtml(){return phoneGallery()?vgMobHtml():vdHtml()}
+function videoGalleryHtml(){return phoneGallery()?vgMobHtml():dtHtml()}
 function layoutVGal(){vdLayout()}
 function initHeroVideo(){
   if(_hvCleanup){_hvCleanup();_hvCleanup=null}
   vgPlay=null;vgPause=null;
   if(!heroVid())return;
-  if(phoneGallery())vgMobInit();else vdInit();
+  vgMobInit();
 }
 function heroJump(){
   if(!heroVid())return false;
-  if(phoneGallery())vgTo(0);
+  vgTo(0);
   var g=$('gallery'),v=$('hv');
   if(g)g.scrollIntoView({behavior:'smooth',block:'center'});
   if(v){
@@ -1631,7 +1709,7 @@ function galleryHtml(){
 function renderGallery(){const g=$('gallery');if(!g||!P)return;g.outerHTML=galleryHtml();syncTrack();syncDots();initHeroVideo();if(typeof NKSaved!=='undefined'&&NKSaved.hydrate)NKSaved.hydrate($('gallery'))}
 /* desktop: swap only the photo tiles, so the arrow buttons keep keyboard focus */
 function renderMosaic(){
-  const gm=$('gm-main');if(!gm)return;const order=tileOrder();
+  if($('dtgrid'))return;const gm=$('gm-main');if(!gm)return;const order=tileOrder();
   gm.querySelector('.gt').outerHTML=tileBtn(order[0],true);
   qsa('#gmosaic > .gt').forEach(b=>b.remove());
   gm.insertAdjacentHTML('afterend',order.slice(1).map(i=>tileBtn(i,false)).join(''));
