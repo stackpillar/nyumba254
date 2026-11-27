@@ -1,0 +1,19 @@
+{
+  "extends": "@nyumba254/tsconfig/library.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "jsx": "react-jsx",
+    "plugins": [
+      { "name": "react-native" }
+    ],
+    "paths": {
+      "@nyumba254/*": ["../packages/*/src"],
+      "@nyumba254/core": ["../packages/core/src"],
+      "@nyumba254/design-system": ["../packages/design-system/src"],
+      "@nyumba254/config/*": ["../packages/config/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.test.tsx"]
+}

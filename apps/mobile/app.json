@@ -1,0 +1,116 @@
+{
+  "expo": {
+    "name": "Nyumba254",
+    "slug": "nyumba254",
+    "scheme": "nyumba254",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#F7F6F2",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.nyumba254.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Nyumba254 uses your photos so you can add pictures to your listing.",
+        "NSCameraUsageDescription": "Nyumba254 uses your camera to take photos for your listing.",
+        "NSLocationWhenInUseUsageDescription": "Nyumba254 uses your location to find properties near you."
+      }
+    },
+    "android": {
+      "package": "com.nyumba254.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundColor": "#052D26"
+      },
+      "predictiveBackGestureEnabled": true,
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            { "scheme": "https", "host": "nyumba254.com", "pathPrefix": "/listing" },
+            { "scheme": "https", "host": "nyumba254.com", "pathPrefix": "/@" },
+            { "scheme": "https", "host": "www.nyumba254.com", "pathPrefix": "/listing" },
+            { "scheme": "https", "host": "www.nyumba254.com", "pathPrefix": "/@" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-font",
+      "expo-image",
+      "expo-video",
+      "expo-localization",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Nyumba254 uses your photos so you can add pictures to your listing.",
+          "cameraPermission": "Nyumba254 uses your camera to take photos for your listing."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#0F6E56",
+          "defaultChannel": "default"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 24,
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          },
+          "ios": {
+            "deploymentTarget": "15.0"
+          }
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 220,
+          "backgroundColor": "#052D26"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "tsconfigPaths": true
+    },
+    "extra": {
+      "supabaseUrl": "https://vliuuloyfhyxcsuchpss.supabase.co",
+      "supabaseKey": "sb_publishable_oIIcecf3wzKMual5K24Z8Q_zmxVfgsx",
+      "eas": {
+        "projectId": "your-project-id"
+      }
+    },
+    "owner": "your-expo-username",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/your-project-id"
+    }
+  }
+}

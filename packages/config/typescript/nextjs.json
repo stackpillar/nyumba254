@@ -1,0 +1,20 @@
+{
+  "extends": "./base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@nyumba254/*": ["../packages/*/src"],
+      "@nyumba254/core": ["../packages/core/src"],
+      "@nyumba254/ui": ["../packages/ui/src"],
+      "@nyumba254/design-system": ["../packages/design-system/src"],
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", "dist", "build", ".next"]
+}

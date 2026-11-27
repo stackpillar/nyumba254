@@ -1,0 +1,22 @@
+{
+  "extends": "./base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "react-native",
+    "plugins": [
+      {
+        "name": "react-native"
+      }
+    ],
+    "paths": {
+      "@nyumba254/*": ["../packages/*/src"],
+      "@nyumba254/core": ["../packages/core/src"],
+      "@nyumba254/ui": ["../packages/ui/src"],
+      "@nyumba254/design-system": ["../packages/design-system/src"],
+      "@/*": ["./src/*"]
+    },
+    "types": ["react-native", "@types/react", "@types/react-native"]
+  },
+  "include": ["**/*.ts", "**/*.tsx", "expo-env.d.ts"],
+  "exclude": ["node_modules", "dist", "build", ".expo"]
+}

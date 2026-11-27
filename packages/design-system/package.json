@@ -1,0 +1,25 @@
+{
+  "name": "@nyumba254/design-system",
+  "version": "0.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./tokens": "./src/tokens/index.ts",
+    "./utils": "./src/utils/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@nyumba254/tailwind-config": "workspace:*"
+  },
+  "devDependencies": {
+    "@nyumba254/tsconfig": "workspace:*",
+    "@nyumba254/eslint-config": "workspace:*",
+    "typescript": "^5.5.0"
+  }
+}

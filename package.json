@@ -1,0 +1,36 @@
+{
+  "name": "nyumba254",
+  "version": "0.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "build:web": "turbo run build --filter=web",
+    "build:mobile": "turbo run build --filter=mobile",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
+    "db:types": "pnpm --filter=core db:types",
+    "db:push": "supabase db push",
+    "db:migrate": "supabase migration up",
+    "functions:deploy": "supabase functions deploy"
+  },
+  "devDependencies": {
+    "@nyumba254/eslint-config": "workspace:*",
+    "@nyumba254/prettier-config": "workspace:*",
+    "@nyumba254/tsconfig": "workspace:*",
+    "@nyumba254/tailwind-config": "workspace:*",
+    "turbo": "^2.1.0",
+    "prettier": "^3.3.0",
+    "typescript": "^5.5.0"
+  },
+  "packageManager": "pnpm@9.6.0",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "extends": "@nyumba254/tsconfig/react-native.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@nyumba254/*": ["../../packages/*/src"],
+      "@nyumba254/core": ["../../packages/core/src"],
+      "@nyumba254/ui": ["../../packages/ui/src"],
+      "@nyumba254/design-system": ["../../packages/design-system/src"],
+      "@/*": ["./app/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", "expo-env.d.ts"],
+  "exclude": ["node_modules", "dist", "build", ".expo"]
+}

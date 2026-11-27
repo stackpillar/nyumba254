@@ -1,0 +1,38 @@
+{
+  "name": "@nyumba254/core",
+  "version": "0.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types/index.ts",
+    "./supabase": "./src/lib/supabase.ts",
+    "./api": "./src/api/index.ts",
+    "./hooks": "./src/hooks/index.ts",
+    "./utils": "./src/utils/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit",
+    "db:types": "supabase gen types typescript --project-id vliuuloyfhyxcsuchpss --schema public > src/types/database.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.44.0",
+    "@nyumba254/design-system": "workspace:*",
+    "clsx": "^2.1.0",
+    "date-fns": "^3.6.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@nyumba254/tsconfig": "workspace:*",
+    "@nyumba254/eslint-config": "workspace:*",
+    "typescript": "^5.5.0",
+    "@types/react": "^18.3.0",
+    "react": "^18.3.0"
+  },
+  "peerDependencies": {
+    "react": "^18.3.0"
+  }
+}

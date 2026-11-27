@@ -1,0 +1,11 @@
+{
+  "name": "@nyumba254/prettier-config",
+  "version": "0.0.0",
+  "private": true,
+  "main": "index.js",
+  "files": ["index.js"],
+  "dependencies": {
+    "prettier": "^3.3.0",
+    "prettier-plugin-tailwindcss": "^0.5.0"
+  }
+}

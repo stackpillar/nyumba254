@@ -1,0 +1,14 @@
+{
+  "name": "@nyumba254/tailwind-config",
+  "version": "0.0.0",
+  "private": true,
+  "main": "index.ts",
+  "files": ["index.ts", "web.ts", "native.ts"],
+  "dependencies": {
+    "tailwindcss": "^3.4.0",
+    "tailwindcss-animate": "^1.0.7"
+  },
+  "peerDependencies": {
+    "tailwindcss": "^3.4.0"
+  }
+}

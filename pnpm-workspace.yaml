@@ -1,0 +1,9 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Only allow workspace protocol for internal dependencies
+onlyBuiltDependencies:
+  - sharp
+  - @parcel/watcher
+  - esbuild

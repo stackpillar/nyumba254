@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "preserve",
+    "strict": true,
+    "skipLibCheck": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@nyumba254/*": ["packages/*/src"],
+      "@nyumba254/core": ["packages/core/src"],
+      "@nyumba254/ui": ["packages/ui/src"],
+      "@nyumba254/design-system": ["packages/design-system/src"],
+      "@nyumba254/config/*": ["packages/config/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "build", ".next", ".expo"]
+}
